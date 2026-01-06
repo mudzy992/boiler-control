@@ -1,0 +1,13 @@
+import * as Prisma from './internal/prismaNamespaceBrowser.js';
+export { Prisma };
+export * as $Enums from './enums.js';
+export * from './enums.js';
+export type User = Prisma.UserModel;
+export type HomeProfile = Prisma.HomeProfileModel;
+export type ThermostatDevice = Prisma.ThermostatDeviceModel;
+export type HeatingEvent = Prisma.HeatingEventModel;
+export type Recommendation = Prisma.RecommendationModel;
+export type WeatherCache = Prisma.WeatherCacheModel;
+export type BoilerHistory = Prisma.BoilerHistoryModel;
+export type HeatingIntervalLearning = Prisma.HeatingIntervalLearningModel;
+export type TuyaToken = Prisma.TuyaTokenModel;

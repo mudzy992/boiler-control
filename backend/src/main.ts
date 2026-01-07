@@ -4,7 +4,20 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: [
+      'https://boiler-control.hopto.org',
+      'http://localhost:5173', // Vite default
+      'http://127.0.0.1:5173',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false, // JWT ide u headeru, ne cookies
+  });
+
   app.enableShutdownHooks();
   await app.listen(3020);
 }
+
 bootstrap();

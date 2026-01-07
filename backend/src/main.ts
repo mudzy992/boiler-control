@@ -13,7 +13,7 @@ async function bootstrap() {
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false, // JWT ide u headeru, ne cookies
+    credentials: false, // JWT ide u headeru, ne cookies-e
   });
 
   app.enableShutdownHooks();

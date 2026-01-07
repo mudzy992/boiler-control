@@ -7,7 +7,7 @@ import { Public } from '../Auth/public.decorator';
 export class ReadonlyController {
   constructor(private readonly readonlyService: ReadonlyService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Get('weather')
   async getWeather(@Query('city') city?: string) {
     return this.readonlyService.getWeatherCache(city);

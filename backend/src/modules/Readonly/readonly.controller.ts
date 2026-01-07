@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ReadonlyService } from './readonly.service';
+import { Public } from '../Auth/public.decorator';
 
 @Controller('api/readonly')
 export class ReadonlyController {
@@ -24,9 +25,9 @@ export class ReadonlyController {
     return this.readonlyService.getRecommendations(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('interval-learnings')
-  async getIntervalLearnings(@Query('homeProfileId') homeProfileId: string) {
-    return this.readonlyService.getIntervalLearnings(+homeProfileId);
+  @Public()
+  @Get('last-recommendation')
+  async getLastRecommendation() {
+    return this.readonlyService.getLastRecommendation();
   }
 }

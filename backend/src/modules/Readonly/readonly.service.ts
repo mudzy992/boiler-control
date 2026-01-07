@@ -29,10 +29,9 @@ export class ReadonlyService {
     });
   }
 
-  async getIntervalLearnings(homeProfileId: number) {
-    return this.prisma.heatingIntervalLearning.findMany({
-      where: { homeProfileId },
-      orderBy: { lastUpdated: 'desc' },
+  async getLastRecommendation() {
+    return this.prisma.recommendation.findFirst({
+      orderBy: { date: 'desc' },
     });
   }
 }

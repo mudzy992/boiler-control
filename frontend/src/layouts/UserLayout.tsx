@@ -8,23 +8,18 @@ import AppFooter from "./AppFooter";
 const { Content} = Layout;
 
 const UserLayout = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, initialized } = useAuth();
   const navigate = useNavigate();
 
-  // redirect logika
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/login");
-    }
-    if (user) {
-    navigate("/",); // redirect na dashboard
-    }
-  }, [loading, user, navigate]);
+    if (!initialized) return;
 
-if (user) {
-  navigate("/", { replace: true }); // redirect na dashboard
-}
-  if (loading) {
+    if (!user) {
+      navigate("/login", { replace: true });
+    }
+  }, [initialized, user, navigate]);
+
+  if (!initialized || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spin size="large" />
@@ -33,21 +28,19 @@ if (user) {
   }
 
   if (!user) {
-    // React router će navigirati, ali moramo render fallback
     return null;
   }
 
   return (
-    <Layout className="min-w-screen! min-h-screen!">
-      <Layout>
-        <AppHeader />
-        <Content style={{ padding: 24 }}>
-          <Outlet />
-        </Content>
-        <AppFooter />
-      </Layout>
+    <Layout className="min-h-screen min-w-screen">
+      <AppHeader />
+      <Content style={{ padding: 24 }}>
+        <Outlet />
+      </Content>
+      <AppFooter />
     </Layout>
   );
 };
+
 
 export default UserLayout;

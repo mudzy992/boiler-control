@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'backend/**'
-      #- 'frontend/**'
+      - 'frontend/**'
       - 'docker-compose.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
@@ -55,11 +55,11 @@ jobs:
             echo "$CHANGES"
 
             BACKEND_CHANGED=$(echo "$CHANGES" | grep '^backend/' || true)
-            # FRONTEND_CHANGED=$(echo "$CHANGES" | grep '^frontend/' || true)
+            FRONTEND_CHANGED=$(echo "$CHANGES" | grep '^frontend/' || true)
             DOCKER_CHANGED=$(echo "$CHANGES" | grep '^docker-compose.yml' || true)
 
             echo "🧩 Backend changed: $BACKEND_CHANGED"
-            # echo "🧩 Frontend changed: $FRONTEND_CHANGED"
+            echo "🧩 Frontend changed: $FRONTEND_CHANGED"
             echo "🧩 Docker changed: $DOCKER_CHANGED"
 
             rebuild_backend() {
@@ -73,24 +73,24 @@ jobs:
               docker compose up -d boiler-control-backend
             }
 
-            # rebuild_frontend() {
-              #echo "🔹 Rebuilding frontend container..."
-              #docker compose stop boiler-control-frontend || true
-              #docker compose rm -f -v boiler-control-frontend || true
-              #sleep 2
-              #docker rmi boiler-control-frontend-image || true
-              #docker compose build frontend
-              #sudo fuser -k 3021/tcp || true
-              #docker compose up -d boiler-control-frontend
-            #}
+             rebuild_frontend() {
+              echo "🔹 Rebuilding frontend container..."
+              docker compose stop boiler-control-frontend || true
+              docker compose rm -f -v boiler-control-frontend || true
+              sleep 2
+              docker rmi boiler-control-frontend-image || true
+              docker compose build frontend
+              sudo fuser -k 3021/tcp || true
+              docker compose up -d boiler-control-frontend
+            }
 
             if [ -n "$BACKEND_CHANGED" ]; then
               rebuild_backend
             fi
 
-            #if [ -n "$FRONTEND_CHANGED" ]; then
+            if [ -n "$FRONTEND_CHANGED" ]; then
               #rebuild_frontend
-            #fi
+            fi
 
             if [ -n "$DOCKER_CHANGED" ]; then
               echo "⚠️ Docker Compose file changed, rebuilding both containers..."

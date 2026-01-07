@@ -8,8 +8,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://boiler-control.hopto.org',
-      'http://localhost:5173', // Vite default
-      'http://127.0.0.1:5173',
+      'http://localhost:3021', // Vite default
+      'http://127.0.0.1:3021',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

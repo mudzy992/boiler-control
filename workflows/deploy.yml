@@ -1,0 +1,107 @@
+name: MovieDB project
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      #- 'frontend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Postavljanje SSH ključa za pristup serveru
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.SERVER_SSH_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -p ${{ secrets.SERVER_SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            echo "➡️ Connecting to server and deploying MovieDB Project..."
+
+            APP_PATH="${{ secrets.APP_PATH }}"
+
+            if [ ! -d "$APP_PATH" ]; then
+              echo "📂 Directory does not exist. Creating..."
+              mkdir -p "$APP_PATH"
+            fi
+
+            cd "$APP_PATH"
+
+            # Ako direktorij nije git repo, kloniraj repo
+            if [ ! -d ".git" ]; then
+              echo "📦 Git repository not found. Cloning..."
+              git clone --branch main git@github.com:mudzy992/boiler-control.git .
+            else
+              echo "🔄 Pulling latest changes from GitHub..."
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            echo "🧰 Checking for changed files..."
+            CHANGES=$(git show --name-only --pretty="" HEAD)
+            echo "$CHANGES"
+
+            BACKEND_CHANGED=$(echo "$CHANGES" | grep '^backend/' || true)
+            # FRONTEND_CHANGED=$(echo "$CHANGES" | grep '^frontend/' || true)
+            DOCKER_CHANGED=$(echo "$CHANGES" | grep '^docker-compose.yml' || true)
+
+            echo "🧩 Backend changed: $BACKEND_CHANGED"
+            # echo "🧩 Frontend changed: $FRONTEND_CHANGED"
+            echo "🧩 Docker changed: $DOCKER_CHANGED"
+
+            rebuild_backend() {
+              echo "🔹 Rebuilding backend container..."
+              docker compose stop boiler-control-backend || true
+              docker compose rm -f -v boiler-control-backend || true
+              sleep 2
+              docker rmi boiler-control-backend-image || true
+              docker compose build backend
+              sudo fuser -k 3020/tcp || true
+              docker compose up -d boiler-control-backend
+            }
+
+            # rebuild_frontend() {
+              #echo "🔹 Rebuilding frontend container..."
+              #docker compose stop boiler-control-frontend || true
+              #docker compose rm -f -v boiler-control-frontend || true
+              #sleep 2
+              #docker rmi boiler-control-frontend-image || true
+              #docker compose build frontend
+              #sudo fuser -k 3021/tcp || true
+              #docker compose up -d boiler-control-frontend
+            #}
+
+            if [ -n "$BACKEND_CHANGED" ]; then
+              rebuild_backend
+            fi
+
+            #if [ -n "$FRONTEND_CHANGED" ]; then
+              #rebuild_frontend
+            #fi
+
+            if [ -n "$DOCKER_CHANGED" ]; then
+              echo "⚠️ Docker Compose file changed, rebuilding both containers..."
+              rebuild_backend
+              #rebuild_frontend
+            fi
+
+            if [ -z "$BACKEND_CHANGED$FRONTEND_CHANGED$DOCKER_CHANGED" ]; then
+              echo "✅ No code changes detected. Checking container health..."
+              docker compose ps
+            fi
+
+            echo "✅ Deployment completed successfully!"
+          EOF

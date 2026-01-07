@@ -1,0 +1,34 @@
+networks:
+  boiler-control-network:
+    name: boiler-control-network
+
+services:
+  boiler-control-backend:
+    networks:
+      - boiler-control-network
+    container_name: boiler-control-backend
+    image: boiler-control-backend-image
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3020:3020"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - /mnt/shared-app-files/boiler-control:/usr/src/app/uploads:rw
+    restart: unless-stopped
+
+#  boiler-control-frontend:
+#    networks:
+#      - boiler-control-network
+#    container_name: boiler-control-frontend
+#    image: boiler-control-frontend-image
+#    build:
+#      context: ./frontend
+#      dockerfile: Dockerfile
+#    depends_on:
+#      - boiler-control-backend
+#    ports:
+#      - "3021:3021"
+#    restart: unless-stopped

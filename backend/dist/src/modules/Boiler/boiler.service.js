@@ -47,6 +47,13 @@ let BoilerService = BoilerService_1 = class BoilerService {
         startTemp = Math.max(35, Math.min(56, startTemp));
         const roundedStartTemp = Number(startTemp.toFixed(2));
         this.logger.log(`Calculated startTemp for user ${userId}: ${roundedStartTemp}`);
+        await this.prisma.boilerHistory.create({
+            data: {
+                userId,
+                externalTemp: weightedTemp,
+                suggestedTemp: roundedStartTemp,
+            },
+        });
         const heatDurations = events
             .filter((e) => e.timestampEnd)
             .map((e) => (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000);

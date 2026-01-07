@@ -36,7 +36,10 @@ export class ThermostatPollingService {
           // grijanje je prestalo → zatvori event
           await this.prisma.heatingEvent.update({
             where: { id: lastEvent.id },
-            data: { timestampEnd: new Date() },
+            data: {
+              timestampEnd: new Date(),
+              hvacAction: 'HEATING_OFF',
+            },
           });
           this.logger.log(
             `Closed heating event ${lastEvent.id} for device ${device.deviceId}`,

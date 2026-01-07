@@ -89,13 +89,13 @@ jobs:
             fi
 
             if [ -n "$FRONTEND_CHANGED" ]; then
-              #rebuild_frontend
+              rebuild_frontend
             fi
 
             if [ -n "$DOCKER_CHANGED" ]; then
               echo "⚠️ Docker Compose file changed, rebuilding both containers..."
               rebuild_backend
-              #rebuild_frontend
+              rebuild_frontend
             fi
 
             if [ -z "$BACKEND_CHANGED$FRONTEND_CHANGED$DOCKER_CHANGED" ]; then

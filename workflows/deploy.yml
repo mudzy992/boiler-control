@@ -1,4 +1,4 @@
-name: MovieDB project
+name: Boiler Control project
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
       - name: Deploy to server
         run: |
           ssh -p ${{ secrets.SERVER_SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            echo "➡️ Connecting to server and deploying MovieDB Project..."
+            echo "➡️ Connecting to server and deploying Boiler Control Project..."
 
             APP_PATH="${{ secrets.APP_PATH }}"
 

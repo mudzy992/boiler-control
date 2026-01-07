@@ -5,4 +5,4 @@ echo "📌 Waiting for database..."
 sleep 10
 
 echo "🚀 Starting NestJS..."
-node dist/main.js
+node dist/src/main.js

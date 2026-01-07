@@ -43,8 +43,8 @@ RUN apt-get update \
 COPY --from=deps /usr/src/app/package*.json ./
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/src/generated ./dist/generated
+COPY --from=build /usr/src/app/src/dist ./dist
+#COPY --from=build /usr/src/app/src/generated ./dist/generated
 
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x /usr/src/app/docker-entrypoint.sh

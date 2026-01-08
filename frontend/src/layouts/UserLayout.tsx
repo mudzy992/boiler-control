@@ -32,9 +32,9 @@ const UserLayout = () => {
   }
 
   return (
-    <Layout className="min-h-screen min-w-screen">
+    <Layout className="min-h-screen!">
       <AppHeader />
-      <Content style={{ padding: 24 }}>
+      <Content >
         <Outlet />
       </Content>
       <AppFooter />

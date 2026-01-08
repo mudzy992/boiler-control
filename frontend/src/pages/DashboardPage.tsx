@@ -117,7 +117,7 @@ export const DashboardPage = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="max-w-7xl mx-auto p-4 bg-gray-50 rounded-md mt-3">
       <Title level={2}>Boiler Control Dashboard</Title>
 
       {/* SYSTEM STATUS */}
@@ -141,7 +141,7 @@ export const DashboardPage = () => {
             <Statistic
               title={
                 <>
-                  <Thermometer size={18} /> Max. Vanjska temp.
+                  <Thermometer size={18} /> Min. Vanjska temp.
                 </>
               }
               value={dashboard.system.boiler?.externalTemp ?? "-"}

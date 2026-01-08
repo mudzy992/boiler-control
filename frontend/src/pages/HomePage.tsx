@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Card, Spin, message, Divider } from "antd";
+import { Card, Spin, message } from "antd";
 import { getTodayWeather, getLastRecommendation } from "../api/readonly.api";
 import type { TodayWeather } from "../interfaces/TodayWeather";
 import type { TodayRecommendation } from "../interfaces/TodayRecommendation";
-import { CloudOutlined, FireOutlined, RiseOutlined, FallOutlined, DashboardOutlined } from "@ant-design/icons";
-import { Wind } from "lucide-react";
+import { CloudOutlined, FireOutlined, DashboardOutlined } from "@ant-design/icons";
 
 const HomePage = () => {
   const [loading, setLoading] = useState(true);
@@ -29,84 +28,68 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-blue-100 to-white">
-        <Spin size="large" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" tip="Loading..." />
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8 flex flex-col gap-4">
-      {/* WEATHER WIDGET */}
+    <div className="flex flex-col items-center gap-8">
+      {/* LAST RECOMMENDATION */}
       <Card
-        title="Today's Weather"
-        className="rounded-2xl shadow-xl bg-linear-to-r from-blue-50 to-white hover:shadow-2xl transition-shadow duration-300"
+        className="w-full max-w-3xl rounded-2xl shadow-lg border border-green-200 hover:shadow-2xl transition-shadow duration-300"
       >
-        {weather ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 ">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <CloudOutlined className="text-blue-500 text-lg" />
-                <span><strong>City:</strong> {weather.city}</span>
+        {lastRecommendation ? (
+          <div className="flex flex-col md:flex-row items-center justify-between p-6">
+            <div className="flex-1 text-center md:text-left space-y-2">
+              <div className="text-5xl font-extrabold text-green-700">
+                {lastRecommendation.recommendedFlowTemp}°C
               </div>
-              <div className="flex items-center space-x-2">
-                <FireOutlined className="text-red-500 text-lg" />
-                <span><strong>Temperature:</strong> {weather.temperature}°C (feels like {weather.feelslike}°C)</span>
+              <div className="text-lg text-gray-700">
+                Confidence: <span className="font-semibold">{lastRecommendation.confidenceScore}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <DashboardOutlined className="text-yellow-500 text-lg" />
-                <span><strong>Condition:</strong> {weather.condition_text}</span>
+              <div className="text-sm text-gray-400">
+                {new Date(lastRecommendation.date).toLocaleString()}
               </div>
-              <div className="flex items-center space-x-2">
-                <Wind className="text-purple-500 text-lg" />
-                <span><strong>Wind:</strong> {weather.wind_kph} kph {weather.wind_dir}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RiseOutlined className="text-orange-500 text-lg" />
-                <FallOutlined className="text-orange-500 text-lg" />
-                <span><strong>Sunrise/Sunset:</strong> {weather.sunrise} / {weather.sunset}</span>
-              </div>
-            </div>
-            <div className="flex flex-col justify-center items-center">
-              <div className="text-6xl font-bold text-blue-600">{weather.temperature}°C</div>
-              <div className="text-gray-500">Feels like {weather.feelslike}°C</div>
-              <div className="mt-2 text-sm text-gray-400">Humidity: {weather.humidity}% | Cloud: {weather.cloud}% | Precipitation: {weather.precipitation_mm} mm</div>
             </div>
           </div>
         ) : (
-          <div className="text-center text-gray-500">No weather data available for today</div>
+          <div className="text-center text-gray-500 py-8 text-xl">No recommendations available</div>
         )}
       </Card>
 
-      {/* LAST RECOMMENDATION WIDGET */}
-      <Card
-        title="Last Recommendation"
-        className="rounded-2xl shadow-xl bg-linear-to-r from-green-50 to-white hover:shadow-2xl transition-shadow duration-300"
-      >
-        {lastRecommendation ? (
-          <div className="flex flex-col md:flex-row justify-between items-center md:items-start">
-            <div className="space-y-2">
-              <div className="text-xl font-semibold text-green-600">
-                Recommended Flow Temp: {lastRecommendation.recommendedFlowTemp}°C
+      {/* OPTIONAL WEATHER INFO */}
+      {weather && (
+        <Card
+          className="w-full max-w-4xl rounded-2xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow duration-300"
+        >
+          <div className="flex flex-col md:flex-row justify-between p-6 items-center gap-4 md:gap-6">
+            <div className="text-center md:text-left space-y-2">
+              <div className="flex items-center justify-center md:justify-start space-x-2 text-blue-600 font-semibold">
+                <CloudOutlined />
+                <span>{weather.city}</span>
               </div>
-              <div className="text-gray-500">
-                Confidence Score: {lastRecommendation.confidenceScore}
+              <div className="flex items-center justify-center md:justify-start space-x-2 text-red-500 font-bold text-lg">
+                <FireOutlined />
+                <span>{weather.temperature}°C (feels like {weather.feelslike}°C)</span>
               </div>
-              <div className="text-gray-400 text-sm">
-                Date: {new Date(lastRecommendation.date).toLocaleString()}
+              <div className="flex items-center justify-center md:justify-start space-x-2 text-yellow-600">
+                <DashboardOutlined />
+                <span>{weather.condition_text}</span>
               </div>
             </div>
-            <Divider type="vertical" className="hidden md:block" />
-            <div className="flex-1 flex justify-center md:justify-end mt-4 md:mt-0">
-              <div className="bg-green-100 text-green-700 p-6 rounded-xl shadow-md text-center text-3xl font-bold">
-                {lastRecommendation.recommendedFlowTemp}°C
+            <div className="flex flex-col items-center md:items-end text-center md:text-right gap-1">
+              <div className="text-blue-500 font-bold text-3xl">{weather.temperature}°C</div>
+              <div className="text-gray-500 text-sm">
+                Wind: {weather.wind_kph} kph {weather.wind_dir}<br />
+                Sunrise/Sunset: {weather.sunrise} / {weather.sunset}
               </div>
             </div>
           </div>
-        ) : (
-          <div className="text-center text-gray-500">No recommendations available</div>
-        )}
-      </Card>
+        </Card>
+      )}
+
     </div>
   );
 };

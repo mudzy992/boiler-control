@@ -1,8 +1,12 @@
+import { Layout } from "antd";
+
+const { Footer } = Layout;
+
 const AppFooter = () => {
   return (
-    <div className="text-center p-4">
+    <Footer className="text-center">
        ©{new Date().getFullYear()} Created by Mudzy
-    </div>
+    </Footer>
   );
 };
 

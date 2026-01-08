@@ -73,7 +73,7 @@ export class TuyaTestService {
     let targetTemp = status['TempSet'] ?? 0;
 
     // Ako je u program modu, koristi aktivni setpoint iz programa
-    if (status['Mode'] === '1' && status['program']) {
+    if (status['Mode'] === '0' && status['program']) {
       targetTemp = this.getCurrentProgramTemp(status['program']);
     }
 

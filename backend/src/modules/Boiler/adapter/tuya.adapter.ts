@@ -76,14 +76,14 @@ export class TuyaAdapter {
 
   async getCurrentTemperature(deviceId: string): Promise<number> {
     const status = await this.getDeviceStatus(deviceId);
-    return status['TempCurrent'] ?? NaN;
+    return status['TempCurrent'] ?? 0;
   }
 
   async fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot> {
     const status = await this.getDeviceStatus(deviceId);
 
-    const currentTemp = status['TempCurrent'] ?? 0;
-    const targetTemp = status['TempSet'] ?? 0;
+    const currentTemp = await this.getCurrentTemperature(deviceId);
+    const targetTemp = await this.getTargetTemperature(deviceId);
     const powerOn = status['Power'] === true;
 
     return {
@@ -95,51 +95,51 @@ export class TuyaAdapter {
   }
 }
 
-  /**
-   * Dekodira Tuya program
-   * Format: [minute, hour, temp*2] x 6 intervala po danu
-   */
-  function parseProgram(programB64: string) {
-    const buf = Buffer.from(programB64, 'base64');
-    const intervals: Array<{ startMinute: number; temp: number }> = [];
+/**
+ * Dekodira Tuya program
+ * Format: [minute, hour, temp*2] x 6 intervala po danu
+ */
+function parseProgram(programB64: string) {
+  const buf = Buffer.from(programB64, 'base64');
+  const intervals: Array<{ startMinute: number; temp: number }> = [];
 
-    for (let i = 0; i + 2 < buf.length; i += 3) {
-      const minute = buf[i];
-      const hour = buf[i + 1];
-      const temp = buf[i + 2];
-      const startMinute = hour * 60 + minute;
-      intervals.push({ startMinute, temp });
-    }
-
-    return intervals;
+  for (let i = 0; i + 2 < buf.length; i += 3) {
+    const minute = buf[i];
+    const hour = buf[i + 1];
+    const temp = buf[i + 2];
+    const startMinute = hour * 60 + minute;
+    intervals.push({ startMinute, temp });
   }
 
-  /**
-   * Dobija aktivnu temperaturu iz programa po trenutnom vremenu i danu
-   */
-  function getCurrentProgramTemp(programB64: string): number {
-    const intervals = parseProgram(programB64);
+  return intervals;
+}
 
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+/**
+ * Dobija aktivnu temperaturu iz programa po trenutnom vremenu i danu
+ */
+function getCurrentProgramTemp(programB64: string): number {
+  const intervals = parseProgram(programB64);
 
-    // Dan u sedmici: 0 = Sunday, 1 = Monday ... 6 = Saturday
-    const dayOfWeek = now.getDay();
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    // Svaki dan ima 6 intervala
-    const startIndex = dayOfWeek === 0 ? 12 : dayOfWeek === 6 ? 6 : 0;
-    const dayIntervals = intervals.slice(startIndex, startIndex + 6);
+  // Dan u sedmici: 0 = Sunday, 1 = Monday ... 6 = Saturday
+  const dayOfWeek = now.getDay();
 
-    // Default na prvu temp
-    let activeTemp = dayIntervals[0].temp;
+  // Svaki dan ima 6 intervala
+  const startIndex = dayOfWeek === 0 ? 12 : dayOfWeek === 6 ? 6 : 0;
+  const dayIntervals = intervals.slice(startIndex, startIndex + 6);
 
-    for (const interval of dayIntervals) {
-      if (currentMinutes >= interval.startMinute) {
-        activeTemp = interval.temp;
-      } else {
-        break;
-      }
+  // Default na prvu temp
+  let activeTemp = dayIntervals[0].temp;
+
+  for (const interval of dayIntervals) {
+    if (currentMinutes >= interval.startMinute) {
+      activeTemp = interval.temp;
+    } else {
+      break;
     }
-
-    return activeTemp;
   }
+
+  return activeTemp;
+}

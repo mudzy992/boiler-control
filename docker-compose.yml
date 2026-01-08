@@ -13,8 +13,6 @@ services:
       - "3020:3020"
     env_file:
       - ./backend/.env
-    environment:
-      - TZ=Europe/Sarajevo
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro

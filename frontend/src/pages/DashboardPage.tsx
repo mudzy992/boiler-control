@@ -102,7 +102,13 @@ export const DashboardPage = () => {
         key: "source",
       },
     ];
-    return <Table columns={columns} dataSource={events} pagination={false} rowKey={(r) => `${r.deviceId}-${r.startedAt}`} />;
+    return <Table
+     columns={columns}
+     dataSource={events}
+     pagination={false}
+     rowKey={(r) => `${r.deviceId}-${r.startedAt}`}
+     style={{overflow: "auto"}}
+     />;
   };
 
   // Prepare data for graphs

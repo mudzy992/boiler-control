@@ -10,6 +10,11 @@ const AppHeader = () => {
 
   const items: MenuProps["items"] = [
     {
+      key: "dashboard",
+      label: "Dashboard",
+      onClick: () => navigate("/dashboard"),
+    },
+    {
       key: "profile",
       label: "Profile",
       onClick: () => navigate("/profile"),

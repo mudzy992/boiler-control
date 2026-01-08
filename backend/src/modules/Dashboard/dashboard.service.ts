@@ -3,79 +3,136 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async getUserDashboard(userId: number) {
-    // Dohvati sve HomeProfile-e korisnika
-    const homeProfiles = await this.prisma.homeProfile.findMany({
+    const [homeProfiles, recommendations, latestWeather, latestBoilerHistory] =
+      await Promise.all([
+        this.getHomeProfiles(userId),
+        this.getRecentRecommendations(userId),
+        this.getLatestWeather(),
+        this.getLatestBoilerHistory(userId),
+      ]);
+
+    const dashboardProfiles = await Promise.all(
+      homeProfiles.map(async (profile) => {
+        const thermostatIds = profile.thermostatDevices.map((t) => t.id);
+
+        const recentHeatingEvents = await this.prisma.heatingEvent.findMany({
+          where: {
+            deviceId: { in: thermostatIds },
+          },
+          orderBy: { timestampStart: 'desc' },
+          take: 5,
+        });
+
+        return {
+          profile: {
+            id: profile.id,
+            floorArea: profile.floorArea,
+            ceilingHeight: profile.ceilingHeight,
+            insulationType: profile.insulationType,
+            windowType: profile.windowType,
+            heatingType: profile.heatingType,
+            learningOffset: profile.learningOffset,
+            learningConfidence: profile.learningConfidence,
+          },
+
+          thermostats: profile.thermostatDevices.map((t) => ({
+            id: t.id,
+            alias: t.alias,
+            vendor: t.vendor,
+            deviceId: t.deviceId,
+            mode: t.mode,
+            lastSeen: t.lastSeen,
+          })),
+
+          learningIntervals: profile.intervalLearnings.map((l) => ({
+            intervalKey: l.intervalKey,
+            avgReachTimeMin: l.avgReachTimeMin,
+            avgOvershoot: l.avgOvershoot,
+            offset: l.offset,
+            confidence: l.confidence,
+            samples: l.samples,
+            lastUpdated: l.lastUpdated,
+          })),
+
+          recentHeatingEvents: recentHeatingEvents.map((e) => ({
+            deviceId: e.deviceId,
+            startedAt: e.timestampStart,
+            endedAt: e.timestampEnd,
+            currentTemp: e.currentTemp,
+            targetTemp: e.targetTemp,
+            hvacAction: e.hvacAction,
+            source: e.source,
+          })),
+
+          systemStatus: {
+            lastSuggestedFlowTemp: latestBoilerHistory?.suggestedTemp ?? null,
+            lastActualFlowTemp: latestBoilerHistory?.actualTemp ?? null,
+            lastExternalTemp: latestBoilerHistory?.externalTemp ?? null,
+            lastHeatingStart: latestBoilerHistory?.heatingStart ?? null,
+            lastHeatingEnd: latestBoilerHistory?.heatingEnd ?? null,
+          },
+
+          insights: {
+            hasEnoughLearningData: profile.intervalLearnings.some(
+              (l) => l.samples >= 5,
+            ),
+            averageConfidence:
+              profile.intervalLearnings.length > 0
+                ? profile.intervalLearnings.reduce(
+                    (sum, l) => sum + l.confidence,
+                    0,
+                  ) / profile.intervalLearnings.length
+                : 0,
+          },
+        };
+      }),
+    );
+
+    return {
+      system: {
+        weather: latestWeather,
+        recommendation: recommendations[0] ?? null,
+        boiler: latestBoilerHistory,
+      },
+      homes: dashboardProfiles,
+    };
+  }
+
+  // =========================
+  // Internal helpers
+  // =========================
+
+  private getHomeProfiles(userId: number) {
+    return this.prisma.homeProfile.findMany({
       where: { userId },
       include: {
         thermostatDevices: true,
         intervalLearnings: true,
       },
     });
+  }
 
-    // Dohvati recenzije / preporuke
-    const recommendations = await this.prisma.recommendation.findMany({
+  private getRecentRecommendations(userId: number) {
+    return this.prisma.recommendation.findMany({
       where: { userId },
       orderBy: { date: 'desc' },
       take: 5,
     });
+  }
 
-    // Dohvati istoriju grijanja
-    const recentHeatingEvents = await this.prisma.heatingEvent.findMany({
-      where: {
-        thermostat: { userId },
-      },
-      orderBy: { timestampStart: 'desc' },
-      take: 10,
+  private getLatestWeather() {
+    return this.prisma.weatherCache.findFirst({
+      orderBy: { fetchedAt: 'desc' },
     });
+  }
 
-    // Agregacija po HomeProfile
-    const result = homeProfiles.map((profile) => ({
-      id: profile.id,
-      floorArea: profile.floorArea,
-      ceilingHeight: profile.ceilingHeight,
-      insulationType: profile.insulationType,
-      windowType: profile.windowType,
-      heatingType: profile.heatingType,
-      learningOffset: profile.learningOffset,
-      learningConfidence: profile.learningConfidence,
-      thermostatDevices: profile.thermostatDevices.map((t) => ({
-        id: t.id,
-        alias: t.alias,
-        mode: t.mode,
-        deviceId: t.deviceId,
-        vendor: t.vendor,
-        lastSeen: t.lastSeen,
-      })),
-      intervalLearnings: profile.intervalLearnings.map((i) => ({
-        key: i.intervalKey,
-        offset: i.offset,
-        confidence: i.confidence,
-        avgReachTimeMin: i.avgReachTimeMin,
-        avgOvershoot: i.avgOvershoot,
-      })),
-      recentHeatingEvents: recentHeatingEvents
-        .filter((e) =>
-          profile.thermostatDevices.some((t) => t.id === e.deviceId),
-        )
-        .map((e) => ({
-          deviceId: e.deviceId,
-          timestampStart: e.timestampStart,
-          timestampEnd: e.timestampEnd,
-          currentTemp: e.currentTemp,
-          targetTemp: e.targetTemp,
-          hvacAction: e.hvacAction,
-          source: e.source,
-        })),
-      recommendations: recommendations.map((r) => ({
-        date: r.date,
-        recommendedFlowTemp: r.recommendedFlowTemp,
-        confidenceScore: r.confidenceScore,
-      })),
-    }));
-
-    return result;
+  private getLatestBoilerHistory(userId: number) {
+    return this.prisma.boilerHistory.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

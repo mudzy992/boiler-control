@@ -13,7 +13,7 @@ export class DailyRecommendationService {
   ) {}
 
   // svaki dan u 6:00
-  @Cron('0 5 * * *', {
+  @Cron('0 6 * * *', {
     name: 'daily-recommendations',
     disabled: process.env.NODE_ENV === 'development',
   })

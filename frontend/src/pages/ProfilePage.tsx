@@ -25,7 +25,7 @@ const ProfilePage = () => {
         const u = await getUserProfile();
         const userDto: UpdateUser = {
             name: u.name ?? "",
-            homeLocation: u.homeLoacation ?? ""
+            homeLocation: u.homeLocation ?? ""
         }
         setUser(userDto);
         userForm.setFieldsValue(userDto);
@@ -51,7 +51,7 @@ const ProfilePage = () => {
       const updated = await updateUserProfile(values);
       const userDto : UpdateUser = {
         name: updated.name || "",
-        homeLocation: updated.homeLoacation || ""
+        homeLocation: updated.homeLocation || ""
       }
       setUser(userDto);
       message.success("User updated successfully");

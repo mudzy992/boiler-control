@@ -4,8 +4,6 @@ networks:
 
 services:
   boiler-control-backend:
-    networks:
-      - boiler-control-network
     container_name: boiler-control-backend
     image: boiler-control-backend-image
     build:
@@ -15,9 +13,16 @@ services:
       - "3020:3020"
     env_file:
       - ./backend/.env
+    environment:
+      - TZ=Europe/Sarajevo
     volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
       - /mnt/shared-app-files/boiler-control:/usr/src/app/uploads:rw
+    networks:
+      - boiler-control-network
     restart: unless-stopped
+
 
   boiler-control-frontend:
     networks:

@@ -3,7 +3,6 @@ import { Cron } from '@nestjs/schedule';
 import { ThermostatDevice } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
-import { BoilerService } from '../Boiler/boiler.service';
 
 @Injectable()
 export class ThermostatPollingService {
@@ -79,7 +78,7 @@ export class ThermostatPollingService {
       }
 
       this.logger.debug(
-        `Decision ${device.deviceId}: was=${isHeating ? 'ON' : 'OFF'} → now=${heatingOn ? 'ON' : 'OFF'}`,
+        `Decision ${device.deviceId}: was=${isHeating ? 'ON' : 'OFF'} → now=${heatingOn ? 'ON' : 'OFF'}. Target: ${targetTemp} Current: ${currentTemp}`,
       );
 
       // ===== STATE TRANSITIONS =====

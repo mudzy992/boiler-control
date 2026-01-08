@@ -17,7 +17,13 @@ async function bootstrap() {
   });
 
   app.enableShutdownHooks();
-  await app.listen(3020);
+  const port = process.env.APP_PORT!;
+  await app.listen(port);
+  console.log(
+    `Server time: ${new Date().toString()}`,
+    'Server sluša na portu:',
+    port,
+  );
 }
 
 bootstrap();

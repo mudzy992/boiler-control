@@ -3,37 +3,36 @@ import { Cron } from '@nestjs/schedule';
 import { ThermostatDevice } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
+import { BoilerService } from '../Boiler/boiler.service';
 
 @Injectable()
 export class ThermostatPollingService {
   private readonly logger = new Logger(ThermostatPollingService.name);
   private readonly DEAD_ZONE = 1.0;
+  private readonly MIN_SWITCH_INTERVAL_MIN = 2; // minimalno 2 minute izmedju OFF→ON
 
   constructor(
     private prisma: PrismaService,
     @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
   ) {}
 
-  /** Polla jedan uređaj i odlučuje da li grijanje treba biti ON/OFF */
+  /** Polla jedan uređaj i odlučuje ON/OFF grijanje */
   async pollDevice(device: ThermostatDevice) {
     try {
+      // --- Snapshot sa termostata ---
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
       const currentTemp = normalizeTemp(snapshot.currentTemp);
       const targetTemp = normalizeTemp(snapshot.targetTemp);
       const powerOn = snapshot.powerOn;
 
-      this.logger.debug(
-        `Snapshot ${device.deviceId}: current=${currentTemp}, target=${targetTemp}`,
-      );
-
+      // --- Dohvati lastEvent ---
       const lastEvent = await this.prisma.heatingEvent.findFirst({
         where: { deviceId: device.id },
         orderBy: { timestampStart: 'desc' },
       });
-
       const isHeating = !!lastEvent && lastEvent.timestampEnd === null;
 
-      // ====== INTERVAL LEARNING LOGIKA ======
+      // --- Dohvati homeProfile i intervalLearning ---
       const homeProfile = await this.prisma.homeProfile.findUnique({
         where: { id: device.homeProfileId },
         include: { intervalLearnings: true },
@@ -44,7 +43,6 @@ export class ThermostatPollingService {
         (i) => i.intervalKey === intervalKey,
       );
 
-      // Ako interval ne postoji, kreiraj ga
       if (!intervalLearning && homeProfile) {
         intervalLearning = await this.prisma.heatingIntervalLearning.create({
           data: {
@@ -59,42 +57,50 @@ export class ThermostatPollingService {
         );
       }
 
-      // Target temp sa primijenjenim offsetom
-      const adjustedTarget = targetTemp + (intervalLearning?.offset ?? 0);
+      // --- Resolve heating state ---
+      const now = new Date();
+      let heatingOn = false;
+      if (powerOn) {
+        heatingOn = resolveHeatingState({
+          isHeating,
+          currentTemp,
+          targetTemp: targetTemp,
+          deadZone: this.DEAD_ZONE,
+        });
 
-      const heatingOn = powerOn
-        ? resolveHeatingState({
-            isHeating,
-            currentTemp,
-            targetTemp: adjustedTarget,
-            deadZone: this.DEAD_ZONE,
-          })
-        : false;
+        // Provjeri minimalni interval između switch-a
+        if (lastEvent && lastEvent.timestampStart) {
+          const minutesSinceLastSwitch =
+            (now.getTime() - lastEvent.timestampStart.getTime()) / 60000;
+          if (minutesSinceLastSwitch < this.MIN_SWITCH_INTERVAL_MIN) {
+            heatingOn = isHeating; // ignoriraj prebrze promjene
+          }
+        }
+      }
 
       this.logger.debug(
         `Decision ${device.deviceId}: was=${isHeating ? 'ON' : 'OFF'} → now=${heatingOn ? 'ON' : 'OFF'}`,
       );
 
       // ===== STATE TRANSITIONS =====
-
-      // ON → OFF
-      if (isHeating && !heatingOn) {
+      if (isHeating && !heatingOn && lastEvent) {
+        // ON → OFF
         await this.prisma.heatingEvent.update({
           where: { id: lastEvent.id },
-          data: { timestampEnd: new Date(), hvacAction: 'HEATING_OFF' },
+          data: { timestampEnd: now, hvacAction: 'HEATING_OFF' },
         });
 
         await this.prisma.boilerHistory.updateMany({
           where: { userId: device.userId, heatingEnd: null },
-          data: { heatingEnd: new Date() },
+          data: { heatingEnd: now },
         });
 
         this.logger.log(`Heating STOPPED for device ${device.deviceId}`);
 
-        // Update interval learning
+        // Update intervalLearning
         if (intervalLearning) {
           const reachTimeMin =
-            (new Date().getTime() - lastEvent.timestampStart.getTime()) / 60000;
+            (now.getTime() - lastEvent.timestampStart.getTime()) / 60000;
           const overshoot = lastEvent.targetTemp - lastEvent.currentTemp;
 
           intervalLearning.samples += 1;
@@ -112,7 +118,7 @@ export class ThermostatPollingService {
             1,
             intervalLearning.samples / 10,
           );
-          intervalLearning.lastUpdated = new Date();
+          intervalLearning.lastUpdated = now;
 
           await this.prisma.heatingIntervalLearning.update({
             where: { id: intervalLearning.id },
@@ -121,14 +127,14 @@ export class ThermostatPollingService {
         }
       }
 
-      // OFF → ON
       if (!isHeating && heatingOn) {
+        // OFF → ON
         const newEvent = await this.prisma.heatingEvent.create({
           data: {
             deviceId: device.id,
-            timestampStart: new Date(),
+            timestampStart: now,
             currentTemp,
-            targetTemp,
+            targetTemp: targetTemp,
             hvacAction: 'HEATING_ON',
             source: 'THERMOSTAT',
           },
@@ -167,7 +173,6 @@ export class ThermostatPollingService {
     }
   }
 
-  /** Polla sve uređaje */
   async pollAll() {
     const devices = await this.prisma.thermostatDevice.findMany();
     for (const d of devices) {
@@ -185,7 +190,6 @@ export class ThermostatPollingService {
   }
 }
 
-/** Rezolucija grijanja sa deadzone */
 function resolveHeatingState(params: {
   isHeating: boolean;
   currentTemp: number;
@@ -193,30 +197,23 @@ function resolveHeatingState(params: {
   deadZone: number;
 }): boolean {
   const { isHeating, currentTemp, targetTemp, deadZone } = params;
-
   if (isHeating) {
-    // Isključi grijanje kada dostigne ili pređe target temp
-    return currentTemp <= targetTemp;
+    return currentTemp < targetTemp; // OFF kada pređe target
   } else {
-    // Uključi grijanje kada je temperatura manja ili jednaka target - deadZone
-    return currentTemp <= targetTemp - deadZone;
+    return currentTemp <= targetTemp - deadZone; // ON kada padne ispod target-deadZone
   }
 }
 
-/** Normalizacija temperature (Tuya / Polling) */
 function normalizeTemp(raw: number): number {
   return raw / 2;
 }
 
-/** Generiše ključ intervala za homeProfile learning */
 function getIntervalKey(now: Date): string {
   const hour = now.getHours();
-  const day = now.getDay(); // 0 = Sunday
+  const day = now.getDay();
   let partOfDay = 'night';
-
   if (hour >= 6 && hour < 12) partOfDay = 'morning';
   else if (hour >= 12 && hour < 18) partOfDay = 'afternoon';
   else if (hour >= 18 && hour < 23) partOfDay = 'evening';
-
   return `weekday_${day}_${partOfDay}`;
 }

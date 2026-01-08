@@ -1,140 +1,237 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { WeatherService } from '../Weather/weather.service';
+import { addMinutes } from 'date-fns';
 
 @Injectable()
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private weatherService: WeatherService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  /** Glavna funkcija koja vraća start temp, automatski koristi feedback loop */
-  async calculateStartTemp(userId: number, city: string): Promise<number> {
-    const home = await this.prisma.homeProfile.findFirst({ where: { userId } });
+  /**
+   * Glavna funkcija koja vraća start temp kotla za korisnika
+   * koristi interval learning + home profile + weather + historical events
+   */
+  async getStartTemp(userId: number): Promise<number> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { homeProfiles: true },
+    });
+    if (!user) throw new Error('User not found');
+
+    const home = user.homeProfiles[0];
     if (!home) throw new Error('HomeProfile not found');
 
-    const { temp_min, temp_max } =
-      await this.weatherService.getTodayWeather(city);
-    const weightedTemp = 0.7 * (temp_min ?? 0) + 0.3 * (temp_max ?? 0);
+    // 1️⃣ Dohvati weather
+    const weather = await this.prisma.weatherCache.findFirst({
+      where: { city: user.homeLocation! },
+      orderBy: { fetchedAt: 'desc' },
+    });
+    const tempMin = weather?.temp_min ?? 0;
+    const tempMax = weather?.temp_max ?? 0;
+    const weightedTemp = 0.7 * tempMin + 0.3 * tempMax;
 
-    this.logger.log(
-      `Weighted external temperature for user ${userId}: ${weightedTemp}`,
+    // 2️⃣ Odredi trenutni interval
+    const intervalKey = this.getIntervalKey();
+
+    // 3️⃣ Dohvati interval learning podatke
+    let intervalLearning = await this.prisma.heatingIntervalLearning.findUnique(
+      {
+        where: {
+          homeProfileId_intervalKey: { homeProfileId: home.id, intervalKey },
+        },
+      },
     );
+    if (!intervalLearning) {
+      // Ako ne postoji, kreiramo default
+      intervalLearning = await this.prisma.heatingIntervalLearning.create({
+        data: {
+          homeProfileId: home.id,
+          intervalKey,
+          avgReachTimeMin: 30,
+          avgOvershoot: 0,
+          offset: 0,
+          confidence: 0.1,
+          samples: 0,
+        },
+      });
+    }
 
-    // 1️⃣ Dohvati heating evente iz pollera
-    const events = await this.prisma.heatingEvent.findMany({
+    // 4️⃣ Izračun curve temp + offset + interval
+    let startTemp = this.calculateCurveTemp(weightedTemp);
+    startTemp += home.learningOffset + intervalLearning.offset;
+
+    // 5️⃣ Uzmemo u obzir historijske heating evente za korekciju
+    const lastWeekEvents = await this.prisma.heatingEvent.findMany({
       where: {
         thermostat: { userId },
-        timestampStart: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // zadnjih 7 dana
+        timestampStart: { gte: addMinutes(new Date(), -7 * 24 * 60 * 60) },
       },
     });
 
-    // 2️⃣ Izračun learning offset-a
-    let learningOffset = 0;
-    events.forEach((e) => {
+    const eventOffset = lastWeekEvents.reduce((acc, e) => {
       const delta = e.targetTemp - e.currentTemp;
-      const weight = e.timestampEnd ? 0.05 : 0.1; // aktivni eventi imaju veću težinu
-      learningOffset += delta * weight;
-    });
+      const weight = e.timestampEnd ? 0.05 : 0.1; // aktivni eventi teži
+      return acc + delta * weight;
+    }, 0);
 
-    this.logger.debug(`Calculated learningOffset: ${learningOffset}`);
+    startTemp += eventOffset;
 
-    // 3️⃣ Start temp prema krivulji + offset
-    let startTemp = this.calculateCurveTemp(weightedTemp);
-    startTemp += learningOffset;
+    // 6️⃣ Ograničimo na raspon kotla
     startTemp = Math.max(35, Math.min(56, startTemp));
-    const roundedStartTemp = Number(startTemp.toFixed(2));
 
+    const roundedTemp = Number(startTemp.toFixed(2));
     this.logger.log(
-      `Calculated startTemp for user ${userId}: ${roundedStartTemp}`,
+      `Calculated startTemp for user ${userId} at interval ${intervalKey}: ${roundedTemp}`,
     );
 
-    // 4️⃣ Zapis u BoilerHistory
-    /* await this.prisma.boilerHistory.create({
-      data: {
-        userId,
-        externalTemp: weightedTemp,
-        suggestedTemp: roundedStartTemp,
-      },
-    });
- */
-    // 5️⃣ Izračun expectedHeatTime i confidence
-    const heatDurations = events
-      .filter((e) => e.timestampEnd)
-      .map(
-        (e) => (e.timestampEnd!.getTime() - e.timestampStart.getTime()) / 60000,
-      ); // min
-    const expectedHeatTimeMin = heatDurations.length
-      ? heatDurations.reduce((a, b) => a + b, 0) / heatDurations.length
-      : 30; // default
-    const confidenceScore = Math.min(
-      1,
-      Math.max(0.1, heatDurations.length / 10),
-    ); // raste sa brojem događaja
-
-    // 6️⃣ Kreiraj Recommendation
-    await this.prisma.recommendation.create({
-      data: {
-        userId,
-        date: new Date(),
-        recommendedFlowTemp: roundedStartTemp,
-        expectedHeatTimeMin,
-        confidenceScore,
-      },
-    });
-
-    // 7️⃣ Update home profile sa learning info
-    await this.prisma.homeProfile.update({
-      where: { id: home.id },
-      data: {
-        learningOffset: learningOffset,
-        learningConfidence: confidenceScore,
-      },
-    });
-
-    return roundedStartTemp;
+    return roundedTemp;
   }
 
-  async createMorningBoilerHistory(userId: number, city: string) {
-    const now = new Date();
-    const dayStart = new Date(now);
-    dayStart.setHours(6, 0, 0, 0); // dan počinje u 6:00
+  /**
+   * Kreira jutarnji boiler history zapis
+   */
+  async createMorningBoilerHistory(userId: number) {
+    const suggestedTemp = await this.getStartTemp(userId);
 
-    // 1️⃣ Zadnja temperatura od prethodnog dana
+    const home = await this.prisma.homeProfile.findFirst({
+      where: { userId },
+      include: { user: true },
+    });
+    if (!home) throw new Error('HomeProfile not found');
+
     const lastBh = await this.prisma.boilerHistory.findFirst({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
-    const lastActualTemp = lastBh?.suggestedTemp ?? 50;
+    const lastActual = lastBh?.actualTemp ?? 50;
 
-    // 2️⃣ Izračun start temperature
-    const suggestedTemp = await this.calculateStartTemp(userId, city);
+    const weather = await this.prisma.weatherCache.findFirst({
+      where: { city: home.user.homeLocation! },
+      orderBy: { fetchedAt: 'desc' },
+    });
+    const externalTemp =
+      0.7 * (weather?.temp_min ?? 0) + 0.3 * (weather?.temp_max ?? 0);
 
-    // 3️⃣ Dohvati vanjsku temp
-    const { temp_min, temp_max } =
-      await this.weatherService.getTodayWeather(city);
-    const externalTemp = 0.7 * (temp_min ?? 0) + 0.3 * (temp_max ?? 0);
-
-    // 4️⃣ Kreiraj jutarnji BoilerHistory zapis
-    const bh = await this.prisma.boilerHistory.create({
+    return this.prisma.boilerHistory.create({
       data: {
         userId,
         externalTemp,
         suggestedTemp,
-        actualTemp: lastActualTemp,
+        actualTemp: lastActual,
+      },
+    });
+  }
+
+  /**
+   * Nakon svakog heating eventa update-amo interval learning
+   */
+  async updateIntervalLearning(
+    userId: number,
+    intervalKey: string,
+    reachTimeMin: number,
+    overshoot: number,
+    targetTemp: number,
+    actualTemp: number,
+  ) {
+    const home = await this.prisma.homeProfile.findFirst({ where: { userId } });
+    if (!home) throw new Error('HomeProfile not found');
+
+    let interval = await this.prisma.heatingIntervalLearning.findUnique({
+      where: {
+        homeProfileId_intervalKey: { homeProfileId: home.id, intervalKey },
       },
     });
 
-    this.logger.log(
-      `Morning BoilerHistory for user ${userId}: suggested=${suggestedTemp}, actual=${lastActualTemp}, external=${externalTemp}`,
+    if (!interval) {
+      interval = await this.prisma.heatingIntervalLearning.create({
+        data: {
+          homeProfileId: home.id,
+          intervalKey,
+          avgReachTimeMin: reachTimeMin,
+          avgOvershoot: overshoot,
+          offset: targetTemp - actualTemp,
+          confidence: 0.1,
+          samples: 1,
+        },
+      });
+      return;
+    }
+
+    // Update prosjeka i offseta
+    const newSamples = interval.samples + 1;
+    const newAvgReach =
+      (interval.avgReachTimeMin * interval.samples + reachTimeMin) / newSamples;
+    const newAvgOvershoot =
+      (interval.avgOvershoot * interval.samples + overshoot) / newSamples;
+    const newOffset =
+      (interval.offset * interval.samples + (targetTemp - actualTemp)) /
+      newSamples;
+    const newConfidence = Math.min(
+      1,
+      (interval.confidence * interval.samples + 0.1) / newSamples,
     );
 
-    return bh;
+    await this.prisma.heatingIntervalLearning.update({
+      where: { id: interval.id },
+      data: {
+        avgReachTimeMin: newAvgReach,
+        avgOvershoot: newAvgOvershoot,
+        offset: newOffset,
+        samples: newSamples,
+        confidence: newConfidence,
+        lastUpdated: new Date(),
+      },
+    });
+
+    // Update home profile sa ukupnim learning offset
+    const intervalLearnings =
+      await this.prisma.heatingIntervalLearning.findMany({
+        where: { homeProfileId: home.id },
+      });
+    const totalOffset = intervalLearnings.reduce(
+      (acc, i) => acc + i.offset * i.confidence,
+      0,
+    );
+    const totalConfidence = intervalLearnings.reduce(
+      (acc, i) => acc + i.confidence,
+      0,
+    );
+
+    const learningOffset = totalConfidence ? totalOffset / totalConfidence : 0;
+    const learningConfidence = Math.min(
+      1,
+      totalConfidence / intervalLearnings.length,
+    );
+
+    await this.prisma.homeProfile.update({
+      where: { id: home.id },
+      data: { learningOffset, learningConfidence },
+    });
   }
 
+  /**
+   * Vraća interval key, npr. "weekday_morning_1"
+   */
+  getIntervalKey(): string {
+    const now = new Date();
+    const hour = now.getHours();
+    // const minute = now.getMinutes();
+    const weekday = now.getDay(); // 0=Sunday ... 6=Saturday
+
+    let part = 'night';
+    if (hour >= 6 && hour < 9) part = 'morning';
+    else if (hour >= 9 && hour < 12) part = 'late_morning';
+    else if (hour >= 12 && hour < 17) part = 'afternoon';
+    else if (hour >= 17 && hour < 22) part = 'evening';
+
+    const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
+    return `${dayType}_${part}`;
+  }
+
+  /**
+   * Krivulja grijanja
+   */
   private calculateCurveTemp(ext: number): number {
     if (ext >= 10) return 45;
     if (ext <= -15) return 56;

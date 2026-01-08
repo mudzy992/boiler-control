@@ -13,7 +13,7 @@ export class DailyRecommendationService {
   ) {}
 
   // svaki dan u 6:00
-  @Cron('0 6 * * *')
+  @Cron('0 5 * * *')
   async generateDailyRecommendations() {
     this.logger.log('Starting daily boiler recommendations...');
 
@@ -26,7 +26,6 @@ export class DailyRecommendationService {
 
         const startTemp = await this.boilerService.createMorningBoilerHistory(
           user.id,
-          user.homeLocation,
         );
 
         this.logger.log(

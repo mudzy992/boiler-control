@@ -75,21 +75,6 @@ export class TuyaAdapter {
     return status['TempSet'] ?? NaN;
   }
 
-  async isHeatingOn(deviceId: string): Promise<boolean> {
-    const status = await this.getDeviceStatus(deviceId);
-
-    const tempCurrent = status['TempCurrent'];
-    const tempSet = status['TempSet'];
-
-    if (typeof tempCurrent !== 'number' || typeof tempSet !== 'number') {
-      return false; // fallback ako nema podataka
-    }
-
-    const deadzone = 1; // stepen
-
-    return tempSet - tempCurrent >= deadzone;
-  }
-
   async fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot> {
     const status = await this.getDeviceStatus(deviceId);
 
@@ -97,14 +82,11 @@ export class TuyaAdapter {
     const targetTemp = status['TempSet'] ?? 0;
     const powerOn = status['Power'] === true;
 
-    const deadzone = 1;
-    const heatingOn = powerOn && targetTemp - currentTemp >= deadzone;
-
     return {
       currentTemp,
       targetTemp,
-      heatingOn,
       timestamp: new Date(),
+      powerOn
     };
   }
 }

@@ -193,8 +193,14 @@ function resolveHeatingState(params: {
   deadZone: number;
 }): boolean {
   const { isHeating, currentTemp, targetTemp, deadZone } = params;
-  if (isHeating) return currentTemp <= targetTemp + deadZone;
-  else return currentTemp < targetTemp - deadZone;
+
+  if (isHeating) {
+    // Isključi grijanje kada dostigne ili pređe target temp
+    return currentTemp < targetTemp;
+  } else {
+    // Uključi grijanje kada je temperatura manja ili jednaka target - deadZone
+    return currentTemp <= targetTemp - deadZone;
+  }
 }
 
 /** Normalizacija temperature (Tuya / Polling) */

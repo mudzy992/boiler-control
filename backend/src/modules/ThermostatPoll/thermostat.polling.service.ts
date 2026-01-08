@@ -175,7 +175,10 @@ export class ThermostatPollingService {
     }
   }
 
-  @Cron('*/1 * * * *')
+  @Cron('*/1 * * * *', {
+    name: 'polling',
+    disabled: process.env.NODE_ENV === 'development',
+  })
   handleCron() {
     this.logger.debug('Thermostat polling cron triggered');
     this.pollAll();

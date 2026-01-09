@@ -19,6 +19,13 @@ export interface DashboardSystem {
   } | null;
 }
 
+export interface DashboardThermostatProgram {
+  dayType: "WORKDAY" | "SATURDAY" | "SUNDAY";
+  startMinute: number; // npr. 6:30 = 390
+  targetTemp: number;
+  orderIndex: number;
+}
+
 export interface DashboardThermostat {
   id: number;
   alias?: string;
@@ -26,6 +33,7 @@ export interface DashboardThermostat {
   deviceId: string;
   mode: string;
   lastSeen?: string;
+  program?: DashboardThermostatProgram[];
 }
 
 export interface DashboardLearningInterval {
@@ -46,6 +54,7 @@ export interface DashboardHeatingEvent {
   targetTemp: number;
   hvacAction: string;
   source: string;
+  durationMinutes?: number;
 }
 
 export interface DashboardInsights {
@@ -87,6 +96,20 @@ export interface DashboardResponse {
  */
 export const getDashboard = async (): Promise<DashboardResponse> => {
   const { data } = await api.get<DashboardResponse>("/dashboard");
+
+  // Dodajemo izračun trajanja grijanja u minutama
+  data.homes.forEach((home) => {
+    home.recentHeatingEvents.forEach((event) => {
+      if (event.endedAt) {
+        const start = new Date(event.startedAt).getTime();
+        const end = new Date(event.endedAt).getTime();
+        event.durationMinutes = Math.round((end - start) / 60000);
+      } else {
+        event.durationMinutes = undefined;
+      }
+    });
+  });
+
   return data;
 };
 

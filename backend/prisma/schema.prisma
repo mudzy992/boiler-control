@@ -60,8 +60,25 @@ model ThermostatDevice {
   lastSeen      DateTime?
   mode          ThermostatMode @default(MANUAL) // MANUAL ili PROGRAM
   heatingEvents HeatingEvent[]
+  thermostatProgram ThermostatProgram[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+}
+
+model ThermostatProgram {
+  id             Int      @id @default(autoincrement())
+  deviceId       Int
+  dayType        DayType  // WORKDAY | SATURDAY | SUNDAY
+  startMinute    Int      // npr 6:30 = 390
+  targetTemp     Float
+  orderIndex     Int      // 0..5 (radi lakšeg sortiranja)
+  programHash    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  device ThermostatDevice @relation(fields: [deviceId], references: [id])
+
+  @@unique([deviceId, dayType, orderIndex])
 }
 
 model HeatingEvent {
@@ -144,16 +161,22 @@ model HeatingIntervalLearning {
   @@unique([homeProfileId, intervalKey])
 }
 
-enum ThermostatMode {
-  MANUAL
-  PROGRAM
-  OFF
-}
-
 model TuyaToken {
   id          Int      @id @default(autoincrement())
   accessToken String
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+enum ThermostatMode {
+  MANUAL
+  PROGRAM
+  OFF
+}
+
+enum DayType {
+  WORKDAY
+  SATURDAY
+  SUNDAY
 }

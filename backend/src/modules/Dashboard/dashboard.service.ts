@@ -26,6 +26,24 @@ export class DashboardService {
           take: 5,
         });
 
+        const thermostatPrograms = await this.prisma.thermostatProgram.findMany(
+          {
+            where: { deviceId: { in: thermostatIds } },
+            orderBy: [{ dayType: 'asc' }, { orderIndex: 'asc' }],
+          },
+        );
+
+        const programsByDevice: Record<number, any[]> = {};
+        thermostatPrograms.forEach((p) => {
+          if (!programsByDevice[p.deviceId]) programsByDevice[p.deviceId] = [];
+          programsByDevice[p.deviceId].push({
+            dayType: p.dayType,
+            startMinute: p.startMinute,
+            targetTemp: p.targetTemp,
+            orderIndex: p.orderIndex,
+          });
+        });
+
         return {
           profile: {
             id: profile.id,
@@ -45,6 +63,7 @@ export class DashboardService {
             deviceId: t.deviceId,
             mode: t.mode,
             lastSeen: t.lastSeen,
+            program: programsByDevice[t.id] ?? [],
           })),
 
           learningIntervals: profile.intervalLearnings.map((l) => ({

@@ -387,6 +387,7 @@ export const ModelName = {
   User: 'User',
   HomeProfile: 'HomeProfile',
   ThermostatDevice: 'ThermostatDevice',
+  ThermostatProgram: 'ThermostatProgram',
   HeatingEvent: 'HeatingEvent',
   Recommendation: 'Recommendation',
   WeatherCache: 'WeatherCache',
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "homeProfile" | "thermostatDevice" | "heatingEvent" | "recommendation" | "weatherCache" | "boilerHistory" | "heatingIntervalLearning" | "tuyaToken"
+    modelProps: "user" | "homeProfile" | "thermostatDevice" | "thermostatProgram" | "heatingEvent" | "recommendation" | "weatherCache" | "boilerHistory" | "heatingIntervalLearning" | "tuyaToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -607,6 +608,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ThermostatDeviceCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ThermostatDeviceCountAggregateOutputType> | number
+        }
+      }
+    }
+    ThermostatProgram: {
+      payload: Prisma.$ThermostatProgramPayload<ExtArgs>
+      fields: Prisma.ThermostatProgramFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ThermostatProgramFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ThermostatProgramFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>
+        }
+        findFirst: {
+          args: Prisma.ThermostatProgramFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ThermostatProgramFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>
+        }
+        findMany: {
+          args: Prisma.ThermostatProgramFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>[]
+        }
+        create: {
+          args: Prisma.ThermostatProgramCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>
+        }
+        createMany: {
+          args: Prisma.ThermostatProgramCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.ThermostatProgramDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>
+        }
+        update: {
+          args: Prisma.ThermostatProgramUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>
+        }
+        deleteMany: {
+          args: Prisma.ThermostatProgramDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ThermostatProgramUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.ThermostatProgramUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThermostatProgramPayload>
+        }
+        aggregate: {
+          args: Prisma.ThermostatProgramAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateThermostatProgram>
+        }
+        groupBy: {
+          args: Prisma.ThermostatProgramGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ThermostatProgramGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ThermostatProgramCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ThermostatProgramCountAggregateOutputType> | number
         }
       }
     }
@@ -1093,6 +1160,21 @@ export const ThermostatDeviceScalarFieldEnum = {
 export type ThermostatDeviceScalarFieldEnum = (typeof ThermostatDeviceScalarFieldEnum)[keyof typeof ThermostatDeviceScalarFieldEnum]
 
 
+export const ThermostatProgramScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  dayType: 'dayType',
+  startMinute: 'startMinute',
+  targetTemp: 'targetTemp',
+  orderIndex: 'orderIndex',
+  programHash: 'programHash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ThermostatProgramScalarFieldEnum = (typeof ThermostatProgramScalarFieldEnum)[keyof typeof ThermostatProgramScalarFieldEnum]
+
+
 export const HeatingEventScalarFieldEnum = {
   id: 'id',
   deviceId: 'deviceId',
@@ -1235,6 +1317,13 @@ export const ThermostatDeviceOrderByRelevanceFieldEnum = {
 export type ThermostatDeviceOrderByRelevanceFieldEnum = (typeof ThermostatDeviceOrderByRelevanceFieldEnum)[keyof typeof ThermostatDeviceOrderByRelevanceFieldEnum]
 
 
+export const ThermostatProgramOrderByRelevanceFieldEnum = {
+  programHash: 'programHash'
+} as const
+
+export type ThermostatProgramOrderByRelevanceFieldEnum = (typeof ThermostatProgramOrderByRelevanceFieldEnum)[keyof typeof ThermostatProgramOrderByRelevanceFieldEnum]
+
+
 export const HeatingEventOrderByRelevanceFieldEnum = {
   hvacAction: 'hvacAction',
   source: 'source'
@@ -1309,6 +1398,13 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'ThermostatMode'
  */
 export type EnumThermostatModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ThermostatMode'>
+    
+
+
+/**
+ * Reference to a field of type 'DayType'
+ */
+export type EnumDayTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DayType'>
     
 
 /**
@@ -1409,6 +1505,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   homeProfile?: Prisma.HomeProfileOmit
   thermostatDevice?: Prisma.ThermostatDeviceOmit
+  thermostatProgram?: Prisma.ThermostatProgramOmit
   heatingEvent?: Prisma.HeatingEventOmit
   recommendation?: Prisma.RecommendationOmit
   weatherCache?: Prisma.WeatherCacheOmit

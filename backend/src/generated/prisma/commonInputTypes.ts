@@ -206,6 +206,23 @@ export type EnumThermostatModeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumThermostatModeFilter<$PrismaModel>
 }
 
+export type EnumDayTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.DayType | Prisma.EnumDayTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DayType[]
+  notIn?: $Enums.DayType[]
+  not?: Prisma.NestedEnumDayTypeFilter<$PrismaModel> | $Enums.DayType
+}
+
+export type EnumDayTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DayType | Prisma.EnumDayTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DayType[]
+  notIn?: $Enums.DayType[]
+  not?: Prisma.NestedEnumDayTypeWithAggregatesFilter<$PrismaModel> | $Enums.DayType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDayTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDayTypeFilter<$PrismaModel>
+}
+
 export type FloatNullableFilter<$PrismaModel = never> = {
   equals?: number | Prisma.FloatFieldRefInput<$PrismaModel> | null
   in?: number[] | null
@@ -456,6 +473,23 @@ export type NestedEnumThermostatModeWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumThermostatModeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumThermostatModeFilter<$PrismaModel>
+}
+
+export type NestedEnumDayTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.DayType | Prisma.EnumDayTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DayType[]
+  notIn?: $Enums.DayType[]
+  not?: Prisma.NestedEnumDayTypeFilter<$PrismaModel> | $Enums.DayType
+}
+
+export type NestedEnumDayTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DayType | Prisma.EnumDayTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.DayType[]
+  notIn?: $Enums.DayType[]
+  not?: Prisma.NestedEnumDayTypeWithAggregatesFilter<$PrismaModel> | $Enums.DayType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDayTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDayTypeFilter<$PrismaModel>
 }
 
 export type NestedFloatNullableFilter<$PrismaModel = never> = {

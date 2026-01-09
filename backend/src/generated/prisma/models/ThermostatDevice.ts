@@ -267,6 +267,7 @@ export type ThermostatDeviceWhereInput = {
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   homeProfile?: Prisma.XOR<Prisma.HomeProfileScalarRelationFilter, Prisma.HomeProfileWhereInput>
   heatingEvents?: Prisma.HeatingEventListRelationFilter
+  thermostatProgram?: Prisma.ThermostatProgramListRelationFilter
 }
 
 export type ThermostatDeviceOrderByWithRelationInput = {
@@ -283,6 +284,7 @@ export type ThermostatDeviceOrderByWithRelationInput = {
   user?: Prisma.UserOrderByWithRelationInput
   homeProfile?: Prisma.HomeProfileOrderByWithRelationInput
   heatingEvents?: Prisma.HeatingEventOrderByRelationAggregateInput
+  thermostatProgram?: Prisma.ThermostatProgramOrderByRelationAggregateInput
   _relevance?: Prisma.ThermostatDeviceOrderByRelevanceInput
 }
 
@@ -303,6 +305,7 @@ export type ThermostatDeviceWhereUniqueInput = Prisma.AtLeast<{
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   homeProfile?: Prisma.XOR<Prisma.HomeProfileScalarRelationFilter, Prisma.HomeProfileWhereInput>
   heatingEvents?: Prisma.HeatingEventListRelationFilter
+  thermostatProgram?: Prisma.ThermostatProgramListRelationFilter
 }, "id">
 
 export type ThermostatDeviceOrderByWithAggregationInput = {
@@ -350,6 +353,7 @@ export type ThermostatDeviceCreateInput = {
   user: Prisma.UserCreateNestedOneWithoutThermostatDevicesInput
   homeProfile: Prisma.HomeProfileCreateNestedOneWithoutThermostatDevicesInput
   heatingEvents?: Prisma.HeatingEventCreateNestedManyWithoutThermostatInput
+  thermostatProgram?: Prisma.ThermostatProgramCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceUncheckedCreateInput = {
@@ -364,6 +368,7 @@ export type ThermostatDeviceUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   heatingEvents?: Prisma.HeatingEventUncheckedCreateNestedManyWithoutThermostatInput
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceUpdateInput = {
@@ -377,6 +382,7 @@ export type ThermostatDeviceUpdateInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutThermostatDevicesNestedInput
   homeProfile?: Prisma.HomeProfileUpdateOneRequiredWithoutThermostatDevicesNestedInput
   heatingEvents?: Prisma.HeatingEventUpdateManyWithoutThermostatNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceUncheckedUpdateInput = {
@@ -391,6 +397,7 @@ export type ThermostatDeviceUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   heatingEvents?: Prisma.HeatingEventUncheckedUpdateManyWithoutThermostatNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceCreateManyInput = {
@@ -593,6 +600,20 @@ export type EnumThermostatModeFieldUpdateOperationsInput = {
   set?: $Enums.ThermostatMode
 }
 
+export type ThermostatDeviceCreateNestedOneWithoutThermostatProgramInput = {
+  create?: Prisma.XOR<Prisma.ThermostatDeviceCreateWithoutThermostatProgramInput, Prisma.ThermostatDeviceUncheckedCreateWithoutThermostatProgramInput>
+  connectOrCreate?: Prisma.ThermostatDeviceCreateOrConnectWithoutThermostatProgramInput
+  connect?: Prisma.ThermostatDeviceWhereUniqueInput
+}
+
+export type ThermostatDeviceUpdateOneRequiredWithoutThermostatProgramNestedInput = {
+  create?: Prisma.XOR<Prisma.ThermostatDeviceCreateWithoutThermostatProgramInput, Prisma.ThermostatDeviceUncheckedCreateWithoutThermostatProgramInput>
+  connectOrCreate?: Prisma.ThermostatDeviceCreateOrConnectWithoutThermostatProgramInput
+  upsert?: Prisma.ThermostatDeviceUpsertWithoutThermostatProgramInput
+  connect?: Prisma.ThermostatDeviceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ThermostatDeviceUpdateToOneWithWhereWithoutThermostatProgramInput, Prisma.ThermostatDeviceUpdateWithoutThermostatProgramInput>, Prisma.ThermostatDeviceUncheckedUpdateWithoutThermostatProgramInput>
+}
+
 export type ThermostatDeviceCreateNestedOneWithoutHeatingEventsInput = {
   create?: Prisma.XOR<Prisma.ThermostatDeviceCreateWithoutHeatingEventsInput, Prisma.ThermostatDeviceUncheckedCreateWithoutHeatingEventsInput>
   connectOrCreate?: Prisma.ThermostatDeviceCreateOrConnectWithoutHeatingEventsInput
@@ -617,6 +638,7 @@ export type ThermostatDeviceCreateWithoutUserInput = {
   updatedAt?: Date | string
   homeProfile: Prisma.HomeProfileCreateNestedOneWithoutThermostatDevicesInput
   heatingEvents?: Prisma.HeatingEventCreateNestedManyWithoutThermostatInput
+  thermostatProgram?: Prisma.ThermostatProgramCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceUncheckedCreateWithoutUserInput = {
@@ -630,6 +652,7 @@ export type ThermostatDeviceUncheckedCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   heatingEvents?: Prisma.HeatingEventUncheckedCreateNestedManyWithoutThermostatInput
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceCreateOrConnectWithoutUserInput = {
@@ -684,6 +707,7 @@ export type ThermostatDeviceCreateWithoutHomeProfileInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutThermostatDevicesInput
   heatingEvents?: Prisma.HeatingEventCreateNestedManyWithoutThermostatInput
+  thermostatProgram?: Prisma.ThermostatProgramCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceUncheckedCreateWithoutHomeProfileInput = {
@@ -697,6 +721,7 @@ export type ThermostatDeviceUncheckedCreateWithoutHomeProfileInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   heatingEvents?: Prisma.HeatingEventUncheckedCreateNestedManyWithoutThermostatInput
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceCreateOrConnectWithoutHomeProfileInput = {
@@ -725,6 +750,76 @@ export type ThermostatDeviceUpdateManyWithWhereWithoutHomeProfileInput = {
   data: Prisma.XOR<Prisma.ThermostatDeviceUpdateManyMutationInput, Prisma.ThermostatDeviceUncheckedUpdateManyWithoutHomeProfileInput>
 }
 
+export type ThermostatDeviceCreateWithoutThermostatProgramInput = {
+  vendor: string
+  deviceId: string
+  alias?: string | null
+  lastSeen?: Date | string | null
+  mode?: $Enums.ThermostatMode
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutThermostatDevicesInput
+  homeProfile: Prisma.HomeProfileCreateNestedOneWithoutThermostatDevicesInput
+  heatingEvents?: Prisma.HeatingEventCreateNestedManyWithoutThermostatInput
+}
+
+export type ThermostatDeviceUncheckedCreateWithoutThermostatProgramInput = {
+  id?: number
+  userId: number
+  homeProfileId: number
+  vendor: string
+  deviceId: string
+  alias?: string | null
+  lastSeen?: Date | string | null
+  mode?: $Enums.ThermostatMode
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  heatingEvents?: Prisma.HeatingEventUncheckedCreateNestedManyWithoutThermostatInput
+}
+
+export type ThermostatDeviceCreateOrConnectWithoutThermostatProgramInput = {
+  where: Prisma.ThermostatDeviceWhereUniqueInput
+  create: Prisma.XOR<Prisma.ThermostatDeviceCreateWithoutThermostatProgramInput, Prisma.ThermostatDeviceUncheckedCreateWithoutThermostatProgramInput>
+}
+
+export type ThermostatDeviceUpsertWithoutThermostatProgramInput = {
+  update: Prisma.XOR<Prisma.ThermostatDeviceUpdateWithoutThermostatProgramInput, Prisma.ThermostatDeviceUncheckedUpdateWithoutThermostatProgramInput>
+  create: Prisma.XOR<Prisma.ThermostatDeviceCreateWithoutThermostatProgramInput, Prisma.ThermostatDeviceUncheckedCreateWithoutThermostatProgramInput>
+  where?: Prisma.ThermostatDeviceWhereInput
+}
+
+export type ThermostatDeviceUpdateToOneWithWhereWithoutThermostatProgramInput = {
+  where?: Prisma.ThermostatDeviceWhereInput
+  data: Prisma.XOR<Prisma.ThermostatDeviceUpdateWithoutThermostatProgramInput, Prisma.ThermostatDeviceUncheckedUpdateWithoutThermostatProgramInput>
+}
+
+export type ThermostatDeviceUpdateWithoutThermostatProgramInput = {
+  vendor?: Prisma.StringFieldUpdateOperationsInput | string
+  deviceId?: Prisma.StringFieldUpdateOperationsInput | string
+  alias?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mode?: Prisma.EnumThermostatModeFieldUpdateOperationsInput | $Enums.ThermostatMode
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutThermostatDevicesNestedInput
+  homeProfile?: Prisma.HomeProfileUpdateOneRequiredWithoutThermostatDevicesNestedInput
+  heatingEvents?: Prisma.HeatingEventUpdateManyWithoutThermostatNestedInput
+}
+
+export type ThermostatDeviceUncheckedUpdateWithoutThermostatProgramInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  userId?: Prisma.IntFieldUpdateOperationsInput | number
+  homeProfileId?: Prisma.IntFieldUpdateOperationsInput | number
+  vendor?: Prisma.StringFieldUpdateOperationsInput | string
+  deviceId?: Prisma.StringFieldUpdateOperationsInput | string
+  alias?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mode?: Prisma.EnumThermostatModeFieldUpdateOperationsInput | $Enums.ThermostatMode
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  heatingEvents?: Prisma.HeatingEventUncheckedUpdateManyWithoutThermostatNestedInput
+}
+
 export type ThermostatDeviceCreateWithoutHeatingEventsInput = {
   vendor: string
   deviceId: string
@@ -735,6 +830,7 @@ export type ThermostatDeviceCreateWithoutHeatingEventsInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutThermostatDevicesInput
   homeProfile: Prisma.HomeProfileCreateNestedOneWithoutThermostatDevicesInput
+  thermostatProgram?: Prisma.ThermostatProgramCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceUncheckedCreateWithoutHeatingEventsInput = {
@@ -748,6 +844,7 @@ export type ThermostatDeviceUncheckedCreateWithoutHeatingEventsInput = {
   mode?: $Enums.ThermostatMode
   createdAt?: Date | string
   updatedAt?: Date | string
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type ThermostatDeviceCreateOrConnectWithoutHeatingEventsInput = {
@@ -776,6 +873,7 @@ export type ThermostatDeviceUpdateWithoutHeatingEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutThermostatDevicesNestedInput
   homeProfile?: Prisma.HomeProfileUpdateOneRequiredWithoutThermostatDevicesNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceUncheckedUpdateWithoutHeatingEventsInput = {
@@ -789,6 +887,7 @@ export type ThermostatDeviceUncheckedUpdateWithoutHeatingEventsInput = {
   mode?: Prisma.EnumThermostatModeFieldUpdateOperationsInput | $Enums.ThermostatMode
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceCreateManyUserInput = {
@@ -813,6 +912,7 @@ export type ThermostatDeviceUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfile?: Prisma.HomeProfileUpdateOneRequiredWithoutThermostatDevicesNestedInput
   heatingEvents?: Prisma.HeatingEventUpdateManyWithoutThermostatNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceUncheckedUpdateWithoutUserInput = {
@@ -826,6 +926,7 @@ export type ThermostatDeviceUncheckedUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   heatingEvents?: Prisma.HeatingEventUncheckedUpdateManyWithoutThermostatNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceUncheckedUpdateManyWithoutUserInput = {
@@ -862,6 +963,7 @@ export type ThermostatDeviceUpdateWithoutHomeProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutThermostatDevicesNestedInput
   heatingEvents?: Prisma.HeatingEventUpdateManyWithoutThermostatNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceUncheckedUpdateWithoutHomeProfileInput = {
@@ -875,6 +977,7 @@ export type ThermostatDeviceUncheckedUpdateWithoutHomeProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   heatingEvents?: Prisma.HeatingEventUncheckedUpdateManyWithoutThermostatNestedInput
+  thermostatProgram?: Prisma.ThermostatProgramUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type ThermostatDeviceUncheckedUpdateManyWithoutHomeProfileInput = {
@@ -896,10 +999,12 @@ export type ThermostatDeviceUncheckedUpdateManyWithoutHomeProfileInput = {
 
 export type ThermostatDeviceCountOutputType = {
   heatingEvents: number
+  thermostatProgram: number
 }
 
 export type ThermostatDeviceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   heatingEvents?: boolean | ThermostatDeviceCountOutputTypeCountHeatingEventsArgs
+  thermostatProgram?: boolean | ThermostatDeviceCountOutputTypeCountThermostatProgramArgs
 }
 
 /**
@@ -919,6 +1024,13 @@ export type ThermostatDeviceCountOutputTypeCountHeatingEventsArgs<ExtArgs extend
   where?: Prisma.HeatingEventWhereInput
 }
 
+/**
+ * ThermostatDeviceCountOutputType without action
+ */
+export type ThermostatDeviceCountOutputTypeCountThermostatProgramArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ThermostatProgramWhereInput
+}
+
 
 export type ThermostatDeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -934,6 +1046,7 @@ export type ThermostatDeviceSelect<ExtArgs extends runtime.Types.Extensions.Inte
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   homeProfile?: boolean | Prisma.HomeProfileDefaultArgs<ExtArgs>
   heatingEvents?: boolean | Prisma.ThermostatDevice$heatingEventsArgs<ExtArgs>
+  thermostatProgram?: boolean | Prisma.ThermostatDevice$thermostatProgramArgs<ExtArgs>
   _count?: boolean | Prisma.ThermostatDeviceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["thermostatDevice"]>
 
@@ -957,6 +1070,7 @@ export type ThermostatDeviceInclude<ExtArgs extends runtime.Types.Extensions.Int
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   homeProfile?: boolean | Prisma.HomeProfileDefaultArgs<ExtArgs>
   heatingEvents?: boolean | Prisma.ThermostatDevice$heatingEventsArgs<ExtArgs>
+  thermostatProgram?: boolean | Prisma.ThermostatDevice$thermostatProgramArgs<ExtArgs>
   _count?: boolean | Prisma.ThermostatDeviceCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -966,6 +1080,7 @@ export type $ThermostatDevicePayload<ExtArgs extends runtime.Types.Extensions.In
     user: Prisma.$UserPayload<ExtArgs>
     homeProfile: Prisma.$HomeProfilePayload<ExtArgs>
     heatingEvents: Prisma.$HeatingEventPayload<ExtArgs>[]
+    thermostatProgram: Prisma.$ThermostatProgramPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1321,6 +1436,7 @@ export interface Prisma__ThermostatDeviceClient<T, Null = never, ExtArgs extends
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   homeProfile<T extends Prisma.HomeProfileDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.HomeProfileDefaultArgs<ExtArgs>>): Prisma.Prisma__HomeProfileClient<runtime.Types.Result.GetResult<Prisma.$HomeProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   heatingEvents<T extends Prisma.ThermostatDevice$heatingEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ThermostatDevice$heatingEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HeatingEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  thermostatProgram<T extends Prisma.ThermostatDevice$thermostatProgramArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ThermostatDevice$thermostatProgramArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ThermostatProgramPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1724,6 +1840,30 @@ export type ThermostatDevice$heatingEventsArgs<ExtArgs extends runtime.Types.Ext
   take?: number
   skip?: number
   distinct?: Prisma.HeatingEventScalarFieldEnum | Prisma.HeatingEventScalarFieldEnum[]
+}
+
+/**
+ * ThermostatDevice.thermostatProgram
+ */
+export type ThermostatDevice$thermostatProgramArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ThermostatProgram
+   */
+  select?: Prisma.ThermostatProgramSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ThermostatProgram
+   */
+  omit?: Prisma.ThermostatProgramOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ThermostatProgramInclude<ExtArgs> | null
+  where?: Prisma.ThermostatProgramWhereInput
+  orderBy?: Prisma.ThermostatProgramOrderByWithRelationInput | Prisma.ThermostatProgramOrderByWithRelationInput[]
+  cursor?: Prisma.ThermostatProgramWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ThermostatProgramScalarFieldEnum | Prisma.ThermostatProgramScalarFieldEnum[]
 }
 
 /**

@@ -1,8 +1,16 @@
+import { DayType } from '../../../generated/prisma/enums';
+
 export interface ThermostatSnapshot {
   currentTemp: number; // trenutna temperatura
   targetTemp: number; // zadana temperatura
   timestamp: Date; // kada je snapshot snimljen
   powerOn: boolean;
+  dayType?: DayType;
+  activeInterval?: {
+    startMinute: number;
+    targetTemp: number;
+    orderIndex: number;
+  };
 }
 
 export interface IThermostatAdapter {

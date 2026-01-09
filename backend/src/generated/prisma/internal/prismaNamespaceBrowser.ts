@@ -54,6 +54,7 @@ export const ModelName = {
   User: 'User',
   HomeProfile: 'HomeProfile',
   ThermostatDevice: 'ThermostatDevice',
+  ThermostatProgram: 'ThermostatProgram',
   HeatingEvent: 'HeatingEvent',
   Recommendation: 'Recommendation',
   WeatherCache: 'WeatherCache',
@@ -124,6 +125,21 @@ export const ThermostatDeviceScalarFieldEnum = {
 } as const
 
 export type ThermostatDeviceScalarFieldEnum = (typeof ThermostatDeviceScalarFieldEnum)[keyof typeof ThermostatDeviceScalarFieldEnum]
+
+
+export const ThermostatProgramScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  dayType: 'dayType',
+  startMinute: 'startMinute',
+  targetTemp: 'targetTemp',
+  orderIndex: 'orderIndex',
+  programHash: 'programHash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ThermostatProgramScalarFieldEnum = (typeof ThermostatProgramScalarFieldEnum)[keyof typeof ThermostatProgramScalarFieldEnum]
 
 
 export const HeatingEventScalarFieldEnum = {
@@ -266,6 +282,13 @@ export const ThermostatDeviceOrderByRelevanceFieldEnum = {
 } as const
 
 export type ThermostatDeviceOrderByRelevanceFieldEnum = (typeof ThermostatDeviceOrderByRelevanceFieldEnum)[keyof typeof ThermostatDeviceOrderByRelevanceFieldEnum]
+
+
+export const ThermostatProgramOrderByRelevanceFieldEnum = {
+  programHash: 'programHash'
+} as const
+
+export type ThermostatProgramOrderByRelevanceFieldEnum = (typeof ThermostatProgramOrderByRelevanceFieldEnum)[keyof typeof ThermostatProgramOrderByRelevanceFieldEnum]
 
 
 export const HeatingEventOrderByRelevanceFieldEnum = {

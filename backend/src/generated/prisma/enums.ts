@@ -16,3 +16,12 @@ export const ThermostatMode = {
 } as const
 
 export type ThermostatMode = (typeof ThermostatMode)[keyof typeof ThermostatMode]
+
+
+export const DayType = {
+  WORKDAY: 'WORKDAY',
+  SATURDAY: 'SATURDAY',
+  SUNDAY: 'SUNDAY'
+} as const
+
+export type DayType = (typeof DayType)[keyof typeof DayType]

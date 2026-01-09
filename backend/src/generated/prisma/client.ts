@@ -53,6 +53,11 @@ export type HomeProfile = Prisma.HomeProfileModel
  */
 export type ThermostatDevice = Prisma.ThermostatDeviceModel
 /**
+ * Model ThermostatProgram
+ * 
+ */
+export type ThermostatProgram = Prisma.ThermostatProgramModel
+/**
  * Model HeatingEvent
  * 
  */

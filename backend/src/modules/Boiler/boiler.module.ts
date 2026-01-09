@@ -4,10 +4,12 @@ import { WeatherModule } from '../Weather/weather.module';
 import { TuyaAdapter } from './adapter/tuya.adapter';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TuyaAuthService } from '../Tuya/tuya.auth.service';
+import { ProgramSyncService } from './adapter/program.sync.service';
 
 @Module({
   imports: [WeatherModule],
   providers: [
+    ProgramSyncService,
     BoilerService,
     PrismaService,
     TuyaAuthService,

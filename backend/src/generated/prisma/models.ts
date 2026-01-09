@@ -11,6 +11,7 @@
 export type * from './models/User.js'
 export type * from './models/HomeProfile.js'
 export type * from './models/ThermostatDevice.js'
+export type * from './models/ThermostatProgram.js'
 export type * from './models/HeatingEvent.js'
 export type * from './models/Recommendation.js'
 export type * from './models/WeatherCache.js'

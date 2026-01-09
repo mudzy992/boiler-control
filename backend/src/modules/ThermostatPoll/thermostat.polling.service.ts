@@ -21,7 +21,7 @@ export class ThermostatPollingService {
       // --- Snapshot sa termostata ---
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
       const currentTemp = normalizeTemp(snapshot.currentTemp);
-      const targetTemp = normalizeTemp(snapshot.targetTemp);
+      const targetTemp = snapshot.targetTemp;
       const powerOn = snapshot.powerOn;
 
       // --- Dohvati lastEvent ---
@@ -78,8 +78,11 @@ export class ThermostatPollingService {
       }
 
       this.logger.debug(
-        `Decision ${device.deviceId}: was=${isHeating ? 'ON' : 'OFF'} → now=${heatingOn ? 'ON' : 'OFF'}. Target: ${targetTemp} Current: ${currentTemp}`,
+        `Decision ${device.deviceId}: was=${isHeating ? 'ON' : 'OFF'} → now=${heatingOn ? 'ON' : 'OFF'}. ` +
+          `Target: ${targetTemp} Current: ${currentTemp} Day: ${snapshot.dayType} ` +
+          `Active Interval: ${formatInterval(snapshot.activeInterval!)}`,
       );
+
 
       // ===== STATE TRANSITIONS =====
       if (isHeating && !heatingOn && lastEvent) {
@@ -215,4 +218,22 @@ function getIntervalKey(now: Date): string {
   else if (hour >= 12 && hour < 18) partOfDay = 'afternoon';
   else if (hour >= 18 && hour < 23) partOfDay = 'evening';
   return `weekday_${day}_${partOfDay}`;
+}
+
+function formatInterval(
+  interval: {
+    startMinute: number;
+    targetTemp: number;
+    orderIndex: number;
+  } | null,
+) {
+  if (!interval) return 'N/A';
+
+  const hours = Math.floor(interval.startMinute / 60)
+    .toString()
+    .padStart(2, '0');
+  const minutes = (interval.startMinute % 60).toString().padStart(2, '0');
+
+  // Pretpostavljamo da traje do kraja dana ako nemamo endMinute
+  return `${hours}:${minutes} → ${interval.targetTemp}°C (idx=${interval.orderIndex})`;
 }

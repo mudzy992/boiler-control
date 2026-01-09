@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, Col, Row, Typography, Statistic, Table, Tag } from "antd";
+import { Card, Col, Row, Typography, Statistic, Table, Tag, Button } from "antd";
 import { Thermometer, Wind, Sun, Cloud, CheckCircle, AlertCircle } from "lucide-react";
 import {
   type DashboardResponse,
@@ -19,6 +19,8 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { manualSyncBoiler } from "../api/boiler.api";
+import { SyncOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -88,7 +90,6 @@ export const DashboardPage = () => {
     }));
   };
 
-
 const renderThermostatProgramChart = (program: { dayType: string; startMinute: number; targetTemp: number }[]) => {
   if (!program || program.length === 0) return null;
 
@@ -126,10 +127,12 @@ const renderThermostatProgramChart = (program: { dayType: string; startMinute: n
   );
 };
 
-
   return (
     <div className="max-w-7xl mx-auto p-4 bg-gray-50 rounded-md mt-3">
-      <Title level={2}>Boiler Control Dashboard</Title>
+      <div className="flex flex-row gap-2 justify-between">
+        <Title level={2}>Boiler Control Dashboard</Title>
+        <Button color="primary" variant="text" onClick={() => manualSyncBoiler()}><SyncOutlined /> Sync</Button>
+      </div>
 
       {/* SYSTEM STATUS */}
       <Row gutter={[16,16]} style={{ marginBottom: 24 }}>

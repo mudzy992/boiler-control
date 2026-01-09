@@ -5,6 +5,7 @@ import { TuyaAdapter } from './adapter/tuya.adapter';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TuyaAuthService } from '../Tuya/tuya.auth.service';
 import { ProgramSyncService } from './adapter/program.sync.service';
+import { BoilerController } from './boiler.controller';
 
 @Module({
   imports: [WeatherModule],
@@ -15,7 +16,7 @@ import { ProgramSyncService } from './adapter/program.sync.service';
     TuyaAuthService,
     { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
   ],
-  controllers: [],
+  controllers: [BoilerController],
   exports: [BoilerService],
 })
 export class BoilerModule {}

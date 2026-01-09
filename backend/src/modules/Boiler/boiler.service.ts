@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { addMinutes } from 'date-fns';
+import { WeatherService } from '../Weather/weather.service';
 
 @Injectable()
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private weatherService: WeatherService,
+  ) {}
 
   /**
    * Glavna funkcija koja vraća start temp kotla za korisnika
@@ -92,13 +96,16 @@ export class BoilerService {
    * Kreira jutarnji boiler history zapis
    */
   async createMorningBoilerHistory(userId: number) {
-    const suggestedTemp = await this.getStartTemp(userId);
-
     const home = await this.prisma.homeProfile.findFirst({
       where: { userId },
       include: { user: true },
     });
     if (!home) throw new Error('HomeProfile not found');
+
+    const todayWeather = await this.weatherService.getTodayWeather(
+      home.user.homeLocation!,
+    );
+    const suggestedTemp = await this.getStartTemp(userId);
 
     const lastBh = await this.prisma.boilerHistory.findFirst({
       where: { userId },
@@ -106,14 +113,10 @@ export class BoilerService {
     });
     const lastActual = lastBh?.actualTemp ?? 50;
 
-    const weather = await this.prisma.weatherCache.findFirst({
-      where: { city: home.user.homeLocation! },
-      orderBy: { fetchedAt: 'desc' },
-    });
     const externalTemp =
-      0.7 * (weather?.temp_min ?? 0) + 0.3 * (weather?.temp_max ?? 0);
+      0.7 * (todayWeather.temp_min ?? 0) + 0.3 * (todayWeather.temp_max ?? 0);
 
-    return this.prisma.boilerHistory.create({
+    const boilerHistory = await this.prisma.boilerHistory.create({
       data: {
         userId,
         externalTemp,
@@ -121,6 +124,32 @@ export class BoilerService {
         actualTemp: lastActual,
       },
     });
+    // 5️⃣ Generiraj Recommendation
+    // Primjer izračuna: recommendedFlowTemp = startTemp + offset,
+    // expectedHeatTimeMin = interval avgReachTime ili neko pravilo, confidenceScore = interval confidence
+    const intervalKey = this.getIntervalKey();
+    const intervalLearning =
+      await this.prisma.heatingIntervalLearning.findUnique({
+        where: {
+          homeProfileId_intervalKey: { homeProfileId: home.id, intervalKey },
+        },
+      });
+
+    const recommendedFlowTemp = suggestedTemp + (intervalLearning?.offset ?? 0);
+    const expectedHeatTimeMin = intervalLearning?.avgReachTimeMin ?? 30;
+    const confidenceScore = intervalLearning?.confidence ?? 0.1;
+
+    await this.prisma.recommendation.create({
+      data: {
+        userId,
+        date: new Date(),
+        recommendedFlowTemp: Number(recommendedFlowTemp.toFixed(2)),
+        expectedHeatTimeMin: Number(expectedHeatTimeMin.toFixed(0)),
+        confidenceScore: Number(confidenceScore.toFixed(2)),
+      },
+    });
+
+    return boilerHistory;
   }
 
   /**

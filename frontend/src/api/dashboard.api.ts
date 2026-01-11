@@ -1,68 +1,19 @@
 import api from "./api";
 
-/**
- * Tipovi koji odgovaraju novom backendu
- */
-export interface DashboardSystem {
-  weather?: any;
-  recommendation?: {
-    date: string;
-    recommendedFlowTemp: number;
-    confidenceScore: number;
-  } | null;
-  boiler?: {
-    externalTemp: number;
-    suggestedTemp: number;
-    actualTemp?: number;
-    heatingStart?: string;
-    heatingEnd?: string;
-  } | null;
+/* =========================
+   Types
+========================= */
+
+export interface DashboardResponse {
+  system: {
+    weather: any;
+    recommendation: any;
+    boiler: any;
+  };
+  homes: HomeDashboard[];
 }
 
-export interface DashboardThermostatProgram {
-  dayType: "WORKDAY" | "SATURDAY" | "SUNDAY";
-  startMinute: number; // npr. 6:30 = 390
-  targetTemp: number;
-  orderIndex: number;
-}
-
-export interface DashboardThermostat {
-  id: number;
-  alias?: string;
-  vendor: string;
-  deviceId: string;
-  mode: string;
-  lastSeen?: string;
-  program?: DashboardThermostatProgram[];
-}
-
-export interface DashboardLearningInterval {
-  intervalKey: string;
-  avgReachTimeMin: number;
-  avgOvershoot: number;
-  offset: number;
-  confidence: number;
-  samples: number;
-  lastUpdated: string;
-}
-
-export interface DashboardHeatingEvent {
-  deviceId: number;
-  startedAt: string;
-  endedAt?: string;
-  currentTemp: number;
-  targetTemp: number;
-  hvacAction: string;
-  source: string;
-  durationMinutes?: number;
-}
-
-export interface DashboardInsights {
-  hasEnoughLearningData: boolean;
-  averageConfidence: number;
-}
-
-export interface DashboardHome {
+export interface HomeDashboard {
   profile: {
     id: number;
     floorArea: number;
@@ -73,61 +24,93 @@ export interface DashboardHome {
     learningOffset: number;
     learningConfidence: number;
   };
-  thermostats: DashboardThermostat[];
-  learningIntervals: DashboardLearningInterval[];
-  recentHeatingEvents: DashboardHeatingEvent[];
+  thermostats: {
+    id: number;
+    alias: string;
+    vendor: string;
+    deviceId: string;
+    mode: string;
+    lastSeen: string;
+    program: {
+      dayType: string;
+      startMinute: number;
+      targetTemp: number;
+      orderIndex: number;
+    }[];
+  }[];
+  learningIntervals: {
+    intervalKey: string;
+    avgReachTimeMin: number;
+    avgOvershoot: number;
+    offset: number;
+    confidence: number;
+    samples: number;
+    lastUpdated: string;
+  }[];
+  recentHeatingEvents: any[];
   systemStatus: {
-    lastSuggestedFlowTemp?: number | null;
-    lastActualFlowTemp?: number | null;
-    lastExternalTemp?: number | null;
-    lastHeatingStart?: string | null;
-    lastHeatingEnd?: string | null;
+    lastSuggestedFlowTemp: number | null;
+    lastActualFlowTemp: number | null;
+    lastExternalTemp: number | null;
   };
-  insights: DashboardInsights;
+  insights: {
+    hasEnoughLearningData: boolean;
+    averageConfidence: number;
+  };
 }
 
-export interface DashboardResponse {
-  system: DashboardSystem;
-  homes: DashboardHome[];
+export interface HeatingEventRow {
+  deviceId: number;
+  startedAt: string;
+  endedAt: string | null;
+  currentTemp: number;
+  targetTemp: number;
+  hvacAction: string;
+  source: string;
+  durationMinutes: number;
 }
 
-/**
- * Dohvati kompletan dashboard
- */
+export interface HeatingStatsBucket {
+  label: string;
+  avgTargetTemp: number;
+  avgCurrentTemp: number;
+  totalDurationMin: number;
+  cycles: number;
+}
+
+/* =========================
+   API
+========================= */
+
 export const getDashboard = async (): Promise<DashboardResponse> => {
-  const { data } = await api.get<DashboardResponse>("/dashboard");
-
-  // Dodajemo izračun trajanja grijanja u minutama
-  data.homes.forEach((home) => {
-    home.recentHeatingEvents.forEach((event) => {
-      if (event.endedAt) {
-        const start = new Date(event.startedAt).getTime();
-        const end = new Date(event.endedAt).getTime();
-        event.durationMinutes = Math.round((end - start) / 60000);
-      } else {
-        event.durationMinutes = undefined;
-      }
-    });
-  });
-
+  const { data } = await api.get("/dashboard");
   return data;
 };
 
-/**
- * Dohvati samo današnji events i preporuke
- */
-export const getDashboardToday = async (): Promise<DashboardResponse> => {
-  const dashboard = await getDashboard();
-  const today = new Date().toISOString().split("T")[0];
+export const getHeatingEvents = async (params: {
+  homeProfileId: number;
+  from: string;
+  to: string;
+}) => {
+  const { data } = await api.get("/dashboard/heating-events", { params });
+  return data;
+};
 
-  return {
-    system: dashboard.system,
-    homes: dashboard.homes.map((home) => ({
-      ...home,
-      recentHeatingEvents: home.recentHeatingEvents.filter((e) =>
-        e.startedAt.startsWith(today)
-      ),
-      learningIntervals: home.learningIntervals, // optional: filtrirati po datumu ako želiš
-    })),
-  };
+export const getHeatingStats = async (params: {
+  homeProfileId: number;
+  from: string;
+  to: string;
+  bucket: "hour" | "day";
+}) => {
+  const { data } = await api.get("/dashboard/heating-stats", { params });
+  return data;
+};
+
+export const getLearningTrends = async (params: {
+  homeProfileId: number;
+  from: string;
+  to: string;
+}) => {
+  const { data } = await api.get("/dashboard/learning-trends", { params });
+  return data;
 };

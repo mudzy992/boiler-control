@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  HeatingEventsQuery,
+  HeatingStatsQuery,
+  LearningTrendsQuery,
+} from './dashboard.controller';
+import { HeatingEventWhereInput } from 'src/generated/prisma/models';
 
 @Injectable()
 export class DashboardService {
@@ -153,5 +159,171 @@ export class DashboardService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getHeatingEvents(userId: number, query: HeatingEventsQuery) {
+    const {
+      homeProfileId,
+      deviceId,
+      hvacAction,
+      source,
+      from,
+      to,
+      page = 1,
+      limit = 20,
+    } = query;
+
+    if (!from || !to) {
+      throw new Error("Parametri 'from' i 'to' su obavezni");
+    }
+
+    const where: HeatingEventWhereInput = {
+      thermostat: {
+        homeProfile: {
+          userId,
+          ...(homeProfileId && { id: Number(homeProfileId) }),
+        },
+      },
+    };
+
+    if (deviceId) where.deviceId = Number(deviceId);
+    if (hvacAction) where.hvacAction = hvacAction;
+    if (source) where.source = source;
+
+    where.timestampStart = {
+      gte: new Date(from),
+      lte: new Date(to),
+    };
+
+    const take = Number(limit) > 0 ? Number(limit) : undefined;
+    const skip = take ? (Number(page) - 1) * take : undefined;
+
+    const [events, total] = await this.prisma.$transaction([
+      this.prisma.heatingEvent.findMany({
+        where,
+        orderBy: { timestampStart: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.heatingEvent.count({ where }),
+    ]);
+
+    return {
+      data: events.map((e) => ({
+        deviceId: e.deviceId,
+        startedAt: e.timestampStart,
+        endedAt: e.timestampEnd,
+        currentTemp: e.currentTemp,
+        targetTemp: e.targetTemp,
+        hvacAction: e.hvacAction,
+        source: e.source,
+        durationMinutes: e.timestampEnd
+          ? Math.round(
+              (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000,
+            )
+          : 0,
+      })),
+      meta: {
+        page: Number(page),
+        limit: take ?? total,
+        total,
+      },
+    };
+  }
+
+  async getHeatingStats(userId: number, query: HeatingStatsQuery) {
+    const { homeProfileId, deviceId, from, to, bucket = 'day' } = query;
+
+    if (!from || !to) throw new Error("'from' i 'to' su obavezni");
+
+    const events = await this.prisma.heatingEvent.findMany({
+      where: {
+        thermostat: {
+          homeProfile: { userId, id: Number(homeProfileId) },
+        },
+        ...(deviceId && { deviceId: Number(deviceId) }),
+        timestampStart: { gte: new Date(from), lte: new Date(to) },
+      },
+      orderBy: { timestampStart: 'asc' },
+    });
+
+    const bucketsMap = new Map<
+      string,
+      {
+        totalTarget: number;
+        totalCurrent: number;
+        totalDuration: number;
+        count: number;
+      }
+    >();
+
+    for (const e of events) {
+      const date = new Date(e.timestampStart);
+      const label =
+        bucket === 'hour'
+          ? `${date.getHours().toString().padStart(2, '0')}:00`
+          : date.toISOString().split('T')[0];
+
+      if (!bucketsMap.has(label))
+        bucketsMap.set(label, {
+          totalTarget: 0,
+          totalCurrent: 0,
+          totalDuration: 0,
+          count: 0,
+        });
+      const b = bucketsMap.get(label)!;
+
+      b.totalTarget += e.targetTemp;
+      b.totalCurrent += e.currentTemp;
+      b.count++;
+      if (e.timestampEnd)
+        b.totalDuration +=
+          (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000;
+    }
+
+    return {
+      buckets: Array.from(bucketsMap.entries()).map(([label, b]) => ({
+        label,
+        avgTargetTemp: b.count
+          ? Number((b.totalTarget / b.count).toFixed(2))
+          : 0,
+        avgCurrentTemp: b.count
+          ? Number((b.totalCurrent / b.count).toFixed(2))
+          : 0,
+        totalDurationMin: Math.round(b.totalDuration),
+        cycles: b.count,
+      })),
+    };
+  }
+
+  async getLearningTrends(userId: number, query: LearningTrendsQuery) {
+    const { homeProfileId, from, to } = query;
+    if (!from || !to) throw new Error("'from' i 'to' su obavezni");
+
+    const intervals = await this.prisma.heatingIntervalLearning.findMany({
+      where: {
+        homeProfileId: Number(homeProfileId),
+        homeProfile: { userId },
+        lastUpdated: { gte: new Date(from), lte: new Date(to) },
+      },
+      orderBy: { lastUpdated: 'asc' },
+    });
+
+    const map = new Map<string, { total: number; samples: number }>();
+    intervals.forEach((i) => {
+      const date = i.lastUpdated.toISOString().split('T')[0];
+      if (!map.has(date)) map.set(date, { total: 0, samples: 0 });
+      const d = map.get(date)!;
+      d.total += i.confidence;
+      d.samples++;
+    });
+
+    return {
+      points: Array.from(map.entries()).map(([date, v]) => ({
+        date,
+        avgConfidence: v.samples ? Number((v.total / v.samples).toFixed(2)) : 0,
+        samples: v.samples,
+      })),
+    };
   }
 }

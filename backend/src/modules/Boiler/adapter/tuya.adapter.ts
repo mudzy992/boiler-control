@@ -83,6 +83,7 @@ export class TuyaAdapter {
   /** Glavna funkcija koja vraća target temperaturu */
   async getTargetTemperature(deviceId: string): Promise<TargetTempInfo> {
     const status = await this.getDeviceStatus(deviceId);
+
     const existingDevice = await this.prisma.thermostatDevice.findFirst({
       where: { deviceId },
     });
@@ -91,6 +92,7 @@ export class TuyaAdapter {
       throw new Error(`Termostat device fetch failed.`);
     }
 
+    // Programski režim
     if (status['Mode'] === '0' && status['program']) {
       const tuyaProgram = this.decodeTuyaProgram(status['program']);
       await this.programSyncService.syncProgram(existingDevice.id, tuyaProgram);
@@ -99,7 +101,8 @@ export class TuyaAdapter {
       const dayType = this.getDayType(now.getDay());
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-      const interval = await this.prisma.thermostatProgram.findFirst({
+      // 1. Pokušaj pronaći interval u tekućem danu
+      const intervalToday = await this.prisma.thermostatProgram.findFirst({
         where: {
           deviceId: existingDevice.id,
           dayType,
@@ -108,20 +111,38 @@ export class TuyaAdapter {
         orderBy: { startMinute: 'desc' },
       });
 
+      let activeInterval = intervalToday;
+
+      // 2. Ako ne postoji → prije prvog intervala dana
+      if (!activeInterval) {
+        const previousDayType = this.getPreviousDayType(dayType);
+
+        activeInterval = await this.prisma.thermostatProgram.findFirst({
+          where: {
+            deviceId: existingDevice.id,
+            dayType: previousDayType,
+          },
+          orderBy: { startMinute: 'desc' },
+        });
+      }
+
       return {
-        targetTemp: interval ? interval.targetTemp : 0,
+        targetTemp: activeInterval?.targetTemp ?? 0,
         dayType,
-        interval: interval
+        interval: activeInterval
           ? {
-              startMinute: interval.startMinute,
-              targetTemp: interval.targetTemp,
-              orderIndex: interval.orderIndex,
+              startMinute: activeInterval.startMinute,
+              targetTemp: activeInterval.targetTemp,
+              orderIndex: activeInterval.orderIndex,
             }
           : undefined,
       };
     }
 
-    return { targetTemp: status['TempSet'] ?? 0 };
+    // Manual / fallback režim
+    return {
+      targetTemp: status['TempSet'] ?? 0,
+    };
   }
 
   async getCurrentTemperature(deviceId: string): Promise<number> {
@@ -181,5 +202,11 @@ export class TuyaAdapter {
     if (day === 0) return 'SUNDAY';
     if (day === 6) return 'SATURDAY';
     return 'WORKDAY';
+  }
+
+  private getPreviousDayType(dayType: DayType): DayType {
+    if (dayType === 'WORKDAY') return 'SUNDAY';
+    if (dayType === 'SATURDAY') return 'WORKDAY';
+    return 'SATURDAY';
   }
 }

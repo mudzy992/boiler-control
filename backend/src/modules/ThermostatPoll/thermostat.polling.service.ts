@@ -94,7 +94,12 @@ export class ThermostatPollingService {
       }
 
       if (!isHeating && heatingOn) {
-        await this.turnOnHeating(device, intervalLearning);
+        await this.turnOnHeating(
+          device,
+          intervalLearning,
+          currentTemp,
+          targetTemp,
+        );
       }
     } catch (error) {
       this.logger.error(
@@ -105,21 +110,32 @@ export class ThermostatPollingService {
   }
 
   /** Uključi grijanje */
-  private async turnOnHeating(device: any, intervalLearning: any) {
+  private async turnOnHeating(
+    device: any,
+    intervalLearning: any,
+    currentTemp: number,
+    targetTemp: number,
+  ) {
     const now = new Date();
+
     const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
       where: { userId: device.userId },
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!lastBoilerHistory) return;
+    if (!lastBoilerHistory) {
+      this.logger.warn(
+        `No BoilerHistory found, skipping BoilerHistory create for device ${device.deviceId}`,
+      );
+      return;
+    }
 
     const newEvent = await this.prisma.heatingEvent.create({
       data: {
         deviceId: device.id,
         timestampStart: now,
-        currentTemp: device.currentTemp,
-        targetTemp: device.targetTemp,
+        currentTemp, // sada je valid
+        targetTemp, // sada je valid
         hvacAction: 'HEATING_ON',
         source: 'THERMOSTAT',
       },

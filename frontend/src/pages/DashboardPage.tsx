@@ -35,6 +35,7 @@ import {
   getHeatingStats,
   getLearningTrends,
 } from "../api/dashboard.api";
+import { manualSyncBoiler } from "../api/boiler.api";
 
 const { Title, Text } = Typography;
 
@@ -219,7 +220,7 @@ export const DashboardPage = () => {
           <Title level={3}>Boiler Control Dashboard</Title>
         </Col>
         <Col xs={24} sm={12} style={{ textAlign: "right" }}>
-          <Button icon={<SyncOutlined />} onClick={loadDashboard}>
+          <Button icon={<SyncOutlined />} onClick={manualSyncBoiler}>
             Refresh
           </Button>
         </Col>

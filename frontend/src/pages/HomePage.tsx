@@ -72,7 +72,7 @@ const HomePage = () => {
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-2 text-red-500 font-bold text-lg">
                 <FireOutlined />
-                <span>{weather.temperature}°C (feels like {weather.feelslike}°C)</span>
+                <span>{weather.temperature.toFixed()}°C (feels like {weather.feelslike.toFixed()}°C)</span>
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-2 text-yellow-600">
                 <DashboardOutlined />
@@ -80,7 +80,7 @@ const HomePage = () => {
               </div>
             </div>
             <div className="flex flex-col items-center md:items-end text-center md:text-right gap-1">
-              <div className="text-blue-500 font-bold text-3xl">{weather.temperature}°C</div>
+              <div className="text-blue-500 font-bold text-3xl">{weather.temperature.toFixed()}°C</div>
               <div className="text-gray-500 text-sm">
                 Wind: {weather.wind_kph} kph {weather.wind_dir}<br />
                 Sunrise/Sunset: {weather.sunrise} / {weather.sunset}

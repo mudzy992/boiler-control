@@ -8,16 +8,14 @@ import { addMinutes } from 'date-fns';
 export class ThermostatPollingService {
   private readonly logger = new Logger(ThermostatPollingService.name);
   private readonly DEAD_ZONE = 1.0;
-  private readonly MIN_SWITCH_INTERVAL_MIN = 2; // minimalno 2 minute između OFF→ON
+  private readonly MIN_SWITCH_INTERVAL_MIN = 2;
 
   constructor(
     private prisma: PrismaService,
     @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
   ) {}
 
-  /**
-   * Polling svih termostata i update stanja grijanja
-   */
+  /** Polling svih termostata */
   @Cron('*/1 * * * *', {
     name: 'boiler_polling',
     disabled: process.env.NODE_ENV === 'development',
@@ -26,35 +24,30 @@ export class ThermostatPollingService {
     const devices = await this.prisma.thermostatDevice.findMany({
       include: { homeProfile: { include: { intervalLearnings: true } } },
     });
+
     for (const device of devices) {
       await this.pollDevice(device);
     }
   }
 
-  /**
-   * Poll jednog uređaja i odluči grijanje
-   */
+  /** Poll jednog uređaja i odluči grijanje */
   private async pollDevice(device: any) {
     try {
-      // --- Snapshot sa termostata ---
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
       const currentTemp = snapshot.currentTemp / 2;
       const targetTemp = snapshot.targetTemp;
       const powerOn = snapshot.powerOn;
 
-      // --- Poslednji heating event ---
       const lastEvent = await this.prisma.heatingEvent.findFirst({
         where: { deviceId: device.id },
         orderBy: { timestampStart: 'desc' },
       });
       const isHeating = !!lastEvent && lastEvent.timestampEnd === null;
 
-      // --- Interval key ---
       const intervalKey = this.getIntervalKey();
       let intervalLearning = device.homeProfile.intervalLearnings.find(
         (i: any) => i.intervalKey === intervalKey,
       );
-
       if (!intervalLearning) {
         intervalLearning = await this.prisma.heatingIntervalLearning.create({
           data: {
@@ -68,11 +61,10 @@ export class ThermostatPollingService {
           },
         });
         this.logger.debug(
-          `Created new intervalLearning: ${intervalKey} for homeProfile ${device.homeProfile.id}`,
+          `Created intervalLearning ${intervalKey} for homeProfile ${device.homeProfile.id}`,
         );
       }
 
-      // --- Resolve heating state ---
       let heatingOn = false;
       if (powerOn) {
         heatingOn = this.resolveHeatingState(
@@ -81,10 +73,10 @@ export class ThermostatPollingService {
           targetTemp,
         );
 
-        if (lastEvent && lastEvent.timestampStart) {
-          const minutesSinceLastSwitch =
+        if (lastEvent?.timestampStart) {
+          const minutesSinceLast =
             (new Date().getTime() - lastEvent.timestampStart.getTime()) / 60000;
-          if (minutesSinceLastSwitch < this.MIN_SWITCH_INTERVAL_MIN) {
+          if (minutesSinceLast < this.MIN_SWITCH_INTERVAL_MIN) {
             heatingOn = isHeating;
           }
         }
@@ -96,7 +88,7 @@ export class ThermostatPollingService {
         }, Target=${targetTemp} Current=${currentTemp}`,
       );
 
-      // ===== STATE TRANSITIONS =====
+      // STATE TRANSITIONS
       if (isHeating && !heatingOn && lastEvent) {
         await this.turnOffHeating(device, lastEvent, intervalLearning);
       }
@@ -112,9 +104,7 @@ export class ThermostatPollingService {
     }
   }
 
-  /**
-   * Uključi grijanje
-   */
+  /** Uključi grijanje */
   private async turnOnHeating(device: any, intervalLearning: any) {
     const now = new Date();
     const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
@@ -122,12 +112,7 @@ export class ThermostatPollingService {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!lastBoilerHistory) {
-      this.logger.warn(
-        `No BoilerHistory found, skipping BoilerHistory create for device ${device.deviceId}`,
-      );
-      return;
-    }
+    if (!lastBoilerHistory) return;
 
     const newEvent = await this.prisma.heatingEvent.create({
       data: {
@@ -165,9 +150,7 @@ export class ThermostatPollingService {
     this.logger.log(`Heating STARTED for device ${device.deviceId}`);
   }
 
-  /**
-   * Isključi grijanje i update interval learning
-   */
+  /** Isključi grijanje i update interval learning */
   private async turnOffHeating(
     device: any,
     lastEvent: any,
@@ -223,9 +206,7 @@ export class ThermostatPollingService {
     this.logger.log(`Heating STOPPED for device ${device.deviceId}`);
   }
 
-  /**
-   * Start temp kalkulacija
-   */
+  /** Start temp kalkulacija v1.1 */
   private async getStartTemp(
     userId: number,
     intervalLearning: any,
@@ -245,10 +226,15 @@ export class ThermostatPollingService {
     });
     const tempMin = weather?.temp_min ?? 0;
     const tempMax = weather?.temp_max ?? 0;
-    const weightedTemp = 0.7 * tempMin + 0.3 * tempMax;
+    let weightedTemp = 0.7 * tempMin + 0.3 * tempMax;
+    weightedTemp = Math.max(-15, Math.min(10, weightedTemp));
+
+    const intervalKey = this.getIntervalKey();
+    const isMorning = intervalKey.includes('morning');
+    const intervalWeight = isMorning ? 0.4 : 1.0;
 
     let startTemp = this.calculateCurveTemp(weightedTemp);
-    startTemp += home.learningOffset + intervalLearning.offset;
+    startTemp += home.learningOffset + intervalLearning.offset * intervalWeight;
 
     // Event-based adjustment
     const lastWeekEvents = await this.prisma.heatingEvent.findMany({
@@ -262,15 +248,20 @@ export class ThermostatPollingService {
       const weight = e.timestampEnd ? 0.05 : 0.1;
       return acc + delta * weight;
     }, 0);
+    startTemp += isMorning ? eventOffset * 0.5 : eventOffset;
 
-    startTemp += eventOffset;
     startTemp = Math.max(35, Math.min(56, startTemp));
+
+    this.logger.debug(
+      `[v1.1] User ${userId} | Interval: ${intervalKey} | StartTemp: ${startTemp.toFixed(
+        2,
+      )}`,
+    );
+
     return Number(startTemp.toFixed(2));
   }
 
-  /**
-   * Recommendation kreacija
-   */
+  /** Recommendation kreacija */
   private async createRecommendation(
     userId: number,
     recommendedFlowTemp: number,
@@ -287,9 +278,7 @@ export class ThermostatPollingService {
     });
   }
 
-  /**
-   * Resolve heating ON/OFF
-   */
+  /** Resolve heating ON/OFF */
   private resolveHeatingState(
     isHeating: boolean,
     currentTemp: number,
@@ -299,18 +288,14 @@ export class ThermostatPollingService {
     return currentTemp <= targetTemp - this.DEAD_ZONE;
   }
 
-  /**
-   * Krivulja grijanja
-   */
+  /** Krivulja grijanja */
   private calculateCurveTemp(ext: number): number {
     if (ext >= 10) return 45;
     if (ext <= -15) return 56;
     return 51 - ext * 0.3;
   }
 
-  /**
-   * Interval key
-   */
+  /** Interval key */
   private getIntervalKey(): string {
     const now = new Date();
     const hour = now.getHours();

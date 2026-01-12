@@ -26,7 +26,7 @@ export class BoilerService {
     const home = user.homeProfiles[0];
     if (!home) throw new Error('HomeProfile not found');
 
-    // 1️⃣ Dohvati weather
+    // --- 1️⃣ Dohvati trenutnu vanjsku temperaturu ---
     const weather = await this.prisma.weatherCache.findFirst({
       where: { city: user.homeLocation! },
       orderBy: { fetchedAt: 'desc' },
@@ -35,10 +35,11 @@ export class BoilerService {
     const tempMax = weather?.temp_max ?? 0;
     const weightedTemp = 0.7 * tempMin + 0.3 * tempMax;
 
-    // 2️⃣ Odredi trenutni interval
+    // --- 2️⃣ Odredi trenutni interval ---
     const intervalKey = this.getIntervalKey();
+    const isMorningInterval = intervalKey.includes('morning');
 
-    // 3️⃣ Dohvati interval learning podatke
+    // --- 3️⃣ Dohvati interval learning ---
     let intervalLearning = await this.prisma.heatingIntervalLearning.findUnique(
       {
         where: {
@@ -46,8 +47,8 @@ export class BoilerService {
         },
       },
     );
+
     if (!intervalLearning) {
-      // Ako ne postoji, kreiramo default
       intervalLearning = await this.prisma.heatingIntervalLearning.create({
         data: {
           homeProfileId: home.id,
@@ -61,11 +62,20 @@ export class BoilerService {
       });
     }
 
-    // 4️⃣ Izračun curve temp + offset + interval
+    // --- 4️⃣ Izračun krivulje polazne temperature ---
     let startTemp = this.calculateCurveTemp(weightedTemp);
-    startTemp += home.learningOffset + intervalLearning.offset;
 
-    // 5️⃣ Uzmemo u obzir historijske heating evente za korekciju
+    // Primjena home profile offseta i interval offseta
+    startTemp += home.learningOffset;
+
+    // Za jutarnji interval: ograničavamo preagresivni offset
+    if (isMorningInterval) {
+      startTemp += intervalLearning.offset * 0.5; // smanjen uticaj da se ne pumpa previše
+    } else {
+      startTemp += intervalLearning.offset;
+    }
+
+    // --- 5️⃣ Koristi historijske heating evente za korekciju ---
     const lastWeekEvents = await this.prisma.heatingEvent.findMany({
       where: {
         thermostat: { userId },
@@ -79,9 +89,10 @@ export class BoilerService {
       return acc + delta * weight;
     }, 0);
 
-    startTemp += eventOffset;
+    // Za jutarnji interval smanjimo težinu event offseta
+    startTemp += isMorningInterval ? eventOffset * 0.5 : eventOffset;
 
-    // 6️⃣ Ograničimo na raspon kotla
+    // --- 6️⃣ Ograničimo na raspon kotla ---
     startTemp = Math.max(35, Math.min(56, startTemp));
 
     const roundedTemp = Number(startTemp.toFixed(2));
@@ -93,7 +104,7 @@ export class BoilerService {
   }
 
   /**
-   * Kreira jutarnji boiler history zapis
+   * Kreira jutarnji boiler history zapis i Recommendation
    */
   async createMorningBoilerHistory(userId: number) {
     const home = await this.prisma.homeProfile.findFirst({
@@ -105,6 +116,7 @@ export class BoilerService {
     const todayWeather = await this.weatherService.getTodayWeather(
       home.user.homeLocation!,
     );
+
     const suggestedTemp = await this.getStartTemp(userId);
 
     const lastBh = await this.prisma.boilerHistory.findFirst({
@@ -124,9 +136,8 @@ export class BoilerService {
         actualTemp: lastActual,
       },
     });
-    // 5️⃣ Generiraj Recommendation
-    // Primjer izračuna: recommendedFlowTemp = startTemp + offset,
-    // expectedHeatTimeMin = interval avgReachTime ili neko pravilo, confidenceScore = interval confidence
+
+    // --- 5️⃣ Kreiranje Recommendation ---
     const intervalKey = this.getIntervalKey();
     const intervalLearning =
       await this.prisma.heatingIntervalLearning.findUnique({
@@ -135,7 +146,13 @@ export class BoilerService {
         },
       });
 
-    const recommendedFlowTemp = suggestedTemp + (intervalLearning?.offset ?? 0);
+    const isMorningInterval = intervalKey.includes('morning');
+
+    // Za jutro smanjimo agresivnost preporuke
+    const recommendedFlowTemp =
+      suggestedTemp +
+      (intervalLearning?.offset ?? 0) * (isMorningInterval ? 0.5 : 1);
+
     const expectedHeatTimeMin = intervalLearning?.avgReachTimeMin ?? 30;
     const confidenceScore = intervalLearning?.confidence ?? 0.1;
 
@@ -153,7 +170,7 @@ export class BoilerService {
   }
 
   /**
-   * Nakon svakog heating eventa update-amo interval learning
+   * Update interval learning nakon heating eventa
    */
   async updateIntervalLearning(
     userId: number,
@@ -187,7 +204,6 @@ export class BoilerService {
       return;
     }
 
-    // Update prosjeka i offseta
     const newSamples = interval.samples + 1;
     const newAvgReach =
       (interval.avgReachTimeMin * interval.samples + reachTimeMin) / newSamples;
@@ -213,7 +229,7 @@ export class BoilerService {
       },
     });
 
-    // Update home profile sa ukupnim learning offset
+    // Update ukupnog home profile offseta
     const intervalLearnings =
       await this.prisma.heatingIntervalLearning.findMany({
         where: { homeProfileId: home.id },
@@ -226,7 +242,6 @@ export class BoilerService {
       (acc, i) => acc + i.confidence,
       0,
     );
-
     const learningOffset = totalConfidence ? totalOffset / totalConfidence : 0;
     const learningConfidence = Math.min(
       1,
@@ -240,15 +255,14 @@ export class BoilerService {
   }
 
   /**
-   * Vraća interval key, npr. "weekday_morning_1"
+   * Interval key, npr. weekday_morning
    */
   getIntervalKey(): string {
     const now = new Date();
     const hour = now.getHours();
-    // const minute = now.getMinutes();
     const weekday = now.getDay(); // 0=Sunday ... 6=Saturday
-
     let part = 'night';
+
     if (hour >= 6 && hour < 9) part = 'morning';
     else if (hour >= 9 && hour < 12) part = 'late_morning';
     else if (hour >= 12 && hour < 17) part = 'afternoon';
@@ -259,7 +273,7 @@ export class BoilerService {
   }
 
   /**
-   * Krivulja grijanja
+   * Krivulja grijanja, mapiranje vanjske temp → start temp
    */
   private calculateCurveTemp(ext: number): number {
     if (ext >= 10) return 45;

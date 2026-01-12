@@ -232,8 +232,8 @@ export const DashboardPage = () => {
           <Card title="Vremenska prognoza">
             {weather ? (
               <Descriptions size="small" column={1}>
-                <Descriptions.Item label="Temperatura">{weather.temperature} °C</Descriptions.Item>
-                <Descriptions.Item label="Osjećaj">{weather.feelslike} °C</Descriptions.Item>
+                <Descriptions.Item label="Temperatura">{weather.temperature.toFixed()} °C</Descriptions.Item>
+                <Descriptions.Item label="Osjećaj">{weather.feelslike.toFixed()} °C</Descriptions.Item>
                 <Descriptions.Item label="Vlažnost">{weather.humidity} %</Descriptions.Item>
                 <Descriptions.Item label="Vjetar">{weather.wind_kph} km/h</Descriptions.Item>
                 <Descriptions.Item label="Pritisak">{weather.pressure_mb} hPa</Descriptions.Item>

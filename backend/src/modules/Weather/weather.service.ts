@@ -104,7 +104,9 @@ export class WeatherService {
         moonrise: today.astro.moonrise,
         moonset: today.astro.moonset,
         moon_phase: today.astro.moon_phase,
-        moon_illumination: today.astro.moon_illumination,
+        moon_illumination: today.astro.moon_illumination
+          ? parseInt(today.astro.moon_illumination, 10)
+          : null,
       };
     } catch (e) {
       this.logger.error(`WeatherAPI fetch failed: ${e.message}`);
@@ -162,7 +164,7 @@ export class WeatherService {
         moonrise: '',
         moonset: '',
         moon_phase: '',
-        moon_illumination: '',
+        moon_illumination: null,
       };
     } catch (e) {
       this.logger.error(`Open-Meteo fetch failed: ${e.message}`);

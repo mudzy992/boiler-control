@@ -132,7 +132,7 @@ export class ThermostatPollingService {
           device,
           intervalLearning,
           currentTemp!,
-          flowResult.finalTemp, // koristimo finalnu temperaturu
+          targetTemp!, // koristimo finalnu temperaturu
         );
 
       this.logger.debug(

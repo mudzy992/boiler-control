@@ -1,3 +1,4 @@
+import type { TodayWeather } from "../interfaces/TodayWeather";
 import api from "./api";
 
 /* =========================
@@ -11,7 +12,7 @@ export interface DashboardCapabilities {
 }
 
 export interface SystemDashboard {
-  weather: any;
+  weather: TodayWeather;
   boiler?: {
     externalTemp: number;
     suggestedTemp: number;

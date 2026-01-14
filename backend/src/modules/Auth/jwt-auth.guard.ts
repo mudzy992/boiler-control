@@ -15,13 +15,18 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
-      return true; // Preskoči JWT provjeru
-    }
 
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
-    if (!authHeader) return false;
+
+    if (!authHeader) {
+      // Ako ruta public, dozvoli pristup i bez tokena
+      if (isPublic) {
+        request.user = null;
+        return true;
+      }
+      return false; // za protected route → odbij
+    }
 
     const token = authHeader.split(' ')[1];
     try {
@@ -29,7 +34,12 @@ export class JwtAuthGuard implements CanActivate {
       request.user = { userId: payload.userId };
       return true;
     } catch {
-      return false;
+      // Ako ruta public, ignoriraj grešku tokena
+      if (isPublic) {
+        request.user = null;
+        return true;
+      }
+      return false; // za protected route → odbij
     }
   }
 }

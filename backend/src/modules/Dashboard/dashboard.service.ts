@@ -1,54 +1,83 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { HeatingEventWhereInput } from 'src/generated/prisma/models';
 import {
   HeatingEventsQuery,
   HeatingStatsQuery,
   LearningTrendsQuery,
 } from './dashboard.controller';
-import { HeatingEventWhereInput } from 'src/generated/prisma/models';
+import { BoilerService } from '../Boiler/boiler.service';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly boilerService: BoilerService,
+  ) {}
 
-  async getUserDashboard(userId: number) {
-    const [homeProfiles, recommendations, latestWeather, latestBoilerHistory] =
+  // ======================================================
+  // MAIN DASHBOARD (anonymous / profile_only / full)
+  // ======================================================
+
+  async getDashboard(userId?: number) {
+    // =====================
+    // ANONYMOUS
+    // =====================
+
+    const weather = await this.getLatestWeather();
+    const flowTemp = await this.boilerService.getStartTemp(userId);
+
+    if (!userId) {
+      return {
+        capabilities: {
+          hasProfile: false,
+          hasThermostat: false,
+          hasLearning: false,
+        },
+        system: {
+          weather,
+          recommendation: {
+            date: Date.now(),
+            recommendedFlowTemp: flowTemp,
+            source: 'LIVE_CALCULATION',
+          },
+        },
+        homes: [],
+      };
+    }
+
+    // =====================
+    // REGISTERED USERS (PROFILE_ONLY / FULL)
+    // =====================
+    const homeProfiles = await this.getHomeProfiles(userId);
+
+    const hasProfile = homeProfiles.length > 0;
+    const hasThermostat = homeProfiles.some(
+      (p) => p.thermostatDevices.length > 0,
+    );
+    const hasLearning = homeProfiles.some(
+      (p) => p.intervalLearnings.length > 0,
+    );
+
+    const [latestWeather, latestBoilerHistory, recommendations] =
       await Promise.all([
-        this.getHomeProfiles(userId),
-        this.getRecentRecommendations(userId),
         this.getLatestWeather(),
-        this.getLatestBoilerHistory(userId),
+        hasThermostat ? this.getLatestBoilerHistory(userId) : null,
+        this.getRecentRecommendations(userId),
       ]);
 
-    const dashboardProfiles = await Promise.all(
+    const homes = await Promise.all(
       homeProfiles.map(async (profile) => {
         const thermostatIds = profile.thermostatDevices.map((t) => t.id);
 
-        const recentHeatingEvents = await this.prisma.heatingEvent.findMany({
-          where: {
-            deviceId: { in: thermostatIds },
-          },
-          orderBy: { timestampStart: 'desc' },
-          take: 5,
-        });
-
-        const thermostatPrograms = await this.prisma.thermostatProgram.findMany(
-          {
-            where: { deviceId: { in: thermostatIds } },
-            orderBy: [{ dayType: 'asc' }, { orderIndex: 'asc' }],
-          },
-        );
-
-        const programsByDevice: Record<number, any[]> = {};
-        thermostatPrograms.forEach((p) => {
-          if (!programsByDevice[p.deviceId]) programsByDevice[p.deviceId] = [];
-          programsByDevice[p.deviceId].push({
-            dayType: p.dayType,
-            startMinute: p.startMinute,
-            targetTemp: p.targetTemp,
-            orderIndex: p.orderIndex,
-          });
-        });
+        const recentHeatingEvents =
+          thermostatIds.length > 0
+            ? await this.prisma.heatingEvent.findMany({
+                where: { deviceId: { in: thermostatIds } },
+                orderBy: { timestampStart: 'desc' },
+                take: 5,
+              })
+            : [];
 
         return {
           profile: {
@@ -58,8 +87,6 @@ export class DashboardService {
             insulationType: profile.insulationType,
             windowType: profile.windowType,
             heatingType: profile.heatingType,
-            learningOffset: profile.learningOffset,
-            learningConfidence: profile.learningConfidence,
           },
 
           thermostats: profile.thermostatDevices.map((t) => ({
@@ -69,7 +96,13 @@ export class DashboardService {
             deviceId: t.deviceId,
             mode: t.mode,
             lastSeen: t.lastSeen,
-            program: programsByDevice[t.id] ?? [],
+
+            program: t.thermostatProgram.map((p) => ({
+              dayType: p.dayType,
+              startMinute: p.startMinute,
+              targetTemp: p.targetTemp,
+              orderIndex: p.orderIndex,
+            })),
           })),
 
           learningIntervals: profile.intervalLearnings.map((l) => ({
@@ -86,82 +119,37 @@ export class DashboardService {
             deviceId: e.deviceId,
             startedAt: e.timestampStart,
             endedAt: e.timestampEnd,
-            currentTemp: e.currentTemp,
             targetTemp: e.targetTemp,
+            currentTemp: e.currentTemp,
             hvacAction: e.hvacAction,
             source: e.source,
           })),
-
-          systemStatus: {
-            lastSuggestedFlowTemp: latestBoilerHistory?.suggestedTemp ?? null,
-            lastActualFlowTemp: latestBoilerHistory?.actualTemp ?? null,
-            lastExternalTemp: latestBoilerHistory?.externalTemp ?? null,
-            lastHeatingStart: latestBoilerHistory?.heatingStart ?? null,
-            lastHeatingEnd: latestBoilerHistory?.heatingEnd ?? null,
-          },
-
-          insights: {
-            hasEnoughLearningData: profile.intervalLearnings.some(
-              (l) => l.samples >= 5,
-            ),
-            averageConfidence:
-              profile.intervalLearnings.length > 0
-                ? profile.intervalLearnings.reduce(
-                    (sum, l) => sum + l.confidence,
-                    0,
-                  ) / profile.intervalLearnings.length
-                : 0,
-          },
         };
       }),
     );
 
     return {
+      capabilities: {
+        hasProfile,
+        hasThermostat,
+        hasLearning,
+      },
       system: {
         weather: latestWeather,
-        recommendation: recommendations[0] ?? null,
         boiler: latestBoilerHistory,
+        recommendation: recommendations[0] ?? null,
       },
-      homes: dashboardProfiles,
+      homes,
     };
   }
 
-  // =========================
-  // Internal helpers
-  // =========================
-
-  private getHomeProfiles(userId: number) {
-    return this.prisma.homeProfile.findMany({
-      where: { userId },
-      include: {
-        thermostatDevices: true,
-        intervalLearnings: true,
-      },
-    });
-  }
-
-  private getRecentRecommendations(userId: number) {
-    return this.prisma.recommendation.findMany({
-      where: { userId },
-      orderBy: { date: 'desc' },
-      take: 5,
-    });
-  }
-
-  private getLatestWeather() {
-    return this.prisma.weatherCache.findFirst({
-      orderBy: { fetchedAt: 'desc' },
-    });
-  }
-
-  private getLatestBoilerHistory(userId: number) {
-    return this.prisma.boilerHistory.findFirst({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
+  // ======================================================
+  // FULL-ONLY ENDPOINTS
+  // ======================================================
 
   async getHeatingEvents(userId: number, query: HeatingEventsQuery) {
+    await this.assertUserHasThermostat(userId);
+
     const {
       homeProfileId,
       deviceId,
@@ -195,8 +183,8 @@ export class DashboardService {
       lte: new Date(to),
     };
 
-    const take = Number(limit) > 0 ? Number(limit) : undefined;
-    const skip = take ? (Number(page) - 1) * take : undefined;
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
 
     const [events, total] = await this.prisma.$transaction([
       this.prisma.heatingEvent.findMany({
@@ -232,6 +220,7 @@ export class DashboardService {
   }
 
   async getHeatingStats(userId: number, query: HeatingStatsQuery) {
+    await this.assertUserHasThermostat(userId);
     const { homeProfileId, deviceId, from, to, bucket = 'day' } = query;
 
     if (!from || !to) throw new Error("'from' i 'to' su obavezni");
@@ -297,6 +286,7 @@ export class DashboardService {
   }
 
   async getLearningTrends(userId: number, query: LearningTrendsQuery) {
+    await this.assertUserHasThermostat(userId);
     const { homeProfileId, from, to } = query;
     if (!from || !to) throw new Error("'from' i 'to' su obavezni");
 
@@ -325,5 +315,58 @@ export class DashboardService {
         samples: v.samples,
       })),
     };
+  }
+
+  // ======================================================
+  // INTERNAL HELPERS
+  // ======================================================
+
+  private getHomeProfiles(userId: number) {
+    return this.prisma.homeProfile.findMany({
+      where: { userId },
+      include: {
+        thermostatDevices: {
+          include: {
+            thermostatProgram: {
+              orderBy: { orderIndex: 'asc' },
+            },
+          },
+        },
+        intervalLearnings: true,
+      },
+    });
+  }
+
+  private getRecentRecommendations(userId: number) {
+    return this.prisma.recommendation.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+      take: 5,
+    });
+  }
+
+  private getLatestWeather() {
+    return this.prisma.weatherCache.findFirst({
+      orderBy: { fetchedAt: 'desc' },
+    });
+  }
+
+  private getLatestBoilerHistory(userId: number) {
+    return this.prisma.boilerHistory.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  private async assertUserHasThermostat(userId: number) {
+    const count = await this.prisma.thermostatDevice.count({
+      where: {
+        homeProfile: { userId },
+      },
+    });
+
+    if (!count) {
+      throw new Error('Ovaj endpoint zahtijeva barem jedan termostat.');
+    }
   }
 }

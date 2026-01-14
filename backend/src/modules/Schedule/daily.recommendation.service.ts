@@ -1,7 +1,11 @@
+// heating/daily.recommendation.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BoilerService } from '../Boiler/boiler.service';
+import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
+import type { FlowTempInput } from '../Heating/engine/types';
 
 @Injectable()
 export class DailyRecommendationService {
@@ -20,25 +24,90 @@ export class DailyRecommendationService {
   async generateDailyRecommendations() {
     this.logger.log('Starting daily boiler recommendations...');
 
-    const users = await this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany({
+      include: {
+        homeProfiles: true,
+        thermostatDevices: true,
+      },
+    });
 
     for (const user of users) {
       try {
-        // pretpostavljamo da user ima city info u homeProfile
-        if (!user.homeLocation) continue;
+        const home = user.homeProfiles[0];
+        if (!home || !user.homeLocation) continue;
 
-        const startTemp = await this.boilerService.createMorningBoilerHistory(
-          user.id,
-        );
+        // --- priprema inputa za FlowTemperatureEngine ---
+        const intervalKey = this.getIntervalKey();
+        const intervalLearning =
+          await this.prisma.heatingIntervalLearning.findUnique({
+            where: {
+              homeProfileId_intervalKey: {
+                homeProfileId: home.id,
+                intervalKey,
+              },
+            },
+          });
+
+        const input: FlowTempInput = {
+          mode: intervalLearning ? 'FULL' : 'PROFILE_ONLY',
+          homeProfile: {
+            floorArea: home.floorArea,
+            learningOffset: home.learningOffset,
+            insulationFactor: 1,
+            confidence: home.learningConfidence ?? 0.1,
+          },
+          intervalKey,
+          intervalLearning: intervalLearning
+            ? {
+                offset: intervalLearning.offset,
+                confidence: intervalLearning.confidence,
+              }
+            : undefined,
+          recentEvents: [], // za jutarnju preporuku trenutno nema recent events
+          weather: await this.getWeatherInput(user.homeLocation),
+        };
+
+        const flowResult = FlowTemperatureEngine.calculate(input);
+
+        // --- spremanje preporuke u bazu ---
+        await this.prisma.recommendation.create({
+          data: {
+            userId: user.id,
+            date: new Date(),
+            recommendedFlowTemp: flowResult.finalTemp,
+            expectedHeatTimeMin: 0, // po potrebi može se dodati logika
+            confidenceScore: flowResult.confidence,
+          },
+        });
 
         this.logger.log(
-          `User ${user.id} morning BoilerHistory created with suggested: ${startTemp.suggestedTemp}°C`,
+          `User ${user.id} daily recommendation created | FlowTemp: ${flowResult.finalTemp}°C | Confidence: ${flowResult.confidence}`,
         );
       } catch (err) {
-        this.logger.error(`Failed for user ${user.id}: ${err}`);
+        this.logger.error(`Failed for user ${user.id}: ${err}`, err.stack);
       }
     }
 
     this.logger.log('Daily recommendations finished.');
+  }
+
+  private getIntervalKey(): string {
+    const now = new Date();
+    //const hour = now.getHours();
+    const weekday = now.getDay();
+    const part = 'morning';
+    const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
+    return `${dayType}_${part}`;
+  }
+
+  private async getWeatherInput(city: string) {
+    const weather = await this.prisma.weatherCache.findFirst({
+      where: { city },
+      orderBy: { fetchedAt: 'desc' },
+    });
+    return {
+      tempMin: weather?.temp_min ?? 0,
+      tempMax: weather?.temp_max ?? 0,
+    };
   }
 }

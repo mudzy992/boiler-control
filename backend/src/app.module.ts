@@ -6,7 +6,6 @@ import { WeatherModule } from './modules/Weather/weather.module';
 import { SchedulerModule } from './modules/Schedule/schedule.module';
 import { DashboardModule } from './modules/Dashboard/dashboard.module';
 import { HomeProfileModule } from './modules/HomeProfile/home.profile.module';
-import { ReadonlyModule } from './modules/Readonly/readonly.module';
 import { ThermostatDeviceModule } from './modules/ThermostatDevice/thermostat.device.module';
 import { UserModule } from './modules/User/user.module';
 import { TuyaTestModule } from './modules/Tuya-test/tuya.test.module';
@@ -20,7 +19,6 @@ import { TuyaTestModule } from './modules/Tuya-test/tuya.test.module';
     SchedulerModule,
     DashboardModule,
     HomeProfileModule,
-    ReadonlyModule,
     ThermostatDeviceModule,
     UserModule,
     TuyaTestModule,

@@ -41,9 +41,17 @@ export class HomeProfileService {
   async update(userId: number, id: number, dto: UpdateHomeProfileDto) {
     await this.findOne(userId, id);
 
+    const dtoCorrected = {
+      ...dto,
+      floorArea: Number(dto.floorArea),
+      ceilingHeight: Number(dto.ceilingHeight),
+      insulationThickness: Number(dto.insulationThickness),
+      constructionYear: Number(dto.constructionYear),
+    };
+
     return this.prisma.homeProfile.update({
       where: { id },
-      data: dto,
+      data: dtoCorrected,
     });
   }
 

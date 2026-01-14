@@ -4,13 +4,22 @@ import api from "./api";
    Types
 ========================= */
 
-export interface DashboardResponse {
-  system: {
-    weather: any;
-    recommendation: any;
-    boiler: any;
-  };
-  homes: HomeDashboard[];
+export interface DashboardCapabilities {
+  hasProfile: boolean;
+  hasThermostat: boolean;
+  hasLearning: boolean;
+}
+
+export interface SystemDashboard {
+  weather: any;
+  boiler?: {
+    externalTemp: number;
+    suggestedTemp: number;
+    actualTemp: number;
+    heatingStart: string | null;
+    heatingEnd: string | null;
+  } | null;
+  recommendation?: any | null;
 }
 
 export interface HomeDashboard {
@@ -21,9 +30,8 @@ export interface HomeDashboard {
     insulationType: string;
     windowType: string;
     heatingType: string;
-    learningOffset: number;
-    learningConfidence: number;
   };
+
   thermostats: {
     id: number;
     alias: string;
@@ -38,25 +46,29 @@ export interface HomeDashboard {
       orderIndex: number;
     }[];
   }[];
+
   learningIntervals: {
     intervalKey: string;
-    avgReachTimeMin: number;
-    avgOvershoot: number;
     offset: number;
     confidence: number;
     samples: number;
     lastUpdated: string;
   }[];
-  recentHeatingEvents: any[];
-  systemStatus: {
-    lastSuggestedFlowTemp: number | null;
-    lastActualFlowTemp: number | null;
-    lastExternalTemp: number | null;
-  };
-  insights: {
-    hasEnoughLearningData: boolean;
-    averageConfidence: number;
-  };
+
+  recentHeatingEvents: {
+    deviceId: number;
+    startedAt: string;
+    endedAt: string | null;
+    targetTemp: number;
+    currentTemp: number;
+    hvacAction: string;
+  }[];
+}
+
+export interface DashboardResponse {
+  capabilities: DashboardCapabilities;
+  system: SystemDashboard;
+  homes: HomeDashboard[];
 }
 
 export interface HeatingEventRow {

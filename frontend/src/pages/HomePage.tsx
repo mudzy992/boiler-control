@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card, Spin, message } from "antd";
-import { getTodayWeather, getLastRecommendation } from "../api/readonly.api";
 import type { TodayWeather } from "../interfaces/TodayWeather";
 import type { TodayRecommendation } from "../interfaces/TodayRecommendation";
 import { CloudOutlined, FireOutlined, DashboardOutlined } from "@ant-design/icons";
+import { getDashboard } from "../api/dashboard.api";
 
 const HomePage = () => {
   const [loading, setLoading] = useState(true);
@@ -14,9 +14,9 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [w, rec] = await Promise.all([getTodayWeather(), getLastRecommendation()]);
-        setWeather(w);
-        setLastRecommendation(rec);
+        const dashboard = await getDashboard();
+        setWeather(dashboard.system.weather);
+        setLastRecommendation(dashboard.system.recommendation);
       } catch (err: any) {
         message.error("Failed to load homepage data", err?.message);
       } finally {

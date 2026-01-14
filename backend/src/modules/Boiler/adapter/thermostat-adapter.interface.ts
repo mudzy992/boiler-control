@@ -5,6 +5,8 @@ export interface ThermostatSnapshot {
   targetTemp: number; // zadana temperatura
   timestamp: Date; // kada je snapshot snimljen
   powerOn: boolean;
+  externalTempMin?: number;
+  externalTempMax?: number;
   dayType?: DayType;
   activeInterval?: {
     startMinute: number;
@@ -16,5 +18,5 @@ export interface ThermostatSnapshot {
 export interface IThermostatAdapter {
   getCurrentTemperature(deviceId: string): Promise<number>;
   getTargetTemperature(deviceId: string): Promise<number>;
-  fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot>;
+  fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot | null>;
 }

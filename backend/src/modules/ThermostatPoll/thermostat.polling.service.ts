@@ -1,8 +1,11 @@
+// heating/thermostat.polling.service.ts
+
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
-import { addMinutes } from 'date-fns';
+import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
+import type { FlowTempInput } from '../Heating/engine/types';
 
 @Injectable()
 export class ThermostatPollingService {
@@ -15,14 +18,16 @@ export class ThermostatPollingService {
     @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
   ) {}
 
-  /** Polling svih termostata */
   @Cron('*/1 * * * *', {
     name: 'boiler_polling',
     disabled: process.env.NODE_ENV === 'development',
   })
   async pollAll() {
     const devices = await this.prisma.thermostatDevice.findMany({
-      include: { homeProfile: { include: { intervalLearnings: true } } },
+      include: {
+        homeProfile: { include: { intervalLearnings: true } },
+        user: true,
+      },
     });
 
     for (const device of devices) {
@@ -30,13 +35,13 @@ export class ThermostatPollingService {
     }
   }
 
-  /** Poll jednog uređaja i odluči grijanje */
   private async pollDevice(device: any) {
     try {
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
-      const currentTemp = snapshot.currentTemp / 2;
-      const targetTemp = snapshot.targetTemp;
-      const powerOn = snapshot.powerOn;
+      const currentTemp =
+        snapshot?.currentTemp !== undefined ? snapshot.currentTemp / 2 : null;
+      const targetTemp = snapshot?.targetTemp ?? null;
+      const powerOn = snapshot?.powerOn ?? false;
 
       const lastEvent = await this.prisma.heatingEvent.findFirst({
         where: { deviceId: device.id },
@@ -45,62 +50,94 @@ export class ThermostatPollingService {
       const isHeating = !!lastEvent && lastEvent.timestampEnd === null;
 
       const intervalKey = this.getIntervalKey();
-      let intervalLearning = device.homeProfile.intervalLearnings.find(
+      const intervalLearning = device.homeProfile?.intervalLearnings?.find(
         (i: any) => i.intervalKey === intervalKey,
       );
-      if (!intervalLearning) {
-        intervalLearning = await this.prisma.heatingIntervalLearning.create({
-          data: {
-            homeProfileId: device.homeProfile.id,
-            intervalKey,
-            avgReachTimeMin: 0,
-            avgOvershoot: 0,
-            offset: 0,
-            confidence: 0.1,
-            samples: 0,
+
+      let mode: FlowTempInput['mode'] = 'PROFILE_ONLY';
+      if (intervalLearning && snapshot) mode = 'FULL';
+      else if (!snapshot) mode = 'PROFILE_ONLY';
+      else if (!device.homeProfile) mode = 'ANONYMOUS';
+
+      const recentEvents = await this.prisma.heatingEvent.findMany({
+        where: {
+          thermostat: { userId: device.userId },
+          timestampStart: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           },
+        },
+      });
+
+      // Weather fallback
+      let tempMin = snapshot?.externalTempMin ?? 0;
+      let tempMax = snapshot?.externalTempMax ?? 0;
+
+      if (!tempMin || !tempMax) {
+        const weather = await this.prisma.weatherCache.findFirst({
+          where: { city: device.user.homeProfile?.user.homeLocation ?? '' },
+          orderBy: { fetchedAt: 'desc' },
         });
-        this.logger.debug(
-          `Created intervalLearning ${intervalKey} for homeProfile ${device.homeProfile.id}`,
-        );
+        tempMin = weather?.temp_min ?? 0;
+        tempMax = weather?.temp_max ?? 0;
       }
+
+      const profileConfidence =
+        (device.homeProfile?.learningConfidence ?? 0.1) *
+        (mode === 'PROFILE_ONLY' ? 0.8 : 1);
+
+      // --- FLOW TEMPERATURE INPUT ---
+      const input: FlowTempInput = {
+        mode,
+        homeProfile: {
+          floorArea: device.homeProfile?.floorArea ?? 150,
+          learningOffset: device.homeProfile?.learningOffset ?? 0,
+          insulationFactor: 1,
+          confidence: profileConfidence,
+        },
+        intervalKey,
+        intervalLearning: intervalLearning
+          ? {
+              offset: intervalLearning.offset,
+              confidence: intervalLearning.confidence,
+            }
+          : undefined,
+        recentEvents: recentEvents.map((e) => ({
+          delta: e.targetTemp - e.currentTemp,
+          active: !e.timestampEnd,
+        })),
+        weather: { tempMin, tempMax },
+      };
+
+      // --- CALCULATE FLOW TEMPERATURE ---
+      const flowResult = FlowTemperatureEngine.calculate(input);
 
       let heatingOn = false;
       if (powerOn) {
         heatingOn = this.resolveHeatingState(
           isHeating,
-          currentTemp,
-          targetTemp,
+          currentTemp!,
+          targetTemp!,
         );
-
-        if (lastEvent?.timestampStart) {
-          const minutesSinceLast =
-            (new Date().getTime() - lastEvent.timestampStart.getTime()) / 60000;
-          if (minutesSinceLast < this.MIN_SWITCH_INTERVAL_MIN) {
-            heatingOn = isHeating;
-          }
-        }
+        const minutesSinceLast = lastEvent
+          ? (Date.now() - lastEvent.timestampStart.getTime()) / 60000
+          : Infinity;
+        if (minutesSinceLast < this.MIN_SWITCH_INTERVAL_MIN)
+          heatingOn = isHeating;
       }
 
-      this.logger.debug(
-        `Device ${device.deviceId}: was=${isHeating ? 'ON' : 'OFF'} → now=${
-          heatingOn ? 'ON' : 'OFF'
-        }, Target=${targetTemp} Current=${currentTemp}`,
-      );
-
-      // STATE TRANSITIONS
-      if (isHeating && !heatingOn && lastEvent) {
+      if (isHeating && !heatingOn && lastEvent)
         await this.turnOffHeating(device, lastEvent, intervalLearning);
-      }
-
-      if (!isHeating && heatingOn) {
+      if (!isHeating && heatingOn)
         await this.turnOnHeating(
           device,
           intervalLearning,
-          currentTemp,
-          targetTemp,
+          currentTemp!,
+          flowResult.finalTemp, // koristimo finalnu temperaturu
         );
-      }
+
+      this.logger.debug(
+        `Device ${device.deviceId} | Mode=${mode} | Current=${currentTemp} | FlowTemp=${flowResult.finalTemp} | Heating=${heatingOn}`,
+      );
     } catch (error) {
       this.logger.error(
         `Polling failed for device ${device.deviceId}: ${error.message}`,
@@ -109,82 +146,59 @@ export class ThermostatPollingService {
     }
   }
 
-  /** Uključi grijanje */
   private async turnOnHeating(
     device: any,
     intervalLearning: any,
     currentTemp: number,
-    targetTemp: number,
+    startTemp: number,
   ) {
     const now = new Date();
-
     const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
       where: { userId: device.userId },
       orderBy: { createdAt: 'desc' },
     });
-
-    if (!lastBoilerHistory) {
-      this.logger.warn(
-        `No BoilerHistory found, skipping BoilerHistory create for device ${device.deviceId}`,
-      );
-      return;
-    }
+    if (!lastBoilerHistory) return;
 
     const newEvent = await this.prisma.heatingEvent.create({
       data: {
         deviceId: device.id,
         timestampStart: now,
-        currentTemp, // sada je valid
-        targetTemp, // sada je valid
+        currentTemp,
+        targetTemp: startTemp,
         hvacAction: 'HEATING_ON',
         source: 'THERMOSTAT',
       },
     });
 
-    const suggestedTemp = await this.getStartTemp(
-      device.userId,
-      intervalLearning,
-    );
-
     await this.prisma.boilerHistory.create({
       data: {
         userId: device.userId,
         externalTemp: lastBoilerHistory.externalTemp,
-        suggestedTemp,
+        suggestedTemp: startTemp,
         actualTemp: lastBoilerHistory.actualTemp,
         heatingStart: newEvent.timestampStart,
         heatingEnd: null,
       },
     });
-
-    await this.createRecommendation(
-      device.userId,
-      suggestedTemp,
-      intervalLearning,
-    );
-
-    this.logger.log(`Heating STARTED for device ${device.deviceId}`);
   }
 
-  /** Isključi grijanje i update interval learning */
   private async turnOffHeating(
     device: any,
     lastEvent: any,
     intervalLearning: any,
   ) {
     const now = new Date();
-
     await this.prisma.heatingEvent.update({
       where: { id: lastEvent.id },
       data: { timestampEnd: now, hvacAction: 'HEATING_OFF' },
     });
-
     await this.prisma.boilerHistory.updateMany({
       where: { userId: device.userId, heatingEnd: null },
       data: { heatingEnd: now },
     });
 
-    // Update interval learning
+    if (!intervalLearning) return;
+
     const reachTimeMin =
       (now.getTime() - lastEvent.timestampStart.getTime()) / 60000;
     const overshoot = lastEvent.targetTemp - lastEvent.currentTemp;
@@ -218,83 +232,8 @@ export class ThermostatPollingService {
         lastUpdated: now,
       },
     });
-
-    this.logger.log(`Heating STOPPED for device ${device.deviceId}`);
   }
 
-  /** Start temp kalkulacija v1.1 */
-  private async getStartTemp(
-    userId: number,
-    intervalLearning: any,
-  ): Promise<number> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { homeProfiles: true },
-    });
-    if (!user) throw new Error('User not found');
-
-    const home = user.homeProfiles[0];
-    if (!home) throw new Error('HomeProfile not found');
-
-    const weather = await this.prisma.weatherCache.findFirst({
-      where: { city: user.homeLocation! },
-      orderBy: { fetchedAt: 'desc' },
-    });
-    const tempMin = weather?.temp_min ?? 0;
-    const tempMax = weather?.temp_max ?? 0;
-    let weightedTemp = 0.7 * tempMin + 0.3 * tempMax;
-    weightedTemp = Math.max(-15, Math.min(10, weightedTemp));
-
-    const intervalKey = this.getIntervalKey();
-    const isMorning = intervalKey.includes('morning');
-    const intervalWeight = isMorning ? 0.4 : 1.0;
-
-    let startTemp = this.calculateCurveTemp(weightedTemp);
-    startTemp += home.learningOffset + intervalLearning.offset * intervalWeight;
-
-    // Event-based adjustment
-    const lastWeekEvents = await this.prisma.heatingEvent.findMany({
-      where: {
-        thermostat: { userId },
-        timestampStart: { gte: addMinutes(new Date(), -7 * 24 * 60 * 60) },
-      },
-    });
-    const eventOffset = lastWeekEvents.reduce((acc, e) => {
-      const delta = e.targetTemp - e.currentTemp;
-      const weight = e.timestampEnd ? 0.05 : 0.1;
-      return acc + delta * weight;
-    }, 0);
-    startTemp += isMorning ? eventOffset * 0.5 : eventOffset;
-
-    startTemp = Math.max(35, Math.min(56, startTemp));
-
-    this.logger.debug(
-      `[v1.1] User ${userId} | Interval: ${intervalKey} | StartTemp: ${startTemp.toFixed(
-        2,
-      )}`,
-    );
-
-    return Number(startTemp.toFixed(2));
-  }
-
-  /** Recommendation kreacija */
-  private async createRecommendation(
-    userId: number,
-    recommendedFlowTemp: number,
-    intervalLearning: any,
-  ) {
-    await this.prisma.recommendation.create({
-      data: {
-        userId,
-        date: new Date(),
-        recommendedFlowTemp: Number(recommendedFlowTemp.toFixed(2)),
-        expectedHeatTimeMin: Math.round(intervalLearning.avgReachTimeMin),
-        confidenceScore: Number(intervalLearning.confidence.toFixed(2)),
-      },
-    });
-  }
-
-  /** Resolve heating ON/OFF */
   private resolveHeatingState(
     isHeating: boolean,
     currentTemp: number,
@@ -304,14 +243,6 @@ export class ThermostatPollingService {
     return currentTemp <= targetTemp - this.DEAD_ZONE;
   }
 
-  /** Krivulja grijanja */
-  private calculateCurveTemp(ext: number): number {
-    if (ext >= 10) return 45;
-    if (ext <= -15) return 56;
-    return 51 - ext * 0.3;
-  }
-
-  /** Interval key */
   private getIntervalKey(): string {
     const now = new Date();
     const hour = now.getHours();

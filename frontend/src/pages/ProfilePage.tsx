@@ -1,10 +1,28 @@
 import { useEffect, useState } from "react";
-import { Card, Form, Input, Button, Spin, message, Divider } from "antd";
+import { Card, Form, Input, Button, Spin, message, Divider, Select } from "antd";
 import type { HomeProfileDashboard } from "../interfaces/Dashboard";
 import { getUserProfile, updateUserProfile } from "../api/user.api";
 import { getHomeProfiles, updateHomeProfile } from "../api/homeProfile.api";
 import type { UpdateUser } from "../interfaces/UpdateUser";
 import type { UpdateHomeProfile } from "../interfaces/HomeProfile";
+
+const { Option } = Select;
+
+const insulationOptions = [
+  { label: "EPS", value: "EPS" },
+  { label: "Kamena vuna", value: "Wool" },
+];
+
+const windowOptions = [
+  { label: "Dvoslojno", value: "DOUBLE" },
+  { label: "Troslojno", value: "TRIPLE" },
+];
+
+const heatingOptions = [
+  { label: "Radijatorsko", value: "radiator" },
+  { label: "Podno", value: "underfloor" },
+  { label: "Kombinovano", value: "combined" },
+];
 
 const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
@@ -17,16 +35,15 @@ const ProfilePage = () => {
   const [userForm] = Form.useForm<UpdateUser>();
   const [homeForm] = Form.useForm<UpdateHomeProfile>();
 
-  // Load data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const u = await getUserProfile();
         const userDto: UpdateUser = {
-            name: u.name ?? "",
-            homeLocation: u.homeLocation ?? ""
-        }
+          name: u.name ?? "",
+          homeLocation: u.homeLocation ?? ""
+        };
         setUser(userDto);
         userForm.setFieldsValue(userDto);
 
@@ -36,7 +53,7 @@ const ProfilePage = () => {
           homeForm.setFieldsValue(homes[0]);
         }
       } catch (err: any) {
-        message.error("Failed to load profile data", err?.message);
+        message.error("Neuspješno učitavanje profila: " + (err?.message ?? ""));
       } finally {
         setLoading(false);
       }
@@ -44,34 +61,31 @@ const ProfilePage = () => {
     fetchData();
   }, [userForm, homeForm]);
 
-  // Handle user update
   const handleUserSubmit = async (values: UpdateUser) => {
     try {
       setSavingUser(true);
       const updated = await updateUserProfile(values);
-      const userDto : UpdateUser = {
-        name: updated.name || "",
-        homeLocation: updated.homeLocation || ""
-      }
-      setUser(userDto);
-      message.success("User updated successfully");
+      setUser({
+        name: updated.name ?? "",
+        homeLocation: updated.homeLocation ?? ""
+      });
+      message.success("Korisnički profil uspješno sačuvan");
     } catch {
-      message.error("Failed to update user");
+      message.error("Neuspješno ažuriranje korisničkog profila");
     } finally {
       setSavingUser(false);
     }
   };
 
-  // Handle home profile update
   const handleHomeSubmit = async (values: Partial<UpdateHomeProfile>) => {
     if (!homeProfile) return;
     try {
       setSavingHome(true);
       const updated = await updateHomeProfile(homeProfile.id, values);
       setHomeProfile(updated);
-      message.success("Home profile updated successfully");
+      message.success("Podaci o stanu uspješno sačuvani");
     } catch {
-      message.error("Failed to update home profile");
+      message.error("Neuspješno ažuriranje podataka o stanu");
     } finally {
       setSavingHome(false);
     }
@@ -87,18 +101,18 @@ const ProfilePage = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* USER PROFILE */}
-      <Card title={`User Profile: ${user?.name ?? "N/A"}`}>
+      {/* KORISNIK */}
+      <Card title={`Korisnički profil: ${user?.name ?? "N/A"}`}>
         <Form form={userForm} layout="vertical" onFinish={handleUserSubmit}>
-          <Form.Item label="Name" name="name">
-            <Input placeholder="Name" />
+          <Form.Item label="Ime i prezime" name="name">
+            <Input placeholder="Ime i prezime" />
           </Form.Item>
-          <Form.Item label="Home Location" name="homeLocation">
-            <Input placeholder="Home Location" />
+          <Form.Item label="Lokacija doma" name="homeLocation">
+            <Input placeholder="Lokacija doma" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={savingUser}>
-              Save
+              Sačuvaj
             </Button>
           </Form.Item>
         </Form>
@@ -108,38 +122,56 @@ const ProfilePage = () => {
 
       {/* HOME PROFILE */}
       {homeProfile ? (
-        <Card title={`Home Profile: ${homeProfile.id}`}>
+        <Card title={`Podaci o stanu: ${homeProfile.id}`}>
           <Form form={homeForm} layout="vertical" onFinish={handleHomeSubmit}>
-            <Form.Item label="Floor Area (m²)" name="floorArea">
+            <Form.Item label="Površina (m²)" name="floorArea">
               <Input type="number" />
             </Form.Item>
-            <Form.Item label="Ceiling Height (cm)" name="ceilingHeight">
+            <Form.Item label="Visina plafona (cm)" name="ceilingHeight">
               <Input type="number" />
             </Form.Item>
-            <Form.Item label="Insulation Type" name="insulationType">
-              <Input />
+            <Form.Item label="Tip izolacije" name="insulationType">
+              <Select>
+                {insulationOptions.map((opt) => (
+                  <Option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
-            <Form.Item label="Insulation Thickness (cm)" name="insulationThickness">
+            <Form.Item label="Debljina izolacije (cm)" name="insulationThickness">
               <Input type="number" />
             </Form.Item>
-            <Form.Item label="Window Type" name="windowType">
-              <Input />
+            <Form.Item label="Tip prozora" name="windowType">
+              <Select>
+                {windowOptions.map((opt) => (
+                  <Option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
-            <Form.Item label="Heating Type" name="heatingType">
-              <Input />
+            <Form.Item label="Tip grijanja" name="heatingType">
+              <Select>
+                {heatingOptions.map((opt) => (
+                  <Option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
-            <Form.Item label="Construction Year" name="constructionYear">
+            <Form.Item label="Godina izgradnje" name="constructionYear">
               <Input type="number" />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" loading={savingHome}>
-                Save
+                Sačuvaj
               </Button>
             </Form.Item>
           </Form>
         </Card>
       ) : (
-        <Card>No home profiles found</Card>
+        <Card>Nema podataka o stanu</Card>
       )}
     </div>
   );

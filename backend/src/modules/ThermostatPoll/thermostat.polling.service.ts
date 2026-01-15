@@ -126,7 +126,7 @@ export class ThermostatPollingService {
           heatingOn = isHeating;
       }
 
-      if (isHeating && !heatingOn && lastEvent)
+      /* if (isHeating && !heatingOn && lastEvent)
         await this.turnOffHeating(device, lastEvent, intervalLearning);
       if (!isHeating && heatingOn)
         await this.turnOnHeating(
@@ -135,7 +135,34 @@ export class ThermostatPollingService {
           currentTemp!,
           flowTemp,
           roomTargetTemp!,
+        ); */
+
+      // --- Handle heating event with targetTemp check ---
+      if (isHeating) {
+        if (!heatingOn && lastEvent) {
+          // Heating OFF
+          await this.turnOffHeating(device, lastEvent, intervalLearning);
+        } else if (
+          lastEvent &&
+          lastEvent.targetTemp !== roomTargetTemp &&
+          heatingOn
+        ) {
+          // Heating ON but target changed -> update last event
+          await this.prisma.heatingEvent.update({
+            where: { id: lastEvent.id },
+            data: { targetTemp: roomTargetTemp! },
+          });
+        }
+      } else if (!isHeating && heatingOn) {
+        // Heating ON -> create new event
+        await this.turnOnHeating(
+          device,
+          intervalLearning,
+          currentTemp!,
+          flowTemp,
+          roomTargetTemp!,
         );
+      }
 
       this.logger.debug(
         `Device ${device.deviceId} | Mode=${mode} | Current=${currentTemp} | TargetTemp: ${roomTargetTemp} | FlowTemp=${flowTemp} | Heating=${heatingOn}`,
@@ -178,7 +205,7 @@ export class ThermostatPollingService {
         userId: device.userId,
         externalTemp: lastBoilerHistory.externalTemp,
         suggestedTemp: flowTemp,
-        actualTemp: lastBoilerHistory.actualTemp,
+        actualTemp: lastBoilerHistory.suggestedTemp,
         heatingStart: newEvent.timestampStart,
         heatingEnd: null,
       },

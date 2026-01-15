@@ -217,6 +217,28 @@ export class DashboardService {
       this.prisma.heatingEvent.count({ where }),
     ]);
 
+    const thermostatDeviceIds = events.map((t) => t.deviceId);
+
+    console.log(thermostatDeviceIds[0]);
+
+    let currentTemp;
+    let targetTemp;
+    if (thermostatDeviceIds) {
+      const thermostat = await this.prisma.thermostatDevice.findFirst({
+        where: {
+          id: thermostatDeviceIds[0],
+        },
+      });
+
+      if (thermostat) {
+        const snapshot = await this.adapter.fetchSnapshot(thermostat?.deviceId);
+        currentTemp =
+          snapshot?.currentTemp !== undefined ? snapshot.currentTemp / 2 : null;
+        targetTemp =
+          snapshot?.targetTemp !== undefined ? snapshot.targetTemp : null;
+      }
+    }
+
     return {
       data: events.map((e) => ({
         deviceId: e.deviceId,
@@ -224,6 +246,8 @@ export class DashboardService {
         endedAt: e.timestampEnd,
         currentTemp: e.currentTemp,
         targetTemp: e.targetTemp,
+        curretTempThermostat: currentTemp,
+        targetTempThermostat: targetTemp,
         hvacAction: e.hvacAction,
         source: e.source,
         durationMinutes: e.timestampEnd

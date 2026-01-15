@@ -109,7 +109,7 @@ export class ThermostatPollingService {
       };
 
       // --- CALCULATE FLOW TEMPERATURE ---
-      const flowResult = FlowTemperatureEngine.calculate(input);
+      FlowTemperatureEngine.calculate(input);
 
       let heatingOn = false;
       if (powerOn) {
@@ -136,7 +136,7 @@ export class ThermostatPollingService {
         );
 
       this.logger.debug(
-        `Device ${device.deviceId} | Mode=${mode} | Current=${currentTemp} | FlowTemp=${flowResult.finalTemp} | Heating=${heatingOn}`,
+        `Device ${device.deviceId} | Mode=${mode} | Current=${currentTemp} | FlowTemp=${targetTemp} | Heating=${heatingOn}`,
       );
     } catch (error) {
       this.logger.error(

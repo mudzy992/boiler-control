@@ -9,14 +9,19 @@ import {
   IntervalLearningInput,
 } from '../Heating/engine/types';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
+import { WeatherService } from '../Weather/weather.service';
 
 @Injectable()
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private weatherService: WeatherService,
+  ) {}
 
   async getStartTemp(userId?: number): Promise<number> {
+    const DEFAULT_ANON_CITY = 'Visoko';
     let mode: FlowTempInput['mode'] = 'ANONYMOUS';
     let homeProfileInput = {
       floorArea: 150,
@@ -26,6 +31,8 @@ export class BoilerService {
     };
     let intervalLearningInput: IntervalLearningInput | undefined = undefined;
     let recentEventsInput: HeatingEventInput[] | undefined = undefined;
+    let todayWeatherTempMin;
+    let todayWeatherTempMax;
 
     if (userId) {
       const user = await this.prisma.user.findUnique({
@@ -33,6 +40,11 @@ export class BoilerService {
         include: { homeProfiles: true },
       });
       if (!user) throw new Error('User not found');
+      const weather = this.weatherService.getTodayWeather(
+        user.homeLocation ?? DEFAULT_ANON_CITY,
+      );
+      todayWeatherTempMax = (await weather).temp_max;
+      todayWeatherTempMin = (await weather).temp_min;
       const home = user.homeProfiles[0];
       if (home) {
         homeProfileInput = {
@@ -74,6 +86,11 @@ export class BoilerService {
           active: !e.timestampEnd,
         }));
       }
+    } else {
+      const weather =
+        await this.weatherService.getTodayWeather(DEFAULT_ANON_CITY);
+      todayWeatherTempMin = weather.temp_min;
+      todayWeatherTempMax = weather.temp_max;
     }
 
     const input: FlowTempInput = {
@@ -82,7 +99,7 @@ export class BoilerService {
       intervalKey: this.getIntervalKey(),
       intervalLearning: intervalLearningInput,
       recentEvents: recentEventsInput,
-      weather: { tempMin: 0, tempMax: 0 }, // fallback
+      weather: { tempMin: todayWeatherTempMin, tempMax: todayWeatherTempMax }, // fallback
     };
 
     const result = FlowTemperatureEngine.calculate(input);

@@ -4,10 +4,20 @@ import { DashboardService } from './dashboard.service';
 import { DashboardController } from './dashboard.controller';
 import { BoilerService } from '../Boiler/boiler.service';
 import { WeatherModule } from '../Weather/weather.module';
+import { TuyaAdapter } from '../Boiler/adapter/tuya.adapter';
+import { TuyaAuthService } from '../Tuya/tuya.auth.service';
+import { ProgramSyncService } from '../Boiler/adapter/program.sync.service';
 
 @Module({
   imports: [WeatherModule],
   controllers: [DashboardController],
-  providers: [DashboardService, PrismaService, BoilerService],
+  providers: [
+    ProgramSyncService,
+    DashboardService,
+    PrismaService,
+    BoilerService,
+    TuyaAuthService,
+    { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
+  ],
 })
 export class DashboardModule {}

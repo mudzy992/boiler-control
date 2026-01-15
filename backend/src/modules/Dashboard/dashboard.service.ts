@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { HeatingEventWhereInput } from 'src/generated/prisma/models';
 import {
@@ -7,12 +7,14 @@ import {
   LearningTrendsQuery,
 } from './dashboard.controller';
 import { BoilerService } from '../Boiler/boiler.service';
+import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 
 @Injectable()
 export class DashboardService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly boilerService: BoilerService,
+    @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
   ) {}
 
   // ======================================================
@@ -69,6 +71,23 @@ export class DashboardService {
     const homes = await Promise.all(
       homeProfiles.map(async (profile) => {
         const thermostatIds = profile.thermostatDevices.map((t) => t.id);
+        const thermostatDeviceIds = profile.thermostatDevices.map(
+          (t) => t.deviceId,
+        );
+
+        let currentTemp;
+        let targetTemp;
+        if (hasThermostat) {
+          const snapshot = await this.adapter.fetchSnapshot(
+            thermostatDeviceIds[0],
+          );
+          currentTemp =
+            snapshot?.currentTemp !== undefined
+              ? snapshot.currentTemp / 2
+              : null;
+          targetTemp =
+            snapshot?.targetTemp !== undefined ? snapshot.targetTemp : null;
+        }
 
         const recentHeatingEvents =
           thermostatIds.length > 0
@@ -96,6 +115,8 @@ export class DashboardService {
             deviceId: t.deviceId,
             mode: t.mode,
             lastSeen: t.lastSeen,
+            currentTemp: currentTemp,
+            targetTemp: targetTemp,
 
             program: t.thermostatProgram.map((p) => ({
               dayType: p.dayType,

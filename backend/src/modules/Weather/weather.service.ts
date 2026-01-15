@@ -22,6 +22,11 @@ export class WeatherService {
       now.getTime() - cached.fetchedAt.getTime() < this.CACHE_MIN * 60 * 1000
     ) {
       return cached;
+    } else {
+      // cache je istekao → brišemo ga
+      await this.prisma.weatherCache.delete({
+        where: { id: cached?.id },
+      });
     }
 
     const weather = await this.fetchOpenMeteo(city);

@@ -133,7 +133,8 @@ export class ThermostatPollingService {
           device,
           intervalLearning,
           currentTemp!,
-          roomTargetTemp!, // koristimo finalnu temperaturu
+          flowTemp,
+          roomTargetTemp!,
         );
 
       this.logger.debug(
@@ -151,7 +152,8 @@ export class ThermostatPollingService {
     device: any,
     intervalLearning: any,
     currentTemp: number,
-    startTemp: number,
+    flowTemp: number,
+    roomTargetTemp: number,
   ) {
     const now = new Date();
     const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
@@ -165,7 +167,7 @@ export class ThermostatPollingService {
         deviceId: device.id,
         timestampStart: now,
         currentTemp,
-        targetTemp: startTemp,
+        targetTemp: roomTargetTemp,
         hvacAction: 'HEATING_ON',
         source: 'THERMOSTAT',
       },
@@ -175,7 +177,7 @@ export class ThermostatPollingService {
       data: {
         userId: device.userId,
         externalTemp: lastBoilerHistory.externalTemp,
-        suggestedTemp: startTemp,
+        suggestedTemp: flowTemp,
         actualTemp: lastBoilerHistory.actualTemp,
         heatingStart: newEvent.timestampStart,
         heatingEnd: null,

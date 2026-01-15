@@ -108,15 +108,36 @@ export class BoilerService {
     const result = FlowTemperatureEngine.calculate(input);
 
     if (userId) {
-      await this.prisma.recommendation.create({
-        data: {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existing = await this.prisma.recommendation.findFirst({
+        where: {
           userId,
-          date: new Date(),
-          recommendedFlowTemp: result.finalTemp,
-          expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
-          confidenceScore: result.confidence,
+          date: { gte: today },
         },
       });
+
+      if (!existing) {
+        await this.prisma.recommendation.create({
+          data: {
+            userId,
+            date: new Date(),
+            recommendedFlowTemp: result.finalTemp,
+            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
+            confidenceScore: result.confidence,
+          },
+        });
+      } else {
+        await this.prisma.recommendation.update({
+          where: { id: existing.id },
+          data: {
+            recommendedFlowTemp: result.finalTemp,
+            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
+            confidenceScore: result.confidence,
+          },
+        });
+      }
     }
 
     this.logger.log(

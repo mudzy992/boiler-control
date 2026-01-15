@@ -1,19 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
 import { PrismaService } from '../../prisma/prisma.service';
+import { fetchWeatherApi } from 'openmeteo';
 
 @Injectable()
 export class WeatherService {
   private readonly logger = new Logger(WeatherService.name);
-  private readonly CACHE_MIN = 10; // minuta
+  private readonly CACHE_MIN = 10;
 
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Glavna metoda za dohvat danasnje temperature
-   */
   async getTodayWeather(city: string) {
     const now = new Date();
+
     const cached = await this.prisma.weatherCache.findFirst({
       where: { city },
       orderBy: { fetchedAt: 'desc' },
@@ -26,148 +24,178 @@ export class WeatherService {
       return cached;
     }
 
-    // --- Prvi pokušaj: WeatherAPI ---
-    let weather = await this.fetchWeatherAPI(city);
-
-    // --- Provjera realnosti min/max ---
-    if (weather && (weather.temp_min < -20 || weather.temp_max > 15)) {
-      this.logger.warn(
-        `WeatherAPI gave unrealistic temperatures for ${city}. Trying Open-Meteo fallback.`,
-      );
-      const fallback = await this.fetchOpenMeteo(city);
-      if (fallback) weather = fallback;
-    }
+    const weather = await this.fetchOpenMeteo(city);
 
     if (!weather) {
-      throw new Error(`Failed to fetch weather data for ${city}`);
+      throw new Error(`Failed to fetch Open-Meteo data for ${city}`);
     }
 
-    return await this.prisma.weatherCache.create({
-      data: { city, ...weather, fetchedAt: new Date() },
+    return this.prisma.weatherCache.create({
+      data: {
+        city,
+        ...weather,
+        fetchedAt: new Date(),
+      },
     });
   }
 
   /**
-   * WeatherAPI.com
-   */
-  private async fetchWeatherAPI(city: string) {
-    try {
-      const apiKey = process.env.WEATHER_API_KEY!;
-      const { data } = await axios.get(
-        'https://api.weatherapi.com/v1/forecast.json',
-        {
-          params: { key: apiKey, q: city, days: 1, aqi: 'no', alerts: 'no' },
-        },
-      );
-
-      const current = data.current;
-      const today = data.forecast.forecastday[0];
-      const hours = today.hour;
-
-      const avg = (arr: any[]) =>
-        arr.reduce((s, h) => s + h.temp_c, 0) / arr.length;
-
-      const mornTemp = avg(
-        hours.filter((h) => {
-          const hr = new Date(h.time).getHours();
-          return hr >= 6 && hr <= 9;
-        }),
-      );
-
-      const dayTemp = avg(
-        hours.filter((h) => {
-          const hr = new Date(h.time).getHours();
-          return hr >= 12 && hr <= 15;
-        }),
-      );
-
-      const tempAvg = mornTemp * 0.65 + dayTemp * 0.35;
-
-      return {
-        temperature: current.temp_c,
-        feelslike: current.feelslike_c,
-        temp_min: today.day.mintemp_c,
-        temp_max: today.day.maxtemp_c,
-        temp_avg: tempAvg,
-        wind_kph: current.wind_kph,
-        gust_kph: current.gust_kph,
-        wind_dir: current.wind_dir,
-        pressure_mb: current.pressure_mb,
-        humidity: current.humidity,
-        cloud: current.cloud,
-        uv_index: current.uv,
-        precipitation_mm: today.day.totalprecip_mm,
-        snow_cm: today.day.totalsnow_cm,
-        condition_text: current.condition.text,
-        sunrise: today.astro.sunrise,
-        sunset: today.astro.sunset,
-        moonrise: today.astro.moonrise,
-        moonset: today.astro.moonset,
-        moon_phase: today.astro.moon_phase,
-        moon_illumination: today.astro.moon_illumination
-          ? parseInt(today.astro.moon_illumination, 10)
-          : null,
-      };
-    } catch (e) {
-      this.logger.error(`WeatherAPI fetch failed: ${e.message}`);
-      return null;
-    }
-  }
-
-  /**
-   * Open-Meteo.com fallback
+   * Open-Meteo fetch + mapping
    */
   private async fetchOpenMeteo(city: string) {
     try {
-      // Pretpostavimo da imamo lokaciju preko grada
-      const { data: geo } = await axios.get(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`,
-      );
-      if (!geo.results?.length) return null;
+      /* =======================
+         1) Geocoding
+      ======================= */
+      const geoRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+          city,
+        )}&count=1`,
+      ).then((r) => r.json());
 
-      const { latitude, longitude } = geo.results[0];
-      const { data } = await axios.get(
+      if (!geoRes?.results?.length) {
+        this.logger.warn(`Open-Meteo geocoding failed for ${city}`);
+        return null;
+      }
+
+      const { latitude, longitude } = geoRes.results[0];
+
+      /* =======================
+         2) Forecast API
+      ======================= */
+      const responses = await fetchWeatherApi(
         'https://api.open-meteo.com/v1/forecast',
         {
-          params: {
-            latitude,
-            longitude,
-            hourly: 'temperature_2m',
-            daily: 'temperature_2m_max,temperature_2m_min',
-            timezone: 'Europe/Sarajevo',
-          },
+          latitude,
+          longitude,
+          timezone: 'Europe/Sarajevo',
+          forecast_days: 1,
+
+          current: [
+            'temperature_2m',
+            'relative_humidity_2m',
+            'weather_code',
+            'is_day',
+          ],
+
+          hourly: [
+            'temperature_2m',
+            'apparent_temperature',
+            'cloud_cover',
+            'pressure_msl',
+            'relative_humidity_2m',
+            'wind_speed_10m',
+            'wind_gusts_10m',
+            'wind_direction_10m',
+            'uv_index',
+            'rain',
+            'snowfall',
+          ],
+
+          daily: [
+            'temperature_2m_max',
+            'temperature_2m_min',
+            'sunrise',
+            'sunset',
+          ],
         },
       );
 
-      const todayHourly = data.hourly.temperature_2m.slice(6, 16); // 6–15h
-      const tempAvg =
-        todayHourly.reduce((a, b) => a + b, 0) / todayHourly.length;
+      const response = responses[0];
+      const utcOffset = response.utcOffsetSeconds();
 
+      const current = response.current();
+      const hourly = response.hourly();
+      const daily = response.daily();
+
+      if (!current || !hourly || !daily) {
+        this.logger.error('Open-Meteo response missing required blocks');
+        return null;
+      }
+
+      /* =======================
+         Helpers
+      ======================= */
+      const hVar = (idx: number) => hourly.variables(idx)?.valuesArray() ?? [];
+
+      const dVar = (idx: number) => daily.variables(idx)?.valuesArray() ?? [];
+
+      const toArray = (v: readonly number[] | Float32Array) =>
+        Array.from(v ?? []);
+
+      /* =======================
+         3) Hourly time array
+      ======================= */
+      const times = Array.from(
+        {
+          length:
+            (Number(hourly.timeEnd()) - Number(hourly.time())) /
+            hourly.interval(),
+        },
+        (_, i) =>
+          new Date(
+            (Number(hourly.time()) + i * hourly.interval() + utcOffset) * 1000,
+          ),
+      );
+
+      const temps = hVar(0);
+
+      const avgTemps = times
+        .map((t, i) => ({ hour: t.getHours(), temp: temps[i] }))
+        .filter((x) => x.temp !== undefined)
+        .filter((x) => x.hour >= 6 && x.hour <= 15)
+        .map((x) => x.temp);
+
+      const temp_avg =
+        avgTemps.length > 0
+          ? avgTemps.reduce((a, b) => a + b, 0) / avgTemps.length
+          : (current.variables(0)?.value() ?? 0);
+
+      /* =======================
+         4) Mapping → DB
+      ======================= */
       return {
-        temperature: tempAvg,
-        feelslike: tempAvg,
-        temp_min: data.daily.temperature_2m_min[0],
-        temp_max: data.daily.temperature_2m_max[0],
-        temp_avg: tempAvg,
-        wind_kph: 0,
-        gust_kph: 0,
-        wind_dir: '',
-        pressure_mb: 0,
-        humidity: 0,
-        cloud: 0,
-        uv_index: 0,
-        precipitation_mm: 0,
-        snow_cm: 0,
-        condition_text: 'Clear',
-        sunrise: '',
-        sunset: '',
+        temperature: current.variables(0)?.value() ?? 0,
+        feelslike:
+          hVar(1)[
+            times.findIndex((t) => t.getHours() === new Date().getHours())
+          ] ??
+          current.variables(0)?.value() ??
+          0,
+
+        temp_min: dVar(1)[0] ?? 0,
+        temp_max: dVar(0)[0] ?? 0,
+        temp_avg,
+
+        wind_kph: hVar(5).at(-1) ?? 0,
+        gust_kph: hVar(6).at(-1) ?? 0,
+        wind_dir: `${hVar(7).at(-1) ?? 0}°`,
+
+        pressure_mb: hVar(3).at(-1) ?? 0,
+        humidity: current.variables(1)?.value() ?? 0,
+        cloud: hVar(2).at(-1) ?? 0,
+
+        uv_index: Math.max(...toArray(hVar(8)), 0),
+        precipitation_mm: toArray(hVar(9)).reduce((a, b) => a + b, 0),
+        snow_cm: toArray(hVar(10)).reduce((a, b) => a + b, 0),
+
+        condition_text: `WMO_${current.variables(2)?.value() ?? 0}`,
+
+        sunrise: new Date(
+          (Number(daily.variables(2)?.valuesInt64(0) ?? 0) + utcOffset) * 1000,
+        ).toISOString(),
+
+        sunset: new Date(
+          (Number(daily.variables(3)?.valuesInt64(0) ?? 0) + utcOffset) * 1000,
+        ).toISOString(),
+
         moonrise: '',
         moonset: '',
         moon_phase: '',
         moon_illumination: null,
       };
     } catch (e) {
-      this.logger.error(`Open-Meteo fetch failed: ${e.message}`);
+      this.logger.error(`Open-Meteo failed: ${e.message}`);
       return null;
     }
   }

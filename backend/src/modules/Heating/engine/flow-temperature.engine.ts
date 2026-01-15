@@ -51,7 +51,7 @@ export class FlowTemperatureEngine {
     else if (home.insulationType === 'Wool') insulationFactor = 0.85;
     if (home.insulationThickness) {
       // linear adjustment: deblja izolacija smanjuje temp
-      insulationFactor *= 1 - (15 - home.insulationThickness) * 0.01;
+      insulationFactor = Math.max(0.7, Math.min(1, insulationFactor));
     }
 
     // 9️⃣ Window adjustment
@@ -66,15 +66,14 @@ export class FlowTemperatureEngine {
     // 11️⃣ Final temperature
     let finalTemp =
       baseCurveTemp +
-      homeOffset +
-      intervalOffset +
-      eventOffset +
-      areaFactor +
-      heightFactor +
-      windowFactor +
-      heatingFactor;
-
-    finalTemp *= insulationFactor; // primjena faktora izolacije
+      (homeOffset +
+        intervalOffset +
+        eventOffset +
+        areaFactor +
+        heightFactor +
+        windowFactor +
+        heatingFactor) *
+        insulationFactor;
 
     // Clamp između 35 i 56
     finalTemp = Math.max(35, Math.min(56, finalTemp));

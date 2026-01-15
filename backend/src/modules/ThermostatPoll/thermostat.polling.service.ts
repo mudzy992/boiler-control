@@ -40,7 +40,7 @@ export class ThermostatPollingService {
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
       const currentTemp =
         snapshot?.currentTemp !== undefined ? snapshot.currentTemp / 2 : null;
-      const targetTemp = snapshot?.targetTemp ?? null;
+      const roomTargetTemp = snapshot?.targetTemp ?? null;
       const powerOn = snapshot?.powerOn ?? false;
 
       const lastEvent = await this.prisma.heatingEvent.findFirst({
@@ -74,7 +74,7 @@ export class ThermostatPollingService {
 
       if (!tempMin || !tempMax) {
         const weather = await this.prisma.weatherCache.findFirst({
-          where: { city: device.user.homeProfile?.user.homeLocation ?? '' },
+          where: { city: device.user.homeLocation ?? '' },
           orderBy: { fetchedAt: 'desc' },
         });
         tempMin = weather?.temp_min ?? 0;
@@ -109,14 +109,15 @@ export class ThermostatPollingService {
       };
 
       // --- CALCULATE FLOW TEMPERATURE ---
-      FlowTemperatureEngine.calculate(input);
+      const result = FlowTemperatureEngine.calculate(input);
+      const flowTemp = result.finalTemp;
 
       let heatingOn = false;
       if (powerOn) {
         heatingOn = this.resolveHeatingState(
           isHeating,
           currentTemp!,
-          targetTemp!,
+          roomTargetTemp!,
         );
         const minutesSinceLast = lastEvent
           ? (Date.now() - lastEvent.timestampStart.getTime()) / 60000
@@ -132,11 +133,11 @@ export class ThermostatPollingService {
           device,
           intervalLearning,
           currentTemp!,
-          targetTemp!, // koristimo finalnu temperaturu
+          roomTargetTemp!, // koristimo finalnu temperaturu
         );
 
       this.logger.debug(
-        `Device ${device.deviceId} | Mode=${mode} | Current=${currentTemp} | FlowTemp=${targetTemp} | Heating=${heatingOn}`,
+        `Device ${device.deviceId} | Mode=${mode} | Current=${currentTemp} | TargetTemp: ${roomTargetTemp} | FlowTemp=${flowTemp} | Heating=${heatingOn}`,
       );
     } catch (error) {
       this.logger.error(

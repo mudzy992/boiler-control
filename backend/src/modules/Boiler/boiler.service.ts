@@ -33,6 +33,8 @@ export class BoilerService {
     let recentEventsInput: HeatingEventInput[] | undefined = undefined;
     let todayWeatherTempMin;
     let todayWeatherTempMax;
+    let intervalLearningEntity: { avgReachTimeMin: number | null } | null =
+      null;
 
     if (userId) {
       const user = await this.prisma.user.findUnique({
@@ -67,6 +69,7 @@ export class BoilerService {
           },
         });
       if (intervalLearning) {
+        intervalLearningEntity = intervalLearning;
         intervalLearningInput = {
           offset: intervalLearning.offset,
           confidence: intervalLearning.confidence,
@@ -103,6 +106,19 @@ export class BoilerService {
     };
 
     const result = FlowTemperatureEngine.calculate(input);
+
+    if (userId) {
+      await this.prisma.recommendation.create({
+        data: {
+          userId,
+          date: new Date(),
+          recommendedFlowTemp: result.finalTemp,
+          expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
+          confidenceScore: result.confidence,
+        },
+      });
+    }
+
     this.logger.log(
       `[Boiler] User ${userId ?? 'ANON'} | Mode: ${mode} | FinalTemp: ${result.finalTemp}`,
     );

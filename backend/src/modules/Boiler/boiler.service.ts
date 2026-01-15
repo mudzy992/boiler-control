@@ -107,7 +107,7 @@ export class BoilerService {
 
     const result = FlowTemperatureEngine.calculate(input);
 
-    if (userId) {
+    /* if (userId) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -135,9 +135,55 @@ export class BoilerService {
             recommendedFlowTemp: result.finalTemp,
             expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
             confidenceScore: result.confidence,
+            date: new Date(),
           },
         });
       }
+    } */
+    if (userId) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existing = await this.prisma.recommendation.findFirst({
+        where: {
+          userId,
+          date: { gte: today },
+        },
+      });
+
+      // Nova logika:
+      // 1. Ako postoji posljednji heating event koji je jos aktivan → update
+      // 2. Ako ne postoji → create
+      // 3. Ako postoji, ali grijanje je završilo → NE diraj preporuku
+      const lastHeating = await this.prisma.heatingEvent.findFirst({
+        where: { thermostat: { userId }, timestampEnd: null },
+        orderBy: { timestampStart: 'desc' },
+      });
+
+      if (!existing && lastHeating) {
+        // Kreiraj novu preporuku
+        await this.prisma.recommendation.create({
+          data: {
+            userId,
+            date: new Date(),
+            recommendedFlowTemp: result.finalTemp,
+            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
+            confidenceScore: result.confidence,
+          },
+        });
+      } else if (existing && lastHeating) {
+        // Update samo ako grijanje još traje
+        await this.prisma.recommendation.update({
+          where: { id: existing.id },
+          data: {
+            recommendedFlowTemp: result.finalTemp,
+            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
+            confidenceScore: result.confidence,
+            date: new Date(),
+          },
+        });
+      }
+      // else: postoji preporuka ali grijanje je završilo → NE radi ništa
     }
 
     this.logger.log(

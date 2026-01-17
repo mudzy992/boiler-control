@@ -18,7 +18,7 @@ const HomePage = () => {
         setWeather(dashboard.system.weather);
         setLastRecommendation(dashboard.system.recommendation);
       } catch (err: any) {
-        message.error("Failed to load homepage data", err?.message);
+        message.error("Failed to load Homepage data", err?.message);
       } finally {
         setLoading(false);
       }

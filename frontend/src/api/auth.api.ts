@@ -19,9 +19,17 @@ export interface AuthUser {
   id: number;
   email: string;
   name?: string;
-  createdAt?: string;
   homeLocation?: string;
+  role?: string;
+  plan?: string;
+  avatarUrl?: string;
+  timezone?: string;
+  locale?: string;
+  prefersDarkMode?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
 
 export interface AuthResponse {
   user: AuthUser;

@@ -6,9 +6,10 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { TuyaAuthService } from '../Tuya/tuya.auth.service';
 import { ProgramSyncService } from './adapter/program.sync.service';
 import { BoilerController } from './boiler.controller';
+import { NotificationsModule } from '../Notification/notifications.module';
 
 @Module({
-  imports: [WeatherModule],
+  imports: [NotificationsModule, WeatherModule],
   providers: [
     ProgramSyncService,
     BoilerService,

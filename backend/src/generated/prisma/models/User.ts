@@ -40,6 +40,14 @@ export type UserMinAggregateOutputType = {
   passwordHash: string | null
   name: string | null
   homeLocation: string | null
+  avatarUrl: string | null
+  timezone: string | null
+  locale: string | null
+  prefersDarkMode: boolean | null
+  isActive: boolean | null
+  lastLoginAt: Date | null
+  role: $Enums.UserRole | null
+  plan: $Enums.UserPlan | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +58,14 @@ export type UserMaxAggregateOutputType = {
   passwordHash: string | null
   name: string | null
   homeLocation: string | null
+  avatarUrl: string | null
+  timezone: string | null
+  locale: string | null
+  prefersDarkMode: boolean | null
+  isActive: boolean | null
+  lastLoginAt: Date | null
+  role: $Enums.UserRole | null
+  plan: $Enums.UserPlan | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +76,14 @@ export type UserCountAggregateOutputType = {
   passwordHash: number
   name: number
   homeLocation: number
+  avatarUrl: number
+  timezone: number
+  locale: number
+  prefersDarkMode: number
+  isActive: number
+  lastLoginAt: number
+  role: number
+  plan: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -80,6 +104,14 @@ export type UserMinAggregateInputType = {
   passwordHash?: true
   name?: true
   homeLocation?: true
+  avatarUrl?: true
+  timezone?: true
+  locale?: true
+  prefersDarkMode?: true
+  isActive?: true
+  lastLoginAt?: true
+  role?: true
+  plan?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -90,6 +122,14 @@ export type UserMaxAggregateInputType = {
   passwordHash?: true
   name?: true
   homeLocation?: true
+  avatarUrl?: true
+  timezone?: true
+  locale?: true
+  prefersDarkMode?: true
+  isActive?: true
+  lastLoginAt?: true
+  role?: true
+  plan?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -100,6 +140,14 @@ export type UserCountAggregateInputType = {
   passwordHash?: true
   name?: true
   homeLocation?: true
+  avatarUrl?: true
+  timezone?: true
+  locale?: true
+  prefersDarkMode?: true
+  isActive?: true
+  lastLoginAt?: true
+  role?: true
+  plan?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -197,6 +245,14 @@ export type UserGroupByOutputType = {
   passwordHash: string
   name: string | null
   homeLocation: string | null
+  avatarUrl: string | null
+  timezone: string | null
+  locale: string | null
+  prefersDarkMode: boolean | null
+  isActive: boolean
+  lastLoginAt: Date | null
+  role: $Enums.UserRole
+  plan: $Enums.UserPlan
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -230,12 +286,23 @@ export type UserWhereInput = {
   passwordHash?: Prisma.StringFilter<"User"> | string
   name?: Prisma.StringNullableFilter<"User"> | string | null
   homeLocation?: Prisma.StringNullableFilter<"User"> | string | null
+  avatarUrl?: Prisma.StringNullableFilter<"User"> | string | null
+  timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  locale?: Prisma.StringNullableFilter<"User"> | string | null
+  prefersDarkMode?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  isActive?: Prisma.BoolFilter<"User"> | boolean
+  lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFilter<"User"> | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   homeProfiles?: Prisma.HomeProfileListRelationFilter
   thermostatDevices?: Prisma.ThermostatDeviceListRelationFilter
   recommendations?: Prisma.RecommendationListRelationFilter
   boilerHistories?: Prisma.BoilerHistoryListRelationFilter
+  devices?: Prisma.UserDeviceListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
+  notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -244,12 +311,23 @@ export type UserOrderByWithRelationInput = {
   passwordHash?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   homeLocation?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  locale?: Prisma.SortOrderInput | Prisma.SortOrder
+  prefersDarkMode?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  role?: Prisma.SortOrder
+  plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   homeProfiles?: Prisma.HomeProfileOrderByRelationAggregateInput
   thermostatDevices?: Prisma.ThermostatDeviceOrderByRelationAggregateInput
   recommendations?: Prisma.RecommendationOrderByRelationAggregateInput
   boilerHistories?: Prisma.BoilerHistoryOrderByRelationAggregateInput
+  devices?: Prisma.UserDeviceOrderByRelationAggregateInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
+  notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
   _relevance?: Prisma.UserOrderByRelevanceInput
 }
 
@@ -262,12 +340,23 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   passwordHash?: Prisma.StringFilter<"User"> | string
   name?: Prisma.StringNullableFilter<"User"> | string | null
   homeLocation?: Prisma.StringNullableFilter<"User"> | string | null
+  avatarUrl?: Prisma.StringNullableFilter<"User"> | string | null
+  timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  locale?: Prisma.StringNullableFilter<"User"> | string | null
+  prefersDarkMode?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  isActive?: Prisma.BoolFilter<"User"> | boolean
+  lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFilter<"User"> | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   homeProfiles?: Prisma.HomeProfileListRelationFilter
   thermostatDevices?: Prisma.ThermostatDeviceListRelationFilter
   recommendations?: Prisma.RecommendationListRelationFilter
   boilerHistories?: Prisma.BoilerHistoryListRelationFilter
+  devices?: Prisma.UserDeviceListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
+  notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -276,6 +365,14 @@ export type UserOrderByWithAggregationInput = {
   passwordHash?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   homeLocation?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  locale?: Prisma.SortOrderInput | Prisma.SortOrder
+  prefersDarkMode?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  role?: Prisma.SortOrder
+  plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -294,6 +391,14 @@ export type UserScalarWhereWithAggregatesInput = {
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   homeLocation?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  avatarUrl?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  timezone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  locale?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  prefersDarkMode?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
+  isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanWithAggregatesFilter<"User"> | $Enums.UserPlan
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -303,12 +408,23 @@ export type UserCreateInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
   thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -317,12 +433,23 @@ export type UserUncheckedCreateInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -330,12 +457,23 @@ export type UserUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
   thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -344,12 +482,23 @@ export type UserUncheckedUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -358,6 +507,14 @@ export type UserCreateManyInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -367,6 +524,14 @@ export type UserUpdateManyMutationInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -377,6 +542,14 @@ export type UserUncheckedUpdateManyInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -393,6 +566,14 @@ export type UserCountOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   name?: Prisma.SortOrder
   homeLocation?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrder
+  timezone?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
+  prefersDarkMode?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -407,6 +588,14 @@ export type UserMaxOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   name?: Prisma.SortOrder
   homeLocation?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrder
+  timezone?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
+  prefersDarkMode?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -417,6 +606,14 @@ export type UserMinOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   name?: Prisma.SortOrder
   homeLocation?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrder
+  timezone?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
+  prefersDarkMode?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -436,6 +633,26 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
+export type EnumUserRoleFieldUpdateOperationsInput = {
+  set?: $Enums.UserRole
+}
+
+export type EnumUserPlanFieldUpdateOperationsInput = {
+  set?: $Enums.UserPlan
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -506,16 +723,69 @@ export type UserUpdateOneRequiredWithoutBoilerHistoriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBoilerHistoriesInput, Prisma.UserUpdateWithoutBoilerHistoriesInput>, Prisma.UserUncheckedUpdateWithoutBoilerHistoriesInput>
 }
 
+export type UserCreateNestedOneWithoutDevicesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDevicesInput, Prisma.UserUncheckedCreateWithoutDevicesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDevicesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutDevicesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDevicesInput, Prisma.UserUncheckedCreateWithoutDevicesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDevicesInput
+  upsert?: Prisma.UserUpsertWithoutDevicesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDevicesInput, Prisma.UserUpdateWithoutDevicesInput>, Prisma.UserUncheckedUpdateWithoutDevicesInput>
+}
+
+export type UserCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.UserUpsertWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserCreateNestedOneWithoutNotificationPreferencesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationPreferencesInput, Prisma.UserUncheckedCreateWithoutNotificationPreferencesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationPreferencesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutNotificationPreferencesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationPreferencesInput, Prisma.UserUncheckedCreateWithoutNotificationPreferencesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationPreferencesInput
+  upsert?: Prisma.UserUpsertWithoutNotificationPreferencesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationPreferencesInput, Prisma.UserUpdateWithoutNotificationPreferencesInput>, Prisma.UserUncheckedUpdateWithoutNotificationPreferencesInput>
+}
+
 export type UserCreateWithoutHomeProfilesInput = {
   email: string
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutHomeProfilesInput = {
@@ -524,11 +794,22 @@ export type UserUncheckedCreateWithoutHomeProfilesInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutHomeProfilesInput = {
@@ -552,11 +833,22 @@ export type UserUpdateWithoutHomeProfilesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutHomeProfilesInput = {
@@ -565,11 +857,22 @@ export type UserUncheckedUpdateWithoutHomeProfilesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutThermostatDevicesInput = {
@@ -577,11 +880,22 @@ export type UserCreateWithoutThermostatDevicesInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutThermostatDevicesInput = {
@@ -590,11 +904,22 @@ export type UserUncheckedCreateWithoutThermostatDevicesInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutThermostatDevicesInput = {
@@ -618,11 +943,22 @@ export type UserUpdateWithoutThermostatDevicesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutThermostatDevicesInput = {
@@ -631,11 +967,22 @@ export type UserUncheckedUpdateWithoutThermostatDevicesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRecommendationsInput = {
@@ -643,11 +990,22 @@ export type UserCreateWithoutRecommendationsInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
   thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRecommendationsInput = {
@@ -656,11 +1014,22 @@ export type UserUncheckedCreateWithoutRecommendationsInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRecommendationsInput = {
@@ -684,11 +1053,22 @@ export type UserUpdateWithoutRecommendationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
   thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRecommendationsInput = {
@@ -697,11 +1077,22 @@ export type UserUncheckedUpdateWithoutRecommendationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
   boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBoilerHistoriesInput = {
@@ -709,11 +1100,22 @@ export type UserCreateWithoutBoilerHistoriesInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
   thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBoilerHistoriesInput = {
@@ -722,11 +1124,22 @@ export type UserUncheckedCreateWithoutBoilerHistoriesInput = {
   passwordHash: string
   name?: string | null
   homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
   createdAt?: Date | string
   updatedAt?: Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
   recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBoilerHistoriesInput = {
@@ -750,11 +1163,22 @@ export type UserUpdateWithoutBoilerHistoriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
   thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBoilerHistoriesInput = {
@@ -763,11 +1187,352 @@ export type UserUncheckedUpdateWithoutBoilerHistoriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
   thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
   recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutDevicesInput = {
+  email: string
+  passwordHash: string
+  name?: string | null
+  homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
+  thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
+  recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
+  boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutDevicesInput = {
+  id?: number
+  email: string
+  passwordHash: string
+  name?: string | null
+  homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
+  thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
+  recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
+  boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutDevicesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDevicesInput, Prisma.UserUncheckedCreateWithoutDevicesInput>
+}
+
+export type UserUpsertWithoutDevicesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDevicesInput, Prisma.UserUncheckedUpdateWithoutDevicesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDevicesInput, Prisma.UserUncheckedCreateWithoutDevicesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDevicesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDevicesInput, Prisma.UserUncheckedUpdateWithoutDevicesInput>
+}
+
+export type UserUpdateWithoutDevicesInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
+  thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
+  recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
+  boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDevicesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
+  thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
+  recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
+  boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutNotificationsInput = {
+  email: string
+  passwordHash: string
+  name?: string | null
+  homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
+  thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
+  recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
+  boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutNotificationsInput = {
+  id?: number
+  email: string
+  passwordHash: string
+  name?: string | null
+  homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
+  thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
+  recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
+  boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+}
+
+export type UserUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserUpdateWithoutNotificationsInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
+  thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
+  recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
+  boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
+  thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
+  recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
+  boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutNotificationPreferencesInput = {
+  email: string
+  passwordHash: string
+  name?: string | null
+  homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  homeProfiles?: Prisma.HomeProfileCreateNestedManyWithoutUserInput
+  thermostatDevices?: Prisma.ThermostatDeviceCreateNestedManyWithoutUserInput
+  recommendations?: Prisma.RecommendationCreateNestedManyWithoutUserInput
+  boilerHistories?: Prisma.BoilerHistoryCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
+  id?: number
+  email: string
+  passwordHash: string
+  name?: string | null
+  homeLocation?: string | null
+  avatarUrl?: string | null
+  timezone?: string | null
+  locale?: string | null
+  prefersDarkMode?: boolean | null
+  isActive?: boolean
+  lastLoginAt?: Date | string | null
+  role?: $Enums.UserRole
+  plan?: $Enums.UserPlan
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  homeProfiles?: Prisma.HomeProfileUncheckedCreateNestedManyWithoutUserInput
+  thermostatDevices?: Prisma.ThermostatDeviceUncheckedCreateNestedManyWithoutUserInput
+  recommendations?: Prisma.RecommendationUncheckedCreateNestedManyWithoutUserInput
+  boilerHistories?: Prisma.BoilerHistoryUncheckedCreateNestedManyWithoutUserInput
+  devices?: Prisma.UserDeviceUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutNotificationPreferencesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationPreferencesInput, Prisma.UserUncheckedCreateWithoutNotificationPreferencesInput>
+}
+
+export type UserUpsertWithoutNotificationPreferencesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationPreferencesInput, Prisma.UserUncheckedUpdateWithoutNotificationPreferencesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationPreferencesInput, Prisma.UserUncheckedCreateWithoutNotificationPreferencesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationPreferencesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationPreferencesInput, Prisma.UserUncheckedUpdateWithoutNotificationPreferencesInput>
+}
+
+export type UserUpdateWithoutNotificationPreferencesInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeProfiles?: Prisma.HomeProfileUpdateManyWithoutUserNestedInput
+  thermostatDevices?: Prisma.ThermostatDeviceUpdateManyWithoutUserNestedInput
+  recommendations?: Prisma.RecommendationUpdateManyWithoutUserNestedInput
+  boilerHistories?: Prisma.BoilerHistoryUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeLocation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prefersDarkMode?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  plan?: Prisma.EnumUserPlanFieldUpdateOperationsInput | $Enums.UserPlan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeProfiles?: Prisma.HomeProfileUncheckedUpdateManyWithoutUserNestedInput
+  thermostatDevices?: Prisma.ThermostatDeviceUncheckedUpdateManyWithoutUserNestedInput
+  recommendations?: Prisma.RecommendationUncheckedUpdateManyWithoutUserNestedInput
+  boilerHistories?: Prisma.BoilerHistoryUncheckedUpdateManyWithoutUserNestedInput
+  devices?: Prisma.UserDeviceUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -780,6 +1545,9 @@ export type UserCountOutputType = {
   thermostatDevices: number
   recommendations: number
   boilerHistories: number
+  devices: number
+  notifications: number
+  notificationPreferences: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -787,6 +1555,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   thermostatDevices?: boolean | UserCountOutputTypeCountThermostatDevicesArgs
   recommendations?: boolean | UserCountOutputTypeCountRecommendationsArgs
   boilerHistories?: boolean | UserCountOutputTypeCountBoilerHistoriesArgs
+  devices?: boolean | UserCountOutputTypeCountDevicesArgs
+  notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
+  notificationPreferences?: boolean | UserCountOutputTypeCountNotificationPreferencesArgs
 }
 
 /**
@@ -827,6 +1598,27 @@ export type UserCountOutputTypeCountBoilerHistoriesArgs<ExtArgs extends runtime.
   where?: Prisma.BoilerHistoryWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDevicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserDeviceWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotificationPreferencesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationPreferenceWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -834,12 +1626,23 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   passwordHash?: boolean
   name?: boolean
   homeLocation?: boolean
+  avatarUrl?: boolean
+  timezone?: boolean
+  locale?: boolean
+  prefersDarkMode?: boolean
+  isActive?: boolean
+  lastLoginAt?: boolean
+  role?: boolean
+  plan?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   homeProfiles?: boolean | Prisma.User$homeProfilesArgs<ExtArgs>
   thermostatDevices?: boolean | Prisma.User$thermostatDevicesArgs<ExtArgs>
   recommendations?: boolean | Prisma.User$recommendationsArgs<ExtArgs>
   boilerHistories?: boolean | Prisma.User$boilerHistoriesArgs<ExtArgs>
+  devices?: boolean | Prisma.User$devicesArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -851,16 +1654,27 @@ export type UserSelectScalar = {
   passwordHash?: boolean
   name?: boolean
   homeLocation?: boolean
+  avatarUrl?: boolean
+  timezone?: boolean
+  locale?: boolean
+  prefersDarkMode?: boolean
+  isActive?: boolean
+  lastLoginAt?: boolean
+  role?: boolean
+  plan?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "homeLocation" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "homeLocation" | "avatarUrl" | "timezone" | "locale" | "prefersDarkMode" | "isActive" | "lastLoginAt" | "role" | "plan" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   homeProfiles?: boolean | Prisma.User$homeProfilesArgs<ExtArgs>
   thermostatDevices?: boolean | Prisma.User$thermostatDevicesArgs<ExtArgs>
   recommendations?: boolean | Prisma.User$recommendationsArgs<ExtArgs>
   boilerHistories?: boolean | Prisma.User$boilerHistoriesArgs<ExtArgs>
+  devices?: boolean | Prisma.User$devicesArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -871,6 +1685,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     thermostatDevices: Prisma.$ThermostatDevicePayload<ExtArgs>[]
     recommendations: Prisma.$RecommendationPayload<ExtArgs>[]
     boilerHistories: Prisma.$BoilerHistoryPayload<ExtArgs>[]
+    devices: Prisma.$UserDevicePayload<ExtArgs>[]
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
+    notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -878,6 +1695,14 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     passwordHash: string
     name: string | null
     homeLocation: string | null
+    avatarUrl: string | null
+    timezone: string | null
+    locale: string | null
+    prefersDarkMode: boolean | null
+    isActive: boolean
+    lastLoginAt: Date | null
+    role: $Enums.UserRole
+    plan: $Enums.UserPlan
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1224,6 +2049,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   thermostatDevices<T extends Prisma.User$thermostatDevicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$thermostatDevicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ThermostatDevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   recommendations<T extends Prisma.User$recommendationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$recommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecommendationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   boilerHistories<T extends Prisma.User$boilerHistoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$boilerHistoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoilerHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  devices<T extends Prisma.User$devicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$devicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserDevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notificationPreferences<T extends Prisma.User$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1258,6 +2086,14 @@ export interface UserFieldRefs {
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly homeLocation: Prisma.FieldRef<"User", 'String'>
+  readonly avatarUrl: Prisma.FieldRef<"User", 'String'>
+  readonly timezone: Prisma.FieldRef<"User", 'String'>
+  readonly locale: Prisma.FieldRef<"User", 'String'>
+  readonly prefersDarkMode: Prisma.FieldRef<"User", 'Boolean'>
+  readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
+  readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly role: Prisma.FieldRef<"User", 'UserRole'>
+  readonly plan: Prisma.FieldRef<"User", 'UserPlan'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -1696,6 +2532,78 @@ export type User$boilerHistoriesArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.BoilerHistoryScalarFieldEnum | Prisma.BoilerHistoryScalarFieldEnum[]
+}
+
+/**
+ * User.devices
+ */
+export type User$devicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserDevice
+   */
+  select?: Prisma.UserDeviceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserDevice
+   */
+  omit?: Prisma.UserDeviceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserDeviceInclude<ExtArgs> | null
+  where?: Prisma.UserDeviceWhereInput
+  orderBy?: Prisma.UserDeviceOrderByWithRelationInput | Prisma.UserDeviceOrderByWithRelationInput[]
+  cursor?: Prisma.UserDeviceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserDeviceScalarFieldEnum | Prisma.UserDeviceScalarFieldEnum[]
+}
+
+/**
+ * User.notifications
+ */
+export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
+}
+
+/**
+ * User.notificationPreferences
+ */
+export type User$notificationPreferencesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NotificationPreference
+   */
+  select?: Prisma.NotificationPreferenceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NotificationPreference
+   */
+  omit?: Prisma.NotificationPreferenceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationPreferenceInclude<ExtArgs> | null
+  where?: Prisma.NotificationPreferenceWhereInput
+  orderBy?: Prisma.NotificationPreferenceOrderByWithRelationInput | Prisma.NotificationPreferenceOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationPreferenceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationPreferenceScalarFieldEnum | Prisma.NotificationPreferenceScalarFieldEnum[]
 }
 
 /**

@@ -7,9 +7,10 @@ import { WeatherModule } from '../Weather/weather.module';
 import { TuyaAdapter } from '../Boiler/adapter/tuya.adapter';
 import { TuyaAuthService } from '../Tuya/tuya.auth.service';
 import { ProgramSyncService } from '../Boiler/adapter/program.sync.service';
+import { NotificationsModule } from '../Notification/notifications.module';
 
 @Module({
-  imports: [WeatherModule],
+  imports: [WeatherModule, NotificationsModule],
   controllers: [DashboardController],
   providers: [
     ProgramSyncService,

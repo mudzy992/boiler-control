@@ -1,3 +1,4 @@
+// src/User/user.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,7 +16,14 @@ export class UserService {
         email: true,
         name: true,
         homeLocation: true,
+        role: true,
+        plan: true,
+        avatarUrl: true,
+        timezone: true,
+        locale: true,
+        prefersDarkMode: true,
         createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -24,18 +32,15 @@ export class UserService {
   }
 
   async updateMe(userId: number, dto: UpdateUserDto) {
-    const dataToUpdate: any = { ...dto }; // kopiramo dto da ne mutiramo original
+    const dataToUpdate: any = { ...dto };
 
-    // Ako je poslana nova lozinka, hashiramo je i dodajemo u data
     if (dto.password) {
       const hashed = await bcrypt.hash(dto.password, 12);
       dataToUpdate.passwordHash = hashed;
-    } else {
-      // Ako password nije poslan, uklonimo ga da se ne updejtuje na null ili undefined
-      delete dataToUpdate.passwordHash;
     }
+    delete dataToUpdate.password; // uklonimo plain password
 
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id: userId },
       data: dataToUpdate,
       select: {
@@ -43,8 +48,16 @@ export class UserService {
         email: true,
         name: true,
         homeLocation: true,
+        role: true,
+        plan: true,
+        avatarUrl: true,
+        timezone: true,
+        locale: true,
+        prefersDarkMode: true,
         updatedAt: true,
       },
     });
+
+    return user;
   }
 }

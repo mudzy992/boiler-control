@@ -6,9 +6,10 @@ import { ThermostatPollingService } from '../ThermostatPoll/thermostat.polling.s
 import { BoilerModule } from '../Boiler/boiler.module';
 import { DailyRecommendationService } from './daily.recommendation.service';
 import { ProgramSyncService } from '../Boiler/adapter/program.sync.service';
+import { NotificationsModule } from '../Notification/notifications.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), BoilerModule],
+  imports: [ScheduleModule.forRoot(), NotificationsModule, BoilerModule],
   providers: [
     ProgramSyncService,
     ThermostatPollingService,

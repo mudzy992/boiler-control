@@ -9,6 +9,17 @@
 * 🟢 You can import this file directly.
 */
 
+export const NotificationType = {
+  DAILY_RECOMMENDATION: 'DAILY_RECOMMENDATION',
+  FLOW_TEMP_CHANGED: 'FLOW_TEMP_CHANGED',
+  HEATING_STARTED: 'HEATING_STARTED',
+  HEATING_ENDED: 'HEATING_ENDED',
+  SYSTEM_ALERT: 'SYSTEM_ALERT'
+} as const
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
+
+
 export const ThermostatMode = {
   MANUAL: 'MANUAL',
   PROGRAM: 'PROGRAM',
@@ -25,3 +36,21 @@ export const DayType = {
 } as const
 
 export type DayType = (typeof DayType)[keyof typeof DayType]
+
+
+export const UserRole = {
+  USER: 'USER',
+  ADMIN: 'ADMIN',
+  SUPPORT: 'SUPPORT'
+} as const
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const UserPlan = {
+  FREE: 'FREE',
+  PRO: 'PRO',
+  ENTERPRISE: 'ENTERPRISE'
+} as const
+
+export type UserPlan = (typeof UserPlan)[keyof typeof UserPlan]

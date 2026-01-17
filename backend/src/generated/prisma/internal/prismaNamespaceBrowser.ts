@@ -60,7 +60,10 @@ export const ModelName = {
   WeatherCache: 'WeatherCache',
   BoilerHistory: 'BoilerHistory',
   HeatingIntervalLearning: 'HeatingIntervalLearning',
-  TuyaToken: 'TuyaToken'
+  TuyaToken: 'TuyaToken',
+  UserDevice: 'UserDevice',
+  Notification: 'Notification',
+  NotificationPreference: 'NotificationPreference'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -85,6 +88,14 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   name: 'name',
   homeLocation: 'homeLocation',
+  avatarUrl: 'avatarUrl',
+  timezone: 'timezone',
+  locale: 'locale',
+  prefersDarkMode: 'prefersDarkMode',
+  isActive: 'isActive',
+  lastLoginAt: 'lastLoginAt',
+  role: 'role',
+  plan: 'plan',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -240,12 +251,62 @@ export const TuyaTokenScalarFieldEnum = {
 export type TuyaTokenScalarFieldEnum = (typeof TuyaTokenScalarFieldEnum)[keyof typeof TuyaTokenScalarFieldEnum]
 
 
+export const UserDeviceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  platform: 'platform',
+  expoPushToken: 'expoPushToken',
+  isActive: 'isActive',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserDeviceScalarFieldEnum = (typeof UserDeviceScalarFieldEnum)[keyof typeof UserDeviceScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  data: 'data',
+  sentAt: 'sentAt',
+  deliveryOk: 'deliveryOk',
+  sourceRef: 'sourceRef',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const NotificationPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationPreferenceScalarFieldEnum = (typeof NotificationPreferenceScalarFieldEnum)[keyof typeof NotificationPreferenceScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull'
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const NullsOrder = {
@@ -260,7 +321,10 @@ export const UserOrderByRelevanceFieldEnum = {
   email: 'email',
   passwordHash: 'passwordHash',
   name: 'name',
-  homeLocation: 'homeLocation'
+  homeLocation: 'homeLocation',
+  avatarUrl: 'avatarUrl',
+  timezone: 'timezone',
+  locale: 'locale'
 } as const
 
 export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnum)[keyof typeof UserOrderByRelevanceFieldEnum]
@@ -325,4 +389,38 @@ export const TuyaTokenOrderByRelevanceFieldEnum = {
 } as const
 
 export type TuyaTokenOrderByRelevanceFieldEnum = (typeof TuyaTokenOrderByRelevanceFieldEnum)[keyof typeof TuyaTokenOrderByRelevanceFieldEnum]
+
+
+export const UserDeviceOrderByRelevanceFieldEnum = {
+  platform: 'platform',
+  expoPushToken: 'expoPushToken'
+} as const
+
+export type UserDeviceOrderByRelevanceFieldEnum = (typeof UserDeviceOrderByRelevanceFieldEnum)[keyof typeof UserDeviceOrderByRelevanceFieldEnum]
+
+
+export const JsonNullValueFilter = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull',
+  AnyNull: 'AnyNull'
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NotificationOrderByRelevanceFieldEnum = {
+  title: 'title',
+  message: 'message',
+  sourceRef: 'sourceRef'
+} as const
+
+export type NotificationOrderByRelevanceFieldEnum = (typeof NotificationOrderByRelevanceFieldEnum)[keyof typeof NotificationOrderByRelevanceFieldEnum]
 

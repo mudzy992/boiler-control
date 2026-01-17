@@ -37,6 +37,7 @@
     "crypto": "^1.0.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
+    "expo-server-sdk": "^4.0.0",
     "https": "^1.0.0",
     "openmeteo": "^1.2.3",
     "passport": "^0.7.0",

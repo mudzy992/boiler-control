@@ -9,6 +9,7 @@ import { HomeProfileModule } from './modules/HomeProfile/home.profile.module';
 import { ThermostatDeviceModule } from './modules/ThermostatDevice/thermostat.device.module';
 import { UserModule } from './modules/User/user.module';
 import { TuyaTestModule } from './modules/Tuya-test/tuya.test.module';
+import { NotificationsModule } from './modules/Notification/notifications.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TuyaTestModule } from './modules/Tuya-test/tuya.test.module';
     ThermostatDeviceModule,
     UserModule,
     TuyaTestModule,
+    NotificationsModule,
   ],
   controllers: [],
   providers: [],

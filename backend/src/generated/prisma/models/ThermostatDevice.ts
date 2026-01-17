@@ -592,10 +592,6 @@ export type ThermostatDeviceUncheckedUpdateManyWithoutHomeProfileNestedInput = {
   deleteMany?: Prisma.ThermostatDeviceScalarWhereInput | Prisma.ThermostatDeviceScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type EnumThermostatModeFieldUpdateOperationsInput = {
   set?: $Enums.ThermostatMode
 }

@@ -1,5 +1,3 @@
-// heating/boiler.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { addMinutes } from 'date-fns';
@@ -10,6 +8,8 @@ import {
 } from '../Heating/engine/types';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { WeatherService } from '../Weather/weather.service';
+import { NotificationsService } from '../Notification/notifications.service';
+import { NotificationType } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class BoilerService {
@@ -18,6 +18,7 @@ export class BoilerService {
   constructor(
     private prisma: PrismaService,
     private weatherService: WeatherService,
+    private notificationService: NotificationsService,
   ) {}
 
   async getStartTemp(userId?: number): Promise<number> {
@@ -172,6 +173,20 @@ export class BoilerService {
           },
         });
       } else if (existing && lastHeating) {
+        const diff = Math.abs(existing.recommendedFlowTemp - result.finalTemp);
+        if (diff >= 1) {
+          await this.notificationService.notifyUser({
+            userId: userId,
+            type: NotificationType.FLOW_TEMP_CHANGED,
+            title: 'Promjena preporuke grijanja',
+            message: `Nova preporučena polazna temperatura je ${result.finalTemp}°C`,
+            data: {
+              type: 'FLOW_TEMP_CHANGED',
+              previous: existing.recommendedFlowTemp,
+              current: result.finalTemp,
+            },
+          });
+        }
         // Update samo ako grijanje još traje
         await this.prisma.recommendation.update({
           where: { id: existing.id },
@@ -224,6 +239,17 @@ export class BoilerService {
         actualTemp: null,
         heatingStart: null,
         heatingEnd: null,
+      },
+    });
+
+    await this.notificationService.notifyUser({
+      userId: userId,
+      type: NotificationType.DAILY_RECOMMENDATION,
+      title: 'Dnevna preporuka grijanja',
+      message: `Preporučena polazna temperatura za danas je ${finalTemp}°C`,
+      data: {
+        type: 'DAILY_RECOMMENDATION',
+        flowTemp: finalTemp,
       },
     });
 

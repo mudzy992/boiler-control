@@ -87,3 +87,18 @@ export type HeatingIntervalLearning = Prisma.HeatingIntervalLearningModel
  * 
  */
 export type TuyaToken = Prisma.TuyaTokenModel
+/**
+ * Model UserDevice
+ * 
+ */
+export type UserDevice = Prisma.UserDeviceModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
+ * Model NotificationPreference
+ * 
+ */
+export type NotificationPreference = Prisma.NotificationPreferenceModel

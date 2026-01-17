@@ -6,6 +6,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
+import { NotificationsService } from '../Notification/notifications.service';
+import { NotificationType } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class ThermostatPollingService {
@@ -16,6 +18,7 @@ export class ThermostatPollingService {
   constructor(
     private prisma: PrismaService,
     @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
+    private notificationsService: NotificationsService,
   ) {}
 
   @Cron('*/1 * * * *', {
@@ -210,6 +213,18 @@ export class ThermostatPollingService {
         heatingEnd: null,
       },
     });
+
+    await this.notificationsService.notifyUser({
+      userId: device.userId,
+      type: NotificationType.HEATING_STARTED,
+      title: 'Grijanje uključeno',
+      message: 'Započet je novi ciklus grijanja.',
+      data: {
+        type: 'HEATING_STARTED',
+        flowTemp,
+        roomTargetTemp,
+      },
+    });
   }
 
   private async turnOffHeating(
@@ -260,6 +275,17 @@ export class ThermostatPollingService {
         samples: newSamples,
         confidence: newConfidence,
         lastUpdated: now,
+      },
+    });
+
+    await this.notificationsService.notifyUser({
+      userId: device.userId,
+      type: NotificationType.HEATING_ENDED,
+      title: 'Grijanje završeno',
+      message: 'Ciklus grijanja je završen',
+      data: {
+        type: 'HEATING_ENDED',
+        durationMin: reachTimeMin,
       },
     });
   }

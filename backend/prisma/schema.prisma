@@ -19,27 +19,43 @@ model User {
   email         String   @unique
   passwordHash  String
   name          String?
-  homeLocation String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  homeLocation  String?
+
+  avatarUrl     String?
+  timezone      String?
+  locale        String?
+  prefersDarkMode Boolean?
+
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+
+  role          UserRole  @default(USER)
+  plan          UserPlan  @default(FREE)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   homeProfiles      HomeProfile[]
   thermostatDevices ThermostatDevice[]
   recommendations   Recommendation[]
   boilerHistories   BoilerHistory[]
+
+  devices                    UserDevice[]
+  notifications               Notification[]
+  notificationPreferences     NotificationPreference[]
 }
 
 model HomeProfile {
   id                  Int                       @id @default(autoincrement())
   user                User                      @relation(fields: [userId], references: [id])
   userId              Int
-  floorArea           Float
-  ceilingHeight       Float
-  insulationType      String
-  insulationThickness Float
-  windowType          String
-  heatingType         String
-  constructionYear    Int
+  floorArea           Float                                 // Grejni prostor 150m2
+  ceilingHeight       Float                                 // Visina plafona 230 cm
+  insulationType      String                                // Vrsta izolacije EPS Wool
+  insulationThickness Float                                 // Debljina izolacije 10, 12, 15 cm
+  windowType          String                                // Tip stolarije double/ triple PVC, Wood
+  heatingType         String                                // Tip grijanja radijator, podno
+  constructionYear    Int                                   // Godina izgradnje objekta
   learningOffset      Float                     @default(0) // ± korekcija krivulje
   learningConfidence  Float                     @default(0) // 0–1
   createdAt           DateTime                  @default(now())
@@ -70,7 +86,7 @@ model ThermostatProgram {
   deviceId       Int
   dayType        DayType  // WORKDAY | SATURDAY | SUNDAY
   startMinute    Int      // npr 6:30 = 390
-  targetTemp     Float
+  targetTemp     Float    // 22,5
   orderIndex     Int      // 0..5 (radi lakšeg sortiranja)
   programHash    String?
   createdAt      DateTime @default(now())
@@ -85,11 +101,11 @@ model HeatingEvent {
   id             Int              @id @default(autoincrement())
   thermostat     ThermostatDevice @relation(fields: [deviceId], references: [id])
   deviceId       Int
-  timestampStart DateTime
-  timestampEnd   DateTime?
-  currentTemp    Float
-  targetTemp     Float
-  hvacAction     String
+  timestampStart DateTime                          // Početak grijanja
+  timestampEnd   DateTime?                         // Završetak grijanja
+  currentTemp    Float                             // Trenutna temperatura u prostoriji
+  targetTemp     Float                             // Temperatura koja treba da se dostigne
+  hvacAction     String                            // Informacija da li je grijanje u toku ili ne
   source         String
 
   createdAt DateTime @default(now())
@@ -100,9 +116,9 @@ model Recommendation {
   user                User     @relation(fields: [userId], references: [id])
   userId              Int
   date                DateTime
-  recommendedFlowTemp Float
-  expectedHeatTimeMin Float
-  confidenceScore     Float
+  recommendedFlowTemp Float                               // Predložena temperatura vode kotla
+  expectedHeatTimeMin Float                               // Očekivano vrijeme zagrijavanja
+  confidenceScore     Float                               //
 
   createdAt DateTime @default(now())
 }
@@ -138,11 +154,11 @@ model BoilerHistory {
   id            Int       @id @default(autoincrement())
   user          User      @relation(fields: [userId], references: [id])
   userId        Int
-  externalTemp  Float
-  suggestedTemp Float
-  actualTemp    Float?
-  heatingStart  DateTime?
-  heatingEnd    DateTime?
+  externalTemp  Float                                // Trenutna vanjska temperatura
+  suggestedTemp Float                                // Predložena temperatura vode kotla (polazna voda)
+  actualTemp    Float?                               // Trenutna aktuelna temperatura vode kotla (polazna voda)
+  heatingStart  DateTime?                            // Početak grijanja
+  heatingEnd    DateTime?                            // Kraj grijanja
   createdAt     DateTime  @default(now())
 }
 
@@ -169,6 +185,66 @@ model TuyaToken {
   updatedAt   DateTime @updatedAt
 }
 
+model UserDevice {
+  id              Int      @id @default(autoincrement())
+  user             User     @relation(fields: [userId], references: [id])
+  userId           Int
+
+  platform         String   // ios | android
+  expoPushToken    String   @unique
+  isActive         Boolean  @default(true)
+
+  lastSeenAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Notification {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+
+  type         NotificationType
+  title        String
+  message      String
+
+  data         Json?        // payload (flowTemp, eventId, etc.)
+  sentAt       DateTime     @default(now())
+  deliveryOk   Boolean      @default(true)
+
+  sourceRef    String?      // npr. "daily_recommendation_2026-01-16"
+
+  createdAt    DateTime     @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@unique([userId, sourceRef])
+}
+
+model NotificationPreference {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+
+  type      NotificationType
+  enabled   Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type])
+}
+
+enum NotificationType {
+  DAILY_RECOMMENDATION
+  FLOW_TEMP_CHANGED
+  HEATING_STARTED
+  HEATING_ENDED
+  SYSTEM_ALERT
+}
+
 enum ThermostatMode {
   MANUAL
   PROGRAM
@@ -179,4 +255,16 @@ enum DayType {
   WORKDAY
   SATURDAY
   SUNDAY
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPPORT
+}
+
+enum UserPlan {
+  FREE
+  PRO
+  ENTERPRISE
 }

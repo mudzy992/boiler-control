@@ -1,10 +1,18 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Patch,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { User } from '../Auth/user.decorator';
 import { RegisterDeviceDTO } from './dto/register-device.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { NotificationType } from 'src/generated/prisma/enums';
+import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationType } from '../../generated/prisma/enums';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api/notifications')

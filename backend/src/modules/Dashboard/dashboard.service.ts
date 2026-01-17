@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { HeatingEventWhereInput } from 'src/generated/prisma/models';
+import { HeatingEventWhereInput } from '../../generated/prisma/models';
 import {
   HeatingEventsQuery,
   HeatingStatsQuery,

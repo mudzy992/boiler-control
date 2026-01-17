@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { ExpoPushService } from '../ExpoPush/expo.push.notification.service';
-import { NotificationType } from 'src/generated/prisma/enums';
+import { NotificationType } from '../../generated/prisma/enums';
 import { NOTIFICATION_DEBOUNCE } from './util/debounce';
 
 @Injectable()

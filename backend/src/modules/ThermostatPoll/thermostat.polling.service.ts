@@ -347,13 +347,26 @@ export class ThermostatPollingService {
   private getIntervalKey(): string {
     const now = new Date();
     const hour = now.getHours();
-    const weekday = now.getDay();
+    const weekday = now.getDay(); // 0 = nedjelja, 6 = subota
     let part = 'night';
+
+    // Definišemo intervale tokom dana
     if (hour >= 6 && hour < 9) part = 'morning';
     else if (hour >= 9 && hour < 12) part = 'late_morning';
     else if (hour >= 12 && hour < 17) part = 'afternoon';
     else if (hour >= 17 && hour < 22) part = 'evening';
-    const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
-    return `${dayType}_${part}`;
+    else part = 'night';
+
+    // Radni dani
+    if (weekday >= 1 && weekday <= 5) {
+      return `weekday_${weekday}_${part}`; // 1=ponedjeljak, 5=petak
+    }
+
+    // Vikend
+    if (weekday === 6) return `weekend_1_${part}`; // subota
+    if (weekday === 0) return `weekend_2_${part}`; // nedjelja
+
+    // fallback
+    return `weekday_1_${part}`;
   }
 }

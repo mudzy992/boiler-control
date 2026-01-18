@@ -14,6 +14,14 @@ import { RegisterDeviceDTO } from './dto/register-device.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationType } from '../../generated/prisma/enums';
 
+interface ManualNotificationDTO {
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  data?: any;
+}
+
 @UseGuards(JwtAuthGuard)
 @Controller('api/notifications')
 export class NotificationsController {
@@ -30,6 +38,21 @@ export class NotificationsController {
       body.expoPushToken,
       body.platform,
     );
+  }
+
+  @Post()
+  async sendManualNotification(
+    @User() userId: number,
+    @Body() body: ManualNotificationDTO,
+  ) {
+    await this.notificationsService.notifyUser({
+      userId: userId,
+      type: body.type,
+      title: body.title,
+      message: body.message,
+      data: body.data,
+    });
+    return { success: true, message: 'Notification sent manually' };
   }
 
   // Dohvati sve notifikacije korisnika

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
+import { NotificationType } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class ExpoPushService {
@@ -26,6 +27,8 @@ export class ExpoPushService {
         title,
         body: message,
         data,
+        priority: 'high',
+        channelId: resolveChannel(data.type),
       });
     }
 
@@ -38,5 +41,18 @@ export class ExpoPushService {
         console.error('Expo push error', error);
       }
     }
+  }
+}
+
+function resolveChannel(type: NotificationType): string {
+  switch (type) {
+    case NotificationType.DAILY_RECOMMENDATION:
+      return 'daily';
+
+    case NotificationType.SYSTEM_ALERT:
+      return 'alerts';
+
+    default:
+      return 'heating';
   }
 }

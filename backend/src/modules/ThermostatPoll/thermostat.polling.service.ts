@@ -218,7 +218,7 @@ export class ThermostatPollingService {
       userId: device.userId,
       type: NotificationType.HEATING_STARTED,
       title: 'Grijanje uključeno',
-      message: 'Započet je novi ciklus grijanja.',
+      message: `Započeo je novi ciklus grijanja. Ciljna temperatura prostorije je ${roomTargetTemp}°C`,
       data: {
         type: 'HEATING_STARTED',
         flowTemp,
@@ -266,6 +266,17 @@ export class ThermostatPollingService {
         newSamples,
     );
 
+    await this.notificationsService.notifyUser({
+      userId: device.userId,
+      type: NotificationType.HEATING_ENDED,
+      title: 'Grijanje završeno',
+      message: `Ciklus grijanja je završen za ${reachTimeMin}°C. Temperatura u prostoriji ${lastEvent.currentTemp}`,
+      data: {
+        type: 'HEATING_ENDED',
+        durationMin: reachTimeMin,
+      },
+    });
+
     await this.prisma.heatingIntervalLearning.update({
       where: { id: intervalLearning.id },
       data: {
@@ -275,17 +286,6 @@ export class ThermostatPollingService {
         samples: newSamples,
         confidence: newConfidence,
         lastUpdated: now,
-      },
-    });
-
-    await this.notificationsService.notifyUser({
-      userId: device.userId,
-      type: NotificationType.HEATING_ENDED,
-      title: 'Grijanje završeno',
-      message: 'Ciklus grijanja je završen',
-      data: {
-        type: 'HEATING_ENDED',
-        durationMin: reachTimeMin,
       },
     });
   }

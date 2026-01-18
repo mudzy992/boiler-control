@@ -9,7 +9,7 @@ import {
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { WeatherService } from '../Weather/weather.service';
 import { NotificationsService } from '../Notification/notifications.service';
-import { NotificationType } from 'src/generated/prisma/enums';
+import { NotificationType } from '../../generated/prisma/enums';
 
 @Injectable()
 export class BoilerService {

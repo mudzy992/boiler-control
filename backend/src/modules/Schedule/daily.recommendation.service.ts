@@ -3,9 +3,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
-import { BoilerService } from '../Boiler/boiler.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
+import { NotificationsService } from '../Notification/notifications.service';
+import { NotificationType } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class DailyRecommendationService {
@@ -13,11 +14,11 @@ export class DailyRecommendationService {
 
   constructor(
     private prisma: PrismaService,
-    private boilerService: BoilerService,
+    private notificationService: NotificationsService,
   ) {}
 
   // svaki dan u 6:00
-  @Cron('0 6 * * *', {
+  @Cron('0 0 * * *', {
     name: 'daily-recommendations',
     disabled: process.env.NODE_ENV === 'development',
   })
@@ -77,6 +78,35 @@ export class DailyRecommendationService {
             recommendedFlowTemp: flowResult.finalTemp,
             expectedHeatTimeMin: 0, // po potrebi može se dodati logika
             confidenceScore: flowResult.confidence,
+          },
+        });
+
+        const alreadySent = await this.prisma.notification.findFirst({
+          where: {
+            userId: user.id,
+            type: NotificationType.DAILY_RECOMMENDATION,
+            createdAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            },
+          },
+        });
+
+        if (alreadySent) {
+          this.logger.warn(
+            `Daily recommendation already sent for user ${user.id}`,
+          );
+          continue;
+        }
+
+        await this.notificationService.notifyUser({
+          userId: user.id,
+          type: NotificationType.DAILY_RECOMMENDATION,
+          title: 'Preporučena temperatura',
+          message: `Nova dnevna preporučena polazna temperatura kotla je ${flowResult.finalTemp}°C`,
+          data: {
+            type: NotificationType.DAILY_RECOMMENDATION,
+            recommendedFlowTemp: flowResult.finalTemp,
+            confidence: flowResult.confidence,
           },
         });
 

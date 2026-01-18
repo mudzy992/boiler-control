@@ -40,7 +40,7 @@ export class NotificationsController {
     );
   }
 
-  @Post()
+  @Post('manual')
   async sendManualNotification(
     @User() userId: number,
     @Body() body: ManualNotificationDTO,

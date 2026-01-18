@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
-import { NotificationType } from 'src/generated/prisma/enums';
+import { NotificationType } from '../../generated/prisma/enums';
 
 @Injectable()
 export class ExpoPushService {

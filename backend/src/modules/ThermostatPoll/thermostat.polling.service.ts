@@ -3,10 +3,10 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
-import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
 import { NotificationsService } from '../Notification/notifications.service';
 import { NotificationType } from '../../generated/prisma/enums';
+import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 
 @Injectable()
 export class ThermostatPollingService {
@@ -144,6 +144,8 @@ export class ThermostatPollingService {
           ? {
               offset: intervalLearning.offset,
               confidence: intervalLearning.confidence,
+              avgOvershoot: intervalLearning.avgOvershoot,
+              avgReachTimeMin: intervalLearning.avgReachTimeMin,
             }
           : undefined,
         recentEvents: recentEvents.map((e) => ({

@@ -24,6 +24,9 @@ export interface HomeProfileInput {
 export interface IntervalLearningInput {
   offset: number;
   confidence: number;
+  avgOvershoot?: number;
+  avgReachTimeMin?: number;
+  samples?: number;
 }
 
 export interface HeatingEventInput {

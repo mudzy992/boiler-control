@@ -6,64 +6,62 @@ export class FlowTemperatureEngine {
   static calculate(input: FlowTempInput): FlowTempResult {
     // 1️⃣ Weighted external temp
     const weightedExternalTemp =
-      0.7 * input.weather.tempMin + 0.3 * input.weather.tempMax;
+      0.7 * (input.weather.tempMin ?? 0) + 0.3 * (input.weather.tempMax ?? 0);
     const ext = Math.max(-15, Math.min(10, weightedExternalTemp));
 
-    // 2️⃣ Base curve
+    // 2️⃣ Base curve (statistički)
     const baseCurveTemp = this.calculateCurve(ext);
 
-    // 3️⃣ Home profile offsets
-    const home = input.homeProfile;
-    let homeOffset = home.learningOffset ?? 0;
-    let confidence = home.confidence ?? 0.1;
+    // 3️⃣ Home profile adaptive offset
+    let homeOffset = (input.homeProfile?.learningOffset ?? 0) || 0;
+    let confidence = input.homeProfile?.confidence ?? 0.1;
     if (input.mode === 'PROFILE_ONLY') confidence *= 0.8;
     homeOffset *= confidence;
 
-    // 4️⃣ Interval learning
+    // 4️⃣ Interval learning adaptive offset
     let intervalOffset = 0;
     if (input.mode === 'FULL' && input.intervalLearning) {
-      const isMorning = input.intervalKey?.includes('morning') ?? false;
-      const morningWeight = isMorning ? 0.4 : 1.0;
-      intervalOffset = input.intervalLearning.offset * morningWeight;
+      const overshootCorrection = input.intervalLearning.avgOvershoot ?? 0;
+      const reachTimeCorrection = input.intervalLearning.avgReachTimeMin
+        ? this.reachTimeAdjustment(input.intervalLearning.avgReachTimeMin)
+        : 0;
+
+      intervalOffset =
+        (input.intervalLearning.offset ?? 0) +
+        overshootCorrection * 0.5 +
+        reachTimeCorrection * 0.2;
+
+      // Morning-specific adjustment
+      if (input.intervalKey?.includes('morning')) intervalOffset *= 0.6;
     }
 
-    // 5️⃣ Recent heating events
+    // 5️⃣ Recent heating events adaptive
     let eventOffset = 0;
     if (input.mode === 'FULL' && input.recentEvents?.length) {
-      const isMorning = input.intervalKey?.includes('morning') ?? false;
-      eventOffset = input.recentEvents.reduce((acc, e) => {
-        const weight = e.active ? 0.1 : 0.05;
-        return acc + e.delta * weight;
+      eventOffset = input.recentEvents.reduce((acc, e, idx) => {
+        const weight = e.active ? 0.15 : 0.05;
+        const decay = Math.exp(-0.25 * idx); // više težine novijim događajima
+        return acc + e.delta * weight * decay;
       }, 0);
-      if (isMorning) eventOffset *= 0.5;
+      if (input.intervalKey?.includes('morning')) eventOffset *= 0.5;
     }
 
-    // 6️⃣ Floor area adjustment
+    // 6️⃣ Home-specific factors
     const areaFactor =
-      home.floorArea >= 150 ? 0 : (150 - home.floorArea) * 0.02;
-
-    // 7️⃣ Ceiling height adjustment
-    const heightFactor = ((home.ceilingHeight ?? 230) - 230) * 0.02;
-
-    // 8️⃣ Insulation adjustment
+      Math.max(0, 150 - (input.homeProfile?.floorArea ?? 150)) * 0.02;
+    const heightFactor =
+      ((input.homeProfile?.ceilingHeight ?? 230) - 230) * 0.02;
     let insulationFactor = 1.0;
-    if (home.insulationType === 'EPS') insulationFactor = 0.9;
-    else if (home.insulationType === 'Wool') insulationFactor = 0.85;
-    if (home.insulationThickness) {
-      // linear adjustment: deblja izolacija smanjuje temp
-      insulationFactor = Math.max(0.7, Math.min(1, insulationFactor));
-    }
-
-    // 9️⃣ Window adjustment
+    if (input.homeProfile?.insulationType === 'EPS') insulationFactor = 0.9;
+    else if (input.homeProfile?.insulationType === 'Wool')
+      insulationFactor = 0.85;
+    insulationFactor = Math.max(0.7, Math.min(1, insulationFactor));
     let windowFactor = 0;
-    if (home.windowType === 'TRIPLE') windowFactor = -1;
-    else if (home.windowType === 'DOUBLE') windowFactor = 0;
+    if (input.homeProfile?.windowType === 'TRIPLE') windowFactor = -1;
+    else if (input.homeProfile?.windowType === 'DOUBLE') windowFactor = 0;
+    const heatingFactor = input.homeProfile?.heatingType === 'podno' ? -2 : 0;
 
-    // 🔟 Heating type adjustment
-    let heatingFactor = 0;
-    if (home.heatingType === 'podno') heatingFactor = -2;
-
-    // 11️⃣ Final temperature
+    // 7️⃣ Compute final flow temperature
     let finalTemp =
       baseCurveTemp +
       (homeOffset +
@@ -75,7 +73,7 @@ export class FlowTemperatureEngine {
         heatingFactor) *
         insulationFactor;
 
-    // Clamp između 35 i 56
+    // 8️⃣ Clamp final temperature
     finalTemp = Math.max(35, Math.min(56, finalTemp));
 
     return {
@@ -89,6 +87,13 @@ export class FlowTemperatureEngine {
       confidence,
       finalTemp: Number(finalTemp.toFixed(2)),
     };
+  }
+
+  /** Convert average reach time to small adaptive correction */
+  private static reachTimeAdjustment(avgReachTimeMin: number): number {
+    // brže grijanje -> smanji temp, sporije -> povisi
+    const targetTime = 30; // cilj u minutama za normalni interval
+    return Math.max(-1, Math.min(1, (targetTime - avgReachTimeMin) * 0.05));
   }
 
   private static calculateCurve(ext: number): number {

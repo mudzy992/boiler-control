@@ -6,253 +6,190 @@ import {
   HeatingEventInput,
   IntervalLearningInput,
 } from '../Heating/engine/types';
-import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { WeatherService } from '../Weather/weather.service';
-import { NotificationsService } from '../Notification/notifications.service';
-import { NotificationType } from '../../generated/prisma/enums';
+import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
+
+export interface FlowTempCalculationResult {
+  flowTemp: number;
+  confidence: number;
+  mode: 'ANONYMOUS' | 'PROFILE_ONLY' | 'FULL';
+  expectedHeatTimeMin?: number;
+  intervalKey: string;
+}
 
 @Injectable()
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
+  private readonly DEFAULT_ANON_CITY = 'Visoko';
 
   constructor(
     private prisma: PrismaService,
     private weatherService: WeatherService,
-    private notificationService: NotificationsService,
   ) {}
 
-  async getStartTemp(userId?: number): Promise<number> {
-    const DEFAULT_ANON_CITY = 'Visoko';
+  /**
+   * Calculate optimal boiler flow temperature based on
+   * profile, interval learning, recent heating behavior and weather.
+   *
+   * ⚠️ Pure calculation only – NO persistence here.
+   */
+  async calculateFlowTemp(userId?: number): Promise<FlowTempCalculationResult> {
+    const intervalKey = this.getIntervalKey();
+
     let mode: FlowTempInput['mode'] = 'ANONYMOUS';
-    let homeProfileInput = {
-      floorArea: 150,
-      learningOffset: 0,
-      insulationFactor: 1,
-      confidence: 0,
-    };
-    let intervalLearningInput: IntervalLearningInput | undefined = undefined;
-    let recentEventsInput: HeatingEventInput[] | undefined = undefined;
-    let todayWeatherTempMin;
-    let todayWeatherTempMax;
-    let intervalLearningEntity: { avgReachTimeMin: number | null } | null =
-      null;
+
+    // -----------------------------
+    // 1️⃣ Weather (mandatory)
+    // -----------------------------
+    let tempMin = 0;
+    let tempMax = 0;
 
     if (userId) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        include: { homeProfiles: true },
       });
-      if (!user) throw new Error('User not found');
-      const weather = this.weatherService.getTodayWeather(
-        user.homeLocation ?? DEFAULT_ANON_CITY,
+      const weather = await this.weatherService.getTodayWeather(
+        user?.homeLocation ?? this.DEFAULT_ANON_CITY,
       );
-      todayWeatherTempMax = (await weather).temp_max;
-      todayWeatherTempMin = (await weather).temp_min;
-      const home = user.homeProfiles[0];
-      if (home) {
+      tempMin = weather.temp_min!;
+      tempMax = weather.temp_max!;
+    } else {
+      const weather = await this.weatherService.getTodayWeather(
+        this.DEFAULT_ANON_CITY,
+      );
+      tempMin = weather.temp_min!;
+      tempMax = weather.temp_max!;
+    }
+
+    // -----------------------------
+    // 2️⃣ Home profile (optional)
+    // -----------------------------
+    let homeProfileInput = {
+      floorArea: 150,
+      learningOffset: 0,
+      insulationFactor: 1,
+      confidence: 0.1,
+    };
+
+    let homeProfileId: number | null = null;
+
+    if (userId) {
+      const profile = await this.prisma.homeProfile.findFirst({
+        where: { userId },
+      });
+
+      if (profile) {
+        homeProfileId = profile.id;
         homeProfileInput = {
-          floorArea: home.floorArea,
-          learningOffset: home.learningOffset,
+          floorArea: profile.floorArea,
+          learningOffset: profile.learningOffset,
           insulationFactor: 1,
-          confidence: home.learningConfidence,
+          confidence: profile.learningConfidence,
         };
         mode = 'PROFILE_ONLY';
       }
+    }
 
-      const intervalKey = this.getIntervalKey();
+    // -----------------------------
+    // 3️⃣ Interval learning (optional)
+    // -----------------------------
+    let intervalLearningInput: IntervalLearningInput | undefined = undefined;
+    let expectedHeatTimeMin: number | undefined = undefined;
+
+    if (homeProfileId) {
       const intervalLearning =
         await this.prisma.heatingIntervalLearning.findUnique({
           where: {
             homeProfileId_intervalKey: {
-              homeProfileId: home?.id ?? 0,
+              homeProfileId,
               intervalKey,
             },
           },
         });
+
       if (intervalLearning) {
-        intervalLearningEntity = intervalLearning;
         intervalLearningInput = {
           offset: intervalLearning.offset,
           confidence: intervalLearning.confidence,
+          avgReachTimeMin: intervalLearning.avgReachTimeMin,
+          avgOvershoot: intervalLearning.avgOvershoot,
         };
+        expectedHeatTimeMin = intervalLearning.avgReachTimeMin ?? undefined;
         mode = 'FULL';
       }
+    }
 
-      const lastWeekEvents = await this.prisma.heatingEvent.findMany({
+    // -----------------------------
+    // 4️⃣ Recent heating behavior (last 7 days)
+    // -----------------------------
+    let recentEventsInput: HeatingEventInput[] | undefined = undefined;
+
+    if (userId) {
+      const recentEvents = await this.prisma.heatingEvent.findMany({
         where: {
           thermostat: { userId },
-          timestampStart: { gte: addMinutes(new Date(), -7 * 24 * 60 * 60) },
+          timestampStart: {
+            gte: addMinutes(new Date(), -7 * 24 * 60),
+          },
         },
+        orderBy: { timestampStart: 'desc' },
+        take: 10,
       });
-      if (lastWeekEvents.length > 0) {
-        recentEventsInput = lastWeekEvents.map((e) => ({
+
+      if (recentEvents.length > 0) {
+        recentEventsInput = recentEvents.map((e) => ({
           delta: e.targetTemp - e.currentTemp,
           active: !e.timestampEnd,
         }));
       }
-    } else {
-      const weather =
-        await this.weatherService.getTodayWeather(DEFAULT_ANON_CITY);
-      todayWeatherTempMin = weather.temp_min;
-      todayWeatherTempMax = weather.temp_max;
     }
 
+    // -----------------------------
+    // 5️⃣ Build engine input
+    // -----------------------------
     const input: FlowTempInput = {
       mode,
+      intervalKey,
       homeProfile: homeProfileInput,
-      intervalKey: this.getIntervalKey(),
       intervalLearning: intervalLearningInput,
       recentEvents: recentEventsInput,
-      weather: { tempMin: todayWeatherTempMin, tempMax: todayWeatherTempMax }, // fallback
+      weather: { tempMin, tempMax },
     };
 
+    // -----------------------------
+    // 6️⃣ Calculate
+    // -----------------------------
     const result = FlowTemperatureEngine.calculate(input);
 
-    /* if (userId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const existing = await this.prisma.recommendation.findFirst({
-        where: {
-          userId,
-          date: { gte: today },
-        },
-      });
-
-      if (!existing) {
-        await this.prisma.recommendation.create({
-          data: {
-            userId,
-            date: new Date(),
-            recommendedFlowTemp: result.finalTemp,
-            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
-            confidenceScore: result.confidence,
-          },
-        });
-      } else {
-        await this.prisma.recommendation.update({
-          where: { id: existing.id },
-          data: {
-            recommendedFlowTemp: result.finalTemp,
-            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
-            confidenceScore: result.confidence,
-            date: new Date(),
-          },
-        });
-      }
-    } */
-    if (userId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const existing = await this.prisma.recommendation.findFirst({
-        where: {
-          userId,
-          date: { gte: today },
-        },
-      });
-
-      // Nova logika:
-      // 1. Ako postoji posljednji heating event koji je jos aktivan → update
-      // 2. Ako ne postoji → create
-      // 3. Ako postoji, ali grijanje je završilo → NE diraj preporuku
-      const lastHeating = await this.prisma.heatingEvent.findFirst({
-        where: { thermostat: { userId }, timestampEnd: null },
-        orderBy: { timestampStart: 'desc' },
-      });
-
-      if (!existing && lastHeating) {
-        // Kreiraj novu preporuku
-        await this.prisma.recommendation.create({
-          data: {
-            userId,
-            date: new Date(),
-            recommendedFlowTemp: result.finalTemp,
-            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
-            confidenceScore: result.confidence,
-          },
-        });
-      } else if (existing && lastHeating) {
-        const diff = Math.abs(existing.recommendedFlowTemp - result.finalTemp);
-        if (diff >= 1) {
-          await this.notificationService.notifyUser({
-            userId: userId,
-            type: NotificationType.FLOW_TEMP_CHANGED,
-            title: 'Promjena preporuke grijanja',
-            message: `Nova preporučena polazna temperatura je ${result.finalTemp}°C`,
-            data: {
-              type: 'FLOW_TEMP_CHANGED',
-              previous: existing.recommendedFlowTemp,
-              current: result.finalTemp,
-            },
-          });
-        }
-        // Update samo ako grijanje još traje
-        await this.prisma.recommendation.update({
-          where: { id: existing.id },
-          data: {
-            recommendedFlowTemp: result.finalTemp,
-            expectedHeatTimeMin: intervalLearningEntity?.avgReachTimeMin ?? 0,
-            confidenceScore: result.confidence,
-            date: new Date(),
-          },
-        });
-      }
-      // else: postoji preporuka ali grijanje je završilo → NE radi ništa
-    }
-
     this.logger.log(
-      `[Boiler] User ${userId ?? 'ANON'} | Mode: ${mode} | FinalTemp: ${result.finalTemp}`,
+      `[BoilerCalc] User=${userId ?? 'ANON'} | Mode=${mode} | Interval=${intervalKey} | FlowTemp=${result.finalTemp}`,
     );
-    return result.finalTemp;
+
+    return {
+      flowTemp: result.finalTemp,
+      confidence: result.confidence,
+      mode,
+      expectedHeatTimeMin,
+      intervalKey,
+    };
   }
 
+  // -----------------------------
+  // Interval key helper
+  // -----------------------------
   private getIntervalKey(): string {
     const now = new Date();
     const hour = now.getHours();
     const weekday = now.getDay();
+
     let part = 'night';
     if (hour >= 6 && hour < 9) part = 'morning';
     else if (hour >= 9 && hour < 12) part = 'late_morning';
     else if (hour >= 12 && hour < 17) part = 'afternoon';
     else if (hour >= 17 && hour < 22) part = 'evening';
+
     const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
+
     return `${dayType}_${part}`;
-  }
-
-  // heating/boiler.service.ts
-
-  async createMorningBoilerHistory(userId: number) {
-    const finalTemp = await this.getStartTemp(userId);
-
-    const lastWeather = await this.prisma.weatherCache.findFirst({
-      orderBy: { fetchedAt: 'desc' },
-    });
-
-    const externalTemp = lastWeather?.temp_min ?? 0;
-
-    const history = await this.prisma.boilerHistory.create({
-      data: {
-        userId,
-        externalTemp,
-        suggestedTemp: finalTemp,
-        actualTemp: null,
-        heatingStart: null,
-        heatingEnd: null,
-      },
-    });
-
-    await this.notificationService.notifyUser({
-      userId: userId,
-      type: NotificationType.DAILY_RECOMMENDATION,
-      title: 'Dnevna preporuka grijanja',
-      message: `Preporučena polazna temperatura za danas je ${finalTemp}°C`,
-      data: {
-        type: 'DAILY_RECOMMENDATION',
-        flowTemp: finalTemp,
-      },
-    });
-
-    return history;
   }
 }

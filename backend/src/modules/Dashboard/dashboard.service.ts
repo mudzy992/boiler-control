@@ -6,8 +6,8 @@ import {
   HeatingStatsQuery,
   LearningTrendsQuery,
 } from './dashboard.controller';
-import { BoilerService } from '../Boiler/boiler.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
+import { BoilerService } from '../Boiler/boiler.service';
 
 @Injectable()
 export class DashboardService {
@@ -27,7 +27,7 @@ export class DashboardService {
     // =====================
 
     const weather = await this.getLatestWeather();
-    const flowTemp = await this.boilerService.getStartTemp(userId);
+    const flowTemp = await this.boilerService.calculateFlowTemp(userId);
 
     if (!userId) {
       return {

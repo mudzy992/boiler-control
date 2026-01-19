@@ -1,6 +1,6 @@
 import { Controller, Post, UseGuards, Req, Logger } from '@nestjs/common';
-import { BoilerService } from './boiler.service';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
+import { BoilerService } from './boiler.service';
 
 @Controller('api/boiler')
 export class BoilerController {
@@ -18,8 +18,7 @@ export class BoilerController {
     this.logger.log(`Manual boiler sync triggered by user ${userId}`);
 
     try {
-      const history =
-        await this.boilerService.createMorningBoilerHistory(userId);
+      const history = await this.boilerService.calculateFlowTemp(userId);
       return {
         success: true,
         message: 'Boiler history successfully synced',

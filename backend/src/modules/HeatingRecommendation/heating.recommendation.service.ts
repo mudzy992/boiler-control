@@ -92,6 +92,16 @@ export class HeatingRecommendationService {
 
     const mode: FlowCalcMode = 'FULL';
 
+    let tempMin = 0;
+    let tempMax = 0;
+    const weather = await this.prisma.weatherCache.findFirst({
+      orderBy: { fetchedAt: 'desc' },
+    });
+    if (weather) {
+      tempMin = weather.temp_min!;
+      tempMax = weather.temp_max!;
+    }
+
     // 4️⃣ Compute recommended flow temperature
     const input: FlowTempInput = {
       mode,
@@ -109,7 +119,7 @@ export class HeatingRecommendationService {
         avgReachTimeMin: intervalLearning.avgReachTimeMin,
       },
       recentEvents: [],
-      weather: { tempMin: 0, tempMax: 0 }, // fallback, može dodati stvarne temp kasnije
+      weather: { tempMin, tempMax }, // fallback, može dodati stvarne temp kasnije
     };
 
     const flowResult = FlowTemperatureEngine.calculate(input);

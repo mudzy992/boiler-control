@@ -126,6 +126,13 @@ export class ThermostatPollingService {
     flowTemp: number,
   ) {
     const now = new Date();
+    const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const lastWeatherTemp = await this.prisma.weatherCache.findFirst({
+      orderBy: { fetchedAt: 'desc' },
+    });
 
     const event = await this.prisma.heatingEvent.create({
       data: {
@@ -141,9 +148,9 @@ export class ThermostatPollingService {
     await this.prisma.boilerHistory.create({
       data: {
         userId: device.userId,
-        externalTemp: 0,
+        externalTemp: lastWeatherTemp?.temperature || 0,
         suggestedTemp: flowTemp,
-        actualTemp: null,
+        actualTemp: lastBoilerHistory?.suggestedTemp,
         heatingStart: event.timestampStart,
         heatingEnd: null,
       },

@@ -40,7 +40,8 @@ export class DashboardService {
           weather,
           recommendation: {
             date: Date.now(),
-            recommendedFlowTemp: flowTemp,
+            recommendedFlowTemp: flowTemp.flowTemp,
+
             source: 'LIVE_CALCULATION',
           },
         },

@@ -36,6 +36,7 @@ import {
   getLearningTrends,
 } from "../api/dashboard.api";
 import { manualSyncBoiler } from "../api/boiler.api";
+import { updateHeatingAnomaly } from "../api/heating.anomaly.api";
 
 const { Title, Text } = Typography;
 
@@ -50,6 +51,7 @@ export const DashboardPage = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [stats, setStats] = useState<any[]>([]);
   const [learning, setLearning] = useState<any[]>([]);
+  const [anomalyEndTime, setAnomalyEndTime] = useState<dayjs.Dayjs | null>(null);
 
   /* =========================
      HELPERS
@@ -166,6 +168,21 @@ export const DashboardPage = () => {
       avgTarget: (events.reduce((s, e) => s + e.targetTemp, 0) / events.length).toFixed(1),
     };
   }, [events]);
+
+  const activeAnomaly = useMemo(() => {
+    console.log(events)
+  return events.find(
+    (e) => e.isAnomaly && !e.endedAt
+  );
+}, [events]);
+
+useEffect(() => {
+  if (activeAnomaly?.proposedEndTime) {
+    setAnomalyEndTime(dayjs(activeAnomaly.proposedEndTime));
+  } else {
+    setAnomalyEndTime(null);
+  }
+}, [activeAnomaly]);
 
   const alerts = useMemo(() => {
     const a: string[] = [];
@@ -309,6 +326,60 @@ export const DashboardPage = () => {
         </Row>
       )}
 
+      {activeAnomaly && (
+  <Card style={{ marginTop: 12 }}>
+    <Alert
+      type="warning"
+      showIcon
+      message="Detektovana anomalija grijanja"
+      description={
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Text>
+            Sistem je primijetio da trenutni ciklus grijanja značajno
+            odstupa od uobičajenog trajanja za ovaj termin.
+          </Text>
+
+          <Text strong>
+            Predloženi završetak:&nbsp;
+            {activeAnomaly.proposedEndTime
+              ? dayjs(activeAnomaly.proposedEndTime).format("DD.MM.YYYY HH:mm")
+              : "nije dostupan"}
+          </Text>
+
+          <Space>
+            <DatePicker
+              showTime
+              value={anomalyEndTime}
+              onChange={(v) => setAnomalyEndTime(v)}
+            />
+
+            <Button
+              type="primary"
+              onClick={async () => {
+                try {
+                  await updateHeatingAnomaly(activeAnomaly.id, {
+                    proposedEndTime: anomalyEndTime
+                      ? anomalyEndTime.toISOString()
+                      : undefined,
+                    confirm: true,
+                  });
+
+                  message.success("Anomalija potvrđena");
+                  await loadHeatingData();
+                } catch {
+                  message.error("Greška pri potvrdi anomalije");
+                }
+              }}
+            >
+              Potvrdi završetak
+            </Button>
+          </Space>
+        </Space>
+      }
+    />
+  </Card>
+)}
+
       {alerts.length > 0 && (
         <Card style={{ marginTop: 12 }}>
           {alerts.map((a) => (
@@ -346,6 +417,49 @@ export const DashboardPage = () => {
             { title: "Target", dataIndex: "targetTemp" },
             { title: "Current", dataIndex: "currentTemp" },
             { title: "Trajanje", dataIndex: "durationMinutes", render: (v) => `${v} min` },
+            {
+  title: "Anomalija",
+  dataIndex: "isAnomaly",
+  render: (_, record) => {
+    if (!record.isAnomaly) return null;
+    return (
+      <Space direction="vertical" size={4}>
+        <Alert
+          type="warning"
+          message={`Predloženi završetak: ${record.proposedEndTime ? dayjs(record.proposedEndTime).format("DD.MM HH:mm") : "-"}`}
+
+          showIcon
+        />
+        <Space>
+          <DatePicker
+            showTime
+            value={record.proposedEndTime ? dayjs(record.proposedEndTime) : null}
+            onChange={(v) => record.proposedEndTime = v?.toISOString() || null}
+          />
+          <Button
+            type="primary"
+            size="small"
+            onClick={async () => {
+              try {
+                await updateHeatingAnomaly(record.id, {
+                  proposedEndTime: record.proposedEndTime || undefined,
+                  confirm: true
+                });
+                message.success("Anomalija potvrđena");
+                await loadHeatingData(); // refresh events
+              } catch {
+                message.error("Greška pri potvrdi anomalije");
+              }
+            }}
+          >
+            Potvrdi
+          </Button>
+        </Space>
+      </Space>
+    );
+  }
+}
+
           ]}
         />
       </Card>

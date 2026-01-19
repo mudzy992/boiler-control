@@ -10,6 +10,7 @@ import { ThermostatDeviceModule } from './modules/ThermostatDevice/thermostat.de
 import { UserModule } from './modules/User/user.module';
 import { TuyaTestModule } from './modules/Tuya-test/tuya.test.module';
 import { NotificationsModule } from './modules/Notification/notifications.module';
+import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotificationsModule } from './modules/Notification/notifications.module
     UserModule,
     TuyaTestModule,
     NotificationsModule,
+    HeatingAnomalyModule,
   ],
   controllers: [],
   providers: [],

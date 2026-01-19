@@ -107,6 +107,9 @@ model HeatingEvent {
   targetTemp     Float                             // Temperatura koja treba da se dostigne
   hvacAction     String                            // Informacija da li je grijanje u toku ili ne
   source         String
+  isAnomaly      Boolean         @default(false)   // Uočena anomalija (cron postavlja na true)
+  proposedEndTime DateTime?                        // Cron prijedlog za Završetak
+  userConfimed    Boolean        @default(false)   // Potvrda korisnika
 
   createdAt DateTime @default(now())
 }

@@ -146,6 +146,14 @@ export class DashboardService {
             curretTempThermostat: currentTemp,
             hvacAction: e.hvacAction,
             source: e.source,
+            durationMinutes: e.timestampEnd
+              ? Math.round(
+                  (e.timestampEnd.getTime() - e.timestampStart.getTime()) /
+                    60000,
+                )
+              : 0,
+            isAnomaly: e.isAnomaly || false,
+            proposedEndTime: e.proposedEndTime ?? null,
           })),
         };
       }),

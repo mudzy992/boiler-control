@@ -230,8 +230,6 @@ export class DashboardService {
 
     const thermostatDeviceIds = events.map((t) => t.deviceId);
 
-    console.log(thermostatDeviceIds[0]);
-
     let currentTemp;
     let targetTemp;
     if (thermostatDeviceIds) {

@@ -1,5 +1,6 @@
 node_modules
 dist
+*.txt
 # Keep environment variables out of version control
 
-/src/generated/prisma
+/backend/src/generated/

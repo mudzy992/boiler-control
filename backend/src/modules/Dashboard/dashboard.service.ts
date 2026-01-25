@@ -72,22 +72,19 @@ export class DashboardService {
     const homes = await Promise.all(
       homeProfiles.map(async (profile) => {
         const thermostatIds = profile.thermostatDevices.map((t) => t.id);
-        const thermostatDeviceIds = profile.thermostatDevices.map(
-          (t) => t.deviceId,
-        );
-
-        let currentTemp;
-        let targetTemp;
-        if (hasThermostat) {
-          const snapshot = await this.adapter.fetchSnapshot(
-            thermostatDeviceIds[0],
-          );
+        let currentTemp: number | null = null;
+        let targetTemp: number | null = null;
+        if (hasThermostat && profile.thermostatDevices.length > 0) {
+          // INFO: uzimamo samo prvi termostat za prikaz trenutnih vrijednosti
+          const thermostat = profile.thermostatDevices[0];
           currentTemp =
-            snapshot?.currentTemp !== undefined
-              ? snapshot.currentTemp / 2
-              : null;
+            thermostat.roomCurrentTemp !== null
+              ? thermostat.roomCurrentTemp / 2
+              : null; // ako treba skaliranje
           targetTemp =
-            snapshot?.targetTemp !== undefined ? snapshot.targetTemp : null;
+            thermostat.roomTargetTemp !== null
+              ? thermostat.roomTargetTemp
+              : null;
         }
 
         const recentHeatingEvents =
@@ -240,11 +237,14 @@ export class DashboardService {
       });
 
       if (thermostat) {
-        const snapshot = await this.adapter.fetchSnapshot(thermostat?.deviceId);
         currentTemp =
-          snapshot?.currentTemp !== undefined ? snapshot.currentTemp / 2 : null;
+          thermostat?.roomCurrentTemp !== undefined
+            ? thermostat.roomCurrentTemp
+            : null;
         targetTemp =
-          snapshot?.targetTemp !== undefined ? snapshot.targetTemp : null;
+          thermostat?.roomTargetTemp !== undefined
+            ? thermostat.roomTargetTemp
+            : null;
       }
     }
 

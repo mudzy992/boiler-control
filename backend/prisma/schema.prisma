@@ -74,9 +74,12 @@ model ThermostatDevice {
   deviceId      String
   alias         String?
   lastSeen      DateTime?
+  roomTargetTemp     Float?
+  roomCurrentTemp    Float?
   mode          ThermostatMode @default(MANUAL) // MANUAL ili PROGRAM
   heatingEvents HeatingEvent[]
   thermostatProgram ThermostatProgram[]
+  lastSnapshotAt  DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }

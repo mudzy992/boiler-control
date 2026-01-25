@@ -47,22 +47,47 @@ export class ThermostatPollingService {
   // ----------------------------------
   private async pollDevice(device: any) {
     try {
-      // 1️⃣ Snapshot (jedina istina iz stvarnog svijeta)
-      const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
-      if (!snapshot) return;
-
-      const currentTemp =
-        snapshot.currentTemp !== undefined ? snapshot.currentTemp / 2 : null;
-      const targetTemp = snapshot.targetTemp ?? null;
-      const powerOn = snapshot.powerOn ?? false;
-      if (currentTemp === null || targetTemp === null) return;
-
-      // 2️⃣ Posljednji heating event
+      // 1️⃣ Posljednji heating event
       const lastEvent = await this.prisma.heatingEvent.findFirst({
         where: { deviceId: device.id },
         orderBy: { timestampStart: 'desc' },
       });
       const isHeating = !!lastEvent && lastEvent.timestampEnd === null;
+      // 🧠 ADAPTIVNI CRON GUARD
+      if (!this.shouldPollDevice(device, isHeating)) {
+        return;
+      }
+      // 2️⃣ Snapshot (jedina istina iz stvarnog svijeta)
+      const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
+      if (!snapshot) return;
+      // INFO: temperature su u adapteru već normalizovane i konvertovane u celzijuse
+      const currentTemp =
+        snapshot.currentTemp !== undefined ? snapshot.currentTemp : null;
+      const targetTemp = snapshot.targetTemp ?? null;
+      // INFO: ovo je podataka da li je termostat uključen ili ne, a ne da li je grijanje trenutno aktivno ili ne
+      const powerOn = snapshot.powerOn ?? false;
+      const hasChanged =
+        device.roomTargetTemp !== targetTemp ||
+        device.roomCurrentTemp !== currentTemp;
+      if (hasChanged) {
+        await this.prisma.thermostatDevice.update({
+          where: { id: device.id },
+          data: {
+            roomTargetTemp: targetTemp,
+            roomCurrentTemp: currentTemp,
+            lastSnapshotAt: new Date(),
+          },
+        });
+      } else {
+        await this.prisma.thermostatDevice.update({
+          where: { id: device.id },
+          data: {
+            lastSnapshotAt: new Date(),
+          },
+        });
+      }
+
+      if (currentTemp === null || targetTemp === null) return;
 
       // 3️⃣ Izračun preporučene polazne temperature (PURE)
       const flowResult = await this.boilerService.calculateFlowTemp(
@@ -71,7 +96,10 @@ export class ThermostatPollingService {
 
       // 4️⃣ Odluči da li grijanje treba biti ON
       let heatingShouldBeOn = false;
-      if (powerOn) {
+
+      if (!powerOn) {
+        heatingShouldBeOn = false;
+      } else {
         heatingShouldBeOn = this.resolveHeatingState(
           isHeating,
           currentTemp,
@@ -232,5 +260,16 @@ export class ThermostatPollingService {
   ): boolean {
     if (isHeating) return currentTemp < targetTemp;
     return currentTemp <= targetTemp - this.DEAD_ZONE;
+  }
+
+  private shouldPollDevice(device: any, isHeating: boolean): boolean {
+    if (!device.lastSnapshotAt) return true;
+
+    const now = Date.now();
+    const last = device.lastSnapshotAt.getTime();
+
+    const intervalMs = isHeating ? 60_000 : 120_000;
+
+    return now - last >= intervalMs;
   }
 }

@@ -60,7 +60,8 @@ export class TuyaAdapter {
     };
   }
 
-  async getDeviceStatus(deviceId: string): Promise<Record<string, any>> {
+  /** JEDAN GET koji vraća kompletan status uređaja */
+  private async fetchStatus(deviceId: string): Promise<Record<string, any>> {
     const path = `/v1.0/devices/${deviceId}`;
     const headers = await this.generateHeaders(path, 'GET');
 
@@ -80,10 +81,11 @@ export class TuyaAdapter {
     );
   }
 
-  /** Glavna funkcija koja vraća target temperaturu */
-  async getTargetTemperature(deviceId: string): Promise<TargetTempInfo> {
-    const status = await this.getDeviceStatus(deviceId);
-
+  /** Dobijamo target temperaturu iz statusa, bez dodatnog fetch-a */
+  private async getTargetFromStatus(
+    deviceId: string,
+    status: Record<string, any>,
+  ): Promise<TargetTempInfo> {
     const existingDevice = await this.prisma.thermostatDevice.findFirst({
       where: { deviceId },
     });
@@ -92,7 +94,6 @@ export class TuyaAdapter {
       throw new Error(`Termostat device fetch failed.`);
     }
 
-    // Programski režim
     if (status['Mode'] === '0' && status['program']) {
       const tuyaProgram = this.decodeTuyaProgram(status['program']);
       await this.programSyncService.syncProgram(existingDevice.id, tuyaProgram);
@@ -101,8 +102,7 @@ export class TuyaAdapter {
       const dayType = this.getDayType(now.getDay());
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-      // 1. Pokušaj pronaći interval u tekućem danu
-      const intervalToday = await this.prisma.thermostatProgram.findFirst({
+      let activeInterval = await this.prisma.thermostatProgram.findFirst({
         where: {
           deviceId: existingDevice.id,
           dayType,
@@ -111,12 +111,8 @@ export class TuyaAdapter {
         orderBy: { startMinute: 'desc' },
       });
 
-      let activeInterval = intervalToday;
-
-      // 2. Ako ne postoji → prije prvog intervala dana
       if (!activeInterval) {
         const previousDayType = this.getPreviousDayType(dayType);
-
         activeInterval = await this.prisma.thermostatProgram.findFirst({
           where: {
             deviceId: existingDevice.id,
@@ -139,22 +135,20 @@ export class TuyaAdapter {
       };
     }
 
-    // Manual / fallback režim
+    // fallback
     return {
       targetTemp: status['TempSet'] ?? 0,
     };
   }
 
-  async getCurrentTemperature(deviceId: string): Promise<number> {
-    const status = await this.getDeviceStatus(deviceId);
-    return status['TempCurrent'] ?? 0;
-  }
-
+  /** FETCH SNAPSHOT – SADA SAMO JEDAN API poziv */
   async fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot> {
-    const currentTemp = await this.getCurrentTemperature(deviceId);
-    const targetInfo = await this.getTargetTemperature(deviceId);
-    const status = await this.getDeviceStatus(deviceId);
+    const status = await this.fetchStatus(deviceId); // <-- samo JEDAN GET
+
+    const currentTemp = (status['TempCurrent'] ?? null) / 2;
     const powerOn = status['Power'] === true;
+
+    const targetInfo = await this.getTargetFromStatus(deviceId, status);
 
     return {
       currentTemp,
@@ -183,15 +177,14 @@ export class TuyaAdapter {
     const dayTypes: DayType[] = ['WORKDAY', 'SATURDAY', 'SUNDAY'];
     const tuyaProgram: TuyaProgramByDay = {} as any;
 
-    // Svaki dan ima 6 intervala → fleksibilno
     dayTypes.forEach((dayType, dayIdx) => {
       const start = dayIdx * 6;
       const end = start + 6;
       tuyaProgram[dayType] = intervals.slice(start, end).map((i, idx) => ({
-        dayType, // obavezno za TuyaProgramInterval
+        dayType,
         orderIndex: idx,
         startMinute: i.startMinute,
-        targetTemp: i.temp / 2, // skaliranje ako je temp*2
+        targetTemp: i.temp / 2, // normalizacija ostaje ista
       }));
     });
 

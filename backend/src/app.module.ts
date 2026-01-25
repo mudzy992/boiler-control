@@ -8,7 +8,6 @@ import { DashboardModule } from './modules/Dashboard/dashboard.module';
 import { HomeProfileModule } from './modules/HomeProfile/home.profile.module';
 import { ThermostatDeviceModule } from './modules/ThermostatDevice/thermostat.device.module';
 import { UserModule } from './modules/User/user.module';
-import { TuyaTestModule } from './modules/Tuya-test/tuya.test.module';
 import { NotificationsModule } from './modules/Notification/notifications.module';
 import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module';
 
@@ -23,7 +22,6 @@ import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/hea
     HomeProfileModule,
     ThermostatDeviceModule,
     UserModule,
-    TuyaTestModule,
     NotificationsModule,
     HeatingAnomalyModule,
   ],

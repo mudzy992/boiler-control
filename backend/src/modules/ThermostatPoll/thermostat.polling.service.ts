@@ -129,7 +129,7 @@ export class ThermostatPollingService {
         await this.handleHeatingEnd(device, lastEvent);
       }
 
-      if (isHeating && lastEvent && lastEvent.targetTemp !== targetTemp) {
+      if (isHeating && lastEvent && lastEvent.roomTargetTemp !== targetTemp) {
         await this.handleTargetTempChange(lastEvent, targetTemp);
       }
 
@@ -166,8 +166,8 @@ export class ThermostatPollingService {
       data: {
         deviceId: device.id,
         timestampStart: now,
-        currentTemp,
-        targetTemp,
+        roomCurrentTemp: currentTemp,
+        roomTargetTemp: targetTemp,
         hvacAction: 'HEATING_ON',
         source: 'THERMOSTAT',
       },
@@ -177,8 +177,8 @@ export class ThermostatPollingService {
       data: {
         userId: device.userId,
         externalTemp: lastWeatherTemp?.temperature || 0,
-        suggestedTemp: flowTemp,
-        actualTemp: lastBoilerHistory?.suggestedTemp,
+        suggestedFlowTemp: flowTemp,
+        actualFlowTemp: lastBoilerHistory?.suggestedFlowTemp,
         heatingStart: event.timestampStart,
         heatingEnd: null,
       },
@@ -188,9 +188,9 @@ export class ThermostatPollingService {
       userId: device.userId,
       deviceId: device.id,
       timestampStart: event.timestampStart,
-      currentTemp,
-      targetTemp,
-      flowTemp,
+      roomCurrentTemp: currentTemp,
+      roomTargetTemp: targetTemp,
+      boilerFlowTemp: flowTemp,
     });
 
     await this.notifications.notifyUser({
@@ -226,9 +226,9 @@ export class ThermostatPollingService {
       deviceId: device.id,
       timestampStart: lastEvent.timestampStart,
       timestampEnd: now,
-      currentTemp: lastEvent.currentTemp,
-      targetTemp: lastEvent.targetTemp,
-      flowTemp: lastEvent.flowTemp,
+      roomCurrentTemp: lastEvent.roomCurrentTemp,
+      roomTargetTemp: lastEvent.roomTargetTemp,
+      boilerFlowTemp: 0, // Flow temp is not stored in event, using 0 or need to fetch from boilerHistory
     });
 
     await this.notifications.notifyUser({
@@ -246,7 +246,7 @@ export class ThermostatPollingService {
   private async handleTargetTempChange(lastEvent: any, newTargetTemp: number) {
     await this.prisma.heatingEvent.update({
       where: { id: lastEvent.id },
-      data: { targetTemp: newTargetTemp },
+      data: { roomTargetTemp: newTargetTemp },
     });
   }
 

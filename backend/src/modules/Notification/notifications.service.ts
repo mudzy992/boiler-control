@@ -101,6 +101,10 @@ export class NotificationsService {
   }
 
   async markAsRead(notificationId: number) {
+    const existing = await this.prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+    if (!existing) return null;
     return await this.prisma.notification.update({
       where: { id: notificationId },
       data: { deliveryOk: true },

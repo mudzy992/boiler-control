@@ -1,1 +1,2 @@
 set NODE_TLS_REJECT_UNAUTHORIZED=0
+"build:apk": "eas build -p android --profile development --local --clear-cache"

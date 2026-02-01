@@ -72,7 +72,7 @@ export class HeatingRecommendationService {
           newSamples,
       );
 
-      await this.prisma.heatingIntervalLearning.update({
+      await this.prisma.heatingIntervalLearning.updateMany({
         where: { id: intervalLearning.id },
         data: {
           avgReachTimeMin: newAvgReach,

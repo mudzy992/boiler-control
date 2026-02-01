@@ -70,7 +70,7 @@ export class ThermostatPollingService {
         device.roomTargetTemp !== targetTemp ||
         device.roomCurrentTemp !== currentTemp;
       if (hasChanged) {
-        await this.prisma.thermostatDevice.update({
+        await this.prisma.thermostatDevice.updateMany({
           where: { id: device.id },
           data: {
             roomTargetTemp: targetTemp,
@@ -79,7 +79,7 @@ export class ThermostatPollingService {
           },
         });
       } else {
-        await this.prisma.thermostatDevice.update({
+        await this.prisma.thermostatDevice.updateMany({
           where: { id: device.id },
           data: {
             lastSnapshotAt: new Date(),
@@ -208,7 +208,7 @@ export class ThermostatPollingService {
   private async handleHeatingEnd(device: any, lastEvent: any) {
     const now = new Date();
 
-    await this.prisma.heatingEvent.update({
+    await this.prisma.heatingEvent.updateMany({
       where: { id: lastEvent.id },
       data: { timestampEnd: now, hvacAction: 'HEATING_OFF' },
     });
@@ -244,7 +244,7 @@ export class ThermostatPollingService {
   // TARGET TEMP CHANGE (ISTINA!)
   // ----------------------------------
   private async handleTargetTempChange(lastEvent: any, newTargetTemp: number) {
-    await this.prisma.heatingEvent.update({
+    await this.prisma.heatingEvent.updateMany({
       where: { id: lastEvent.id },
       data: { roomTargetTemp: newTargetTemp },
     });

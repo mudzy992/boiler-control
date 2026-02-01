@@ -87,7 +87,7 @@ export class HeatingAnomalyCheckerService {
         event.timestampStart.getTime() + avg * 60000,
       );
 
-      await this.prisma.heatingEvent.update({
+      await this.prisma.heatingEvent.updateMany({
         where: { id: event.id },
         data: {
           isAnomaly: true,
@@ -137,7 +137,7 @@ export class HeatingAnomalyCheckerService {
     const boiler = await this.prisma.boilerHistory.findFirst({
       orderBy: { createdAt: 'desc' },
     });
-    if (!event) throw new Error('Event not found');
+    if (!event) return { success: false };
 
     let endTime = event.proposedEndTime ?? new Date();
     if (dto.proposedEndTime) endTime = dto.proposedEndTime;

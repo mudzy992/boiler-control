@@ -40,6 +40,11 @@ export class UserService {
     }
     delete dataToUpdate.password; // uklonimo plain password
 
+    const existing = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existing) return null;
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: dataToUpdate,

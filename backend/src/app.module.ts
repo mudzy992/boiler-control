@@ -13,13 +13,16 @@ import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/hea
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { GasReadingModule } from './modules/Gas/gas.reading.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     BoilerModule,
@@ -32,6 +35,7 @@ import { GasReadingModule } from './modules/Gas/gas.reading.module';
     NotificationsModule,
     HeatingAnomalyModule,
     GasReadingModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [

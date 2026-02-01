@@ -144,7 +144,7 @@ export class HeatingAnomalyCheckerService {
     if (dto.confirm && !dto.proposedEndTime)
       endTime = event.proposedEndTime ?? new Date();
 
-    await this.prisma.heatingEvent.update({
+    await this.prisma.heatingEvent.updateMany({
       where: { id: eventId },
       data: {
         timestampEnd: endTime,

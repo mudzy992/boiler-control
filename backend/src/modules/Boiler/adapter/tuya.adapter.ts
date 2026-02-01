@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable, Logger } from '@nestjs/common';
+import axios, { AxiosError } from 'axios';
 import crypto from 'crypto';
 import { TuyaAuthService } from '../../../modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -18,17 +18,117 @@ interface TargetTempInfo {
   };
 }
 
+interface CircuitBreakerState {
+  failureCount: number;
+  lastFailureTime: number;
+  isOpen: boolean;
+}
+
+interface CachedSnapshot {
+  timestamp: number;
+  data: ThermostatSnapshot;
+}
+
+interface TuyaRequestMetrics {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  circuitBreakerTrips: number;
+}
+
 @Injectable()
 export class TuyaAdapter {
+  private readonly logger = new Logger(TuyaAdapter.name);
   private readonly baseUrl = process.env.TUYA_BASE_URL!;
-  private readonly statusCache = new Map<string, { timestamp: number; data: any }>();
-  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+  // Cache: 5s TTL for read coalescing
+  private readonly snapshotCache = new Map<string, CachedSnapshot>();
+  private readonly SNAPSHOT_CACHE_TTL = 5 * 1000; // 5 seconds
+
+  // Circuit breaker: prevent cascade failures
+  private readonly circuitBreaker = new Map<string, CircuitBreakerState>();
+  private readonly CB_FAILURE_THRESHOLD = 3;
+  private readonly CB_RESET_TIME = 60 * 1000; // 60 seconds
+
+  // Request accounting for budget monitoring
+  private requestMetrics: TuyaRequestMetrics = {
+    totalRequests: 0,
+    successfulRequests: 0,
+    failedRequests: 0,
+    circuitBreakerTrips: 0,
+  };
 
   constructor(
     private readonly tokenService: TuyaAuthService,
     private readonly programSyncService: ProgramSyncService,
     private readonly prisma: PrismaService,
   ) {}
+
+  /** Get current request metrics for Prometheus export */
+  getMetrics(): TuyaRequestMetrics {
+    return { ...this.requestMetrics };
+  }
+
+  /** Reset metrics (useful for testing) */
+  resetMetrics(): void {
+    this.requestMetrics = {
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0,
+      circuitBreakerTrips: 0,
+    };
+  }
+
+  /** Check circuit breaker state and throw if open */
+  private checkCircuitBreaker(deviceId: string): void {
+    const state = this.circuitBreaker.get(deviceId);
+    if (!state) return;
+
+    if (state.isOpen) {
+      const timeSinceLastFailure = Date.now() - state.lastFailureTime;
+      if (timeSinceLastFailure > this.CB_RESET_TIME) {
+        // Reset circuit breaker
+        this.logger.debug(
+          `[CB] Resetting circuit breaker for device ${deviceId}`,
+        );
+        this.circuitBreaker.delete(deviceId);
+        return;
+      }
+      this.requestMetrics.circuitBreakerTrips++;
+      this.logger.warn(
+        `[CB] Circuit breaker OPEN for device ${deviceId}. Failing fast.`,
+      );
+      throw new Error(`Circuit breaker open for device ${deviceId}`);
+    }
+  }
+
+  /** Record failure and update circuit breaker state */
+  private recordFailure(deviceId: string): void {
+    let state = this.circuitBreaker.get(deviceId);
+    if (!state) {
+      state = { failureCount: 0, lastFailureTime: 0, isOpen: false };
+      this.circuitBreaker.set(deviceId, state);
+    }
+
+    state.failureCount++;
+    state.lastFailureTime = Date.now();
+
+    if (state.failureCount >= this.CB_FAILURE_THRESHOLD) {
+      state.isOpen = true;
+      this.logger.warn(
+        `[CB] Opening circuit breaker for device ${deviceId} after ${state.failureCount} failures`,
+      );
+    }
+  }
+
+  /** Record success and reset circuit breaker */
+  private recordSuccess(deviceId: string): void {
+    const state = this.circuitBreaker.get(deviceId);
+    if (state) {
+      state.failureCount = 0;
+      state.isOpen = false;
+    }
+  }
 
   private async generateHeaders(
     path: string,
@@ -62,33 +162,71 @@ export class TuyaAdapter {
     };
   }
 
-  /** JEDAN GET koji vraća kompletan status uređaja */
+  /** JEDAN GET koji vraća kompletan status uređaja — s cache-om od 5s i circuit breakerom */
   private async fetchStatus(deviceId: string): Promise<Record<string, any>> {
-    const cached = this.statusCache.get(deviceId);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+    // Check circuit breaker first
+    this.checkCircuitBreaker(deviceId);
+
+    // Check snapshot cache (5s TTL for coalescing)
+    const cached = this.snapshotCache.get(deviceId);
+    if (cached && Date.now() - cached.timestamp < this.SNAPSHOT_CACHE_TTL) {
+      this.logger.debug(
+        `[Cache] Returning cached snapshot for device ${deviceId}`,
+      );
       return cached.data;
     }
 
     const path = `/v1.0/devices/${deviceId}`;
     const headers = await this.generateHeaders(path, 'GET');
 
-    const res = await axios.get(`${this.baseUrl}${path}`, { headers });
-    if (!res.data.success) {
-      throw new Error(`Tuya device fetch failed: ${JSON.stringify(res.data)}`);
+    const startTime = Date.now();
+    this.requestMetrics.totalRequests++;
+
+    try {
+      const res = await axios.get(`${this.baseUrl}${path}`, {
+        headers,
+        timeout: 10000, // 10 second timeout
+      });
+
+      const duration = Date.now() - startTime;
+      this.logger.debug(
+        `[Tuya] GET ${path} success in ${duration}ms | status=${res.data.success}`,
+      );
+
+      if (!res.data.success) {
+        this.recordFailure(deviceId);
+        throw new Error(
+          `Tuya device fetch failed: ${JSON.stringify(res.data)} after ${duration}ms`,
+        );
+      }
+
+      this.requestMetrics.successfulRequests++;
+      this.recordSuccess(deviceId);
+
+      const statusArray: Array<{ code: string; value: any }> =
+        res.data.result.status ?? [];
+      const statusMap = statusArray.reduce(
+        (acc, s) => {
+          acc[s.code] = s.value;
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+
+      return statusMap;
+    } catch (err) {
+      this.requestMetrics.failedRequests++;
+      this.recordFailure(deviceId);
+
+      const errMsg = err instanceof AxiosError ? err.message : String(err);
+      this.logger.error(`[Tuya] GET ${path} failed: ${errMsg}`, {
+        deviceId,
+        error: errMsg,
+        status: err instanceof AxiosError ? err.response?.status : 'unknown',
+      });
+
+      throw err;
     }
-
-    const statusArray: Array<{ code: string; value: any }> =
-      res.data.result.status ?? [];
-    const statusMap = statusArray.reduce(
-      (acc, s) => {
-        acc[s.code] = s.value;
-        return acc;
-      },
-      {} as Record<string, any>,
-    );
-
-    this.statusCache.set(deviceId, { timestamp: Date.now(), data: statusMap });
-    return statusMap;
   }
 
   /** Dobijamo target temperaturu iz statusa, bez dodatnog fetch-a */
@@ -151,7 +289,7 @@ export class TuyaAdapter {
     };
   }
 
-  /** FETCH SNAPSHOT – SADA SAMO JEDAN API poziv */
+  /** FETCH SNAPSHOT – SADA SAMO JEDAN API poziv s 5s cache-om */
   async fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot> {
     const status = await this.fetchStatus(deviceId); // <-- samo JEDAN GET
 
@@ -160,7 +298,7 @@ export class TuyaAdapter {
 
     const targetInfo = await this.getTargetFromStatus(deviceId, status);
 
-    return {
+    const snapshot: ThermostatSnapshot = {
       currentTemp,
       targetTemp: targetInfo.targetTemp,
       timestamp: new Date(),
@@ -168,6 +306,14 @@ export class TuyaAdapter {
       dayType: targetInfo.dayType,
       activeInterval: targetInfo.interval,
     };
+
+    // Cache the snapshot result (not the status, but the full snapshot)
+    this.snapshotCache.set(deviceId, {
+      timestamp: Date.now(),
+      data: snapshot,
+    });
+
+    return snapshot;
   }
 
   // ----------------- HELPERS -----------------

@@ -8,9 +8,15 @@ import { DailyRecommendationService } from './daily.recommendation.service';
 import { ProgramSyncService } from '../Boiler/adapter/program.sync.service';
 import { NotificationsModule } from '../Notification/notifications.module';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), NotificationsModule, BoilerModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    NotificationsModule,
+    BoilerModule,
+    CommonModule,
+  ],
   providers: [
     ProgramSyncService,
     ThermostatPollingService,

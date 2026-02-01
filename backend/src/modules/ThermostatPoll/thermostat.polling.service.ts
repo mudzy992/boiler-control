@@ -6,10 +6,15 @@ import { NotificationsService } from '../Notification/notifications.service';
 import { NotificationType } from '../../generated/prisma/enums';
 import { BoilerService } from '../Boiler/boiler.service';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
+import { StructuredLogger, LogContext } from '../../common/structured-logger';
+import { MetricsService } from '../../common/metrics.service';
 
 @Injectable()
 export class ThermostatPollingService {
   private readonly logger = new Logger(ThermostatPollingService.name);
+  private readonly structuredLogger = new StructuredLogger(
+    ThermostatPollingService.name,
+  );
 
   private readonly DEAD_ZONE = 1.0;
   private readonly MIN_SWITCH_INTERVAL_MIN = 2;
@@ -20,6 +25,7 @@ export class ThermostatPollingService {
     private boilerService: BoilerService,
     private notifications: NotificationsService,
     private recommendationService: HeatingRecommendationService,
+    private metricsService: MetricsService,
   ) {}
 
   // ----------------------------------
@@ -30,22 +36,45 @@ export class ThermostatPollingService {
     disabled: process.env.NODE_ENV === 'development',
   })
   async pollAll() {
-    const devices = await this.prisma.thermostatDevice.findMany({
-      include: {
-        user: true,
-        homeProfile: { include: { intervalLearnings: true } },
-      },
-    });
+    const runId = `poll_${Date.now()}`;
+    this.metricsService.incrementCounter('poll_runs_total');
 
-    for (const device of devices) {
-      await this.pollDevice(device);
+    try {
+      const devices = await this.prisma.thermostatDevice.findMany({
+        include: {
+          user: true,
+          homeProfile: { include: { intervalLearnings: true } },
+        },
+      });
+
+      const ctx: LogContext = { runId, module: 'thermostat_polling' };
+      this.structuredLogger.debug(
+        `Starting poll cycle with ${devices.length} devices`,
+        ctx,
+      );
+
+      for (const device of devices) {
+        await this.pollDevice(device, runId);
+      }
+
+      this.metricsService.incrementCounter('poll_runs_success');
+    } catch (err) {
+      this.metricsService.incrementCounter('poll_runs_failed');
+      const ctx: LogContext = { runId, module: 'thermostat_polling' };
+      this.structuredLogger.error('Poll cycle failed', err, ctx);
     }
   }
 
   // ----------------------------------
   // POLL SINGLE DEVICE
   // ----------------------------------
-  private async pollDevice(device: any) {
+  private async pollDevice(device: any, runId?: string) {
+    const ctx: LogContext = {
+      runId: runId || `poll_${Date.now()}`,
+      deviceId: device.id,
+      userId: device.userId,
+    };
+
     try {
       // 1️⃣ Posljednji heating event
       const lastEvent = await this.prisma.heatingEvent.findFirst({
@@ -53,6 +82,11 @@ export class ThermostatPollingService {
         orderBy: { timestampStart: 'desc' },
       });
       const isHeating = !!lastEvent && lastEvent.timestampEnd === null;
+
+      this.structuredLogger.debug(
+        `Device polling started | isHeating=${isHeating}`,
+        ctx,
+      );
       // 🧠 ADAPTIVNI CRON GUARD
       if (!this.shouldPollDevice(device, isHeating)) {
         return;
@@ -122,15 +156,16 @@ export class ThermostatPollingService {
           currentTemp,
           targetTemp,
           flowResult.flowTemp,
+          ctx.runId,
         );
       }
 
       if (isHeating && !heatingShouldBeOn && lastEvent) {
-        await this.handleHeatingEnd(device, lastEvent);
+        await this.handleHeatingEnd(device, lastEvent, ctx.runId);
       }
 
       if (isHeating && lastEvent && lastEvent.roomTargetTemp !== targetTemp) {
-        await this.handleTargetTempChange(lastEvent, targetTemp);
+        await this.handleTargetTempChange(lastEvent, targetTemp, ctx.runId);
       }
 
       this.logger.debug(
@@ -152,8 +187,36 @@ export class ThermostatPollingService {
     currentTemp: number,
     targetTemp: number,
     flowTemp: number,
+    runId?: string,
   ) {
     const now = new Date();
+
+    const ctx: LogContext = {
+      runId,
+      deviceId: device.id,
+      userId: device.userId,
+      action: 'heating_start',
+    };
+
+    // Idempotency: skip if an event was already created in the same minute
+    const minuteSlotStart = new Date(Math.floor(now.getTime() / 60000) * 60000);
+    const existing = await this.prisma.heatingEvent.findFirst({
+      where: {
+        deviceId: device.id,
+        timestampStart: { gte: minuteSlotStart },
+      },
+    });
+
+    if (existing) {
+      this.structuredLogger.debug(
+        'Duplicate heating start detected; skipping',
+        ctx,
+      );
+      return;
+    }
+
+    this.structuredLogger.log('Starting heating start transaction', ctx);
+
     const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
       orderBy: { createdAt: 'desc' },
     });
@@ -162,26 +225,35 @@ export class ThermostatPollingService {
       orderBy: { fetchedAt: 'desc' },
     });
 
-    const event = await this.prisma.heatingEvent.create({
-      data: {
-        deviceId: device.id,
-        timestampStart: now,
-        roomCurrentTemp: currentTemp,
-        roomTargetTemp: targetTemp,
-        hvacAction: 'HEATING_ON',
-        source: 'THERMOSTAT',
-      },
-    });
+    // Wrap multi-step DB operations in transaction for atomicity
+    const [event] = await this.prisma.$transaction([
+      this.prisma.heatingEvent.create({
+        data: {
+          deviceId: device.id,
+          timestampStart: now,
+          roomCurrentTemp: currentTemp,
+          roomTargetTemp: targetTemp,
+          hvacAction: 'HEATING_ON',
+          source: 'THERMOSTAT',
+        },
+      }),
+      this.prisma.boilerHistory.create({
+        data: {
+          userId: device.userId,
+          externalTemp: lastWeatherTemp?.temperature || 0,
+          suggestedFlowTemp: flowTemp,
+          actualFlowTemp: lastBoilerHistory?.suggestedFlowTemp,
+          heatingStart: now,
+          heatingEnd: null,
+        },
+      }),
+    ]);
 
-    await this.prisma.boilerHistory.create({
-      data: {
-        userId: device.userId,
-        externalTemp: lastWeatherTemp?.temperature || 0,
-        suggestedFlowTemp: flowTemp,
-        actualFlowTemp: lastBoilerHistory?.suggestedFlowTemp,
-        heatingStart: event.timestampStart,
-        heatingEnd: null,
-      },
+    this.metricsService.incrementCounter('heating_events_created');
+
+    this.structuredLogger.log('Heating event created', {
+      ...ctx,
+      eventId: event.id,
     });
 
     await this.recommendationService.processHeatingEvent({
@@ -205,21 +277,37 @@ export class ThermostatPollingService {
   // ----------------------------------
   // HEATING END
   // ----------------------------------
-  private async handleHeatingEnd(device: any, lastEvent: any) {
+  private async handleHeatingEnd(device: any, lastEvent: any, runId?: string) {
     const now = new Date();
 
-    await this.prisma.heatingEvent.updateMany({
-      where: { id: lastEvent.id },
-      data: { timestampEnd: now, hvacAction: 'HEATING_OFF' },
-    });
+    const ctx: LogContext = {
+      runId,
+      deviceId: device.id,
+      userId: device.userId,
+      action: 'heating_end',
+    };
 
-    await this.prisma.boilerHistory.updateMany({
-      where: { userId: device.userId, heatingEnd: null },
-      data: { heatingEnd: now },
-    });
+    // Wrap heating end updates in transaction for consistency
+    await this.prisma.$transaction([
+      this.prisma.heatingEvent.updateMany({
+        where: { id: lastEvent.id },
+        data: { timestampEnd: now, hvacAction: 'HEATING_OFF' },
+      }),
+      this.prisma.boilerHistory.updateMany({
+        where: { userId: device.userId, heatingEnd: null },
+        data: { heatingEnd: now },
+      }),
+    ]);
 
+    this.metricsService.incrementCounter('heating_events_ended');
     const durationMin =
       (now.getTime() - lastEvent.timestampStart.getTime()) / 60000;
+
+    this.structuredLogger.log('Heating event ended', {
+      ...ctx,
+      eventId: lastEvent.id,
+      durationMin,
+    });
 
     await this.recommendationService.processHeatingEvent({
       userId: device.userId,
@@ -243,7 +331,23 @@ export class ThermostatPollingService {
   // ----------------------------------
   // TARGET TEMP CHANGE (ISTINA!)
   // ----------------------------------
-  private async handleTargetTempChange(lastEvent: any, newTargetTemp: number) {
+  private async handleTargetTempChange(
+    lastEvent: any,
+    newTargetTemp: number,
+    runId?: string,
+  ) {
+    const ctx: LogContext = {
+      runId,
+      deviceId: lastEvent.deviceId,
+      userId: lastEvent.userId,
+      action: 'target_temp_change',
+    };
+
+    this.structuredLogger.log('Updating target temp for active heating event', {
+      ...ctx,
+      eventId: lastEvent.id,
+    });
+
     await this.prisma.heatingEvent.updateMany({
       where: { id: lastEvent.id },
       data: { roomTargetTemp: newTargetTemp },

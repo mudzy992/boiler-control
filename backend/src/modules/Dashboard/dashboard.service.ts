@@ -79,7 +79,7 @@ export class DashboardService {
           const thermostat = profile.thermostatDevices[0];
           currentTemp =
             thermostat.roomCurrentTemp !== null
-              ? thermostat.roomCurrentTemp / 2
+              ? thermostat.roomCurrentTemp
               : null; // ako treba skaliranje
           targetTemp =
             thermostat.roomTargetTemp !== null

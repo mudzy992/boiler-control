@@ -8,36 +8,26 @@ export interface HeatingEventData {
   deviceId: number;
   timestampStart: Date;
   timestampEnd?: Date;
-  currentTemp: number;
-  targetTemp: number;
-  flowTemp: number;
+  roomCurrentTemp: number;
+  roomTargetTemp: number;
+  boilerFlowTemp: number;
 }
 
 @Injectable()
 export class HeatingRecommendationService {
   private readonly logger = new Logger(HeatingRecommendationService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  /**
-   * Called ONLY when heating STARTS or ENDS
-   * No polling, no vendor API calls here
-   */
-  async processHeatingEvent(event: HeatingEventData): Promise<void> {
-    /** 1️⃣ Load device + home profile */
+  /** Process heating event (start or end) */
+  async processHeatingEvent(event: HeatingEventData) {
+    // 1️⃣ Fetch last interval learning for this device's home profile
     const device = await this.prisma.thermostatDevice.findUnique({
       where: { id: event.deviceId },
-      include: { homeProfile: true },
+      include: { homeProfile: { include: { intervalLearnings: true } } },
     });
+    if (!device || !device.homeProfile) return;
 
-    if (!device?.homeProfile) {
-      this.logger.warn(
-        `[HeatingRecommendation] Device or HomeProfile not found (deviceId=${event.deviceId})`,
-      );
-      return;
-    }
-
-    /** 2️⃣ Resolve interval key */
     const intervalKey = this.getIntervalKey();
     const intervalLearning = this.getOrCreateIntervalLearning(
       device.homeProfile,
@@ -45,74 +35,77 @@ export class HeatingRecommendationService {
     );
 
     // 2️⃣ Compute overshoot and reach time
-    const overshoot = (event.currentTemp ?? 0) - (event.targetTemp ?? 0);
+    const overshoot =
+      (event.roomCurrentTemp ?? 0) - (event.roomTargetTemp ?? 0);
     const reachTime =
       event.timestampEnd && event.timestampStart
         ? (event.timestampEnd.getTime() - event.timestampStart.getTime()) /
           60000
         : 0;
 
-    /** 4️⃣ If event ENDED → update learning */
+    // 3️⃣ Update interval learning if event ended
     if (event.timestampEnd) {
-      const reachTimeMin =
-        (event.timestampEnd.getTime() - event.timestampStart.getTime()) / 60000;
+      const newSamples = (intervalLearning.samples ?? 0) + 1;
 
-      const overshoot = event.currentTemp - event.targetTemp;
+      const newAvgReach =
+        ((intervalLearning.avgReachTimeMin ?? 0) *
+          (intervalLearning.samples ?? 0) +
+          reachTime) /
+        newSamples;
 
-      const samples = intervalLearning.samples + 1;
+      const newAvgOvershoot =
+        ((intervalLearning.avgOvershoot ?? 0) *
+          (intervalLearning.samples ?? 0) +
+          overshoot) /
+        newSamples;
 
-      const avgReachTimeMin =
-        (intervalLearning.avgReachTimeMin * intervalLearning.samples +
-          reachTimeMin) /
-        samples;
+      const newOffset =
+        ((intervalLearning.offset ?? 0) * (intervalLearning.samples ?? 0) +
+          overshoot) /
+        newSamples;
 
-      const avgOvershoot =
-        (intervalLearning.avgOvershoot * intervalLearning.samples + overshoot) /
-        samples;
-
-      const offset =
-        (intervalLearning.offset * intervalLearning.samples + overshoot) /
-        samples;
-
-      const confidence = Math.min(
+      const newConfidence = Math.min(
         1,
-        (intervalLearning.confidence * intervalLearning.samples + 0.1) /
-          samples,
+        ((intervalLearning.confidence ?? 0.1) *
+          (intervalLearning.samples ?? 0) +
+          0.1) /
+          newSamples,
       );
 
       await this.prisma.heatingIntervalLearning.update({
         where: { id: intervalLearning.id },
         data: {
-          avgReachTimeMin,
-          avgOvershoot,
-          offset,
-          confidence,
-          samples,
+          avgReachTimeMin: newAvgReach,
+          avgOvershoot: newAvgOvershoot,
+          offset: newOffset,
+          samples: newSamples,
+          confidence: newConfidence,
           lastUpdated: new Date(),
         },
       });
 
       this.logger.debug(
-        `[IntervalLearning] ${intervalKey} | reach=${reachTimeMin.toFixed(
-          1,
-        )}min overshoot=${overshoot.toFixed(2)}°C`,
+        `[HeatingRecommendation] Updated IntervalLearning ${intervalKey} | reachTime=${reachTime.toFixed(
+          2,
+        )} | overshoot=${overshoot.toFixed(2)}`,
       );
     }
 
-    /** 5️⃣ Weather (cached only) */
+    const mode: FlowCalcMode = 'FULL';
+
+    let tempMin = 0;
+    let tempMax = 0;
     const weather = await this.prisma.weatherCache.findFirst({
       orderBy: { fetchedAt: 'desc' },
     });
+    if (weather) {
+      tempMin = weather.temp_min!;
+      tempMax = weather.temp_max!;
+    }
 
-    const mode: FlowCalcMode = 'FULL';
-    const weatherInput = {
-      tempMin: weather?.temp_min ?? 0,
-      tempMax: weather?.temp_max ?? 0,
-    };
-
-    /** 6️⃣ Flow temperature calculation */
+    // 4️⃣ Compute recommended flow temperature
     const input: FlowTempInput = {
-      mode: mode,
+      mode,
       homeProfile: {
         floorArea: device.homeProfile.floorArea,
         learningOffset: device.homeProfile.learningOffset,
@@ -127,20 +120,17 @@ export class HeatingRecommendationService {
         avgReachTimeMin: intervalLearning.avgReachTimeMin,
       },
       recentEvents: [],
-      weather: weatherInput,
+      weather: { tempMin, tempMax }, // fallback, može dodati stvarne temp kasnije
     };
 
     const flowResult = FlowTemperatureEngine.calculate(input);
 
-    /** 7️⃣ Upsert daily recommendation */
+    // 5️⃣ Upsert recommendation za danas
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const existing = await this.prisma.recommendation.findFirst({
-      where: {
-        userId: event.userId,
-        date: today,
-      },
+      where: { userId: event.userId, date: { gte: today } },
     });
 
     if (!existing) {
@@ -160,21 +150,41 @@ export class HeatingRecommendationService {
           recommendedFlowTemp: flowResult.finalTemp,
           expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? 0,
           confidenceScore: flowResult.confidence,
+          date: today,
         },
       });
     }
 
     this.logger.debug(
-      `[HeatingRecommendation] user=${event.userId} flow=${flowResult.finalTemp}°C`,
+      `[HeatingRecommendation] User ${event.userId} | FlowTemp=${flowResult.finalTemp}`,
     );
   }
 
-  /** Time-based learning bucket */
+  /** Helper: get or create interval learning */
+  private getOrCreateIntervalLearning(homeProfile: any, intervalKey: string) {
+    let learning = homeProfile.intervalLearnings?.find(
+      (i) => i.intervalKey === intervalKey,
+    );
+    if (!learning) {
+      learning = {
+        id: 0, // dummy, real create treba preko prisma ako želimo persist
+        intervalKey,
+        offset: 0,
+        avgOvershoot: 0,
+        avgReachTimeMin: 0,
+        samples: 0,
+        confidence: 0.1,
+      };
+      homeProfile.intervalLearnings.push(learning);
+    }
+    return learning;
+  }
+
+  /** Simple interval key based on time & day */
   private getIntervalKey(): string {
     const now = new Date();
     const hour = now.getHours();
     const weekday = now.getDay();
-
     let part = 'night';
     if (hour >= 6 && hour < 9) part = 'morning';
     else if (hour >= 9 && hour < 12) part = 'late_morning';
@@ -182,7 +192,6 @@ export class HeatingRecommendationService {
     else if (hour >= 17 && hour < 22) part = 'evening';
 
     const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
-
     return `${dayType}_${part}`;
   }
 }

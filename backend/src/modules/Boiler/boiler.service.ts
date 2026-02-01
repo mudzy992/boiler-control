@@ -87,6 +87,19 @@ export class BoilerService {
           confidence: profile.learningConfidence,
         };
         mode = 'PROFILE_ONLY';
+
+        // --- SEASONALITY CHECK ---
+        const { seasonMode } = profile;
+        if (seasonMode === 'SUMMER') {
+          return this.createOffResult(intervalKey, mode);
+        }
+        if (seasonMode === 'AUTO') {
+          // Simple auto logic: if average of min/max > 15°C -> SUMMER
+          const avgTemp = (tempMin + tempMax) / 2;
+          if (avgTemp > 16) { // 16°C cut-off
+             return this.createOffResult(intervalKey, mode);
+          }
+        }
       }
     }
 
@@ -138,7 +151,7 @@ export class BoilerService {
 
       if (recentEvents.length > 0) {
         recentEventsInput = recentEvents.map((e) => ({
-          delta: e.targetTemp - e.currentTemp,
+          delta: e.roomTargetTemp - e.roomCurrentTemp,
           active: !e.timestampEnd,
         }));
       }
@@ -170,6 +183,17 @@ export class BoilerService {
       confidence: result.confidence,
       mode,
       expectedHeatTimeMin,
+      intervalKey,
+    };
+  }
+
+  private createOffResult(intervalKey: string, mode: any): FlowTempCalculationResult {
+    this.logger.log(`[BoilerCalc] Seasonality -> HEATING OFF`);
+    return {
+      flowTemp: 0,
+      confidence: 1,
+      mode,
+      expectedHeatTimeMin: 0,
       intervalKey,
     };
   }

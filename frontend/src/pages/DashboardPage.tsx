@@ -277,7 +277,7 @@ useEffect(() => {
                 <Descriptions.Item label="Target temperatura">
                   {getCurrentIntervalTemp(intervals!, home.recentHeatingEvents)} °C
                 </Descriptions.Item>
-                <Descriptions.Item label="Temperatura polazne vode">{boiler.suggestedTemp} °C</Descriptions.Item>
+                <Descriptions.Item label="Temperatura polazne vode">{boiler.suggestedFlowTemp} °C</Descriptions.Item>
                 <Descriptions.Item label="Mode">
                   <Tag color="blue">{thermostat.mode}</Tag>
                 </Descriptions.Item>

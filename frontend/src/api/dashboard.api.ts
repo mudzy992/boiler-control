@@ -15,8 +15,8 @@ export interface SystemDashboard {
   weather: TodayWeather;
   boiler?: {
     externalTemp: number;
-    suggestedTemp: number;
-    actualTemp: number;
+    suggestedFlowTemp: number;
+    actualFlowTemp: number;
     heatingStart: string | null;
     heatingEnd: string | null;
   } | null;

@@ -13,7 +13,10 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ThermostatDeviceService } from './thermostat.device.service';
 import { CreateThermostatDeviceDto } from './dto/create-thermostat-device.dto';
 import { UpdateThermostatDeviceDto } from './dto/update-thermostat-device.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Thermostats')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('api/thermostats')
 export class ThermostatDeviceController {

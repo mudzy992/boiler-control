@@ -8,9 +8,9 @@ export interface HeatingEventData {
   deviceId: number;
   timestampStart: Date;
   timestampEnd?: Date;
-  currentTemp: number;
-  targetTemp: number;
-  flowTemp: number;
+  roomCurrentTemp: number;
+  roomTargetTemp: number;
+  boilerFlowTemp: number;
 }
 
 @Injectable()
@@ -35,7 +35,7 @@ export class HeatingRecommendationService {
     );
 
     // 2️⃣ Compute overshoot and reach time
-    const overshoot = (event.currentTemp ?? 0) - (event.targetTemp ?? 0);
+    const overshoot = (event.roomCurrentTemp ?? 0) - (event.roomTargetTemp ?? 0);
     const reachTime =
       event.timestampEnd && event.timestampStart
         ? (event.timestampEnd.getTime() - event.timestampStart.getTime()) /

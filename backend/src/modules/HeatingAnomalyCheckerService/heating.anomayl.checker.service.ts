@@ -159,9 +159,9 @@ export class HeatingAnomalyCheckerService {
       deviceId: event.thermostat.id,
       timestampStart: event.timestampStart,
       timestampEnd: endTime,
-      currentTemp: event.currentTemp,
-      targetTemp: event.targetTemp,
-      flowTemp: boiler?.suggestedTemp || 0,
+      roomCurrentTemp: event.roomCurrentTemp,
+      roomTargetTemp: event.roomTargetTemp,
+      boilerFlowTemp: boiler?.suggestedFlowTemp || 0,
     });
 
     return { success: true, eventId, timestampEnd: endTime };

@@ -10,9 +10,16 @@ import { ThermostatDeviceModule } from './modules/ThermostatDevice/thermostat.de
 import { UserModule } from './modules/User/user.module';
 import { NotificationsModule } from './modules/Notification/notifications.module';
 import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { GasReadingModule } from './modules/Gas/gas.reading.module';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
     PrismaModule,
     AuthModule,
     BoilerModule,
@@ -24,8 +31,14 @@ import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/hea
     UserModule,
     NotificationsModule,
     HeatingAnomalyModule,
+    GasReadingModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

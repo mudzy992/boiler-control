@@ -7,6 +7,7 @@ export interface HomeProfile {
   windowType: string;
   heatingType: string;
   constructionYear: number;
+  seasonMode: 'WINTER' | 'SUMMER' | 'AUTO';
 }
 
 // UpdateHomeProfileDto

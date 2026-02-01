@@ -21,6 +21,8 @@ interface TargetTempInfo {
 @Injectable()
 export class TuyaAdapter {
   private readonly baseUrl = process.env.TUYA_BASE_URL!;
+  private readonly statusCache = new Map<string, { timestamp: number; data: any }>();
+  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   constructor(
     private readonly tokenService: TuyaAuthService,
@@ -62,6 +64,11 @@ export class TuyaAdapter {
 
   /** JEDAN GET koji vraća kompletan status uređaja */
   private async fetchStatus(deviceId: string): Promise<Record<string, any>> {
+    const cached = this.statusCache.get(deviceId);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.data;
+    }
+
     const path = `/v1.0/devices/${deviceId}`;
     const headers = await this.generateHeaders(path, 'GET');
 
@@ -72,13 +79,16 @@ export class TuyaAdapter {
 
     const statusArray: Array<{ code: string; value: any }> =
       res.data.result.status ?? [];
-    return statusArray.reduce(
+    const statusMap = statusArray.reduce(
       (acc, s) => {
         acc[s.code] = s.value;
         return acc;
       },
       {} as Record<string, any>,
     );
+
+    this.statusCache.set(deviceId, { timestamp: Date.now(), data: statusMap });
+    return statusMap;
   }
 
   /** Dobijamo target temperaturu iz statusa, bez dodatnog fetch-a */

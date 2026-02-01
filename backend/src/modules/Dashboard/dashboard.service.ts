@@ -2,10 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { HeatingEventWhereInput } from '../../generated/prisma/models';
 import {
-  HeatingEventsQuery,
-  HeatingStatsQuery,
-  LearningTrendsQuery,
-} from './dashboard.controller';
+  GetHeatingEventsDto,
+  GetHeatingStatsDto,
+  GetLearningTrendsDto,
+} from './dto/dashboard.dto';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 import { BoilerService } from '../Boiler/boiler.service';
 
@@ -138,9 +138,9 @@ export class DashboardService {
             deviceId: e.deviceId,
             startedAt: e.timestampStart,
             endedAt: e.timestampEnd,
-            targetTemp: e.targetTemp,
+            targetTemp: e.roomTargetTemp,
             targetTempThermostat: targetTemp,
-            currentTemp: e.currentTemp,
+            currentTemp: e.roomCurrentTemp,
             curretTempThermostat: currentTemp,
             hvacAction: e.hvacAction,
             source: e.source,
@@ -176,7 +176,7 @@ export class DashboardService {
   // FULL-ONLY ENDPOINTS
   // ======================================================
 
-  async getHeatingEvents(userId: number, query: HeatingEventsQuery) {
+  async getHeatingEvents(userId: number, query: GetHeatingEventsDto) {
     await this.assertUserHasThermostat(userId);
 
     const {
@@ -253,8 +253,8 @@ export class DashboardService {
         deviceId: e.deviceId,
         startedAt: e.timestampStart,
         endedAt: e.timestampEnd,
-        currentTemp: e.currentTemp,
-        targetTemp: e.targetTemp,
+        currentTemp: e.roomCurrentTemp,
+        targetTemp: e.roomTargetTemp,
         curretTempThermostat: currentTemp,
         targetTempThermostat: targetTemp,
         hvacAction: e.hvacAction,
@@ -273,7 +273,7 @@ export class DashboardService {
     };
   }
 
-  async getHeatingStats(userId: number, query: HeatingStatsQuery) {
+  async getHeatingStats(userId: number, query: GetHeatingStatsDto) {
     await this.assertUserHasThermostat(userId);
     const { homeProfileId, deviceId, from, to, bucket = 'day' } = query;
 
@@ -316,8 +316,8 @@ export class DashboardService {
         });
       const b = bucketsMap.get(label)!;
 
-      b.totalTarget += e.targetTemp;
-      b.totalCurrent += e.currentTemp;
+      b.totalTarget += e.roomTargetTemp;
+      b.totalCurrent += e.roomCurrentTemp;
       b.count++;
       if (e.timestampEnd)
         b.totalDuration +=
@@ -339,7 +339,7 @@ export class DashboardService {
     };
   }
 
-  async getLearningTrends(userId: number, query: LearningTrendsQuery) {
+  async getLearningTrends(userId: number, query: GetLearningTrendsDto) {
     await this.assertUserHasThermostat(userId);
     const { homeProfileId, from, to } = query;
     if (!from || !to) throw new Error("'from' i 'to' su obavezni");

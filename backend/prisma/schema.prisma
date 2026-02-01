@@ -43,6 +43,7 @@ model User {
   devices                    UserDevice[]
   notifications               Notification[]
   notificationPreferences     NotificationPreference[]
+  gasReadings                 GasReading[]
 }
 
 model HomeProfile {
@@ -58,6 +59,7 @@ model HomeProfile {
   constructionYear    Int                                   // Godina izgradnje objekta
   learningOffset      Float                     @default(0) // ± korekcija krivulje
   learningConfidence  Float                     @default(0) // 0–1
+  seasonMode          SeasonMode                @default(WINTER) // Ljetni/Zimski režim
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @updatedAt
   thermostatDevices   ThermostatDevice[]
@@ -106,8 +108,8 @@ model HeatingEvent {
   deviceId       Int
   timestampStart DateTime                          // Početak grijanja
   timestampEnd   DateTime?                         // Završetak grijanja
-  currentTemp    Float                             // Trenutna temperatura u prostoriji
-  targetTemp     Float                             // Temperatura koja treba da se dostigne
+  roomCurrentTemp    Float           @map("currentTemp")                  // Trenutna temperatura u prostoriji
+  roomTargetTemp     Float           @map("targetTemp")                   // Temperatura koja treba da se dostigne
   hvacAction     String                            // Informacija da li je grijanje u toku ili ne
   source         String
   isAnomaly      Boolean         @default(false)   // Uočena anomalija (cron postavlja na true)
@@ -161,11 +163,28 @@ model BoilerHistory {
   user          User      @relation(fields: [userId], references: [id])
   userId        Int
   externalTemp  Float                                // Trenutna vanjska temperatura
-  suggestedTemp Float                                // Predložena temperatura vode kotla (polazna voda)
-  actualTemp    Float?                               // Trenutna aktuelna temperatura vode kotla (polazna voda)
+  suggestedFlowTemp Float         @map("suggestedTemp")                       // Predložena temperatura vode kotla (polazna voda)
+  actualFlowTemp    Float?        @map("actualTemp")                          // Trenutna aktuelna temperatura vode kotla (polazna voda)
   heatingStart  DateTime?                            // Početak grijanja
   heatingEnd    DateTime?                            // Kraj grijanja
   createdAt     DateTime  @default(now())
+}
+
+model GasReading {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  readingDate  DateTime
+  counterValue Float    // Stanje brojila (m3)
+  consumption  Float?   // Potrošnja od zadnjeg očitavanja (m3)
+
+  createdAt    DateTime @default(now())
+}
+
+enum SeasonMode {
+  WINTER
+  SUMMER
+  AUTO
 }
 
 model HeatingIntervalLearning {

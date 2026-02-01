@@ -10,6 +10,7 @@ export interface HeatingEventData {
   timestampEnd?: Date;
   currentTemp: number;
   targetTemp: number;
+  flowTemp: number;
 }
 
 @Injectable()
@@ -38,26 +39,18 @@ export class HeatingRecommendationService {
 
     /** 2️⃣ Resolve interval key */
     const intervalKey = this.getIntervalKey();
+    const intervalLearning = this.getOrCreateIntervalLearning(
+      device.homeProfile,
+      intervalKey,
+    );
 
-    /** 3️⃣ Load or create interval learning (PERSISTED) */
-    const intervalLearning = await this.prisma.heatingIntervalLearning.upsert({
-      where: {
-        homeProfileId_intervalKey: {
-          homeProfileId: device.homeProfile.id,
-          intervalKey,
-        },
-      },
-      create: {
-        homeProfileId: device.homeProfile.id,
-        intervalKey,
-        avgReachTimeMin: 0,
-        avgOvershoot: 0,
-        offset: 0,
-        confidence: 0.1,
-        samples: 0,
-      },
-      update: {},
-    });
+    // 2️⃣ Compute overshoot and reach time
+    const overshoot = (event.currentTemp ?? 0) - (event.targetTemp ?? 0);
+    const reachTime =
+      event.timestampEnd && event.timestampStart
+        ? (event.timestampEnd.getTime() - event.timestampStart.getTime()) /
+          60000
+        : 0;
 
     /** 4️⃣ If event ENDED → update learning */
     if (event.timestampEnd) {

@@ -39,7 +39,6 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import type { TooltipProps } from "recharts";
 
 import {
   getDashboard,
@@ -304,7 +303,7 @@ useEffect(() => {
   };
 
   // Custom tooltip for graph
-  const CustomTooltip = ({ active, payload }: TooltipProps<any, any>) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

@@ -7,6 +7,7 @@ import { DayType } from '../../../generated/prisma/enums';
 import { ThermostatSnapshot } from './thermostat-adapter.interface';
 import { TuyaProgramByDay } from './program-sync.types';
 import { ProgramSyncService } from './program.sync.service';
+import { StructuredLogger } from '../../../common/structured-logger';
 
 interface TargetTempInfo {
   targetTemp: number;
@@ -39,6 +40,7 @@ interface TuyaRequestMetrics {
 @Injectable()
 export class TuyaAdapter {
   private readonly logger = new Logger(TuyaAdapter.name);
+  private readonly structuredLogger = new StructuredLogger(TuyaAdapter.name);
   private readonly baseUrl = process.env.TUYA_BASE_URL!;
 
   // Cache: 5s TTL for read coalescing
@@ -163,16 +165,40 @@ export class TuyaAdapter {
   }
 
   /** JEDAN GET koji vraća kompletan status uređaja — s cache-om od 5s i circuit breakerom */
-  private async fetchStatus(deviceId: string): Promise<Record<string, any>> {
+  private async fetchStatus(
+    deviceId: string,
+    runId?: string,
+  ): Promise<Record<string, any>> {
     // Check circuit breaker first
-    this.checkCircuitBreaker(deviceId);
+    const cbState = this.circuitBreaker.get(deviceId);
+    if (cbState?.isOpen) {
+      // If we have a recent cached snapshot, return it instead of failing hard
+      const cached = this.snapshotCache.get(deviceId);
+      if (cached && Date.now() - cached.timestamp < this.SNAPSHOT_CACHE_TTL) {
+        this.structuredLogger.warn(
+          'Returning cached snapshot due to open circuit',
+          {
+            deviceId,
+            runId,
+            module: 'tuya-adapter',
+            action: 'circuit_open_return_cache',
+          },
+        );
+        this.requestMetrics.circuitBreakerTrips++;
+        return cached.data as Record<string, any>;
+      }
+      this.checkCircuitBreaker(deviceId);
+    }
 
     // Check snapshot cache (5s TTL for coalescing)
     const cached = this.snapshotCache.get(deviceId);
     if (cached && Date.now() - cached.timestamp < this.SNAPSHOT_CACHE_TTL) {
-      this.logger.debug(
-        `[Cache] Returning cached snapshot for device ${deviceId}`,
-      );
+      this.structuredLogger.debug('Snapshot from cache', {
+        deviceId,
+        runId,
+        module: 'tuya-adapter',
+        action: 'cache_hit',
+      });
       return cached.data;
     }
 
@@ -183,18 +209,29 @@ export class TuyaAdapter {
     this.requestMetrics.totalRequests++;
 
     try {
+      const timeoutMs = Number(process.env.TUYA_REQUEST_TIMEOUT_MS) || 10000;
       const res = await axios.get(`${this.baseUrl}${path}`, {
         headers,
-        timeout: 10000, // 10 second timeout
+        timeout: timeoutMs, // configurable timeout
       });
 
       const duration = Date.now() - startTime;
-      this.logger.debug(
-        `[Tuya] GET ${path} success in ${duration}ms | status=${res.data.success}`,
-      );
+      this.structuredLogger.log('Tuya request success', {
+        deviceId,
+        runId,
+        module: 'tuya-adapter',
+        action: 'tuya_request_success',
+        durationMin: duration / 1000 / 60,
+      });
 
       if (!res.data.success) {
         this.recordFailure(deviceId);
+        this.structuredLogger.error('Tuya response unsuccessful', undefined, {
+          deviceId,
+          runId,
+          module: 'tuya-adapter',
+          action: 'tuya_response_error',
+        });
         throw new Error(
           `Tuya device fetch failed: ${JSON.stringify(res.data)} after ${duration}ms`,
         );
@@ -219,10 +256,11 @@ export class TuyaAdapter {
       this.recordFailure(deviceId);
 
       const errMsg = err instanceof AxiosError ? err.message : String(err);
-      this.logger.error(`[Tuya] GET ${path} failed: ${errMsg}`, {
+      this.structuredLogger.error('Tuya request failed', new Error(errMsg), {
         deviceId,
-        error: errMsg,
-        status: err instanceof AxiosError ? err.response?.status : 'unknown',
+        runId,
+        module: 'tuya-adapter',
+        action: 'tuya_request_error',
       });
 
       throw err;
@@ -290,8 +328,11 @@ export class TuyaAdapter {
   }
 
   /** FETCH SNAPSHOT – SADA SAMO JEDAN API poziv s 5s cache-om */
-  async fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot> {
-    const status = await this.fetchStatus(deviceId); // <-- samo JEDAN GET
+  async fetchSnapshot(
+    deviceId: string,
+    runId?: string,
+  ): Promise<ThermostatSnapshot> {
+    const status = await this.fetchStatus(deviceId, runId); // <-- samo JEDAN GET
 
     const currentTemp = (status['TempCurrent'] ?? null) / 2;
     const powerOn = status['Power'] === true;
@@ -311,6 +352,13 @@ export class TuyaAdapter {
     this.snapshotCache.set(deviceId, {
       timestamp: Date.now(),
       data: snapshot,
+    });
+
+    this.structuredLogger.log('Snapshot fetched', {
+      deviceId,
+      runId,
+      module: 'tuya-adapter',
+      action: 'snapshot_fetched',
     });
 
     return snapshot;

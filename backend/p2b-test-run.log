@@ -1,0 +1,2362 @@
+
+> backend@0.0.1 test:integration
+> cross-env NODE_ENV=test DATABASE_HOST=inventory.hopto.org DATABASE_PORT=3306 DATABASE_USER=mudzy DATABASE_PASSWORD='nije,kikiriki' DATABASE_NAME=boiler_assistant_test JWT_SECRET='tvoj_tajni_jwt_kljuc' JWT_EXPIRES_IN='3600s' WEATHER_API_KEY='8e968a22bfca43d18a6152747260301' TUYA_CLIENT_ID='y3kg9wjqwghsj8ak5swj' TUYA_CLIENT_SECRET='7d2164fd310f4edcb590ecbdaf373cca' TUYA_REGION=EU TUYA_BASE_URL=https://openapi.tuyaeu.com jest --config jest-integration.config.js --runInBand --forceExit --testTimeout=300000 --runInBand
+
+FAIL backend-integration test/integration/api.integration.spec.ts
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/register ΓÇ║ should create a new user and return token
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/register ΓÇ║ should reject duplicate email registration
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/register ΓÇ║ should reject invalid email format
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/register ΓÇ║ should reject weak password
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/login ΓÇ║ should login with correct credentials
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/login ΓÇ║ should login with correct credentials
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      151 |       beforeAll(async () => {
+      152 |         testUserEmail = `login_test_${Date.now()}@example.com`;
+    > 153 |         await request(app.getHttpServer()).post('/api/auth/register').send({
+          |                           ^
+      154 |           email: testUserEmail,
+      155 |           password: testUserPassword,
+      156 |           name: 'Login Test User',
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:153:27)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/login ΓÇ║ should reject invalid credentials
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/login ΓÇ║ should reject invalid credentials
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      151 |       beforeAll(async () => {
+      152 |         testUserEmail = `login_test_${Date.now()}@example.com`;
+    > 153 |         await request(app.getHttpServer()).post('/api/auth/register').send({
+          |                           ^
+      154 |           email: testUserEmail,
+      155 |           password: testUserPassword,
+      156 |           name: 'Login Test User',
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:153:27)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/login ΓÇ║ should reject non-existent user
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Auth Endpoints ΓÇ║ POST /api/auth/login ΓÇ║ should reject non-existent user
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      151 |       beforeAll(async () => {
+      152 |         testUserEmail = `login_test_${Date.now()}@example.com`;
+    > 153 |         await request(app.getHttpServer()).post('/api/auth/register').send({
+          |                           ^
+      154 |           email: testUserEmail,
+      155 |           password: testUserPassword,
+      156 |           name: 'Login Test User',
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:153:27)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ GET /api/user ΓÇ║ should return current user profile with authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ GET /api/user ΓÇ║ should return current user profile with authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      203 |     beforeAll(async () => {
+      204 |       const email = `user_test_${Date.now()}@example.com`;
+    > 205 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      206 |         .post('/api/auth/register')
+      207 |         .send({
+      208 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:205:50)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ GET /api/user ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ GET /api/user ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      203 |     beforeAll(async () => {
+      204 |       const email = `user_test_${Date.now()}@example.com`;
+    > 205 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      206 |         .post('/api/auth/register')
+      207 |         .send({
+      208 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:205:50)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ GET /api/user ΓÇ║ should reject request with invalid token
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ GET /api/user ΓÇ║ should reject request with invalid token
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      203 |     beforeAll(async () => {
+      204 |       const email = `user_test_${Date.now()}@example.com`;
+    > 205 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      206 |         .post('/api/auth/register')
+      207 |         .send({
+      208 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:205:50)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ PUT /api/user ΓÇ║ should update user profile
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ User Endpoints ΓÇ║ PUT /api/user ΓÇ║ should update user profile
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      203 |     beforeAll(async () => {
+      204 |       const email = `user_test_${Date.now()}@example.com`;
+    > 205 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      206 |         .post('/api/auth/register')
+      207 |         .send({
+      208 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:205:50)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Metrics Endpoints ΓÇ║ GET /metrics ΓÇ║ should return Prometheus metrics in text format
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Metrics Endpoints ΓÇ║ GET /metrics ΓÇ║ should contain all expected metrics
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Metrics Endpoints ΓÇ║ GET /metrics/json ΓÇ║ should return metrics in JSON format
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Metrics Endpoints ΓÇ║ GET /metrics/json ΓÇ║ should contain all expected metric counters
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Dashboard Endpoints ΓÇ║ GET /api/dashboard ΓÇ║ should return dashboard summary with authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Dashboard Endpoints ΓÇ║ GET /api/dashboard ΓÇ║ should return dashboard summary with authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      345 |     beforeAll(async () => {
+      346 |       const email = `dashboard_test_${Date.now()}@example.com`;
+    > 347 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      348 |         .post('/api/auth/register')
+      349 |         .send({
+      350 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:347:50)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Dashboard Endpoints ΓÇ║ GET /api/dashboard ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Dashboard Endpoints ΓÇ║ GET /api/dashboard ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      345 |     beforeAll(async () => {
+      346 |       const email = `dashboard_test_${Date.now()}@example.com`;
+    > 347 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      348 |         .post('/api/auth/register')
+      349 |         .send({
+      350 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:347:50)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Health & Info Endpoints ΓÇ║ GET /health ΓÇ║ should return health status
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Error Handling ΓÇ║ should return 404 for non-existent endpoint
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Error Handling ΓÇ║ should handle CORS preflight requests
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Error Handling ΓÇ║ should return validation error for malformed request
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Concurrency & Load Testing ΓÇ║ should handle multiple concurrent requests
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Concurrency & Load Testing ΓÇ║ should handle rapid sequential requests
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Structured Logging Verification ΓÇ║ should include correlation IDs in logs (verified via successful request)
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      20 |
+      21 |   beforeAll(async () => {
+    > 22 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      23 |       imports: [AppModule],
+      24 |     }).compile();
+      25 |
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:22:42)
+
+  ΓùÅ Integration Tests: Backend API (P2a) ΓÇ║ Structured Logging Verification ΓÇ║ should include correlation IDs in logs (verified via successful request)
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      487 |     beforeAll(async () => {
+      488 |       const email = `logging_test_${Date.now()}@example.com`;
+    > 489 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      490 |         .post('/api/auth/register')
+      491 |         .send({
+      492 |           email,
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:489:50)
+
+
+  ΓùÅ Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'close')
+
+      65 |   afterAll(async () => {
+      66 |     // Clean up test data (note: not using TRUNCATE as it may fail with certain DB drivers)
+    > 67 |     await app.close();
+         |               ^
+      68 |     // Ensure Prisma releases DB connections between Jest suites
+      69 |     await prisma.$disconnect();
+      70 |   });
+
+      at Object.<anonymous> (test/integration/api.integration.spec.ts:67:15)
+
+FAIL backend-integration test/integration/heating-polling.integration.spec.ts
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Heating Events Endpoints ΓÇ║ POST /api/heating-events (manual creation for testing) ΓÇ║ should create heating event with transaction
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Heating Events Endpoints ΓÇ║ POST /api/heating-events (manual creation for testing) ΓÇ║ should create heating event with transaction
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+       98 |       // Create test user
+       99 |       const email = `heating_test_${Date.now()}@example.com`;
+    > 100 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      101 |         .post('/api/auth/register')
+      102 |         .send({
+      103 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:100:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Heating Events Endpoints ΓÇ║ GET /api/heating-events (retrieve events) ΓÇ║ should return heating events for user
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Heating Events Endpoints ΓÇ║ GET /api/heating-events (retrieve events) ΓÇ║ should return heating events for user
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+       98 |       // Create test user
+       99 |       const email = `heating_test_${Date.now()}@example.com`;
+    > 100 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      101 |         .post('/api/auth/register')
+      102 |         .send({
+      103 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:100:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Heating Events Endpoints ΓÇ║ GET /api/heating-events (retrieve events) ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Heating Events Endpoints ΓÇ║ GET /api/heating-events (retrieve events) ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+       98 |       // Create test user
+       99 |       const email = `heating_test_${Date.now()}@example.com`;
+    > 100 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      101 |         .post('/api/auth/register')
+      102 |         .send({
+      103 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:100:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Recommendations Endpoints ΓÇ║ GET /api/recommendations (retrieve recommendations) ΓÇ║ should return recommendations for user
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Recommendations Endpoints ΓÇ║ GET /api/recommendations (retrieve recommendations) ΓÇ║ should return recommendations for user
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      199 |     beforeAll(async () => {
+      200 |       const email = `rec_test_${Date.now()}@example.com`;
+    > 201 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      202 |         .post('/api/auth/register')
+      203 |         .send({
+      204 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:201:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Recommendations Endpoints ΓÇ║ GET /api/recommendations (retrieve recommendations) ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Recommendations Endpoints ΓÇ║ GET /api/recommendations (retrieve recommendations) ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      199 |     beforeAll(async () => {
+      200 |       const email = `rec_test_${Date.now()}@example.com`;
+    > 201 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      202 |         .post('/api/auth/register')
+      203 |         .send({
+      204 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:201:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Recommendations Endpoints ΓÇ║ GET /api/recommendations/today ΓÇ║ should return today recommendations
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Recommendations Endpoints ΓÇ║ GET /api/recommendations/today ΓÇ║ should return today recommendations
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      199 |     beforeAll(async () => {
+      200 |       const email = `rec_test_${Date.now()}@example.com`;
+    > 201 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      202 |         .post('/api/auth/register')
+      203 |         .send({
+      204 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:201:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Anomalies Endpoints ΓÇ║ GET /api/anomalies (retrieve anomalies) ΓÇ║ should return anomalies for user
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Anomalies Endpoints ΓÇ║ GET /api/anomalies (retrieve anomalies) ΓÇ║ should return anomalies for user
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      263 |     beforeAll(async () => {
+      264 |       const email = `anomaly_test_${Date.now()}@example.com`;
+    > 265 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      266 |         .post('/api/auth/register')
+      267 |         .send({
+      268 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:265:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Anomalies Endpoints ΓÇ║ GET /api/anomalies (retrieve anomalies) ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Anomalies Endpoints ΓÇ║ GET /api/anomalies (retrieve anomalies) ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      263 |     beforeAll(async () => {
+      264 |       const email = `anomaly_test_${Date.now()}@example.com`;
+    > 265 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      266 |         .post('/api/auth/register')
+      267 |         .send({
+      268 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:265:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Thermostat Devices Endpoints ΓÇ║ GET /api/devices (retrieve user devices) ΓÇ║ should return user thermostat devices
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Thermostat Devices Endpoints ΓÇ║ GET /api/devices (retrieve user devices) ΓÇ║ should return user thermostat devices
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      313 |     beforeAll(async () => {
+      314 |       const email = `device_test_${Date.now()}@example.com`;
+    > 315 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      316 |         .post('/api/auth/register')
+      317 |         .send({
+      318 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:315:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Thermostat Devices Endpoints ΓÇ║ GET /api/devices (retrieve user devices) ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Thermostat Devices Endpoints ΓÇ║ GET /api/devices (retrieve user devices) ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      313 |     beforeAll(async () => {
+      314 |       const email = `device_test_${Date.now()}@example.com`;
+    > 315 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      316 |         .post('/api/auth/register')
+      317 |         .send({
+      318 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:315:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Boiler Endpoints ΓÇ║ GET /api/boiler/history ΓÇ║ should return boiler history
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Boiler Endpoints ΓÇ║ GET /api/boiler/history ΓÇ║ should return boiler history
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      363 |     beforeAll(async () => {
+      364 |       const email = `boiler_test_${Date.now()}@example.com`;
+    > 365 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      366 |         .post('/api/auth/register')
+      367 |         .send({
+      368 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:365:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Boiler Endpoints ΓÇ║ GET /api/boiler/history ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Boiler Endpoints ΓÇ║ GET /api/boiler/history ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      363 |     beforeAll(async () => {
+      364 |       const email = `boiler_test_${Date.now()}@example.com`;
+    > 365 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      366 |         .post('/api/auth/register')
+      367 |         .send({
+      368 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:365:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Weather Data Endpoints ΓÇ║ GET /api/weather (retrieve weather data) ΓÇ║ should return weather data
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Weather Data Endpoints ΓÇ║ GET /api/weather (retrieve weather data) ΓÇ║ should return weather data
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      410 |     beforeAll(async () => {
+      411 |       const email = `weather_test_${Date.now()}@example.com`;
+    > 412 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      413 |         .post('/api/auth/register')
+      414 |         .send({
+      415 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:412:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Weather Data Endpoints ΓÇ║ GET /api/weather (retrieve weather data) ΓÇ║ should reject request without authorization
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Weather Data Endpoints ΓÇ║ GET /api/weather (retrieve weather data) ΓÇ║ should reject request without authorization
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      410 |     beforeAll(async () => {
+      411 |       const email = `weather_test_${Date.now()}@example.com`;
+    > 412 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      413 |         .post('/api/auth/register')
+      414 |         .send({
+      415 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:412:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Transactional Integrity Verification (P1c) ΓÇ║ should maintain database consistency on heating event creation
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Transactional Integrity Verification (P1c) ΓÇ║ should maintain database consistency on heating event creation
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      450 |     beforeAll(async () => {
+      451 |       const email = `transaction_test_${Date.now()}@example.com`;
+    > 452 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      453 |         .post('/api/auth/register')
+      454 |         .send({
+      455 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:452:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Transactional Integrity Verification (P1c) ΓÇ║ should prevent orphaned database records on error
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Transactional Integrity Verification (P1c) ΓÇ║ should prevent orphaned database records on error
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      450 |     beforeAll(async () => {
+      451 |       const email = `transaction_test_${Date.now()}@example.com`;
+    > 452 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      453 |         .post('/api/auth/register')
+      454 |         .send({
+      455 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:452:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Metrics Tracking Verification (P1d) ΓÇ║ should track metrics after successful operations
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Correlation ID Propagation Verification (P1d) ΓÇ║ should handle authenticated requests with structured logging
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Correlation ID Propagation Verification (P1d) ΓÇ║ should handle authenticated requests with structured logging
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      533 |     beforeAll(async () => {
+      534 |       const email = `correlation_test_${Date.now()}@example.com`;
+    > 535 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      536 |         .post('/api/auth/register')
+      537 |         .send({
+      538 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:535:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle requests with query parameters
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle requests with query parameters
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      564 |     beforeAll(async () => {
+      565 |       const email = `edge_case_test_${Date.now()}@example.com`;
+    > 566 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      567 |         .post('/api/auth/register')
+      568 |         .send({
+      569 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:566:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle requests with date filters
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle requests with date filters
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      564 |     beforeAll(async () => {
+      565 |       const email = `edge_case_test_${Date.now()}@example.com`;
+    > 566 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      567 |         .post('/api/auth/register')
+      568 |         .send({
+      569 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:566:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle empty response bodies gracefully
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle empty response bodies gracefully
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      564 |     beforeAll(async () => {
+      565 |       const email = `edge_case_test_${Date.now()}@example.com`;
+    > 566 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      567 |         .post('/api/auth/register')
+      568 |         .send({
+      569 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:566:50)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle malformed authorization headers
+
+    Nest can't resolve dependencies of the WeatherService (PrismaService, ?). Please make sure that the argument WeatherHttpAdapter at index [1] is available in the WeatherModule context.
+
+    Potential solutions:
+    - Is WeatherModule a valid NestJS module?
+    - If WeatherHttpAdapter is a provider, is it part of the current WeatherModule?
+    - If WeatherHttpAdapter is exported from a separate @Module, is that module imported within WeatherModule?
+      @Module({
+        imports: [ /* the Module containing WeatherHttpAdapter */ ]
+      })
+
+    For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
+
+      43 |       .useValue({ canActivate: () => true });
+      44 |
+    > 45 |     const moduleFixture: TestingModule = await builder.compile();
+         |                                          ^
+      46 |
+      47 |     app = moduleFixture.createNestApplication();
+      48 |     app.useGlobalPipes(
+
+      at TestingInjector.lookupComponentInParentModules (node_modules/@nestjs/core/injector/injector.js:290:19)
+      at TestingInjector.resolveComponentWrapper (node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (node_modules/@nestjs/core/injector/injector.js:140:38)
+          at async Promise.all (index 1)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:169:27)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:75:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:103:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 3)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 8)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:45:42)
+
+  ΓùÅ Integration Tests: Heating & Polling (P2a) ΓÇ║ Edge Cases & Error Scenarios ΓÇ║ should handle malformed authorization headers
+
+    TypeError: Cannot read properties of undefined (reading 'getHttpServer')
+
+      564 |     beforeAll(async () => {
+      565 |       const email = `edge_case_test_${Date.now()}@example.com`;
+    > 566 |       const registerResponse = await request(app.getHttpServer())
+          |                                                  ^
+      567 |         .post('/api/auth/register')
+      568 |         .send({
+      569 |           email,
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:566:50)
+
+
+  ΓùÅ Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'close')
+
+      85 |
+      86 |   afterAll(async () => {
+    > 87 |     await app.close();
+         |               ^
+      88 |     // Ensure Prisma releases DB connections between Jest suites
+      89 |     await prisma.$disconnect();
+      90 |   });
+
+      at Object.<anonymous> (test/integration/heating-polling.integration.spec.ts:87:15)
+
+Test Suites: 2 failed, 2 total
+Tests:       46 failed, 46 total
+Snapshots:   0 total
+Time:        3.524 s, estimated 20 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

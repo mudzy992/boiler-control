@@ -1,0 +1,15 @@
+
+> backend@0.0.1 test:integration
+> cross-env NODE_ENV=test DATABASE_HOST=inventory.hopto.org DATABASE_PORT=3306 DATABASE_USER=mudzy DATABASE_PASSWORD='nije,kikiriki' DATABASE_NAME=boiler_assistant_test JWT_SECRET='tvoj_tajni_jwt_kljuc' JWT_EXPIRES_IN='3600s' WEATHER_API_KEY='8e968a22bfca43d18a6152747260301' TUYA_CLIENT_ID='y3kg9wjqwghsj8ak5swj' TUYA_CLIENT_SECRET='7d2164fd310f4edcb590ecbdaf373cca' TUYA_REGION=EU TUYA_BASE_URL=https://openapi.tuyaeu.com jest --config jest-integration.config.js --runInBand --forceExit --testTimeout=300000 --runInBand
+
+(node:40204) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS backend-integration test/integration/api.integration.spec.ts (12.905 s)
+PASS backend-integration test/integration/heating-polling.integration.spec.ts (6.937 s)
+
+Test Suites: 2 passed, 2 total
+Tests:       46 passed, 46 total
+Snapshots:   0 total
+Time:        20.151 s, estimated 22 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

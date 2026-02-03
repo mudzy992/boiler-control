@@ -57,7 +57,7 @@ export class NotificationsController {
 
   // Dohvati sve notifikacije korisnika
   @Get()
-  async getNotifications(@Param('userId') userId: number) {
+  async getNotifications(@User() userId: number) {
     return this.notificationsService.getUserNotifications(userId);
   }
 
@@ -67,11 +67,53 @@ export class NotificationsController {
     return this.notificationsService.markAsRead(id);
   }
 
+  @Get('types')
+  async getNotificationTypes() {
+    // Return all available notification types
+    return [
+      { value: 'DAILY_RECOMMENDATION', label: 'Daily Recommendations' },
+      { value: 'FLOW_TEMP_CHANGED', label: 'Flow Temperature Changes' },
+      { value: 'HEATING_STARTED', label: 'Heating Started' },
+      { value: 'HEATING_ENDED', label: 'Heating Ended' },
+      { value: 'SYSTEM_ALERT', label: 'System Alerts' },
+      { value: 'GAS_READING_REMINDER', label: 'Gas Reading Reminders' },
+    ];
+  }
+
   @Get('preferences')
-  getPreferences(@User() userId: number) {
-    return this.prisma.notificationPreference.findMany({
+  async getPreferences(@User() userId: number) {
+    // Get existing preferences
+    const preferences = await this.prisma.notificationPreference.findMany({
       where: { userId: userId },
     });
+
+    // If no preferences exist, create defaults for all types
+    if (preferences.length === 0) {
+      const notificationTypes = [
+        'DAILY_RECOMMENDATION',
+        'FLOW_TEMP_CHANGED',
+        'HEATING_STARTED',
+        'HEATING_ENDED',
+        'SYSTEM_ALERT',
+        'GAS_READING_REMINDER',
+      ] as NotificationType[];
+
+      const defaultPreferences = await Promise.all(
+        notificationTypes.map((type) =>
+          this.prisma.notificationPreference.create({
+            data: {
+              userId: userId,
+              type: type,
+              enabled: true, // All enabled by default
+            },
+          }),
+        ),
+      );
+
+      return defaultPreferences;
+    }
+
+    return preferences;
   }
 
   @Patch('preferences')

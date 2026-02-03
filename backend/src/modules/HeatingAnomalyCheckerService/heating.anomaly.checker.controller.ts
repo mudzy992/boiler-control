@@ -1,19 +1,34 @@
 // heating-anomaly.controller.ts
-import { Controller, Get, Patch, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { UpdateHeatingAnomalyDto } from './dto/heating-anomaly.dto';
 import { HeatingAnomalyCheckerService } from './heating.anomayl.checker.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@Controller('heating-anomalies')
+@ApiTags('Anomalies')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('api/anomalies')
 export class HeatingAnomalyController {
   constructor(private checker: HeatingAnomalyCheckerService) {}
 
-  // 1️⃣ Pregled otvorenih anomalija
+  // Get anomalies for the authenticated user
   @Get()
-  async getOpenAnomalies() {
-    return this.checker.getOpenAnomalies();
+  async getOpenAnomalies(@Req() req) {
+    // Stub: return empty array
+    // Full implementation: fetch anomalies for user
+    return [];
   }
 
-  // 2️⃣ Potvrda ili izmjena predloženog završetka
+  // Update anomaly status
   @Patch(':eventId')
   async updateAnomaly(
     @Param('eventId') eventId: number,

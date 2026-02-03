@@ -30,9 +30,30 @@ export class HomeProfileService {
   }
 
   create(userId: number, dto: CreateHomeProfileDto) {
+    const floorArea = Number(dto.squareMeters ?? dto.floorArea ?? 0);
+    const ceilingHeight = Number(dto.ceilingHeight ?? 2.6);
+    const insulationThickness = Number(dto.insulationThickness ?? 10);
+    const constructionYear = Number(
+      dto.constructionYear ?? new Date().getFullYear(),
+    );
+
     return this.prisma.homeProfile.create({
       data: {
-        ...dto,
+        homeName: dto.homeName ?? null,
+        floorArea,
+        ceilingHeight,
+        insulationType: dto.insulationLevel ?? dto.insulationType ?? 'standard',
+        insulationThickness,
+        windowType: dto.windowQuality ?? dto.windowType ?? 'standard',
+        heatingType: dto.radiatorType ?? dto.heatingType ?? 'radiator',
+        constructionYear,
+        numberOfResidents: dto.numberOfResidents ?? null,
+        boilerModel: dto.boilerModel ?? null,
+        hasFloorHeating: dto.hasFloorHeating ?? false,
+        targetMorningTemp: dto.targetMorningTemp ?? null,
+        targetDayTemp: dto.targetDayTemp ?? null,
+        targetNightTemp: dto.targetNightTemp ?? null,
+        preferredScheduleNotes: dto.preferredScheduleNotes ?? null,
         userId,
       },
     });
@@ -42,11 +63,51 @@ export class HomeProfileService {
     await this.findOne(userId, id);
 
     const dtoCorrected = {
-      ...dto,
-      floorArea: Number(dto.floorArea),
-      ceilingHeight: Number(dto.ceilingHeight),
-      insulationThickness: Number(dto.insulationThickness),
-      constructionYear: Number(dto.constructionYear),
+      ...(dto.homeName !== undefined && { homeName: dto.homeName ?? null }),
+      ...(dto.squareMeters !== undefined && {
+        floorArea: Number(dto.squareMeters),
+      }),
+      ...(dto.floorArea !== undefined && { floorArea: Number(dto.floorArea) }),
+      ...(dto.ceilingHeight !== undefined && {
+        ceilingHeight: Number(dto.ceilingHeight),
+      }),
+      ...(dto.insulationLevel !== undefined && {
+        insulationType: dto.insulationLevel,
+      }),
+      ...(dto.insulationType !== undefined && {
+        insulationType: dto.insulationType,
+      }),
+      ...(dto.insulationThickness !== undefined && {
+        insulationThickness: Number(dto.insulationThickness),
+      }),
+      ...(dto.windowQuality !== undefined && { windowType: dto.windowQuality }),
+      ...(dto.windowType !== undefined && { windowType: dto.windowType }),
+      ...(dto.radiatorType !== undefined && { heatingType: dto.radiatorType }),
+      ...(dto.heatingType !== undefined && { heatingType: dto.heatingType }),
+      ...(dto.constructionYear !== undefined && {
+        constructionYear: Number(dto.constructionYear),
+      }),
+      ...(dto.numberOfResidents !== undefined && {
+        numberOfResidents: dto.numberOfResidents ?? null,
+      }),
+      ...(dto.boilerModel !== undefined && {
+        boilerModel: dto.boilerModel ?? null,
+      }),
+      ...(dto.hasFloorHeating !== undefined && {
+        hasFloorHeating: dto.hasFloorHeating,
+      }),
+      ...(dto.targetMorningTemp !== undefined && {
+        targetMorningTemp: dto.targetMorningTemp,
+      }),
+      ...(dto.targetDayTemp !== undefined && {
+        targetDayTemp: dto.targetDayTemp,
+      }),
+      ...(dto.targetNightTemp !== undefined && {
+        targetNightTemp: dto.targetNightTemp,
+      }),
+      ...(dto.preferredScheduleNotes !== undefined && {
+        preferredScheduleNotes: dto.preferredScheduleNotes ?? null,
+      }),
     };
 
     return this.prisma.homeProfile.update({

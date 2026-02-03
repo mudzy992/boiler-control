@@ -3,17 +3,22 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { HeatingEventWhereInput } from '../../generated/prisma/models';
 import {
   GetHeatingEventsDto,
+  GetHeatingSummaryDto,
   GetHeatingStatsDto,
   GetLearningTrendsDto,
 } from './dto/dashboard.dto';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 import { BoilerService } from '../Boiler/boiler.service';
+import { WeatherService } from '../Weather/weather.service';
 
 @Injectable()
 export class DashboardService {
+  private readonly DEFAULT_CITY = 'Visoko';
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly boilerService: BoilerService,
+    private readonly weatherService: WeatherService,
     @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
   ) {}
 
@@ -250,6 +255,7 @@ export class DashboardService {
 
     return {
       data: events.map((e) => ({
+        id: e.id,
         deviceId: e.deviceId,
         startedAt: e.timestampStart,
         endedAt: e.timestampEnd,
@@ -270,6 +276,139 @@ export class DashboardService {
         limit: take ?? total,
         total,
       },
+    };
+  }
+
+  async getHeatingSummary(userId: number, query: GetHeatingSummaryDto) {
+    await this.assertUserHasThermostat(userId);
+
+    const { homeProfileId, deviceId, from, to, bucket } = query;
+
+    if (!from || !to) throw new Error("'from' i 'to' su obavezni");
+
+    const events = await this.prisma.heatingEvent.findMany({
+      where: {
+        thermostat: {
+          homeProfile: {
+            userId,
+            ...(homeProfileId && { id: Number(homeProfileId) }),
+          },
+        },
+        ...(deviceId && { deviceId: Number(deviceId) }),
+        timestampStart: { gte: new Date(from), lte: new Date(to) },
+      },
+      orderBy: { timestampStart: 'asc' },
+    });
+
+    const totalCycles = events.length;
+    const totalDurationMin = events.reduce((acc, e) => {
+      if (!e.timestampEnd) return acc;
+      return (
+        acc + (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000
+      );
+    }, 0);
+
+    const avgDurationMin = totalCycles
+      ? Number((totalDurationMin / totalCycles).toFixed(2))
+      : 0;
+
+    const avgIndoorTemp = totalCycles
+      ? Number(
+          (
+            events.reduce((acc, e) => acc + (e.roomCurrentTemp ?? 0), 0) /
+            totalCycles
+          ).toFixed(2),
+        )
+      : 0;
+
+    const bucketType = bucket ?? 'day';
+    const bucketsMap = new Map<
+      string,
+      {
+        totalDuration: number;
+        cycles: number;
+        totalTarget: number;
+        totalCurrent: number;
+      }
+    >();
+
+    for (const e of events) {
+      const date = new Date(e.timestampStart);
+      const localDateLabel = `${date.getFullYear()}-${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+      const label =
+        bucketType === 'hour'
+          ? `${date.getHours().toString().padStart(2, '0')}:00`
+          : localDateLabel;
+
+      if (!bucketsMap.has(label)) {
+        bucketsMap.set(label, {
+          totalDuration: 0,
+          cycles: 0,
+          totalTarget: 0,
+          totalCurrent: 0,
+        });
+      }
+
+      const b = bucketsMap.get(label)!;
+      b.cycles += 1;
+      b.totalTarget += e.roomTargetTemp;
+      b.totalCurrent += e.roomCurrentTemp;
+      if (e.timestampEnd) {
+        b.totalDuration +=
+          (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000;
+      }
+    }
+
+    return {
+      summary: {
+        totalCycles,
+        totalDurationMin: Math.round(totalDurationMin),
+        avgDurationMin,
+        avgIndoorTemp,
+      },
+      buckets: Array.from(bucketsMap.entries()).map(([label, b]) => ({
+        label,
+        totalDurationMin: Math.round(b.totalDuration),
+        cycles: b.cycles,
+        avgTargetTemp: b.cycles
+          ? Number((b.totalTarget / b.cycles).toFixed(2))
+          : 0,
+        avgCurrentTemp: b.cycles
+          ? Number((b.totalCurrent / b.cycles).toFixed(2))
+          : 0,
+      })),
+    };
+  }
+
+  async getHeatingStatus(userId: number) {
+    await this.assertUserHasThermostat(userId);
+
+    const lastEvent = await this.prisma.heatingEvent.findFirst({
+      where: {
+        thermostat: {
+          homeProfile: { userId },
+        },
+      },
+      orderBy: { timestampStart: 'desc' },
+    });
+
+    return {
+      isHeatingNow: lastEvent?.hvacAction === 'HEATING_ON',
+      lastEvent: lastEvent
+        ? {
+            id: lastEvent.id,
+            deviceId: lastEvent.deviceId,
+            timestampStart: lastEvent.timestampStart,
+            timestampEnd: lastEvent.timestampEnd,
+            roomCurrentTemp: lastEvent.roomCurrentTemp,
+            roomTargetTemp: lastEvent.roomTargetTemp,
+            hvacAction: lastEvent.hvacAction,
+            source: lastEvent.source,
+            isAnomaly: lastEvent.isAnomaly ?? false,
+          }
+        : null,
     };
   }
 
@@ -399,10 +538,34 @@ export class DashboardService {
     });
   }
 
-  private getLatestWeather() {
-    return this.prisma.weatherCache.findFirst({
-      orderBy: { fetchedAt: 'desc' },
-    });
+  private async getLatestWeather() {
+    try {
+      const weatherData = await this.weatherService.getTodayWeather(
+        this.DEFAULT_CITY,
+      );
+      return this.transformWeather(weatherData);
+    } catch (error) {
+      // Fallback to cache if fetch fails
+      const cached = await this.prisma.weatherCache.findFirst({
+        orderBy: { fetchedAt: 'desc' },
+      });
+      return cached ? this.transformWeather(cached) : null;
+    }
+  }
+
+  private transformWeather(data: any) {
+    if (!data) return null;
+    return {
+      temp: data.temperature ?? null,
+      feelsLike: data.feelslike ?? null,
+      condition: data.condition_text ?? null,
+      humidity: data.humidity ?? null,
+      windSpeed: data.wind_kph ?? null,
+      pressure: data.pressure_mb ?? null,
+      uvIndex: data.uv_index ?? null,
+      sunrise: data.sunrise ?? null,
+      sunset: data.sunset ?? null,
+    };
   }
 
   private getLatestBoilerHistory(userId: number) {

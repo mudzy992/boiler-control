@@ -1,5 +1,13 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -21,6 +29,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   async login(@Body() body: { email: string; password: string }) {
     return this.authService.login(body.email, body.password);
   }

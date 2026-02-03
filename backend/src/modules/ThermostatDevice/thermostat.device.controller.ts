@@ -18,7 +18,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @ApiTags('Thermostats')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('api/thermostats')
+@Controller('api/devices')
 export class ThermostatDeviceController {
   constructor(private readonly service: ThermostatDeviceService) {}
 
@@ -30,6 +30,11 @@ export class ThermostatDeviceController {
   @Get(':id')
   findOne(@Req() req, @Param('id') id: string) {
     return this.service.findOne(req.user.userId, +id);
+  }
+
+  @Get(':id/programs')
+  getPrograms(@Req() req, @Param('id') id: string) {
+    return this.service.getPrograms(req.user.userId, +id);
   }
 
   @Post()

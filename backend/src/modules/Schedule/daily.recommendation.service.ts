@@ -20,7 +20,8 @@ export class DailyRecommendationService {
   // svaki dan u 6:00
   @Cron('0 0 * * *', {
     name: 'daily-recommendations',
-    disabled: process.env.NODE_ENV === 'development',
+    disabled:
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test',
   })
   async generateDailyRecommendations() {
     this.logger.log('Starting daily boiler recommendations...');

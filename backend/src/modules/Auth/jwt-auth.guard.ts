@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from './public.decorator';
@@ -26,7 +31,7 @@ export class JwtAuthGuard implements CanActivate {
         request.user = null;
         return true;
       }
-      return false;
+      throw new UnauthorizedException('Missing authorization header');
     }
 
     const token = authHeader.split(' ')[1];
@@ -51,14 +56,14 @@ export class JwtAuthGuard implements CanActivate {
         return true;
       }
 
-      // Ako token važi ali user ne postoji
-      return false;
-    } catch {
+      // If token is valid but user doesn't exist
+      throw new UnauthorizedException('User not found');
+    } catch (err) {
       if (isPublic) {
         request.user = null;
         return true;
       }
-      return false;
+      throw new UnauthorizedException(err.message || 'Invalid token');
     }
   }
 }

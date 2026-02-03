@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { User } from '../Auth/user.decorator';
 import {
   GetHeatingEventsDto,
+  GetHeatingSummaryDto,
   GetHeatingStatsDto,
   GetLearningTrendsDto,
 } from './dto/dashboard.dto';
@@ -22,8 +23,8 @@ export class DashboardController {
   // =====================================
 
   @Get()
-  @Public()
-  async getDashboard(@User() userId: number | null) {
+  async getDashboard(@Req() req) {
+    const userId = req.user?.userId;
     return this.dashboardService.getDashboard(userId ?? undefined);
   }
 
@@ -32,26 +33,27 @@ export class DashboardController {
   // =====================================
 
   @Get('heating-events')
-  getHeatingEvents(
-    @Req() req: any,
-    @Query() query: GetHeatingEventsDto,
-  ) {
+  getHeatingEvents(@Req() req: any, @Query() query: GetHeatingEventsDto) {
     return this.dashboardService.getHeatingEvents(req.user.id, query);
   }
 
+  @Get('heating-status')
+  getHeatingStatus(@Req() req: any) {
+    return this.dashboardService.getHeatingStatus(req.user.id);
+  }
+
+  @Get('heating-summary')
+  getHeatingSummary(@Req() req: any, @Query() query: GetHeatingSummaryDto) {
+    return this.dashboardService.getHeatingSummary(req.user.id, query);
+  }
+
   @Get('heating-stats')
-  getHeatingStats(
-    @Req() req: any,
-    @Query() query: GetHeatingStatsDto,
-  ) {
+  getHeatingStats(@Req() req: any, @Query() query: GetHeatingStatsDto) {
     return this.dashboardService.getHeatingStats(req.user.id, query);
   }
 
   @Get('learning-trends')
-  getLearningTrends(
-    @Req() req: any,
-    @Query() query: GetLearningTrendsDto,
-  ) {
+  getLearningTrends(@Req() req: any, @Query() query: GetLearningTrendsDto) {
     return this.dashboardService.getLearningTrends(req.user.id, query);
   }
 }

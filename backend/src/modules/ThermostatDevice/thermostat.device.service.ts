@@ -35,6 +35,20 @@ export class ThermostatDeviceService {
     return device;
   }
 
+  async getPrograms(userId: number, deviceId: number) {
+    const device = await this.prisma.thermostatDevice.findUnique({
+      where: { id: deviceId },
+    });
+
+    if (!device) throw new NotFoundException('Thermostat not found');
+    if (device.userId !== userId) throw new ForbiddenException('Access denied');
+
+    return this.prisma.thermostatProgram.findMany({
+      where: { deviceId },
+      orderBy: [{ dayType: 'asc' }, { orderIndex: 'asc' }],
+    });
+  }
+
   async create(userId: number, dto: CreateThermostatDeviceDto) {
     const homeProfile = await this.prisma.homeProfile.findFirst({
       where: {

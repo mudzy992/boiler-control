@@ -18,5 +18,8 @@ export interface ThermostatSnapshot {
 export interface IThermostatAdapter {
   getCurrentTemperature(deviceId: string): Promise<number>;
   getTargetTemperature(deviceId: string): Promise<number>;
-  fetchSnapshot(deviceId: string): Promise<ThermostatSnapshot | null>;
+  fetchSnapshot(
+    deviceId: string,
+    runId?: string,
+  ): Promise<ThermostatSnapshot | null>;
 }

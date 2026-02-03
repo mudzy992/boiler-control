@@ -50,6 +50,7 @@ model HomeProfile {
   id                  Int                       @id @default(autoincrement())
   user                User                      @relation(fields: [userId], references: [id])
   userId              Int
+  homeName            String?
   floorArea           Float                                 // Grejni prostor 150m2
   ceilingHeight       Float                                 // Visina plafona 230 cm
   insulationType      String                                // Vrsta izolacije EPS Wool
@@ -57,6 +58,13 @@ model HomeProfile {
   windowType          String                                // Tip stolarije double/ triple PVC, Wood
   heatingType         String                                // Tip grijanja radijator, podno
   constructionYear    Int                                   // Godina izgradnje objekta
+  numberOfResidents   Int?
+  boilerModel         String?
+  hasFloorHeating     Boolean                   @default(false)
+  targetMorningTemp   Float?
+  targetDayTemp       Float?
+  targetNightTemp     Float?
+  preferredScheduleNotes String?
   learningOffset      Float                     @default(0) // ± korekcija krivulje
   learningConfidence  Float                     @default(0) // 0–1
   seasonMode          SeasonMode                @default(WINTER) // Ljetni/Zimski režim

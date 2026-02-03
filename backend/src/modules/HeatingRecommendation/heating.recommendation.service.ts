@@ -194,4 +194,21 @@ export class HeatingRecommendationService {
     const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
     return `${dayType}_${part}`;
   }
+
+  /**
+   * Fetch recommendations for a user
+   */
+  async getRecommendations(userId: number) {
+    try {
+      const recommendations = await this.prisma.recommendation.findMany({
+        where: { userId },
+        orderBy: { date: 'desc' },
+        take: 100,
+      });
+      return recommendations;
+    } catch (error) {
+      this.logger.error('Error fetching recommendations', error);
+      return [];
+    }
+  }
 }

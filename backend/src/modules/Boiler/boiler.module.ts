@@ -7,14 +7,17 @@ import { TuyaAuthService } from '../Tuya/tuya.auth.service';
 import { ProgramSyncService } from './adapter/program.sync.service';
 import { BoilerController } from './boiler.controller';
 import { NotificationsModule } from '../Notification/notifications.module';
+import { TuyaHttpAdapter } from '../Tuya/tuya-http.adapter';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
-  imports: [NotificationsModule, WeatherModule],
+  imports: [NotificationsModule, WeatherModule, CommonModule],
   providers: [
     ProgramSyncService,
     BoilerService,
     PrismaService,
     TuyaAuthService,
+    TuyaHttpAdapter,
     { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
   ],
   controllers: [BoilerController],

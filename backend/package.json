@@ -14,10 +14,15 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
+    "test:integration": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules DATABASE_HOST=inventory.hopto.org DATABASE_PORT=3306 DATABASE_USER=mudzy DATABASE_PASSWORD='nije,kikiriki' DATABASE_NAME=boiler_assistant_test JWT_SECRET='tvoj_tajni_jwt_kljuc' JWT_EXPIRES_IN='3600s' WEATHER_API_KEY='8e968a22bfca43d18a6152747260301' TUYA_CLIENT_ID='y3kg9wjqwghsj8ak5swj' TUYA_CLIENT_SECRET='7d2164fd310f4edcb590ecbdaf373cca' TUYA_REGION=EU TUYA_BASE_URL=https://openapi.tuyaeu.com jest --config jest-integration.config.js --runInBand --forceExit --testTimeout=300000",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:smoke": "ts-node -r tsconfig-paths/register test/smoke-tests.ts",
+    "db:reset": "prisma migrate reset --force",
+    "db:seed": "ts-node --transpile-only prisma/seed.ts",
+    "db:reset:seed": "npm run db:reset && npm run db:seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -30,7 +35,7 @@
     "@nestjs/swagger": "^11.2.5",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/adapter-mariadb": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/client": "^7.3.0",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "buffer": "^6.0.3",
@@ -58,13 +63,14 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.19.3",
     "@types/supertest": "^6.0.2",
+    "cross-env": "^7.0.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
-    "prisma": "^7.2.0",
+    "prisma": "^7.3.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -73,22 +79,5 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

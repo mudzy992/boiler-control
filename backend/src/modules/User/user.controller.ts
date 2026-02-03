@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -11,12 +11,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('me')
+  @Get()
   getMe(@Req() req) {
     return this.userService.getMe(req.user.userId);
   }
 
-  @Patch('me')
+  @Put()
   updateMe(@Req() req, @Body() dto: UpdateUserDto) {
     return this.userService.updateMe(req.user.userId, dto);
   }

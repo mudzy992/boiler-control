@@ -1,13 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { fetchWeatherApi } from 'openmeteo';
+import { WeatherHttpAdapter } from './weather-http.adapter';
+
+/**
+ * P2b change: wrap external HTTP calls (geocoding + forecast) with
+ * `WeatherHttpAdapter.executeWithCircuitBreaker` so requests gain timeout,
+ * retries, and circuit-breaker protection. This is an internal resiliency
+ * change and does not alter any controller routes or DTOs.
+ */
 
 @Injectable()
 export class WeatherService {
   private readonly logger = new Logger(WeatherService.name);
   private readonly CACHE_MIN = 10;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private weatherAdapter: WeatherHttpAdapter,
+  ) {}
 
   async getTodayWeather(city: string) {
     const now = new Date();
@@ -22,10 +33,12 @@ export class WeatherService {
       now.getTime() - cached.fetchedAt.getTime() < this.CACHE_MIN * 60 * 1000
     ) {
       return cached;
-    } else {
-      // cache je istekao → brišemo ga
+    }
+
+    // If cache exists but is stale, delete it. If no cache, continue.
+    if (cached) {
       await this.prisma.weatherCache.delete({
-        where: { id: cached?.id },
+        where: { id: cached.id },
       });
     }
 
@@ -52,11 +65,15 @@ export class WeatherService {
       /* =======================
          1) Geocoding
       ======================= */
-      const geoRes = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-          city,
-        )}&count=1`,
-      ).then((r) => r.json());
+      // Use adapter to wrap the geocoding request for timeouts / CB.
+      const geoRes = await this.weatherAdapter.executeWithCircuitBreaker(
+        async () =>
+          fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+              city,
+            )}&count=1`,
+          ).then((r) => r.json()),
+      );
 
       if (!geoRes?.results?.length) {
         this.logger.warn(`Open-Meteo geocoding failed for ${city}`);
@@ -68,42 +85,45 @@ export class WeatherService {
       /* =======================
          2) Forecast API
       ======================= */
-      const responses = await fetchWeatherApi(
-        'https://api.open-meteo.com/v1/forecast',
-        {
-          latitude,
-          longitude,
-          timezone: 'Europe/Sarajevo',
-          forecast_days: 1,
+      // Wrap the forecast call with the adapter's circuit breaker and timeout
+      // protection. We call the original helper (`fetchWeatherApi`) but ensure
+      // the execution is subject to adapter-level policies.
+      const responses = await this.weatherAdapter.executeWithCircuitBreaker(
+        () =>
+          fetchWeatherApi('https://api.open-meteo.com/v1/forecast', {
+            latitude,
+            longitude,
+            timezone: 'Europe/Sarajevo',
+            forecast_days: 1,
 
-          current: [
-            'temperature_2m',
-            'relative_humidity_2m',
-            'weather_code',
-            'is_day',
-          ],
+            current: [
+              'temperature_2m',
+              'relative_humidity_2m',
+              'weather_code',
+              'is_day',
+            ],
 
-          hourly: [
-            'temperature_2m',
-            'apparent_temperature',
-            'cloud_cover',
-            'pressure_msl',
-            'relative_humidity_2m',
-            'wind_speed_10m',
-            'wind_gusts_10m',
-            'wind_direction_10m',
-            'uv_index',
-            'rain',
-            'snowfall',
-          ],
+            hourly: [
+              'temperature_2m',
+              'apparent_temperature',
+              'cloud_cover',
+              'pressure_msl',
+              'relative_humidity_2m',
+              'wind_speed_10m',
+              'wind_gusts_10m',
+              'wind_direction_10m',
+              'uv_index',
+              'rain',
+              'snowfall',
+            ],
 
-          daily: [
-            'temperature_2m_max',
-            'temperature_2m_min',
-            'sunrise',
-            'sunset',
-          ],
-        },
+            daily: [
+              'temperature_2m_max',
+              'temperature_2m_min',
+              'sunrise',
+              'sunset',
+            ],
+          }),
       );
 
       const response = responses[0];

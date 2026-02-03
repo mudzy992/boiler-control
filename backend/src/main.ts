@@ -15,7 +15,10 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:3021',
+      'http://localhost:5173',
       'https://boiler-control.hopto.org',
+      'http://192.168.31.247:8082',
+      'http://localhost:8082',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -51,7 +54,7 @@ async function bootstrap() {
     `Server time: ${new Date().toString()}`,
     'Server listening on port:',
     port,
-    'Swagger at: /api/docs'
+    'Swagger at: /api/docs',
   );
 }
 

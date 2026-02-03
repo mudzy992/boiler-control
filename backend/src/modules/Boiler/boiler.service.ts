@@ -96,8 +96,9 @@ export class BoilerService {
         if (seasonMode === 'AUTO') {
           // Simple auto logic: if average of min/max > 15°C -> SUMMER
           const avgTemp = (tempMin + tempMax) / 2;
-          if (avgTemp > 16) { // 16°C cut-off
-             return this.createOffResult(intervalKey, mode);
+          if (avgTemp > 16) {
+            // 16°C cut-off
+            return this.createOffResult(intervalKey, mode);
           }
         }
       }
@@ -187,7 +188,10 @@ export class BoilerService {
     };
   }
 
-  private createOffResult(intervalKey: string, mode: any): FlowTempCalculationResult {
+  private createOffResult(
+    intervalKey: string,
+    mode: any,
+  ): FlowTempCalculationResult {
     this.logger.log(`[BoilerCalc] Seasonality -> HEATING OFF`);
     return {
       flowTemp: 0,
@@ -215,5 +219,22 @@ export class BoilerService {
     const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
 
     return `${dayType}_${part}`;
+  }
+
+  /**
+   * Fetch boiler history for a user
+   */
+  async getBoilerHistory(userId: number) {
+    try {
+      const history = await this.prisma.boilerHistory.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      });
+      return history;
+    } catch (error) {
+      this.logger.error('Error fetching boiler history', error);
+      return [];
+    }
   }
 }

@@ -2,6 +2,15 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TuyaHttpAdapter } from './tuya-http.adapter';
+
+/**
+ * P2b integration note:
+ * Replaced direct `axios` token fetch with calls wrapped by `TuyaHttpAdapter`.
+ * This preserves existing behavior while adding circuit-breaker, timeout
+ * and retry-with-jitter protection. We deliberately do not change routes
+ * or DTOs — this is an internal resiliency enhancement only.
+ */
 
 @Injectable()
 export class TuyaAuthService {
@@ -9,7 +18,10 @@ export class TuyaAuthService {
   private readonly clientId = process.env.TUYA_CLIENT_ID!;
   private readonly clientSecret = process.env.TUYA_CLIENT_SECRET!;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private tuyaAdapter: TuyaHttpAdapter,
+  ) {}
 
   /**
    * Dohvati globalni access token
@@ -27,14 +39,19 @@ export class TuyaAuthService {
 
     const sign = this.sign('GET', path, timestamp);
 
-    const res = await axios.get(`${this.baseUrl}${path}`, {
-      headers: {
-        client_id: this.clientId,
-        sign,
-        t: timestamp,
-        sign_method: 'HMAC-SHA256',
-      },
-    });
+    // Use the Tuya adapter's circuit breaker + timeout protection.
+    // We still use axios for the actual HTTP call but execute it through
+    // the adapter's `executeWithCircuitBreaker` to gain retries/timeouts.
+    const res = await this.tuyaAdapter.executeWithCircuitBreaker(async () =>
+      axios.get(`${this.baseUrl}${path}`, {
+        headers: {
+          client_id: this.clientId,
+          sign,
+          t: timestamp,
+          sign_method: 'HMAC-SHA256',
+        },
+      }),
+    );
 
     if (!res.data?.result?.access_token) {
       throw new Error('Tuya token fetch failed');

@@ -20,6 +20,16 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "src/**/*",
+    "prisma.config.ts",
+    "**/*.ts",
+    "test",
+    "jest-integration.config.js",
+    "prisma/seed.ts"
+  ]
 }

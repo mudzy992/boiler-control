@@ -1,4 +1,12 @@
-import { IsEnum, IsInt, IsOptional, IsString, IsDateString, Min, Max } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsDateString,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -40,12 +48,12 @@ export class GetHeatingEventsDto {
   @Min(1)
   page: number = 1;
 
-  @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 500 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(500)
   limit: number = 20;
 }
 
@@ -72,6 +80,33 @@ export class GetHeatingStatsDto {
   @ApiProperty({ enum: ['hour', 'day'] })
   @IsEnum(['hour', 'day'])
   bucket: 'hour' | 'day';
+}
+
+export class GetHeatingSummaryDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  homeProfileId?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  deviceId?: number;
+
+  @ApiProperty()
+  @IsDateString()
+  from: string;
+
+  @ApiProperty()
+  @IsDateString()
+  to: string;
+
+  @ApiPropertyOptional({ enum: ['hour', 'day'] })
+  @IsOptional()
+  @IsEnum(['hour', 'day'])
+  bucket?: 'hour' | 'day';
 }
 
 export class GetLearningTrendsDto {

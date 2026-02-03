@@ -8,9 +8,11 @@ import { TuyaAdapter } from '../Boiler/adapter/tuya.adapter';
 import { TuyaAuthService } from '../Tuya/tuya.auth.service';
 import { ProgramSyncService } from '../Boiler/adapter/program.sync.service';
 import { NotificationsModule } from '../Notification/notifications.module';
+import { TuyaHttpAdapter } from '../Tuya/tuya-http.adapter';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
-  imports: [WeatherModule, NotificationsModule],
+  imports: [WeatherModule, NotificationsModule, CommonModule],
   controllers: [DashboardController],
   providers: [
     ProgramSyncService,
@@ -18,6 +20,7 @@ import { NotificationsModule } from '../Notification/notifications.module';
     PrismaService,
     BoilerService,
     TuyaAuthService,
+    TuyaHttpAdapter,
     { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
   ],
 })

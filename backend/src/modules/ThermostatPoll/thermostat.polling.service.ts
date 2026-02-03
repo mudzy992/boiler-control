@@ -30,10 +30,12 @@ export class ThermostatPollingService {
 
   // ----------------------------------
   // CRON: Poll svih uređaja
+  // Disabled during development and test runs to avoid exhausting DB pool
   // ----------------------------------
   @Cron('*/1 * * * *', {
     name: 'thermostat_polling',
-    disabled: process.env.NODE_ENV === 'development',
+    disabled:
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test',
   })
   async pollAll() {
     const runId = `poll_${Date.now()}`;
@@ -92,7 +94,7 @@ export class ThermostatPollingService {
         return;
       }
       // 2️⃣ Snapshot (jedina istina iz stvarnog svijeta)
-      const snapshot = await this.adapter.fetchSnapshot(device.deviceId);
+      const snapshot = await this.adapter.fetchSnapshot(device.deviceId, runId);
       if (!snapshot) return;
       // INFO: temperature su u adapteru već normalizovane i konvertovane u celzijuse
       const currentTemp =

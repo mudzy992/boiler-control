@@ -1,8 +1,10 @@
-export enum DayType {
-  WORKDAY = "WORKDAY",
-  SATURDAY = "SATURDAY",
-  SUNDAY = "SUNDAY",
-}
+export const DayType = {
+  WORKDAY: "WORKDAY",
+  SATURDAY: "SATURDAY",
+  SUNDAY: "SUNDAY",
+} as const;
+
+export type DayType = typeof DayType[keyof typeof DayType];
 
 export interface ThermostatProgram {
   id: number;

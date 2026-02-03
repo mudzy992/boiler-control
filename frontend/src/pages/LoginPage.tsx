@@ -1,71 +1,59 @@
-import { Button, Card, Divider, Form, Input, message, Typography } from "antd";
-import { Lock, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/useAuth";
+import React from 'react';
+import { Form, Input, Button, Card, message, Spin } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
-const { Title, Text } = Typography;
-
-const LoginPage = () => {
+export const LoginPage: React.FC = () => {
+  const [form] = Form.useForm();
+  const { login, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
       await login(values.email, values.password);
-      message.success("Uspješna prijava");
-      navigate("/dashboard", { replace: true });
-    } catch (e: any) {
-      message.error("Neispravni kredencijali", e);
+      message.success('Login successful!');
+      navigate('/dashboard');
+    } catch (error) {
+      message.error('Login failed. Please check your credentials.');
     }
   };
 
   return (
-    <div className="flex justify-center">
-      <Card style={{ width: 360 }}>
-        <Title level={3} style={{ textAlign: "center" }}>
-          Prijava
-        </Title>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-orange-50 px-6 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <Card className="w-full max-w-md shadow-xl">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">🔥 Boiler Control</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Login to your account</p>
+        </div>
 
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Email je obavezan" },
-              { type: "email", message: "Neispravan email" },
-            ]}
-          >
-            <Input prefix={<User size={16} />} placeholder="email@domena.com" />
-          </Form.Item>
+        <Spin spinning={isLoading}>
+          <Form form={form} onFinish={onFinish} layout="vertical">
+            <Form.Item
+              name="email"
+              rules={[
+                { required: true, message: 'Please input your email!' },
+                { type: 'email', message: 'Please enter a valid email!' },
+              ]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
+            </Form.Item>
 
-          <Form.Item
-            label="Lozinka"
-            name="password"
-            rules={[{ required: true, message: "Lozinka je obavezna" }]}
-          >
-            <Input.Password prefix={<Lock size={16} />} />
-          </Form.Item>
+            <Form.Item
+              name="password"
+              rules={[{ required: true, message: 'Please input your password!' }]}
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+            </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              Prijavi se
-            </Button>
-          </Form.Item>
-
-          <Divider />
-
-          <div className="flex flex-col items-center">
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Nemaš nalog? <Link to="/register">Registruj se</Link>
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              CORE system · Dashboard & Read-only
-            </Text>
-          </div>
-        </Form>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block size="large" loading={isLoading}>
+                Sign In
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
       </Card>
     </div>
   );
 };
-
-export default LoginPage;

@@ -1,35 +1,34 @@
-# Stage 1: Build the apps
+# Stage 1: Build the frontend
 FROM node:20-slim AS build-stage
 
-# Postavljanje radnog direktorija
 WORKDIR /app
 
-# Kopiraj package.json i package-lock.json
-COPY frontend/package*.json frontend/package-lock.json ./
+# Copy package files from monorepo root
+COPY package-lock.json ./
+COPY frontend/package*.json ./
 
-# Instalacija dependencies
-RUN npm install --force --silent
+# Install dependencies
+RUN npm install
 
-# Kopiraj cijelu aplikaciju
+# Copy frontend source
 COPY frontend/ .
 
-# Build aplikacije
+# Build the application
 RUN npm run build
 
 # Stage 2: Production image
 FROM node:20-slim
 
-# Postavljanje radnog direktorija za aplikaciju unutar image-a
 WORKDIR /app
 
-# Kopiramo izgrađene datoteke iz build-stage
-COPY --from=build-stage /app/build /app/build
+# Install serve to run the application
+RUN npm install -g serve
 
-# Instaliraj serve globalno
-RUN npm install -g serve --silent
+# Copy built assets from build stage (output to dist directory)
+COPY --from=build-stage /app/dist ./dist
 
-# Otvori port za aplikaciju
+# Expose port
 EXPOSE 3021
 
-# Pokreni aplikaciju
-CMD ["serve", "-s", "build", "-l", "3021"]
+# Run the application
+CMD ["serve", "-s", "dist", "-l", "3021"]

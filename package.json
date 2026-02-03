@@ -5,18 +5,18 @@
   "private": true,
   "workspaces": [
     "backend",
-    "apps/web",
+    "frontend",
     "apps/mobile"
   ],
   "scripts": {
-    "install:all": "npm install && npm install --workspace=backend && npm install --workspace=apps/web && npm install --workspace=apps/mobile",
-    "dev": "npm run dev --workspace=backend & npm run dev --workspace=apps/web",
-    "dev:web": "npm run dev --workspace=apps/web",
+    "install:all": "npm install && npm install --workspace=backend && npm install --workspace=frontend && npm install --workspace=apps/mobile",
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=frontend",
+    "dev:web": "npm run dev --workspace=frontend",
     "dev:mobile": "npm run start --workspace=apps/mobile",
     "dev:backend": "npm run start:dev --workspace=backend",
-    "build": "npm run build --workspace=backend && npm run build --workspace=apps/web",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
     "test": "npm test --workspace=backend",
-    "test:all": "npm test --workspace=backend && npm run lint --workspace=apps/web && npm run lint --workspace=apps/mobile"
+    "test:all": "npm test --workspace=backend && npm run lint --workspace=frontend && npm run lint --workspace=apps/mobile"
   },
   "dependencies": {
     "react-native-worklets": "0.5.1"

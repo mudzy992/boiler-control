@@ -21,8 +21,9 @@ npm run dev:backend
 **Web App** (React + Vite):
 ```bash
 npm run dev:web
-# Runs on http://localhost:5173
+# Runs on http://localhost:3021
 ```
+> **Note**: Frontend has been migrated to v2 from `apps/web`. See [FRONTEND_QUICKSTART.md](./FRONTEND_QUICKSTART.md) for details.
 
 **Mobile App** (React Native + Expo):
 ```bash

@@ -47,6 +47,11 @@ export class HomeProfileController {
   remove(@Req() req, @Param('id') id: string) {
     return this.service.remove(req.user.userId, +id);
   }
+
+  @Patch(':id/activate')
+  activate(@Req() req, @Param('id') id: string) {
+    return this.service.activate(req.user.userId, +id);
+  }
 }
 
 @UseGuards(JwtAuthGuard)

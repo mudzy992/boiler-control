@@ -34,7 +34,9 @@ export const ProfilePage: React.FC = () => {
   const onFinish = async (values: UserProfile) => {
     setSaving(true);
     try {
-      await apiClient.updateUserProfile(values);
+      // Exclude email from update (it's read-only)
+      const { email, ...updateData } = values;
+      await apiClient.updateUserProfile(updateData);
       message.success('Profile updated');
     } catch (error) {
       message.error('Failed to update profile');

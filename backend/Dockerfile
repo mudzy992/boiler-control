@@ -5,16 +5,18 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates build-essential git curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package*.json ./
-RUN npm ci
+# Copy root package-lock.json and backend package.json
+COPY package-lock.json ./
+COPY backend/package*.json ./
+RUN npm install --legacy-peer-deps
 
 # Stage 2: Build
 FROM deps AS build
 WORKDIR /usr/src/app
 ENV NODE_OPTIONS=${NODE_OPTIONS:-"--dns-result-order=ipv4first"}
 
-COPY . .
-COPY prisma ./prisma
+COPY backend/ .
+COPY backend/prisma ./prisma
 
 ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
 ENV DATABASE_HOST=172.17.0.1
@@ -46,7 +48,7 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
 #COPY --from=build /usr/src/app/src/generated ./dist/generated
 
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
+COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x /usr/src/app/docker-entrypoint.sh
 
 ENV NODE_ENV=production

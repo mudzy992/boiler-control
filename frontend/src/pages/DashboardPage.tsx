@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Card,
   Col,
@@ -15,6 +15,10 @@ import {
   Space,
   Alert,
   Descriptions,
+  Modal,
+  Switch,
+  List,
+  Drawer,
 } from "antd";
 import {
   ResponsiveContainer,
@@ -26,8 +30,16 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-import { SyncOutlined } from "@ant-design/icons";
+import {
+  SyncOutlined,
+  BellOutlined,
+  WarningOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
+import type { TooltipProps } from "recharts";
 
 import {
   getDashboard,
@@ -37,6 +49,13 @@ import {
 } from "../api/dashboard.api";
 import { manualSyncBoiler } from "../api/boiler.api";
 import { updateHeatingAnomaly } from "../api/heating.anomaly.api";
+import {
+  getNotifications,
+  getNotificationPreferences,
+  updateNotificationPreference,
+  type Notification,
+  type NotificationPreference,
+} from "../api/notification.api";
 
 const { Title, Text } = Typography;
 
@@ -44,14 +63,21 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<any>(null);
   const [selectedHomeId, setSelectedHomeId] = useState<number | null>(null);
+  // Default to today's range (00:00:00 to now)
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
     dayjs().startOf("day"),
-    dayjs().endOf("day"),
+    dayjs(),
   ]);
   const [events, setEvents] = useState<any[]>([]);
   const [stats, setStats] = useState<any[]>([]);
   const [learning, setLearning] = useState<any[]>([]);
   const [anomalyEndTime, setAnomalyEndTime] = useState<dayjs.Dayjs | null>(null);
+
+  // Notifications
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference[]>([]);
+  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
 
   /* =========================
      HELPERS
@@ -66,7 +92,10 @@ export const DashboardPage = () => {
     if (isSingleDay) {
       return {
         from: dateRange[0].startOf("day").toISOString(),
-        to: dateRange[0].endOf("day").toISOString(),
+        // Use current time instead of end of day for today
+        to: dateRange[0].isSame(dayjs(), "day")
+          ? dayjs().toISOString()
+          : dateRange[0].endOf("day").toISOString(),
       };
     }
     return {
@@ -117,9 +146,23 @@ export const DashboardPage = () => {
     }
   };
 
+  const loadNotifications = useCallback(async () => {
+    try {
+      const [notifs, prefs] = await Promise.all([
+        getNotifications(),
+        getNotificationPreferences(),
+      ]);
+      setNotifications(notifs);
+      setNotificationPreferences(prefs);
+    } catch (error) {
+      console.error("Failed to load notifications:", error);
+    }
+  }, []);
+
   useEffect(() => {
     loadDashboard();
-  }, []);
+    loadNotifications();
+  }, [loadNotifications]);
 
   useEffect(() => {
     if (selectedHomeId) loadHeatingData();
@@ -185,14 +228,50 @@ useEffect(() => {
 }, [activeAnomaly]);
 
   const alerts = useMemo(() => {
-    const a: string[] = [];
-    if (events.filter((e) => e.durationMinutes < 20).length >= 3) {
-      a.push("Detektovani česti kratki ciklusi grijanja");
+    const a: { type: "warning" | "error" | "info"; message: string; icon: any }[] = [];
+
+    // Short cycles detection
+    const shortCycles = events.filter((e) => e.durationMinutes < 20);
+    if (shortCycles.length >= 3) {
+      a.push({
+        type: "warning",
+        message: `Detektovano ${shortCycles.length} kratkih ciklusa grijanja (< 20 min)`,
+        icon: <WarningOutlined />,
+      });
     }
+
+    // Overshoot detection
     const overshootAvg =
       events.reduce((s, e) => s + (e.targetTemp - e.currentTemp), 0) /
       (events.length || 1);
-    if (overshootAvg > 1.5) a.push("Mogući overshoot (previsoka ciljna temperatura)");
+    if (overshootAvg > 1.5) {
+      a.push({
+        type: "warning",
+        message: `Mogući overshoot - prosječna razlika: ${overshootAvg.toFixed(1)}°C`,
+        icon: <WarningOutlined />,
+      });
+    }
+
+    // Long cycles detection
+    const longCycles = events.filter((e) => e.durationMinutes > 90);
+    if (longCycles.length > 0) {
+      a.push({
+        type: "info",
+        message: `Detektovano ${longCycles.length} dugih ciklusa grijanja (> 90 min)`,
+        icon: <InfoCircleOutlined />,
+      });
+    }
+
+    // Anomalies
+    const anomalies = events.filter((e) => e.isAnomaly);
+    if (anomalies.length > 0) {
+      a.push({
+        type: "error",
+        message: `${anomalies.length} anomalija(e) u odabranom periodu`,
+        icon: <WarningOutlined />,
+      });
+    }
+
     return a;
   }, [events]);
 
@@ -224,6 +303,29 @@ useEffect(() => {
     return tempMatch ? parseFloat(tempMatch[1]) : "-";
   };
 
+  // Custom tooltip for graph
+  const CustomTooltip = ({ active, payload }: TooltipProps<any, any>) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <Card size="small" style={{ minWidth: 200 }}>
+          <Space direction="vertical" size="small">
+            <Text strong>{data.label}</Text>
+            <Text>Trajanje: {data.totalDurationMin} min</Text>
+            <Text>Ciklusa: {data.cycles}</Text>
+            {data.avgTargetTemp && (
+              <Text>Prosj. target: {data.avgTargetTemp.toFixed(1)}°C</Text>
+            )}
+            {data.avgCurrentTemp && (
+              <Text>Prosj. stvarna: {data.avgCurrentTemp.toFixed(1)}°C</Text>
+            )}
+          </Space>
+        </Card>
+      );
+    }
+    return null;
+  };
+
   if (loading) return <Spin fullscreen />;
   if (!dashboard || !home) return null;
 
@@ -237,9 +339,25 @@ useEffect(() => {
           <Title level={3}>Boiler Control Dashboard</Title>
         </Col>
         <Col xs={24} sm={12} style={{ textAlign: "right" }}>
-          <Button icon={<SyncOutlined />} onClick={manualSyncBoiler}>
-            Refresh
-          </Button>
+          <Space>
+            <Badge count={notifications.filter(n => !n.sourceRef?.includes('read')).length}>
+              <Button
+                icon={<BellOutlined />}
+                onClick={() => setNotificationDrawerOpen(true)}
+              >
+                Notifikacije
+              </Button>
+            </Badge>
+            <Button
+              icon={<SettingOutlined />}
+              onClick={() => setNotificationSettingsOpen(true)}
+            >
+              Postavke
+            </Button>
+            <Button icon={<SyncOutlined />} onClick={manualSyncBoiler}>
+              Refresh
+            </Button>
+          </Space>
         </Col>
       </Row>
 
@@ -299,10 +417,54 @@ useEffect(() => {
                         ? intervals[dayKey].map((interval: string, idx: number) => {
                             const tempMatch = interval.match(/(\d+(\.\d+)?)°C/);
                             const temp = tempMatch ? parseFloat(tempMatch[1]) : 22;
+
+                            // Better color scheme for light/dark theme compatibility
                             let color = "blue";
                             if (temp <= 21) color = "cyan";
-                            else if (temp >= 23) color = "volcano";
-                            return <Tag color={color} key={idx}>{interval}</Tag>;
+                            else if (temp >= 23) color = "red";
+
+                            // Check if this is the active interval
+                            const now = dayjs();
+                            const dayOfWeek = now.day();
+                            let currentDayKey = "WORKING_DAY";
+                            if (dayOfWeek === 6) currentDayKey = "SATURDAY";
+                            else if (dayOfWeek === 0) currentDayKey = "SUNDAY";
+
+                            const isActiveDay = currentDayKey === dayKey;
+                            const nowMinutes = now.hour() * 60 + now.minute();
+                            const timeMatch = interval.match(/(\d+):(\d+)/);
+                            let isActive = false;
+
+                            if (isActiveDay && timeMatch) {
+                              const [, h, m] = timeMatch;
+                              const intervalStart = parseInt(h) * 60 + parseInt(m);
+                              const nextInterval = intervals[dayKey][idx + 1];
+                              let intervalEnd = 24 * 60; // end of day
+
+                              if (nextInterval) {
+                                const nextMatch = nextInterval.match(/(\d+):(\d+)/);
+                                if (nextMatch) {
+                                  const [, nh, nm] = nextMatch;
+                                  intervalEnd = parseInt(nh) * 60 + parseInt(nm);
+                                }
+                              }
+
+                              isActive = nowMinutes >= intervalStart && nowMinutes < intervalEnd;
+                            }
+
+                            return (
+                              <Tag
+                                color={isActive ? "green" : color}
+                                key={idx}
+                                style={isActive ? {
+                                  fontWeight: "bold",
+                                  border: "2px solid",
+                                  boxShadow: "0 0 8px rgba(82, 196, 26, 0.5)"
+                                } : {}}
+                              >
+                                {interval}
+                              </Tag>
+                            );
                           })
                         : <Text type="secondary">-</Text>}
                     </Space>
@@ -381,10 +543,12 @@ useEffect(() => {
 )}
 
       {alerts.length > 0 && (
-        <Card style={{ marginTop: 12 }}>
-          {alerts.map((a) => (
-            <Alert key={a} type="warning" showIcon message={a} />
-          ))}
+        <Card style={{ marginTop: 12 }} title={<><WarningOutlined /> Upozorenja i preporuke</>}>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            {alerts.map((a, idx) => (
+              <Alert key={idx} type={a.type} showIcon icon={a.icon} message={a.message} />
+            ))}
+          </Space>
         </Card>
       )}
 
@@ -400,8 +564,8 @@ useEffect(() => {
           <BarChart data={stats}>
             <XAxis dataKey="label" />
             <YAxis />
-            <Tooltip />
-            <Bar dataKey="totalDurationMin" />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="totalDurationMin" fill="#1890ff" />
           </BarChart>
         </ResponsiveContainer>
 
@@ -475,6 +639,79 @@ useEffect(() => {
           </LineChart>
         </ResponsiveContainer>
       </Card>
+
+      {/* NOTIFICATION DRAWER */}
+      <Drawer
+        title={<><BellOutlined /> Notifikacije</>}
+        placement="right"
+        width={400}
+        onClose={() => setNotificationDrawerOpen(false)}
+        open={notificationDrawerOpen}
+      >
+        <List
+          dataSource={notifications}
+          locale={{ emptyText: "Nema notifikacija" }}
+          renderItem={(notif) => {
+            const getIcon = () => {
+              if (notif.type.includes("ANOMALY")) return <WarningOutlined style={{ color: "#faad14" }} />;
+              if (notif.type.includes("ERROR")) return <WarningOutlined style={{ color: "#ff4d4f" }} />;
+              if (notif.type.includes("SUCCESS")) return <CheckCircleOutlined style={{ color: "#52c41a" }} />;
+              return <InfoCircleOutlined style={{ color: "#1890ff" }} />;
+            };
+
+            return (
+              <List.Item>
+                <List.Item.Meta
+                  avatar={getIcon()}
+                  title={notif.title}
+                  description={
+                    <Space direction="vertical" size="small">
+                      <Text>{notif.message}</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {dayjs(notif.sentAt).format("DD.MM.YYYY HH:mm")}
+                      </Text>
+                    </Space>
+                  }
+                />
+              </List.Item>
+            );
+          }}
+        />
+      </Drawer>
+
+      {/* NOTIFICATION SETTINGS MODAL */}
+      <Modal
+        title={<><SettingOutlined /> Postavke notifikacija</>}
+        open={notificationSettingsOpen}
+        onCancel={() => setNotificationSettingsOpen(false)}
+        footer={null}
+        width={500}
+      >
+        <List
+          dataSource={notificationPreferences}
+          locale={{ emptyText: "Nema dostupnih postavki" }}
+          renderItem={(pref) => (
+            <List.Item>
+              <List.Item.Meta
+                title={pref.type.replace(/_/g, " ")}
+                description={`Posljednje ažurirano: ${dayjs(pref.updatedAt).format("DD.MM.YYYY HH:mm")}`}
+              />
+              <Switch
+                checked={pref.enabled}
+                onChange={async (checked) => {
+                  try {
+                    await updateNotificationPreference(pref.type, checked);
+                    message.success("Postavke ažurirane");
+                    await loadNotifications();
+                  } catch {
+                    message.error("Greška pri ažuriranju postavki");
+                  }
+                }}
+              />
+            </List.Item>
+          )}
+        />
+      </Modal>
     </div>
   );
 };

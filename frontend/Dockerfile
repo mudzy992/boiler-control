@@ -3,6 +3,9 @@ FROM node:20-slim AS build-stage
 
 WORKDIR /app
 
+# Build argument for API URL (defaults to backend service)
+ARG VITE_API_URL=http://backend:3020/api
+
 # Copy frontend package files
 COPY frontend/package*.json ./
 
@@ -16,8 +19,8 @@ RUN npm install --force --legacy-peer-deps --no-audit --no-fund || npm install -
 # Rebuild native modules for Linux platform
 RUN npm rebuild
 
-# Build the application
-RUN npm run build
+# Build the application with API URL
+RUN VITE_API_URL=${VITE_API_URL} npm run build
 
 # Stage 2: Production image
 FROM node:20-slim

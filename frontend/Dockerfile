@@ -5,8 +5,7 @@ FROM node:20-slim AS build-stage
 WORKDIR /app
 
 # Kopiraj package.json i package-lock.json
-COPY package-lock.json ./
-COPY frontend/package*.json ./
+COPY frontend/package*.json frontend/package-lock.json ./
 
 # Instalacija dependencies
 RUN npm install --force --silent
@@ -15,7 +14,7 @@ RUN npm install --force --silent
 COPY frontend/ .
 
 # Build aplikacije
-RUN npm run build --verbose || true
+RUN npm run build
 
 # Stage 2: Production image
 FROM node:20-slim

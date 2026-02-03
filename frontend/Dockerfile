@@ -7,8 +7,8 @@ WORKDIR /app
 COPY package-lock.json ./
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies with legacy peer deps to handle optional dependencies
+RUN npm install --legacy-peer-deps && npm rebuild
 
 # Copy frontend source
 COPY frontend/ .

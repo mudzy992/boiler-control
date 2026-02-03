@@ -12,10 +12,10 @@ export interface WeatherInput {
 export interface HomeProfileInput {
   floorArea: number;
   ceilingHeight?: number; // visina plafona u cm, default 230
-  insulationType?: 'EPS' | 'Wool'; // tip izolacije
+  insulationType?: 'STANDARD' | 'EPS' | 'MINERAL_WOOL' | 'ADVANCED'; // tip izolacije
   insulationThickness?: number; // debljina izolacije u cm
-  windowType?: 'DOUBLE' | 'TRIPLE'; // tip prozora
-  heatingType?: 'radiator' | 'podno'; // tip grijanja
+  windowType?: 'SINGLE_GLAZED' | 'DOUBLE_GLAZED' | 'TRIPLE_GLAZED'; // tip prozora
+  heatingType?: 'RADIATOR' | 'UNDERFLOOR' | 'MIXED'; // tip grijanja
   learningOffset?: number; // ± korekcija krivulje
   confidence?: number; // 0–1, koliko vjerujemo offset-u
   insulationFactor?: number; // interno, može ostati opcionalno

@@ -68,8 +68,8 @@ async function main() {
         ceilingHeight: 2.3,
         insulationType: 'EPS',
         insulationThickness: 10,
-        windowType: 'PVC Double',
-        heatingType: 'Radiator',
+        windowType: 'DOUBLE_GLAZED',
+        heatingType: 'RADIATOR',
         constructionYear: 1990,
       },
     });

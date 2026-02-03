@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
@@ -7,6 +8,12 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import {
+  InsulationType,
+  WindowType,
+  HeatingType,
+  SeasonMode,
+} from 'src/generated/prisma/enums';
 
 export class CreateHomeProfileDto {
   @IsOptional()
@@ -16,13 +23,31 @@ export class CreateHomeProfileDto {
   @IsNumber()
   @Min(10)
   @Max(2000)
-  squareMeters: number;
+  floorArea: number;
 
-  @IsString()
-  insulationLevel: string;
+  @IsNumber()
+  @Min(1.8)
+  @Max(5)
+  ceilingHeight: number;
 
-  @IsString()
-  windowQuality: string;
+  @IsEnum(InsulationType)
+  insulationType: InsulationType;
+
+  @IsNumber()
+  @Min(5)
+  @Max(30)
+  insulationThickness: number;
+
+  @IsEnum(WindowType)
+  windowType: WindowType;
+
+  @IsEnum(HeatingType)
+  heatingType: HeatingType;
+
+  @IsInt()
+  @Min(1900)
+  @Max(2100)
+  constructionYear: number;
 
   @IsOptional()
   @IsInt()
@@ -33,9 +58,6 @@ export class CreateHomeProfileDto {
   @IsOptional()
   @IsString()
   boilerModel?: string;
-
-  @IsString()
-  radiatorType: string;
 
   @IsBoolean()
   hasFloorHeating: boolean;
@@ -60,30 +82,6 @@ export class CreateHomeProfileDto {
   preferredScheduleNotes?: string;
 
   @IsOptional()
-  @IsNumber()
-  ceilingHeight?: number;
-
-  @IsOptional()
-  @IsNumber()
-  insulationThickness?: number;
-
-  @IsOptional()
-  @IsNumber()
-  constructionYear?: number;
-
-  @IsOptional()
-  @IsNumber()
-  floorArea?: number;
-
-  @IsOptional()
-  @IsString()
-  insulationType?: string;
-
-  @IsOptional()
-  @IsString()
-  windowType?: string;
-
-  @IsOptional()
-  @IsString()
-  heatingType?: string;
+  @IsEnum(SeasonMode)
+  seasonMode?: SeasonMode;
 }

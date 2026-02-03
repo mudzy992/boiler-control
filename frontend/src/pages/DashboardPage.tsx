@@ -15,7 +15,7 @@ interface Notification {
   type: string;
   title: string;
   message: string;
-  isRead: boolean;
+  sourceRef: boolean;
   createdAt: string;
 }
 
@@ -190,7 +190,7 @@ export const DashboardPage: React.FC = () => {
       setNotificationPreferences(prefs);
     } catch (error) {
       console.error('Failed to load notifications:', error);
-      message.error('Greška pri učitavanju notifikacija');
+      message.error('Error loading notifications');
     } finally {
       setNotificationsLoading(false);
     }
@@ -470,18 +470,18 @@ export const DashboardPage: React.FC = () => {
           <Badge count={notifications.filter(n => !n.sourceRef?.includes('read')).length}>
             <button
               onClick={() => setNotificationDrawerOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 cursor-pointer"
             >
               <BellOutlined />
-              <span>Notifikacije</span>
+              <span>Notifications</span>
             </button>
           </Badge>
           <button
             onClick={() => setNotificationSettingsOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 cursor-pointer"
           >
             <SettingOutlined />
-            <span>Postavke</span>
+            <span>Settings</span>
           </button>
           <Tag
             color={isHeatingActive ? 'green' : 'default'}

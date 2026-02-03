@@ -82,7 +82,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <Layout className="min-h-screen">
       <Sider trigger={null} collapsible className="border-r border-gray-200 dark:border-slate-800">
-        <div className="px-6 py-5 text-lg font-semibold text-white dark:text-slate-100">
+        <div className="px-6 py-5 text-lg font-semibold text-black dark:text-slate-100">
           🔥 Boiler Control
         </div>
         <Menu theme={mode === 'dark' ? 'dark' : 'light'} mode="inline" items={menuItems} />

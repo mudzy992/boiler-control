@@ -7,13 +7,23 @@ import { UpdateHomeProfileDto } from './dto/update-home-profile.dto';
 export class HomeProfileService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(userId: number) {
-    return this.prisma.homeProfile.findMany({
+  async findAll(userId: number) {
+    const profiles = await this.prisma.homeProfile.findMany({
       where: { userId },
       include: {
         thermostatDevices: true,
       },
+      orderBy: { createdAt: 'asc' },
     });
+
+    // Map to include computed fields
+    return profiles.map((profile, index) => ({
+      ...profile,
+      isActive: index === 0, // For now, first profile is active (TODO: add activeHomeProfileId to User)
+      thermostats: profile.thermostatDevices.length,
+      name: profile.homeName || 'Home',
+      location: `${profile.insulationType} insulation`, // Temporary until we have proper location field
+    }));
   }
 
   async findOne(userId: number, id: number) {
@@ -122,5 +132,27 @@ export class HomeProfileService {
     return this.prisma.homeProfile.delete({
       where: { id },
     });
+  }
+
+  async activate(userId: number, id: number) {
+    // Verify ownership
+    await this.findOne(userId, id);
+
+    // TODO: When User has activeHomeProfileId field, update it here
+    // For now, just return the profile with isActive: true
+    const profile = await this.prisma.homeProfile.findUnique({
+      where: { id },
+      include: {
+        thermostatDevices: true,
+      },
+    });
+
+    return {
+      ...profile,
+      isActive: true,
+      thermostats: profile?.thermostatDevices.length || 0,
+      name: profile?.homeName || 'Home',
+      location: `${profile?.insulationType} insulation`,
+    };
   }
 }

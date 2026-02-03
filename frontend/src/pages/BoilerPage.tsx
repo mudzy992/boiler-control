@@ -24,7 +24,7 @@ export const BoilerPage: React.FC = () => {
         setEvents(Array.isArray(data) ? data : data?.events ?? []);
       } catch (error) {
         console.error('Error loading boiler events:', error);
-        message.error('Failed to load boiler history');
+        message.error('Failed to load boiler history!');
       } finally {
         setLoading(false);
       }

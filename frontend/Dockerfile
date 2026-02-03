@@ -3,16 +3,17 @@ FROM node:20-slim AS build-stage
 
 WORKDIR /app
 
-# Copy package files from monorepo root
-COPY package-lock.json ./
+# Copy frontend package files
 COPY frontend/package*.json ./
 
-# Copy frontend source early to ensure package.json context
+# Copy frontend source
 COPY frontend/ .
 
-# Install dependencies and rebuild for Linux platform
-# Use npm ci for reproducible builds, --force to handle optional deps
-RUN npm ci --force 2>&1 || npm install --force --legacy-peer-deps
+# Install dependencies with retry logic for optional dependencies
+# npm install with --no-audit and --no-fund to speed up installation
+RUN npm install --force --legacy-peer-deps --no-audit --no-fund || npm install --force --legacy-peer-deps
+
+# Rebuild native modules for Linux platform
 RUN npm rebuild
 
 # Build the application

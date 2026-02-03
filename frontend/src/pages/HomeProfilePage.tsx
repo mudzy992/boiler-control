@@ -13,59 +13,33 @@ import {
   Spin,
 } from 'antd';
 import { apiClient } from '../services/api';
+import type { HomeProfileResponse, CreateHomeProfileDto, UpdateHomeProfileDto } from '../types/homeProfile';
+import {
+  INSULATION_TYPE_OPTIONS,
+  WINDOW_TYPE_OPTIONS,
+  HEATING_TYPE_OPTIONS,
+  InsulationType,
+  WindowType,
+  HeatingType,
+} from '../constants/homeProfileEnums';
 
 interface HomeProfileFormValues {
   homeName?: string;
-  squareMeters: number;
-  insulationLevel: string;
-  windowQuality: string;
+  floorArea: number;
+  ceilingHeight: number;
+  insulationType: InsulationType;
+  insulationThickness: number;
+  windowType: WindowType;
+  heatingType: HeatingType;
+  constructionYear: number;
   numberOfResidents?: number;
   boilerModel?: string;
-  radiatorType: string;
   hasFloorHeating?: boolean;
   targetMorningTemp: number;
   targetDayTemp: number;
   targetNightTemp: number;
   preferredScheduleNotes?: string;
 }
-
-interface HomeProfileResponse {
-  id: number;
-  homeName?: string;
-  squareMeters?: number;
-  insulationLevel?: string;
-  windowQuality?: string;
-  numberOfResidents?: number;
-  boilerModel?: string;
-  radiatorType?: string;
-  floorArea?: number;
-  insulationType?: string;
-  windowType?: string;
-  heatingType?: string;
-  hasFloorHeating?: boolean;
-  targetMorningTemp?: number;
-  targetDayTemp?: number;
-  targetNightTemp?: number;
-  preferredScheduleNotes?: string;
-}
-
-const insulationOptions = [
-  { value: 'LOW', label: 'Low' },
-  { value: 'MEDIUM', label: 'Medium' },
-  { value: 'HIGH', label: 'High' },
-];
-
-const windowOptions = [
-  { value: 'SINGLE', label: 'Single pane' },
-  { value: 'DOUBLE', label: 'Double pane' },
-  { value: 'TRIPLE', label: 'Triple pane' },
-];
-
-const radiatorOptions = [
-  { value: 'RADIATOR', label: 'Radiator' },
-  { value: 'FLOOR', label: 'Floor Heating' },
-  { value: 'MIXED', label: 'Mixed' },
-];
 
 export const HomeProfilePage: React.FC = () => {
   const [form] = Form.useForm<HomeProfileFormValues>();
@@ -82,12 +56,15 @@ export const HomeProfilePage: React.FC = () => {
           setProfileId(profile.id);
           form.setFieldsValue({
             homeName: profile.homeName,
-            squareMeters: profile.squareMeters ?? profile.floorArea ?? 0,
-            insulationLevel: profile.insulationLevel ?? profile.insulationType ?? '',
-            windowQuality: profile.windowQuality ?? profile.windowType ?? '',
+            floorArea: profile.floorArea,
+            ceilingHeight: profile.ceilingHeight,
+            insulationType: profile.insulationType,
+            insulationThickness: profile.insulationThickness,
+            windowType: profile.windowType,
+            heatingType: profile.heatingType,
+            constructionYear: profile.constructionYear,
             numberOfResidents: profile.numberOfResidents,
             boilerModel: profile.boilerModel,
-            radiatorType: profile.radiatorType ?? profile.heatingType ?? '',
             hasFloorHeating: profile.hasFloorHeating ?? false,
             targetMorningTemp: profile.targetMorningTemp ?? 20,
             targetDayTemp: profile.targetDayTemp ?? 21,
@@ -146,54 +123,88 @@ export const HomeProfilePage: React.FC = () => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
+            floorArea: 100,
+            ceilingHeight: 2.6,
+            insulationType: InsulationType.STANDARD,
+            insulationThickness: 10,
+            windowType: WindowType.DOUBLE_GLAZED,
+            heatingType: HeatingType.RADIATOR,
+            constructionYear: new Date().getFullYear(),
             hasFloorHeating: false,
+            targetMorningTemp: 22,
+            targetDayTemp: 20,
+            targetNightTemp: 18,
           }}
         >
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
-              <Form.Item name="homeName" label="Home Name" rules={[{ required: true }]}>
+              <Form.Item name="homeName" label="Home Name">
                 <Input placeholder="My Home" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                name="squareMeters"
-                label="Square Meters"
+                name="floorArea"
+                label="Floor Area (m²)"
                 rules={[{ required: true, type: 'number', min: 10, max: 2000 }]}
               >
                 <InputNumber className="w-full" min={10} max={2000} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="insulationLevel" label="Insulation Level" rules={[{ required: true }]}
+              <Form.Item
+                name="ceilingHeight"
+                label="Ceiling Height (m)"
+                rules={[{ required: true, type: 'number', min: 2.0, max: 5.0 }]}
               >
-                <Select options={insulationOptions} placeholder="Select insulation" />
+                <InputNumber className="w-full" min={2.0} max={5.0} step={0.1} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="windowQuality" label="Window Quality" rules={[{ required: true }]}
+              <Form.Item
+                name="constructionYear"
+                label="Construction Year"
+                rules={[{ required: true, type: 'number', min: 1800, max: 2100 }]}
               >
-                <Select options={windowOptions} placeholder="Select window type" />
+                <InputNumber className="w-full" min={1800} max={2100} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="insulationType" label="Insulation Type" rules={[{ required: true }]}>
+                <Select options={INSULATION_TYPE_OPTIONS} placeholder="Select insulation type" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="insulationThickness"
+                label="Insulation Thickness (cm)"
+                rules={[{ required: true, type: 'number', min: 0, max: 50 }]}
+              >
+                <InputNumber className="w-full" min={0} max={50} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="windowType" label="Window Type" rules={[{ required: true }]}>
+                <Select options={WINDOW_TYPE_OPTIONS} placeholder="Select window type" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="heatingType" label="Heating Type" rules={[{ required: true }]}>
+                <Select options={HEATING_TYPE_OPTIONS} placeholder="Select heating type" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
                 name="numberOfResidents"
                 label="Number of Residents"
-                rules={[{ required: true, type: 'number', min: 1, max: 20 }]}
+                rules={[{ type: 'number', min: 1, max: 20 }]}
               >
                 <InputNumber className="w-full" min={1} max={20} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="boilerModel" label="Boiler Model" rules={[{ required: true }]}>
+              <Form.Item name="boilerModel" label="Boiler Model">
                 <Input placeholder="Boiler model" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="radiatorType" label="Radiator Type" rules={[{ required: true }]}
-              >
-                <Select options={radiatorOptions} placeholder="Select radiator type" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
@@ -204,8 +215,8 @@ export const HomeProfilePage: React.FC = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name="targetMorningTemp"
-                label="Target Morning Temp"
-                rules={[{ required: true, type: 'number', min: 5, max: 30 }]}
+                label="Target Morning Temp (°C)"
+                rules={[{ type: 'number', min: 5, max: 30 }]}
               >
                 <InputNumber className="w-full" min={5} max={30} />
               </Form.Item>
@@ -213,8 +224,8 @@ export const HomeProfilePage: React.FC = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name="targetDayTemp"
-                label="Target Day Temp"
-                rules={[{ required: true, type: 'number', min: 5, max: 30 }]}
+                label="Target Day Temp (°C)"
+                rules={[{ type: 'number', min: 5, max: 30 }]}
               >
                 <InputNumber className="w-full" min={5} max={30} />
               </Form.Item>
@@ -222,8 +233,8 @@ export const HomeProfilePage: React.FC = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name="targetNightTemp"
-                label="Target Night Temp"
-                rules={[{ required: true, type: 'number', min: 5, max: 30 }]}
+                label="Target Night Temp (°C)"
+                rules={[{ type: 'number', min: 5, max: 30 }]}
               >
                 <InputNumber className="w-full" min={5} max={30} />
               </Form.Item>

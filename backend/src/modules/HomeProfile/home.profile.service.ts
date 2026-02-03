@@ -8,6 +8,12 @@ export class HomeProfileService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(userId: number) {
+    // Get user's location
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { homeLocation: true },
+    });
+
     const profiles = await this.prisma.homeProfile.findMany({
       where: { userId },
       include: {
@@ -16,13 +22,36 @@ export class HomeProfileService {
       orderBy: { createdAt: 'asc' },
     });
 
-    // Map to include computed fields
+    // Map to include computed fields with actual data
     return profiles.map((profile, index) => ({
-      ...profile,
-      isActive: index === 0, // For now, first profile is active (TODO: add activeHomeProfileId to User)
+      id: profile.id,
+      userId: profile.userId,
+      homeName: profile.homeName,
+      floorArea: profile.floorArea,
+      ceilingHeight: profile.ceilingHeight,
+      insulationType: profile.insulationType,
+      insulationThickness: profile.insulationThickness,
+      windowType: profile.windowType,
+      heatingType: profile.heatingType,
+      constructionYear: profile.constructionYear,
+      numberOfResidents: profile.numberOfResidents,
+      boilerModel: profile.boilerModel,
+      hasFloorHeating: profile.hasFloorHeating,
+      targetMorningTemp: profile.targetMorningTemp,
+      targetDayTemp: profile.targetDayTemp,
+      targetNightTemp: profile.targetNightTemp,
+      preferredScheduleNotes: profile.preferredScheduleNotes,
+      learningOffset: profile.learningOffset,
+      learningConfidence: profile.learningConfidence,
+      seasonMode: profile.seasonMode,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+      // Mobile app expected fields
+      isActive: index === 0, // For now, first profile is active
       thermostats: profile.thermostatDevices.length,
-      name: profile.homeName || 'Home',
-      location: `${profile.insulationType} insulation`, // Temporary until we have proper location field
+      name: profile.homeName || 'Unnamed Home',
+      location: user?.homeLocation || 'No location set',
+      thermostatDevices: profile.thermostatDevices,
     }));
   }
 
@@ -40,30 +69,24 @@ export class HomeProfileService {
   }
 
   create(userId: number, dto: CreateHomeProfileDto) {
-    const floorArea = Number(dto.squareMeters ?? dto.floorArea ?? 0);
-    const ceilingHeight = Number(dto.ceilingHeight ?? 2.6);
-    const insulationThickness = Number(dto.insulationThickness ?? 10);
-    const constructionYear = Number(
-      dto.constructionYear ?? new Date().getFullYear(),
-    );
-
     return this.prisma.homeProfile.create({
       data: {
         homeName: dto.homeName ?? null,
-        floorArea,
-        ceilingHeight,
-        insulationType: dto.insulationLevel ?? dto.insulationType ?? 'standard',
-        insulationThickness,
-        windowType: dto.windowQuality ?? dto.windowType ?? 'standard',
-        heatingType: dto.radiatorType ?? dto.heatingType ?? 'radiator',
-        constructionYear,
+        floorArea: dto.floorArea,
+        ceilingHeight: dto.ceilingHeight,
+        insulationType: dto.insulationType,
+        insulationThickness: dto.insulationThickness,
+        windowType: dto.windowType,
+        heatingType: dto.heatingType,
+        constructionYear: dto.constructionYear,
         numberOfResidents: dto.numberOfResidents ?? null,
         boilerModel: dto.boilerModel ?? null,
-        hasFloorHeating: dto.hasFloorHeating ?? false,
-        targetMorningTemp: dto.targetMorningTemp ?? null,
-        targetDayTemp: dto.targetDayTemp ?? null,
-        targetNightTemp: dto.targetNightTemp ?? null,
+        hasFloorHeating: dto.hasFloorHeating,
+        targetMorningTemp: dto.targetMorningTemp,
+        targetDayTemp: dto.targetDayTemp,
+        targetNightTemp: dto.targetNightTemp,
         preferredScheduleNotes: dto.preferredScheduleNotes ?? null,
+        seasonMode: dto.seasonMode ?? 'WINTER',
         userId,
       },
     });
@@ -72,57 +95,39 @@ export class HomeProfileService {
   async update(userId: number, id: number, dto: UpdateHomeProfileDto) {
     await this.findOne(userId, id);
 
-    const dtoCorrected = {
-      ...(dto.homeName !== undefined && { homeName: dto.homeName ?? null }),
-      ...(dto.squareMeters !== undefined && {
-        floorArea: Number(dto.squareMeters),
-      }),
-      ...(dto.floorArea !== undefined && { floorArea: Number(dto.floorArea) }),
-      ...(dto.ceilingHeight !== undefined && {
-        ceilingHeight: Number(dto.ceilingHeight),
-      }),
-      ...(dto.insulationLevel !== undefined && {
-        insulationType: dto.insulationLevel,
-      }),
-      ...(dto.insulationType !== undefined && {
-        insulationType: dto.insulationType,
-      }),
-      ...(dto.insulationThickness !== undefined && {
-        insulationThickness: Number(dto.insulationThickness),
-      }),
-      ...(dto.windowQuality !== undefined && { windowType: dto.windowQuality }),
-      ...(dto.windowType !== undefined && { windowType: dto.windowType }),
-      ...(dto.radiatorType !== undefined && { heatingType: dto.radiatorType }),
-      ...(dto.heatingType !== undefined && { heatingType: dto.heatingType }),
-      ...(dto.constructionYear !== undefined && {
-        constructionYear: Number(dto.constructionYear),
-      }),
-      ...(dto.numberOfResidents !== undefined && {
-        numberOfResidents: dto.numberOfResidents ?? null,
-      }),
-      ...(dto.boilerModel !== undefined && {
-        boilerModel: dto.boilerModel ?? null,
-      }),
-      ...(dto.hasFloorHeating !== undefined && {
-        hasFloorHeating: dto.hasFloorHeating,
-      }),
-      ...(dto.targetMorningTemp !== undefined && {
-        targetMorningTemp: dto.targetMorningTemp,
-      }),
-      ...(dto.targetDayTemp !== undefined && {
-        targetDayTemp: dto.targetDayTemp,
-      }),
-      ...(dto.targetNightTemp !== undefined && {
-        targetNightTemp: dto.targetNightTemp,
-      }),
-      ...(dto.preferredScheduleNotes !== undefined && {
-        preferredScheduleNotes: dto.preferredScheduleNotes ?? null,
-      }),
-    };
+    const updateData: any = {};
+
+    if (dto.homeName !== undefined) updateData.homeName = dto.homeName ?? null;
+    if (dto.floorArea !== undefined) updateData.floorArea = dto.floorArea;
+    if (dto.ceilingHeight !== undefined)
+      updateData.ceilingHeight = dto.ceilingHeight;
+    if (dto.insulationType !== undefined)
+      updateData.insulationType = dto.insulationType;
+    if (dto.insulationThickness !== undefined)
+      updateData.insulationThickness = dto.insulationThickness;
+    if (dto.windowType !== undefined) updateData.windowType = dto.windowType;
+    if (dto.heatingType !== undefined) updateData.heatingType = dto.heatingType;
+    if (dto.constructionYear !== undefined)
+      updateData.constructionYear = dto.constructionYear;
+    if (dto.numberOfResidents !== undefined)
+      updateData.numberOfResidents = dto.numberOfResidents ?? null;
+    if (dto.boilerModel !== undefined)
+      updateData.boilerModel = dto.boilerModel ?? null;
+    if (dto.hasFloorHeating !== undefined)
+      updateData.hasFloorHeating = dto.hasFloorHeating;
+    if (dto.targetMorningTemp !== undefined)
+      updateData.targetMorningTemp = dto.targetMorningTemp;
+    if (dto.targetDayTemp !== undefined)
+      updateData.targetDayTemp = dto.targetDayTemp;
+    if (dto.targetNightTemp !== undefined)
+      updateData.targetNightTemp = dto.targetNightTemp;
+    if (dto.preferredScheduleNotes !== undefined)
+      updateData.preferredScheduleNotes = dto.preferredScheduleNotes ?? null;
+    if (dto.seasonMode !== undefined) updateData.seasonMode = dto.seasonMode;
 
     return this.prisma.homeProfile.update({
       where: { id },
-      data: dtoCorrected,
+      data: updateData,
     });
   }
 
@@ -138,6 +143,12 @@ export class HomeProfileService {
     // Verify ownership
     await this.findOne(userId, id);
 
+    // Get user's location
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { homeLocation: true },
+    });
+
     // TODO: When User has activeHomeProfileId field, update it here
     // For now, just return the profile with isActive: true
     const profile = await this.prisma.homeProfile.findUnique({
@@ -147,12 +158,16 @@ export class HomeProfileService {
       },
     });
 
+    if (!profile) {
+      throw new NotFoundException('HomeProfile not found');
+    }
+
     return {
       ...profile,
       isActive: true,
-      thermostats: profile?.thermostatDevices.length || 0,
-      name: profile?.homeName || 'Home',
-      location: `${profile?.insulationType} insulation`,
+      thermostats: profile.thermostatDevices.length,
+      name: profile.homeName || 'Unnamed Home',
+      location: user?.homeLocation || 'No location set',
     };
   }
 }

@@ -53,10 +53,10 @@ model HomeProfile {
   homeName            String?
   floorArea           Float                                 // Grejni prostor 150m2
   ceilingHeight       Float                                 // Visina plafona 230 cm
-  insulationType      String                                // Vrsta izolacije EPS Wool
+  insulationType      InsulationType                        // Vrsta izolacije (STANDARD, EPS, MINERAL_WOOL, ADVANCED)
   insulationThickness Float                                 // Debljina izolacije 10, 12, 15 cm
-  windowType          String                                // Tip stolarije double/ triple PVC, Wood
-  heatingType         String                                // Tip grijanja radijator, podno
+  windowType          WindowType                            // Tip stolarije (SINGLE_GLAZED, DOUBLE_GLAZED, TRIPLE_GLAZED)
+  heatingType         HeatingType                           // Tip grijanja (RADIATOR, UNDERFLOOR, MIXED)
   constructionYear    Int                                   // Godina izgradnje objekta
   numberOfResidents   Int?
   boilerModel         String?
@@ -193,6 +193,25 @@ enum SeasonMode {
   WINTER
   SUMMER
   AUTO
+}
+
+enum InsulationType {
+  STANDARD
+  EPS
+  MINERAL_WOOL
+  ADVANCED
+}
+
+enum WindowType {
+  SINGLE_GLAZED
+  DOUBLE_GLAZED
+  TRIPLE_GLAZED
+}
+
+enum HeatingType {
+  RADIATOR
+  UNDERFLOOR
+  MIXED
 }
 
 model HeatingIntervalLearning {

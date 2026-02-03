@@ -1,4 +1,9 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import type {
+  CreateHomeProfileDto,
+  UpdateHomeProfileDto,
+  HomeProfileResponse,
+} from '../types/homeProfile';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3020/api';
 
@@ -36,12 +41,10 @@ export class ApiClient {
   }
 
   setToken(token: string) {
-    this.token = token;
     localStorage.setItem('token', token);
   }
 
   clearToken() {
-    this.token = null;
     localStorage.removeItem('token');
   }
 
@@ -126,17 +129,17 @@ export class ApiClient {
   }
 
   // Home Profile endpoints
-  async getHomeProfile() {
+  async getHomeProfile(): Promise<HomeProfileResponse> {
     const response = await this.client.get('/home-profile');
     return response.data;
   }
 
-  async createHomeProfile(data: any) {
+  async createHomeProfile(data: CreateHomeProfileDto): Promise<HomeProfileResponse> {
     const response = await this.client.post('/home-profile', data);
     return response.data;
   }
 
-  async updateHomeProfile(id: number, data: any) {
+  async updateHomeProfile(id: number, data: UpdateHomeProfileDto): Promise<HomeProfileResponse> {
     const response = await this.client.patch(`/home-profile/${id}`, data);
     return response.data;
   }

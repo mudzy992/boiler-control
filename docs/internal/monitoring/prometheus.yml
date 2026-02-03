@@ -1,0 +1,95 @@
+# Prometheus configuration for Boiler Control Backend
+# Metrics endpoint: http://backend:3020/metrics
+
+global:
+  # Prometheus scrape interval
+  scrape_interval: 15s
+  # Timeout for scrape requests
+  scrape_timeout: 10s
+  # Evaluation interval for alerting rules
+  evaluation_interval: 15s
+  # External labels added to all metrics
+  external_labels:
+    cluster: 'boiler-control'
+    environment: 'production'
+
+# Scrape job configurations
+scrape_configs:
+  - job_name: 'backend-metrics'
+    # Metrics scraped from backend service
+    static_configs:
+      - targets: ['localhost:3020']
+        labels:
+          service: 'boiler-control-backend'
+          component: 'api-server'
+
+    # Metrics path (default is /metrics)
+    metrics_path: '/metrics'
+
+    # Scrape interval specific to this job
+    scrape_interval: 15s
+
+    # Connection timeout
+    scrape_timeout: 10s
+
+    # Relabel configs for metric transformation
+    relabel_configs:
+      # Add service label from job name
+      - source_labels: [__job__]
+        target_label: job
+
+      # Add instance label from address
+      - source_labels: [__address__]
+        target_label: instance
+
+      # Extract port from address for dimension
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        target_label: host
+
+    # Metric relabeling (after scrape, before storage)
+    metric_relabel_configs:
+      # Keep only relevant metrics
+      - source_labels: [__name__]
+        regex: '(reporting_.*|nodejs_.*|process_.*|http_.*)'
+        action: keep
+
+      # Drop high-cardinality metrics that could cause issues
+      - source_labels: [__name__]
+        regex: 'http_request_duration_microseconds_bucket'
+        action: drop
+
+  - job_name: 'backend-reporting'
+    # Custom reporting metrics endpoint
+    static_configs:
+      - targets: ['localhost:3020']
+        labels:
+          service: 'boiler-control-backend'
+          component: 'reporting'
+
+    metrics_path: '/metrics/reporting'
+    scrape_interval: 1m  # Reporting metrics updated less frequently
+    scrape_timeout: 10s
+
+    relabel_configs:
+      - source_labels: [__job__]
+        target_label: job
+      - source_labels: [__address__]
+        target_label: instance
+
+    metric_relabel_configs:
+      # Keep reporting metrics only
+      - source_labels: [__name__]
+        regex: 'reporting_.*'
+        action: keep
+
+# Alert rules (optional)
+rule_files:
+  # - '/etc/prometheus/alert_rules.yml'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - 'alertmanager:9093'

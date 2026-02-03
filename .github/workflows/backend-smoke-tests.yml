@@ -1,0 +1,165 @@
+name: Backend Smoke Tests (Post-Deployment)
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend_url:
+        description: 'Backend URL to test (e.g., https://example.com:3020)'
+        required: true
+        default: 'http://localhost:3020'
+      environment:
+        description: 'Environment being tested'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: staging
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run smoke tests
+        working-directory: backend
+        env:
+          BACKEND_URL: ${{ github.event.inputs.backend_url }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+        run: npm run test:smoke
+
+      - name: Health check endpoint
+        run: |
+          echo "🔍 Checking health endpoint..."
+          set +e
+          RESPONSE=$(curl -s -w "\n%{http_code}" ${{ github.event.inputs.backend_url }}/health 2>&1)
+          set -e
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Health check failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "✅ Health check passed"
+
+      - name: Metrics endpoint availability
+        run: |
+          echo "🔍 Checking metrics endpoint..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" ${{ github.event.inputs.backend_url }}/metrics)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Metrics endpoint failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          # Verify key metrics are present
+          if echo "$BODY" | grep -q "reporting_home_health_score"; then
+            echo "✅ Found reporting_home_health_score metric"
+          else
+            echo "⚠️  reporting_home_health_score metric not found (may be normal if no data yet)"
+          fi
+
+          echo "✅ Metrics endpoint is healthy"
+
+      - name: API endpoint smoke test
+        run: |
+          echo "🔍 Testing API endpoint..."
+
+          # Test a basic endpoint (weather as example)
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Content-Type: application/json" \
+            ${{ github.event.inputs.backend_url }}/api/weather)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+            echo "✅ API endpoint is responding (HTTP $HTTP_CODE)"
+          else
+            echo "❌ API endpoint failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Correlation ID header test
+        run: |
+          echo "🔍 Testing correlation ID propagation..."
+
+          # Make a request and check for correlation ID in response headers
+          RESPONSE=$(curl -s -i ${{ github.event.inputs.backend_url }}/health 2>&1)
+
+          if echo "$RESPONSE" | grep -qi "x-correlation-id\|x-request-id\|runid"; then
+            echo "✅ Correlation ID header detected in response"
+          else
+            echo "⚠️  No correlation ID header detected (may be normal depending on implementation)"
+          fi
+
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "📊 Smoke Test Report"
+          echo "===================="
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Backend URL: ${{ github.event.inputs.backend_url }}"
+          echo "Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Slack notification on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "🚨 Backend Smoke Tests Failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "⚠️ *Smoke Tests Failed*\nEnvironment: `${{ github.event.inputs.environment }}`\nURL: `${{ github.event.inputs.backend_url }}`\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>"
+                  }
+                }
+              ]
+            }
+
+      - name: Slack notification on success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✅ Backend Smoke Tests Passed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Smoke Tests Passed*\nEnvironment: `${{ github.event.inputs.environment }}`\nURL: `${{ github.event.inputs.backend_url }}`"
+                  }
+                }
+              ]
+            }

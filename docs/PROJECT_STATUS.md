@@ -1,14 +1,14 @@
 # Boiler Control Backend: Project Status & Roadmap
 
-**Project Phase:** Batch 2 ✅ Complete | Batch 3 📋 Planned
+**Project Phase:** Batch 2 ✅ Complete | Batch 3 P2a ✅ Complete | Batch 3 (P2b-P2d) 📋 Planned
 **Last Updated:** February 1, 2026
-**Backend Status:** ✅ Running | TypeScript: 0 errors | DI: 0 errors
+**Backend Status:** ✅ Compiles (0 errors) | ✅ All modules loaded | 📋 Tests ready for execution
 
 ---
 
 ## 📊 Executive Summary
 
-The boiler-control backend has successfully completed **Batch 2 (P1c, P1d, P1e)** and is ready for **Batch 3 (P2a–P2d)** implementation. All production-critical safety measures (transactional integrity, idempotency, observability) are in place.
+The boiler-control backend has successfully completed **Batch 2 (P1c, P1d, P1e)** and **Batch 3 P2a (Integration Tests + Enhanced Logging)**. All production-critical safety measures are in place, and comprehensive integration tests are ready for execution.
 
 ### Key Achievements
 
@@ -19,16 +19,25 @@ The boiler-control backend has successfully completed **Batch 2 (P1c, P1d, P1e)*
 - DI error resolved (CommonModule import)
 - Full TypeScript compilation (0 errors)
 
+✅ **Batch 3 P2a Deliverables:**
+- Integration tests: 2 files, ~850 lines, 45+ test cases
+- End-to-end API validation for web + mobile clients
+- Enhanced logging: StructuredLogger + runId propagation in 3 modules
+- Batch 2 constraint validation (P1c, P1d verification)
+- TypeScript compilation: 0 errors
+- NestJS modules: All 15 loaded successfully
+
 ✅ **Backend Readiness:**
 - Poll cycle: 1min active / 2min idle (unchanged)
 - Tuya API budget: Protected (no new calls)
 - Heating logic: Preserved (only wrapped with safety)
 - All constraints maintained
+- All Batch 2 requirements still in place
 
-📋 **Batch 3 Planning:**
-- 4 high-value tasks (P2a–P2d) documented
-- 33–48 hours estimated effort
-- Ready for implementation on user confirmation
+📋 **Batch 3 Remaining Tasks (P2b-P2d):**
+- P2b: Circuit breaker + timeout hardening (optional)
+- P2d: Performance baseline metrics (optional)
+- Documentation: Update batch3-plan.md, PROJECT_STATUS.md
 
 ---
 
@@ -43,11 +52,18 @@ boiler-control/
 │   │   ├── modules/
 │   │   │   ├── Auth/
 │   │   │   ├── ThermostatPoll/      # ✅ Batch 2: Polling with idempotency + logging
+│   │   │   │                        # ✅ Batch 3 P2a: RunId propagation to adapter
 │   │   │   ├── Boiler/
 │   │   │   │   └── adapter/
-│   │   │   │       └── tuya.adapter.ts   # 📋 Batch 3: Add circuit breaker + timeouts
-│   │   │   ├── HeatingAnomalyCheckerService/  # 📋 Batch 3: Expand logging
+│   │   │   │       └── tuya.adapter.ts   # ✅ Batch 3 P2a: Enhanced logging with runId
+│   │   │   │                           # 📋 Batch 3 P2b: Add circuit breaker + timeouts
+│   │   │   ├── HeatingAnomalyCheckerService/  # ✅ Batch 3 P2a: Expanded logging
 │   │   │   ├── Heating/
+│   ├── test/
+│   │   └── integration/           # ✅ Batch 3 P2a: NEW - Integration tests
+│   │       ├── api.integration.spec.ts       # 450 lines, 20+ tests
+│   │       └── heating-polling.integration.spec.ts  # 400 lines, 25+ tests
+```
 │   │   │   ├── HeatingRecommendation/
 │   │   │   ├── Schedule/           # ✅ Batch 2: Fixed DI (CommonModule import)
 │   │   │   └── ...

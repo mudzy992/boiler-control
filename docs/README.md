@@ -1,102 +1,216 @@
-# Boiler Control Backend: Documentation Index
+# Boiler Control System - Documentation Index
 
-**Last Updated:** February 1, 2026
-**Batch Status:** Batch 2 ✅ Complete | Batch 3 📋 Planned
+**Last Updated:** February 3, 2026
+**Project Status:** V2 Implementation Complete ✅ | Docker Refactored ✅
 
 ---
 
-## 📚 Documentation Guide
+## 📚 Documentation Organization
 
-This index provides quick navigation to all backend documentation created during Batch 2 implementation and Batch 3 planning.
+All project documentation has been centralized in this `docs/` directory for better organization and maintenance.
 
 ---
 
 ## 🎯 Start Here
 
-**New to this project?** Start with [PROJECT_STATUS.md](PROJECT_STATUS.md) for a high-level overview.
+### New to the Project?
+1. **[../README.md](../README.md)** - Main project overview with quick start
+2. **[README_MONOREPO.md](./README_MONOREPO.md)** - Detailed monorepo structure
+3. **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Common commands and workflows
 
-**Want Batch 2 details?** Read [batch2-summary.md](batch2-summary.md).
+### Want to Deploy?
+1. **[../docker-compose.yml](../docker-compose.yml)** - Backend orchestration
+2. **[../backend/Dockerfile](../backend/Dockerfile)** - Multi-stage Docker build
+3. **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Environment configuration
 
-**Planning Batch 3?** Check [batch3-plan.md](batch3-plan.md).
-
-**Need verification?** Review [BATCH2_VERIFICATION_REPORT.md](BATCH2_VERIFICATION_REPORT.md).
-
----
-
-## 📑 Document Catalog
-
-### 1. PROJECT_STATUS.md (~600 lines)
-
-**Purpose:** Executive summary and roadmap
-
-**Sections:**
-- Executive summary (key achievements, readiness)
-- Project structure overview
-- Batch 2 status (completion checklist, files modified)
-- Batch 3 roadmap (P2a–P2d overview, timeline)
-- Safety constraints (all maintained)
-- Production readiness checklist
-- Next steps for user
-
-**When to Read:** First time, or need project overview
-
-**Key Takeaways:**
-- Batch 2 complete ✅
-- 0 errors in TypeScript and DI
-- Batch 3 ready for approval (33–48 hours effort)
-- All constraints preserved
+### Need Architecture Details?
+1. **[V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)** - Complete system architecture
+2. **[V2_FRONTEND_GUIDE.md](./V2_FRONTEND_GUIDE.md)** - Frontend patterns
+3. **[P2E_README.md](./P2E_README.md)** - AsyncLocalStorage implementation
 
 ---
 
-### 2. batch2-summary.md (~530 lines)
+## 📑 Documentation by Category
 
-**Purpose:** Comprehensive Batch 2 implementation details
+### Getting Started
+- **[README_MONOREPO.md](./README_MONOREPO.md)** - Monorepo structure and setup
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Command reference
+- **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Environment variables
+- **[SETUP_CHECKLIST.md](./SETUP_CHECKLIST.md)** - Setup verification
 
-**Sections:**
-- Executive summary (tasks, achievements)
-- Files changed (with code examples)
-- Implementation details:
-  - P1c: Transactional integrity + idempotency
-  - P1d: Structured logging + Prometheus metrics
-  - P1e: Contract tests
-- Verification steps (backend startup, TypeScript, metrics, logs)
-- Important caveats (dev mode, idempotency behavior, metrics persistence)
-- Constraints maintained checklist
-- Summary of files modified
+### Architecture & Design
+- **[V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)** - System architecture
+- **[V2_FRONTEND_GUIDE.md](./V2_FRONTEND_GUIDE.md)** - Frontend development guide
+- **[V2_DOCUMENTATION_INDEX.md](./V2_DOCUMENTATION_INDEX.md)** - Frontend docs navigation
+- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** - Project overview
 
-**When to Read:** Need detailed Batch 2 information
+### Implementation Details
+- **[P2E_README.md](./P2E_README.md)** - AsyncLocalStorage (P2e)
+- **[P2E_COMPLETION_SUMMARY.md](./P2E_COMPLETION_SUMMARY.md)** - P2e completion
+- **[BACKEND_INTEGRATION_STATUS.md](./BACKEND_INTEGRATION_STATUS.md)** - Backend status
+- **[FRONTEND_REVIEW.md](./FRONTEND_REVIEW.md)** - Frontend review
+- **[BACKEND_REVIEW.md](./BACKEND_REVIEW.md)** - Backend review
+- **[BACKEND_WRITE_OPERATIONS_AUDIT.md](./BACKEND_WRITE_OPERATIONS_AUDIT.md)** - Write ops audit
 
-**Key Sections:**
-- [P1c Details](batch2-summary.md#p1c-transactional-integrity--idempotency)
-- [Idempotency Strategy](batch2-summary.md#idempotency-strategy)
-- [Prometheus Metrics](batch2-summary.md#prometheus-metrics-endpoint)
-- [Verification Steps](batch2-summary.md#verification-steps)
+### Project Status & Milestones
+- **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** - Current project status
+- **[V2_IMPLEMENTATION_COMPLETE.md](./V2_IMPLEMENTATION_COMPLETE.md)** - V2 completion
+- **[V2_SESSION_COMPLETION_REPORT.md](./V2_SESSION_COMPLETION_REPORT.md)** - Session report
+- **[PHASE_1_COMPLETE.md](./PHASE_1_COMPLETE.md)** - Phase 1 summary
+- **[PHASE_3_COMPLETION_CHECKLIST.md](./PHASE_3_COMPLETION_CHECKLIST.md)** - Phase 3 checklist
+- **[PHASE_3_REFACTOR_SUMMARY.md](./PHASE_3_REFACTOR_SUMMARY.md)** - Phase 3 refactor
+
+### Feature Guides
+- **[MOBILE_V2_PLAN.md](./MOBILE_V2_PLAN.md)** - Mobile app V2 plan
+- **[DASHBOARD_UPDATES_SUMMARY.md](./DASHBOARD_UPDATES_SUMMARY.md)** - Dashboard updates
+- **[THERMOSTAT_FIX_CHECKLIST.md](./THERMOSTAT_FIX_CHECKLIST.md)** - Thermostat fixes
+- **[THERMOSTAT_PROGRAMS_ENDPOINT_FIX.md](./THERMOSTAT_PROGRAMS_ENDPOINT_FIX.md)** - Endpoint fix
+
+### Quick References
+- **[V2_QUICK_REFERENCE.md](./V2_QUICK_REFERENCE.md)** - V2 quick reference
+- **[V2_DELIVERABLES_MANIFEST.md](./V2_DELIVERABLES_MANIFEST.md)** - Deliverables list
+- **[FILE_MANIFEST.md](./FILE_MANIFEST.md)** - File inventory
+- **[EXECUTIVE_SUMMARY.md](./EXECUTIVE_SUMMARY.md)** - Executive summary
 
 ---
 
-### 3. batch3-plan.md (~600+ lines)
+## 📂 Internal Documentation
 
-**Purpose:** Detailed Batch 3 task planning and acceptance criteria
+Detailed technical documentation for specific implementations, pipelines, and operations.
 
-**Sections:**
-- Executive summary (4 tasks, 33–48 hours effort)
-- Task breakdown:
-  - **P2a:** Integration tests (poll → DB end-to-end)
-  - **P2b:** Timeout + circuit breaker (Tuya adapter)
-  - **P2c:** Structured logging expansion
-  - **P2d:** Performance baseline metrics
-- For each task:
-  - Objective
-  - Acceptance criteria
-  - Code examples
-  - Dependencies
-  - Estimated effort
-- Timeline & dependencies (sequential order, parallelization)
-- Integration with Batch 2
-- Risk & mitigation
-- Success metrics
+### Architecture Deep Dives
+- **[internal/architecture/](./internal/architecture/)** - Detailed architecture docs
 
-**When to Read:** Planning or implementing Batch 3
+### Deployment & Pipeline
+- **[internal/pipeline/](./internal/pipeline/)** - Implementation pipelines
+  - Batch 2/3 implementation checklists
+  - P2B, P2C, P2D, P2E implementation summaries
+  - Frontend integration guides
+  - Deployment guides
+  - TypeScript compilation fixes
+
+### Monitoring & Observability
+- **[internal/monitoring/](./internal/monitoring/)** - Monitoring setup
+  - Monitoring setup guides
+  - Baseline metrics
+
+### Operations & Troubleshooting
+- **[internal/runbooks/](./internal/runbooks/)** - Operational runbooks
+  - P2E troubleshooting runbook
+
+### Development Logs
+- **[internal/logs/](./internal/logs/)** - Development logs
+  - Backend progress logs
+  - Batch verification reports
+
+### Snapshots & Diffs
+- **[internal/snapshots/](./internal/snapshots/)** - Code change snapshots
+  - P2B, P2C, P2D diff reports
+  - API change snapshots
+  - Batch implementation diffs
+
+### Directory Organization
+- **[internal/DIRECTORY_OVERVIEW.md](./internal/DIRECTORY_OVERVIEW.md)** - Internal docs structure
+- **[internal/REORGANIZATION_COMPLETE.md](./internal/REORGANIZATION_COMPLETE.md)** - Reorganization summary
+
+---
+
+## 🔍 Finding Documentation
+
+### By Topic
+
+**Backend Development:**
+- [Backend README](../backend/README.md)
+- [V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)
+- [P2E_README.md](./P2E_README.md)
+- [BACKEND_REVIEW.md](./BACKEND_REVIEW.md)
+
+**Frontend Development:**
+- [Web App README](../apps/web/README.md)
+- [V2_FRONTEND_GUIDE.md](./V2_FRONTEND_GUIDE.md)
+- [FRONTEND_REVIEW.md](./FRONTEND_REVIEW.md)
+
+**Mobile Development:**
+- [Mobile App README](../apps/mobile/README.md)
+- [MOBILE_V2_PLAN.md](./MOBILE_V2_PLAN.md)
+
+**Docker & Deployment:**
+- [Root README](../README.md) - Docker quickstart
+- [docker-compose.yml](../docker-compose.yml) - Orchestration config
+- [backend/Dockerfile](../backend/Dockerfile) - Multi-stage build
+- [internal/pipeline/](./internal/pipeline/) - Deployment guides
+
+**Database:**
+- [Backend Database Setup](../backend/DATABASE_SETUP.md)
+- [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)
+
+**Testing:**
+- [Backend README](../backend/README.md#-testing)
+- [internal/logs/](./internal/logs/) - Test verification reports
+
+**Monitoring:**
+- [internal/monitoring/MONITORING_SETUP.md](./internal/monitoring/MONITORING_SETUP.md)
+- [internal/monitoring/BASELINE_METRICS.md](./internal/monitoring/BASELINE_METRICS.md)
+
+---
+
+## 🆘 Common Questions
+
+### How do I get started?
+1. Read [../README.md](../README.md)
+2. Follow [SETUP_CHECKLIST.md](./SETUP_CHECKLIST.md)
+3. Reference [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+
+### How do I deploy with Docker?
+1. Read Docker section in [../README.md](../README.md#-docker--deployment)
+2. Configure [../docker-compose.yml](../docker-compose.yml)
+3. Follow deployment guides in [internal/pipeline/](./internal/pipeline/)
+
+### Where is the API documentation?
+- **Swagger UI**: http://localhost:3020/api (when backend running)
+- **Backend README**: [../backend/README.md](../backend/README.md#-api-endpoints)
+
+### How do I troubleshoot issues?
+1. Check [QUICK_REFERENCE.md](./QUICK_REFERENCE.md#troubleshooting)
+2. Review [internal/runbooks/](./internal/runbooks/)
+3. Search [internal/logs/](./internal/logs/) for similar issues
+
+### What's the current project status?
+- [PROJECT_STATUS.md](./PROJECT_STATUS.md)
+- [V2_IMPLEMENTATION_COMPLETE.md](./V2_IMPLEMENTATION_COMPLETE.md)
+
+---
+
+## 📝 Documentation Updates
+
+This documentation structure was reorganized on February 3, 2026 as part of the Docker refactoring effort. All root-level markdown files have been moved to this `docs/` directory for better organization.
+
+### Previous Locations
+All documentation previously at the repository root is now in `docs/`:
+- `V2_ARCHITECTURE.md` → `docs/V2_ARCHITECTURE.md`
+- `QUICK_REFERENCE.md` → `docs/QUICK_REFERENCE.md`
+- etc.
+
+### Path Updates
+The following files have been updated with new documentation paths:
+- `README.md` (root)
+- `.github/copilot-instructions.md`
+- `backend/README.md`
+
+---
+
+## 🤝 Contributing to Documentation
+
+When adding new documentation:
+1. Place in appropriate category directory
+2. Update this index
+3. Use relative links for internal references
+4. Follow markdown best practices
+5. Include last updated date
+
+---
+
+**For the most up-to-date information, always check the project's root [README.md](../README.md)**
 
 **Key Sections:**
 - [P2a: Integration Tests](batch3-plan.md#p2a-integration-tests-poll--db-end-to-end)

@@ -1,98 +1,354 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Boiler Control Backend - NestJS API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS-based REST API for the Boiler Control System, providing heating system management, monitoring, and control capabilities.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Quick Start
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### Installation
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+### Database Setup
 
 ```bash
-# development
-$ npm run start
+# Generate Prisma client
+npx prisma generate
 
-# watch mode
-$ npm run start:dev
+# Run migrations
+npx prisma migrate dev
 
-# production mode
-$ npm run start:prod
+# Seed test data
+npm run db:seed
+
+# Or do all at once
+npm run db:reset:seed
 ```
 
-## Run tests
+### Development
 
 ```bash
-# unit tests
-$ npm run test
+# Start dev server with hot reload
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# API available at http://localhost:3020
+# Swagger docs at http://localhost:3020/api
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Testing
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Unit tests (25 tests)
+npm test
+
+# Integration tests (46 tests)
+npm run test:integration
+
+# Test coverage
+npm run test:cov
+
+# Smoke tests
+npm run test:smoke
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🏗 Architecture
 
-## Resources
+### Technology Stack
 
-Check out a few resources that may come in handy when working with NestJS:
+- **Framework**: NestJS 11 with TypeScript
+- **Database**: MySQL 8.0 with Prisma ORM
+- **Authentication**: JWT with Passport
+- **Validation**: class-validator + class-transformer
+- **Monitoring**: Prometheus metrics
+- **API Docs**: Swagger/OpenAPI
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Key Features
 
-## Support
+- **AsyncLocalStorage**: Correlation ID tracking across async operations (see [../docs/P2E_README.md](../docs/P2E_README.md))
+- **Module Pattern**: Feature-based modules in `src/modules/`
+- **Guards**: JWT authentication, role-based access control
+- **Scheduling**: Cron jobs for periodic tasks
+- **Rate Limiting**: Throttling with @nestjs/throttler
+- **Health Checks**: Custom health check endpoint
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Module Structure
 
-## Stay in touch
+```
+src/
+├── modules/
+│   ├── Auth/           # JWT authentication
+│   ├── Boiler/         # Boiler management & events
+│   ├── Dashboard/      # Dashboard aggregations
+│   ├── Heating/        # Heating control & anomalies
+│   ├── User/           # User management
+│   ├── Weather/        # Weather API integration
+│   ├── Reports/        # Report generation
+│   └── Thermostat/     # Thermostat programs
+├── common/             # Shared utilities
+│   ├── correlation-id.service.ts  # AsyncLocalStorage
+│   └── guards/         # Auth guards
+├── prisma/             # Prisma service
+└── generated/          # Prisma generated types
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 🔧 Configuration
 
-## License
+### Environment Variables
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Create `backend/.env`:
+
+```env
+# Database
+DATABASE_URL="mysql://user:password@host:3306/boiler_assistant"
+DATABASE_HOST="localhost"
+DATABASE_PORT=3306
+DATABASE_USER="boileruser"
+DATABASE_PASSWORD="yourpassword"
+DATABASE_NAME="boiler_assistant"
+
+# Authentication
+JWT_SECRET="your-secret-key-here"
+JWT_EXPIRES_IN="3600s"
+
+# External APIs
+WEATHER_API_KEY="your-weather-api-key"
+TUYA_CLIENT_ID="your-tuya-client-id"
+TUYA_CLIENT_SECRET="your-tuya-secret"
+TUYA_REGION="EU"
+TUYA_BASE_URL="https://openapi.tuyaeu.com"
+
+# Application
+APP_PORT=3020
+NODE_ENV=development
+TZ=Europe/Sarajevo
+```
+
+## 📊 Database
+
+### Prisma Commands
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Create a migration
+npx prisma migrate dev --name your-migration-name
+
+# Apply migrations
+npx prisma migrate deploy
+
+# Reset database (dev only)
+npx prisma migrate reset
+
+# Open Prisma Studio
+npx prisma studio
+```
+
+### Schema
+
+- Located in `prisma/schema.prisma`
+- Generated types in `src/generated/prisma/`
+- Seed file: `prisma/seed.ts`
+
+### Test Data
+
+```bash
+# Reset and seed database
+npm run db:reset:seed
+```
+
+Test credentials:
+
+- **User**: test@example.com / password123
+- **Admin**: admin@example.com / password123
+
+## 🐳 Docker
+
+### Build Image
+
+```bash
+docker build -t boiler-control-backend:latest .
+```
+
+### Run with Docker Compose
+
+```bash
+# From project root
+docker-compose up -d
+
+# View logs
+docker-compose logs -f backend
+
+# Run migrations
+docker-compose exec backend npx prisma migrate deploy
+
+# Seed database
+docker-compose exec backend npm run db:seed
+```
+
+See [../docker-compose.yml](../docker-compose.yml) for configuration details.
+
+## 🔌 API Endpoints
+
+### Authentication
+
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration
+- `POST /auth/refresh` - Refresh token
+
+### Dashboard
+
+- `GET /dashboard` - Dashboard summary
+
+### Boiler
+
+- `GET /boiler/events` - Boiler event history
+- `GET /boiler/status` - Current boiler status
+- `POST /boiler/control` - Control boiler
+
+### Heating
+
+- `GET /heating/events` - Heating events
+- `GET /heating/anomalies` - Detected anomalies
+- `POST /heating/schedule` - Set heating schedule
+
+### Weather
+
+- `GET /weather` - Current weather data
+- `GET /weather/forecast` - Weather forecast
+
+### User
+
+- `GET /user/profile` - Get user profile
+- `PUT /user/profile` - Update user profile
+
+### Reports
+
+- `GET /reports` - List reports
+- `POST /reports/generate` - Generate new report
+- `GET /reports/:id` - Get specific report
+
+Full API documentation available at http://localhost:3020/api (Swagger).
+
+## 🧪 Testing
+
+### Test Structure
+
+```
+test/
+├── unit/               # Unit tests
+├── integration/        # Integration tests
+└── smoke-tests.ts      # Smoke tests
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+npm test
+
+# Integration tests (requires test database)
+npm run test:integration
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm run test:cov
+
+# Debug tests
+npm run test:debug
+```
+
+### Test Database
+
+Integration tests use a separate test database configured via environment variables.
+Always re-seed before running integration tests:
+
+```bash
+npm run db:reset:seed
+```
+
+## 📈 Monitoring
+
+### Prometheus Metrics
+
+Metrics exposed on `/metrics` endpoint.
+
+Start monitoring stack:
+
+```bash
+docker-compose -f docker-compose.monitoring.yml up -d
+```
+
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000 (admin/admin)
+
+## 🛠 Development
+
+### Code Style
+
+```bash
+# Lint
+npm run lint
+
+# Format
+npm run format
+```
+
+### Building
+
+```bash
+# Build for production
+npm run build
+
+# Run production build
+npm run start:prod
+```
+
+### Hot Reload
+
+The dev server (`npm run start:dev`) automatically reloads on file changes.
+
+## 📚 Additional Documentation
+
+- **AsyncLocalStorage Implementation**: [../docs/P2E_README.md](../docs/P2E_README.md)
+- **Architecture Overview**: [../docs/V2_ARCHITECTURE.md](../docs/V2_ARCHITECTURE.md)
+- **Database Setup**: [DATABASE_SETUP.md](./DATABASE_SETUP.md)
+- **P2B Implementation**: [P2B_IMPLEMENTATION.md](./P2B_IMPLEMENTATION.md)
+- **Deployment Guides**: [../docs/internal/pipeline/](../docs/internal/pipeline/)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Database connection fails:**
+
+- Check DATABASE_URL in `.env`
+- Ensure MySQL is running
+- Verify database credentials
+
+**Prisma client not found:**
+
+```bash
+npx prisma generate
+```
+
+**Test failures:**
+
+```bash
+# Reset test database
+npm run db:reset:seed
+```
+
+**Port already in use:**
+
+```bash
+# Change APP_PORT in .env or kill existing process
+lsof -ti:3020 | xargs kill -9
+```
+
+## 📝 License
+
+UNLICENSED - Private project

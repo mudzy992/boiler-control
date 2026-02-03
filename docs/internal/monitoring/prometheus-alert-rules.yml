@@ -1,0 +1,355 @@
+# Prometheus Alert Rules for Boiler Control Backend
+# Defines alerting conditions for production monitoring
+#
+# Usage:
+#   1. Copy this file to your Prometheus config directory
+#   2. Update prometheus.yml to reference this file:
+#      rule_files:
+#        - 'prometheus-alert-rules.yml'
+#   3. Restart Prometheus
+#   4. Alerts appear in Prometheus UI at http://prometheus:9090/alerts
+
+groups:
+  - name: boiler-control-backend
+    interval: 30s
+    rules:
+      # Health and System Alerts
+
+      - alert: HealthScoreLow
+        expr: reporting_home_health_score < 70
+        for: 5m
+        labels:
+          severity: warning
+          component: health
+        annotations:
+          summary: "Home health score is low ({{ $value | humanize }})"
+          description: "Home health score dropped below 70 for more than 5 minutes. Current value: {{ $value }}%"
+          runbook: "Check dashboard for anomalies, heating events, and anomaly detection rates"
+
+      - alert: HealthScoreCritical
+        expr: reporting_home_health_score < 50
+        for: 2m
+        labels:
+          severity: critical
+          component: health
+        annotations:
+          summary: "Home health score is CRITICAL ({{ $value | humanize }})"
+          description: "Home health score dropped below 50. Immediate attention required. Current value: {{ $value }}%"
+          runbook: "Page on-call engineer immediately. Check logs for errors, correlation IDs may help trace issues"
+
+      # Anomaly Detection Alerts
+
+      - alert: AnomalyRateHigh
+        expr: reporting_anomaly_rate_per_hour > 5
+        for: 10m
+        labels:
+          severity: warning
+          component: anomaly-detection
+        annotations:
+          summary: "Anomaly detection rate is elevated ({{ $value | humanize }}/hour)"
+          description: "Anomaly rate exceeded 5 per hour for more than 10 minutes. Current rate: {{ $value }} anomalies/hour"
+          runbook: "Review recent heating events in dashboard. Check for sensor issues or unusual patterns"
+
+      - alert: AnomalyRateCritical
+        expr: reporting_anomaly_rate_per_hour > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: anomaly-detection
+        annotations:
+          summary: "Anomaly detection rate CRITICAL ({{ $value | humanize }}/hour)"
+          description: "Anomaly rate exceeded 10 per hour. Potential system malfunction. Current rate: {{ $value }} anomalies/hour"
+          runbook: "Page on-call engineer. Check boiler sensors and heating system immediately"
+
+      # Fallback Strategy Alerts
+
+      - alert: FallbackRateHigh
+        expr: reporting_fallback_rate_per_hour > 3
+        for: 10m
+        labels:
+          severity: warning
+          component: fallback-strategy
+        annotations:
+          summary: "Fallback strategy triggered frequently ({{ $value | humanize }}/hour)"
+          description: "Fallback rate exceeded 3 per hour for more than 10 minutes. Current rate: {{ $value }} fallbacks/hour"
+          runbook: "Review recent reports. Check if AI predictions are degraded or unavailable"
+
+      - alert: FallbackRateCritical
+        expr: reporting_fallback_rate_per_hour > 5
+        for: 5m
+        labels:
+          severity: critical
+          component: fallback-strategy
+        annotations:
+          summary: "Fallback strategy CRITICAL ({{ $value | humanize }}/hour)"
+          description: "Fallback rate exceeded 5 per hour. Predictions unavailable. Current rate: {{ $value }} fallbacks/hour"
+          runbook: "Page on-call engineer. Check ReportingService and AI/ML prediction service health"
+
+      # Alert System Alerts
+
+      - alert: ActiveAlertsHigh
+        expr: reporting_active_alerts > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: alert-system
+        annotations:
+          summary: "High number of active alerts ({{ $value }})"
+          description: "System has more than 10 active alerts for more than 10 minutes. Current count: {{ $value }} alerts"
+          runbook: "Review all active alerts in dashboard. May indicate cascading issues"
+
+      - alert: ActiveAlertsCritical
+        expr: reporting_active_alerts > 20
+        for: 5m
+        labels:
+          severity: critical
+          component: alert-system
+        annotations:
+          summary: "CRITICAL: System overwhelmed with alerts ({{ $value }})"
+          description: "System has more than 20 active alerts. Cascading failure likely. Current count: {{ $value }} alerts"
+          runbook: "Page on-call engineer immediately. System may be experiencing cascading failures"
+
+      # API Performance Alerts
+
+      - alert: APILatencyHighP99
+        expr: histogram_quantile(0.99, rate(http_request_duration_ms_bucket[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: api-performance
+        annotations:
+          summary: "API latency (p99) is high ({{ $value | humanize }}ms)"
+          description: "99th percentile API latency exceeded 1 second for more than 5 minutes. Current p99: {{ $value }}ms"
+          runbook: "Check backend CPU/memory usage. Look for slow database queries in logs using correlation IDs"
+
+      - alert: APILatencyHighP95
+        expr: histogram_quantile(0.95, rate(http_request_duration_ms_bucket[5m])) > 2000
+        for: 5m
+        labels:
+          severity: critical
+          component: api-performance
+        annotations:
+          summary: "API latency (p95) is CRITICAL ({{ $value | humanize }}ms)"
+          description: "95th percentile API latency exceeded 2 seconds. System experiencing significant slowdown. Current p95: {{ $value }}ms"
+          runbook: "Page on-call engineer. Check database connections, network I/O, and run slowlog analysis"
+
+      # HTTP Error Rate Alerts
+
+      - alert: ErrorRateHigh
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: http-errors
+        annotations:
+          summary: "HTTP 5xx error rate is elevated ({{ $value | humanizePercentage }})"
+          description: "5xx error rate exceeded 1% for more than 5 minutes. Current rate: {{ $value | humanizePercentage }}"
+          runbook: "Check recent logs for errors. Use correlation IDs to trace error patterns"
+
+      - alert: ErrorRateCritical
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: http-errors
+        annotations:
+          summary: "HTTP 5xx error rate CRITICAL ({{ $value | humanizePercentage }})"
+          description: "5xx error rate exceeded 5%. Many requests failing. Current rate: {{ $value | humanizePercentage }}"
+          runbook: "Page on-call engineer. Check service health, database connectivity, external service dependencies"
+
+      # Memory and Resource Alerts
+
+      - alert: MemoryUsageHigh
+        expr: (nodejs_memory_usage_bytes / nodejs_memory_limit_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: system-resources
+        annotations:
+          summary: "Node.js memory usage is high ({{ $value | humanizePercentage }})"
+          description: "Memory usage exceeded 85% of limit for more than 5 minutes. Current usage: {{ $value | humanizePercentage }}"
+          runbook: "Check for memory leaks. Look for growing arrays or uncleaned objects in application logs"
+
+      - alert: MemoryUsageCritical
+        expr: (nodejs_memory_usage_bytes / nodejs_memory_limit_bytes) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: system-resources
+        annotations:
+          summary: "Node.js memory usage CRITICAL ({{ $value | humanizePercentage }})"
+          description: "Memory usage exceeded 95% of limit. Out-of-memory crash imminent. Current usage: {{ $value | humanizePercentage }}"
+          runbook: "Page on-call engineer immediately. Restart service to free memory. Investigate root cause"
+
+      # Request Volume Alerts
+
+      - alert: RequestVolumeDropped
+        expr: rate(http_requests_total[5m]) < 1
+        for: 10m
+        labels:
+          severity: warning
+          component: traffic-monitoring
+        annotations:
+          summary: "Request volume dropped significantly ({{ $value | humanize }} req/sec)"
+          description: "API request rate dropped below 1 req/sec for more than 10 minutes. Current rate: {{ $value }} req/sec"
+          runbook: "Check if frontend is down or if clients have connectivity issues. Check load balancer health"
+
+      - alert: RequestVolumeSpiked
+        expr: rate(http_requests_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: traffic-monitoring
+        annotations:
+          summary: "Request volume spiked ({{ $value | humanize }} req/sec)"
+          description: "API request rate exceeded 100 req/sec for more than 5 minutes. Current rate: {{ $value }} req/sec"
+          runbook: "Monitor system resources. Scale infrastructure if sustained. Check for bot traffic"
+
+      # Service Availability Alerts
+
+      - alert: ServiceDown
+        expr: up{job="backend-metrics"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: service-availability
+        annotations:
+          summary: "Backend service is DOWN"
+          description: "Backend service is not responding to Prometheus scrapes. Service has been down for more than 1 minute"
+          runbook: "Page on-call engineer immediately. Check service logs, restart if necessary"
+
+      - alert: MetricsCollectionFailed
+        expr: up{job="backend-reporting"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          component: metrics-collection
+        annotations:
+          summary: "Reporting metrics collection failed"
+          description: "Backend reporting endpoint is not responding to Prometheus scrapes. Reporting metrics unavailable"
+          runbook: "Check ReportingService health. Verify /metrics/reporting endpoint is available"
+
+      # Rate Limiting and Throttling
+
+      - alert: HighRequestRejectionRate
+        expr: (rate(http_requests_total{status="429"}[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: rate-limiting
+        annotations:
+          summary: "High rate of throttled requests (429) ({{ $value | humanizePercentage }})"
+          description: "Rate limiting is rejecting more than 5% of requests. Current rate: {{ $value | humanizePercentage }}"
+          runbook: "Check rate limiting configuration. May need to adjust limits or scale infrastructure"
+
+---
+
+## Alert Severity Levels
+
+### WARNING (Yellow)
+- Issue affecting user experience but system still operational
+- Response time: 30 minutes
+- Example: Health score at 70%, latency p99 at 1 second
+
+### CRITICAL (Red)
+- Issue severely impacting functionality or imminent failure risk
+- Response time: 5-10 minutes (immediate)
+- Example: Health score at 50%, service down, memory critical
+
+---
+
+## Alert Severity to Action Mapping
+
+| Severity | Response Time | Action | Escalation |
+|----------|---------------|--------|------------|
+| WARNING | 30 minutes | Investigate, monitor | If not resolved in 1 hour |
+| CRITICAL | 5-10 minutes | Immediate investigation, page on-call | If not resolved in 15 minutes |
+
+---
+
+## Correlation ID Usage in Alerting
+
+When investigating alerts:
+
+1. **Identify the time window** (e.g., alert fired at 14:35)
+2. **Find correlation IDs** in logs for that time window
+3. **Search logs** for those correlation IDs to trace the issue
+4. **Example**:
+   ```bash
+   # In Prometheus/Grafana, note the time: 2026-02-02 14:35:22
+   # Search backend logs for errors around that time:
+   grep "14:35" logs.txt | head -20
+   # Extract correlation IDs:
+   grep "ERROR" logs.txt | grep "14:35" | grep -oE "[a-f0-9]{8}-[a-f0-9]{4}" | sort -u
+   # Trace full request:
+   grep "f47ac10b-58cc" logs.txt
+   ```
+
+---
+
+## Testing Alerts
+
+### Simulate High Anomaly Rate
+```bash
+# In a loop, generate many anomalies
+for i in {1..15}; do
+  # Make requests that trigger anomalies
+  curl http://localhost:3020/api/anomaly-trigger &
+done
+wait
+# Alert should fire within 10 minutes
+```
+
+### Simulate High Memory Usage
+```bash
+# Temporarily disable garbage collection (not recommended for production!)
+# Or load large amounts of data
+NODE_OPTIONS=--expose-gc npm run start:dev
+# In another terminal:
+node -e "require('vm').runInThisContext('while(true) {}');"
+```
+
+### Simulate Service Down
+```bash
+# Stop the backend
+Ctrl+C (in npm run start:dev terminal)
+# Alert should fire within 1-2 minutes
+```
+
+---
+
+## Integration with External Services
+
+### Slack Notifications
+```yaml
+# Add to prometheus.yml
+alertmanager_config:
+  route:
+    receiver: 'slack'
+  receivers:
+    - name: 'slack'
+      slack_configs:
+        - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+          channel: '#alerts'
+          title: 'Alert: {{ .CommonLabels.alertname }}'
+          text: '{{ .CommonAnnotations.description }}'
+```
+
+### Email Notifications
+```yaml
+# Configure in AlertManager
+receivers:
+  - name: 'email'
+    email_configs:
+      - to: 'oncall@example.com'
+        from: 'prometheus@example.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@example.com'
+        auth_password: 'password'
+```
+
+---
+
+**Last Updated**: February 2, 2026
+**Author**: Backend Team
+**Status**: Ready for Production Deployment

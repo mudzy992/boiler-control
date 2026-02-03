@@ -1,0 +1,25 @@
+{
+  "name": "boiler-control-monorepo",
+  "version": "1.0.0",
+  "description": "Boiler Control System - Full-stack application",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "apps/web",
+    "apps/mobile"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --workspace=backend && npm install --workspace=apps/web && npm install --workspace=apps/mobile",
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=apps/web",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=apps/web",
+    "test": "npm test --workspace=backend",
+    "test:all": "npm test --workspace=backend && npm run lint --workspace=apps/web && npm run lint --workspace=apps/mobile"
+  },
+  "dependencies": {
+    "react-native-worklets": "0.5.1"
+  },
+  "devDependencies": {}
+}

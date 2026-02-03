@@ -5,13 +5,14 @@ FROM node:20-slim AS build-stage
 WORKDIR /app
 
 # Kopiraj package.json i package-lock.json
-COPY package*.json ./
+COPY package-lock.json ./
+COPY frontend/package*.json ./
 
 # Instalacija dependencies
 RUN npm install --force --silent
 
 # Kopiraj cijelu aplikaciju
-COPY . .
+COPY frontend/ .
 
 # Build aplikacije
 RUN npm run build --verbose || true

@@ -7,11 +7,13 @@ WORKDIR /app
 COPY package-lock.json ./
 COPY frontend/package*.json ./
 
-# Install dependencies with legacy peer deps to handle optional dependencies
-RUN npm install --legacy-peer-deps && npm rebuild
-
-# Copy frontend source
+# Copy frontend source early to ensure package.json context
 COPY frontend/ .
+
+# Install dependencies and rebuild for Linux platform
+# Use npm ci for reproducible builds, --force to handle optional deps
+RUN npm ci --force 2>&1 || npm install --force --legacy-peer-deps
+RUN npm rebuild
 
 # Build the application
 RUN npm run build

@@ -267,6 +267,7 @@ i18n.use(initReactI18next).init({
   },
   lng: getDeviceLanguage(),
   fallbackLng: 'en-US',
+  compatibilityJSON: 'v3', // Use v3 format for Intl.PluralRules compatibility
   interpolation: {
     escapeValue: false,
   },

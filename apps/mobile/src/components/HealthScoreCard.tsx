@@ -11,6 +11,7 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confide
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
+  const shadowColor = useColorModeValue('gray.400', 'transparent');
 
   // Determine color based on score
   const getScoreColor = (value: number) => {
@@ -23,63 +24,94 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confide
   const scoreColor = getScoreColor(score);
 
   return (
-    <Box bg={bgColor} borderWidth={1} borderColor={borderColor} rounded="lg" p={4} mb={3}>
-      <VStack space={3}>
+    <Box
+      bg={bgColor}
+      borderWidth={1}
+      borderColor={borderColor}
+      rounded="xl"
+      p={5}
+      shadow={2}
+      _dark={{ shadow: 'none', borderColor: 'gray.700' }}
+    >
+      <VStack space={4}>
         {/* Header */}
-        <HStack justifyContent="space-between" alignItems="flex-start">
+        <HStack justifyContent="space-between" alignItems="center">
           <VStack space={1} flex={1}>
-            <Text fontSize="sm" fontWeight="600" color={mutedColor}>
+            <Text
+              fontSize="xs"
+              fontWeight="700"
+              color={mutedColor}
+              textTransform="uppercase"
+              letterSpacing="0.5"
+            >
               System Health
             </Text>
-            <HStack alignItems="baseline" space={2}>
-              <Text fontSize="3xl" fontWeight="bold" color={textColor}>
+            <HStack alignItems="baseline" space={2} mt={1}>
+              <Text fontSize="4xl" fontWeight="800" color={textColor}>
                 {Math.round(score)}
               </Text>
-              <Text fontSize="sm" color={mutedColor}>
+              <Text fontSize="md" fontWeight="600" color={mutedColor}>
                 / 100
               </Text>
             </HStack>
           </VStack>
-          <Circle
-            size="70px"
-            bg={scoreColor}
-            opacity={0.2}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Text fontSize="lg" fontWeight="bold" color={scoreColor}>
-              {Math.round(score)}%
-            </Text>
-          </Circle>
+          <Box position="relative">
+            <Circle
+              size="80px"
+              bg={scoreColor}
+              opacity={0.15}
+              position="absolute"
+              justifyContent="center"
+              alignItems="center"
+            />
+            <Circle
+              size="80px"
+              justifyContent="center"
+              alignItems="center"
+              borderWidth={3}
+              borderColor={scoreColor}
+            >
+              <Text fontSize="xl" fontWeight="800" color={scoreColor}>
+                {Math.round(score)}%
+              </Text>
+            </Circle>
+          </Box>
         </HStack>
 
         {/* Progress bar */}
-        <VStack space={1}>
+        <VStack space={2}>
           <Progress
             value={score}
             mx="0"
-            size="md"
+            size="lg"
+            rounded="full"
             colorScheme={
               score >= 80 ? 'success' : score >= 60 ? 'warning' : score >= 40 ? 'orange' : 'danger'
             }
           />
           <HStack justifyContent="space-between">
-            <Text fontSize="xs" color={mutedColor}>
-              Model Confidence: {Math.round(confidence)}%
+            <Text fontSize="xs" fontWeight="600" color={mutedColor}>
+              Confidence: {Math.round(confidence)}%
+            </Text>
+            <Text fontSize="xs" fontWeight="600" color={scoreColor}>
+              {score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Poor'}
             </Text>
           </HStack>
         </VStack>
 
         {/* Status message */}
-        <Box bg={scoreColor} opacity={0.1} rounded="md" px={3} py={2}>
-          <Text
-            fontSize="xs"
-            fontWeight="500"
-            color={useColorModeValue(
-              score >= 80 ? 'gray.700' : score >= 60 ? 'gray.800' : 'red.700',
-              scoreColor
-            )}
-          >
+        <Box
+          bg={useColorModeValue(
+            score >= 80 ? 'success.50' : score >= 60 ? 'warning.50' : 'orange.50',
+            'gray.700'
+          )}
+          rounded="lg"
+          px={4}
+          py={3}
+          borderLeftWidth={4}
+          borderLeftColor={scoreColor}
+        >
+          <Text fontSize="sm" fontWeight="600" color={textColor}>
             {score >= 80
               ? '✓ System performing optimally'
               : score >= 60

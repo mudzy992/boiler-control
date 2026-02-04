@@ -27,50 +27,64 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
   };
 
   return (
-    <Box bg={bgColor} borderWidth={1} borderColor={borderColor} rounded="lg" p={4} mb={3}>
-      <VStack space={3}>
+    <Box
+      bg={bgColor}
+      borderWidth={1}
+      borderColor={borderColor}
+      rounded="xl"
+      p={5}
+      shadow={2}
+      _dark={{ shadow: 'none', borderColor: 'gray.700' }}
+    >
+      <VStack space={4}>
         {/* Main weather info */}
         <HStack justifyContent="space-between" alignItems="center">
-          <VStack space={1}>
-            <Text fontSize="xs" fontWeight="600" color={mutedColor}>
-              Weather
+          <VStack space={1.5} flex={1}>
+            <Text
+              fontSize="xs"
+              fontWeight="700"
+              color={mutedColor}
+              textTransform="uppercase"
+              letterSpacing="0.5"
+            >
+              Current Weather
             </Text>
             <HStack alignItems="baseline" space={1}>
-              <Text fontSize="3xl" fontWeight="bold" color={textColor}>
+              <Text fontSize="5xl" fontWeight="800" color={textColor}>
                 {weather?.temp ? weather.temp.toFixed(0) : '—'}
               </Text>
-              <Text fontSize="lg" color={mutedColor}>
+              <Text fontSize="2xl" fontWeight="600" color={mutedColor}>
                 °C
               </Text>
             </HStack>
-            <Text fontSize="sm" color={mutedColor}>
+            <Text fontSize="sm" fontWeight="500" color={mutedColor}>
               Feels like {weather?.feelsLike ? weather.feelsLike.toFixed(0) : '—'}°C
             </Text>
-            <Text fontSize="sm" fontWeight="500" color={accentColor}>
+            <Text fontSize="md" fontWeight="700" color={accentColor} mt={1}>
               {weather.condition}
             </Text>
           </VStack>
 
-          <Box>
-            <Ionicons name={getWeatherIcon(weather.condition)} size={60} color={accentColor} />
+          <Box bg={accentColor} rounded="full" p={3}>
+            <Ionicons name={getWeatherIcon(weather.condition)} size={64} color="white" />
           </Box>
         </HStack>
 
         {/* Weather details grid */}
-        <HStack space={2} justifyContent="space-between">
+        <HStack space={3} justifyContent="space-between">
           {/* Humidity */}
           <Box
             flex={1}
-            bg={useColorModeValue('gray.50', 'gray.900')}
-            rounded="md"
-            p={2}
+            bg={useColorModeValue('gray.100', 'gray.700')}
+            rounded="xl"
+            p={3}
             alignItems="center"
           >
-            <Ionicons name="water" size={16} color={accentColor} />
-            <Text fontSize="xs" color={mutedColor} mt={1}>
+            <Ionicons name="water" size={24} color={accentColor} />
+            <Text fontSize="lg" fontWeight="700" color={textColor} mt={2}>
               {weather?.humidity ?? '—'}%
             </Text>
-            <Text fontSize="xs" color={mutedColor}>
+            <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
               Humidity
             </Text>
           </Box>
@@ -78,16 +92,16 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
           {/* Wind */}
           <Box
             flex={1}
-            bg={useColorModeValue('gray.50', 'gray.900')}
-            rounded="md"
-            p={2}
+            bg={useColorModeValue('gray.100', 'gray.700')}
+            rounded="xl"
+            p={3}
             alignItems="center"
           >
-            <Ionicons name="cloudy-outline" size={16} color={accentColor} />
-            <Text fontSize="xs" color={mutedColor} mt={1}>
+            <Ionicons name="cloudy-outline" size={24} color={accentColor} />
+            <Text fontSize="lg" fontWeight="700" color={textColor} mt={2}>
               {weather?.windSpeed ? weather.windSpeed.toFixed(1) : '—'}
             </Text>
-            <Text fontSize="xs" color={mutedColor}>
+            <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
               m/s
             </Text>
           </Box>
@@ -95,16 +109,16 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
           {/* Pressure */}
           <Box
             flex={1}
-            bg={useColorModeValue('gray.50', 'gray.900')}
-            rounded="md"
-            p={2}
+            bg={useColorModeValue('gray.100', 'gray.700')}
+            rounded="xl"
+            p={3}
             alignItems="center"
           >
-            <Ionicons name="git-branch" size={16} color={accentColor} />
-            <Text fontSize="xs" color={mutedColor} mt={1}>
+            <Ionicons name="git-branch" size={24} color={accentColor} />
+            <Text fontSize="lg" fontWeight="700" color={textColor} mt={2}>
               {weather?.pressure ?? '—'}
             </Text>
-            <Text fontSize="xs" color={mutedColor}>
+            <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
               hPa
             </Text>
           </Box>

@@ -30,6 +30,8 @@ export const DashboardScreen = () => {
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
+  const headerBtnBg = useColorModeValue('gray.100', 'gray.700');
+  const additionalHomesBg = useColorModeValue('blue.100', 'blue.900');
   const navigation = useNavigation();
   const toast = useToast();
   const { showError } = useErrorHandler();
@@ -46,10 +48,14 @@ export const DashboardScreen = () => {
     queryFn: getDashboard,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache
-    onError: (error) => {
-      showError(error, 'Failed to load dashboard data');
-    },
   });
+
+  // Handle query errors outside the query config to maintain hook order
+  React.useEffect(() => {
+    if (error) {
+      showError(error, 'Failed to load dashboard data');
+    }
+  }, [error, showError]);
 
   // Calculate health score based on learning confidence
   const calculateHealthScore = () => {
@@ -130,23 +136,41 @@ export const DashboardScreen = () => {
           />
         }
       >
-        <VStack px={4} py={4} space={4} pb={8}>
+        <VStack px={5} py={5} space={5} pb={8}>
           {/* Header */}
-          <HStack justifyContent="space-between" alignItems="center">
-            <Heading size="xl" color={textColor}>
-              Dashboard
-            </Heading>
-            <HStack space={2} alignItems="center">
+          <HStack justifyContent="space-between" alignItems="center" mb={1}>
+            <VStack space={0}>
+              <Heading size="2xl" color={textColor} fontWeight="700">
+                Dashboard
+              </Heading>
+              <Text fontSize="sm" color={mutedColor} mt={1}>
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </Text>
+            </VStack>
+            <HStack space={3} alignItems="center">
               <Pressable
                 onPress={() => (navigation as any).navigate('Settings', { screen: 'Analytics' })}
-                _pressed={{ opacity: 0.7 }}
+                _pressed={{ opacity: 0.6 }}
+                bg={headerBtnBg}
+                rounded="full"
+                p={2}
               >
-                <Icon as={Ionicons} name="bar-chart-outline" size={6} color="brand.400" />
+                <Icon as={Ionicons} name="bar-chart-outline" size={5} color="brand.400" />
               </Pressable>
-              <Pressable onPress={() => refetch()} opacity={isFetching ? 0.5 : 1}>
+              <Pressable
+                onPress={() => refetch()}
+                opacity={isFetching ? 0.5 : 1}
+                bg={headerBtnBg}
+                rounded="full"
+                p={2}
+              >
                 <MaterialCommunityIcons
                   name={isFetching ? 'loading' : 'refresh'}
-                  size={24}
+                  size={20}
                   color="brand.400"
                 />
               </Pressable>
@@ -194,7 +218,7 @@ export const DashboardScreen = () => {
 
           {/* Additional homes (if any) */}
           {dashboardData?.homes && dashboardData.homes.length > 1 && (
-            <Box bg={useColorModeValue('blue.100', 'blue.900')} rounded="lg" p={3}>
+            <Box bg={additionalHomesBg} rounded="lg" p={3}>
               <Text fontSize="xs" color="blue.600">
                 Additional {dashboardData.homes.length - 1} home(s) available in Home Profile
                 section

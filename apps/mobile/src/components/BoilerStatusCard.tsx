@@ -45,115 +45,164 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
   const isOptimal = tempDiff <= 2;
 
   return (
-    <Box bg={bgColor} borderWidth={1} borderColor={borderColor} rounded="lg" p={4} mb={3}>
-      <VStack space={3}>
+    <Box
+      bg={bgColor}
+      borderWidth={1}
+      borderColor={borderColor}
+      rounded="xl"
+      p={5}
+      shadow={2}
+      _dark={{ shadow: 'none', borderColor: 'gray.700' }}
+    >
+      <VStack space={4}>
         {/* Header */}
         <HStack justifyContent="space-between" alignItems="center">
-          <VStack space={1}>
-            <Text fontSize="sm" fontWeight="600" color={mutedColor}>
+          <VStack space={2}>
+            <Text
+              fontSize="xs"
+              fontWeight="700"
+              color={mutedColor}
+              textTransform="uppercase"
+              letterSpacing="0.5"
+            >
               Boiler Status
             </Text>
-            <HStack alignItems="center" space={2}>
-              <MaterialCommunityIcons
-                name={isHeating ? 'fire' : 'fire-off'}
-                size={24}
-                color={isHeating ? accentColor : mutedColor}
-              />
-              <Text fontSize="lg" fontWeight="bold" color={isHeating ? accentColor : mutedColor}>
-                {isHeating ? 'Heating' : 'Idle'}
-              </Text>
+            <HStack alignItems="center" space={3}>
+              <Box bg={isHeating ? accentColor : mutedColor} opacity={0.15} rounded="full" p={2.5}>
+                <MaterialCommunityIcons
+                  name={isHeating ? 'fire' : 'fire-off'}
+                  size={28}
+                  color={isHeating ? accentColor : mutedColor}
+                />
+              </Box>
+              <VStack space={0.5}>
+                <Text fontSize="xl" fontWeight="800" color={isHeating ? accentColor : textColor}>
+                  {isHeating ? 'Heating' : 'Idle'}
+                </Text>
+                {isHeating && (
+                  <Text fontSize="xs" fontWeight="600" color={mutedColor}>
+                    Duration: {getHeatingDuration()}
+                  </Text>
+                )}
+              </VStack>
             </HStack>
           </VStack>
-
-          {isHeating && (
-            <Box bg={accentColor} opacity={0.2} rounded="md" px={3} py={1}>
-              <Text fontSize="xs" fontWeight="600" color={accentColor}>
-                {getHeatingDuration()}
-              </Text>
-            </Box>
-          )}
         </HStack>
 
         {/* External Temperature */}
-        <Box bg={useColorModeValue('gray.50', 'gray.900')} rounded="md" p={2}>
-          <Text fontSize="xs" color={mutedColor} mb={1}>
+        <Box bg={useColorModeValue('gray.100', 'gray.700')} rounded="xl" p={4}>
+          <Text
+            fontSize="xs"
+            fontWeight="700"
+            color={mutedColor}
+            textTransform="uppercase"
+            letterSpacing="0.5"
+            mb={2}
+          >
             External Temperature
           </Text>
-          <Text fontSize="lg" fontWeight="bold" color={textColor}>
-            {boiler?.externalTemp ? boiler.externalTemp.toFixed(1) : '—'}°C
-          </Text>
+          <HStack alignItems="baseline" space={1}>
+            <Text fontSize="3xl" fontWeight="800" color={textColor}>
+              {boiler?.externalTemp ? boiler.externalTemp.toFixed(1) : '—'}
+            </Text>
+            <Text fontSize="xl" fontWeight="600" color={mutedColor}>
+              °C
+            </Text>
+          </HStack>
         </Box>
 
         {/* Flow Temperature Comparison */}
-        <VStack space={2}>
-          <Text fontSize="xs" fontWeight="600" color={mutedColor}>
+        <VStack space={3}>
+          <Text
+            fontSize="xs"
+            fontWeight="700"
+            color={mutedColor}
+            textTransform="uppercase"
+            letterSpacing="0.5"
+          >
             Flow Temperature
           </Text>
-          <HStack space={3} justifyContent="space-around">
+          <HStack space={3} justifyContent="space-between">
             {/* Suggested */}
-            <Box flex={1} alignItems="center">
+            <Box flex={1}>
               <Box
-                bg={useColorModeValue('blue.100', 'blue.900')}
-                rounded="md"
-                p={2}
-                w="100%"
+                bg={useColorModeValue('blue.50', 'blue.900')}
+                borderWidth={2}
+                borderColor="blue.400"
+                rounded="xl"
+                p={4}
                 alignItems="center"
               >
-                <Text fontSize="xs" color={mutedColor} mb={1}>
+                <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
                   Suggested
                 </Text>
-                <Text fontSize="md" fontWeight="bold" color="blue.600">
-                  {boiler?.suggestedFlowTemp ? boiler.suggestedFlowTemp.toFixed(1) : '—'}°C
-                </Text>
+                <HStack alignItems="baseline" space={0.5}>
+                  <Text fontSize="2xl" fontWeight="800" color="blue.600">
+                    {boiler?.suggestedFlowTemp ? boiler.suggestedFlowTemp.toFixed(1) : '—'}
+                  </Text>
+                  <Text fontSize="sm" fontWeight="600" color="blue.500">
+                    °C
+                  </Text>
+                </HStack>
               </Box>
             </Box>
 
             {/* Actual */}
-            <Box flex={1} alignItems="center">
+            <Box flex={1}>
               <Box
                 bg={
                   isOptimal
-                    ? useColorModeValue('green.100', 'green.900')
-                    : useColorModeValue('orange.100', 'orange.900')
+                    ? useColorModeValue('green.50', 'green.900')
+                    : useColorModeValue('orange.50', 'orange.900')
                 }
-                rounded="md"
-                p={2}
-                w="100%"
+                borderWidth={2}
+                borderColor={isOptimal ? 'green.400' : 'orange.400'}
+                rounded="xl"
+                p={4}
                 alignItems="center"
               >
-                <Text fontSize="xs" color={mutedColor} mb={1}>
+                <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
                   Actual
                 </Text>
-                <Text
-                  fontSize="md"
-                  fontWeight="bold"
-                  color={isOptimal ? 'green.600' : 'orange.600'}
-                >
-                  {boiler?.actualFlowTemp ? boiler.actualFlowTemp.toFixed(1) : '—'}°C
-                </Text>
+                <HStack alignItems="baseline" space={0.5}>
+                  <Text
+                    fontSize="2xl"
+                    fontWeight="800"
+                    color={isOptimal ? 'green.600' : 'orange.600'}
+                  >
+                    {boiler?.actualFlowTemp ? boiler.actualFlowTemp.toFixed(1) : '—'}
+                  </Text>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="600"
+                    color={isOptimal ? 'green.500' : 'orange.500'}
+                  >
+                    °C
+                  </Text>
+                </HStack>
               </Box>
             </Box>
           </HStack>
 
           {/* Status indicator */}
-          {isOptimal ? (
-            <Box bg="green.100" _dark={{ bg: 'green.900' }} rounded="md" px={3} py={2}>
-              <Text fontSize="xs" fontWeight="500" color="green.700" _dark={{ color: 'green.400' }}>
-                ✓ Flow temperature is optimal (diff: {tempDiff ? tempDiff.toFixed(1) : '—'}°C)
-              </Text>
-            </Box>
-          ) : (
-            <Box bg="orange.100" _dark={{ bg: 'orange.900' }} rounded="md" px={3} py={2}>
-              <Text
-                fontSize="xs"
-                fontWeight="500"
-                color="orange.700"
-                _dark={{ color: 'orange.400' }}
-              >
-                ⚠ Flow temperature deviation: {tempDiff ? tempDiff.toFixed(1) : '—'}°C
-              </Text>
-            </Box>
-          )}
+          <Box
+            bg={
+              isOptimal
+                ? useColorModeValue('green.50', 'green.900')
+                : useColorModeValue('orange.50', 'orange.900')
+            }
+            rounded="lg"
+            px={4}
+            py={3}
+            borderLeftWidth={4}
+            borderLeftColor={isOptimal ? 'green.500' : 'orange.500'}
+          >
+            <Text fontSize="sm" fontWeight="600" color={textColor}>
+              {isOptimal
+                ? `✓ Optimal (Δ ${tempDiff ? tempDiff.toFixed(1) : '—'}°C)`
+                : `⚠ Deviation: ${tempDiff ? tempDiff.toFixed(1) : '—'}°C`}
+            </Text>
+          </Box>
         </VStack>
       </VStack>
     </Box>

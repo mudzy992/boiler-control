@@ -47,47 +47,90 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
   const targetTemp = thermostat.program?.[0]?.targetTemp || '—';
 
   return (
-    <Box bg={bgColor} borderWidth={1} borderColor={borderColor} rounded="lg" p={3} mb={2}>
-      <VStack space={2}>
+    <Box
+      bg={bgColor}
+      borderWidth={1}
+      borderColor={borderColor}
+      rounded="xl"
+      p={4}
+      mb={3}
+      shadow={1}
+      _dark={{ shadow: 'none', borderColor: 'gray.700' }}
+    >
+      <VStack space={3}>
         {/* Header: Name and Mode Badge */}
         <HStack justifyContent="space-between" alignItems="center">
-          <HStack space={2} alignItems="center" flex={1}>
-            <MaterialCommunityIcons name="thermometer" size={20} color={accentColor} />
-            <VStack space={0} flex={1}>
-              <Text fontSize="sm" fontWeight="600" color={textColor}>
+          <HStack space={3} alignItems="center" flex={1}>
+            <Box bg={accentColor} opacity={0.15} rounded="full" p={2}>
+              <MaterialCommunityIcons name="thermometer" size={24} color={accentColor} />
+            </Box>
+            <VStack space={0.5} flex={1}>
+              <Text fontSize="md" fontWeight="700" color={textColor}>
                 {thermostat.alias}
               </Text>
-              <Text fontSize="xs" color={mutedColor}>
+              <Text fontSize="xs" fontWeight="600" color={mutedColor}>
                 {thermostat.vendor}
               </Text>
             </VStack>
           </HStack>
-          <Badge colorScheme={getStatusColor(thermostat.mode)}>{thermostat.mode}</Badge>
+          <Badge
+            colorScheme={getStatusColor(thermostat.mode)}
+            rounded="lg"
+            px={3}
+            py={1}
+            _text={{ fontSize: 'xs', fontWeight: '700' }}
+          >
+            {thermostat.mode}
+          </Badge>
         </HStack>
 
         {/* Temperature Display */}
-        <HStack space={3} justifyContent="space-around">
-          <Box alignItems="center">
-            <Text fontSize="xs" color={mutedColor} mb={1}>
+        <HStack space={3} justifyContent="space-between">
+          <Box
+            flex={1}
+            bg={useColorModeValue('gray.100', 'gray.700')}
+            rounded="xl"
+            p={3}
+            alignItems="center"
+          >
+            <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
               Current
             </Text>
-            <Text fontSize="lg" fontWeight="bold" color={textColor}>
-              {currentTemp?.toFixed(1) || '—'}°C
-            </Text>
+            <HStack alignItems="baseline" space={0.5}>
+              <Text fontSize="2xl" fontWeight="800" color={textColor}>
+                {currentTemp?.toFixed(1) || '—'}
+              </Text>
+              <Text fontSize="sm" fontWeight="600" color={mutedColor}>
+                °C
+              </Text>
+            </HStack>
           </Box>
-          <Box alignItems="center">
-            <Text fontSize="xs" color={mutedColor} mb={1}>
+          <Box
+            flex={1}
+            bg={useColorModeValue('brand.50', 'brand.900')}
+            rounded="xl"
+            p={3}
+            alignItems="center"
+            borderWidth={2}
+            borderColor="brand.400"
+          >
+            <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
               Target
             </Text>
-            <Text fontSize="lg" fontWeight="bold" color={accentColor}>
-              {typeof targetTemp === 'number' ? targetTemp.toFixed(1) : targetTemp}°C
-            </Text>
+            <HStack alignItems="baseline" space={0.5}>
+              <Text fontSize="2xl" fontWeight="800" color={accentColor}>
+                {typeof targetTemp === 'number' ? targetTemp.toFixed(1) : targetTemp}
+              </Text>
+              <Text fontSize="sm" fontWeight="600" color={accentColor}>
+                °C
+              </Text>
+            </HStack>
           </Box>
         </HStack>
 
         {/* Footer: Last Seen */}
-        <Box bg={useColorModeValue('gray.50', 'gray.900')} rounded="md" px={2} py={1}>
-          <Text fontSize="xs" color={mutedColor}>
+        <Box bg={useColorModeValue('gray.100', 'gray.700')} rounded="lg" px={3} py={2}>
+          <Text fontSize="xs" fontWeight="600" color={mutedColor}>
             Last seen: {getLastSeenText(thermostat.lastSeen)}
           </Text>
         </Box>

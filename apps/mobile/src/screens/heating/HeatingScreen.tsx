@@ -50,6 +50,7 @@ export const HeatingScreen = () => {
   const heatingActiveColor = useColorModeValue('red.500', 'red.400');
   const heatingInactiveColor = useColorModeValue('blue.500', 'blue.400');
   const borderColor = useColorModeValue('gray.200', 'dark.700');
+  const infoBoxBg = useColorModeValue('blue.50', 'blue.900');
 
   // Fetch live dashboard data with heating status
   const {
@@ -57,15 +58,20 @@ export const HeatingScreen = () => {
     isLoading,
     isRefetching,
     refetch,
+    error: queryError,
   } = useQuery({
     queryKey: ['dashboard-heating'],
     queryFn: () => apiClient.getDashboard() as Promise<DashboardData>,
     staleTime: 1000 * 60 * 2, // Stale after 2 minutes
     refetchInterval: 1000 * 60 * 1, // Auto-refresh every 1 minute
-    onError: (error) => {
-      showError(error, t('heating.loadError') || 'Failed to load heating data');
-    },
   });
+
+  // Handle query errors outside the query config to maintain hook order
+  React.useEffect(() => {
+    if (queryError) {
+      showError(queryError, t('heating.loadError') || 'Failed to load heating data');
+    }
+  }, [queryError, showError, t]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -246,7 +252,7 @@ export const HeatingScreen = () => {
         </VStack>
 
         {/* Auto-refresh Info */}
-        <Box bg={useColorModeValue('blue.50', 'blue.900')} rounded="lg" p={3} mt={6}>
+        <Box bg={infoBoxBg} rounded="lg" p={3} mt={6}>
           <HStack space={2} alignItems="center">
             <Icon as={Ionicons} name="information-circle" size={5} color={accentColor} />
             <Text color={subtextColor} fontSize="xs" flex={1}>

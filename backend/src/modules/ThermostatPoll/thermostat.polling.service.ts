@@ -120,6 +120,7 @@ export class ThermostatPollingService {
           where: { id: device.id },
           data: {
             lastSnapshotAt: new Date(),
+            lastSeen: new Date(),
           },
         });
       }

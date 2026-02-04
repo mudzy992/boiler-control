@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGasReadingDto } from './dto/create-gas-reading.dto';
 
@@ -7,6 +11,29 @@ export class GasReadingService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: number, dto: CreateGasReadingDto) {
+    // 0. Check if reading for this date already exists (daily limit)
+    const readingDate = new Date(dto.readingDate);
+    const dayStart = new Date(readingDate);
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayEnd = new Date(readingDate);
+    dayEnd.setUTCHours(23, 59, 59, 999);
+
+    const existingReading = await this.prisma.gasReading.findFirst({
+      where: {
+        userId,
+        readingDate: {
+          gte: dayStart,
+          lte: dayEnd,
+        },
+      },
+    });
+
+    if (existingReading) {
+      throw new ConflictException(
+        'A gas reading for this date already exists. Please update the existing entry.',
+      );
+    }
+
     // 1. Find previous reading to calculate consumption
     const lastReading = await this.prisma.gasReading.findFirst({
       where: { userId },
@@ -16,7 +43,9 @@ export class GasReadingService {
     let consumption = 0;
     if (lastReading) {
       if (dto.counterValue < lastReading.counterValue) {
-        throw new Error('Novo stanje brojila ne može biti manje od prethodnog.');
+        throw new Error(
+          'Novo stanje brojila ne može biti manje od prethodnog.',
+        );
       }
       consumption = dto.counterValue - lastReading.counterValue;
     }
@@ -83,9 +112,11 @@ export class GasReadingService {
 
     history.forEach((h) => {
       if (h.heatingStart && h.heatingEnd) {
-        const duration = (h.heatingEnd.getTime() - h.heatingStart.getTime()) / 60000;
+        const duration =
+          (h.heatingEnd.getTime() - h.heatingStart.getTime()) / 60000;
         totalMinutes += duration;
-        weightedTempSum += duration * (h.actualFlowTemp || h.suggestedFlowTemp || 0);
+        weightedTempSum +=
+          duration * (h.actualFlowTemp || h.suggestedFlowTemp || 0);
       }
     });
 

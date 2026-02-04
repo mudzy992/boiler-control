@@ -13,6 +13,7 @@ import {
   listenForNotifications,
   setNavigationRef,
 } from './src/services/notifications/notificationService';
+import './src/locales/config';
 
 // Create React Query client
 const queryClient = new QueryClient({

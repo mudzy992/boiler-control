@@ -1,53 +1,319 @@
-# Boiler Control System - Documentation Index
+# Boiler Control System - Documentation
 
-**Last Updated:** February 3, 2026
-**Project Status:** V2 Implementation Complete ✅ | Docker Refactored ✅
-
----
-
-## 📚 Documentation Organization
-
-All project documentation has been centralized in this `docs/` directory for better organization and maintenance.
+**Last Updated:** February 4, 2026 | **Status:** ✅ Production Ready (V2 Complete, Phase 5 In Progress)
 
 ---
 
-## 🎯 Start Here
+## 📚 Documentation Overview
+
+This folder contains all project documentation. **Start here to navigate the docs.**
+
+---
+
+## 🎯 For AI Agents & Developers
+
+### 📋 Development Rules & Patterns
+**[copilot-instructions.md](./copilot-instructions.md)** ← **START HERE**
+
+This is the **single source of truth** for:
+- Project architecture and structure
+- Development patterns (backend, frontend, mobile)
+- Code conventions and best practices
+- Common gotchas and troubleshooting
+- Authentication flows
+- Testing guidelines
+- Deployment procedures
+
+**Read this first before starting any development work.**
+
+---
+
+### 🚀 Feature Status & Implementation Details
+**[features.md](./features.md)** - Complete feature inventory
+
+Organized by feature area:
+- ✅ Status badges for each feature
+- Frontend, backend, and mobile implementation details
+- API endpoints required
+- Known issues and limitations
+- Dependencies between features
+- Cross-platform parity notes
+- Phase 5 updates (i18n, error handling, daily limits)
+
+Use this to:
+- Understand what's implemented vs. planned
+- Find feature dependencies
+- Review implementation status
+- Identify what needs work
+
+---
+
+### 🔌 API Reference & Endpoints
+**[api-reference.md](./api-reference.md)** - Complete API documentation
+
+Organized by module:
+- Authentication endpoints
+- Dashboard, Heating, Gas, Weather APIs
+- User profile and home management endpoints
+- Notification endpoints (including new mark-all-read)
+- Error response formats
+- Rate limits and monitoring
+- Gas daily limit validation (409 Conflict)
+
+Use this to:
+- Understand available API endpoints
+- See request/response examples
+- Integrate backend APIs into frontend
+- Test endpoints manually
+- Mock API responses for testing
+
+---
+
+## 🏗️ Architecture & Design
+
+### Full System Architecture
+**[V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)**
+
+Deep dive into:
+- System overview and design patterns
+- Global API client pattern (web & mobile)
+- Context API for state management
+- Route protection and authentication flows
+- Data fetching patterns
+- Theme system architecture
+- Error handling strategy
+- Performance considerations
+
+---
+
+### Quick Reference & Commands
+**[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)**
+
+Cheat sheet with:
+- Start commands (backend, web, mobile)
+- Test credentials
+- Service URLs
+- Key npm commands
+- Database commands
+- Troubleshooting quick fixes
+- File locations
+
+---
+
+## 🚀 Getting Started
 
 ### New to the Project?
-1. **[../README.md](../README.md)** - Main project overview with quick start
-2. **[README_MONOREPO.md](./README_MONOREPO.md)** - Detailed monorepo structure
-3. **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Common commands and workflows
 
-### Want to Deploy?
-1. **[../docker-compose.yml](../docker-compose.yml)** - Backend orchestration
-2. **[../backend/Dockerfile](../backend/Dockerfile)** - Multi-stage Docker build
-3. **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Environment configuration
+1. **Understand the Rules** → Read [copilot-instructions.md](./copilot-instructions.md) (15 min)
+2. **See What's Built** → Skim [features.md](./features.md) (10 min)
+3. **Set Up Locally** → Follow [../README.md](../README.md) (20 min)
+4. **Quick Reference** → Bookmark [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 
-### Need Architecture Details?
-1. **[V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)** - Complete system architecture
-2. **[V2_FRONTEND_GUIDE.md](./V2_FRONTEND_GUIDE.md)** - Frontend patterns
-3. **[P2E_README.md](./P2E_README.md)** - AsyncLocalStorage implementation
+**Total: ~45 minutes to full setup**
+
+### Starting a New Feature?
+
+1. Check [features.md](./features.md) for similar features
+2. Review [api-reference.md](./api-reference.md) for related endpoints
+3. Check [copilot-instructions.md](./copilot-instructions.md#key-patterns--conventions) for patterns
+4. Follow the architecture in [V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)
+
+### Making an API Change?
+
+1. Update endpoint in `backend/src/modules/`
+2. Document in [api-reference.md](./api-reference.md)
+3. Update frontend/mobile API clients
+4. Update feature status in [features.md](./features.md) if needed
+5. Add tests
 
 ---
 
-## 📑 Documentation by Category
+## 📁 Documentation Structure
 
-### Getting Started
-- **[README_MONOREPO.md](./README_MONOREPO.md)** - Monorepo structure and setup
-- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Command reference
-- **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Environment variables
-- **[SETUP_CHECKLIST.md](./SETUP_CHECKLIST.md)** - Setup verification
+### Core Documentation (This Folder)
+```
+docs/
+├── README.md                     ← You are here (master index)
+├── copilot-instructions.md       ← AI agent rules & patterns
+├── features.md                   ← Feature inventory & status
+├── api-reference.md              ← API endpoints & examples
+├── QUICK_REFERENCE.md            ← Commands & quick tips
+├── V2_ARCHITECTURE.md            ← System design & patterns
+├── ENVIRONMENT_SETUP.md          ← Configuration guide
+├── SETUP_CHECKLIST.md            ← Setup verification
+│
+├── internal/                     ← Detailed technical docs
+│   ├── architecture/
+│   ├── pipeline/                 ← Deployment guides
+│   ├── monitoring/               ← Monitoring setup
+│   ├── runbooks/                 ← Operational runbooks
+│   ├── logs/                     ← Development logs
+│   └── snapshots/                ← Code change diffs
+│
+└── Project Status Docs (archived)
+    ├── PROJECT_SUMMARY.md
+    ├── PHASE_3_COMPLETION_CHECKLIST.md
+    └── ... (30+ status documents - now consolidated)
+```
 
-### Architecture & Design
-- **[V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)** - System architecture
-- **[V2_FRONTEND_GUIDE.md](./V2_FRONTEND_GUIDE.md)** - Frontend development guide
-- **[V2_DOCUMENTATION_INDEX.md](./V2_DOCUMENTATION_INDEX.md)** - Frontend docs navigation
-- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** - Project overview
+### Key Files Outside Docs
 
-### Implementation Details
-- **[P2E_README.md](./P2E_README.md)** - AsyncLocalStorage (P2e)
-- **[P2E_COMPLETION_SUMMARY.md](./P2E_COMPLETION_SUMMARY.md)** - P2e completion
-- **[BACKEND_INTEGRATION_STATUS.md](./BACKEND_INTEGRATION_STATUS.md)** - Backend status
+**Root:**
+- `[../README.md](../README.md)` - Main project README with Docker quickstart
+- `[../docker-compose.yml](../docker-compose.yml)` - Docker orchestration
+
+**Backend:**
+- `[../backend/README.md](../backend/README.md)` - Backend-specific guide
+- `[../backend/DATABASE_SETUP.md](../backend/DATABASE_SETUP.md)` - Database configuration
+
+**Frontend:**
+- `[../frontend](../frontend)` - Production React app (Vite)
+
+**Mobile:**
+- `[../apps/mobile](../apps/mobile)` - React Native Expo app
+
+---
+
+## 🔍 Finding Information
+
+### By Topic
+
+| Topic | Document | Section |
+|-------|----------|---------|
+| **Development Rules** | copilot-instructions.md | All |
+| **Backend Patterns** | copilot-instructions.md | Key Patterns & Conventions |
+| **Frontend Patterns** | copilot-instructions.md | Frontend Code Patterns |
+| **Feature Status** | features.md | Summary Table |
+| **API Endpoints** | api-reference.md | All modules |
+| **Quick Commands** | QUICK_REFERENCE.md | npm Commands |
+| **Architecture** | V2_ARCHITECTURE.md | All |
+| **Setup Issues** | QUICK_REFERENCE.md | Troubleshooting |
+| **Environment Vars** | ENVIRONMENT_SETUP.md | Configuration |
+| **Deployment** | docs/internal/pipeline/ | Deployment guides |
+| **i18n** | copilot-instructions.md | Localization section |
+| **Error Handling** | copilot-instructions.md | Mobile Error Handling |
+| **Gas Daily Limit** | features.md | Gas Readings section |
+
+### By Job
+
+**I'm an AI Agent/Copilot**
+→ Read [copilot-instructions.md](./copilot-instructions.md) (all sections)
+
+**I'm a Frontend Developer**
+→ Read: [copilot-instructions.md#frontend-code-patterns](./copilot-instructions.md), [features.md](./features.md), [api-reference.md](./api-reference.md)
+
+**I'm a Backend Developer**
+→ Read: [copilot-instructions.md#backend-code-patterns](./copilot-instructions.md), [features.md](./features.md), [api-reference.md](./api-reference.md)
+
+**I'm a DevOps/Operator**
+→ Read: [../README.md](../README.md), [docs/internal/pipeline/](./internal/pipeline/), [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)
+
+**I'm Setting Up for First Time**
+→ Read: [../README.md](../README.md), [QUICK_REFERENCE.md](./QUICK_REFERENCE.md), [SETUP_CHECKLIST.md](./SETUP_CHECKLIST.md)
+
+---
+
+## ✅ Documentation Quality
+
+**Status**: ✅ Current & Complete
+
+- ✅ All features documented with status badges
+- ✅ All API endpoints documented with examples
+- ✅ All development patterns documented
+- ✅ Architecture documented
+- ✅ Quick reference for common tasks
+- ✅ Internal operational guides available
+- ✅ Setup procedures verified
+- ✅ Phase 5 additions documented (i18n, error handling, daily limits)
+
+**Last Verified**: February 4, 2026
+
+---
+
+## 📝 Contributing to Documentation
+
+When adding new features or changing implementation:
+
+1. **Update [features.md](./features.md)**
+   - Add feature section with status badge
+   - List frontend/backend/mobile files
+   - List API endpoints
+   - Note dependencies
+
+2. **Update [api-reference.md](./api-reference.md)**
+   - Add endpoint documentation
+   - Include request/response examples
+   - Note auth requirements
+
+3. **Update [copilot-instructions.md](./copilot-instructions.md)** (if adding patterns)
+   - Add code patterns
+   - Add gotchas
+   - Update examples
+
+4. **Update [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** (if adding commands)
+   - Add new commands
+   - Update URLs
+   - Update troubleshooting
+
+---
+
+## 🔗 Navigation Tips
+
+- **Bookmark [copilot-instructions.md](./copilot-instructions.md)** - Reference constantly
+- **Bookmark [features.md](./features.md)** - Check before starting work
+- **Bookmark [api-reference.md](./api-reference.md)** - Always open when developing
+- **Bookmark [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Troubleshooting & commands
+
+---
+
+## 🎓 Learning Path
+
+### Level 1: Get Running (1-2 hours)
+1. Read [copilot-instructions.md - Project Overview](./copilot-instructions.md#project-overview)
+2. Follow [../README.md](../README.md) setup steps
+3. Run backend + frontend locally
+4. Use [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) for commands
+
+### Level 2: Understand Architecture (2-3 hours)
+1. Read [V2_ARCHITECTURE.md](./V2_ARCHITECTURE.md)
+2. Read [copilot-instructions.md - Architecture & Structure](./copilot-instructions.md#architecture--structure)
+3. Read [copilot-instructions.md - Key Patterns](./copilot-instructions.md#key-patterns--conventions)
+4. Review [api-reference.md](./api-reference.md)
+
+### Level 3: Implement Features (As needed)
+1. Check [features.md](./features.md) for what's built
+2. Find similar feature in [features.md](./features.md)
+3. Review [api-reference.md](./api-reference.md) for endpoints
+4. Follow patterns in [copilot-instructions.md](./copilot-instructions.md)
+5. Implement feature
+6. Update docs
+
+---
+
+## 📊 Statistics
+
+| Metric | Value |
+|--------|-------|
+| **Core Doc Files** | 4 (copilot-instructions, features, api-reference, QUICK_REFERENCE) |
+| **Features Documented** | 20+ |
+| **API Endpoints** | 30+ |
+| **Development Patterns** | 15+ |
+| **Code Examples** | 50+ |
+| **Internal Docs** | 30+ |
+| **Total Documentation** | 50+ files |
+
+---
+
+## 🚀 Next Steps
+
+1. ✅ Read [copilot-instructions.md](./copilot-instructions.md)
+2. ✅ Skim [features.md](./features.md) for overview
+3. ✅ Bookmark [api-reference.md](./api-reference.md)
+4. ✅ Start developing using [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+
+---
+
+**For questions about documentation, check the relevant file above. For development patterns and rules, always refer to [copilot-instructions.md](./copilot-instructions.md).**
 - **[FRONTEND_REVIEW.md](./FRONTEND_REVIEW.md)** - Frontend review
 - **[BACKEND_REVIEW.md](./BACKEND_REVIEW.md)** - Backend review
 - **[BACKEND_WRITE_OPERATIONS_AUDIT.md](./BACKEND_WRITE_OPERATIONS_AUDIT.md)** - Write ops audit

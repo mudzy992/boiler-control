@@ -2,7 +2,7 @@ module.exports = ({ config }) => {
   // Default API URL for local development
   // Will be overridden by EAS build env vars for preview/production
   const extra = {
-    EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.31.247:3020/api',
+    EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://boiler-control.hopto.org/backend/api',
     eas: {
       projectId:
         process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||

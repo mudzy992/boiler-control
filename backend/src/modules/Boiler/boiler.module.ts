@@ -18,6 +18,7 @@ import { CommonModule } from '../../common/common.module';
     PrismaService,
     TuyaAuthService,
     TuyaHttpAdapter,
+    TuyaAdapter,
     { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
   ],
   controllers: [BoilerController],

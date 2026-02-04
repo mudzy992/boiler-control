@@ -107,7 +107,14 @@ export class NotificationsService {
     if (!existing) return null;
     return await this.prisma.notification.update({
       where: { id: notificationId },
-      data: { deliveryOk: true },
+      data: { isRead: true },
+    });
+  }
+
+  async markAllAsRead(userId: number) {
+    return await this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true },
     });
   }
 

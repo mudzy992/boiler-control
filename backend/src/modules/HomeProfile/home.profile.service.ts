@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateHomeProfileDto } from './dto/create-home-profile.dto';
 import { UpdateHomeProfileDto } from './dto/update-home-profile.dto';
@@ -8,10 +12,9 @@ export class HomeProfileService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(userId: number) {
-    // Get user's location
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { homeLocation: true },
+      select: { homeLocation: true, activeHomeProfileId: true },
     });
 
     const profiles = await this.prisma.homeProfile.findMany({
@@ -23,7 +26,16 @@ export class HomeProfileService {
     });
 
     // Map to include computed fields with actual data
-    return profiles.map((profile, index) => ({
+    let activeId = user?.activeHomeProfileId ?? null;
+    if (!activeId && profiles[0]) {
+      activeId = profiles[0].id;
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { activeHomeProfileId: activeId },
+      });
+    }
+
+    return profiles.map((profile) => ({
       id: profile.id,
       userId: profile.userId,
       homeName: profile.homeName,
@@ -47,12 +59,44 @@ export class HomeProfileService {
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
       // Mobile app expected fields
-      isActive: index === 0, // For now, first profile is active
+      isActive: profile.id === activeId,
       thermostats: profile.thermostatDevices.length,
       name: profile.homeName || 'Unnamed Home',
-      location: user?.homeLocation || 'No location set',
+      location: profile.location || user?.homeLocation || 'No location set',
       thermostatDevices: profile.thermostatDevices,
     }));
+  }
+
+  async findActive(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { activeHomeProfileId: true, homeLocation: true },
+    });
+
+    let activeId = user?.activeHomeProfileId ?? null;
+    if (!activeId) {
+      const first = await this.prisma.homeProfile.findFirst({
+        where: { userId },
+      });
+      activeId = first?.id ?? null;
+    }
+
+    if (!activeId) return null;
+
+    const profile = await this.prisma.homeProfile.findUnique({
+      where: { id: activeId },
+      include: { thermostatDevices: true },
+    });
+
+    if (!profile) return null;
+
+    return {
+      ...profile,
+      isActive: true,
+      thermostats: profile.thermostatDevices.length,
+      name: profile.homeName || 'Unnamed Home',
+      location: profile.location || user?.homeLocation || 'No location set',
+    };
   }
 
   async findOne(userId: number, id: number) {
@@ -68,27 +112,44 @@ export class HomeProfileService {
     return profile;
   }
 
-  create(userId: number, dto: CreateHomeProfileDto) {
-    return this.prisma.homeProfile.create({
-      data: {
-        homeName: dto.homeName ?? null,
-        floorArea: dto.floorArea,
-        ceilingHeight: dto.ceilingHeight,
-        insulationType: dto.insulationType,
-        insulationThickness: dto.insulationThickness,
-        windowType: dto.windowType,
-        heatingType: dto.heatingType,
-        constructionYear: dto.constructionYear,
-        numberOfResidents: dto.numberOfResidents ?? null,
-        boilerModel: dto.boilerModel ?? null,
-        hasFloorHeating: dto.hasFloorHeating,
-        targetMorningTemp: dto.targetMorningTemp,
-        targetDayTemp: dto.targetDayTemp,
-        targetNightTemp: dto.targetNightTemp,
-        preferredScheduleNotes: dto.preferredScheduleNotes ?? null,
-        seasonMode: dto.seasonMode ?? 'WINTER',
-        userId,
-      },
+  async create(userId: number, dto: CreateHomeProfileDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const profile = await tx.homeProfile.create({
+        data: {
+          homeName: dto.homeName ?? null,
+          location: dto.location ?? null,
+          floorArea: dto.floorArea,
+          ceilingHeight: dto.ceilingHeight,
+          insulationType: dto.insulationType,
+          insulationThickness: dto.insulationThickness,
+          windowType: dto.windowType,
+          heatingType: dto.heatingType,
+          constructionYear: dto.constructionYear,
+          numberOfResidents: dto.numberOfResidents ?? null,
+          boilerModel: dto.boilerModel ?? null,
+          hasFloorHeating: dto.hasFloorHeating,
+          targetMorningTemp: dto.targetMorningTemp,
+          targetDayTemp: dto.targetDayTemp,
+          targetNightTemp: dto.targetNightTemp,
+          preferredScheduleNotes: dto.preferredScheduleNotes ?? null,
+          seasonMode: dto.seasonMode ?? 'WINTER',
+          userId,
+        },
+      });
+
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { activeHomeProfileId: true },
+      });
+
+      if (!user?.activeHomeProfileId) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { activeHomeProfileId: profile.id },
+        });
+      }
+
+      return profile;
     });
   }
 
@@ -98,6 +159,7 @@ export class HomeProfileService {
     const updateData: any = {};
 
     if (dto.homeName !== undefined) updateData.homeName = dto.homeName ?? null;
+    if (dto.location !== undefined) updateData.location = dto.location ?? null;
     if (dto.floorArea !== undefined) updateData.floorArea = dto.floorArea;
     if (dto.ceilingHeight !== undefined)
       updateData.ceilingHeight = dto.ceilingHeight;
@@ -132,6 +194,17 @@ export class HomeProfileService {
   }
 
   async remove(userId: number, id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { activeHomeProfileId: true },
+    });
+
+    if (user?.activeHomeProfileId === id) {
+      throw new BadRequestException(
+        'Cannot delete the active home. Switch to another home first.',
+      );
+    }
+
     await this.findOne(userId, id);
 
     return this.prisma.homeProfile.delete({
@@ -143,14 +216,11 @@ export class HomeProfileService {
     // Verify ownership
     await this.findOne(userId, id);
 
-    // Get user's location
-    const user = await this.prisma.user.findUnique({
+    await this.prisma.user.update({
       where: { id: userId },
-      select: { homeLocation: true },
+      data: { activeHomeProfileId: id },
     });
 
-    // TODO: When User has activeHomeProfileId field, update it here
-    // For now, just return the profile with isActive: true
     const profile = await this.prisma.homeProfile.findUnique({
       where: { id },
       include: {
@@ -167,7 +237,7 @@ export class HomeProfileService {
       isActive: true,
       thermostats: profile.thermostatDevices.length,
       name: profile.homeName || 'Unnamed Home',
-      location: user?.homeLocation || 'No location set',
+      location: profile.location || 'No location set',
     };
   }
 }

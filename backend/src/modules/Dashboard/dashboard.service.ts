@@ -510,6 +510,39 @@ export class DashboardService {
     };
   }
 
+  async exportAnalytics(userId: number, query: any) {
+    const { homeProfileId, from, to, bucket = 'day' } = query;
+
+    const [summary, stats, learning] = await Promise.all([
+      this.getHeatingSummary(userId, { homeProfileId, from, to, bucket }),
+      this.getHeatingStats(userId, { homeProfileId, from, to, bucket }),
+      this.getLearningTrends(userId, { homeProfileId, from, to }),
+    ]);
+
+    const csvLines = [
+      'label,avgTargetTemp,avgCurrentTemp,totalDurationMin,cycles',
+      ...stats.buckets.map(
+        (b) =>
+          `${b.label},${b.avgTargetTemp},${b.avgCurrentTemp},${b.totalDurationMin},${b.cycles}`,
+      ),
+    ];
+
+    const timestamp = new Date().toISOString().replace(/[:]/g, '-');
+    const filename = `analytics_${homeProfileId}_${timestamp}.csv`;
+
+    return {
+      summary,
+      stats,
+      learning,
+      export: {
+        format: 'csv',
+        contentType: 'text/csv',
+        filename,
+        content: csvLines.join('\n'),
+      },
+    };
+  }
+
   // ======================================================
   // INTERNAL HELPERS
   // ======================================================

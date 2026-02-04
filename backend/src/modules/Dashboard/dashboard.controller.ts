@@ -8,6 +8,7 @@ import {
   GetHeatingSummaryDto,
   GetHeatingStatsDto,
   GetLearningTrendsDto,
+  ExportAnalyticsDto,
 } from './dto/dashboard.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -55,5 +56,10 @@ export class DashboardController {
   @Get('learning-trends')
   getLearningTrends(@Req() req: any, @Query() query: GetLearningTrendsDto) {
     return this.dashboardService.getLearningTrends(req.user.id, query);
+  }
+
+  @Get('export')
+  exportAnalytics(@Req() req: any, @Query() query: ExportAnalyticsDto) {
+    return this.dashboardService.exportAnalytics(req.user.id, query);
   }
 }

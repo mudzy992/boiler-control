@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Boiler Control",
+    "slug": "boiler-control",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.boilercontrol.app"
+    },
+    "android": {
+      "package": "com.boilercontrol.app"
+    },
+    "extra": {
+      "EXPO_PUBLIC_API_URL": "http://192.168.31.247:3020/api"
+    }
+  }
+}

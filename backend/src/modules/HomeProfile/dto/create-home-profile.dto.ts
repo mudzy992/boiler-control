@@ -20,6 +20,10 @@ export class CreateHomeProfileDto {
   @IsString()
   homeName?: string;
 
+  @IsOptional()
+  @IsString()
+  location?: string;
+
   @IsNumber()
   @Min(10)
   @Max(2000)

@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Patch,
+  Injectable,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
@@ -13,6 +14,7 @@ import { User } from '../Auth/user.decorator';
 import { RegisterDeviceDTO } from './dto/register-device.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationType } from '../../generated/prisma/enums';
+import { GasReminderService } from '../Schedule/gas.reminder.service';
 
 interface ManualNotificationDTO {
   userId: number;
@@ -28,6 +30,7 @@ export class NotificationsController {
   constructor(
     private notificationsService: NotificationsService,
     private prisma: PrismaService,
+    private gasReminderService: GasReminderService,
   ) {}
 
   // Registracija tokena
@@ -65,6 +68,12 @@ export class NotificationsController {
   @Post(':id/read')
   async markAsRead(@Param('id') id: number) {
     return this.notificationsService.markAsRead(id);
+  }
+
+  // Označi sve notifikacije kao pročitane
+  @Post('mark-all-read')
+  async markAllRead(@User() userId: number) {
+    return this.notificationsService.markAllAsRead(userId);
   }
 
   @Get('types')
@@ -135,5 +144,27 @@ export class NotificationsController {
         enabled: body.enabled,
       },
     });
+  }
+
+  /**
+   * 🧪 TEST ENDPOINT: Send a test gas reminder to the current user
+   * Useful for QA to verify push notifications work
+   *
+   * Example: POST /api/notifications/test-gas-reminder
+   */
+  @Post('test-gas-reminder')
+  async testGasReminder(@User() userId: number) {
+    return this.gasReminderService.sendTestReminder(userId);
+  }
+
+  /**
+   * 🧪 TEST ENDPOINT: Trigger all daily gas reminders immediately (admin only)
+   * This will send the reminder to all users who have it enabled
+   *
+   * Example: POST /api/notifications/test-trigger-all-gas-reminders
+   */
+  @Post('test-trigger-all-gas-reminders')
+  async testTriggerAllReminders() {
+    return this.gasReminderService.triggerDailyReminders();
   }
 }

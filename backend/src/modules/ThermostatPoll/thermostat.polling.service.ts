@@ -111,6 +111,7 @@ export class ThermostatPollingService {
           data: {
             roomTargetTemp: targetTemp,
             roomCurrentTemp: currentTemp,
+            lastSeen: new Date(),
             lastSnapshotAt: new Date(),
           },
         });

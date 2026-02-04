@@ -11,6 +11,9 @@ import { HeatingPage } from './pages/HeatingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ReportsPage } from './pages/ReportsPage';
 import { HomeProfilePage } from './pages/HomeProfilePage';
+import { GasReadingsPage } from './pages/GasReadingsPage';
+import { GasAnalyticsPage } from './pages/GasAnalyticsPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 
 function App() {
   return (
@@ -50,6 +53,26 @@ function App() {
               }
             />
             <Route
+              path="/gas/readings"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <GasReadingsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gas/analytics"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <GasAnalyticsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/reports"
               element={
                 <ProtectedRoute>
@@ -75,6 +98,16 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <ProfilePage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <NotificationsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

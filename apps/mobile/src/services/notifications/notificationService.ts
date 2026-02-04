@@ -110,13 +110,16 @@ export const registerForPushNotifications = async (): Promise<PushRegistrationRe
  * Supports: myapp://gas/add-reading
  */
 const handleDeepLink = (deepLink: string) => {
+  console.log('🔗 Handling deep link:', deepLink);
+  
   if (!navigationRef) {
-    console.warn('Navigation ref not available for deep link handling');
+    console.warn('❌ Navigation ref not available for deep link handling');
     return;
   }
 
   // Parse deep link
   if (deepLink.includes('gas/add-reading')) {
+    console.log('✅ Navigating to Gas Add Reading');
     // Navigate to Gas tab, then to GasReadings screen
     navigationRef.navigate('Main', {
       screen: 'Gas',
@@ -128,14 +131,17 @@ const handleDeepLink = (deepLink: string) => {
       },
     });
   } else if (deepLink.includes('gas')) {
+    console.log('✅ Navigating to Gas');
     navigationRef.navigate('Main', {
       screen: 'Gas',
     });
   } else if (deepLink.includes('dashboard')) {
+    console.log('✅ Navigating to Dashboard');
     navigationRef.navigate('Main', {
       screen: 'Dashboard',
     });
   } else if (deepLink.includes('heating')) {
+    console.log('✅ Navigating to Heating');
     navigationRef.navigate('Main', {
       screen: 'Heating',
     });
@@ -143,10 +149,16 @@ const handleDeepLink = (deepLink: string) => {
 };
 
 export const listenForNotifications = (
-  _navigationRef?: React.RefObject<NavigationContainerRef<any>>,
+  navRef?: React.RefObject<NavigationContainerRef<any>>,
   onReceive?: (notification: Notifications.Notification) => void,
   onResponse?: (response: Notifications.NotificationResponse) => void
 ) => {
+  // Update navigation ref if provided
+  if (navRef?.current) {
+    navigationRef = navRef.current;
+    console.log('✅ Navigation ref set in listener');
+  }
+
   const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
     onReceive?.(notification);
   });

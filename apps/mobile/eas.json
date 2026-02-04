@@ -10,7 +10,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/apii"
+        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
       }
     },
     "preview": {

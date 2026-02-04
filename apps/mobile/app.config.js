@@ -16,7 +16,7 @@ module.exports = ({ config }) => {
     orientation: config.orientation || 'portrait',
     userInterfaceStyle: config.userInterfaceStyle || 'light',
     assetBundlePatterns: config.assetBundlePatterns || ['**/*'],
-    scheme: config.scheme || ['myapp', 'exp'],
+    scheme: config.scheme || 'myapp',
     plugins: config.plugins || [
       'expo-font',
       '@react-native-community/datetimepicker',
@@ -30,7 +30,7 @@ module.exports = ({ config }) => {
     ],
     ios: {
       ...(config.ios || {}),
-      bundleIdentifier: config.ios?.bundleIdentifier || 'com.mudzy.BoilerControlMobile',
+      bundleIdentifier: config.ios?.bundleIdentifier || 'com.boilercontrol.app',
       supportsTablet: config.ios?.supportsTablet ?? true,
       config: {
         ...(config.ios?.config || {}),
@@ -43,7 +43,7 @@ module.exports = ({ config }) => {
     },
     android: {
       ...(config.android || {}),
-      package: config.android?.package || 'com.mudzy.BoilerControlMobileV1b1',
+      package: config.android?.package || 'com.boilercontrol.app',
       versionCode: config.android?.versionCode || 1,
       edgeToEdgeEnabled: config.android?.edgeToEdgeEnabled ?? true,
       predictiveBackGestureEnabled: config.android?.predictiveBackGestureEnabled ?? false,

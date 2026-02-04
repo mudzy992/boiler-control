@@ -10,6 +10,7 @@
         "simulator": true
       },
       "env": {
+        "NODE_ENV": "development",
         "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
       }
     },
@@ -19,12 +20,14 @@
         "buildType": "apk"
       },
       "env": {
+        "NODE_ENV": "production",
         "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
+        "NODE_ENV": "production",
         "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
       }
     }

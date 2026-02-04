@@ -24,6 +24,8 @@ module.exports = ({ config }) => {
       [
         'expo-notifications',
         {
+          icon: "./assets/notification.png",
+          color: "#ffffff",
           defaultChannel: 'default',
           enableBackgroundRemoteNotifications: false,
         },

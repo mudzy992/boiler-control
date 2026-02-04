@@ -4,10 +4,7 @@ module.exports = ({ config }) => {
   const extra = {
     EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://boiler-control.hopto.org/backend/api',
     eas: {
-      projectId:
-        process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||
-        process.env.EAS_PROJECT_ID ||
-        config.extra?.eas?.projectId,
+      projectId: "c875e85d-ad10-4eb6-bdae-fa5038133ee7",
     },
   };
 

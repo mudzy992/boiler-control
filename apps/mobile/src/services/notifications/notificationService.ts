@@ -68,11 +68,37 @@ export const registerForPushNotifications = async (): Promise<PushRegistrationRe
     : await Notifications.getExpoPushTokenAsync();
 
   if (Platform.OS === 'android') {
+    // Default channel
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Default',
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#4CAF50',
+    });
+
+    // Daily recommendations channel
+    await Notifications.setNotificationChannelAsync('daily', {
+      name: 'Daily Recommendations',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#2196F3',
+    });
+
+    // System alerts channel (high priority)
+    await Notifications.setNotificationChannelAsync('alerts', {
+      name: 'System Alerts',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 500, 250, 500],
+      lightColor: '#FF5252',
+      sound: 'default',
+    });
+
+    // Heating events channel
+    await Notifications.setNotificationChannelAsync('heating', {
+      name: 'Heating Events',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF9800',
     });
   }
 

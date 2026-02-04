@@ -32,12 +32,9 @@ export default function App() {
 
   useEffect(() => {
     configureNotificationHandler();
-    const cleanup = listenForNotifications();
-
-    // Pass navigation ref to notification service for deep link handling
-    if (navigationRef.current) {
-      setNavigationRef(navigationRef as React.RefObject<NavigationContainerRef<any>>);
-    }
+    
+    // Pass navigation ref directly to listener setup
+    const cleanup = listenForNotifications(navigationRef as React.RefObject<NavigationContainerRef<any>>);
 
     return () => {
       cleanup();

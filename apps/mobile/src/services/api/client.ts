@@ -207,6 +207,12 @@ class ApiClientService {
     return response.data;
   }
 
+  // Heating events
+  async getHeatingEvents(params?: Record<string, any>) {
+    const response = await this.client.get('/heating-events', { params });
+    return response.data;
+  }
+
   // Token management
   async setToken(token: string) {
     await SecureStorage.setToken(token);

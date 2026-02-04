@@ -23,7 +23,6 @@ import { HealthScoreCard } from '../../components/HealthScoreCard';
 import { WeatherCard } from '../../components/WeatherCard';
 import { BoilerStatusCard } from '../../components/BoilerStatusCard';
 import { ThermostatCard } from '../../components/ThermostatCard';
-import { RecentHeatingEvents } from '../../components/RecentHeatingEvents';
 import { AlertsCard } from '../../components/AlertsCard';
 
 export const DashboardScreen = () => {
@@ -152,6 +151,12 @@ export const DashboardScreen = () => {
               </Text>
             </VStack>
             <HStack space={3} alignItems="center">
+              <Icon
+                as={Ionicons}
+                name="flame"
+                size={6}
+                color={primaryHome?.thermostats?.some((t) => t.isHeating) ? 'red.500' : mutedColor}
+              />
               <Pressable
                 onPress={() => (navigation as any).navigate('Settings', { screen: 'Analytics' })}
                 _pressed={{ opacity: 0.6 }}
@@ -183,11 +188,11 @@ export const DashboardScreen = () => {
           {/* Health Score */}
           {primaryHome && <HealthScoreCard score={healthScore} confidence={avgConfidence * 100} />}
 
-          {/* Weather */}
-          {dashboardData?.system?.weather && <WeatherCard weather={dashboardData.system.weather} />}
-
           {/* Boiler Status */}
           <BoilerStatusCard boiler={dashboardData?.system?.boiler} />
+
+          {/* Weather */}
+          {dashboardData?.system?.weather && <WeatherCard weather={dashboardData.system.weather} />}
 
           {/* Thermostats */}
           {primaryHome?.thermostats && primaryHome.thermostats.length > 0 && (
@@ -209,11 +214,6 @@ export const DashboardScreen = () => {
                 );
               })}
             </VStack>
-          )}
-
-          {/* Recent Heating Events */}
-          {primaryHome?.recentHeatingEvents && primaryHome.recentHeatingEvents.length > 0 && (
-            <RecentHeatingEvents events={primaryHome.recentHeatingEvents} />
           )}
 
           {/* Additional homes (if any) */}

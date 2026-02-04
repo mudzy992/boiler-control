@@ -32,9 +32,11 @@ export default function App() {
 
   useEffect(() => {
     configureNotificationHandler();
-    
+
     // Pass navigation ref directly to listener setup
-    const cleanup = listenForNotifications(navigationRef as React.RefObject<NavigationContainerRef<any>>);
+    const cleanup = listenForNotifications(
+      navigationRef as React.RefObject<NavigationContainerRef<any>>
+    );
 
     return () => {
       cleanup();

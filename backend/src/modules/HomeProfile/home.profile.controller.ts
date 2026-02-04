@@ -24,6 +24,11 @@ export class HomeProfileController {
     return this.service.findAll(req.user.userId);
   }
 
+  @Get('active')
+  findActive(@Req() req) {
+    return this.service.findActive(req.user.userId);
+  }
+
   @Get(':id')
   findOne(@Req() req, @Param('id') id: string) {
     return this.service.findOne(req.user.userId, +id);
@@ -67,6 +72,8 @@ export class HomeProfileSingleController {
       insulationLevel: profile.insulationType,
       windowQuality: profile.windowType,
       radiatorType: profile.heatingType,
+      location: profile.location,
+      isActive: profile.isActive ?? false,
     };
   }
 

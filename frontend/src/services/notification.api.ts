@@ -9,6 +9,7 @@ export interface Notification {
   data?: any;
   sentAt: string;
   deliveryOk: boolean;
+  isRead: boolean;
   sourceRef?: string;
   createdAt: string;
 }
@@ -29,6 +30,10 @@ export const getNotifications = async (): Promise<Notification[]> => {
 
 export const markNotificationAsRead = async (id: number): Promise<void> => {
   await apiClient.post(`/notifications/${id}/read`);
+};
+
+export const markAllNotificationsAsRead = async (): Promise<void> => {
+  await apiClient.post('/notifications/mark-all-read');
 };
 
 export const getNotificationPreferences = async (): Promise<NotificationPreference[]> => {

@@ -1,0 +1,540 @@
+import React, { useMemo } from 'react';
+import {
+  Box,
+  VStack,
+  HStack,
+  Text,
+  useColorModeValue,
+  Spinner,
+  ScrollView,
+  Icon,
+} from 'native-base';
+import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { Dimensions } from 'react-native';
+import { apiClient } from '../../services/api/client';
+import dayjs from 'dayjs';
+
+let LineChart: any = null;
+try {
+  LineChart = require('react-native-chart-kit').LineChart;
+} catch (e) {
+  // Chart-kit not installed
+}
+
+interface GasAnalysisData {
+  period?: {
+    startDate?: string;
+    endDate?: string;
+    from?: string;
+    to?: string;
+  };
+  totalConsumption?: number;
+  totalGas?: number;
+  averageDaily?: number;
+  totalHeatingHours?: number;
+  avgFlowTemp?: number;
+  efficiency?: {
+    heatingHours?: number;
+    averageFlowTemp?: number;
+    gasUsagePerHeatingHour?: number;
+    m3PerHour?: number;
+  };
+  monthlyTrends?: Array<{
+    month: string;
+    consumption: number;
+    heatingHours: number;
+  }>;
+}
+
+interface GasReading {
+  id: number;
+  userId: number;
+  counterValue: number;
+  readingDate: string;
+  createdAt: string;
+}
+
+interface DailyConsumptionStats {
+  minDaily: number;
+  maxDaily: number;
+  medianDaily: number;
+  meanDaily: number;
+  stdDev: number | null;
+  trend: 'increasing' | 'decreasing' | 'stable';
+}
+
+// Utility function to calculate daily consumption differences
+const calculateDailyConsumptionStats = (readings: GasReading[]): DailyConsumptionStats | null => {
+  if (!readings || readings.length < 2) {
+    return null;
+  }
+
+  // Sort readings by date (oldest first)
+  const sorted = [...readings].sort(
+    (a, b) => new Date(a.readingDate).getTime() - new Date(b.readingDate).getTime()
+  );
+
+  const dailyConsumptions: number[] = [];
+
+  // Calculate consumption differences
+  for (let i = 1; i < sorted.length; i++) {
+    const diff = sorted[i].counterValue - sorted[i - 1].counterValue;
+    const daysDiff = dayjs(sorted[i].readingDate).diff(
+      dayjs(sorted[i - 1].readingDate),
+      'day',
+      true
+    );
+
+    if (diff >= 0 && daysDiff > 0) {
+      const dailyConsumption = diff / daysDiff;
+      dailyConsumptions.push(dailyConsumption);
+    }
+  }
+
+  if (dailyConsumptions.length === 0) {
+    return null;
+  }
+
+  // Calculate statistics
+  const sorted_consumption = [...dailyConsumptions].sort((a, b) => a - b);
+  const minDaily = Math.min(...dailyConsumptions);
+  const maxDaily = Math.max(...dailyConsumptions);
+  const meanDaily = dailyConsumptions.reduce((a, b) => a + b, 0) / dailyConsumptions.length;
+
+  // Median
+  const mid = Math.floor(sorted_consumption.length / 2);
+  const medianDaily =
+    sorted_consumption.length % 2 !== 0
+      ? sorted_consumption[mid]
+      : (sorted_consumption[mid - 1] + sorted_consumption[mid]) / 2;
+
+  // Standard deviation (optional)
+  let stdDev: number | null = null;
+  if (dailyConsumptions.length > 1) {
+    const squaredDiffs = dailyConsumptions.map((x) => Math.pow(x - meanDaily, 2));
+    const variance = squaredDiffs.reduce((a, b) => a + b, 0) / dailyConsumptions.length;
+    stdDev = Math.sqrt(variance);
+  }
+
+  // Trend direction
+  const firstHalf = dailyConsumptions.slice(0, Math.ceil(dailyConsumptions.length / 2));
+  const secondHalf = dailyConsumptions.slice(Math.ceil(dailyConsumptions.length / 2));
+  const avgFirstHalf = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+  const avgSecondHalf = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+  let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
+  const trendThreshold = meanDaily * 0.05; // 5% threshold
+
+  if (avgSecondHalf > avgFirstHalf + trendThreshold) {
+    trend = 'increasing';
+  } else if (avgSecondHalf < avgFirstHalf - trendThreshold) {
+    trend = 'decreasing';
+  }
+
+  return {
+    minDaily,
+    maxDaily,
+    medianDaily,
+    meanDaily,
+    stdDev,
+    trend,
+  };
+};
+
+export const GasAnalysisScreen: React.FC = () => {
+  const bgColor = useColorModeValue('gray.50', 'dark.900');
+  const cardBg = useColorModeValue('white', 'dark.800');
+  const textColor = useColorModeValue('gray.800', 'gray.100');
+  const subtextColor = useColorModeValue('gray.600', 'gray.400');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const chartBg = useColorModeValue('white', '#1a202c');
+  const spinnerColor = useColorModeValue('brand.500', 'brand.400');
+  const chartLabelColor = useColorModeValue('gray.600', 'gray.400');
+  const amberBg = useColorModeValue('amber.50', 'amber.900');
+  const amberBorder = useColorModeValue('amber.200', 'amber.700');
+  const amberIcon = useColorModeValue('amber.600', 'amber.300');
+  const amberText = useColorModeValue('amber.700', 'amber.200');
+  const blueBg = useColorModeValue('blue.50', 'blue.900');
+  const blueBorder = useColorModeValue('blue.200', 'blue.700');
+  const blueIcon = useColorModeValue('blue.600', 'blue.300');
+  const blueText = useColorModeValue('blue.700', 'blue.200');
+  const greenBg = useColorModeValue('green.50', 'green.900');
+  const greenBorder = useColorModeValue('green.200', 'green.700');
+  const greenIcon = useColorModeValue('green.600', 'green.300');
+  const greenText = useColorModeValue('green.700', 'green.200');
+  const purpleBg = useColorModeValue('purple.50', 'purple.900');
+  const purpleBorder = useColorModeValue('purple.200', 'purple.700');
+  const purpleIcon = useColorModeValue('purple.600', 'purple.300');
+  const purpleText = useColorModeValue('purple.700', 'purple.200');
+
+  const { data: analysis, isLoading } = useQuery({
+    queryKey: ['gas-analysis'],
+    queryFn: () => apiClient.getGasAnalysis() as Promise<GasAnalysisData>,
+  });
+
+  const { data: readings } = useQuery({
+    queryKey: ['gas-readings'],
+    queryFn: () => apiClient.getGasReadings() as Promise<GasReading[]>,
+  });
+
+  const dailyStats = useMemo(() => {
+    return readings ? calculateDailyConsumptionStats(readings) : null;
+  }, [readings]);
+
+  const chartData = useMemo(() => {
+    if (!analysis?.monthlyTrends || analysis.monthlyTrends.length === 0) {
+      return null;
+    }
+
+    const labels = analysis.monthlyTrends.map((m) => {
+      const date = dayjs(m.month);
+      return date.format('MMM');
+    });
+
+    const datasets = [
+      {
+        data: analysis.monthlyTrends.map((m) => m.consumption),
+        color: () => '#3b82f6',
+        strokeWidth: 2,
+      },
+    ];
+
+    return { labels, datasets };
+  }, [analysis?.monthlyTrends]);
+
+  if (isLoading) {
+    return (
+      <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
+        <Spinner size="lg" color={spinnerColor} />
+        <Text mt={3} color={subtextColor}>
+          Loading analysis...
+        </Text>
+      </Box>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <Box flex={1} bg={bgColor} safeArea p={4}>
+        <Text color={subtextColor}>No analysis data available.</Text>
+      </Box>
+    );
+  }
+
+  const screenWidth = Dimensions.get('window').width;
+  const chartWidth = screenWidth - 32;
+
+  const periodStart = analysis.period?.startDate ?? analysis.period?.from;
+  const periodEnd = analysis.period?.endDate ?? analysis.period?.to;
+  const totalConsumption = analysis.totalConsumption ?? analysis.totalGas ?? 0;
+  const daysInPeriod =
+    periodStart && periodEnd ? Math.max(1, dayjs(periodEnd).diff(dayjs(periodStart), 'day')) : 0;
+  const averageDaily =
+    analysis.averageDaily ?? (daysInPeriod ? totalConsumption / daysInPeriod : 0);
+  const heatingHours = analysis.efficiency?.heatingHours ?? analysis.totalHeatingHours ?? 0;
+  const averageFlowTemp = analysis.efficiency?.averageFlowTemp ?? analysis.avgFlowTemp ?? 0;
+  const gasUsagePerHeatingHour =
+    analysis.efficiency?.gasUsagePerHeatingHour ?? analysis.efficiency?.m3PerHour ?? 0;
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }} bg={bgColor}>
+      <VStack space={4} pb={6}>
+        {/* Header */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color={textColor}>
+            Gas Analytics
+          </Text>
+          <Text fontSize="sm" color={subtextColor} mt={1}>
+            Last 30 days analysis
+          </Text>
+        </Box>
+
+        {/* Summary Stats */}
+        <HStack space={3}>
+          <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+            <VStack space={2}>
+              <HStack alignItems="center" space={2}>
+                <Icon as={Ionicons} name="flame-outline" size={5} color="orange.500" />
+                <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
+                  Total Use
+                </Text>
+              </HStack>
+              <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                {totalConsumption.toFixed(2)} m³
+              </Text>
+            </VStack>
+          </Box>
+
+          <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+            <VStack space={2}>
+              <HStack alignItems="center" space={2}>
+                <Icon as={Ionicons} name="calculator-outline" size={5} color="blue.500" />
+                <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
+                  Avg Daily
+                </Text>
+              </HStack>
+              <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                {averageDaily.toFixed(2)} m³
+              </Text>
+            </VStack>
+          </Box>
+        </HStack>
+
+        {/* Efficiency Stats */}
+        <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+          <VStack space={3}>
+            <Text fontSize="md" fontWeight="600" color={textColor}>
+              Heating Efficiency
+            </Text>
+            <HStack
+              justifyContent="space-between"
+              alignItems="center"
+              pb={3}
+              borderBottomWidth={1}
+              borderBottomColor={borderColor}
+            >
+              <VStack>
+                <Text fontSize="sm" color={subtextColor}>
+                  Heating Hours
+                </Text>
+                <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                  {heatingHours.toFixed(1)} h
+                </Text>
+              </VStack>
+              <VStack>
+                <Text fontSize="sm" color={subtextColor}>
+                  Avg Flow Temp
+                </Text>
+                <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                  {averageFlowTemp.toFixed(1)}°C
+                </Text>
+              </VStack>
+              <VStack>
+                <Text fontSize="sm" color={subtextColor}>
+                  Usage/Hour
+                </Text>
+                <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                  {gasUsagePerHeatingHour.toFixed(3)} m³
+                </Text>
+              </VStack>
+            </HStack>
+          </VStack>
+        </Box>
+
+        {/* Chart */}
+        {LineChart && chartData && chartData.datasets[0].data.length > 0 && (
+          <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={2}>
+            <Text fontSize="md" fontWeight="600" color={textColor} px={4} pt={4}>
+              Monthly Consumption
+            </Text>
+            <LineChart
+              data={chartData}
+              width={chartWidth}
+              height={220}
+              chartConfig={{
+                backgroundColor: chartBg,
+                backgroundGradientFrom: chartBg,
+                backgroundGradientTo: chartBg,
+                decimalPlaces: 2,
+                color: () => '#64748b',
+                labelColor: () => chartLabelColor as any,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: '5',
+                  strokeWidth: '2',
+                  stroke: '#3b82f6',
+                },
+                propsForBackgroundLines: {
+                  strokeDasharray: '0',
+                  stroke: borderColor,
+                },
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
+                borderRadius: 16,
+              }}
+            />
+          </Box>
+        )}
+
+        {!LineChart && (
+          <Box bg={amberBg} rounded="lg" p={4} borderWidth={1} borderColor={amberBorder}>
+            <HStack space={2} alignItems="center">
+              <Icon as={Ionicons} name="alert-circle-outline" size={5} color={amberIcon} />
+              <Text fontSize="sm" color={amberText}>
+                Charts not available. Install react-native-chart-kit.
+              </Text>
+            </HStack>
+          </Box>
+        )}
+
+        {/* Daily Consumption Stats */}
+        {dailyStats ? (
+          <Box bg={greenBg} rounded="lg" borderWidth={1} borderColor={greenBorder} p={4}>
+            <VStack space={3}>
+              <HStack alignItems="center" space={2}>
+                <Icon as={Ionicons} name="stats-chart-outline" size={5} color={greenIcon} />
+                <Text fontSize="md" fontWeight="600" color={greenText}>
+                  Daily Consumption Stats
+                </Text>
+              </HStack>
+
+              <VStack space={2} divider={<Box h="1" bg={greenBorder} />}>
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="sm" color={greenText}>
+                    Minimum Daily
+                  </Text>
+                  <Text fontSize="md" fontWeight="bold" color={greenText}>
+                    {dailyStats.minDaily.toFixed(2)} m³
+                  </Text>
+                </HStack>
+
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="sm" color={greenText}>
+                    Maximum Daily
+                  </Text>
+                  <Text fontSize="md" fontWeight="bold" color={greenText}>
+                    {dailyStats.maxDaily.toFixed(2)} m³
+                  </Text>
+                </HStack>
+
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="sm" color={greenText}>
+                    Average Daily
+                  </Text>
+                  <Text fontSize="md" fontWeight="bold" color={greenText}>
+                    {dailyStats.meanDaily.toFixed(2)} m³
+                  </Text>
+                </HStack>
+
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="sm" color={greenText}>
+                    Median Daily
+                  </Text>
+                  <Text fontSize="md" fontWeight="bold" color={greenText}>
+                    {dailyStats.medianDaily.toFixed(2)} m³
+                  </Text>
+                </HStack>
+
+                {dailyStats.stdDev !== null && (
+                  <HStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="sm" color={greenText}>
+                      Std. Deviation
+                    </Text>
+                    <Text fontSize="md" fontWeight="bold" color={greenText}>
+                      {dailyStats.stdDev.toFixed(2)}
+                    </Text>
+                  </HStack>
+                )}
+              </VStack>
+            </VStack>
+          </Box>
+        ) : (
+          <Box bg={purpleBg} rounded="lg" borderWidth={1} borderColor={purpleBorder} p={4}>
+            <HStack space={2} alignItems="center">
+              <Icon as={Ionicons} name="information-circle-outline" size={5} color={purpleIcon} />
+              <Text fontSize="sm" color={purpleText} flex={1}>
+                Need at least 2 readings to calculate daily consumption statistics.
+              </Text>
+            </HStack>
+          </Box>
+        )}
+
+        {/* Consumption Trend */}
+        {dailyStats && (
+          <Box bg={blueBg} rounded="lg" borderWidth={1} borderColor={blueBorder} p={4}>
+            <VStack space={3}>
+              <HStack alignItems="center" space={2}>
+                <Icon
+                  as={Ionicons}
+                  name={
+                    dailyStats.trend === 'increasing'
+                      ? 'trending-up-outline'
+                      : dailyStats.trend === 'decreasing'
+                        ? 'trending-down-outline'
+                        : 'swap-horizontal-outline'
+                  }
+                  size={5}
+                  color={blueIcon}
+                />
+                <Text fontSize="md" fontWeight="600" color={blueText}>
+                  Consumption Trend
+                </Text>
+              </HStack>
+
+              <HStack justifyContent="space-between" alignItems="center">
+                <Text fontSize="sm" color={blueText}>
+                  Direction
+                </Text>
+                <HStack
+                  bg={
+                    dailyStats.trend === 'increasing'
+                      ? 'green.500'
+                      : dailyStats.trend === 'decreasing'
+                        ? 'blue.500'
+                        : 'amber.500'
+                  }
+                  rounded="md"
+                  px={3}
+                  py={1}
+                  alignItems="center"
+                  space={1}
+                >
+                  <Icon
+                    as={Ionicons}
+                    name={
+                      dailyStats.trend === 'increasing'
+                        ? 'arrow-up'
+                        : dailyStats.trend === 'decreasing'
+                          ? 'arrow-down'
+                          : 'remove'
+                    }
+                    size={4}
+                    color="white"
+                  />
+                  <Text fontSize="sm" fontWeight="bold" color="white" textTransform="capitalize">
+                    {dailyStats.trend}
+                  </Text>
+                </HStack>
+              </HStack>
+
+              <Text fontSize="xs" color={blueText} mt={2}>
+                {dailyStats.trend === 'increasing'
+                  ? 'Consumption is increasing. Consider optimizing usage patterns.'
+                  : dailyStats.trend === 'decreasing'
+                    ? 'Consumption is decreasing. Good trend!'
+                    : 'Consumption is relatively stable.'}
+              </Text>
+            </VStack>
+          </Box>
+        )}
+
+        {/* Period Info */}
+        <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
+          <HStack space={2} alignItems="flex-start">
+            <Icon
+              as={Ionicons}
+              name="information-circle-outline"
+              size={5}
+              color={blueIcon}
+              mt={1}
+            />
+            <VStack flex={1} space={1}>
+              <Text fontSize="sm" fontWeight="600" color={blueText}>
+                Analysis Period
+              </Text>
+              <Text fontSize="xs" color={blueIcon}>
+                {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
+                {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
+              </Text>
+            </VStack>
+          </HStack>
+        </Box>
+      </VStack>
+    </ScrollView>
+  );
+};

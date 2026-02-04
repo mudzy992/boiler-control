@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "702902890475",
+    "project_id": "boilercontrole",
+    "storage_bucket": "boilercontrole.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:702902890475:android:7de108cb38274aa414f3ae",
+        "android_client_info": {
+          "package_name": "com.mudzy.BoilerControlMobileV1b1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_aR6bk6f_wrUU-n8LCMMMbc_vZafIPYo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

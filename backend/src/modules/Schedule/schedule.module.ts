@@ -10,6 +10,7 @@ import { NotificationsModule } from '../Notification/notifications.module';
 import { TuyaHttpAdapter } from '../Tuya/tuya-http.adapter';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { CommonModule } from '../../common/common.module';
+import { GasReminderService } from './gas.reminder.service';
 
 const IS_TEST = process.env.NODE_ENV === 'test';
 
@@ -28,6 +29,7 @@ const IS_TEST = process.env.NODE_ENV === 'test';
         HeatingRecommendationService,
         { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
         DailyRecommendationService,
+        GasReminderService,
       ]
     : [
         ProgramSyncService,
@@ -37,6 +39,7 @@ const IS_TEST = process.env.NODE_ENV === 'test';
         HeatingRecommendationService,
         { provide: 'IThermostatAdapter', useClass: TuyaAdapter },
         DailyRecommendationService,
+        GasReminderService,
       ],
   exports: IS_TEST ? [] : [ThermostatPollingService],
 })

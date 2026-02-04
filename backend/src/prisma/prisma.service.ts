@@ -10,7 +10,7 @@ export class PrismaService
   private readonly hasDb: boolean;
 
   constructor() {
-    const poolSize = Number(process.env.DATABASE_POOL_SIZE) || 5;
+    const poolSize = Number(process.env.DATABASE_POOL_SIZE) || 10;
 
     const hasDb = !!(
       process.env.DATABASE_HOST &&

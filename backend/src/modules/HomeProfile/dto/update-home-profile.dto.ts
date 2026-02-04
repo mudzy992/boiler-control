@@ -21,6 +21,10 @@ export class UpdateHomeProfileDto {
   homeName?: string;
 
   @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
   @IsNumber()
   @Min(10)
   @Max(2000)

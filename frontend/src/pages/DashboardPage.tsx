@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert } from 'antd';
+import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button } from 'antd';
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '../services/api';
 import { StatCard } from '../components/StatCard';
 import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
+import { useQuery } from '@tanstack/react-query';
 
 const { Text } = Typography;
 
@@ -15,7 +16,10 @@ interface Notification {
   type: string;
   title: string;
   message: string;
-  sourceRef: boolean;
+  data?: any;
+  sentAt: string;
+  isRead: boolean;
+  sourceRef?: string;
   createdAt: string;
 }
 
@@ -29,8 +33,11 @@ interface NotificationPreference {
 interface Weather {
   temperature: number;
   feelslike: number;
-  humidity: number;
-  condition_text: string;
+  humidity?: number;
+  condition_text?: string;
+  wind_kph?: number;
+  temp_min?: number;
+  temp_max?: number;
   fetchedAt: string;
 }
 
@@ -179,6 +186,24 @@ export const DashboardPage: React.FC = () => {
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
 
+  const { data: homeProfile } = useQuery({
+    queryKey: ['home-profile'],
+    queryFn: () => apiClient.getHomeProfile(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const homeProfileId = homeProfile?.id;
+
+  const {
+    data: currentWeather,
+    isLoading: weatherLoading,
+  } = useQuery({
+    queryKey: ['weather-current', homeProfileId],
+    queryFn: () => apiClient.getCurrentWeather(homeProfileId),
+    enabled: !!homeProfileId,
+    staleTime: 1000 * 60 * 10,
+  });
+
   const loadNotifications = useCallback(async () => {
     try {
       setNotificationsLoading(true);
@@ -195,6 +220,24 @@ export const DashboardPage: React.FC = () => {
       setNotificationsLoading(false);
     }
   }, []);
+
+  const unreadNotifications = useMemo(
+    () => notifications.filter((n) => !n.isRead),
+    [notifications]
+  );
+
+  const handleMarkNotificationAsRead = useCallback(
+    async (notificationId: number) => {
+      try {
+        await apiClient.markNotificationAsRead(notificationId);
+        await loadNotifications();
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+        message.error('Failed to mark notification as read');
+      }
+    },
+    [loadNotifications]
+  );
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -403,7 +446,7 @@ export const DashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex items-center justify-center h-64">
         <Spin size="large" />
       </div>
     );
@@ -466,23 +509,23 @@ export const DashboardPage: React.FC = () => {
             Overview of your heating system performance and alerts.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge count={notifications.filter(n => !n.sourceRef?.includes('read')).length}>
-            <button
+        <div className="flex items-center justify-between gap-4">
+          <Badge count={unreadNotifications.length}>
+            <Button
               onClick={() => setNotificationDrawerOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+              type='primary'
             >
               <BellOutlined />
               <span>Notifications</span>
-            </button>
+            </Button>
           </Badge>
-          <button
+          <Button
             onClick={() => setNotificationSettingsOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+            type='primary'
           >
             <SettingOutlined />
             <span>Settings</span>
-          </button>
+          </Button>
           <Tag
             color={isHeatingActive ? 'green' : 'default'}
             className={
@@ -539,11 +582,23 @@ export const DashboardPage: React.FC = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12}>
           <Card title="System Information" className="shadow-sm">
-            <div className="space-y-2">
-              <p><strong>Outside Temp:</strong> {data.weather.temperature}°C</p>
-              <p><strong>Weather:</strong> {data.weather.condition_text}</p>
-              <p><strong>Humidity:</strong> {data.weather.humidity}%</p>
-            </div>
+            {weatherLoading ? (
+              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Spin size="small" />
+                Loading weather...
+              </div>
+            ) : currentWeather ? (
+              <div className="space-y-2">
+                <p><strong>Outside Temp:</strong> {currentWeather.temperature?.toFixed?.(1) ?? currentWeather.temperature}°C</p>
+                <p><strong>Feels Like:</strong> {currentWeather.feelslike?.toFixed?.(1) ?? currentWeather.feelslike ?? '—'}°C</p>
+                <p><strong>Weather:</strong> {currentWeather.condition_text ?? '—'}</p>
+                <p><strong>Humidity:</strong> {currentWeather.humidity ?? '—'}%</p>
+                <p><strong>Wind Speed:</strong> {currentWeather.wind_kph ?? '—'} km/h</p>
+                <p><strong>Today Min/Max:</strong> {currentWeather.temp_min ?? '—'}°C / {currentWeather.temp_max ?? '—'}°C</p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">No weather data available</p>
+            )}
           </Card>
         </Col>
         <Col xs={24} sm={12}>
@@ -581,11 +636,11 @@ export const DashboardPage: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <Badge color="#22c55e" text={null} />
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          <span className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">
                             Active Program
                           </span>
                           {activeProgram ? (
-                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
                               {formatStartMinute(activeProgram.startMinute)} · {activeProgram.targetTemp.toFixed(1)}°C
                             </span>
                           ) : (
@@ -597,14 +652,14 @@ export const DashboardPage: React.FC = () => {
                       </div>
                     ),
                     children: (
-                      <div className="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      <div className="grid gap-3 mt-2 md:grid-cols-2 xl:grid-cols-3">
                         {scheduleByDay.map((day) => (
                           <div
                             key={day.dayType}
-                            className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40"
+                            className="p-3 border rounded-lg border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
                           >
                             <div className="flex items-center justify-between">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                              <p className="text-xs font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">
                                 {day.dayType}
                               </p>
                               <span className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -711,7 +766,7 @@ export const DashboardPage: React.FC = () => {
                 if (!datum) return null;
 
                 return (
-                  <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                  <div className="p-3 bg-white border rounded-lg shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
                     <div className="space-y-1">
                       <div className="font-semibold text-slate-900 dark:text-slate-100">{title}</div>
                       <div className="text-sm text-slate-600 dark:text-slate-300">
@@ -773,11 +828,11 @@ export const DashboardPage: React.FC = () => {
         open={notificationDrawerOpen}
       >
         {notificationsLoading ? (
-          <div className="flex h-64 items-center justify-center">
+          <div className="flex items-center justify-center h-64">
             <Spin size="large" />
           </div>
-        ) : notifications.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center text-center">
+        ) : unreadNotifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
             <BellOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
             <Text type="secondary">Nema novih notifikacija</Text>
             <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
@@ -786,7 +841,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         ) : (
           <List
-            dataSource={notifications}
+            dataSource={unreadNotifications}
             renderItem={(notif) => {
               const getIcon = () => {
                 if (notif.type.includes('ANOMALY') || notif.type.includes('ALERT')) {
@@ -802,7 +857,10 @@ export const DashboardPage: React.FC = () => {
               };
 
               return (
-                <List.Item>
+                <List.Item
+                  onClick={() => !notif.isRead && handleMarkNotificationAsRead(notif.id)}
+                  className="cursor-pointer"
+                >
                   <List.Item.Meta
                     avatar={getIcon()}
                     title={notif.title}
@@ -831,11 +889,11 @@ export const DashboardPage: React.FC = () => {
         width={600}
       >
         {notificationsLoading ? (
-          <div className="flex h-64 items-center justify-center">
+          <div className="flex items-center justify-center h-64">
             <Spin size="large" />
           </div>
         ) : notificationPreferences.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center h-64 text-center">
             <SettingOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
             <Text type="secondary">Učitavanje postavki...</Text>
             <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>

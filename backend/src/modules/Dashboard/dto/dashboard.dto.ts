@@ -123,3 +123,23 @@ export class GetLearningTrendsDto {
   @IsDateString()
   to: string;
 }
+
+export class ExportAnalyticsDto {
+  @ApiProperty()
+  @Type(() => Number)
+  @IsInt()
+  homeProfileId: number;
+
+  @ApiProperty()
+  @IsDateString()
+  from: string;
+
+  @ApiProperty()
+  @IsDateString()
+  to: string;
+
+  @ApiPropertyOptional({ enum: ['hour', 'day'] })
+  @IsOptional()
+  @IsEnum(['hour', 'day'])
+  bucket?: 'hour' | 'day';
+}

@@ -111,6 +111,11 @@ export class ApiClient {
     return response.data;
   }
 
+  async getCurrentWeather(homeProfileId: number) {
+    const response = await this.client.get(`/weather/current/${homeProfileId}`);
+    return response.data;
+  }
+
   // User endpoints
   async getUserProfile() {
     const response = await this.client.get('/user');
@@ -125,6 +130,21 @@ export class ApiClient {
   // Gas endpoints
   async getGasReadings() {
     const response = await this.client.get('/gas/readings');
+    return response.data;
+  }
+
+  async addGasReadingPayload(data: { counterValue: number; readingDate: string }) {
+    const response = await this.client.post('/gas/readings', data);
+    return response.data;
+  }
+
+  async deleteGasReading(id: number) {
+    const response = await this.client.delete(`/gas/readings/${id}`);
+    return response.data;
+  }
+
+  async getGasAnalysis(from: string, to: string) {
+    const response = await this.client.get('/gas/analysis', { params: { from, to } });
     return response.data;
   }
 
@@ -163,6 +183,11 @@ export class ApiClient {
 
   async markNotificationAsRead(id: number) {
     const response = await this.client.post(`/notifications/${id}/read`);
+    return response.data;
+  }
+
+  async markAllNotificationsRead() {
+    const response = await this.client.post('/notifications/mark-all-read');
     return response.data;
   }
 

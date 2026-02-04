@@ -33,20 +33,20 @@ export const GasScreen = () => {
       }}
     >
       <Tab.Screen
-        name="GasReadings"
+        name="Readings"
         component={GasReadingsScreen}
         options={{
-          title: 'Readings',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="GasAnalysis"
+        name="Analysis"
         component={GasAnalysisScreen}
         options={{
-          title: 'Analytics',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="analytics-outline" size={size} color={color} />
           ),

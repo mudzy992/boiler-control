@@ -111,7 +111,7 @@ export const registerForPushNotifications = async (): Promise<PushRegistrationRe
  */
 const handleDeepLink = (deepLink: string) => {
   console.log('🔗 Handling deep link:', deepLink);
-  
+
   if (!navigationRef) {
     console.warn('❌ Navigation ref not available for deep link handling');
     return;

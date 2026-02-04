@@ -4,6 +4,7 @@ import {
   VStack,
   HStack,
   Text,
+  Heading,
   useColorModeValue,
   Spinner,
   ScrollView,
@@ -12,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
 
@@ -143,6 +145,7 @@ const calculateDailyConsumptionStats = (readings: GasReading[]): DailyConsumptio
 };
 
 export const GasAnalysisScreen: React.FC = () => {
+  const { t } = useTranslation();
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -238,303 +241,315 @@ export const GasAnalysisScreen: React.FC = () => {
     analysis.efficiency?.gasUsagePerHeatingHour ?? analysis.efficiency?.m3PerHour ?? 0;
 
   return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }} bg={bgColor}>
-      <VStack space={4} pb={6}>
-        {/* Header */}
-        <Box>
-          <Text fontSize="xl" fontWeight="bold" color={textColor}>
-            Gas Analytics
-          </Text>
-          <Text fontSize="sm" color={subtextColor} mt={1}>
-            Last 30 days analysis
-          </Text>
-        </Box>
-
-        {/* Summary Stats */}
-        <HStack space={3}>
-          <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-            <VStack space={2}>
-              <HStack alignItems="center" space={2}>
-                <Icon as={Ionicons} name="flame-outline" size={5} color="orange.500" />
-                <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Total Use
-                </Text>
-              </HStack>
-              <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                {totalConsumption.toFixed(2)} m³
-              </Text>
-            </VStack>
-          </Box>
-
-          <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-            <VStack space={2}>
-              <HStack alignItems="center" space={2}>
-                <Icon as={Ionicons} name="calculator-outline" size={5} color="blue.500" />
-                <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Avg Daily
-                </Text>
-              </HStack>
-              <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                {averageDaily.toFixed(2)} m³
-              </Text>
-            </VStack>
-          </Box>
-        </HStack>
-
-        {/* Efficiency Stats */}
-        <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-          <VStack space={3}>
-            <Text fontSize="md" fontWeight="600" color={textColor}>
-              Heating Efficiency
+    <Box flex={1} bg={bgColor} safeArea>
+      <ScrollView>
+        <VStack px={5} py={5} space={4} pb={8}>
+          {/* Header */}
+          <VStack space={1}>
+            <Heading size="2xl" color={textColor} fontWeight="700">
+              {t('gas.analyticsTitle')}
+            </Heading>
+            <Text fontSize="sm" color={subtextColor}>
+              {t('gas.analyticsSubtitle')}
             </Text>
-            <HStack
-              justifyContent="space-between"
-              alignItems="center"
-              pb={3}
-              borderBottomWidth={1}
-              borderBottomColor={borderColor}
-            >
-              <VStack>
-                <Text fontSize="sm" color={subtextColor}>
-                  Heating Hours
-                </Text>
-                <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                  {heatingHours.toFixed(1)} h
-                </Text>
-              </VStack>
-              <VStack>
-                <Text fontSize="sm" color={subtextColor}>
-                  Avg Flow Temp
-                </Text>
-                <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                  {averageFlowTemp.toFixed(1)}°C
-                </Text>
-              </VStack>
-              <VStack>
-                <Text fontSize="sm" color={subtextColor}>
-                  Usage/Hour
-                </Text>
-                <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                  {gasUsagePerHeatingHour.toFixed(3)} m³
-                </Text>
-              </VStack>
-            </HStack>
           </VStack>
-        </Box>
 
-        {/* Chart */}
-        {LineChart && chartData && chartData.datasets[0].data.length > 0 && (
-          <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={2}>
-            <Text fontSize="md" fontWeight="600" color={textColor} px={4} pt={4}>
-              Monthly Consumption
-            </Text>
-            <LineChart
-              data={chartData}
-              width={chartWidth}
-              height={220}
-              chartConfig={{
-                backgroundColor: chartBg,
-                backgroundGradientFrom: chartBg,
-                backgroundGradientTo: chartBg,
-                decimalPlaces: 2,
-                color: () => '#64748b',
-                labelColor: () => chartLabelColor as any,
-                style: {
-                  borderRadius: 16,
-                },
-                propsForDots: {
-                  r: '5',
-                  strokeWidth: '2',
-                  stroke: '#3b82f6',
-                },
-                propsForBackgroundLines: {
-                  strokeDasharray: '0',
-                  stroke: borderColor,
-                },
-              }}
-              bezier
-              style={{
-                marginVertical: 8,
-                borderRadius: 16,
-              }}
-            />
-          </Box>
-        )}
+          {/* Summary Stats */}
+          <HStack space={3}>
+            <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+              <VStack space={2}>
+                <HStack alignItems="center" space={2}>
+                  <Icon as={Ionicons} name="flame-outline" size={5} color="orange.500" />
+                  <Text
+                    fontSize="xs"
+                    fontWeight="600"
+                    color={subtextColor}
+                    textTransform="uppercase"
+                  >
+                    Total Use
+                  </Text>
+                </HStack>
+                <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                  {totalConsumption.toFixed(2)} m³
+                </Text>
+              </VStack>
+            </Box>
 
-        {!LineChart && (
-          <Box bg={amberBg} rounded="lg" p={4} borderWidth={1} borderColor={amberBorder}>
-            <HStack space={2} alignItems="center">
-              <Icon as={Ionicons} name="alert-circle-outline" size={5} color={amberIcon} />
-              <Text fontSize="sm" color={amberText}>
-                Charts not available. Install react-native-chart-kit.
-              </Text>
-            </HStack>
-          </Box>
-        )}
+            <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+              <VStack space={2}>
+                <HStack alignItems="center" space={2}>
+                  <Icon as={Ionicons} name="calculator-outline" size={5} color="blue.500" />
+                  <Text
+                    fontSize="xs"
+                    fontWeight="600"
+                    color={subtextColor}
+                    textTransform="uppercase"
+                  >
+                    Avg Daily
+                  </Text>
+                </HStack>
+                <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                  {averageDaily.toFixed(2)} m³
+                </Text>
+              </VStack>
+            </Box>
+          </HStack>
 
-        {/* Daily Consumption Stats */}
-        {dailyStats ? (
-          <Box bg={greenBg} rounded="lg" borderWidth={1} borderColor={greenBorder} p={4}>
+          {/* Efficiency Stats */}
+          <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
             <VStack space={3}>
-              <HStack alignItems="center" space={2}>
-                <Icon as={Ionicons} name="stats-chart-outline" size={5} color={greenIcon} />
-                <Text fontSize="md" fontWeight="600" color={greenText}>
-                  Daily Consumption Stats
+              <Text fontSize="md" fontWeight="600" color={textColor}>
+                Heating Efficiency
+              </Text>
+              <HStack
+                justifyContent="space-between"
+                alignItems="center"
+                pb={3}
+                borderBottomWidth={1}
+                borderBottomColor={borderColor}
+              >
+                <VStack>
+                  <Text fontSize="sm" color={subtextColor}>
+                    Heating Hours
+                  </Text>
+                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                    {heatingHours.toFixed(1)} h
+                  </Text>
+                </VStack>
+                <VStack>
+                  <Text fontSize="sm" color={subtextColor}>
+                    Avg Flow Temp
+                  </Text>
+                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                    {averageFlowTemp.toFixed(1)}°C
+                  </Text>
+                </VStack>
+                <VStack>
+                  <Text fontSize="sm" color={subtextColor}>
+                    Usage/Hour
+                  </Text>
+                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                    {gasUsagePerHeatingHour.toFixed(3)} m³
+                  </Text>
+                </VStack>
+              </HStack>
+            </VStack>
+          </Box>
+
+          {/* Chart */}
+          {LineChart && chartData && chartData.datasets[0].data.length > 0 && (
+            <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={2}>
+              <Text fontSize="md" fontWeight="600" color={textColor} px={4} pt={4}>
+                Monthly Consumption
+              </Text>
+              <LineChart
+                data={chartData}
+                width={chartWidth}
+                height={220}
+                chartConfig={{
+                  backgroundColor: chartBg,
+                  backgroundGradientFrom: chartBg,
+                  backgroundGradientTo: chartBg,
+                  decimalPlaces: 2,
+                  color: () => '#64748b',
+                  labelColor: () => chartLabelColor as any,
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForDots: {
+                    r: '5',
+                    strokeWidth: '2',
+                    stroke: '#3b82f6',
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '0',
+                    stroke: borderColor,
+                  },
+                }}
+                bezier
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+              />
+            </Box>
+          )}
+
+          {!LineChart && (
+            <Box bg={amberBg} rounded="lg" p={4} borderWidth={1} borderColor={amberBorder}>
+              <HStack space={2} alignItems="center">
+                <Icon as={Ionicons} name="alert-circle-outline" size={5} color={amberIcon} />
+                <Text fontSize="sm" color={amberText}>
+                  Charts not available. Install react-native-chart-kit.
                 </Text>
               </HStack>
+            </Box>
+          )}
 
-              <VStack space={2} divider={<Box h="1" bg={greenBorder} />}>
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize="sm" color={greenText}>
-                    Minimum Daily
-                  </Text>
-                  <Text fontSize="md" fontWeight="bold" color={greenText}>
-                    {dailyStats.minDaily.toFixed(2)} m³
+          {/* Daily Consumption Stats */}
+          {dailyStats ? (
+            <Box bg={greenBg} rounded="lg" borderWidth={1} borderColor={greenBorder} p={4}>
+              <VStack space={3}>
+                <HStack alignItems="center" space={2}>
+                  <Icon as={Ionicons} name="stats-chart-outline" size={5} color={greenIcon} />
+                  <Text fontSize="md" fontWeight="600" color={greenText}>
+                    Daily Consumption Stats
                   </Text>
                 </HStack>
 
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize="sm" color={greenText}>
-                    Maximum Daily
-                  </Text>
-                  <Text fontSize="md" fontWeight="bold" color={greenText}>
-                    {dailyStats.maxDaily.toFixed(2)} m³
-                  </Text>
-                </HStack>
-
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize="sm" color={greenText}>
-                    Average Daily
-                  </Text>
-                  <Text fontSize="md" fontWeight="bold" color={greenText}>
-                    {dailyStats.meanDaily.toFixed(2)} m³
-                  </Text>
-                </HStack>
-
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize="sm" color={greenText}>
-                    Median Daily
-                  </Text>
-                  <Text fontSize="md" fontWeight="bold" color={greenText}>
-                    {dailyStats.medianDaily.toFixed(2)} m³
-                  </Text>
-                </HStack>
-
-                {dailyStats.stdDev !== null && (
+                <VStack space={2} divider={<Box h="1" bg={greenBorder} />}>
                   <HStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="sm" color={greenText}>
-                      Std. Deviation
+                      Minimum Daily
                     </Text>
                     <Text fontSize="md" fontWeight="bold" color={greenText}>
-                      {dailyStats.stdDev.toFixed(2)}
+                      {dailyStats.minDaily.toFixed(2)} m³
                     </Text>
                   </HStack>
-                )}
-              </VStack>
-            </VStack>
-          </Box>
-        ) : (
-          <Box bg={purpleBg} rounded="lg" borderWidth={1} borderColor={purpleBorder} p={4}>
-            <HStack space={2} alignItems="center">
-              <Icon as={Ionicons} name="information-circle-outline" size={5} color={purpleIcon} />
-              <Text fontSize="sm" color={purpleText} flex={1}>
-                Need at least 2 readings to calculate daily consumption statistics.
-              </Text>
-            </HStack>
-          </Box>
-        )}
 
-        {/* Consumption Trend */}
-        {dailyStats && (
-          <Box bg={blueBg} rounded="lg" borderWidth={1} borderColor={blueBorder} p={4}>
-            <VStack space={3}>
-              <HStack alignItems="center" space={2}>
-                <Icon
-                  as={Ionicons}
-                  name={
-                    dailyStats.trend === 'increasing'
-                      ? 'trending-up-outline'
-                      : dailyStats.trend === 'decreasing'
-                        ? 'trending-down-outline'
-                        : 'swap-horizontal-outline'
-                  }
-                  size={5}
-                  color={blueIcon}
-                />
-                <Text fontSize="md" fontWeight="600" color={blueText}>
-                  Consumption Trend
+                  <HStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="sm" color={greenText}>
+                      Maximum Daily
+                    </Text>
+                    <Text fontSize="md" fontWeight="bold" color={greenText}>
+                      {dailyStats.maxDaily.toFixed(2)} m³
+                    </Text>
+                  </HStack>
+
+                  <HStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="sm" color={greenText}>
+                      Average Daily
+                    </Text>
+                    <Text fontSize="md" fontWeight="bold" color={greenText}>
+                      {dailyStats.meanDaily.toFixed(2)} m³
+                    </Text>
+                  </HStack>
+
+                  <HStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="sm" color={greenText}>
+                      Median Daily
+                    </Text>
+                    <Text fontSize="md" fontWeight="bold" color={greenText}>
+                      {dailyStats.medianDaily.toFixed(2)} m³
+                    </Text>
+                  </HStack>
+
+                  {dailyStats.stdDev !== null && (
+                    <HStack justifyContent="space-between" alignItems="center">
+                      <Text fontSize="sm" color={greenText}>
+                        Std. Deviation
+                      </Text>
+                      <Text fontSize="md" fontWeight="bold" color={greenText}>
+                        {dailyStats.stdDev.toFixed(2)}
+                      </Text>
+                    </HStack>
+                  )}
+                </VStack>
+              </VStack>
+            </Box>
+          ) : (
+            <Box bg={purpleBg} rounded="lg" borderWidth={1} borderColor={purpleBorder} p={4}>
+              <HStack space={2} alignItems="center">
+                <Icon as={Ionicons} name="information-circle-outline" size={5} color={purpleIcon} />
+                <Text fontSize="sm" color={purpleText} flex={1}>
+                  Need at least 2 readings to calculate daily consumption statistics.
                 </Text>
               </HStack>
+            </Box>
+          )}
 
-              <HStack justifyContent="space-between" alignItems="center">
-                <Text fontSize="sm" color={blueText}>
-                  Direction
-                </Text>
-                <HStack
-                  bg={
-                    dailyStats.trend === 'increasing'
-                      ? 'green.500'
-                      : dailyStats.trend === 'decreasing'
-                        ? 'blue.500'
-                        : 'amber.500'
-                  }
-                  rounded="md"
-                  px={3}
-                  py={1}
-                  alignItems="center"
-                  space={1}
-                >
+          {/* Consumption Trend */}
+          {dailyStats && (
+            <Box bg={blueBg} rounded="lg" borderWidth={1} borderColor={blueBorder} p={4}>
+              <VStack space={3}>
+                <HStack alignItems="center" space={2}>
                   <Icon
                     as={Ionicons}
                     name={
                       dailyStats.trend === 'increasing'
-                        ? 'arrow-up'
+                        ? 'trending-up-outline'
                         : dailyStats.trend === 'decreasing'
-                          ? 'arrow-down'
-                          : 'remove'
+                          ? 'trending-down-outline'
+                          : 'swap-horizontal-outline'
                     }
-                    size={4}
-                    color="white"
+                    size={5}
+                    color={blueIcon}
                   />
-                  <Text fontSize="sm" fontWeight="bold" color="white" textTransform="capitalize">
-                    {dailyStats.trend}
+                  <Text fontSize="md" fontWeight="600" color={blueText}>
+                    Consumption Trend
                   </Text>
                 </HStack>
-              </HStack>
 
-              <Text fontSize="xs" color={blueText} mt={2}>
-                {dailyStats.trend === 'increasing'
-                  ? 'Consumption is increasing. Consider optimizing usage patterns.'
-                  : dailyStats.trend === 'decreasing'
-                    ? 'Consumption is decreasing. Good trend!'
-                    : 'Consumption is relatively stable.'}
-              </Text>
-            </VStack>
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="sm" color={blueText}>
+                    Direction
+                  </Text>
+                  <HStack
+                    bg={
+                      dailyStats.trend === 'increasing'
+                        ? 'green.500'
+                        : dailyStats.trend === 'decreasing'
+                          ? 'blue.500'
+                          : 'amber.500'
+                    }
+                    rounded="md"
+                    px={3}
+                    py={1}
+                    alignItems="center"
+                    space={1}
+                  >
+                    <Icon
+                      as={Ionicons}
+                      name={
+                        dailyStats.trend === 'increasing'
+                          ? 'arrow-up'
+                          : dailyStats.trend === 'decreasing'
+                            ? 'arrow-down'
+                            : 'remove'
+                      }
+                      size={4}
+                      color="white"
+                    />
+                    <Text fontSize="sm" fontWeight="bold" color="white" textTransform="capitalize">
+                      {dailyStats.trend}
+                    </Text>
+                  </HStack>
+                </HStack>
+
+                <Text fontSize="xs" color={blueText} mt={2}>
+                  {dailyStats.trend === 'increasing'
+                    ? 'Consumption is increasing. Consider optimizing usage patterns.'
+                    : dailyStats.trend === 'decreasing'
+                      ? 'Consumption is decreasing. Good trend!'
+                      : 'Consumption is relatively stable.'}
+                </Text>
+              </VStack>
+            </Box>
+          )}
+
+          {/* Period Info */}
+          <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
+            <HStack space={2} alignItems="flex-start">
+              <Icon
+                as={Ionicons}
+                name="information-circle-outline"
+                size={5}
+                color={blueIcon}
+                mt={1}
+              />
+              <VStack flex={1} space={1}>
+                <Text fontSize="sm" fontWeight="600" color={blueText}>
+                  Analysis Period
+                </Text>
+                <Text fontSize="xs" color={blueIcon}>
+                  {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
+                  {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
+                </Text>
+              </VStack>
+            </HStack>
           </Box>
-        )}
-
-        {/* Period Info */}
-        <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
-          <HStack space={2} alignItems="flex-start">
-            <Icon
-              as={Ionicons}
-              name="information-circle-outline"
-              size={5}
-              color={blueIcon}
-              mt={1}
-            />
-            <VStack flex={1} space={1}>
-              <Text fontSize="sm" fontWeight="600" color={blueText}>
-                Analysis Period
-              </Text>
-              <Text fontSize="xs" color={blueIcon}>
-                {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
-                {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
-              </Text>
-            </VStack>
-          </HStack>
-        </Box>
-      </VStack>
-    </ScrollView>
+        </VStack>
+      </ScrollView>
+    </Box>
   );
 };

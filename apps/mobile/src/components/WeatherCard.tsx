@@ -116,7 +116,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
           >
             <Ionicons name="git-branch" size={24} color={accentColor} />
             <Text fontSize="lg" fontWeight="700" color={textColor} mt={2}>
-              {weather?.pressure ?? '—'}
+              {weather?.pressure ? weather.pressure.toFixed(0) : '—'}
             </Text>
             <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
               hPa

@@ -14,6 +14,7 @@ import {
   Badge,
   Spinner,
   useToast,
+  Divider,
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../services/api/client';
@@ -34,6 +35,18 @@ interface DashboardData {
     name: string;
     thermostats?: Thermostat[];
   }>;
+}
+
+interface HeatingEvent {
+  id: number;
+  timestampStart: string;
+  timestampEnd: string | null;
+  roomCurrentTemp: number;
+  roomTargetTemp: number;
+  hvacAction: string;
+  source: string;
+  isAnomaly: boolean;
+  thermostatId?: number;
 }
 
 export const HeatingScreen = () => {
@@ -66,6 +79,39 @@ export const HeatingScreen = () => {
     refetchInterval: 1000 * 60 * 1, // Auto-refresh every 1 minute
   });
 
+  // Fetch heating events
+  const {
+    data: heatingEventsData,
+    isLoading: eventsLoading,
+    refetch: refetchEvents,
+  } = useQuery({
+    queryKey: ['heating-events'],
+    queryFn: () => apiClient.getHeatingEvents({ limit: 20 }),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Get data early to use in hooks
+  const homes = dashboardData?.homes || [];
+  const currentHome = homes[0];
+  const thermostats = currentHome?.thermostats || [];
+  const allHeatingEvents = Array.isArray(heatingEventsData)
+    ? heatingEventsData
+    : (heatingEventsData as any)?.events || [];
+
+  // Filter events to only show today's events
+  const getTodayEvents = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return allHeatingEvents.filter((event: HeatingEvent) => {
+      const eventDate = new Date(event.timestampStart);
+      eventDate.setHours(0, 0, 0, 0);
+      return eventDate.getTime() === today.getTime();
+    });
+  };
+
+  const heatingEvents = getTodayEvents();
+
   // Handle query errors outside the query config to maintain hook order
   React.useEffect(() => {
     if (queryError) {
@@ -76,7 +122,7 @@ export const HeatingScreen = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchEvents()]);
       toast.show({
         render: ({ id }) => (
           <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
@@ -106,7 +152,6 @@ export const HeatingScreen = () => {
     );
   }
 
-  const homes = dashboardData?.homes || [];
   if (homes.length === 0) {
     return (
       <Box flex={1} bg={bgColor} safeArea p={4} justifyContent="center">
@@ -119,9 +164,32 @@ export const HeatingScreen = () => {
     );
   }
 
-  // Get first home (current active home)
-  const currentHome = homes[0];
-  const thermostats = currentHome.thermostats || [];
+  // Helper functions for heating events
+  const formatEventTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const calculateDuration = (start: string, end: string | null) => {
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+    const minutes = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  };
 
   return (
     <Box flex={1} bg={bgColor} safeArea>
@@ -132,15 +200,12 @@ export const HeatingScreen = () => {
         contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
       >
         {/* Header */}
-        <VStack space={2} mb={6}>
-          <Heading color={textColor} size="lg">
-            {t('heating.title')}
+        <VStack space={1} mb={6}>
+          <Heading color={textColor} size="2xl" fontWeight="700">
+            {t('heating.title') || 'Heating'}
           </Heading>
-          <Text color={subtextColor} fontSize="sm">
-            {currentHome.name}
-          </Text>
-          <Text color={subtextColor} fontSize="xs">
-            {t('heating.lastUpdated')}: {new Date().toLocaleTimeString()}
+          <Text fontSize="sm" color={subtextColor}>
+            {t('heating.subtitle') || 'Monitor your heating system and thermostat status'}
           </Text>
         </VStack>
 
@@ -260,6 +325,144 @@ export const HeatingScreen = () => {
             </Text>
           </HStack>
         </Box>
+
+        {/* Recent Heating Sessions */}
+        {heatingEvents.length > 0 && (
+          <VStack space={3} mt={6}>
+            <Divider />
+            <Heading color={textColor} size="md" mt={2}>
+              {t('heating.recentSessions') || 'Recent Heating Sessions'}
+            </Heading>
+            <Text color={subtextColor} fontSize="xs">
+              {t('heating.sessionsDesc') || 'History of heating events and cycles'}
+            </Text>
+
+            {eventsLoading ? (
+              <Center py={8}>
+                <Spinner size="sm" color={accentColor} />
+              </Center>
+            ) : (
+              <VStack space={3} mt={2}>
+                {heatingEvents.map((event: HeatingEvent, index: number) => {
+                  const isActive = !event.timestampEnd;
+                  const duration = calculateDuration(event.timestampStart, event.timestampEnd);
+                  const tempChange = (event.roomCurrentTemp - event.roomTargetTemp).toFixed(1);
+                  const isHeating = event.hvacAction.includes('HEATING_ON');
+
+                  return (
+                    <Box
+                      key={event.id}
+                      bg={cardBg}
+                      rounded="lg"
+                      p={4}
+                      borderLeftWidth={3}
+                      borderLeftColor={
+                        event.isAnomaly
+                          ? 'orange.500'
+                          : isHeating
+                            ? heatingActiveColor
+                            : heatingInactiveColor
+                      }
+                      shadow={1}
+                      borderColor={borderColor}
+                      borderWidth={1}
+                    >
+                      {/* Header */}
+                      <HStack justifyContent="space-between" alignItems="flex-start" mb={3}>
+                        <VStack flex={1}>
+                          <HStack space={2} alignItems="center">
+                            <Icon
+                              as={Ionicons}
+                              name={isHeating ? 'flame' : 'water'}
+                              size={4}
+                              color={isHeating ? heatingActiveColor : heatingInactiveColor}
+                            />
+                            <Text fontWeight="600" color={textColor} fontSize="sm">
+                              {formatEventDate(event.timestampStart)}
+                            </Text>
+                          </HStack>
+                          <Text color={subtextColor} fontSize="xs" mt={1}>
+                            {formatEventTime(event.timestampStart)} -{' '}
+                            {event.timestampEnd ? formatEventTime(event.timestampEnd) : 'Active'}
+                          </Text>
+                        </VStack>
+                        <HStack space={2}>
+                          {isActive && (
+                            <Badge colorScheme="error" variant="solid" rounded="md">
+                              <Text fontSize="2xs" color="white">
+                                ACTIVE
+                              </Text>
+                            </Badge>
+                          )}
+                          {event.isAnomaly && (
+                            <Badge colorScheme="warning" variant="solid" rounded="md">
+                              <Text fontSize="2xs" color="white">
+                                ANOMALY
+                              </Text>
+                            </Badge>
+                          )}
+                        </HStack>
+                      </HStack>
+
+                      {/* Stats Grid */}
+                      <HStack justifyContent="space-between" space={2}>
+                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
+                          <Text color={subtextColor} fontSize="2xs">
+                            Duration
+                          </Text>
+                          <Text color={textColor} fontSize="sm" fontWeight="600">
+                            {duration}
+                          </Text>
+                        </VStack>
+                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
+                          <Text color={subtextColor} fontSize="2xs">
+                            Temp
+                          </Text>
+                          <Text color={textColor} fontSize="sm" fontWeight="600">
+                            {event.roomCurrentTemp.toFixed(1)}°C
+                          </Text>
+                        </VStack>
+                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
+                          <Text color={subtextColor} fontSize="2xs">
+                            Target
+                          </Text>
+                          <Text color={textColor} fontSize="sm" fontWeight="600">
+                            {event.roomTargetTemp.toFixed(1)}°C
+                          </Text>
+                        </VStack>
+                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
+                          <Text color={subtextColor} fontSize="2xs">
+                            Diff
+                          </Text>
+                          <Text
+                            color={parseFloat(tempChange) < 0 ? heatingActiveColor : 'green.500'}
+                            fontSize="sm"
+                            fontWeight="600"
+                          >
+                            {tempChange}°C
+                          </Text>
+                        </VStack>
+                      </HStack>
+
+                      {/* Source */}
+                      <HStack mt={2} space={1} alignItems="center">
+                        <Icon
+                          as={Ionicons}
+                          name="information-circle-outline"
+                          size={3}
+                          color={subtextColor}
+                        />
+                        <Text color={subtextColor} fontSize="2xs">
+                          Source: {event.source || 'System'}
+                        </Text>
+                      </HStack>
+                    </Box>
+                  );
+                })}
+              </VStack>
+            )}
+          </VStack>
+        )}
       </ScrollView>
     </Box>
   );

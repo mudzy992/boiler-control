@@ -31,14 +31,21 @@ interface NotificationPreference {
 
 // Type definitions matching actual backend response
 interface Weather {
-  temperature: number;
-  feelslike: number;
+  temp?: number;
+  feelsLike?: number;
+  condition?: string;
   humidity?: number;
+  windSpeed?: number;
+  tempMin?: number;
+  tempMax?: number;
+  fetchedAt?: string;
+  // raw fields from current weather endpoint (WeatherCache)
+  temperature?: number;
+  feelslike?: number;
   condition_text?: string;
   wind_kph?: number;
   temp_min?: number;
   temp_max?: number;
-  fetchedAt: string;
 }
 
 interface Boiler {
@@ -203,6 +210,34 @@ export const DashboardPage: React.FC = () => {
     enabled: !!homeProfileId,
     staleTime: 1000 * 60 * 10,
   });
+
+  const weatherDisplay = useMemo(() => {
+    if (currentWeather) {
+      return {
+        outsideTemp: currentWeather.temperature ?? currentWeather.temp ?? null,
+        feelsLike: currentWeather.feelslike ?? currentWeather.feelsLike ?? null,
+        condition: currentWeather.condition_text ?? currentWeather.condition ?? null,
+        humidity: currentWeather.humidity ?? null,
+        windSpeed: currentWeather.wind_kph ?? currentWeather.windSpeed ?? null,
+        tempMin: currentWeather.temp_min ?? currentWeather.tempMin ?? null,
+        tempMax: currentWeather.temp_max ?? currentWeather.tempMax ?? null,
+      };
+    }
+
+    if (data?.weather) {
+      return {
+        outsideTemp: data.weather.temp ?? data.weather.temperature ?? null,
+        feelsLike: data.weather.feelsLike ?? data.weather.feelslike ?? null,
+        condition: data.weather.condition ?? data.weather.condition_text ?? null,
+        humidity: data.weather.humidity ?? null,
+        windSpeed: data.weather.windSpeed ?? data.weather.wind_kph ?? null,
+        tempMin: data.weather.tempMin ?? data.weather.temp_min ?? null,
+        tempMax: data.weather.tempMax ?? data.weather.temp_max ?? null,
+      };
+    }
+
+    return null;
+  }, [currentWeather, data?.weather]);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -587,14 +622,14 @@ export const DashboardPage: React.FC = () => {
                 <Spin size="small" />
                 Loading weather...
               </div>
-            ) : currentWeather ? (
+            ) : weatherDisplay ? (
               <div className="space-y-2">
-                <p><strong>Outside Temp:</strong> {currentWeather.temperature?.toFixed?.(1) ?? currentWeather.temperature}°C</p>
-                <p><strong>Feels Like:</strong> {currentWeather.feelslike?.toFixed?.(1) ?? currentWeather.feelslike ?? '—'}°C</p>
-                <p><strong>Weather:</strong> {currentWeather.condition_text ?? '—'}</p>
-                <p><strong>Humidity:</strong> {currentWeather.humidity ?? '—'}%</p>
-                <p><strong>Wind Speed:</strong> {currentWeather.wind_kph ?? '—'} km/h</p>
-                <p><strong>Today Min/Max:</strong> {currentWeather.temp_min ?? '—'}°C / {currentWeather.temp_max ?? '—'}°C</p>
+                <p><strong>Outside Temp:</strong> {weatherDisplay.outsideTemp !== null ? `${Number(weatherDisplay.outsideTemp).toFixed(1)}°C` : '—'}</p>
+                <p><strong>Feels Like:</strong> {weatherDisplay.feelsLike !== null ? `${Number(weatherDisplay.feelsLike).toFixed(1)}°C` : '—'}</p>
+                <p><strong>Weather:</strong> {weatherDisplay.condition ?? '—'}</p>
+                <p><strong>Humidity:</strong> {weatherDisplay.humidity ?? '—'}%</p>
+                <p><strong>Wind Speed:</strong> {weatherDisplay.windSpeed ?? '—'} km/h</p>
+                <p><strong>Today Min/Max:</strong> {weatherDisplay.tempMin ?? '—'}°C / {weatherDisplay.tempMax ?? '—'}°C</p>
               </div>
             ) : (
               <p className="text-sm text-slate-500 dark:text-slate-400">No weather data available</p>

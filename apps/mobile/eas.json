@@ -10,7 +10,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.31.247:3020/api"
+        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/apii"
       }
     },
     "preview": {
@@ -19,7 +19,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.31.247:3020/api"
+        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
       }
     },
     "production": {

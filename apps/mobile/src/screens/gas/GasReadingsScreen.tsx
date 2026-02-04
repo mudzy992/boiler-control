@@ -11,10 +11,12 @@ import {
   ScrollView,
   Pressable,
   Modal,
+  useToast,
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
+import { useErrorHandler } from '../../services/api/error.handler';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
 
@@ -30,6 +32,8 @@ export const GasReadingsScreen: React.FC = () => {
   const route = useRoute<RouteProp<any, 'GasReadings'>>();
   const [showAddModal, setShowAddModal] = React.useState(false);
   const queryClient = useQueryClient();
+  const toast = useToast();
+  const { showError } = useErrorHandler();
 
   // Handle deep link to open add modal
   useEffect(() => {
@@ -48,6 +52,9 @@ export const GasReadingsScreen: React.FC = () => {
   const { data: readings, isLoading } = useQuery({
     queryKey: ['gas-readings'],
     queryFn: () => apiClient.getGasReadings() as Promise<GasReading[]>,
+    onError: (error) => {
+      showError(error, 'Failed to load gas readings');
+    },
   });
 
   const addMutation = useMutation({
@@ -57,6 +64,20 @@ export const GasReadingsScreen: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
       setShowAddModal(false);
+      toast.show({
+        render: ({ id }) => (
+          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              Gas reading added successfully
+            </Text>
+          </Box>
+        ),
+        duration: 2000,
+        placement: 'top',
+      });
+    },
+    onError: (error) => {
+      showError(error, 'Failed to add gas reading');
     },
   });
 
@@ -65,6 +86,20 @@ export const GasReadingsScreen: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      toast.show({
+        render: ({ id }) => (
+          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              Gas reading deleted
+            </Text>
+          </Box>
+        ),
+        duration: 2000,
+        placement: 'top',
+      });
+    },
+    onError: (error) => {
+      showError(error, 'Failed to delete gas reading');
     },
   });
 
@@ -168,6 +203,7 @@ export const GasReadingsScreen: React.FC = () => {
                 onSubmit={addMutation.mutateAsync}
                 isLoading={addMutation.isPending}
                 onCancel={() => setShowAddModal(false)}
+                existingReadings={readings || []}
               />
             </ScrollView>
           </Modal.Body>

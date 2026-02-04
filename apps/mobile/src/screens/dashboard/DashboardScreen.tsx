@@ -12,11 +12,13 @@ import {
   HStack,
   Pressable,
   Icon,
+  useToast,
 } from 'native-base';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { getDashboard } from '../../api/dashboard.api';
+import { useErrorHandler } from '../../services/api/error.handler';
 import { HealthScoreCard } from '../../components/HealthScoreCard';
 import { WeatherCard } from '../../components/WeatherCard';
 import { BoilerStatusCard } from '../../components/BoilerStatusCard';
@@ -29,6 +31,8 @@ export const DashboardScreen = () => {
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const navigation = useNavigation();
+  const toast = useToast();
+  const { showError } = useErrorHandler();
 
   const {
     data: dashboardData,
@@ -42,6 +46,9 @@ export const DashboardScreen = () => {
     queryFn: getDashboard,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+    onError: (error) => {
+      showError(error, 'Failed to load dashboard data');
+    },
   });
 
   // Calculate health score based on learning confidence

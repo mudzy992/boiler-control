@@ -21,15 +21,22 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { FormInput } from '../FormInput';
+import { useTranslation } from '../../hooks/useTranslation';
 import { AxiosError } from 'axios';
 
 interface GasFormProps {
   onSubmit: (data: { counterValue: number; readingDate: string }) => Promise<void>;
   isLoading?: boolean;
   onCancel?: () => void;
+  existingReadings?: Array<{ id: number; readingDate: string }>;
 }
 
-export const GasForm: React.FC<GasFormProps> = ({ onSubmit, isLoading, onCancel }) => {
+export const GasForm: React.FC<GasFormProps> = ({
+  onSubmit,
+  isLoading,
+  onCancel,
+  existingReadings = [],
+}) => {
   const [counterValue, setCounterValue] = useState('');
   const [useCurrentDateTime, setUseCurrentDateTime] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -38,6 +45,7 @@ export const GasForm: React.FC<GasFormProps> = ({ onSubmit, isLoading, onCancel 
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [error, setError] = useState('');
   const toast = useToast();
+  const { t } = useTranslation();
 
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -91,15 +99,35 @@ export const GasForm: React.FC<GasFormProps> = ({ onSubmit, isLoading, onCancel 
 
     const value = parseFloat(counterValue);
     if (!counterValue || isNaN(value) || value < 0) {
-      setError('Please enter a valid counter value');
+      setError(t('gas.invalidValue'));
+      return;
+    }
+
+    const readingDate = useCurrentDateTime
+      ? new Date()
+      : combineDateTime(selectedDate, selectedTime);
+
+    // Check if a reading already exists for this date
+    const readingDateString = readingDate.toDateString();
+    const hasTodayReading = existingReadings.some((reading) => {
+      const existingDate = new Date(reading.readingDate).toDateString();
+      return existingDate === readingDateString;
+    });
+
+    if (hasTodayReading) {
+      const errorMsg = t('gas.duplicateDate');
+      setError(errorMsg);
+      toast.show({
+        title: t('gas.duplicateEntry'),
+        description: errorMsg,
+        duration: 5000,
+        placement: 'top',
+        bg: 'orange.500',
+      });
       return;
     }
 
     try {
-      const readingDate = useCurrentDateTime
-        ? new Date()
-        : combineDateTime(selectedDate, selectedTime);
-
       await onSubmit({
         counterValue: value,
         readingDate: readingDate.toISOString(),
@@ -114,12 +142,12 @@ export const GasForm: React.FC<GasFormProps> = ({ onSubmit, isLoading, onCancel 
       // Extract backend validation message
       const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message;
 
-      const errorMessage = backendMessage || err.message || 'Failed to add reading';
+      const errorMessage = backendMessage || err.message || t('common.error');
 
       // Display in both toast and form error
       setError(errorMessage);
       toast.show({
-        title: 'Error',
+        title: t('gas.error'),
         description: errorMessage,
         duration: 5000,
         placement: 'top',

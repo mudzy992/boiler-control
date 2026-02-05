@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, VStack, HStack, Text, useColorModeValue, Badge } from 'native-base';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ThermostatDevice } from '../types/Dashboard';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface ThermostatCardProps {
   thermostat: ThermostatDevice;
@@ -9,6 +10,7 @@ interface ThermostatCardProps {
 }
 
 export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, currentTemp }) => {
+  const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -35,12 +37,12 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffMinutes < 1) return 'Now';
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffMinutes < 1) return t('thermostat.lastSeenNow');
+    if (diffMinutes < 60) return t('thermostat.lastSeenMinutes', { count: diffMinutes });
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 24) return t('thermostat.lastSeenHours', { count: diffHours });
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
+    return t('thermostat.lastSeenDays', { count: diffDays });
   };
 
   // Get target temp from first program
@@ -80,7 +82,7 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
             py={1}
             _text={{ fontSize: 'xs', fontWeight: '700' }}
           >
-            {thermostat.mode}
+            {t(`thermostat.mode.${thermostat.mode.toLowerCase()}`) || thermostat.mode}
           </Badge>
         </HStack>
 
@@ -94,7 +96,7 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
             alignItems="center"
           >
             <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
-              Current
+              {t('thermostat.current')}
             </Text>
             <HStack alignItems="baseline" space={0.5}>
               <Text fontSize="2xl" fontWeight="800" color={textColor}>
@@ -115,7 +117,7 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
             borderColor="brand.400"
           >
             <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
-              Target
+              {t('thermostat.target')}
             </Text>
             <HStack alignItems="baseline" space={0.5}>
               <Text fontSize="2xl" fontWeight="800" color={accentColor}>
@@ -131,7 +133,7 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
         {/* Footer: Last Seen */}
         <Box bg={useColorModeValue('gray.100', 'gray.700')} rounded="lg" px={3} py={2}>
           <Text fontSize="xs" fontWeight="600" color={mutedColor}>
-            Last seen: {getLastSeenText(thermostat.lastSeen)}
+            {t('thermostat.lastSeen', { time: getLastSeenText(thermostat.lastSeen) })}
           </Text>
         </Box>
       </VStack>

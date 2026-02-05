@@ -11,9 +11,9 @@ import { colorModeManager } from './src/theme/colorModeManager';
 import {
   configureNotificationHandler,
   listenForNotifications,
-  setNavigationRef,
 } from './src/services/notifications/notificationService';
-import './src/locales/config';
+import i18n from './src/locales/config';
+import { AppStorage } from './src/services/storage/AppStorage';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -41,6 +41,17 @@ export default function App() {
     return () => {
       cleanup();
     };
+  }, []);
+
+  useEffect(() => {
+    const loadLanguage = async () => {
+      const savedLanguage = await AppStorage.get('app.language');
+      if (savedLanguage && savedLanguage !== i18n.language) {
+        await i18n.changeLanguage(savedLanguage);
+      }
+    };
+
+    loadLanguage();
   }, []);
 
   return (

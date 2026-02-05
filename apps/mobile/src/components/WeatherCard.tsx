@@ -2,12 +2,14 @@ import React from 'react';
 import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import type { TodayWeather } from '../types/Weather';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface WeatherCardProps {
   weather: TodayWeather;
 }
 
 export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
+  const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -47,7 +49,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
               textTransform="uppercase"
               letterSpacing="0.5"
             >
-              Current Weather
+              {t('weather.current')}
             </Text>
             <HStack alignItems="baseline" space={1}>
               <Text fontSize="5xl" fontWeight="800" color={textColor}>
@@ -58,7 +60,9 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
               </Text>
             </HStack>
             <Text fontSize="sm" fontWeight="500" color={mutedColor}>
-              Feels like {weather?.feelsLike ? weather.feelsLike.toFixed(0) : '—'}°C
+              {t('weather.feelsLike', {
+                value: weather?.feelsLike ? weather.feelsLike.toFixed(0) : '—',
+              })}
             </Text>
             <Text fontSize="md" fontWeight="700" color={accentColor} mt={1}>
               {weather.condition}
@@ -85,7 +89,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
               {weather?.humidity ?? '—'}%
             </Text>
             <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
-              Humidity
+              {t('weather.humidity')}
             </Text>
           </Box>
 
@@ -102,7 +106,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
               {weather?.windSpeed ? weather.windSpeed.toFixed(1) : '—'}
             </Text>
             <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
-              m/s
+              {t('weather.windUnit')}
             </Text>
           </Box>
 
@@ -119,7 +123,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
               {weather?.pressure ? weather.pressure.toFixed(0) : '—'}
             </Text>
             <Text fontSize="xs" fontWeight="600" color={mutedColor} mt={0.5}>
-              hPa
+              {t('weather.pressureUnit')}
             </Text>
           </Box>
         </HStack>

@@ -2,12 +2,14 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useColorModeValue } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../../hooks/useTranslation';
 import { GasReadingsScreen } from './GasReadingsScreen';
 import { GasAnalysisScreen } from './GasAnalysisScreen';
 
 const Tab = createBottomTabNavigator();
 
 export const GasScreen = () => {
+  const { t } = useTranslation();
   const headerBg = useColorModeValue('#ffffff', '#1a202c');
   const headerTint = useColorModeValue('#000000', '#ffffff');
   const tabBg = useColorModeValue('#ffffff', '#1a202c');
@@ -37,6 +39,7 @@ export const GasScreen = () => {
         component={GasReadingsScreen}
         options={{
           headerShown: false,
+          tabBarLabel: t('navigation.readings'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
           ),
@@ -47,6 +50,7 @@ export const GasScreen = () => {
         component={GasAnalysisScreen}
         options={{
           headerShown: false,
+          tabBarLabel: t('navigation.analysis'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="analytics-outline" size={size} color={color} />
           ),

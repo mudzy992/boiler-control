@@ -211,7 +211,7 @@ export const GasAnalysisScreen: React.FC = () => {
       <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
         <Spinner size="lg" color={spinnerColor} />
         <Text mt={3} color={subtextColor}>
-          Loading analysis...
+          {t('gas.analysisLoading')}
         </Text>
       </Box>
     );
@@ -220,7 +220,7 @@ export const GasAnalysisScreen: React.FC = () => {
   if (!analysis) {
     return (
       <Box flex={1} bg={bgColor} safeArea p={4}>
-        <Text color={subtextColor}>No analysis data available.</Text>
+        <Text color={subtextColor}>{t('gas.analysisNoData')}</Text>
       </Box>
     );
   }
@@ -266,7 +266,7 @@ export const GasAnalysisScreen: React.FC = () => {
                     color={subtextColor}
                     textTransform="uppercase"
                   >
-                    Total Use
+                    {t('gas.analysisTotalUse')}
                   </Text>
                 </HStack>
                 <Text fontSize="lg" fontWeight="bold" color={textColor}>
@@ -285,7 +285,7 @@ export const GasAnalysisScreen: React.FC = () => {
                     color={subtextColor}
                     textTransform="uppercase"
                   >
-                    Avg Daily
+                    {t('gas.analysisAvgDaily')}
                   </Text>
                 </HStack>
                 <Text fontSize="lg" fontWeight="bold" color={textColor}>
@@ -299,7 +299,7 @@ export const GasAnalysisScreen: React.FC = () => {
           <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
             <VStack space={3}>
               <Text fontSize="md" fontWeight="600" color={textColor}>
-                Heating Efficiency
+                {t('gas.analysisHeatingEfficiency')}
               </Text>
               <HStack
                 justifyContent="space-between"
@@ -310,7 +310,7 @@ export const GasAnalysisScreen: React.FC = () => {
               >
                 <VStack>
                   <Text fontSize="sm" color={subtextColor}>
-                    Heating Hours
+                    {t('gas.analysisHeatingHours')}
                   </Text>
                   <Text fontSize="lg" fontWeight="bold" color={textColor}>
                     {heatingHours.toFixed(1)} h
@@ -318,7 +318,7 @@ export const GasAnalysisScreen: React.FC = () => {
                 </VStack>
                 <VStack>
                   <Text fontSize="sm" color={subtextColor}>
-                    Avg Flow Temp
+                    {t('gas.analysisAvgFlowTemp')}
                   </Text>
                   <Text fontSize="lg" fontWeight="bold" color={textColor}>
                     {averageFlowTemp.toFixed(1)}°C
@@ -326,7 +326,7 @@ export const GasAnalysisScreen: React.FC = () => {
                 </VStack>
                 <VStack>
                   <Text fontSize="sm" color={subtextColor}>
-                    Usage/Hour
+                    {t('gas.analysisUsagePerHour')}
                   </Text>
                   <Text fontSize="lg" fontWeight="bold" color={textColor}>
                     {gasUsagePerHeatingHour.toFixed(3)} m³
@@ -340,7 +340,7 @@ export const GasAnalysisScreen: React.FC = () => {
           {LineChart && chartData && chartData.datasets[0].data.length > 0 && (
             <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={2}>
               <Text fontSize="md" fontWeight="600" color={textColor} px={4} pt={4}>
-                Monthly Consumption
+                {t('gas.analysisMonthlyConsumption')}
               </Text>
               <LineChart
                 data={chartData}
@@ -380,7 +380,7 @@ export const GasAnalysisScreen: React.FC = () => {
               <HStack space={2} alignItems="center">
                 <Icon as={Ionicons} name="alert-circle-outline" size={5} color={amberIcon} />
                 <Text fontSize="sm" color={amberText}>
-                  Charts not available. Install react-native-chart-kit.
+                  {t('gas.analysisChartUnavailable')}
                 </Text>
               </HStack>
             </Box>
@@ -393,14 +393,14 @@ export const GasAnalysisScreen: React.FC = () => {
                 <HStack alignItems="center" space={2}>
                   <Icon as={Ionicons} name="stats-chart-outline" size={5} color={greenIcon} />
                   <Text fontSize="md" fontWeight="600" color={greenText}>
-                    Daily Consumption Stats
+                    {t('gas.analysisDailyStats')}
                   </Text>
                 </HStack>
 
                 <VStack space={2} divider={<Box h="1" bg={greenBorder} />}>
                   <HStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="sm" color={greenText}>
-                      Minimum Daily
+                      {t('gas.analysisMinDaily')}
                     </Text>
                     <Text fontSize="md" fontWeight="bold" color={greenText}>
                       {dailyStats.minDaily.toFixed(2)} m³
@@ -409,7 +409,7 @@ export const GasAnalysisScreen: React.FC = () => {
 
                   <HStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="sm" color={greenText}>
-                      Maximum Daily
+                      {t('gas.analysisMaxDaily')}
                     </Text>
                     <Text fontSize="md" fontWeight="bold" color={greenText}>
                       {dailyStats.maxDaily.toFixed(2)} m³
@@ -418,7 +418,7 @@ export const GasAnalysisScreen: React.FC = () => {
 
                   <HStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="sm" color={greenText}>
-                      Average Daily
+                      {t('gas.analysisAvgDailyLabel')}
                     </Text>
                     <Text fontSize="md" fontWeight="bold" color={greenText}>
                       {dailyStats.meanDaily.toFixed(2)} m³
@@ -427,7 +427,7 @@ export const GasAnalysisScreen: React.FC = () => {
 
                   <HStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="sm" color={greenText}>
-                      Median Daily
+                      {t('gas.analysisMedianDaily')}
                     </Text>
                     <Text fontSize="md" fontWeight="bold" color={greenText}>
                       {dailyStats.medianDaily.toFixed(2)} m³
@@ -437,7 +437,7 @@ export const GasAnalysisScreen: React.FC = () => {
                   {dailyStats.stdDev !== null && (
                     <HStack justifyContent="space-between" alignItems="center">
                       <Text fontSize="sm" color={greenText}>
-                        Std. Deviation
+                        {t('gas.analysisStdDev')}
                       </Text>
                       <Text fontSize="md" fontWeight="bold" color={greenText}>
                         {dailyStats.stdDev.toFixed(2)}
@@ -452,7 +452,7 @@ export const GasAnalysisScreen: React.FC = () => {
               <HStack space={2} alignItems="center">
                 <Icon as={Ionicons} name="information-circle-outline" size={5} color={purpleIcon} />
                 <Text fontSize="sm" color={purpleText} flex={1}>
-                  Need at least 2 readings to calculate daily consumption statistics.
+                  {t('gas.analysisNeedTwoReadings')}
                 </Text>
               </HStack>
             </Box>
@@ -476,13 +476,13 @@ export const GasAnalysisScreen: React.FC = () => {
                     color={blueIcon}
                   />
                   <Text fontSize="md" fontWeight="600" color={blueText}>
-                    Consumption Trend
+                    {t('gas.analysisTrend')}
                   </Text>
                 </HStack>
 
                 <HStack justifyContent="space-between" alignItems="center">
                   <Text fontSize="sm" color={blueText}>
-                    Direction
+                    {t('gas.analysisDirection')}
                   </Text>
                   <HStack
                     bg={
@@ -511,17 +511,21 @@ export const GasAnalysisScreen: React.FC = () => {
                       color="white"
                     />
                     <Text fontSize="sm" fontWeight="bold" color="white" textTransform="capitalize">
-                      {dailyStats.trend}
+                      {dailyStats.trend === 'increasing'
+                        ? t('gas.analysisTrendIncreasing')
+                        : dailyStats.trend === 'decreasing'
+                          ? t('gas.analysisTrendDecreasing')
+                          : t('gas.analysisTrendStable')}
                     </Text>
                   </HStack>
                 </HStack>
 
                 <Text fontSize="xs" color={blueText} mt={2}>
                   {dailyStats.trend === 'increasing'
-                    ? 'Consumption is increasing. Consider optimizing usage patterns.'
+                    ? t('gas.analysisTrendMessageIncreasing')
                     : dailyStats.trend === 'decreasing'
-                      ? 'Consumption is decreasing. Good trend!'
-                      : 'Consumption is relatively stable.'}
+                      ? t('gas.analysisTrendMessageDecreasing')
+                      : t('gas.analysisTrendMessageStable')}
                 </Text>
               </VStack>
             </Box>
@@ -539,7 +543,7 @@ export const GasAnalysisScreen: React.FC = () => {
               />
               <VStack flex={1} space={1}>
                 <Text fontSize="sm" fontWeight="600" color={blueText}>
-                  Analysis Period
+                  {t('gas.analysisPeriod')}
                 </Text>
                 <Text fontSize="xs" color={blueIcon}>
                   {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}

@@ -98,6 +98,34 @@ export const HeatingScreen = () => {
     ? heatingEventsData
     : (heatingEventsData as any)?.events || [];
 
+  // Calculate isHeating for each thermostat based on latest heating event
+  const getIsHeatingForThermostat = (thermostatId: number): boolean => {
+    if (!allHeatingEvents || allHeatingEvents.length === 0) return false;
+
+    // Filter events for this thermostat
+    const thermostatEvents = allHeatingEvents.filter(
+      (event: HeatingEvent) => event.thermostatId === thermostatId
+    );
+
+    if (thermostatEvents.length === 0) return false;
+
+    // Sort by timestampStart descending to get the latest event
+    const sortedEvents = [...thermostatEvents].sort(
+      (a, b) => new Date(b.timestampStart).getTime() - new Date(a.timestampStart).getTime()
+    );
+
+    const latestEvent = sortedEvents[0];
+
+    // Check if the latest event is still ongoing (no timestampEnd) and has HEATING_ON action
+    return !latestEvent.timestampEnd && latestEvent.hvacAction === 'HEATING_ON';
+  };
+
+  // Enhance thermostats with correct isHeating status
+  const enhancedThermostats = thermostats.map((thermostat) => ({
+    ...thermostat,
+    isHeating: getIsHeatingForThermostat(thermostat.id),
+  }));
+
   // Filter events to only show today's events
   const getTodayEvents = () => {
     const today = new Date();
@@ -176,8 +204,8 @@ export const HeatingScreen = () => {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) return 'Today';
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    if (date.toDateString() === today.toDateString()) return t('heatingEvents.today');
+    if (date.toDateString() === yesterday.toDateString()) return t('heatingEvents.yesterday');
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
@@ -211,8 +239,8 @@ export const HeatingScreen = () => {
 
         {/* Thermostats Status */}
         <VStack space={4}>
-          {thermostats.length > 0 ? (
-            thermostats.map((thermostat) => (
+          {enhancedThermostats.length > 0 ? (
+            enhancedThermostats.map((thermostat) => (
               <Box
                 key={thermostat.id}
                 bg={cardBg}
@@ -383,21 +411,23 @@ export const HeatingScreen = () => {
                           </HStack>
                           <Text color={subtextColor} fontSize="xs" mt={1}>
                             {formatEventTime(event.timestampStart)} -{' '}
-                            {event.timestampEnd ? formatEventTime(event.timestampEnd) : 'Active'}
+                            {event.timestampEnd
+                              ? formatEventTime(event.timestampEnd)
+                              : t('heatingEvents.active')}
                           </Text>
                         </VStack>
                         <HStack space={2}>
                           {isActive && (
                             <Badge colorScheme="error" variant="solid" rounded="md">
                               <Text fontSize="2xs" color="white">
-                                ACTIVE
+                                {t('heatingEvents.active')}
                               </Text>
                             </Badge>
                           )}
                           {event.isAnomaly && (
                             <Badge colorScheme="warning" variant="solid" rounded="md">
                               <Text fontSize="2xs" color="white">
-                                ANOMALY
+                                {t('heatingEvents.anomaly')}
                               </Text>
                             </Badge>
                           )}
@@ -408,7 +438,7 @@ export const HeatingScreen = () => {
                       <HStack justifyContent="space-between" space={2}>
                         <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
                           <Text color={subtextColor} fontSize="2xs">
-                            Duration
+                            {t('heatingEvents.duration')}
                           </Text>
                           <Text color={textColor} fontSize="sm" fontWeight="600">
                             {duration}
@@ -416,7 +446,7 @@ export const HeatingScreen = () => {
                         </VStack>
                         <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
                           <Text color={subtextColor} fontSize="2xs">
-                            Temp
+                            {t('heatingEvents.current')}
                           </Text>
                           <Text color={textColor} fontSize="sm" fontWeight="600">
                             {event.roomCurrentTemp.toFixed(1)}°C
@@ -424,7 +454,7 @@ export const HeatingScreen = () => {
                         </VStack>
                         <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
                           <Text color={subtextColor} fontSize="2xs">
-                            Target
+                            {t('heatingEvents.target')}
                           </Text>
                           <Text color={textColor} fontSize="sm" fontWeight="600">
                             {event.roomTargetTemp.toFixed(1)}°C
@@ -432,7 +462,7 @@ export const HeatingScreen = () => {
                         </VStack>
                         <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
                           <Text color={subtextColor} fontSize="2xs">
-                            Diff
+                            {t('heatingEvents.diff')}
                           </Text>
                           <Text
                             color={parseFloat(tempChange) < 0 ? heatingActiveColor : 'green.500'}
@@ -453,7 +483,9 @@ export const HeatingScreen = () => {
                           color={subtextColor}
                         />
                         <Text color={subtextColor} fontSize="2xs">
-                          Source: {event.source || 'System'}
+                          {t('heatingEvents.source', {
+                            source: event.source || t('heatingEvents.system'),
+                          })}
                         </Text>
                       </HStack>
                     </Box>

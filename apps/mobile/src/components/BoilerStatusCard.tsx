@@ -2,12 +2,14 @@ import React from 'react';
 import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { BoilerData } from '../types/Dashboard';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface BoilerStatusCardProps {
   boiler: BoilerData | null | undefined;
 }
 
 export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) => {
+  const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -20,7 +22,7 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
         <HStack space={2} alignItems="center">
           <MaterialCommunityIcons name="alert-circle" size={20} color={mutedColor} />
           <Text fontSize="sm" color={mutedColor}>
-            Boiler data not available
+            {t('boiler.notAvailable')}
           </Text>
         </HStack>
       </Box>
@@ -65,7 +67,7 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
               textTransform="uppercase"
               letterSpacing="0.5"
             >
-              Boiler Status
+              {t('boiler.status')}
             </Text>
             <HStack alignItems="center" space={3}>
               <Box bg={isHeating ? accentColor : mutedColor} opacity={0.15} rounded="full" p={2.5}>
@@ -77,11 +79,11 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
               </Box>
               <VStack space={0.5}>
                 <Text fontSize="xl" fontWeight="800" color={isHeating ? accentColor : textColor}>
-                  {isHeating ? 'Heating' : 'Idle'}
+                  {isHeating ? t('boiler.heating') : t('boiler.idle')}
                 </Text>
                 {isHeating && (
                   <Text fontSize="xs" fontWeight="600" color={mutedColor}>
-                    Duration: {getHeatingDuration()}
+                    {t('boiler.duration', { value: getHeatingDuration() })}
                   </Text>
                 )}
               </VStack>
@@ -99,7 +101,7 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
             letterSpacing="0.5"
             mb={2}
           >
-            External Temperature
+            {t('boiler.externalTemp')}
           </Text>
           <HStack alignItems="baseline" space={1}>
             <Text fontSize="3xl" fontWeight="800" color={textColor}>
@@ -120,7 +122,7 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
             textTransform="uppercase"
             letterSpacing="0.5"
           >
-            Flow Temperature
+            {t('boiler.flowTemp')}
           </Text>
           <HStack space={3} justifyContent="space-between">
             {/* Suggested */}
@@ -134,7 +136,7 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
                 alignItems="center"
               >
                 <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
-                  Suggested
+                  {t('boiler.suggested')}
                 </Text>
                 <HStack alignItems="baseline" space={0.5}>
                   <Text fontSize="2xl" fontWeight="800" color="blue.600">
@@ -162,7 +164,7 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
                 alignItems="center"
               >
                 <Text fontSize="xs" fontWeight="700" color={mutedColor} mb={2}>
-                  Actual
+                  {t('boiler.actual')}
                 </Text>
                 <HStack alignItems="baseline" space={0.5}>
                   <Text
@@ -199,8 +201,8 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
           >
             <Text fontSize="sm" fontWeight="600" color={textColor}>
               {isOptimal
-                ? `✓ Optimal (Δ ${tempDiff ? tempDiff.toFixed(1) : '—'}°C)`
-                : `⚠ Deviation: ${tempDiff ? tempDiff.toFixed(1) : '—'}°C`}
+                ? t('boiler.optimal', { diff: tempDiff ? tempDiff.toFixed(1) : '—' })
+                : t('boiler.deviation', { diff: tempDiff ? tempDiff.toFixed(1) : '—' })}
             </Text>
           </Box>
         </VStack>

@@ -171,10 +171,10 @@ export const GasForm: React.FC<GasFormProps> = ({
 
       <FormControl isRequired>
         <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-          Counter Value (m³)
+          {t('gas.counterValueLabel')}
         </FormControl.Label>
         <FormInput
-          placeholder="e.g. 12345.67"
+          placeholder={t('gas.counterValuePlaceholder')}
           keyboardType="decimal-pad"
           value={counterValue}
           onChangeText={setCounterValue}
@@ -194,7 +194,7 @@ export const GasForm: React.FC<GasFormProps> = ({
           <HStack space={2} alignItems="center">
             <Icon as={Ionicons} name="time-outline" size={5} color="brand.500" />
             <Text fontSize="sm" fontWeight="500" color={textColor}>
-              Use current date & time
+              {t('gas.useCurrentDateTime')}
             </Text>
           </HStack>
           <Switch
@@ -212,7 +212,7 @@ export const GasForm: React.FC<GasFormProps> = ({
         <>
           <FormControl isRequired>
             <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-              Reading Date
+              {t('gas.readingDate')}
             </FormControl.Label>
             <Pressable
               onPress={() =>
@@ -238,7 +238,7 @@ export const GasForm: React.FC<GasFormProps> = ({
 
           <FormControl isRequired>
             <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-              Reading Time
+              {t('gas.readingTime')}
             </FormControl.Label>
             <Pressable
               onPress={() =>
@@ -293,7 +293,7 @@ export const GasForm: React.FC<GasFormProps> = ({
             onPress={onCancel}
             disabled={isLoading}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
         <Button
@@ -303,7 +303,7 @@ export const GasForm: React.FC<GasFormProps> = ({
           isDisabled={isLoading || !counterValue}
           _text={{ fontWeight: 'bold' }}
         >
-          {isLoading ? <Spinner size="sm" color="white" /> : 'Add Reading'}
+          {isLoading ? <Spinner size="sm" color="white" /> : t('gas.addReading')}
         </Button>
       </HStack>
     </VStack>

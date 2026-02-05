@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, VStack, HStack, Text, Icon, Pressable, useColorModeValue } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GasReading {
   id: number;
@@ -13,17 +14,18 @@ interface GasReading {
 
 interface GasReadingCardProps {
   reading: GasReading;
-  nextReading?: GasReading; // Next reading in the list (older reading)
+  previousReading?: GasReading; // Previous reading in the list (newer reading)
   onDelete?: (id: number) => void;
   isDeleting?: boolean;
 }
 
 export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   reading,
-  nextReading,
+  previousReading,
   onDelete,
   isDeleting,
 }) => {
+  const { t } = useTranslation();
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -36,15 +38,15 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   const formattedDate = dayjs(reading.readingDate).format('DD.MM.YYYY');
   const formattedTime = dayjs(reading.readingDate).format('HH:mm');
 
-  // Calculate consumption difference: current - next (older reading)
+  // Calculate consumption difference: previous (newer) - current (older)
   const consumption =
-    nextReading && reading.counterValue >= nextReading.counterValue
-      ? reading.counterValue - nextReading.counterValue
+    previousReading && previousReading.counterValue >= reading.counterValue
+      ? previousReading.counterValue - reading.counterValue
       : null;
 
   const daysDiff =
-    nextReading && dayjs(reading.readingDate).isAfter(nextReading.readingDate)
-      ? dayjs(reading.readingDate).diff(dayjs(nextReading.readingDate), 'day')
+    previousReading && dayjs(previousReading.readingDate).isAfter(reading.readingDate)
+      ? dayjs(previousReading.readingDate).diff(dayjs(reading.readingDate), 'day')
       : null;
 
   const dailyConsumption = consumption && daysDiff && daysDiff > 0 ? consumption / daysDiff : null;
@@ -63,7 +65,7 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
             <HStack space={4}>
               <VStack>
                 <Text fontSize="xs" color={subtextColor}>
-                  Date
+                  {t('gas.dateLabel')}
                 </Text>
                 <Text fontSize="sm" fontWeight="500" color={textColor}>
                   {formattedDate}
@@ -71,7 +73,7 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
               </VStack>
               <VStack>
                 <Text fontSize="xs" color={subtextColor}>
-                  Time
+                  {t('gas.timeLabel')}
                 </Text>
                 <Text fontSize="sm" fontWeight="500" color={textColor}>
                   {formattedTime}
@@ -110,7 +112,7 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
             <HStack justifyContent="space-between" alignItems="center">
               <VStack>
                 <Text fontSize="xs" color={consumptionText} fontWeight="600">
-                  Consumption
+                  {t('gas.consumption')}
                 </Text>
                 <Text fontSize="sm" fontWeight="bold" color={consumptionText}>
                   {consumption.toFixed(2)} m³
@@ -119,10 +121,10 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
               {dailyConsumption !== null && (
                 <VStack alignItems="flex-end">
                   <Text fontSize="xs" color={consumptionText} fontWeight="600">
-                    Daily
+                    {t('gas.dailyLabel')}
                   </Text>
                   <Text fontSize="sm" fontWeight="bold" color={consumptionText}>
-                    {dailyConsumption.toFixed(2)} m³/day
+                    {t('gas.dailyValue', { value: dailyConsumption.toFixed(2) })}
                   </Text>
                 </VStack>
               )}

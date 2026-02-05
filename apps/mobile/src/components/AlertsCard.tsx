@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { DashboardResponse } from '../types/Dashboard';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface AlertsCardProps {
   dashboardData?: DashboardResponse;
@@ -16,6 +17,7 @@ interface Alert {
 }
 
 export const AlertsCard: React.FC<AlertsCardProps> = ({ dashboardData }) => {
+  const { t } = useTranslation();
   // Generate alerts based on dashboard data
   const generateAlerts = (): Alert[] => {
     const alerts: Alert[] = [];
@@ -31,16 +33,20 @@ export const AlertsCard: React.FC<AlertsCardProps> = ({ dashboardData }) => {
           alerts.push({
             id: 'flow-temp-critical',
             type: 'critical',
-            title: 'Flow Temperature Critical',
-            message: `Actual (${boiler.actualFlowTemp.toFixed(1)}°C) differs from suggested (${boiler.suggestedFlowTemp.toFixed(1)}°C) by ${tempDiff.toFixed(1)}°C`,
+            title: t('alerts.flowTempCriticalTitle'),
+            message: t('alerts.flowTempCriticalMessage', {
+              actual: boiler.actualFlowTemp.toFixed(1),
+              suggested: boiler.suggestedFlowTemp.toFixed(1),
+              diff: tempDiff.toFixed(1),
+            }),
             icon: 'thermometer-alert',
           });
         } else if (tempDiff > 2) {
           alerts.push({
             id: 'flow-temp-warning',
             type: 'warning',
-            title: 'Flow Temperature Deviation',
-            message: `Temperature difference: ${tempDiff.toFixed(1)}°C`,
+            title: t('alerts.flowTempWarningTitle'),
+            message: t('alerts.flowTempWarningMessage', { diff: tempDiff.toFixed(1) }),
             icon: 'thermometer',
           });
         }
@@ -62,16 +68,22 @@ export const AlertsCard: React.FC<AlertsCardProps> = ({ dashboardData }) => {
             alerts.push({
               id: `thermostat-offline-${thermostat.id}`,
               type: 'critical',
-              title: 'Thermostat Offline',
-              message: `${thermostat.alias} hasn't responded for ${Math.floor(hoursSinceLastSeen)} hours`,
+              title: t('alerts.thermostatOfflineTitle'),
+              message: t('alerts.thermostatOfflineMessage', {
+                name: thermostat.alias,
+                hours: Math.floor(hoursSinceLastSeen),
+              }),
               icon: 'wifi-off',
             });
           } else if (hoursSinceLastSeen > 1) {
             alerts.push({
               id: `thermostat-unresponsive-${thermostat.id}`,
               type: 'warning',
-              title: 'Thermostat Unresponsive',
-              message: `${thermostat.alias} last seen ${Math.floor(hoursSinceLastSeen)}h ago`,
+              title: t('alerts.thermostatUnresponsiveTitle'),
+              message: t('alerts.thermostatUnresponsiveMessage', {
+                name: thermostat.alias,
+                hours: Math.floor(hoursSinceLastSeen),
+              }),
               icon: 'wifi-alert',
             });
           }
@@ -88,8 +100,10 @@ export const AlertsCard: React.FC<AlertsCardProps> = ({ dashboardData }) => {
           alerts.push({
             id: 'low-confidence',
             type: 'info',
-            title: 'Learning Model Confidence Low',
-            message: `System needs more heating data for better recommendations (${(avgConfidence * 100).toFixed(0)}% confidence)`,
+            title: t('alerts.learningLowTitle'),
+            message: t('alerts.learningLowMessage', {
+              confidence: (avgConfidence * 100).toFixed(0),
+            }),
             icon: 'lightbulb-question',
           });
         }
@@ -101,8 +115,8 @@ export const AlertsCard: React.FC<AlertsCardProps> = ({ dashboardData }) => {
       alerts.push({
         id: 'weather-unavailable',
         type: 'warning',
-        title: 'Weather Data Unavailable',
-        message: 'External temperature data is not available',
+        title: t('alerts.weatherUnavailableTitle'),
+        message: t('alerts.weatherUnavailableMessage'),
         icon: 'weather-cloudy-alert',
       });
     }

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface NotificationPreference {
   id: number;
@@ -25,26 +26,15 @@ interface NotificationPreference {
   updatedAt: string;
 }
 
-const labelMap: Record<string, string> = {
-  DAILY_RECOMMENDATION: 'Dnevne preporuke',
-  FLOW_TEMP_CHANGED: 'Promjena temperature polazne vode',
-  HEATING_STARTED: 'Početak grijanja',
-  HEATING_ENDED: 'Kraj grijanja',
-  SYSTEM_ALERT: 'Sistemska upozorenja',
-  GAS_READING_REMINDER: 'Podsjetnici za unos očitanja plina',
-};
+const getTypeLabel = (type: string, t: (key: string) => string) =>
+  t(`notifications.types.${type}`) || type;
 
-const descriptionMap: Record<string, string> = {
-  DAILY_RECOMMENDATION: 'Preporuke za optimizaciju grijanja svaki dan.',
-  FLOW_TEMP_CHANGED: 'Obavijesti kada se promijeni temperatura polazne vode.',
-  HEATING_STARTED: 'Obavijest kada grijanje započne.',
-  HEATING_ENDED: 'Obavijest kada grijanje završi.',
-  SYSTEM_ALERT: 'Kritična upozorenja o radu sistema.',
-  GAS_READING_REMINDER: 'Podsjetnik za unos očitanja plina.',
-};
+const getTypeDescription = (type: string, t: (key: string) => string) =>
+  t(`notifications.typeDescriptions.${type}`) || t('notifications.preferencesDefaultDesc');
 
 export const NotificationPreferencesScreen: React.FC = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -75,7 +65,7 @@ export const NotificationPreferencesScreen: React.FC = () => {
       <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
         <Spinner size="lg" color={loadingSpinnerColor} />
         <Text mt={3} color={subtextColor}>
-          Loading preferences...
+          {t('notifications.preferencesLoading')}
         </Text>
       </Box>
     );
@@ -94,8 +84,7 @@ export const NotificationPreferencesScreen: React.FC = () => {
                 color={infoIconColor}
               />
               <Text fontSize="sm" color={infoTextColor}>
-                Odaberite koje tipove notifikacija želite primati. Sve promjene se odmah
-                primjenjuju.
+                {t('notifications.preferencesInfo')}
               </Text>
             </HStack>
           </Box>
@@ -112,14 +101,16 @@ export const NotificationPreferencesScreen: React.FC = () => {
               <HStack space={3} alignItems="center" justifyContent="space-between">
                 <VStack flex={1} space={1}>
                   <Text fontSize="md" fontWeight="600" color={textColor}>
-                    {labelMap[pref.type] || pref.type}
+                    {getTypeLabel(pref.type, t)}
                   </Text>
                   <Text fontSize="sm" color={subtextColor}>
-                    {descriptionMap[pref.type] || 'Primaj notifikacije za ovaj tip događaja.'}
+                    {getTypeDescription(pref.type, t)}
                   </Text>
                   {pref.updatedAt && (
                     <Text fontSize="xs" color={subtextColor}>
-                      Posljednja izmjena: {dayjs(pref.updatedAt).format('DD.MM.YYYY HH:mm')}
+                      {t('notifications.lastUpdated', {
+                        date: dayjs(pref.updatedAt).format('DD.MM.YYYY HH:mm'),
+                      })}
                     </Text>
                   )}
                 </VStack>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 import type { RecentHeatingEvent } from '../types/Dashboard';
 
 interface RecentHeatingEventsProps {
@@ -8,6 +9,7 @@ interface RecentHeatingEventsProps {
 }
 
 export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events }) => {
+  const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -39,7 +41,7 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
     return {
       icon: isHeating ? 'fire' : 'fire-off',
       color: isHeating ? accentColor : mutedColor,
-      label: isHeating ? 'Heating' : 'Idle',
+      label: isHeating ? t('heatingEvents.heating') : t('heatingEvents.idle'),
     };
   };
 
@@ -84,7 +86,7 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
           <HStack space={3} justifyContent="space-between">
             <Box flex={1}>
               <Text fontSize="xs" color={mutedColor}>
-                Current
+                {t('heatingEvents.current')}
               </Text>
               <Text fontSize="sm" fontWeight="bold" color={textColor}>
                 {item?.currentTemp ? item.currentTemp.toFixed(1) : '—'}°C
@@ -92,7 +94,7 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
             </Box>
             <Box flex={1}>
               <Text fontSize="xs" color={mutedColor}>
-                Target
+                {t('heatingEvents.target')}
               </Text>
               <Text fontSize="sm" fontWeight="bold" color={textColor}>
                 {item?.targetTemp ? item.targetTemp.toFixed(1) : '—'}°C
@@ -100,7 +102,7 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
             </Box>
             <Box flex={1}>
               <Text fontSize="xs" color={mutedColor}>
-                Diff
+                {t('heatingEvents.diff')}
               </Text>
               <Text
                 fontSize="sm"
@@ -122,7 +124,7 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
         <VStack space={2} alignItems="center">
           <MaterialCommunityIcons name="history" size={24} color={mutedColor} />
           <Text fontSize="sm" color={mutedColor}>
-            No heating events today
+            {t('heatingEvents.noEvents')}
           </Text>
         </VStack>
       </Box>
@@ -133,14 +135,14 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
     <Box bg={bgColor} borderWidth={1} borderColor={borderColor} rounded="lg" p={4} mb={3}>
       <VStack space={2}>
         <Text fontSize="sm" fontWeight="600" color={mutedColor}>
-          Recent Heating Events
+          {t('heatingEvents.title')}
         </Text>
 
         {events.slice(0, 5).map((item, index) => renderEventItem({ item, index }))}
 
         {events.length > 5 && (
           <Text fontSize="xs" color={mutedColor} textAlign="center" mt={2}>
-            +{events.length - 5} more events
+            {t('heatingEvents.moreEvents', { count: events.length - 5 })}
           </Text>
         )}
       </VStack>

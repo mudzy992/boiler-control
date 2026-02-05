@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Box, VStack, HStack, Text, Icon, useColorModeValue, Skeleton } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GasReading {
   id: number;
@@ -17,6 +18,7 @@ interface GasAnalyticsCardProps {
 }
 
 export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, isLoading }) => {
+  const { t } = useTranslation();
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -79,7 +81,7 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
         <HStack space={3} alignItems="center">
           <Icon as={Ionicons} name="information-circle-outline" size={5} color={subtextColor} />
           <Text fontSize="sm" color={subtextColor}>
-            No gas readings available yet.
+            {t('analytics.noGasReadings')}
           </Text>
         </HStack>
       </Box>
@@ -97,19 +99,24 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
     <Box bg={cardBg} rounded="xl" shadow={2} p={4} borderWidth={1} borderColor={borderColor}>
       <VStack space={4}>
         {/* Header */}
-        <HStack alignItems="center" space={2}>
-          <Icon as={Ionicons} name="flame-outline" size={6} color="orange.500" />
-          <Text fontSize="lg" fontWeight="600" color={textColor}>
-            Gas Consumption
+        <VStack space={1}>
+          <HStack alignItems="center" space={2}>
+            <Icon as={Ionicons} name="flame-outline" size={6} color="orange.500" />
+            <Text fontSize="lg" fontWeight="600" color={textColor}>
+              {t('analytics.gasConsumption')}
+            </Text>
+          </HStack>
+          <Text fontSize="xs" color={subtextColor}>
+            {t('analytics.gasConsumptionDesc')}
           </Text>
-        </HStack>
+        </VStack>
 
         {/* Summary Stats */}
         <VStack space={2}>
           <HStack space={3}>
             <Box flex={1} bg={statBg} rounded="lg" p={3}>
               <Text fontSize="xs" color={subtextColor} fontWeight="600">
-                Total
+                {t('analytics.totalLabel')}
               </Text>
               <Text fontSize="md" fontWeight="bold" color={textColor}>
                 {stats.totalConsumption.toFixed(2)} m³
@@ -118,7 +125,7 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
 
             <Box flex={1} bg={statBg} rounded="lg" p={3}>
               <Text fontSize="xs" color={subtextColor} fontWeight="600">
-                Avg Daily
+                {t('analytics.avgDailyLabel')}
               </Text>
               <Text fontSize="md" fontWeight="bold" color={textColor}>
                 {stats.avgDailyConsumption.toFixed(2)} m³
@@ -129,7 +136,7 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
           <HStack space={3}>
             <Box flex={1} bg={statBg} rounded="lg" p={3}>
               <Text fontSize="xs" color={subtextColor} fontWeight="600">
-                Min
+                {t('analytics.minLabel')}
               </Text>
               <Text fontSize="md" fontWeight="bold" color={textColor}>
                 {stats.minConsumption.toFixed(2)} m³
@@ -138,7 +145,7 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
 
             <Box flex={1} bg={statBg} rounded="lg" p={3}>
               <Text fontSize="xs" color={subtextColor} fontWeight="600">
-                Max
+                {t('analytics.maxLabel')}
               </Text>
               <Text fontSize="md" fontWeight="bold" color={textColor}>
                 {stats.maxConsumption.toFixed(2)} m³
@@ -150,22 +157,22 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
         {/* Recent Readings with Consumption Differences */}
         <VStack space={2} pt={2} borderTopWidth={1} borderTopColor={borderColor}>
           <Text fontSize="sm" fontWeight="600" color={textColor}>
-            Recent Readings ({stats.readingCount})
+            {t('analytics.recentReadings')} ({stats.readingCount})
           </Text>
 
           {displayReadings.map((reading, idx) => {
-            const isOldest = idx === 0;
+            const isNewest = idx === displayReadings.length - 1;
             const nextReading =
               idx < displayReadings.length - 1 ? displayReadings[idx + 1] : undefined;
 
             const consumption =
-              nextReading && reading.counterValue >= nextReading.counterValue
-                ? reading.counterValue - nextReading.counterValue
+              nextReading && nextReading.counterValue >= reading.counterValue
+                ? nextReading.counterValue - reading.counterValue
                 : null;
 
             const daysDiff =
-              nextReading && dayjs(reading.readingDate).isAfter(nextReading.readingDate)
-                ? dayjs(reading.readingDate).diff(dayjs(nextReading.readingDate), 'day')
+              nextReading && dayjs(nextReading.readingDate).isAfter(reading.readingDate)
+                ? dayjs(nextReading.readingDate).diff(dayjs(reading.readingDate), 'day')
                 : null;
 
             const dailyConsumption =
@@ -184,14 +191,14 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
                     </Text>
                   </VStack>
 
-                  {!isOldest && consumption !== null && (
+                  {!isNewest && consumption !== null && (
                     <VStack alignItems="flex-end" space={0}>
                       <Text fontSize="xs" fontWeight="600" color={consumptionText}>
                         {consumption.toFixed(2)} m³
                       </Text>
                       {dailyConsumption !== null && (
                         <Text fontSize="xs" color={consumptionText}>
-                          {dailyConsumption.toFixed(2)}/day
+                          {t('analytics.perDay', { value: dailyConsumption.toFixed(2) })}
                         </Text>
                       )}
                     </VStack>

@@ -13,7 +13,6 @@ import {
   Spinner,
   ScrollView,
   Pressable,
-  Modal,
   useToast,
   Center,
 } from 'native-base';
@@ -22,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
 import { useTranslation } from '../../hooks/useTranslation';
+import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
 
@@ -369,12 +369,14 @@ export const GasReadingsScreen: React.FC = () => {
                 <VStack>
                   <Text fontSize="2xs" fontWeight="600" color={mutedColor} mb={1}>
                     {dateFilter === 'week'
-                      ? 'Last Week Consumption'
+                      ? t('gas.consumptionLastWeek')
                       : dateFilter === 'month'
-                        ? 'This Month Consumption'
+                        ? t('gas.consumptionThisMonth')
                         : dateFilter === 'year'
-                          ? 'This Year Consumption'
-                          : 'Total Consumption'}
+                          ? t('gas.consumptionThisYear')
+                          : dateFilter === 'custom'
+                            ? t('gas.consumptionCustom')
+                            : t('gas.consumptionTotal')}
                   </Text>
                   <HStack alignItems="baseline" space={1}>
                     <Text fontSize="2xl" fontWeight="700" color={textColor}>
@@ -414,9 +416,7 @@ export const GasReadingsScreen: React.FC = () => {
                 <GasReadingCard
                   key={reading.id}
                   reading={reading}
-                  nextReading={
-                    idx < filteredReadings.length - 1 ? filteredReadings[idx + 1] : undefined
-                  }
+                  previousReading={idx > 0 ? filteredReadings[idx - 1] : undefined}
                   onDelete={() => deleteMutation.mutate(reading.id)}
                   isDeleting={deleteMutation.isPending && deleteMutation.variables === reading.id}
                 />
@@ -447,148 +447,112 @@ export const GasReadingsScreen: React.FC = () => {
       </Pressable>
 
       {/* Add Reading Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} size="full">
-        <Modal.Content bg={cardBg} safeAreaTop>
-          <Modal.Header borderBottomWidth={1} borderBottomColor={borderColor}>
-            <HStack justifyContent="space-between" w="full" alignItems="center">
-              <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                {t('gas.addReading') || 'Add Gas Reading'}
-              </Text>
-              <Pressable onPress={() => setShowAddModal(false)}>
-                <Icon as={Ionicons} name="close" size={6} color={textColor} />
-              </Pressable>
-            </HStack>
-          </Modal.Header>
-          <Modal.Body p={0}>
-            <ScrollView w="full" p={4} bounces={false}>
-              <GasForm
-                onSubmit={addMutation.mutateAsync}
-                isLoading={addMutation.isPending}
-                onCancel={() => setShowAddModal(false)}
-                existingReadings={readings}
-              />
-            </ScrollView>
-          </Modal.Body>
-        </Modal.Content>
-      </Modal>
+      <BottomSheetModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        snapPoints={['75%', '95%']}
+      >
+        <VStack space={4} flex={1}>
+          <HStack justifyContent="space-between" alignItems="center">
+            <Text fontSize="lg" fontWeight="bold" color={textColor}>
+              {t('gas.addReading') || 'Add Gas Reading'}
+            </Text>
+            <Pressable onPress={() => setShowAddModal(false)}>
+              <Icon as={Ionicons} name="close" size={6} color={textColor} />
+            </Pressable>
+          </HStack>
+          <ScrollView bounces={false} flex={1}>
+            <GasForm
+              onSubmit={addMutation.mutateAsync}
+              isLoading={addMutation.isPending}
+              onCancel={() => setShowAddModal(false)}
+              existingReadings={readings}
+            />
+          </ScrollView>
+        </VStack>
+      </BottomSheetModal>
 
       {/* Date Range Picker Modal */}
-      <Modal isOpen={showDateRangePicker} onClose={() => setShowDateRangePicker(false)} size="lg">
-        <Modal.Content bg={cardBg}>
-          <Modal.Header borderBottomWidth={1} borderBottomColor={borderColor}>
-            <Text fontSize="lg" fontWeight="bold" color={textColor}>
-              {t('gas.dateRange.title') || 'Select Date Range'}
-            </Text>
-          </Modal.Header>
-          <Modal.Body>
-            <VStack space={4}>
-              {/* Start Date */}
-              <Box>
-                <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                  {t('gas.dateRange.startDate') || 'Start Date'}
-                </Text>
-                <Pressable
-                  onPress={() => setShowStartPicker(true)}
-                  bg={filterBg}
-                  px={4}
-                  py={3}
-                  rounded="lg"
-                  borderWidth={1}
-                  borderColor={borderColor}
-                >
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <Text color={textColor} fontSize="sm">
-                      {customStartDate
-                        ? customStartDate.toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : t('gas.dateRange.selectStart') || 'Select start date'}
-                    </Text>
-                    <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
-                  </HStack>
-                </Pressable>
-              </Box>
+      <BottomSheetModal
+        isOpen={showDateRangePicker}
+        onClose={() => setShowDateRangePicker(false)}
+        snapPoints={['60%', '85%']}
+      >
+        <VStack space={4}>
+          <Text fontSize="lg" fontWeight="bold" color={textColor}>
+            {t('gas.dateRange.title') || 'Select Date Range'}
+          </Text>
+          <VStack space={4}>
+            {/* Start Date */}
+            <Box>
+              <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
+                {t('gas.dateRange.startDate') || 'Start Date'}
+              </Text>
+              <Pressable
+                onPress={() => setShowStartPicker(true)}
+                bg={filterBg}
+                px={4}
+                py={3}
+                rounded="lg"
+                borderWidth={1}
+                borderColor={borderColor}
+              >
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text color={textColor} fontSize="sm">
+                    {customStartDate
+                      ? customStartDate.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : t('gas.dateRange.selectStart') || 'Select start date'}
+                  </Text>
+                  <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
+                </HStack>
+              </Pressable>
+            </Box>
 
-              {/* End Date */}
-              <Box>
-                <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                  {t('gas.dateRange.endDate') || 'End Date'}
-                </Text>
-                <Pressable
-                  onPress={() => setShowEndPicker(true)}
-                  bg={filterBg}
-                  px={4}
-                  py={3}
-                  rounded="lg"
-                  borderWidth={1}
-                  borderColor={borderColor}
-                >
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <Text color={textColor} fontSize="sm">
-                      {customEndDate
-                        ? customEndDate.toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : t('gas.dateRange.selectEnd') || 'Select end date'}
-                    </Text>
-                    <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
-                  </HStack>
-                </Pressable>
-              </Box>
+            {/* End Date */}
+            <Box>
+              <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
+                {t('gas.dateRange.endDate') || 'End Date'}
+              </Text>
+              <Pressable
+                onPress={() => setShowEndPicker(true)}
+                bg={filterBg}
+                px={4}
+                py={3}
+                rounded="lg"
+                borderWidth={1}
+                borderColor={borderColor}
+              >
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text color={textColor} fontSize="sm">
+                    {customEndDate
+                      ? customEndDate.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : t('gas.dateRange.selectEnd') || 'Select end date'}
+                  </Text>
+                  <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
+                </HStack>
+              </Pressable>
+            </Box>
 
-              {/* Quick Presets */}
+            {/* Quick Presets */}
+            <VStack space={2}>
+              <Text fontSize="xs" fontWeight="600" color={mutedColor} mb={1}>
+                {t('gas.dateRange.quickPresets') || 'Quick Presets'}
+              </Text>
               <VStack space={2}>
-                <Text fontSize="xs" fontWeight="600" color={mutedColor} mb={1}>
-                  {t('gas.dateRange.quickPresets') || 'Quick Presets'}
-                </Text>
-                <VStack space={2}>
-                  <HStack space={2}>
-                    <Pressable
-                      onPress={() => {
-                        const end = new Date();
-                        const start = new Date();
-                        start.setDate(end.getDate() - 30);
-                        setCustomStartDate(start);
-                        setCustomEndDate(end);
-                      }}
-                      bg={filterBg}
-                      px={3}
-                      py={2}
-                      rounded="md"
-                      flex={1}
-                    >
-                      <Text fontSize="xs" color={textColor} textAlign="center">
-                        {t('gas.dateRange.last30') || 'Last 30 days'}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => {
-                        const end = new Date();
-                        const start = new Date();
-                        start.setDate(end.getDate() - 60);
-                        setCustomStartDate(start);
-                        setCustomEndDate(end);
-                      }}
-                      bg={filterBg}
-                      px={3}
-                      py={2}
-                      rounded="md"
-                      flex={1}
-                    >
-                      <Text fontSize="xs" color={textColor} textAlign="center">
-                        {t('gas.dateRange.last60') || 'Last 60 days'}
-                      </Text>
-                    </Pressable>
-                  </HStack>
+                <HStack space={2}>
                   <Pressable
                     onPress={() => {
                       const end = new Date();
                       const start = new Date();
-                      start.setDate(end.getDate() - 90);
+                      start.setDate(end.getDate() - 30);
                       setCustomStartDate(start);
                       setCustomEndDate(end);
                     }}
@@ -596,49 +560,85 @@ export const GasReadingsScreen: React.FC = () => {
                     px={3}
                     py={2}
                     rounded="md"
+                    flex={1}
                   >
                     <Text fontSize="xs" color={textColor} textAlign="center">
-                      {t('gas.dateRange.last90') || 'Last 90 days'}
+                      {t('gas.dateRange.last30') || 'Last 30 days'}
                     </Text>
                   </Pressable>
-                </VStack>
+                  <Pressable
+                    onPress={() => {
+                      const end = new Date();
+                      const start = new Date();
+                      start.setDate(end.getDate() - 60);
+                      setCustomStartDate(start);
+                      setCustomEndDate(end);
+                    }}
+                    bg={filterBg}
+                    px={3}
+                    py={2}
+                    rounded="md"
+                    flex={1}
+                  >
+                    <Text fontSize="xs" color={textColor} textAlign="center">
+                      {t('gas.dateRange.last60') || 'Last 60 days'}
+                    </Text>
+                  </Pressable>
+                </HStack>
+                <Pressable
+                  onPress={() => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(end.getDate() - 90);
+                    setCustomStartDate(start);
+                    setCustomEndDate(end);
+                  }}
+                  bg={filterBg}
+                  px={3}
+                  py={2}
+                  rounded="md"
+                >
+                  <Text fontSize="xs" color={textColor} textAlign="center">
+                    {t('gas.dateRange.last90') || 'Last 90 days'}
+                  </Text>
+                </Pressable>
               </VStack>
             </VStack>
-          </Modal.Body>
-          <Modal.Footer borderTopWidth={1} borderTopColor={borderColor}>
-            <HStack space={3} w="full">
-              <Pressable
-                flex={1}
-                onPress={() => {
-                  setCustomStartDate(null);
-                  setCustomEndDate(null);
-                  setShowDateRangePicker(false);
-                }}
-                bg={filterBg}
-                py={3}
-                rounded="lg"
-                alignItems="center"
-              >
-                <Text fontSize="sm" fontWeight="600" color={textColor}>
-                  {t('common.cancel') || 'Clear'}
-                </Text>
-              </Pressable>
-              <Pressable
-                flex={1}
-                onPress={() => setShowDateRangePicker(false)}
-                bg={fabBg}
-                py={3}
-                rounded="lg"
-                alignItems="center"
-              >
-                <Text fontSize="sm" fontWeight="600" color="white">
-                  {t('common.save') || 'Apply'}
-                </Text>
-              </Pressable>
-            </HStack>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal>
+          </VStack>
+
+          {/* Button group for date range modal */}
+          <HStack space={3} w="full" mt={4}>
+            <Pressable
+              flex={1}
+              onPress={() => {
+                setCustomStartDate(null);
+                setCustomEndDate(null);
+                setShowDateRangePicker(false);
+              }}
+              bg={filterBg}
+              py={3}
+              rounded="lg"
+              alignItems="center"
+            >
+              <Text fontSize="sm" fontWeight="600" color={textColor}>
+                {t('common.clear')}
+              </Text>
+            </Pressable>
+            <Pressable
+              flex={1}
+              onPress={() => setShowDateRangePicker(false)}
+              bg={fabBg}
+              py={3}
+              rounded="lg"
+              alignItems="center"
+            >
+              <Text fontSize="sm" fontWeight="600" color="white">
+                {t('common.save') || 'Apply'}
+              </Text>
+            </Pressable>
+          </HStack>
+        </VStack>
+      </BottomSheetModal>
 
       {/* Start Date Picker */}
       {showStartPicker && (

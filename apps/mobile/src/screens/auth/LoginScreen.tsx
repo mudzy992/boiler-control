@@ -14,6 +14,7 @@ import {
 } from 'native-base';
 import { Platform } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormInput } from '../../components/FormInput';
 
@@ -23,6 +24,7 @@ export const LoginScreen = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
+  const { t } = useTranslation();
   const toast = useToast();
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
@@ -32,7 +34,7 @@ export const LoginScreen = ({ navigation }: any) => {
   const handleLogin = async () => {
     if (!email || !password) {
       toast.show({
-        description: 'Please fill in all fields',
+        description: t('auth.fillAllFields'),
       });
       return;
     }
@@ -41,13 +43,12 @@ export const LoginScreen = ({ navigation }: any) => {
     try {
       await login(email, password);
       toast.show({
-        description: 'Welcome back!',
+        description: t('auth.welcomeBack'),
       });
     } catch (error: any) {
       console.error('Login error:', error);
       toast.show({
-        description:
-          error.response?.data?.message || 'Login failed. Please check your credentials.',
+        description: error.response?.data?.message || t('auth.loginError'),
         duration: 3000,
       });
     } finally {
@@ -66,10 +67,10 @@ export const LoginScreen = ({ navigation }: any) => {
                 <MaterialCommunityIcons name="fire" size={48} color="white" />
               </Box>
               <Heading size="xl" color={textColor}>
-                Boiler Control
+                {t('auth.appTitle')}
               </Heading>
               <Text fontSize="md" color="gray.500">
-                Smart heating management
+                {t('auth.smartHeating')}
               </Text>
             </VStack>
 
@@ -77,15 +78,15 @@ export const LoginScreen = ({ navigation }: any) => {
             <Box w="100%" maxW="400px" bg={cardBg} rounded="xl" shadow={2} p={6}>
               <VStack space={4}>
                 <Heading size="lg" color={textColor} mb={2}>
-                  Sign In
+                  {t('auth.signIn')}
                 </Heading>
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    Email
+                    {t('auth.email')}
                   </Text>
                   <FormInput
-                    placeholder="your@email.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -97,10 +98,10 @@ export const LoginScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    Password
+                    {t('auth.password')}
                   </Text>
                   <FormInput
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
@@ -112,16 +113,16 @@ export const LoginScreen = ({ navigation }: any) => {
                 </VStack>
 
                 <Button onPress={handleLogin} isLoading={isLoading} mt={2} size="lg">
-                  Sign In
+                  {t('auth.signIn')}
                 </Button>
 
                 <HStack justifyContent="center" mt={4}>
                   <Text fontSize="sm" color="gray.500">
-                    Don't have an account?{' '}
+                    {t('auth.dontHaveAccount')}{' '}
                   </Text>
                   <Pressable onPress={() => navigation.navigate('Register')}>
                     <Text fontSize="sm" color="brand.400" fontWeight="semibold">
-                      Sign Up
+                      {t('auth.signUp')}
                     </Text>
                   </Pressable>
                 </HStack>

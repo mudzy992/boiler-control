@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Platform, Share } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import Svg, { Polyline } from 'react-native-svg';
 import {
   Box,
@@ -52,6 +53,7 @@ const getDateRange = (timeRange: TimeRange) => {
 };
 
 export const AnalyticsScreen = () => {
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const [exporting, setExporting] = useState(false);
   const toast = useToast();
@@ -62,6 +64,21 @@ export const AnalyticsScreen = () => {
   });
 
   const dateRange = useMemo(() => getDateRange(timeRange), [timeRange]);
+
+  const getVsLastLabel = (range: TimeRange) => {
+    switch (range) {
+      case 'day':
+        return t('analytics.vsLastDay');
+      case 'week':
+        return t('analytics.vsLastWeek');
+      case 'month':
+        return t('analytics.vsLastMonth');
+      case 'year':
+        return t('analytics.vsLastYear');
+      default:
+        return t('analytics.vsLastWeek');
+    }
+  };
 
   const summaryQuery = useQuery({
     queryKey: ['analytics-summary', activeHome?.id, timeRange],
@@ -116,7 +133,7 @@ export const AnalyticsScreen = () => {
 
   const handleExport = async () => {
     if (!activeHome) {
-      toast.show({ description: 'Select a home to export analytics.', placement: 'top' });
+      toast.show({ description: t('analytics.selectHome'), placement: 'top' });
       return;
     }
 
@@ -131,12 +148,12 @@ export const AnalyticsScreen = () => {
 
       const meta = data.export;
       if (!meta?.content || !meta?.filename) {
-        toast.show({ description: 'Export unavailable. Please try again.', placement: 'top' });
+        toast.show({ description: t('analytics.exportUnavailable'), placement: 'top' });
         return;
       }
 
       if (meta.contentType && !meta.contentType.includes('csv')) {
-        toast.show({ description: 'Unexpected export format returned.', placement: 'top' });
+        toast.show({ description: t('analytics.unexpectedFormat'), placement: 'top' });
         return;
       }
 
@@ -152,7 +169,7 @@ export const AnalyticsScreen = () => {
       ).filter(Boolean) as string[];
 
       if (!candidates.length) {
-        toast.show({ description: 'Storage unavailable for export.', placement: 'top' });
+        toast.show({ description: t('analytics.storageUnavailable'), placement: 'top' });
         return;
       }
 
@@ -173,36 +190,36 @@ export const AnalyticsScreen = () => {
       }
 
       if (!fileUri) {
-        toast.show({ description: 'Could not write export file.', placement: 'top' });
+        toast.show({ description: t('analytics.couldNotWriteFile'), placement: 'top' });
         return;
       }
 
       const sharePayload =
         Platform.OS === 'ios'
           ? { url: fileUri }
-          : { url: fileUri, message: `Analytics report saved: ${fileUri}` };
+          : { url: fileUri, message: t('analytics.reportSaved', { path: fileUri }) };
 
       try {
         await Share.share({
           title: sanitizedName,
           ...sharePayload,
         });
-        toast.show({ description: 'Export ready to share.', placement: 'top' });
+        toast.show({ description: t('analytics.exportSuccess'), placement: 'top' });
       } catch (shareErr) {
-        toast.show({ description: 'Share failed. Retrying as text...', placement: 'top' });
+        toast.show({ description: t('analytics.shareAsText'), placement: 'top' });
         try {
           await Share.share({
             title: sanitizedName,
             message: meta.content,
           });
-          toast.show({ description: 'Shared as text fallback.', placement: 'top' });
+          toast.show({ description: t('analytics.exportSuccess'), placement: 'top' });
         } catch (textErr) {
-          toast.show({ description: 'Could not share export.', placement: 'top' });
+          toast.show({ description: t('analytics.couldNotShare'), placement: 'top' });
         }
       }
     } catch (err: any) {
       toast.show({
-        description: 'Could not export analytics. Please try again.',
+        description: t('analytics.exportFailed'),
         placement: 'top',
       });
     } finally {
@@ -263,20 +280,27 @@ export const AnalyticsScreen = () => {
             {unit}
           </Text>
         </HStack>
-        <HStack alignItems="center" space={1}>
-          <Icon
-            as={Ionicons}
-            name={trend === 'up' ? 'arrow-up' : 'arrow-down'}
-            size={4}
-            color={trend === 'up' ? 'red.500' : 'green.500'}
-          />
-          <Text fontSize="xs" color={trend === 'up' ? 'red.500' : 'green.500'} fontWeight="500">
-            {trendValue}
+        <VStack space={1}>
+          <HStack alignItems="center" space={1} flexWrap="wrap">
+            <Icon
+              as={Ionicons}
+              name={trend === 'up' ? 'arrow-up' : 'arrow-down'}
+              size={4}
+              color={trend === 'up' ? 'red.500' : 'green.500'}
+            />
+            <Text
+              fontSize="xs"
+              color={trend === 'up' ? 'red.500' : 'green.500'}
+              fontWeight="500"
+              flexShrink={1}
+            >
+              {trendValue}
+            </Text>
+          </HStack>
+          <Text fontSize="xs" color={subtextColor} numberOfLines={1} flexShrink={1}>
+            {getVsLastLabel(timeRange)}
           </Text>
-          <Text fontSize="xs" color={subtextColor}>
-            vs last {timeRange}
-          </Text>
-        </HStack>
+        </VStack>
       </VStack>
     </Box>
   );
@@ -318,31 +342,34 @@ export const AnalyticsScreen = () => {
         <VStack px={4} py={6} space={4} pb={8}>
           {!activeHome && (
             <Box bg={cardBg} rounded="xl" p={4}>
-              <Text color={textColor}>
-                No active home found. Create or select a home to view analytics.
-              </Text>
+              <Text color={textColor}>{t('analytics.noActiveHome')}</Text>
             </Box>
           )}
 
           <HStack justifyContent="space-between" alignItems="center">
-            <Heading size="xl" color={textColor}>
-              Analytics
-            </Heading>
+            <VStack space={1}>
+              <Heading size="2xl" color={textColor} fontWeight="700">
+                {t('analytics.title')}
+              </Heading>
+              <Text fontSize="sm" color={subtextColor}>
+                {t('analytics.subtitle')}
+              </Text>
+            </VStack>
             <Select
               selectedValue={timeRange}
               minWidth="120"
-              accessibilityLabel="Choose Time Range"
-              placeholder="Time Range"
+              accessibilityLabel={t('analytics.timeRange')}
+              placeholder={t('analytics.timeRange')}
               _selectedItem={{
                 bg: 'brand.100',
                 endIcon: <CheckIcon size="5" />,
               }}
               onValueChange={(value) => setTimeRange(value as TimeRange)}
             >
-              <Select.Item label="Today" value="day" />
-              <Select.Item label="This Week" value="week" />
-              <Select.Item label="This Month" value="month" />
-              <Select.Item label="This Year" value="year" />
+              <Select.Item label={t('analytics.today')} value="day" />
+              <Select.Item label={t('analytics.thisWeek')} value="week" />
+              <Select.Item label={t('analytics.thisMonth')} value="month" />
+              <Select.Item label={t('analytics.thisYear')} value="year" />
             </Select>
           </HStack>
 
@@ -351,23 +378,25 @@ export const AnalyticsScreen = () => {
               <Skeleton flex={1} rounded="xl" isLoaded={!summaryQuery.isLoading}>
                 <StatCard
                   icon="flame-outline"
-                  label="Heating Hours"
+                  label={t('analytics.heatingHours')}
                   value={
                     summaryQuery.data
                       ? (summaryQuery.data.summary.totalDurationMin / 60).toFixed(1)
                       : '0'
                   }
-                  unit="hrs"
+                  unit={t('analytics.hrs')}
                   trend="down"
                   trendValue={
-                    summaryQuery.data ? `${summaryQuery.data.summary.totalCycles} cycles` : ''
+                    summaryQuery.data
+                      ? `${summaryQuery.data.summary.totalCycles} ${t('analytics.cycles')}`
+                      : ''
                   }
                 />
               </Skeleton>
               <Skeleton flex={1} rounded="xl" isLoaded={!summaryQuery.isLoading}>
                 <StatCard
                   icon="thermometer-outline"
-                  label="Avg Indoor"
+                  label={t('analytics.avgIndoor')}
                   value={
                     summaryQuery.data ? summaryQuery.data.summary.avgIndoorTemp.toFixed(1) : '0'
                   }
@@ -375,7 +404,9 @@ export const AnalyticsScreen = () => {
                   trend="down"
                   trendValue={
                     summaryQuery.data
-                      ? `${summaryQuery.data.summary.avgDurationMin.toFixed(1)} min avg`
+                      ? t('analytics.avgMinutes', {
+                          value: summaryQuery.data.summary.avgDurationMin.toFixed(1),
+                        })
                       : ''
                   }
                 />
@@ -386,13 +417,15 @@ export const AnalyticsScreen = () => {
               <Skeleton flex={1} rounded="xl" isLoaded={!summaryQuery.isLoading}>
                 <StatCard
                   icon="stats-chart-outline"
-                  label="Sessions"
+                  label={t('analytics.sessions')}
                   value={summaryQuery.data ? String(summaryQuery.data.summary.totalCycles) : '0'}
                   unit=""
                   trend="up"
                   trendValue={
                     summaryQuery.data
-                      ? `${summaryQuery.data.summary.totalDurationMin} min total`
+                      ? t('analytics.totalMinutes', {
+                          value: summaryQuery.data.summary.totalDurationMin,
+                        })
                       : ''
                   }
                 />
@@ -400,7 +433,7 @@ export const AnalyticsScreen = () => {
               <Skeleton flex={1} rounded="xl" isLoaded={!learningQuery.isLoading}>
                 <StatCard
                   icon="pulse-outline"
-                  label="Confidence"
+                  label={t('analytics.confidence')}
                   value={
                     learningQuery.data && learningQuery.data.points.length > 0
                       ? learningQuery.data.points[
@@ -411,7 +444,9 @@ export const AnalyticsScreen = () => {
                   unit=""
                   trend="up"
                   trendValue={
-                    learningQuery.data ? `${learningQuery.data.points.length} samples` : ''
+                    learningQuery.data
+                      ? `${learningQuery.data.points.length} ${t('analytics.samples')}`
+                      : ''
                   }
                 />
               </Skeleton>
@@ -421,10 +456,10 @@ export const AnalyticsScreen = () => {
           {/* Heating Duration & Cycles */}
           <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
             <Heading size="sm" color={textColor} mb={1}>
-              Heating Trends ({timeRange})
+              {t('analytics.heatingTrends', { context: timeRange })}
             </Heading>
             <Text fontSize="xs" color={subtextColor} mb={3}>
-              Duration, cycles, and average indoor temperature across the selected range.
+              {t('analytics.trendDescription')}
             </Text>
             {statsQuery.isLoading ? (
               <VStack space={2}>
@@ -436,7 +471,7 @@ export const AnalyticsScreen = () => {
                 ))}
               </VStack>
             ) : statsQuery.isError || !statsQuery.data || statsQuery.data.buckets.length === 0 ? (
-              <Text color={subtextColor}>No data available</Text>
+              <Text color={subtextColor}>{t('analytics.noTrendData')}</Text>
             ) : (
               <VStack space={3}>
                 {(() => {
@@ -454,8 +489,12 @@ export const AnalyticsScreen = () => {
                           </Text>
                           <HStack space={3} alignItems="center">
                             <Text color={subtextColor}>{b.avgCurrentTemp.toFixed(1)}°C</Text>
-                            <Text color={subtextColor}>{b.totalDurationMin} min</Text>
-                            <Text color={subtextColor}>{b.cycles} cycles</Text>
+                            <Text color={subtextColor}>
+                              {b.totalDurationMin} {t('analytics.minutes')}
+                            </Text>
+                            <Text color={subtextColor}>
+                              {b.cycles} {t('analytics.cycles')}
+                            </Text>
                           </HStack>
                         </HStack>
                         <VStack space={1}>
@@ -477,15 +516,15 @@ export const AnalyticsScreen = () => {
           {/* Temperature Trend */}
           <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
             <Heading size="sm" color={textColor} mb={1}>
-              Temperature Trend
+              {t('analytics.temperatureTrend')}
             </Heading>
             <Text fontSize="xs" color={subtextColor} mb={3}>
-              Average indoor temperature per bucket.
+              {t('analytics.tempDescription')}
             </Text>
             {statsQuery.isLoading ? (
               <Skeleton h={24} rounded="xl" />
             ) : !tempSeries.length ? (
-              <Text color={subtextColor}>No temperature data in this range.</Text>
+              <Text color={subtextColor}>{t('analytics.noTempData')}</Text>
             ) : (
               <VStack space={2}>
                 <Box h={32}>
@@ -516,7 +555,7 @@ export const AnalyticsScreen = () => {
                 <HStack justifyContent="space-between" alignItems="center">
                   <VStack>
                     <Text fontSize="xs" color={subtextColor}>
-                      Start
+                      {t('analytics.start')}
                     </Text>
                     <Text fontSize="sm" color={textColor} fontWeight="600">
                       {tempSeries[0]?.avgCurrentTemp.toFixed(1)}°C
@@ -524,7 +563,7 @@ export const AnalyticsScreen = () => {
                   </VStack>
                   <VStack alignItems="flex-end">
                     <Text fontSize="xs" color={subtextColor}>
-                      End
+                      {t('analytics.end')}
                     </Text>
                     <Text fontSize="sm" color={textColor} fontWeight="600">
                       {tempSeries[tempSeries.length - 1]?.avgCurrentTemp.toFixed(1)}°C
@@ -538,16 +577,16 @@ export const AnalyticsScreen = () => {
           {/* Efficiency & Cycles */}
           <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
             <Heading size="sm" color={textColor} mb={1}>
-              Efficiency & Cycles
+              {t('analytics.efficiency')} & {t('analytics.cycleDensity')}
             </Heading>
             <Text fontSize="xs" color={subtextColor} mb={3}>
-              Ratio of achieved vs target temps and cycle density.
+              {`${t('analytics.efficiencyRatio')} • ${t('analytics.cycleDensityDesc')}`}
             </Text>
             <VStack space={3}>
               <VStack space={1}>
                 <HStack justifyContent="space-between" alignItems="center">
                   <Text color={textColor} fontWeight="600">
-                    Efficiency
+                    {t('analytics.efficiency')}
                   </Text>
                   <Text color={subtextColor}>{efficiency !== null ? `${efficiency}%` : '—'}</Text>
                 </HStack>
@@ -563,7 +602,7 @@ export const AnalyticsScreen = () => {
 
               <VStack space={2}>
                 <Text fontSize="xs" color={subtextColor}>
-                  Cycle Density
+                  {t('analytics.cycleDensity')}
                 </Text>
                 {cyclesSeries.length ? (
                   <HStack space={1} alignItems="flex-end">
@@ -584,7 +623,7 @@ export const AnalyticsScreen = () => {
                     })()}
                   </HStack>
                 ) : (
-                  <Text color={subtextColor}>No cycle data for this range.</Text>
+                  <Text color={subtextColor}>{t('analytics.noCycleData')}</Text>
                 )}
               </VStack>
             </VStack>
@@ -601,25 +640,29 @@ export const AnalyticsScreen = () => {
           {/* AI Insights */}
           <Box>
             <Heading size="md" color={textColor} mb={1}>
-              AI Insights & Learning
+              {t('analytics.aiInsights')}
             </Heading>
             <Text fontSize="xs" color={subtextColor} mb={3}>
-              Model confidence and sample coverage over time.
+              {t('analytics.insightsDescription')}
             </Text>
             {learningQuery.isLoading ? (
               <HStack space={3} alignItems="center">
-                <Spinner accessibilityLabel="Loading insights" size="sm" color="brand.500" />
-                <Text color={subtextColor}>Loading insights...</Text>
+                <Spinner
+                  accessibilityLabel={t('analytics.loadingInsights')}
+                  size="sm"
+                  color="brand.500"
+                />
+                <Text color={subtextColor}>{t('analytics.loadingInsights')}</Text>
               </HStack>
             ) : learningQuery.isError ||
               !learningQuery.data ||
               learningQuery.data.points.length === 0 ? (
-              <Text color={subtextColor}>No learning insights available for this range.</Text>
+              <Text color={subtextColor}>{t('analytics.noInsights')}</Text>
             ) : (
               <VStack space={4}>
                 <VStack space={2}>
                   <Text fontSize="xs" color={subtextColor}>
-                    Confidence Trend
+                    {t('analytics.confidenceTrend')}
                   </Text>
                   <HStack space={1} alignItems="flex-end">
                     {learningQuery.data.points.slice(-24).map((p, idx) => {
@@ -639,14 +682,23 @@ export const AnalyticsScreen = () => {
 
                 <InsightCard
                   icon="bulb-outline"
-                  title="Model Confidence"
-                  description={`Latest confidence: ${learningQuery.data.points[learningQuery.data.points.length - 1].avgConfidence.toFixed(2)} across ${learningQuery.data.points[learningQuery.data.points.length - 1].samples} samples.`}
+                  title={t('analytics.modelConfidence')}
+                  description={t('analytics.confidenceValue', {
+                    confidence:
+                      learningQuery.data.points[
+                        learningQuery.data.points.length - 1
+                      ].avgConfidence.toFixed(2),
+                    samples:
+                      learningQuery.data.points[learningQuery.data.points.length - 1].samples,
+                  })}
                   type="success"
                 />
                 <InsightCard
                   icon="alert-circle-outline"
-                  title="Training Coverage"
-                  description={`Data points in range: ${learningQuery.data.points.length}. Keep schedules steady to improve predictions.`}
+                  title={t('analytics.trainingCoverage')}
+                  description={t('analytics.trainingDescription', {
+                    points: learningQuery.data.points.length,
+                  })}
                   type="info"
                 />
               </VStack>
@@ -656,23 +708,23 @@ export const AnalyticsScreen = () => {
           {/* Comparison */}
           <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
             <Heading size="sm" color={textColor} mb={3}>
-              Performance Comparison
+              {t('analytics.performanceComparison')}
             </Heading>
             <VStack space={3}>
               <HStack justifyContent="space-between">
-                <Text color={subtextColor}>vs. Similar Homes</Text>
+                <Text color={subtextColor}>{t('analytics.vsSimilarHomes')}</Text>
                 <HStack alignItems="center" space={1}>
                   <Text color="green.500" fontWeight="600">
-                    12% better
+                    {t('analytics.better', { percent: '12' })}
                   </Text>
                   <Icon as={Ionicons} name="arrow-down" size={4} color="green.500" />
                 </HStack>
               </HStack>
               <HStack justifyContent="space-between">
-                <Text color={subtextColor}>vs. Last Year</Text>
+                <Text color={subtextColor}>{t('analytics.vsLastYear')}</Text>
                 <HStack alignItems="center" space={1}>
                   <Text color="green.500" fontWeight="600">
-                    18% improvement
+                    {t('analytics.improvement', { percent: '18' })}
                   </Text>
                   <Icon as={Ionicons} name="arrow-down" size={4} color="green.500" />
                 </HStack>
@@ -689,7 +741,7 @@ export const AnalyticsScreen = () => {
             isLoading={exporting}
             isDisabled={!activeHome || exporting}
           >
-            Export Analytics Report
+            {t('analytics.exportData')}
           </Button>
         </VStack>
       </ScrollView>

@@ -9,7 +9,7 @@ interface GasReadingProps {
     readingDate: string;
     createdAt: string;
   };
-  nextReading?: {
+  previousReading?: {
     counterValue: number;
     readingDate: string;
   };
@@ -19,7 +19,7 @@ interface GasReadingProps {
 
 export const GasReadingCard: React.FC<GasReadingProps> = ({
   reading,
-  nextReading,
+  previousReading,
   onDelete,
   isLoading = false,
 }) => {
@@ -27,9 +27,9 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
   let daysDiff = 0;
   let dailyConsumption = 0;
 
-  if (nextReading) {
-    consumption = reading.counterValue - nextReading.counterValue;
-    daysDiff = dayjs(reading.readingDate).diff(dayjs(nextReading.readingDate), 'day');
+  if (previousReading) {
+    consumption = previousReading.counterValue - reading.counterValue;
+    daysDiff = dayjs(previousReading.readingDate).diff(dayjs(reading.readingDate), 'day');
     if (daysDiff > 0) {
       dailyConsumption = Math.round((consumption / daysDiff) * 100) / 100;
     }

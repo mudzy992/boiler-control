@@ -14,6 +14,7 @@ import {
 } from 'native-base';
 import { Platform } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormInput } from '../../components/FormInput';
 
@@ -25,6 +26,7 @@ export const RegisterScreen = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { register } = useAuth();
+  const { t } = useTranslation();
   const toast = useToast();
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
@@ -35,21 +37,21 @@ export const RegisterScreen = ({ navigation }: any) => {
     // Validation
     if (!name || !email || !password || !confirmPassword) {
       toast.show({
-        description: 'Please fill in all fields',
+        description: t('auth.fillAllFields'),
       });
       return;
     }
 
     if (password !== confirmPassword) {
       toast.show({
-        description: 'Passwords do not match',
+        description: t('auth.passwordsDontMatch'),
       });
       return;
     }
 
     if (password.length < 6) {
       toast.show({
-        description: 'Password must be at least 6 characters',
+        description: t('auth.passwordTooShort'),
       });
       return;
     }
@@ -58,12 +60,12 @@ export const RegisterScreen = ({ navigation }: any) => {
     try {
       await register(email, password, name);
       toast.show({
-        description: 'Account created successfully!',
+        description: t('auth.accountCreated'),
       });
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.show({
-        description: error.response?.data?.message || 'Registration failed. Please try again.',
+        description: error.response?.data?.message || t('auth.registerError'),
         duration: 3000,
       });
     } finally {
@@ -82,10 +84,10 @@ export const RegisterScreen = ({ navigation }: any) => {
                 <MaterialCommunityIcons name="fire" size={48} color="white" />
               </Box>
               <Heading size="xl" color={textColor}>
-                Boiler Control
+                {t('auth.appTitle')}
               </Heading>
               <Text fontSize="md" color="gray.500">
-                Create your account
+                {t('auth.createAccount')}
               </Text>
             </VStack>
 
@@ -93,15 +95,15 @@ export const RegisterScreen = ({ navigation }: any) => {
             <Box w="100%" maxW="400px" bg={cardBg} rounded="xl" shadow={2} p={6}>
               <VStack space={4}>
                 <Heading size="lg" color={textColor} mb={2}>
-                  Sign Up
+                  {t('auth.signUp')}
                 </Heading>
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    Full Name
+                    {t('auth.name')}
                   </Text>
                   <FormInput
-                    placeholder="John Doe"
+                    placeholder={t('auth.namePlaceholder')}
                     value={name}
                     onChangeText={setName}
                     autoCapitalize="words"
@@ -111,10 +113,10 @@ export const RegisterScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    Email
+                    {t('auth.email')}
                   </Text>
                   <FormInput
-                    placeholder="your@email.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -126,10 +128,10 @@ export const RegisterScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    Password
+                    {t('auth.password')}
                   </Text>
                   <FormInput
-                    placeholder="At least 6 characters"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
@@ -141,10 +143,10 @@ export const RegisterScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    Confirm Password
+                    {t('auth.confirmPassword')}
                   </Text>
                   <FormInput
-                    placeholder="Re-enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry
@@ -156,16 +158,16 @@ export const RegisterScreen = ({ navigation }: any) => {
                 </VStack>
 
                 <Button onPress={handleRegister} isLoading={isLoading} mt={2} size="lg">
-                  Create Account
+                  {t('auth.signUp')}
                 </Button>
 
                 <HStack justifyContent="center" mt={4}>
                   <Text fontSize="sm" color="gray.500">
-                    Already have an account?{' '}
+                    {t('auth.alreadyHaveAccount')}{' '}
                   </Text>
                   <Pressable onPress={() => navigation.navigate('Login')}>
                     <Text fontSize="sm" color="brand.400" fontWeight="semibold">
-                      Sign In
+                      {t('auth.signIn')}
                     </Text>
                   </Pressable>
                 </HStack>

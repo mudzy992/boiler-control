@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, VStack, HStack, Text, Progress, useColorModeValue, Circle } from 'native-base';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface HealthScoreCardProps {
   score: number; // 0-100
@@ -7,11 +8,11 @@ interface HealthScoreCardProps {
 }
 
 export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confidence }) => {
+  const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
-  const shadowColor = useColorModeValue('gray.400', 'transparent');
 
   // Determine color based on score
   const getScoreColor = (value: number) => {
@@ -44,14 +45,14 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confide
               textTransform="uppercase"
               letterSpacing="0.5"
             >
-              System Health
+              {t('dashboard.systemHealth')}
             </Text>
             <HStack alignItems="baseline" space={2} mt={1}>
               <Text fontSize="4xl" fontWeight="800" color={textColor}>
                 {Math.round(score)}
               </Text>
               <Text fontSize="md" fontWeight="600" color={mutedColor}>
-                / 100
+                {t('dashboard.outOf', { max: 100 })}
               </Text>
             </HStack>
           </VStack>
@@ -91,10 +92,16 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confide
           />
           <HStack justifyContent="space-between">
             <Text fontSize="xs" fontWeight="600" color={mutedColor}>
-              Confidence: {Math.round(confidence)}%
+              {t('dashboard.confidence', { value: Math.round(confidence) })}
             </Text>
             <Text fontSize="xs" fontWeight="600" color={scoreColor}>
-              {score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Poor'}
+              {score >= 80
+                ? t('dashboard.scoreExcellent')
+                : score >= 60
+                  ? t('dashboard.scoreGood')
+                  : score >= 40
+                    ? t('dashboard.scoreFair')
+                    : t('dashboard.scorePoor')}
             </Text>
           </HStack>
         </VStack>
@@ -113,10 +120,10 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confide
         >
           <Text fontSize="sm" fontWeight="600" color={textColor}>
             {score >= 80
-              ? '✓ System performing optimally'
+              ? t('dashboard.statusOptimal')
               : score >= 60
-                ? '⚠ Minor adjustments recommended'
-                : '! System needs attention'}
+                ? t('dashboard.statusMinorAdjustments')
+                : t('dashboard.statusNeedsAttention')}
           </Text>
         </Box>
       </VStack>

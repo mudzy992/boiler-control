@@ -161,17 +161,15 @@ export const GasAnalyticsPage: React.FC = () => {
               </div>
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-slate-700">
-                {[...readings]
+                {([...readings]
                   .sort((a, b) => dayjs(b.readingDate).diff(dayjs(a.readingDate)))
-                  .slice(0, 5)
-                  .map((reading, index) => {
-                    const prevReading = [...readings]
-                      .sort((a, b) => dayjs(b.readingDate).diff(dayjs(a.readingDate)))
-                      .slice(0, 6)[index + 1];
+                  .slice(0, 5))
+                  .map((reading, index, list) => {
+                    const previousReading = index > 0 ? list[index - 1] : undefined;
 
                     let consumption = null;
-                    if (prevReading) {
-                      consumption = reading.counterValue - prevReading.counterValue;
+                    if (previousReading) {
+                      consumption = previousReading.counterValue - reading.counterValue;
                     }
 
                     return (

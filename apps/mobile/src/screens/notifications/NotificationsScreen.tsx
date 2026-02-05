@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { apiClient } from '../../services/api/client';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface NotificationItem {
   id: number;
@@ -35,23 +36,14 @@ interface NotificationSection {
   data: NotificationItem[];
 }
 
-const getSectionTitle = (date: dayjs.Dayjs) => {
-  if (date.isSame(dayjs(), 'day')) return 'Today';
-  if (date.isSame(dayjs().subtract(1, 'day'), 'day')) return 'Yesterday';
+const getSectionTitle = (date: dayjs.Dayjs, t: (key: string) => string) => {
+  if (date.isSame(dayjs(), 'day')) return t('notifications.today');
+  if (date.isSame(dayjs().subtract(1, 'day'), 'day')) return t('notifications.yesterday');
   return date.format('MMM D, YYYY');
 };
 
-const getTypeLabel = (type: string) => {
-  const labels: Record<string, string> = {
-    DAILY_RECOMMENDATION: 'Daily Recommendation',
-    FLOW_TEMP_CHANGED: 'Flow Temperature Changed',
-    HEATING_STARTED: 'Heating Started',
-    HEATING_ENDED: 'Heating Ended',
-    SYSTEM_ALERT: 'System Alert',
-    GAS_READING_REMINDER: 'Gas Reading Reminder',
-  };
-
-  return labels[type] || type;
+const getTypeLabel = (type: string, t: (key: string) => string) => {
+  return t(`notifications.types.${type}`) || type;
 };
 
 const getTypeIcon = (type: string) => {
@@ -70,6 +62,7 @@ const getTypeIcon = (type: string) => {
 export const NotificationsScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const [showAll, setShowAll] = useState(false);
+  const { t } = useTranslation();
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -126,10 +119,10 @@ export const NotificationsScreen: React.FC = () => {
     return Array.from(grouped.entries())
       .sort(([a], [b]) => (dayjs(a).isBefore(dayjs(b)) ? 1 : -1))
       .map(([dateKey, data]) => ({
-        title: getSectionTitle(dayjs(dateKey)),
+        title: getSectionTitle(dayjs(dateKey), t),
         data,
       }));
-  }, [filteredNotifications]);
+  }, [filteredNotifications, t]);
 
   const handlePress = useCallback(
     (notification: NotificationItem) => {
@@ -144,7 +137,7 @@ export const NotificationsScreen: React.FC = () => {
       <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
         <Spinner size="lg" color={brandColor} />
         <Text mt={3} color={subtextColor}>
-          Loading notifications...
+          {t('notifications.loading')}
         </Text>
       </Box>
     );
@@ -164,7 +157,7 @@ export const NotificationsScreen: React.FC = () => {
               borderColor={borderColor}
             >
               <Text color={showAll ? textColor : 'white'} fontWeight="600">
-                Unread {unreadCount > 0 ? `(${unreadCount})` : ''}
+                {t('notifications.unread')} {unreadCount > 0 ? `(${unreadCount})` : ''}
               </Text>
             </Box>
           </Pressable>
@@ -178,7 +171,7 @@ export const NotificationsScreen: React.FC = () => {
               borderColor={borderColor}
             >
               <Text color={showAll ? 'white' : textColor} fontWeight="600">
-                All ({notifications?.length || 0})
+                {t('notifications.all')} ({notifications?.length || 0})
               </Text>
             </Box>
           </Pressable>
@@ -196,7 +189,9 @@ export const NotificationsScreen: React.FC = () => {
             opacity={unreadCount === 0 || markAllReadMutation.isPending ? 0.5 : 1}
           >
             <Text color={textColor} fontWeight="600">
-              {markAllReadMutation.isPending ? 'Marking...' : 'Mark All Read'}
+              {markAllReadMutation.isPending
+                ? t('notifications.marking')
+                : t('notifications.markAllRead')}
             </Text>
           </Box>
         </Pressable>
@@ -230,7 +225,7 @@ export const NotificationsScreen: React.FC = () => {
                     </Text>
                     {!item.isRead && (
                       <Badge colorScheme="danger" variant="solid" rounded="full" px={2}>
-                        NEW
+                        {t('notifications.new')}
                       </Badge>
                     )}
                   </HStack>
@@ -240,7 +235,7 @@ export const NotificationsScreen: React.FC = () => {
                   <Divider mt={2} mb={1} bg={borderColor} />
                   <HStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="xs" color={subtextColor}>
-                      {getTypeLabel(item.type)}
+                      {getTypeLabel(item.type, t)}
                     </Text>
                     <Text fontSize="xs" color={subtextColor}>
                       {dayjs(item.sentAt || item.createdAt).format('HH:mm')}
@@ -255,7 +250,7 @@ export const NotificationsScreen: React.FC = () => {
           <Box alignItems="center" mt={10}>
             <Icon as={Ionicons} name="notifications-off-outline" size={12} color={subtextColor} />
             <Text mt={3} color={subtextColor}>
-              {showAll ? 'No notifications yet' : 'No unread notifications'}
+              {showAll ? t('notifications.noneAll') : t('notifications.noneUnread')}
             </Text>
           </Box>
         )}

@@ -3,7 +3,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorMode } from 'native-base';
 import { BackHandler } from 'react-native';
-import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
+import { useTranslation } from '../hooks/useTranslation';
+import { DashboardStackNavigator } from './DashboardStackNavigator';
 import { HeatingScreen } from '../screens/heating/HeatingScreen';
 import { GasScreen } from '../screens/gas/GasScreen';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
@@ -17,6 +18,7 @@ const Tab = createBottomTabNavigator();
 
 export const MainTabNavigator = () => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
 
   const tabBarOptions = {
     activeTintColor: '#ff6b3d',
@@ -38,9 +40,9 @@ export const MainTabNavigator = () => {
     >
       <Tab.Screen
         name="Dashboard"
-        component={DashboardScreen}
+        component={DashboardStackNavigator}
         options={{
-          tabBarLabel: 'Dashboard',
+          tabBarLabel: t('navigation.dashboard'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="speedometer-outline" size={size} color={color} />
           ),
@@ -50,7 +52,7 @@ export const MainTabNavigator = () => {
         name="Heating"
         component={HeatingScreen}
         options={{
-          tabBarLabel: 'Heating',
+          tabBarLabel: t('navigation.heating'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="flame-outline" size={size} color={color} />
           ),
@@ -60,7 +62,7 @@ export const MainTabNavigator = () => {
         name="Gas"
         component={GasScreen}
         options={{
-          tabBarLabel: 'Gas',
+          tabBarLabel: t('navigation.gas'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="speedometer-outline" size={size} color={color} />
           ),
@@ -70,7 +72,7 @@ export const MainTabNavigator = () => {
         name="Settings"
         component={SettingsStackNavigator}
         options={{
-          tabBarLabel: 'Settings',
+          tabBarLabel: t('navigation.settings'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),

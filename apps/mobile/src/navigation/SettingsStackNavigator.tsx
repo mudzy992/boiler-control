@@ -4,7 +4,6 @@ import { useColorModeValue } from 'native-base';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
 import { HomeManagementScreen } from '../screens/home/HomeManagementScreen';
 import { ScheduleManagementScreen } from '../screens/schedule/ScheduleManagementScreen';
-import { AnalyticsScreen } from '../screens/analytics/AnalyticsScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { NotificationPreferencesScreen } from '../screens/notifications/NotificationPreferencesScreen';
 
@@ -44,14 +43,6 @@ export const SettingsStackNavigator = () => {
         component={ScheduleManagementScreen}
         options={{
           title: 'Heating Schedules',
-          headerBackTitle: 'Back',
-        }}
-      />
-      <Stack.Screen
-        name="Analytics"
-        component={AnalyticsScreen}
-        options={{
-          title: 'Analytics & Insights',
           headerBackTitle: 'Back',
         }}
       />

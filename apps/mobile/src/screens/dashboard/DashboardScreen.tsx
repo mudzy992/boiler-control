@@ -12,7 +12,6 @@ import {
   HStack,
   Pressable,
   Icon,
-  useToast,
 } from 'native-base';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -24,15 +23,16 @@ import { WeatherCard } from '../../components/WeatherCard';
 import { BoilerStatusCard } from '../../components/BoilerStatusCard';
 import { ThermostatCard } from '../../components/ThermostatCard';
 import { AlertsCard } from '../../components/AlertsCard';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const DashboardScreen = () => {
+  const { t, i18n } = useTranslation();
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const headerBtnBg = useColorModeValue('gray.100', 'gray.700');
   const additionalHomesBg = useColorModeValue('blue.100', 'blue.900');
   const navigation = useNavigation();
-  const toast = useToast();
   const { showError } = useErrorHandler();
 
   const {
@@ -52,9 +52,9 @@ export const DashboardScreen = () => {
   // Handle query errors outside the query config to maintain hook order
   React.useEffect(() => {
     if (error) {
-      showError(error, 'Failed to load dashboard data');
+      showError(error, t('dashboard.loadError'));
     }
-  }, [error, showError]);
+  }, [error, showError, t]);
 
   // Calculate health score based on learning confidence
   const calculateHealthScore = () => {
@@ -85,7 +85,7 @@ export const DashboardScreen = () => {
           <VStack space={4} alignItems="center">
             <Spinner size="lg" color="brand.400" />
             <Text fontSize="lg" color={mutedColor}>
-              Loading dashboard...
+              {t('dashboard.loading')}
             </Text>
           </VStack>
         </Center>
@@ -101,16 +101,14 @@ export const DashboardScreen = () => {
             <VStack space={4} alignItems="center" w="100%">
               <MaterialCommunityIcons name="alert-circle" size={40} color={mutedColor} />
               <Text fontSize="lg" fontWeight="600" color={textColor}>
-                Unable to load dashboard
+                {t('dashboard.unableToLoad')}
               </Text>
               <Text fontSize="sm" color={mutedColor} textAlign="center">
-                {error instanceof Error
-                  ? error.message
-                  : 'An error occurred while fetching dashboard data'}
+                {error instanceof Error ? error.message : t('dashboard.loadErrorGeneric')}
               </Text>
               <Pressable mt={4} onPress={() => refetch()} bg="brand.500" px={6} py={3} rounded="md">
                 <Text fontWeight="600" color="white">
-                  Try Again
+                  {t('common.retry')}
                 </Text>
               </Pressable>
             </VStack>
@@ -123,6 +121,8 @@ export const DashboardScreen = () => {
   const primaryHome = dashboardData?.homes?.[0];
   const healthScore = calculateHealthScore();
   const avgConfidence = primaryHome?.learningIntervals?.[0]?.confidence ?? 0;
+  const isHeating =
+    dashboardData?.system?.boiler?.heatingStart && !dashboardData?.system?.boiler?.heatingEnd;
 
   return (
     <Box flex={1} bg={bgColor} safeArea>
@@ -140,10 +140,10 @@ export const DashboardScreen = () => {
           <HStack justifyContent="space-between" alignItems="center" mb={1}>
             <VStack space={0}>
               <Heading size="2xl" color={textColor} fontWeight="700">
-                Dashboard
+                {t('dashboard.title')}
               </Heading>
               <Text fontSize="sm" color={mutedColor} mt={1}>
-                {new Date().toLocaleDateString('en-US', {
+                {new Date().toLocaleDateString(i18n.language, {
                   weekday: 'long',
                   month: 'long',
                   day: 'numeric',
@@ -151,14 +151,16 @@ export const DashboardScreen = () => {
               </Text>
             </VStack>
             <HStack space={3} alignItems="center">
-              <Icon
-                as={Ionicons}
-                name="flame"
-                size={6}
-                color={primaryHome?.thermostats?.some((t) => t.isHeating) ? 'red.500' : mutedColor}
-              />
+              <Pressable bg={headerBtnBg} rounded="full" p={2}>
+                <Icon
+                  as={Ionicons}
+                  name="flame"
+                  size={6}
+                  color={isHeating ? 'red.500' : mutedColor}
+                />
+              </Pressable>
               <Pressable
-                onPress={() => (navigation as any).navigate('Settings', { screen: 'Analytics' })}
+                onPress={() => (navigation as any).navigate('Analytics')}
                 _pressed={{ opacity: 0.6 }}
                 bg={headerBtnBg}
                 rounded="full"
@@ -198,7 +200,7 @@ export const DashboardScreen = () => {
           {primaryHome?.thermostats && primaryHome.thermostats.length > 0 && (
             <VStack space={2}>
               <Text fontSize="sm" fontWeight="600" color={mutedColor}>
-                Thermostats ({primaryHome.thermostats.length})
+                {t('dashboard.thermostats', { count: primaryHome.thermostats.length })}
               </Text>
               {primaryHome.thermostats.map((thermostat) => {
                 // Find matching recent event for current temp
@@ -220,8 +222,7 @@ export const DashboardScreen = () => {
           {dashboardData?.homes && dashboardData.homes.length > 1 && (
             <Box bg={additionalHomesBg} rounded="lg" p={3}>
               <Text fontSize="xs" color="blue.600">
-                Additional {dashboardData.homes.length - 1} home(s) available in Home Profile
-                section
+                {t('dashboard.additionalHomes', { count: dashboardData.homes.length - 1 })}
               </Text>
             </Box>
           )}

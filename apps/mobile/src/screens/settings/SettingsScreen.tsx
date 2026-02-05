@@ -16,19 +16,33 @@ import {
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import { useNavigation } from '@react-navigation/native';
+import { BottomSheetModal } from '../../components/BottomSheetModal';
 import {
   scheduleDailyGasReadingReminder,
   cancelDailyGasReadingReminder,
 } from '../../services/notifications/notificationService';
+import { AppStorage } from '../../services/storage/AppStorage';
 
 export const SettingsScreen = () => {
   const { user, logout } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [dailyGasReminder, setDailyGasReminder] = useState(true);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  const languageLabel =
+    i18n.language === 'bs-BS' ? t('settings.languageBosnian') : t('settings.languageEnglish');
+
+  const handleLanguageChange = async (language: 'en-US' | 'bs-BS') => {
+    await AppStorage.set('app.language', language);
+    await i18n.changeLanguage(language);
+    setShowLanguageModal(false);
+  };
 
   const handleDailyGasReminderToggle = async (enabled: boolean) => {
     setDailyGasReminder(enabled);
@@ -51,6 +65,7 @@ export const SettingsScreen = () => {
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const selectedBg = useColorModeValue('gray.100', 'gray.800');
 
   const handleLogout = async () => {
     try {
@@ -113,7 +128,7 @@ export const SettingsScreen = () => {
       <ScrollView>
         <VStack px={4} py={6} space={4} pb={8}>
           <Heading size="xl" color={textColor}>
-            Settings
+            {t('settings.title')}
           </Heading>
 
           {/* Account Section */}
@@ -121,18 +136,18 @@ export const SettingsScreen = () => {
             <VStack space={0}>
               <Box px={4} py={3} borderBottomWidth={1} borderBottomColor={borderColor}>
                 <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Account
+                  {t('settings.accountSection')}
                 </Text>
               </Box>
               <SettingItem
                 icon="person-outline"
-                title={user?.name || 'User'}
+                title={user?.name || t('settings.profile')}
                 subtitle={user?.email}
               />
               <Divider />
               <SettingItem
                 icon="key-outline"
-                title="Change Password"
+                title={t('settings.changePassword')}
                 onPress={() => console.log('Change password')}
               />
             </VStack>
@@ -143,16 +158,23 @@ export const SettingsScreen = () => {
             <VStack space={0}>
               <Box px={4} py={3} borderBottomWidth={1} borderBottomColor={borderColor}>
                 <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Appearance
+                  {t('settings.appearanceSection')}
                 </Text>
               </Box>
               <SettingItem
                 icon={colorMode === 'dark' ? 'moon' : 'sunny'}
-                title="Dark Mode"
-                subtitle={colorMode === 'dark' ? 'Enabled' : 'Disabled'}
+                title={t('settings.darkMode')}
+                subtitle={colorMode === 'dark' ? t('common.enabled') : t('common.disabled')}
                 rightElement={
                   <Switch isChecked={colorMode === 'dark'} onToggle={toggleColorMode} size="sm" />
                 }
+              />
+              <Divider />
+              <SettingItem
+                icon="language-outline"
+                title={t('settings.language')}
+                subtitle={languageLabel}
+                onPress={() => setShowLanguageModal(true)}
               />
             </VStack>
           </Box>
@@ -162,13 +184,13 @@ export const SettingsScreen = () => {
             <VStack space={0}>
               <Box px={4} py={3} borderBottomWidth={1} borderBottomColor={borderColor}>
                 <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Notifications
+                  {t('settings.notificationsSection')}
                 </Text>
               </Box>
               <SettingItem
                 icon="notifications-outline"
-                title="Enable Notifications"
-                subtitle="Receive alerts and updates"
+                title={t('settings.notificationsEnabled')}
+                subtitle={t('settings.notificationsEnabledDesc')}
                 rightElement={
                   <Switch
                     isChecked={notificationsEnabled}
@@ -180,8 +202,8 @@ export const SettingsScreen = () => {
               <Divider />
               <SettingItem
                 icon="phone-portrait-outline"
-                title="Push Notifications"
-                subtitle="Get push notifications on this device"
+                title={t('settings.pushNotifications')}
+                subtitle={t('settings.pushNotificationsDesc')}
                 rightElement={
                   <Switch
                     isChecked={pushEnabled}
@@ -194,22 +216,22 @@ export const SettingsScreen = () => {
               <Divider />
               <SettingItem
                 icon="list-outline"
-                title="Notifications"
-                subtitle="View notification history"
+                title={t('settings.notifications')}
+                subtitle={t('settings.notificationsDesc')}
                 onPress={() => (navigation as any).navigate('Notifications')}
               />
               <Divider />
               <SettingItem
                 icon="settings-outline"
-                title="Notification Preferences"
-                subtitle="Customize alert types"
+                title={t('settings.notificationPreferences')}
+                subtitle={t('settings.notificationPreferencesDesc')}
                 onPress={() => (navigation as any).navigate('NotificationPreferences')}
               />
               <Divider />
               <SettingItem
                 icon="time-outline"
-                title="Daily Gas Reminder"
-                subtitle="7:00 PM reminder for gas readings"
+                title={t('settings.dailyGasReminder')}
+                subtitle={t('settings.dailyGasReminderTime')}
                 rightElement={
                   <Switch
                     isChecked={dailyGasReminder}
@@ -227,20 +249,20 @@ export const SettingsScreen = () => {
             <VStack space={0}>
               <Box px={4} py={3} borderBottomWidth={1} borderBottomColor={borderColor}>
                 <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Homes
+                  {t('settings.homesSection')}
                 </Text>
               </Box>
               <SettingItem
                 icon="home-outline"
-                title="Manage Homes"
-                subtitle="Add or edit home profiles"
+                title={t('settings.manageHomes')}
+                subtitle={t('settings.manageHomesDesc')}
                 onPress={() => (navigation as any).navigate('HomeManagement')}
               />
               <Divider />
               <SettingItem
                 icon="calendar-outline"
-                title="Heating Schedules"
-                subtitle="Configure heating programs"
+                title={t('settings.heatingSchedules')}
+                subtitle={t('settings.heatingSchedulesDesc')}
                 onPress={() => (navigation as any).navigate('ScheduleManagement')}
               />
             </VStack>
@@ -251,20 +273,20 @@ export const SettingsScreen = () => {
             <VStack space={0}>
               <Box px={4} py={3} borderBottomWidth={1} borderBottomColor={borderColor}>
                 <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  Data & Privacy
+                  {t('settings.dataPrivacySection')}
                 </Text>
               </Box>
               <SettingItem
                 icon="download-outline"
-                title="Export Data"
-                subtitle="Download your heating data"
+                title={t('settings.exportData')}
+                subtitle={t('settings.exportDataDesc')}
                 onPress={() => console.log('Export data')}
               />
               <Divider />
               <SettingItem
                 icon="trash-outline"
-                title="Clear Cache"
-                subtitle="Free up storage space"
+                title={t('settings.clearCache')}
+                subtitle={t('settings.clearCacheDesc')}
                 onPress={() => console.log('Clear cache')}
               />
             </VStack>
@@ -275,20 +297,24 @@ export const SettingsScreen = () => {
             <VStack space={0}>
               <Box px={4} py={3} borderBottomWidth={1} borderBottomColor={borderColor}>
                 <Text fontSize="xs" fontWeight="600" color={subtextColor} textTransform="uppercase">
-                  About
+                  {t('settings.aboutSection')}
                 </Text>
               </Box>
-              <SettingItem icon="information-circle-outline" title="Version" subtitle="2.0.0" />
+              <SettingItem
+                icon="information-circle-outline"
+                title={t('settings.version')}
+                subtitle="2.0.0"
+              />
               <Divider />
               <SettingItem
                 icon="help-circle-outline"
-                title="Help & Support"
+                title={t('settings.helpSupport')}
                 onPress={() => console.log('Help')}
               />
               <Divider />
               <SettingItem
                 icon="document-text-outline"
-                title="Terms & Privacy"
+                title={t('settings.termsPrivacy')}
                 onPress={() => console.log('Terms')}
               />
             </VStack>
@@ -303,8 +329,44 @@ export const SettingsScreen = () => {
             leftIcon={<Icon as={Ionicons} name="log-out-outline" />}
             mt={4}
           >
-            Sign Out
+            {t('common.logout')}
           </Button>
+
+          <BottomSheetModal
+            isOpen={showLanguageModal}
+            onClose={() => setShowLanguageModal(false)}
+            snapPoints={['45%', '60%']}
+          >
+            <VStack space={3}>
+              <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                {t('settings.language')}
+              </Text>
+              <VStack space={2}>
+                <Pressable
+                  onPress={() => handleLanguageChange('en-US')}
+                  bg={i18n.language === 'en-US' ? selectedBg : 'transparent'}
+                  px={4}
+                  py={3}
+                  rounded="md"
+                >
+                  <Text fontSize="sm" fontWeight="600" color={textColor}>
+                    {t('settings.languageEnglish')}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleLanguageChange('bs-BS')}
+                  bg={i18n.language === 'bs-BS' ? selectedBg : 'transparent'}
+                  px={4}
+                  py={3}
+                  rounded="md"
+                >
+                  <Text fontSize="sm" fontWeight="600" color={textColor}>
+                    {t('settings.languageBosnian')}
+                  </Text>
+                </Pressable>
+              </VStack>
+            </VStack>
+          </BottomSheetModal>
         </VStack>
       </ScrollView>
     </Box>

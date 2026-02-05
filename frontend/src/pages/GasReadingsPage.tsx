@@ -144,9 +144,7 @@ export const GasReadingsPage: React.FC = () => {
             <GasReadingCard
               key={reading.id}
               reading={reading}
-              nextReading={
-                index < sortedReadings.length - 1 ? sortedReadings[index + 1] : undefined
-              }
+              previousReading={index > 0 ? sortedReadings[index - 1] : undefined}
               onDelete={(id) => deleteMutation.mutateAsync(id)}
               isLoading={deleteMutation.isPending}
             />

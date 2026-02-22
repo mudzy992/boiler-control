@@ -3,7 +3,7 @@ services:
     container_name: boiler-control-backend
     image: boiler-control-backend-image
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     env_file:
       - ./.env

@@ -64,9 +64,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3020
 
-# Kopiraj build + node_modules
+# Kopiraj build
 COPY --from=build /app/backend/dist ./dist
-COPY --from=deps /app/node_modules ./node_modules
+
+# Kopiraj backend package.json + package-lock.json
+COPY backend/package*.json ./backend/
+
+# Instaliraj samo production deps iz backend
+RUN npm ci --omit=dev --legacy-peer-deps --prefix ./backend
+
+# Premjesti node_modules iz backend u root da main.js vidi dotenv
+RUN cp -r ./backend/node_modules ./node_modules
 
 # Entrypoint
 COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh

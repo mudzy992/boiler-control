@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TuyaHttpAdapter } from './tuya-http.adapter';
 

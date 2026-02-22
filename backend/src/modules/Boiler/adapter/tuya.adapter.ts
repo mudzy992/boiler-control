@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { TuyaAuthService } from '../../../modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DayType } from '../../../generated/prisma/enums';

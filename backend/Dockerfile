@@ -1,5 +1,7 @@
 # Stage 1: dependencies
 FROM node:20-slim AS dependencies
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/backend/app
 
 COPY package*.json ./
@@ -7,24 +9,29 @@ RUN npm ci
 
 # Stage 2: build
 FROM node:20-slim AS build
+# FIX: Re-install openssl here too for the build phase
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/backend/app
 
 COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
 COPY . .
-CMD ["ls", "-la"]
 
 RUN npx prisma generate
 RUN npm run build --verbose
 
 # Stage 3: production
 FROM node:20-slim AS production
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/backend/app
 
 ENV NODE_ENV=production
-ENV PORT=3020
 
 COPY --from=build /usr/src/backend/app/dist ./dist
 COPY --from=build /usr/src/backend/app/node_modules ./node_modules
+COPY --from=build /usr/src/backend/app/package*.json ./
+# Make sure your prisma schema is available if needed at runtime
+COPY --from=build /usr/src/backend/app/prisma ./prisma
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh
 

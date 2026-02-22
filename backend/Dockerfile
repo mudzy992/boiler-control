@@ -45,7 +45,11 @@ ENV TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
 ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
-# Prisma generate (lokalna verzija iz node_modules)
+# Install ts-node ako treba
+RUN npm install ts-node typescript --workspace=backend
+
+# Compile config i pokreni Prisma generate
+RUN npx ts-node prisma.config.ts
 RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Build NestJS

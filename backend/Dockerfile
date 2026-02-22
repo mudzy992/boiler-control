@@ -10,9 +10,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Kopiraj root package.json + lockfile
 COPY package.json package-lock.json ./
-COPY prisma.config.ts ./
-COPY prisma ./prisma
-COPY *.json ./
 
 # Instaliraj sve workspace deps jednom
 RUN npm ci --legacy-peer-deps

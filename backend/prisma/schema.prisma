@@ -6,8 +6,9 @@
 
 generator client {
   provider     = "prisma-client-js"
-  output       = "./dist/generated/prisma"
-  transpile    = true
+  output       = "../src/generated/prisma"
+  transpile = true
+
 }
 
 datasource db {

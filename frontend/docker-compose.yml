@@ -1,0 +1,25 @@
+services:
+  boiler-control-frontend:
+    container_name: boiler-control-frontend
+    image: boiler-control-frontend-image
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/backend/api
+    networks:
+      - web
+    restart: unless-stopped
+    expose:
+      - "3021"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.boiler-frontend.rule=Host(`boiler-control.hopto.org`)"
+      - "traefik.http.routers.boiler-frontend.entrypoints=websecure"
+      - "traefik.http.routers.boiler-frontend.tls=true"
+      - "traefik.http.routers.boiler-frontend.tls.certresolver=le"
+      - "traefik.http.services.boiler-frontend.loadbalancer.server.port=3021"
+
+networks:
+  web:
+    external: true

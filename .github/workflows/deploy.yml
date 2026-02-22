@@ -7,7 +7,6 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
-      - 'docker-compose.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -64,24 +63,26 @@ jobs:
 
             rebuild_backend() {
               echo "🔹 Rebuilding backend container..."
+              docker-compose -f ./backend/docker-compose.yml down
               docker compose stop boiler-control-backend || true
               docker compose rm -f -v boiler-control-backend || true
               sleep 2
               docker rmi boiler-control-backend-image || true
-              docker compose build backend
+              docker-compose -f ./backend/docker-compose.yml up --build -d boiler-control-backend
               sudo fuser -k 3020/tcp || true
-              docker compose up -d boiler-control-backend
+              docker-compose -f ./backend/docker-compose.yml up --build -d boiler-control-backend
             }
 
              rebuild_frontend() {
               echo "🔹 Rebuilding frontend container..."
+              docker-compose -f ./frontend/docker-compose.yml down
               docker compose stop boiler-control-frontend || true
               docker compose rm -f -v boiler-control-frontend || true
               sleep 2
               docker rmi boiler-control-frontend-image || true
-              docker compose build frontend
+              docker-compose -f ./frontend/docker-compose.yml up --build -d boiler-control-frontend
               sudo fuser -k 3021/tcp || true
-              docker compose up -d boiler-control-frontend
+              docker-compose -f ./frontend/docker-compose.yml up --build -d boiler-control-frontend
             }
 
             if [ -n "$BACKEND_CHANGED" ]; then

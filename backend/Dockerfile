@@ -1,75 +1,47 @@
 ############################
-# Stage 1: Install root deps (workspaces)
+# Stage 1: deps
 ############################
-FROM node:20-slim AS deps
-WORKDIR /app
+FROM node:20-alpine AS dependencies
+WORKDIR /usr/src/backend/app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates python3 make g++ openssl git curl \
-    && rm -rf /var/lib/apt/lists/*
+# Kopiramo package.json i package-lock.json u radni direktorij
+COPY package*.json ./
 
-# Kopiraj root package.json + lockfile
+# Instaliramo ovisnosti
+RUN npm install --force --verbose
+
+############################
+# Stage 2: build
+############################
+FROM dependencies AS build
+COPY . .
+RUN npm run build --verbose
+
+COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
+COPY src ./src
 
-# Instaliraj sve workspace deps jednom
-RUN npm ci --legacy-peer-deps
-
-############################
-# Stage 2: Build backend
-############################
-FROM node:20-slim AS build
-WORKDIR /app
-
-# Kopiraj node_modules iz deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Kopiraj root package.json + lockfile (obavezno)
-COPY package.json package-lock.json ./
-
-# Kopiraj backend source
-COPY backend/ ./backend/
-WORKDIR /app/backend
-
-# Env varijable (env7)
-ENV NODE_OPTIONS="--dns-result-order=ipv4first"
-ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
-ENV DATABASE_HOST=172.17.0.1
-ENV DATABASE_USER=mudzy
-ENV DATABASE_PASSWORD="nije,kikiriki"
-ENV DATABASE_NAME=boiler_assistant
-ENV JWT_SECRET="tvoj_tajni_jwt_kljuc"
-ENV JWT_EXPIRES_IN="3600s"
-ENV WEATHER_API_KEY="8e968a22bfca43d18a6152747260301"
-ENV TUYA_CLIENT_ID="y3kg9wjqwghsj8ak5swj"
-ENV TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
-ENV TUYA_REGION=EU
-ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
-
-# Install ts-node ako treba
-RUN npm install ts-node typescript --workspace=backend
-
-# Compile config i pokreni Prisma generate
-RUN npx ts-node prisma.config.ts
-RUN npx prisma generate --schema=prisma/schema.prisma
+# Prisma generate
+RUN npx prisma generate
 
 # Build NestJS
-RUN npm run build --workspace=backend
+RUN npm run build
 
 ############################
-# Stage 3: Production image
+# Stage 3: production
 ############################
 FROM node:20-slim AS production
-WORKDIR /app
+WORKDIR /usr/src/backend/app
 
 ENV NODE_ENV=production
 ENV PORT=3020
 
-# Kopiraj build i node_modules iz build stage-a
-COPY --from=build /app/backend/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /usr/src/backend/app/dist ./dist
+COPY --from=build /usr/src/backend/app/node_modules ./node_modules
 
 # Entrypoint
-COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3020

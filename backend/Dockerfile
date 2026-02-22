@@ -25,7 +25,7 @@ RUN npm cache clean --force \
 ############################
 FROM node:20-slim AS build
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
@@ -42,7 +42,7 @@ ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
 # Kopiramo backend source
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY backend/ .
 
 # Prisma generate
@@ -56,7 +56,7 @@ RUN npm run build
 ############################
 FROM node:20-slim AS production
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -67,8 +67,8 @@ ENV NODE_ENV=production
 ENV PORT=3020
 
 # Kopiramo samo ono što treba za runtime
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY backend/package*.json ./
 COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh

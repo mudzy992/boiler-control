@@ -1,5 +1,5 @@
 ############################
-# Stage 1: Install deps (root + workspaces)
+# Stage 1: Install root deps (workspaces)
 ############################
 FROM node:20-slim AS deps
 WORKDIR /app
@@ -9,10 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Kopiraj root package.json + lockfile
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-# Instaliraj sve workspace deps u root-u
-RUN npm install --legacy-peer-deps
+# Instaliraj sve workspace deps jednom
+RUN npm ci --legacy-peer-deps
 
 ############################
 # Stage 2: Build backend
@@ -20,11 +20,13 @@ RUN npm install --legacy-peer-deps
 FROM node:20-slim AS build
 WORKDIR /app
 
-# Copy installed deps
+# Kopiraj node_modules iz deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json ./
 
-# Copy backend source
+# Kopiraj root package.json + lockfile (obavezno)
+COPY package.json package-lock.json ./
+
+# Kopiraj backend source
 COPY backend/ ./backend/
 WORKDIR /app/backend
 
@@ -43,9 +45,11 @@ ENV TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
 ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
-# Prisma generate + build
-RUN npx prisma generate --schema=backend/prisma/schema.prisma
-RUN npm run build
+# Prisma generate (lokalna verzija iz node_modules)
+RUN npx prisma generate --schema=prisma/schema.prisma
+
+# Build NestJS
+RUN npm run build --workspace=backend
 
 ############################
 # Stage 3: Production image
@@ -56,7 +60,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3020
 
-# Copy built backend
+# Kopiraj build + node_modules
 COPY --from=build /app/backend/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
 

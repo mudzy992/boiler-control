@@ -11,11 +11,7 @@ WORKDIR /usr/src/backend/app
 
 COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
 COPY . .
-COPY tsconfig.json ./tsconfig.json
-COPY nest-cli.json ./nest-cli.json
-COPY src ./src
-COPY prisma ./prisma
-COPY package*.json ./
+CMD ["ls", "-la"]
 
 RUN npx prisma generate
 RUN tree -L 2

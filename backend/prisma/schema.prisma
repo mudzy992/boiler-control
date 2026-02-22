@@ -5,9 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider     = "prisma-client"
+  provider     = "prisma-client-js"
   output       = "../src/generated/prisma"
-  moduleFormat = "cjs"
+  transpile    = true
 }
 
 datasource db {
@@ -17,9 +17,11 @@ datasource db {
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
+  username      String?  @unique
   passwordHash  String
   name          String?
   homeLocation  String?
+  gasPriceExVat Float?
 
   activeHomeProfile   HomeProfile? @relation("ActiveHomeProfile", fields: [activeHomeProfileId], references: [id])
   activeHomeProfileId Int? @unique
@@ -47,6 +49,7 @@ model User {
   notifications               Notification[]
   notificationPreferences     NotificationPreference[]
   gasReadings                 GasReading[]
+  gasPriceHistories           GasPriceHistory[]
 }
 
 model HomeProfile {
@@ -129,6 +132,7 @@ model HeatingEvent {
   isAnomaly      Boolean         @default(false)   // Uočena anomalija (cron postavlja na true)
   proposedEndTime DateTime?                        // Cron prijedlog za Završetak
   userConfimed    Boolean        @default(false)   // Potvrda korisnika
+  anomalyCheckedAt DateTime?
 
   createdAt DateTime @default(now())
 }
@@ -191,8 +195,39 @@ model GasReading {
   readingDate  DateTime
   counterValue Float    // Stanje brojila (m3)
   consumption  Float?   // Potrošnja od zadnjeg očitavanja (m3)
+  meterImagePath String?
+  meterImageMime String?
+  meterImageOriginalName String?
+  isInvoiceReference Boolean @default(false)
+  referenceMonth DateTime?
+  invoicePdfPath String?
+  invoicePdfMime String?
+  invoicePdfOriginalName String?
+  invoiceUploadedAt DateTime?
+  invoiceGasPriceExVat Float?
 
   createdAt    DateTime @default(now())
+
+  gasPriceHistories GasPriceHistory[]
+
+  @@unique([userId, referenceMonth])
+}
+
+model GasPriceHistory {
+  id            Int            @id @default(autoincrement())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        Int
+  gasReading    GasReading?    @relation(fields: [gasReadingId], references: [id])
+  gasReadingId  Int?
+  priceExVat    Float
+  vatRate       Float          @default(0.17)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  source        GasPriceSource @default(MANUAL)
+  createdAt     DateTime       @default(now())
+
+  @@index([userId, effectiveFrom])
+  @@index([userId, effectiveTo])
 }
 
 enum SeasonMode {
@@ -327,4 +362,9 @@ enum UserPlan {
   FREE
   PRO
   ENTERPRISE
+}
+
+enum GasPriceSource {
+  MANUAL
+  INVOICE
 }

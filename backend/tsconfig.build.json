@@ -6,7 +6,11 @@
     "target": "ES2023",
     "skipLibCheck": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "baseUrl": "./",
+    "paths": {
+      "src/*": ["src/*"]
+    }
   },
   "exclude": [
     "node_modules",

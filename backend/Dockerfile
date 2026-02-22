@@ -4,16 +4,18 @@
 FROM node:20-slim AS build
 WORKDIR /app
 
-# System dependencies
+# System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     python3 \
     make \
     g++ \
     openssl \
+    git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Env variables
+# Environment variables (env7)
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
 ENV DATABASE_HOST=172.17.0.1
@@ -28,23 +30,23 @@ ENV TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
 ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
-# COPY root package.json i package-lock.json
+# Copy root + backend package.json
 COPY package*.json ./
-# COPY backend package.json (npm workspace)
 COPY backend/package*.json ./backend/
 
-# Install only backend dependencies, consistent s root lockfile
-RUN npm install --legacy-peer-deps --workspace=backend
+# Install all dependencies (workspaces)
+RUN npm install --legacy-peer-deps
 
-# COPY cijeli backend source
+# Copy backend source
 COPY backend/ ./backend/
 
+# Build backend
 WORKDIR /app/backend
 
 # Prisma generate
 RUN npx prisma generate
 
-# Build NestJS
+# NestJS build
 RUN npm run build
 
 ############################
@@ -53,12 +55,12 @@ RUN npm run build
 FROM node:20-slim AS pruned
 WORKDIR /app
 
-# COPY root + backend package.json i package-lock.json
+# Copy root + backend package.json
 COPY package*.json ./
 COPY backend/package*.json ./backend/
 
-# Install production-only backend dependencies
-RUN npm install --omit=dev --legacy-peer-deps --workspace=backend
+# Install only production deps
+RUN npm install --omit=dev --legacy-peer-deps
 
 ############################
 # Stage 3: Final Production Image
@@ -66,15 +68,16 @@ RUN npm install --omit=dev --legacy-peer-deps --workspace=backend
 FROM node:20-slim AS production
 WORKDIR /app
 
+# Production ENV
 ENV NODE_ENV=production
 ENV PORT=3020
 
-# COPY build output
+# Copy dist
 COPY --from=build /app/backend/dist ./dist
-# COPY production-only node_modules
+# Copy production node_modules
 COPY --from=pruned /app/node_modules ./node_modules
 
-# COPY package.json i entrypoint
+# Copy package.json + entrypoint
 COPY backend/package*.json ./
 COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh

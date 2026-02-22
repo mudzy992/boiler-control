@@ -1,27 +1,19 @@
 ############################
-# Stage 1: Base deps (cached)
+# Stage 1: Build dependencies
 ############################
-FROM node:20-slim AS deps
-
+FROM node:20-slim AS build
 WORKDIR /app
 
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     python3 \
     make \
     g++ \
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/package*.json ./
-RUN npm install --legacy-peer-deps
-
-
-############################
-# Stage 2: Build
-############################
-FROM node:20-slim AS build
-WORKDIR /app
-
+# Env variables
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
 ENV DATABASE_HOST=172.17.0.1
@@ -36,34 +28,40 @@ ENV TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
 ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
-# Kopiraj package fajlove
-COPY backend/package*.json ./
+# COPY root package.json i package-lock.json
+COPY package*.json ./
+# COPY backend package.json (npm workspace)
+COPY backend/package*.json ./backend/
 
-# **Fresh install dependencies direktno u build stage**
-RUN npm install --legacy-peer-deps
+# Install only backend dependencies, consistent s root lockfile
+RUN npm install --legacy-peer-deps --workspace=backend
 
-# Kopiraj cijeli source
-COPY backend/ .
+# COPY cijeli backend source
+COPY backend/ ./backend/
 
-# Prisma client
+WORKDIR /app/backend
+
+# Prisma generate
 RUN npx prisma generate
 
-# Build Nest
+# Build NestJS
 RUN npm run build
 
-
 ############################
-# Stage 3: Production deps only
+# Stage 2: Production-only deps
 ############################
 FROM node:20-slim AS pruned
 WORKDIR /app
 
-COPY backend/package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps
+# COPY root + backend package.json i package-lock.json
+COPY package*.json ./
+COPY backend/package*.json ./backend/
 
+# Install production-only backend dependencies
+RUN npm install --omit=dev --legacy-peer-deps --workspace=backend
 
 ############################
-# Stage 4: Final Production Image
+# Stage 3: Final Production Image
 ############################
 FROM node:20-slim AS production
 WORKDIR /app
@@ -71,9 +69,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3020
 
-COPY --from=build /app/dist ./dist
+# COPY build output
+COPY --from=build /app/backend/dist ./dist
+# COPY production-only node_modules
 COPY --from=pruned /app/node_modules ./node_modules
 
+# COPY package.json i entrypoint
 COPY backend/package*.json ./
 COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh

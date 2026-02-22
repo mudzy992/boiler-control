@@ -10,7 +10,7 @@ COPY package*.json ./
 # Instaliramo ovisnosti
 RUN npm install --force --verbose
 
-############################
+###########################
 # Stage 2: build
 ############################
 FROM dependencies AS build

@@ -14,7 +14,6 @@ COPY . .
 CMD ["ls", "-la"]
 
 RUN npx prisma generate
-RUN tree -L 2
 RUN npm run build --verbose
 
 # Stage 3: production

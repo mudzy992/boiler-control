@@ -33,6 +33,7 @@ COPY --from=build /usr/src/backend/app/node_modules ./node_modules
 COPY --from=build /usr/src/backend/app/package*.json ./
 # Make sure your prisma schema is available if needed at runtime
 COPY --from=build /usr/src/backend/app/prisma ./prisma
+COPY --from=build /usr/src/backend/app/src/generated ./dist/generated
 
 EXPOSE 3020
 # Start NestJS directly

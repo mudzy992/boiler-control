@@ -21,7 +21,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "lib": ["ES2023"],
+    "downlevelIteration": true
   },
   "include": [
     "src/**/*",

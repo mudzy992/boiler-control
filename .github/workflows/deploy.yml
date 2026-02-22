@@ -63,26 +63,30 @@ jobs:
 
             rebuild_backend() {
               echo "🔹 Rebuilding backend container..."
-              docker-compose -f ./backend/docker-compose.yml down
+              cd backend
+              docker-compose down
               docker compose stop boiler-control-backend || true
               docker compose rm -f -v boiler-control-backend || true
               sleep 2
               docker rmi boiler-control-backend-image || true
-              docker-compose -f ./backend/docker-compose.yml up --build -d boiler-control-backend
+              docker-compose up --build -d boiler-control-backend
               sudo fuser -k 3020/tcp || true
-              docker-compose -f ./backend/docker-compose.yml up --build -d boiler-control-backend
+              docker-compose up --build -d boiler-control-backend
+              cd ..
             }
 
-             rebuild_frontend() {
+            rebuild_frontend() {
               echo "🔹 Rebuilding frontend container..."
-              docker-compose -f ./frontend/docker-compose.yml down
+              cd frontend
+              docker-compose down
               docker compose stop boiler-control-frontend || true
               docker compose rm -f -v boiler-control-frontend || true
               sleep 2
               docker rmi boiler-control-frontend-image || true
-              docker-compose -f ./frontend/docker-compose.yml up --build -d boiler-control-frontend
+              docker-compose up --build -d boiler-control-frontend
               sudo fuser -k 3021/tcp || true
-              docker-compose -f ./frontend/docker-compose.yml up --build -d boiler-control-frontend
+              docker-compose up --build -d boiler-control-frontend
+              cd ..
             }
 
             if [ -n "$BACKEND_CHANGED" ]; then

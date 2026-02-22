@@ -17,16 +17,8 @@ FROM dependencies AS build
 COPY . .
 RUN npm run build --verbose
 
-COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
-COPY package.json package-lock.json ./
-COPY prisma ./prisma
-COPY src ./src
-
 # Prisma generate
 RUN npx prisma generate
-
-# Build NestJS
-RUN npm run build
 
 ############################
 # Stage 3: production

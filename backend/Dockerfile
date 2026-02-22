@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
-RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 
 ############################
@@ -54,7 +54,7 @@ FROM node:20-slim AS pruned
 WORKDIR /app
 
 COPY backend/package*.json ./
-RUN npm ci --omit=dev --legacy-peer-deps
+RUN npm install --omit=dev --legacy-peer-deps
 
 
 ############################
@@ -66,10 +66,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3020
 
-# KOPIRAMO BUILD ARTEFAKTE
 COPY --from=build /app/dist ./dist
-
-# KOPIRAMO SAMO PRODUCTION DEPENDENCIES
 COPY --from=pruned /app/node_modules ./node_modules
 
 COPY backend/package*.json ./
@@ -77,5 +74,4 @@ COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3020
-
 ENTRYPOINT ["./docker-entrypoint.sh"]

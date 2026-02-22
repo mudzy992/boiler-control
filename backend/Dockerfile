@@ -33,8 +33,7 @@ COPY --from=build /usr/src/backend/app/node_modules ./node_modules
 COPY --from=build /usr/src/backend/app/package*.json ./
 # Make sure your prisma schema is available if needed at runtime
 COPY --from=build /usr/src/backend/app/prisma ./prisma
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3020
-ENTRYPOINT ["./docker-entrypoint.sh"]
+# Start NestJS directly
+CMD ["node", "dist/main.js"]

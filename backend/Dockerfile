@@ -5,7 +5,7 @@ WORKDIR /usr/src/backend/app
 COPY package*.json ./
 RUN npm ci
 
-# Stage 2: builda
+# Stage 2: build
 FROM node:20-slim AS build
 WORKDIR /usr/src/backend/app
 

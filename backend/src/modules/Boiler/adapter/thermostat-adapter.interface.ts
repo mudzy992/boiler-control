@@ -1,4 +1,4 @@
-import { DayType } from '../../../generated/prisma/enums';
+import { DayType } from 'src/generated/prisma';
 
 export interface ThermostatSnapshot {
   currentTemp: number; // trenutna temperatura

@@ -3,11 +3,11 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 import { NotificationsService } from '../Notification/notifications.service';
-import { NotificationType } from '../../generated/prisma/enums';
 import { BoilerService } from '../Boiler/boiler.service';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { StructuredLogger, LogContext } from '../../common/structured-logger';
 import { MetricsService } from '../../common/metrics.service';
+import { NotificationType } from 'src/generated/prisma';
 
 @Injectable()
 export class ThermostatPollingService {

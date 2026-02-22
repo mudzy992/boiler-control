@@ -1,8 +1,4 @@
-import {
-  WindowType,
-  HeatingType,
-  InsulationType,
-} from 'src/generated/prisma/enums';
+import { WindowType, HeatingType, InsulationType } from 'src/generated/prisma';
 import { FlowTempInput } from '../engine/types';
 import { BaseHeatingStrategy } from './base.strategy';
 

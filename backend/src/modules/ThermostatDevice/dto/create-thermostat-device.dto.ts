@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsString, IsNumber } from 'class-validator';
-import { ThermostatMode } from '../../../generated/prisma/enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ThermostatMode } from 'src/generated/prisma';
 
 export class CreateThermostatDeviceDto {
   @ApiProperty()

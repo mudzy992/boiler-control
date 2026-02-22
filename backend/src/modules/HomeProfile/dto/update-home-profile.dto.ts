@@ -13,7 +13,7 @@ import {
   WindowType,
   HeatingType,
   SeasonMode,
-} from 'src/generated/prisma/enums';
+} from 'src/generated/prisma';
 
 export class UpdateHomeProfileDto {
   @IsOptional()

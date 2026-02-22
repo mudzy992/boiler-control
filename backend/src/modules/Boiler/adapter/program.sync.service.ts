@@ -2,8 +2,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { TuyaProgramByDay, TuyaProgramInterval } from './program-sync.types';
-import { DayType } from '../../../generated/prisma/enums';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { DayType } from 'src/generated/prisma';
 
 @Injectable()
 export class ProgramSyncService {

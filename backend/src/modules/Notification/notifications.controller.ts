@@ -6,15 +6,14 @@ import {
   Param,
   UseGuards,
   Patch,
-  Injectable,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { User } from '../Auth/user.decorator';
 import { RegisterDeviceDTO } from './dto/register-device.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { NotificationType } from '../../generated/prisma/enums';
 import { GasReminderService } from '../Schedule/gas.reminder.service';
+import { NotificationType } from 'src/generated/prisma';
 
 interface ManualNotificationDTO {
   userId: number;
@@ -77,7 +76,7 @@ export class NotificationsController {
   }
 
   @Get('types')
-  async getNotificationTypes() {
+  getNotificationTypes() {
     // Return all available notification types
     return [
       { value: 'DAILY_RECOMMENDATION', label: 'Daily Recommendations' },

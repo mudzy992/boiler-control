@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../Notification/notifications.service';
-import { NotificationType } from '../../generated/prisma/enums';
+import { NotificationType } from 'src/generated/prisma';
 
 @Injectable()
 export class GasReminderService {

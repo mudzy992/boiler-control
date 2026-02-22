@@ -15,10 +15,11 @@ RUN npm install --force --verbose
 ############################
 FROM dependencies AS build
 COPY . .
-RUN npm run build --verbose
 
 # Prisma generate
 RUN npx prisma generate
+
+RUN npm run build --verbose
 
 ############################
 # Stage 3: production

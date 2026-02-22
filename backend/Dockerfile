@@ -44,7 +44,7 @@ ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
 # Prisma generate + build
-RUN npx prisma generate
+RUN npm run generate:prisma --workspace=backend
 RUN npm run build
 
 ############################

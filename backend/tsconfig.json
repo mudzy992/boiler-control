@@ -10,6 +10,8 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
+    "lib": ["ES2023"],
+    "downlevelIteration": true,
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -21,9 +23,7 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "allowJs": true,
-    "checkJs": false,
-    "lib": ["ES2023"],
-    "downlevelIteration": true
+    "checkJs": false
   },
   "include": [
     "src/**/*",

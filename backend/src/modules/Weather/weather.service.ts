@@ -66,7 +66,7 @@ export class WeatherService {
          1) Geocoding
       ======================= */
       // Use adapter to wrap the geocoding request for timeouts / CB.
-      const geoRes = await this.weatherAdapter.executeWithCircuitBreaker(
+      const geoRes: any = await this.weatherAdapter.executeWithCircuitBreaker(
         async () =>
           fetch(
             `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(

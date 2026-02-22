@@ -4,7 +4,8 @@ FROM node:20-slim AS build-stage
 WORKDIR /app
 
 # Build argument for API URL (defaults to backend service)
-ARG VITE_API_URL=https://boiler-control.hopto.org/backend/api
+ARG VITE_API_URL=/backend/api
+ENV VITE_API_URL=${VITE_API_URL}
 
 # Copy frontend package files
 COPY frontend/package*.json ./

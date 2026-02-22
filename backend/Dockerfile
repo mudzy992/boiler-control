@@ -5,7 +5,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates build-essential git curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy root package-lock.json and backend package.json
+# Copy root-A package-lock.json and backend package.json
 COPY package-lock.json ./
 COPY backend/package*.json ./
 RUN npm install --legacy-peer-deps

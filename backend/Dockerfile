@@ -3,7 +3,7 @@ FROM node:20-slim AS dependencies
 WORKDIR /usr/src/backend/app
 
 COPY package*.json ./
-RUN npm install --force --verbose
+RUN npm install --legacy-peer-deps
 
 # Stage 2: build
 FROM node:20-slim AS build

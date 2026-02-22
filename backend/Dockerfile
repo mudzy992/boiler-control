@@ -22,7 +22,6 @@ RUN npm install --legacy-peer-deps
 FROM node:20-slim AS build
 WORKDIR /app
 
-# ---- VRACENI SVI TVOJI ENV ----
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
 ENV DATABASE_HOST=172.17.0.1
@@ -36,14 +35,20 @@ ENV TUYA_CLIENT_ID="y3kg9wjqwghsj8ak5swj"
 ENV TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
 ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
-# --------------------------------
 
+# Kopiraj package fajlove
 COPY backend/package*.json ./
-COPY --from=deps /app/node_modules ./node_modules
 
+# **Fresh install dependencies direktno u build stage**
+RUN npm install --legacy-peer-deps
+
+# Kopiraj cijeli source
 COPY backend/ .
 
+# Prisma client
 RUN npx prisma generate
+
+# Build Nest
 RUN npm run build
 
 

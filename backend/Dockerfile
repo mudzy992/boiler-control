@@ -17,8 +17,7 @@ RUN apt-get update \
 COPY backend/package*.json ./
 
 # Reproducibilan install
-RUN npm ci --legacy-peer-deps
-
+RUN npm install --legacy-peer-deps
 
 ############################
 # Stage 2: Build

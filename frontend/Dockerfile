@@ -8,10 +8,10 @@ ARG VITE_API_URL=/backend/api
 ENV VITE_API_URL=${VITE_API_URL}
 
 # Copy frontend package files
-COPY frontend/package*.json ./
+COPY package*.json ./
 
 # Copy frontend source
-COPY frontend/ .
+COPY . .
 
 # Install dependencies with retry logic for optional dependencies
 # npm install with --no-audit and --no-fund to speed up installation

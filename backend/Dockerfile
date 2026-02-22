@@ -17,14 +17,15 @@ RUN apt-get update \
 COPY backend/package*.json ./
 
 # Reproducibilan install
-RUN npm install --legacy-peer-deps
+RUN npm cache clean --force \
+    && npm install --legacy-peer-deps
 
 ############################
 # Stage 2: Build
 ############################
-FROM deps AS build
+FROM node:20-slim AS build
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 ENV DATABASE_URL="mysql://mudzy:nije,kikiriki@172.17.0.1:3306/boiler_assistant"
@@ -41,8 +42,8 @@ ENV TUYA_REGION=EU
 ENV TUYA_BASE_URL=https://openapi.tuyaeu.com
 
 # Kopiramo backend source
+COPY --from=deps /app/node_modules ./node_modules
 COPY backend/ .
-
 
 # Prisma generate
 RUN npx prisma generate
@@ -50,30 +51,27 @@ RUN npx prisma generate
 # Build Nest aplikacije
 RUN npm run build
 
-
 ############################
 # Stage 3: Production
 ############################
 FROM node:20-slim AS production
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Kopiramo samo ono što treba za runtime
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=deps /usr/src/app/package*.json ./
-COPY --from=build /usr/src/app/dist ./dist
-
-# Entry point
-COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x docker-entrypoint.sh
-
 ENV NODE_ENV=production
 ENV PORT=3020
+
+# Kopiramo samo ono što treba za runtime
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules ./node_modules
+COPY backend/package*.json ./
+COPY backend/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3020
 

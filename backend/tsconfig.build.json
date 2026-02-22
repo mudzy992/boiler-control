@@ -1,6 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
     "target": "ES2023",
     "skipLibCheck": true,
     "experimentalDecorators": true,
@@ -11,6 +13,7 @@
     "test",
     "dist",
     "**/*spec.ts",
-    "prisma/seed.ts"
+    "prisma/seed.ts",
+    "prisma.config.ts"
   ]
 }

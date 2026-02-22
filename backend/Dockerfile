@@ -18,6 +18,7 @@ COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
 COPY . .
 
 RUN npx prisma generate
+RUN cat tsconfig.build.json
 RUN npm run build --verbose
 
 # Stage 3: production

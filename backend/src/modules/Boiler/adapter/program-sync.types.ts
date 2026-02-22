@@ -1,4 +1,4 @@
-import { DayType } from '../../../generated/prisma/enums';
+import { DayType } from 'src/generated/prisma';
 
 export interface TuyaProgramInterval {
   dayType: DayType; // WORKDAY | SATURDAY | SUNDAY

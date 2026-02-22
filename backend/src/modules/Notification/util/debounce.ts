@@ -1,4 +1,4 @@
-import { NotificationType } from 'src/generated/prisma/enums';
+import { NotificationType } from 'src/generated/prisma';
 
 export const NOTIFICATION_DEBOUNCE: Record<
   NotificationType,

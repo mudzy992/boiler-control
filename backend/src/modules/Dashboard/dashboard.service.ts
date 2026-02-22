@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { HeatingEventWhereInput } from '../../generated/prisma/models';
 import {
   GetHeatingEventsDto,
   GetHeatingSummaryDto,
@@ -199,7 +198,7 @@ export class DashboardService {
       throw new Error("Parametri 'from' i 'to' su obavezni");
     }
 
-    const where: HeatingEventWhereInput = {
+    const where: any = {
       thermostat: {
         homeProfile: {
           userId,

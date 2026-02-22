@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ExpoPushService } from '../ExpoPush/expo.push.notification.service';
-import { NotificationType } from '../../generated/prisma/enums';
 import { NOTIFICATION_DEBOUNCE } from './util/debounce';
+import { NotificationType } from 'src/generated/prisma';
 
 @Injectable()
 export class NotificationsService {

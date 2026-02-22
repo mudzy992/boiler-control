@@ -3,11 +3,11 @@ import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
 import { TuyaAuthService } from '../../../modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DayType } from '../../../generated/prisma/enums';
 import { ThermostatSnapshot } from './thermostat-adapter.interface';
 import { TuyaProgramByDay } from './program-sync.types';
 import { ProgramSyncService } from './program.sync.service';
 import { StructuredLogger } from '../../../common/structured-logger';
+import { DayType } from 'src/generated/prisma';
 
 interface TargetTempInfo {
   targetTemp: number;

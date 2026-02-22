@@ -4,17 +4,14 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../Notification/notifications.service';
 import { subDays } from 'date-fns';
-import { NotificationType } from '../../generated/prisma/enums';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { StructuredLogger } from '../../common/structured-logger';
-import {
-  AnomalyDetectionService,
-  AnomalyType,
-} from '../../common/anomaly-detection.service';
+import { AnomalyDetectionService } from '../../common/anomaly-detection.service';
 import { FallbackStrategyService } from '../../common/fallback-strategy.service';
 import { MetricsService } from '../../common/metrics.service';
 import { ReportingService } from '../../common/reporting.service';
 import { CorrelationIdService } from '../../common/correlation-id.service';
+import { NotificationType } from 'src/generated/prisma';
 
 type HeatingEventWithThermostat = {
   id: number;

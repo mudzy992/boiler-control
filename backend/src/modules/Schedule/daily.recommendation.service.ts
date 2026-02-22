@@ -6,7 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
 import { NotificationsService } from '../Notification/notifications.service';
-import { NotificationType } from 'src/generated/prisma/enums';
+import { NotificationType } from 'src/generated/prisma';
 
 @Injectable()
 export class DailyRecommendationService {

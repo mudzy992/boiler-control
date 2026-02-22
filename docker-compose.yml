@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   boiler-control-backend:
     container_name: boiler-control-backend

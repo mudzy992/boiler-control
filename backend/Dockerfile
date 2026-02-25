@@ -5,7 +5,7 @@ RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/li
 WORKDIR /usr/src/backend/app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
 # Stage 2: build
 FROM node:20-slim AS build

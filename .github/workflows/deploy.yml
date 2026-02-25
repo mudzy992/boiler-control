@@ -68,10 +68,19 @@ jobs:
             echo "🧩 Frontend changed: $FRONTEND_CHANGED"
             echo "🧩 Docker changed: $DOCKER_CHANGED"
 
+            force_remove_container() {
+              local cname="$1"
+              if docker ps -aq -f "name=^/${cname}$" | grep -q .; then
+                echo "🧹 Removing existing container: ${cname}"
+                docker rm -f "${cname}" || true
+              fi
+            }
+
             rebuild_backend() {
               echo "🔹 Rebuilding backend container..."
               docker compose -f "$COMPOSE_FILE" stop boiler-control-backend || true
               docker compose -f "$COMPOSE_FILE" rm -f boiler-control-backend || true
+              force_remove_container "boiler-control-backend"
               docker compose -f "$COMPOSE_FILE" up --build -d boiler-control-backend
             }
 
@@ -79,6 +88,7 @@ jobs:
               echo "🔹 Rebuilding frontend container..."
               docker compose -f "$COMPOSE_FILE" stop boiler-control-frontend || true
               docker compose -f "$COMPOSE_FILE" rm -f boiler-control-frontend || true
+              force_remove_container "boiler-control-frontend"
               docker compose -f "$COMPOSE_FILE" up --build -d boiler-control-frontend
             }
 

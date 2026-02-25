@@ -7,7 +7,12 @@ import { registerForPushNotifications } from '../services/notifications/notifica
 export interface User {
   id: number;
   email: string;
+  username?: string | null;
   name: string;
+  gasPriceExVat?: number | null;
+  gasPriceIncVat?: number | null;
+  gasPriceLastUpdatedAt?: string | null;
+  gasPriceSource?: string | null;
 }
 
 export interface AuthContextType {
@@ -15,8 +20,13 @@ export interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    name: string,
+    username: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -60,9 +70,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (identifier: string, password: string) => {
     try {
-      const response = await apiClient.login(email, password);
+      const response = await apiClient.login(identifier, password);
 
       if (!response.token) {
         throw new Error('No token received from server');
@@ -78,23 +88,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const register = useCallback(async (email: string, password: string, name: string) => {
-    try {
-      const response = await apiClient.register(email, password, name);
+  const register = useCallback(
+    async (
+      email: string,
+      password: string,
+      name: string,
+      username: string,
+    ) => {
+      try {
+        const response = await apiClient.register(
+          email,
+          password,
+          name,
+          username,
+        );
 
-      if (!response.token) {
-        throw new Error('No token received from server');
+        if (!response.token) {
+          throw new Error('No token received from server');
+        }
+
+        setToken(response.token);
+        setUser(response.user);
+        await SecureStorage.setToken(response.token);
+        await apiClient.setToken(response.token);
+      } catch (error) {
+        console.error('Registration failed:', error);
+        throw error;
       }
-
-      setToken(response.token);
-      setUser(response.user);
-      await SecureStorage.setToken(response.token);
-      await apiClient.setToken(response.token);
-    } catch (error) {
-      console.error('Registration failed:', error);
-      throw error;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     try {

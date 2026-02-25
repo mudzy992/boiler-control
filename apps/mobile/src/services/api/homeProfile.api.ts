@@ -11,8 +11,7 @@ import {
 export interface HomeProfile {
   id: number;
   userId: number;
-  name: string;
-  location: string;
+  name?: string;
   isActive: boolean;
   thermostats: number;
   createdAt: string;

@@ -20,6 +20,7 @@ import { FormInput } from '../../components/FormInput';
 
 export const RegisterScreen = ({ navigation }: any) => {
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,7 +36,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 
   const handleRegister = async () => {
     // Validation
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !username || !email || !password || !confirmPassword) {
       toast.show({
         description: t('auth.fillAllFields'),
       });
@@ -58,7 +59,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 
     setIsLoading(true);
     try {
-      await register(email, password, name);
+      await register(email, password, name, username);
       toast.show({
         description: t('auth.accountCreated'),
       });
@@ -120,6 +121,20 @@ export const RegisterScreen = ({ navigation }: any) => {
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    isDisabled={isLoading}
+                  />
+                </VStack>
+
+                <VStack space={2}>
+                  <Text fontSize="sm" fontWeight="medium" color={textColor}>
+                    {t('auth.username') || 'Username'}
+                  </Text>
+                  <FormInput
+                    placeholder={t('auth.usernamePlaceholder') || 'username'}
+                    value={username}
+                    onChangeText={setUsername}
                     autoCapitalize="none"
                     autoCorrect={false}
                     isDisabled={isLoading}

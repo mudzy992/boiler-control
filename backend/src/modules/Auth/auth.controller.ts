@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from '../User/dto/register.dto';
+import { LoginDto } from '../User/dto/login.dto';
 
 interface JwtRequest extends Request {
   user: {
@@ -30,8 +31,9 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  async login(@Body() body: { email: string; password: string }) {
-    return this.authService.login(body.email, body.password);
+  async login(@Body() body: LoginDto) {
+    const identifier = body.identifier ?? body.email;
+    return this.authService.login(identifier, body.password);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,8 +1,6 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { Public } from '../Auth/public.decorator';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
-import { User } from '../Auth/user.decorator';
 import {
   GetHeatingEventsDto,
   GetHeatingSummaryDto,
@@ -35,31 +33,31 @@ export class DashboardController {
 
   @Get('heating-events')
   getHeatingEvents(@Req() req: any, @Query() query: GetHeatingEventsDto) {
-    return this.dashboardService.getHeatingEvents(req.user.id, query);
+    return this.dashboardService.getHeatingEvents(req.user.userId, query);
   }
 
   @Get('heating-status')
   getHeatingStatus(@Req() req: any) {
-    return this.dashboardService.getHeatingStatus(req.user.id);
+    return this.dashboardService.getHeatingStatus(req.user.userId);
   }
 
   @Get('heating-summary')
   getHeatingSummary(@Req() req: any, @Query() query: GetHeatingSummaryDto) {
-    return this.dashboardService.getHeatingSummary(req.user.id, query);
+    return this.dashboardService.getHeatingSummary(req.user.userId, query);
   }
 
   @Get('heating-stats')
   getHeatingStats(@Req() req: any, @Query() query: GetHeatingStatsDto) {
-    return this.dashboardService.getHeatingStats(req.user.id, query);
+    return this.dashboardService.getHeatingStats(req.user.userId, query);
   }
 
   @Get('learning-trends')
   getLearningTrends(@Req() req: any, @Query() query: GetLearningTrendsDto) {
-    return this.dashboardService.getLearningTrends(req.user.id, query);
+    return this.dashboardService.getLearningTrends(req.user.userId, query);
   }
 
   @Get('export')
   exportAnalytics(@Req() req: any, @Query() query: ExportAnalyticsDto) {
-    return this.dashboardService.exportAnalytics(req.user.id, query);
+    return this.dashboardService.exportAnalytics(req.user.userId, query);
   }
 }

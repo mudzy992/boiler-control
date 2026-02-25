@@ -23,10 +23,11 @@ import { useTranslation } from '../../hooks/useTranslation';
 
 interface Thermostat {
   id: number;
-  name: string;
-  currentTemp: number;
-  targetTemp: number;
-  isHeating: boolean;
+  alias?: string;
+  name?: string;
+  currentTemp?: number | null;
+  targetTemp?: number | null;
+  isHeatingNow?: boolean;
 }
 
 interface DashboardData {
@@ -39,6 +40,7 @@ interface DashboardData {
 
 interface HeatingEvent {
   id: number;
+  deviceId?: number;
   timestampStart: string;
   timestampEnd: string | null;
   roomCurrentTemp: number;
@@ -46,7 +48,6 @@ interface HeatingEvent {
   hvacAction: string;
   source: string;
   isAnomaly: boolean;
-  thermostatId?: number;
 }
 
 export const HeatingScreen = () => {
@@ -104,7 +105,7 @@ export const HeatingScreen = () => {
 
     // Filter events for this thermostat
     const thermostatEvents = allHeatingEvents.filter(
-      (event: HeatingEvent) => event.thermostatId === thermostatId
+      (event: HeatingEvent) => event.deviceId === thermostatId
     );
 
     if (thermostatEvents.length === 0) return false;
@@ -123,7 +124,13 @@ export const HeatingScreen = () => {
   // Enhance thermostats with correct isHeating status
   const enhancedThermostats = thermostats.map((thermostat) => ({
     ...thermostat,
-    isHeating: getIsHeatingForThermostat(thermostat.id),
+    name: thermostat.alias || thermostat.name || `Thermostat ${thermostat.id}`,
+    currentTemp: Number(thermostat.currentTemp ?? 0),
+    targetTemp: Number(thermostat.targetTemp ?? 0),
+    isHeating:
+      typeof thermostat.isHeatingNow === 'boolean'
+        ? thermostat.isHeatingNow
+        : getIsHeatingForThermostat(thermostat.id),
   }));
 
   // Filter events to only show today's events
@@ -152,7 +159,7 @@ export const HeatingScreen = () => {
     try {
       await Promise.all([refetch(), refetchEvents()]);
       toast.show({
-        render: ({ id }) => (
+        render: () => (
           <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
             <Text color="white" fontSize="sm">
               {t('heating.updated')}
@@ -371,7 +378,7 @@ export const HeatingScreen = () => {
               </Center>
             ) : (
               <VStack space={3} mt={2}>
-                {heatingEvents.map((event: HeatingEvent, index: number) => {
+                {heatingEvents.map((event: HeatingEvent) => {
                   const isActive = !event.timestampEnd;
                   const duration = calculateDuration(event.timestampStart, event.timestampEnd);
                   const tempChange = (event.roomCurrentTemp - event.roomTargetTemp).toFixed(1);

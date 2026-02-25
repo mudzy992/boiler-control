@@ -4,7 +4,12 @@ import dayjs from 'dayjs';
 interface GasFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { counterValue: number; readingDate: string }) => Promise<void>;
+  onSubmit: (data: {
+    counterValue: number;
+    readingDate: string;
+    markAsReference?: boolean;
+    meterImage?: File;
+  }) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -19,10 +24,25 @@ export const GasForm: React.FC<GasFormProps> = ({
     useCurrentDateTime: true,
     readingDate: dayjs().format('YYYY-MM-DD'),
     readingTime: dayjs().format('HH:mm'),
+    markAsReference: false,
   });
+  const [meterImage, setMeterImage] = useState<File | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string>('');
+
+  const resetForm = () => {
+    setFormData({
+      counterValue: '',
+      useCurrentDateTime: true,
+      readingDate: dayjs().format('YYYY-MM-DD'),
+      readingTime: dayjs().format('HH:mm'),
+      markAsReference: false,
+    });
+    setMeterImage(null);
+    setErrors({});
+    setApiError('');
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -64,16 +84,12 @@ export const GasForm: React.FC<GasFormProps> = ({
       await onSubmit({
         counterValue: parseFloat(formData.counterValue),
         readingDate: readingDatetime,
+        markAsReference: formData.markAsReference,
+        meterImage: meterImage || undefined,
       });
 
       // Reset form
-      setFormData({
-        counterValue: '',
-        useCurrentDateTime: true,
-        readingDate: dayjs().format('YYYY-MM-DD'),
-        readingTime: dayjs().format('HH:mm'),
-      });
-      setErrors({});
+      resetForm();
       onClose();
     } catch (error: any) {
       const message =
@@ -148,6 +164,38 @@ export const GasForm: React.FC<GasFormProps> = ({
             </label>
           </div>
 
+          <div className="mb-4 flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="markAsReference"
+              checked={formData.markAsReference}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, markAsReference: e.target.checked }))
+              }
+              className="rounded border-gray-300 dark:border-slate-600"
+              disabled={isLoading}
+            />
+            <label htmlFor="markAsReference" className="text-sm text-gray-700 dark:text-slate-300">
+              Mark as monthly invoice reference
+            </label>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+              Meter Image (optional)
+            </label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => setMeterImage(e.target.files?.[0] || null)}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+              disabled={isLoading}
+            />
+            {meterImage && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">{meterImage.name}</p>
+            )}
+          </div>
+
           {/* Date & Time (conditional) */}
           {!formData.useCurrentDateTime && (
             <>
@@ -188,7 +236,10 @@ export const GasForm: React.FC<GasFormProps> = ({
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
               disabled={isLoading}
               className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
             >

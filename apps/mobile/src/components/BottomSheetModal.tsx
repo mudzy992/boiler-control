@@ -19,7 +19,6 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({
   isOpen,
   onClose,
   children,
-  title,
   snapPoints = ['50%', '90%'],
 }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);

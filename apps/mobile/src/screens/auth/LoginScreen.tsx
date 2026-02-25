@@ -19,7 +19,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormInput } from '../../components/FormInput';
 
 export const LoginScreen = ({ navigation }: any) => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,7 +32,7 @@ export const LoginScreen = ({ navigation }: any) => {
   const textColor = useColorModeValue('gray.800', 'gray.100');
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!identifier || !password) {
       toast.show({
         description: t('auth.fillAllFields'),
       });
@@ -41,7 +41,7 @@ export const LoginScreen = ({ navigation }: any) => {
 
     setIsLoading(true);
     try {
-      await login(email, password);
+      await login(identifier, password);
       toast.show({
         description: t('auth.welcomeBack'),
       });
@@ -83,13 +83,12 @@ export const LoginScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    {t('auth.email')}
+                    {t('auth.emailOrUsername') || 'Email or Username'}
                   </Text>
                   <FormInput
-                    placeholder={t('auth.emailPlaceholder')}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
+                    placeholder={t('auth.emailPlaceholder') || 'you@example.com or username'}
+                    value={identifier}
+                    onChangeText={setIdentifier}
                     autoCapitalize="none"
                     autoCorrect={false}
                     isDisabled={isLoading}

@@ -18,6 +18,7 @@
     "test",
     "dist",
     "**/*spec.ts",
+    "src/generated/prisma/**/*.js",
     "prisma/seed.ts",
     "prisma.config.ts"
   ]

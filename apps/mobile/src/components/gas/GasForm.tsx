@@ -15,6 +15,7 @@ import {
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerEvent,
@@ -25,7 +26,12 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { AxiosError } from 'axios';
 
 interface GasFormProps {
-  onSubmit: (data: { counterValue: number; readingDate: string }) => Promise<void>;
+  onSubmit: (data: {
+    counterValue: number;
+    readingDate: string;
+    markAsReference?: boolean;
+    meterImage?: { uri: string; name?: string; type?: string };
+  }) => Promise<void>;
   isLoading?: boolean;
   onCancel?: () => void;
   existingReadings?: Array<{ id: number; readingDate: string }>;
@@ -43,6 +49,12 @@ export const GasForm: React.FC<GasFormProps> = ({
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [markAsReference, setMarkAsReference] = useState(false);
+  const [meterImage, setMeterImage] = useState<{
+    uri: string;
+    name?: string;
+    type?: string;
+  } | null>(null);
   const [error, setError] = useState('');
   const toast = useToast();
   const { t } = useTranslation();
@@ -94,6 +106,30 @@ export const GasForm: React.FC<GasFormProps> = ({
     return combined;
   };
 
+  const pickMeterImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      const errorMsg = t('gas.imagePermissionDenied') || 'Image permission denied';
+      setError(errorMsg);
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setMeterImage({
+        uri: asset.uri,
+        name: asset.fileName || `meter-${Date.now()}.jpg`,
+        type: asset.mimeType || 'image/jpeg',
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     setError('');
 
@@ -131,6 +167,8 @@ export const GasForm: React.FC<GasFormProps> = ({
       await onSubmit({
         counterValue: value,
         readingDate: readingDate.toISOString(),
+        markAsReference,
+        meterImage: meterImage ?? undefined,
       });
 
       // Reset form on success
@@ -138,6 +176,8 @@ export const GasForm: React.FC<GasFormProps> = ({
       setUseCurrentDateTime(true);
       setSelectedDate(new Date());
       setSelectedTime(new Date());
+      setMarkAsReference(false);
+      setMeterImage(null);
     } catch (err: any) {
       // Extract backend validation message
       const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message;
@@ -263,6 +303,62 @@ export const GasForm: React.FC<GasFormProps> = ({
           </FormControl>
         </>
       )}
+
+      <FormControl>
+        <HStack
+          justifyContent="space-between"
+          alignItems="center"
+          bg={useColorModeValue('gray.50', 'dark.700')}
+          p={3}
+          rounded="md"
+        >
+          <HStack space={2} alignItems="center">
+            <Icon as={Ionicons} name="receipt-outline" size={5} color="orange.500" />
+            <Text fontSize="sm" fontWeight="500" color={textColor}>
+              {t('gas.markAsReference') || 'Mark as monthly invoice reference'}
+            </Text>
+          </HStack>
+          <Switch
+            size="sm"
+            isChecked={markAsReference}
+            onToggle={setMarkAsReference}
+            onTrackColor={switchTrackColor}
+            isDisabled={isLoading}
+          />
+        </HStack>
+      </FormControl>
+
+      <FormControl>
+        <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
+          {t('gas.meterImage') || 'Meter Image (optional)'}
+        </FormControl.Label>
+        <HStack space={2}>
+          <Button
+            flex={1}
+            variant="outline"
+            onPress={pickMeterImage}
+            isDisabled={isLoading}
+            leftIcon={<Icon as={Ionicons} name="image-outline" size={4} color="brand.500" />}
+          >
+            {meterImage ? (t('gas.changeImage') || 'Change Image') : (t('gas.selectImage') || 'Select Image')}
+          </Button>
+          {meterImage && (
+            <Button
+              variant="ghost"
+              colorScheme="red"
+              onPress={() => setMeterImage(null)}
+              isDisabled={isLoading}
+            >
+              {t('common.clear')}
+            </Button>
+          )}
+        </HStack>
+        {meterImage && (
+          <Text mt={2} fontSize="xs" color={textColor}>
+            {meterImage.name || meterImage.uri}
+          </Text>
+        )}
+      </FormControl>
 
       {/* iOS Date Picker */}
       {Platform.OS === 'ios' && showDatePicker && (

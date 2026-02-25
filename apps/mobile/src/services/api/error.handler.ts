@@ -1,7 +1,4 @@
 import { AxiosError } from 'axios';
-import { Box, HStack, Icon, Text } from 'native-base';
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
 
 /**
  * Error handling utility for consistent error messages across the mobile app
@@ -96,18 +93,16 @@ export function parseApiError(error: unknown): ApiError {
  *        showError(error);
  */
 export function useErrorHandler() {
-  const toast = React.useRef<any>(null);
-
   // Simple toast implementation using alert-like UI
   const showError = (error: unknown, customMessage?: string) => {
     const apiError = error instanceof ApiError ? error : parseApiError(error);
-    const message = customMessage || apiError.userMessage;
+    const finalMessage = customMessage || apiError.userMessage;
 
     // For now, we'll use a simple console.error and could integrate with a toast library
     console.error('[API Error]', {
       statusCode: apiError.statusCode,
       message: apiError.message,
-      userMessage: apiError.userMessage,
+      userMessage: finalMessage,
       isNetworkError: apiError.isNetworkError,
     });
 

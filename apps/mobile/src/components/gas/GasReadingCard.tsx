@@ -10,20 +10,37 @@ interface GasReading {
   counterValue: number;
   readingDate: string;
   createdAt: string;
+  isInvoiceReference?: boolean;
+  referenceMonth?: string | null;
+  hasMeterImage?: boolean;
+  hasInvoicePdf?: boolean;
+  invoiceUploadedAt?: string | null;
 }
 
 interface GasReadingCardProps {
   reading: GasReading;
   previousReading?: GasReading; // Previous reading in the list (newer reading)
   onDelete?: (id: number) => void;
+  onToggleReference?: (reading: GasReading, isReference: boolean) => void;
+  onUploadInvoice?: (reading: GasReading) => void;
+  onDeleteInvoice?: (reading: GasReading) => void;
+  onOpenMeterImage?: (reading: GasReading) => void;
+  onOpenInvoice?: (reading: GasReading) => void;
   isDeleting?: boolean;
+  isMutating?: boolean;
 }
 
 export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   reading,
   previousReading,
   onDelete,
+  onToggleReference,
+  onUploadInvoice,
+  onDeleteInvoice,
+  onOpenMeterImage,
+  onOpenInvoice,
   isDeleting,
+  isMutating,
 }) => {
   const { t } = useTranslation();
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -34,6 +51,8 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   const consumptionBg = useColorModeValue('blue.50', 'blue.900');
   const consumptionBorder = useColorModeValue('blue.200', 'blue.700');
   const consumptionText = useColorModeValue('blue.700', 'blue.200');
+  const standardBadgeBg = useColorModeValue('gray.300', 'gray.600');
+  const standardBadgeText = useColorModeValue('gray.700', 'gray.100');
 
   const formattedDate = dayjs(reading.readingDate).format('DD.MM.YYYY');
   const formattedTime = dayjs(reading.readingDate).format('HH:mm');
@@ -61,6 +80,35 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
               <Text fontSize="lg" fontWeight="600" color={textColor}>
                 {reading.counterValue.toFixed(2)} m³
               </Text>
+            </HStack>
+            <HStack space={2}>
+              {reading.isInvoiceReference ? (
+                <Box px={2} py={1} rounded="full" bg="amber.500">
+                  <Text fontSize="2xs" color="white" fontWeight="700">
+                    REFERENCE
+                  </Text>
+                </Box>
+              ) : (
+                <Box px={2} py={1} rounded="full" bg={standardBadgeBg}>
+                  <Text fontSize="2xs" color={standardBadgeText} fontWeight="700">
+                    STANDARD
+                  </Text>
+                </Box>
+              )}
+              {reading.hasMeterImage && (
+                <Box px={2} py={1} rounded="full" bg="blue.500">
+                  <Text fontSize="2xs" color="white" fontWeight="700">
+                    IMAGE
+                  </Text>
+                </Box>
+              )}
+              {reading.hasInvoicePdf && (
+                <Box px={2} py={1} rounded="full" bg="green.500">
+                  <Text fontSize="2xs" color="white" fontWeight="700">
+                    INVOICE
+                  </Text>
+                </Box>
+              )}
             </HStack>
             <HStack space={4}>
               <VStack>
@@ -131,6 +179,67 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
             </HStack>
           </Box>
         )}
+
+        <HStack flexWrap="wrap" space={2}>
+          {onToggleReference && (
+            <Pressable
+              onPress={() => onToggleReference(reading, !reading.isInvoiceReference)}
+              disabled={isMutating}
+              _pressed={{ opacity: 0.7 }}
+            >
+              <Box
+                px={3}
+                py={2}
+                rounded="md"
+                bg={reading.isInvoiceReference ? 'orange.500' : 'blue.500'}
+              >
+                <Text color="white" fontSize="xs" fontWeight="700">
+                  {reading.isInvoiceReference ? 'Unset Reference' : 'Set Reference'}
+                </Text>
+              </Box>
+            </Pressable>
+          )}
+
+          {reading.hasMeterImage && onOpenMeterImage && (
+            <Pressable onPress={() => onOpenMeterImage(reading)} disabled={isMutating}>
+              <Box px={3} py={2} rounded="md" bg="blue.600">
+                <Text color="white" fontSize="xs" fontWeight="700">
+                  Open Image
+                </Text>
+              </Box>
+            </Pressable>
+          )}
+
+          {reading.isInvoiceReference && onUploadInvoice && (
+            <Pressable onPress={() => onUploadInvoice(reading)} disabled={isMutating}>
+              <Box px={3} py={2} rounded="md" bg="green.600">
+                <Text color="white" fontSize="xs" fontWeight="700">
+                  {reading.hasInvoicePdf ? 'Replace Invoice' : 'Upload Invoice'}
+                </Text>
+              </Box>
+            </Pressable>
+          )}
+
+          {reading.hasInvoicePdf && onOpenInvoice && (
+            <Pressable onPress={() => onOpenInvoice(reading)} disabled={isMutating}>
+              <Box px={3} py={2} rounded="md" bg="teal.600">
+                <Text color="white" fontSize="xs" fontWeight="700">
+                  Open Invoice
+                </Text>
+              </Box>
+            </Pressable>
+          )}
+
+          {reading.hasInvoicePdf && onDeleteInvoice && (
+            <Pressable onPress={() => onDeleteInvoice(reading)} disabled={isMutating}>
+              <Box px={3} py={2} rounded="md" bg="red.600">
+                <Text color="white" fontSize="xs" fontWeight="700">
+                  Delete Invoice
+                </Text>
+              </Box>
+            </Pressable>
+          )}
+        </HStack>
       </VStack>
     </Box>
   );

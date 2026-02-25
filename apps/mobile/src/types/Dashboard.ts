@@ -19,6 +19,9 @@ export interface ThermostatDevice {
   deviceId: string;
   mode: string; // PROGRAM, MANUAL, OFF
   lastSeen: string;
+  currentTemp?: number | null;
+  targetTemp?: number | null;
+  isHeatingNow?: boolean;
   program: ThermostatProgram[];
 }
 

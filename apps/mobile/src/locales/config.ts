@@ -108,7 +108,6 @@ const enUS = {
       'Data points in range: {{points}}. Keep schedules steady to improve predictions.',
     performanceComparison: 'Performance Comparison',
     vsSimilarHomes: 'vs. Similar Homes',
-    vsLastYear: 'vs. Last Year',
     better: '{{percent}}% better',
     improvement: '{{percent}}% improvement',
     // Gas Consumption Card
@@ -658,7 +657,6 @@ const bsBS = {
       'Točka podataka u periodu: {{points}}. Održavajte rasporede stabilnim da poboljšate prognose.',
     performanceComparison: 'Usporedba performansi',
     vsSimilarHomes: 'u odnosu na slične domove',
-    vsLastYear: 'u odnosu na prošlu godinu',
     better: '{{percent}}% bolje',
     improvement: '{{percent}}% poboljšanja',
     // Gas Consumption Card
@@ -674,17 +672,6 @@ const bsBS = {
     meterReading: 'Očitanje brojača',
     dailyConsumption: 'Dnevna potrošnja',
     noGasData: 'Nema dostupnih podataka o plinu',
-    consumptionForDay: 'Potrošnja za {{date}}',
-    // Heating Sessions
-    sessionDate: 'Datum sesije',
-    sessionDuration: 'Trajanje',
-    sessionTemp: 'Temperatura',
-    sessionTarget: 'Ciljna',
-    sessionDiff: 'Razlika',
-    sessionSource: 'Izvor',
-    // Efficiency descriptions
-    efficiencyRatio: 'Omjer postignute i ciljne temperature',
-    cycleDensityDesc: 'Prosječni ciklusi po danu',
     consumptionForDay: 'Potrošnja za {{date}}',
     // Heating Sessions
     sessionDate: 'Datum sesije',

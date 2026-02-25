@@ -6,6 +6,7 @@ import { AnomalyDetectionService } from './anomaly-detection.service';
 import { FallbackStrategyService } from './fallback-strategy.service';
 import { ReportingService } from './reporting.service';
 import { CorrelationIdService } from './correlation-id.service';
+import { FileStorageService } from './file-storage.service';
 
 @Module({
   controllers: [MetricsController, HealthController],
@@ -15,6 +16,7 @@ import { CorrelationIdService } from './correlation-id.service';
     FallbackStrategyService,
     ReportingService,
     CorrelationIdService,
+    FileStorageService,
   ],
   exports: [
     MetricsService,
@@ -22,6 +24,7 @@ import { CorrelationIdService } from './correlation-id.service';
     FallbackStrategyService,
     ReportingService,
     CorrelationIdService,
+    FileStorageService,
   ],
 })
 export class CommonModule {}

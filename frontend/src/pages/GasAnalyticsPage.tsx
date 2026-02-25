@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient, ApiClient } from '../services/api';
+import { apiClient } from '../services/api';
 import { StatCard } from '../components/StatCard';
 import { Button } from 'antd';
 
 export const GasAnalyticsPage: React.FC = () => {
   const [periodDays, setPeriodDays] = useState(30);
+  const [useDefaultReferenceRange, setUseDefaultReferenceRange] = useState(true);
 
   // Calculate date range for the selected period
   const dateRange = useMemo(() => {
@@ -18,14 +19,16 @@ export const GasAnalyticsPage: React.FC = () => {
     };
   }, [periodDays]);
 
-  // Fetch analysis data from API
-  const gasApi = apiClient as ApiClient & { getGasAnalysis: (from: string, to: string) => Promise<any> };
-
   const { data: analysisData = {}, isLoading, error } = useQuery({
-    queryKey: ['gas-analysis', dateRange.from, dateRange.to],
+    queryKey: [
+      'gas-analysis',
+      useDefaultReferenceRange ? 'default-range' : `${dateRange.from}-${dateRange.to}`,
+    ],
     queryFn: async () => {
       try {
-        const result = await gasApi.getGasAnalysis(dateRange.from, dateRange.to);
+        const result = useDefaultReferenceRange
+          ? await apiClient.getGasAnalysis()
+          : await apiClient.getGasAnalysis(dateRange.from, dateRange.to);
         console.log('Gas Analysis API Response:', result);
         return result;
       } catch (err) {
@@ -61,7 +64,12 @@ export const GasAnalyticsPage: React.FC = () => {
           Gas Analytics
         </h1>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Analyze your consumption patterns and trends over time. Data for {dateRange.from} to {dateRange.to}.
+          Analyze your consumption patterns and trends over time.
+          {analysisData?.period?.mode === 'reference_to_current'
+            ? ' Showing default range from last reference to current balance.'
+            : analysisData?.period?.mode === 'last_30_days'
+              ? ' No reference found, using last 30 days.'
+              : ` Data for ${dateRange.from} to ${dateRange.to}.`}
         </p>
       </div>
 
@@ -71,11 +79,20 @@ export const GasAnalyticsPage: React.FC = () => {
           Analyze Period
         </label>
         <div className="flex flex-wrap gap-2 mt-3 sm:gap-3">
+          <Button
+            onClick={() => setUseDefaultReferenceRange(true)}
+            type={useDefaultReferenceRange ? 'primary' : 'default'}
+          >
+            Reference → Current
+          </Button>
           {[7, 14, 30, 90, 365].map((days) => (
             <Button
               key={days}
-              onClick={() => setPeriodDays(days)}
-              type={periodDays === days ? 'primary' : 'default'}
+              onClick={() => {
+                setUseDefaultReferenceRange(false);
+                setPeriodDays(days);
+              }}
+              type={!useDefaultReferenceRange && periodDays === days ? 'primary' : 'default'}
             >
               {days === 7 ? '7d' : days === 14 ? '14d' : days === 30 ? '30d' : days === 90 ? '90d' : '1y'}
             </Button>
@@ -107,7 +124,7 @@ export const GasAnalyticsPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Total Consumption"
-              value={analysisData.totalGas ?? 0}
+              value={analysisData.consumptionFromReferenceM3 ?? analysisData.totalGas ?? 0}
               suffix="m³"
             />
             <StatCard
@@ -126,6 +143,55 @@ export const GasAnalyticsPage: React.FC = () => {
               suffix="m³/h"
             />
           </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard title="Cost Ex VAT" value={analysisData.costExVat ?? 0} suffix="" />
+            <StatCard title="VAT (17%)" value={analysisData.vatAmount ?? 0} suffix="" />
+            <StatCard title="Cost Inc VAT" value={analysisData.costIncVat ?? 0} suffix="" />
+          </div>
+
+          {!!analysisData.priceBreakdown?.length && (
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <p className="text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-slate-300">
+                Price Windows
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-600 dark:text-slate-400">
+                      <th className="px-2 py-2">Price Ex VAT</th>
+                      <th className="px-2 py-2">Source</th>
+                      <th className="px-2 py-2">Effective</th>
+                      <th className="px-2 py-2">Consumption</th>
+                      <th className="px-2 py-2">Cost Ex VAT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analysisData.priceBreakdown.map((row: any, idx: number) => (
+                      <tr key={`${row.priceExVat}-${idx}`} className="border-t border-gray-100 dark:border-slate-700">
+                        <td className="px-2 py-2 font-medium text-gray-900 dark:text-gray-100">
+                          {Number(row.priceExVat ?? 0).toFixed(4)}
+                        </td>
+                        <td className="px-2 py-2 text-gray-600 dark:text-slate-300">
+                          {(row.source || 'MANUAL').toUpperCase()}
+                        </td>
+                        <td className="px-2 py-2 text-gray-600 dark:text-slate-300">
+                          {row.effectiveFrom ? dayjs(row.effectiveFrom).format('DD.MM.YYYY') : '—'} -{' '}
+                          {row.effectiveTo ? dayjs(row.effectiveTo).format('DD.MM.YYYY') : 'current'}
+                        </td>
+                        <td className="px-2 py-2 text-gray-600 dark:text-slate-300">
+                          {Number(row.consumptionM3 ?? 0).toFixed(2)} m³
+                        </td>
+                        <td className="px-2 py-2 text-gray-600 dark:text-slate-300">
+                          {Number(row.costExVat ?? 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Efficiency Card */}
           <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-700 dark:bg-slate-800">

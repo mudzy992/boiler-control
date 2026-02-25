@@ -1,4 +1,15 @@
-import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -6,6 +17,20 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(32)
+  @Matches(/^[a-zA-Z0-9_.-]+$/, {
+    message:
+      'Username may only contain letters, numbers, underscore, dot, and dash',
+  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  username?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -37,4 +62,15 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   prefersDarkMode?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  gasPriceExVat?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  gasPriceEffectiveFrom?: string;
 }

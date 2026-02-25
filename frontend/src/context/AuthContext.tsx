@@ -4,6 +4,7 @@ import { apiClient } from '../services/api';
 interface User {
   id: string;
   email: string;
+  username?: string | null;
   name: string;
 }
 
@@ -11,7 +12,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
 }
@@ -40,10 +41,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
   }, [token]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (identifier: string, password: string) => {
     setIsLoading(true);
     try {
-      const data = await apiClient.login(email, password);
+      const data = await apiClient.login(identifier, password);
       setToken(data.token);
       setUser(data.user);
       apiClient.setToken(data.token);

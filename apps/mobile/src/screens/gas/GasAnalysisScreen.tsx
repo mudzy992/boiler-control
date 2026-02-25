@@ -30,12 +30,30 @@ interface GasAnalysisData {
     endDate?: string;
     from?: string;
     to?: string;
+    mode?: 'explicit' | 'reference_to_current' | 'last_30_days';
   };
   totalConsumption?: number;
   totalGas?: number;
+  consumptionFromReferenceM3?: number;
   averageDaily?: number;
   totalHeatingHours?: number;
   avgFlowTemp?: number;
+  costExVat?: number;
+  vatAmount?: number;
+  costIncVat?: number;
+  referenceReading?: {
+    id: number;
+    readingDate: string;
+    counterValue: number;
+  } | null;
+  priceBreakdown?: Array<{
+    priceExVat: number;
+    consumptionM3: number;
+    costExVat: number;
+    source?: string;
+    effectiveFrom?: string | null;
+    effectiveTo?: string | null;
+  }>;
   efficiency?: {
     heatingHours?: number;
     averageFlowTemp?: number;
@@ -170,6 +188,8 @@ export const GasAnalysisScreen: React.FC = () => {
   const purpleBorder = useColorModeValue('purple.200', 'purple.700');
   const purpleIcon = useColorModeValue('purple.600', 'purple.300');
   const purpleText = useColorModeValue('purple.700', 'purple.200');
+  const slateBg = useColorModeValue('gray.50', 'dark.700');
+  const slateBorder = useColorModeValue('gray.200', 'dark.600');
 
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['gas-analysis'],
@@ -230,7 +250,11 @@ export const GasAnalysisScreen: React.FC = () => {
 
   const periodStart = analysis.period?.startDate ?? analysis.period?.from;
   const periodEnd = analysis.period?.endDate ?? analysis.period?.to;
-  const totalConsumption = analysis.totalConsumption ?? analysis.totalGas ?? 0;
+  const totalConsumption =
+    analysis.consumptionFromReferenceM3 ??
+    analysis.totalConsumption ??
+    analysis.totalGas ??
+    0;
   const daysInPeriod =
     periodStart && periodEnd ? Math.max(1, dayjs(periodEnd).diff(dayjs(periodStart), 'day')) : 0;
   const averageDaily =
@@ -335,6 +359,69 @@ export const GasAnalysisScreen: React.FC = () => {
               </HStack>
             </VStack>
           </Box>
+
+          <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+            <VStack space={3}>
+              <Text fontSize="md" fontWeight="600" color={textColor}>
+                {t('gas.analysisCostBreakdown') || 'Estimated Cost (17% VAT)'}
+              </Text>
+              <HStack justifyContent="space-between" alignItems="center">
+                <VStack>
+                  <Text fontSize="sm" color={subtextColor}>
+                    Ex VAT
+                  </Text>
+                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                    {(analysis.costExVat ?? 0).toFixed(2)}
+                  </Text>
+                </VStack>
+                <VStack>
+                  <Text fontSize="sm" color={subtextColor}>
+                    VAT (17%)
+                  </Text>
+                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                    {(analysis.vatAmount ?? 0).toFixed(2)}
+                  </Text>
+                </VStack>
+                <VStack>
+                  <Text fontSize="sm" color={subtextColor}>
+                    Incl VAT
+                  </Text>
+                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
+                    {(analysis.costIncVat ?? 0).toFixed(2)}
+                  </Text>
+                </VStack>
+              </HStack>
+            </VStack>
+          </Box>
+
+          {!!analysis.priceBreakdown?.length && (
+            <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+              <VStack space={3}>
+                <Text fontSize="md" fontWeight="600" color={textColor}>
+                  {t('gas.analysisPriceWindows') || 'Price Windows'}
+                </Text>
+                {analysis.priceBreakdown.map((row, idx) => (
+                  <Box key={`${row.priceExVat}-${idx}`} bg={slateBg} borderWidth={1} borderColor={slateBorder} rounded="md" p={3}>
+                    <HStack justifyContent="space-between" alignItems="center" mb={1}>
+                      <Text fontSize="sm" color={textColor} fontWeight="600">
+                        {row.priceExVat.toFixed(4)} / m³
+                      </Text>
+                      <Text fontSize="xs" color={subtextColor}>
+                        {(row.source || 'MANUAL').toUpperCase()}
+                      </Text>
+                    </HStack>
+                    <Text fontSize="xs" color={subtextColor}>
+                      {(row.effectiveFrom && dayjs(row.effectiveFrom).format('DD.MM.YYYY')) || '—'} -{' '}
+                      {(row.effectiveTo && dayjs(row.effectiveTo).format('DD.MM.YYYY')) || 'current'}
+                    </Text>
+                    <Text fontSize="xs" color={subtextColor}>
+                      {row.consumptionM3.toFixed(2)} m³ | {(row.costExVat ?? 0).toFixed(2)} ex VAT
+                    </Text>
+                  </Box>
+                ))}
+              </VStack>
+            </Box>
+          )}
 
           {/* Chart */}
           {LineChart && chartData && chartData.datasets[0].data.length > 0 && (
@@ -549,6 +636,20 @@ export const GasAnalysisScreen: React.FC = () => {
                   {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
                   {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
                 </Text>
+                <Text fontSize="xs" color={blueIcon}>
+                  {analysis.period?.mode === 'reference_to_current'
+                    ? t('gas.analysisModeReference') || 'From last reference to current'
+                    : analysis.period?.mode === 'last_30_days'
+                      ? t('gas.analysisModeLast30') || 'Default last 30 days'
+                      : t('gas.analysisModeExplicit') || 'Custom period'}
+                </Text>
+                {analysis.referenceReading && (
+                  <Text fontSize="xs" color={blueIcon}>
+                    {t('gas.analysisReferenceReading') || 'Reference'}:{' '}
+                    {dayjs(analysis.referenceReading.readingDate).format('DD.MM.YYYY')} (
+                    {analysis.referenceReading.counterValue.toFixed(2)} m³)
+                  </Text>
+                )}
               </VStack>
             </HStack>
           </Box>

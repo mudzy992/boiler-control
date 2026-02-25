@@ -1,6 +1,5 @@
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import BottomSheet from '@gorhom/bottom-sheet';
 
 interface BottomSheetProviderProps {
   children: React.ReactNode;

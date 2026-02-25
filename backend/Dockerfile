@@ -9,7 +9,7 @@ RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
 # Stage 2: build
 FROM node:20-slim AS build
-# FIX: Re-install openssl here too for the build phase
+# FIX: Re-install openssl here too for the build phase1
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/backend/app

@@ -447,17 +447,14 @@ export const ScheduleManagementScreen = () => {
               {/* Programs by Day */}
               <VStack space={6}>
                 <DayGroupSection
-                  dayType="WORKDAY"
                   programs={groupedPrograms.workday}
                   dayLabel="Weekdays (Mon-Fri)"
                 />
                 <DayGroupSection
-                  dayType="SATURDAY"
                   programs={groupedPrograms.saturday}
                   dayLabel="Saturday"
                 />
                 <DayGroupSection
-                  dayType="SUNDAY"
                   programs={groupedPrograms.sunday}
                   dayLabel="Sunday"
                 />

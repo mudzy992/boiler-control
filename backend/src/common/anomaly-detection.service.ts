@@ -13,6 +13,8 @@ export enum AnomalyType {
   RAPID_CYCLING = 'rapid_cycling', // Duration < 5 minutes
 }
 
+export type DetectionPhase = 'OPEN' | 'CLOSED';
+
 /**
  * Anomaly detection context with statistical data
  */
@@ -45,10 +47,15 @@ export class AnomalyDetectionService {
   constructor(private metricsService: MetricsService) {}
 
   /**
-   * Detect anomalies in heating cycle
-   * Uses multi-factor detection: overshoot, early stop, prolonged idle, rapid cycling
+   * Detect anomalies in heating cycle.
+   * OPEN phase runs only checks that make sense while a cycle is still active.
+   * CLOSED phase runs short-cycle checks plus statistical checks.
    */
-  detectAnomalies(context: AnomalyContext, startTime: Date): AnomalyResult {
+  detectAnomalies(
+    context: AnomalyContext,
+    startTime: Date,
+    phase: DetectionPhase = 'OPEN',
+  ): AnomalyResult {
     const anomalies: AnomalyType[] = [];
     let confidence = 0;
 
@@ -62,47 +69,60 @@ export class AnomalyDetectionService {
       };
     }
 
-    // Check for overshoot: current duration > average + 2σ
-    if (
+    const hasOvershoot =
       context.currentDuration >
-      context.averageDuration + context.threshold * context.standardDeviation
-    ) {
-      anomalies.push(AnomalyType.OVERSHOOT);
-      confidence = Math.min(
-        1.0,
-        0.8 + (context.standardDeviation > 0 ? 0.1 : 0),
-      );
-    }
-
-    // Check for early stop: current duration < average - 2σ
-    if (
+      context.averageDuration + context.threshold * context.standardDeviation;
+    const hasEarlyStop =
       context.currentDuration <
         context.averageDuration -
           context.threshold * context.standardDeviation &&
-      context.standardDeviation > 0
-    ) {
-      anomalies.push(AnomalyType.EARLY_STOP);
-      confidence = Math.min(
-        1.0,
-        0.75 + (context.standardDeviation > 0 ? 0.15 : 0),
-      );
+      context.standardDeviation > 0;
+    const hasProlongedIdle = context.currentDuration > 120;
+    const hasRapidCycling = context.currentDuration < 5;
+
+    if (phase === 'OPEN') {
+      if (hasOvershoot) {
+        anomalies.push(AnomalyType.OVERSHOOT);
+        confidence = Math.min(
+          1.0,
+          0.8 + (context.standardDeviation > 0 ? 0.1 : 0),
+        );
+      }
+
+      if (hasProlongedIdle) {
+        anomalies.push(AnomalyType.PROLONGED_IDLE);
+        confidence = Math.min(1.0, confidence + 0.2);
+      }
+    } else {
+      if (hasOvershoot) {
+        anomalies.push(AnomalyType.OVERSHOOT);
+        confidence = Math.min(
+          1.0,
+          0.8 + (context.standardDeviation > 0 ? 0.1 : 0),
+        );
+      }
+
+      if (hasEarlyStop) {
+        anomalies.push(AnomalyType.EARLY_STOP);
+        confidence = Math.min(
+          1.0,
+          0.75 + (context.standardDeviation > 0 ? 0.15 : 0),
+        );
+      }
+
+      if (hasRapidCycling) {
+        anomalies.push(AnomalyType.RAPID_CYCLING);
+        confidence = Math.min(1.0, confidence + 0.25);
+      }
+
+      if (hasProlongedIdle) {
+        anomalies.push(AnomalyType.PROLONGED_IDLE);
+        confidence = Math.min(1.0, confidence + 0.2);
+      }
     }
 
-    // Check for prolonged idle: > 120 minutes
-    if (context.currentDuration > 120) {
-      anomalies.push(AnomalyType.PROLONGED_IDLE);
-      confidence = Math.min(1.0, confidence + 0.2);
-    }
-
-    // Check for rapid cycling: < 5 minutes
-    if (context.currentDuration < 5) {
-      anomalies.push(AnomalyType.RAPID_CYCLING);
-      confidence = Math.min(1.0, confidence + 0.25);
-    }
-
-    // Calculate proposed end time based on average
     let proposedEndTime: Date | undefined;
-    if (anomalies.length > 0) {
+    if (anomalies.length > 0 && phase === 'OPEN') {
       proposedEndTime = new Date(
         startTime.getTime() + context.averageDuration * 60000,
       );
@@ -111,7 +131,6 @@ export class AnomalyDetectionService {
     const isAnomaly = anomalies.length > 0;
 
     if (isAnomaly) {
-      // Record metrics for each anomaly type
       this.metricsService.incrementCounter('anomaly_detected_total');
       for (const type of anomalies) {
         switch (type) {
@@ -149,6 +168,10 @@ export class AnomalyDetectionService {
    * Higher score = more likely to be an anomaly
    */
   calculateConfidence(types: AnomalyType[], historicalCount: number): number {
+    if (!types.length) {
+      return 0;
+    }
+
     let score = 0;
     const typeWeights: Record<AnomalyType, number> = {
       [AnomalyType.OVERSHOOT]: 0.8,
@@ -157,14 +180,15 @@ export class AnomalyDetectionService {
       [AnomalyType.RAPID_CYCLING]: 0.85,
     };
 
-    // Average weights of detected anomalies
     if (types.length > 0) {
       score =
         types.reduce((sum, type) => sum + typeWeights[type], 0) / types.length;
     }
 
-    // Boost confidence if we have good historical data
-    const dataQualityBoost = Math.min(0.1, historicalCount / 50);
+    const dataQualityBoost = Math.min(
+      0.1,
+      Math.max(0, (historicalCount - 20) / 200),
+    );
     score = Math.min(1.0, score + dataQualityBoost);
 
     return score;
@@ -180,13 +204,13 @@ export class AnomalyDetectionService {
     result: AnomalyResult,
     context: AnomalyContext,
   ): void {
-    this.structuredLogger.log('Anomaly detected', {
+    this.structuredLogger.log('Anomaly Detection', {
       eventId,
       deviceId,
       userId,
       module: 'anomaly-detection',
       action: 'anomaly_detected',
-      anomalyTypes: result.types.join(','),
+      anomalyTypes: result.types,
       confidence: result.confidence,
       currentDuration: context.currentDuration,
       averageDuration: context.averageDuration,

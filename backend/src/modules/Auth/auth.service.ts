@@ -22,18 +22,30 @@ export class AuthService {
 
   async register(data: RegisterDto) {
     if (!data.email) throw new BadRequestException('Email is required');
+    if (!data.username) throw new BadRequestException('Username is required');
     if (!data.password) throw new BadRequestException('Password is required');
 
-    const existing = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    if (existing) throw new BadRequestException('Email already in use');
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const normalizedUsername = data.username.trim().toLowerCase();
+
+    const [existingEmail, existingUsername] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { email: normalizedEmail },
+      }),
+      this.prisma.user.findUnique({
+        where: { username: normalizedUsername },
+      }),
+    ]);
+    if (existingEmail) throw new BadRequestException('Email already in use');
+    if (existingUsername)
+      throw new BadRequestException('Username already in use');
 
     const hashed = await bcrypt.hash(data.password, 12);
 
     const user = await this.prisma.user.create({
       data: {
-        email: data.email,
+        email: normalizedEmail,
+        username: normalizedUsername,
         passwordHash: hashed,
         name: data.name,
         homeLocation: data.homeLocation,
@@ -41,6 +53,7 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        username: true,
         name: true,
         homeLocation: true,
         role: true,
@@ -60,8 +73,21 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+  async login(identifier: string | undefined, password: string) {
+    if (!identifier) throw new UnauthorizedException('Invalid credentials');
+    const rawIdentifier = identifier.trim();
+    const normalizedIdentifier = identifier.trim().toLowerCase();
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: rawIdentifier },
+          { email: normalizedIdentifier },
+          { username: rawIdentifier },
+          { username: normalizedIdentifier },
+        ],
+      },
+    });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(password, user.passwordHash);
@@ -71,6 +97,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         name: user.name,
         homeLocation: user.homeLocation,
         role: user.role,
@@ -90,6 +117,7 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        username: true,
         name: true,
         homeLocation: true,
         role: true,

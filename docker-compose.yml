@@ -10,6 +10,7 @@ services:
     environment:
       - TZ=Europe/Sarajevo
       - APP_PORT=3020
+      - UPLOAD_ROOT_PATH=/usr/src/app/uploads
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro

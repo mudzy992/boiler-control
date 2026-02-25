@@ -9,9 +9,9 @@ export const LoginPage: React.FC = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  const onFinish = async (values: { email: string; password: string }) => {
+  const onFinish = async (values: { identifier: string; password: string }) => {
     try {
-      await login(values.email, values.password);
+      await login(values.identifier, values.password);
       message.success('Login successful!');
       navigate('/dashboard');
     } catch (error) {
@@ -30,13 +30,16 @@ export const LoginPage: React.FC = () => {
         <Spin spinning={isLoading}>
           <Form form={form} onFinish={onFinish} layout="vertical">
             <Form.Item
-              name="email"
+              name="identifier"
               rules={[
-                { required: true, message: 'Please input your email!' },
-                { type: 'email', message: 'Please enter a valid email!' },
+                { required: true, message: 'Please input your email or username!' },
               ]}
             >
-              <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Email or username"
+                size="large"
+              />
             </Form.Item>
 
             <Form.Item

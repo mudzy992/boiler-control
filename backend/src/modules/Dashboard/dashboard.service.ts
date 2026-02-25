@@ -68,28 +68,17 @@ export class DashboardService {
 
     const [latestWeather, latestBoilerHistory, recommendations] =
       await Promise.all([
-        this.getLatestWeather(),
-        hasThermostat ? this.getLatestBoilerHistory(userId) : null,
-        this.getRecentRecommendations(userId),
-      ]);
+      this.getLatestWeather(),
+      hasThermostat ? this.getLatestBoilerHistory(userId) : null,
+      this.getRecentRecommendations(userId),
+    ]);
+
+    const heatingStatus: Array<{ deviceId: number; isHeatingNow: boolean }> =
+      hasThermostat ? await this.getHeatingStatus(userId) : [];
 
     const homes = await Promise.all(
       homeProfiles.map(async (profile) => {
         const thermostatIds = profile.thermostatDevices.map((t) => t.id);
-        let currentTemp: number | null = null;
-        let targetTemp: number | null = null;
-        if (hasThermostat && profile.thermostatDevices.length > 0) {
-          // INFO: uzimamo samo prvi termostat za prikaz trenutnih vrijednosti
-          const thermostat = profile.thermostatDevices[0];
-          currentTemp =
-            thermostat.roomCurrentTemp !== null
-              ? thermostat.roomCurrentTemp
-              : null; // ako treba skaliranje
-          targetTemp =
-            thermostat.roomTargetTemp !== null
-              ? thermostat.roomTargetTemp
-              : null;
-        }
 
         const recentHeatingEvents =
           thermostatIds.length > 0
@@ -110,23 +99,27 @@ export class DashboardService {
             heatingType: profile.heatingType,
           },
 
-          thermostats: profile.thermostatDevices.map((t) => ({
-            id: t.id,
-            alias: t.alias,
-            vendor: t.vendor,
-            deviceId: t.deviceId,
-            mode: t.mode,
-            lastSeen: t.lastSeen,
-            currentTemp: currentTemp,
-            targetTemp: targetTemp,
+          thermostats: profile.thermostatDevices.map((t) => {
+            const status = heatingStatus.find((s) => s.deviceId === t.id);
+            return {
+              id: t.id,
+              alias: t.alias,
+              vendor: t.vendor,
+              deviceId: t.deviceId,
+              mode: t.mode,
+              lastSeen: t.lastSeen,
+              currentTemp: t.roomCurrentTemp,
+              targetTemp: t.roomTargetTemp,
+              isHeatingNow: status?.isHeatingNow ?? false,
 
-            program: t.thermostatProgram.map((p) => ({
-              dayType: p.dayType,
-              startMinute: p.startMinute,
-              targetTemp: p.targetTemp,
-              orderIndex: p.orderIndex,
-            })),
-          })),
+              program: t.thermostatProgram.map((p) => ({
+                dayType: p.dayType,
+                startMinute: p.startMinute,
+                targetTemp: p.targetTemp,
+                orderIndex: p.orderIndex,
+              })),
+            };
+          }),
 
           learningIntervals: profile.intervalLearnings.map((l) => ({
             intervalKey: l.intervalKey,
@@ -143,9 +136,13 @@ export class DashboardService {
             startedAt: e.timestampStart,
             endedAt: e.timestampEnd,
             targetTemp: e.roomTargetTemp,
-            targetTempThermostat: targetTemp,
+            targetTempThermostat:
+              profile.thermostatDevices.find((t) => t.id === e.deviceId)
+                ?.roomTargetTemp ?? null,
             currentTemp: e.roomCurrentTemp,
-            curretTempThermostat: currentTemp,
+            curretTempThermostat:
+              profile.thermostatDevices.find((t) => t.id === e.deviceId)
+                ?.roomCurrentTemp ?? null,
             hvacAction: e.hvacAction,
             source: e.source,
             durationMinutes: e.timestampEnd
@@ -384,31 +381,29 @@ export class DashboardService {
   async getHeatingStatus(userId: number) {
     await this.assertUserHasThermostat(userId);
 
-    const lastEvent = await this.prisma.heatingEvent.findFirst({
+    const thermostats = await this.prisma.thermostatDevice.findMany({
       where: {
-        thermostat: {
-          homeProfile: { userId },
-        },
+        homeProfile: { userId },
       },
-      orderBy: { timestampStart: 'desc' },
     });
 
-    return {
-      isHeatingNow: lastEvent?.hvacAction === 'HEATING_ON',
-      lastEvent: lastEvent
-        ? {
-            id: lastEvent.id,
-            deviceId: lastEvent.deviceId,
-            timestampStart: lastEvent.timestampStart,
-            timestampEnd: lastEvent.timestampEnd,
-            roomCurrentTemp: lastEvent.roomCurrentTemp,
-            roomTargetTemp: lastEvent.roomTargetTemp,
-            hvacAction: lastEvent.hvacAction,
-            source: lastEvent.source,
-            isAnomaly: lastEvent.isAnomaly ?? false,
-          }
-        : null,
-    };
+    const statusPromises = thermostats.map(async (thermostat) => {
+      const lastEvent = await this.prisma.heatingEvent.findFirst({
+        where: {
+          deviceId: thermostat.id,
+        },
+        orderBy: {
+          timestampStart: 'desc',
+        },
+      });
+
+      return {
+        deviceId: thermostat.id,
+        isHeatingNow: lastEvent?.timestampEnd === null,
+      };
+    });
+
+    return Promise.all(statusPromises);
   }
 
   async getHeatingStats(userId: number, query: GetHeatingStatsDto) {

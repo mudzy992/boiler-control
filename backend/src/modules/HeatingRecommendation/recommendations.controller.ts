@@ -19,7 +19,7 @@ export class RecommendationsController {
    */
   @Get()
   async getRecommendations(@Req() req) {
-    return this.recommendationService.getRecommendations(req.user.id);
+    return this.recommendationService.getRecommendations(req.user.userId);
   }
 
   /**

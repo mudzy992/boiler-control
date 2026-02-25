@@ -1,18 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, ApiClient } from '../services/api';
+import { apiClient } from '../services/api';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { GasForm } from '../components/GasForm';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 
 export const GasReadingsPage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const queryClient = useQueryClient();
-  const gasApi = apiClient as ApiClient & {
-    addGasReadingPayload: (data: { counterValue: number; readingDate: string }) => Promise<unknown>;
-    deleteGasReading: (id: number) => Promise<unknown>;
-  };
+  const token = localStorage.getItem('token');
 
   // Fetch readings
   const { data: readings = [], isLoading, error } = useQuery({
@@ -26,8 +23,13 @@ export const GasReadingsPage: React.FC = () => {
 
   // Add reading mutation
   const addMutation = useMutation({
-    mutationFn: async (data: { counterValue: number; readingDate: string }) => {
-      return gasApi.addGasReadingPayload(data);
+    mutationFn: async (data: {
+      counterValue: number;
+      readingDate: string;
+      markAsReference?: boolean;
+      meterImage?: File;
+    }) => {
+      return apiClient.addGasReadingWithUpload(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
@@ -39,13 +41,85 @@ export const GasReadingsPage: React.FC = () => {
   // Delete reading mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return gasApi.deleteGasReading(id);
+      return apiClient.deleteGasReading(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
     },
   });
+
+  const referenceMutation = useMutation({
+    mutationFn: async (payload: { id: number; isReference: boolean }) =>
+      apiClient.updateGasReference(payload.id, payload.isReference),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+  });
+
+  const invoiceUploadMutation = useMutation({
+    mutationFn: async (payload: {
+      id: number;
+      invoicePdf: File;
+      invoiceGasPriceExVat?: number;
+    }) =>
+      apiClient.uploadGasInvoice(
+        payload.id,
+        payload.invoicePdf,
+        payload.invoiceGasPriceExVat,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+  });
+
+  const invoiceDeleteMutation = useMutation({
+    mutationFn: async (id: number) => apiClient.deleteGasInvoice(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+  });
+
+  const openProtectedFile = async (url: string, fileName: string) => {
+    if (!token) {
+      message.error('Authentication missing');
+      return;
+    }
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to load file');
+    }
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(blobUrl);
+  };
+
+  const handleUploadInvoice = async (readingId: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        await invoiceUploadMutation.mutateAsync({ id: readingId, invoicePdf: file });
+      } catch {
+        message.error('Failed to upload invoice');
+      }
+    };
+    input.click();
+  };
 
   // Sort readings (newest first)
   const sortedReadings = useMemo(() => {
@@ -141,14 +215,34 @@ export const GasReadingsPage: React.FC = () => {
       {!isLoading && readings.length > 0 && (
         <div className="mt-8 space-y-3">
           {sortedReadings.map((reading, index) => (
-            <GasReadingCard
-              key={reading.id}
-              reading={reading}
-              previousReading={index > 0 ? sortedReadings[index - 1] : undefined}
-              onDelete={(id) => deleteMutation.mutateAsync(id)}
-              isLoading={deleteMutation.isPending}
-            />
-          ))}
+              <GasReadingCard
+                key={reading.id}
+                reading={reading}
+                previousReading={index > 0 ? sortedReadings[index - 1] : undefined}
+                onDelete={(id) => deleteMutation.mutateAsync(id)}
+                onToggleReference={(id, isReference) =>
+                  referenceMutation.mutate({ id, isReference })
+                }
+                onUploadInvoice={handleUploadInvoice}
+                onDeleteInvoice={(id) => invoiceDeleteMutation.mutate(id)}
+                onOpenMeterImage={(id) =>
+                  void openProtectedFile(apiClient.getGasMeterImageUrl(id), `meter-${id}.jpg`).catch(
+                    () => message.error('Failed to open image'),
+                  )
+                }
+                onOpenInvoice={(id) =>
+                  void openProtectedFile(apiClient.getGasInvoiceUrl(id), `invoice-${id}.pdf`).catch(
+                    () => message.error('Failed to open invoice'),
+                  )
+                }
+                isLoading={
+                  deleteMutation.isPending ||
+                  referenceMutation.isPending ||
+                  invoiceUploadMutation.isPending ||
+                  invoiceDeleteMutation.isPending
+                }
+              />
+            ))}
         </div>
       )}
 

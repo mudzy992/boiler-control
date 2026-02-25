@@ -27,13 +27,14 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 WORKDIR /usr/src/backend/app
 
 ENV NODE_ENV=production
+ENV UPLOAD_ROOT_PATH=/usr/src/app/uploads
 
 COPY --from=build /usr/src/backend/app/dist ./dist
 COPY --from=build /usr/src/backend/app/node_modules ./node_modules
 COPY --from=build /usr/src/backend/app/package*.json ./
 # Make sure your prisma schema is available if needed at runtime
 COPY --from=build /usr/src/backend/app/prisma ./prisma
-COPY --from=build /usr/src/backend/app/src/generated ./dist/generated
+COPY --from=build /usr/src/backend/app/src/generated ./dist/src/generated
 
 EXPOSE 3020
 # Start NestJS directly

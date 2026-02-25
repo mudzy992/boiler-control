@@ -122,6 +122,7 @@ TUYA_BASE_URL="https://openapi.tuyaeu.com"
 APP_PORT=3020
 NODE_ENV=development
 TZ=Europe/Sarajevo
+UPLOAD_ROOT_PATH="/usr/src/app/uploads"
 ```
 
 ## 📊 Database

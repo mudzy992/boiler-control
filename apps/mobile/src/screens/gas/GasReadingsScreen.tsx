@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { RefreshControl, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import * as Linking from 'expo-linking';
 import {
   Box,
   VStack,
@@ -24,6 +27,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
+import { SecureStorage } from '../../services/storage/SecureStorage';
 
 interface GasReading {
   id: number;
@@ -31,6 +35,12 @@ interface GasReading {
   counterValue: number;
   readingDate: string;
   createdAt: string;
+  isInvoiceReference?: boolean;
+  referenceMonth?: string | null;
+  hasMeterImage?: boolean;
+  hasInvoicePdf?: boolean;
+  invoiceUploadedAt?: string | null;
+  invoiceGasPriceExVat?: number | null;
 }
 
 export const GasReadingsScreen: React.FC = () => {
@@ -87,10 +97,16 @@ export const GasReadingsScreen: React.FC = () => {
   }, [queryError, showError, t]);
 
   const addMutation = useMutation({
-    mutationFn: (data: { counterValue: number; readingDate: string }) =>
-      apiClient.addGasReadingPayload(data),
+    mutationFn: (data: {
+      counterValue: number;
+      readingDate: string;
+      markAsReference?: boolean;
+      meterImage?: { uri: string; name?: string; type?: string };
+    }) =>
+      apiClient.addGasReadingWithUpload(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
       setShowAddModal(false);
       toast.show({
         render: () => (
@@ -129,6 +145,125 @@ export const GasReadingsScreen: React.FC = () => {
       showError(error, t('gas.deleteError') || 'Failed to delete gas reading');
     },
   });
+
+  const referenceMutation = useMutation({
+    mutationFn: (payload: { id: number; isReference: boolean }) =>
+      apiClient.updateGasReference(payload.id, payload.isReference),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+    onError: (error: any) => {
+      showError(error, t('gas.referenceError') || 'Failed to update reference state');
+    },
+  });
+
+  const invoiceUploadMutation = useMutation({
+    mutationFn: (payload: {
+      id: number;
+      invoicePdf: { uri: string; name?: string; type?: string };
+      invoiceGasPriceExVat?: number;
+    }) => apiClient.uploadGasInvoice(payload.id, payload.invoicePdf, payload.invoiceGasPriceExVat),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      toast.show({
+        render: () => (
+          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              {t('gas.invoiceUploaded') || 'Invoice uploaded'}
+            </Text>
+          </Box>
+        ),
+        duration: 2000,
+        placement: 'top',
+      });
+    },
+    onError: (error: any) => {
+      showError(error, t('gas.invoiceUploadError') || 'Failed to upload invoice');
+    },
+  });
+
+  const invoiceDeleteMutation = useMutation({
+    mutationFn: (id: number) => apiClient.deleteGasInvoice(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+    onError: (error: any) => {
+      showError(error, t('gas.invoiceDeleteError') || 'Failed to delete invoice');
+    },
+  });
+
+  const openProtectedFile = async (url: string, fallbackName: string) => {
+    const token = await SecureStorage.getToken();
+    if (!token) {
+      throw new Error('Authentication token missing');
+    }
+    const fileSystem = FileSystem as any;
+    const baseDir =
+      fileSystem.cacheDirectory ||
+      fileSystem.documentDirectory ||
+      fileSystem.temporaryDirectory;
+    if (!baseDir) {
+      throw new Error('No local storage directory available for downloads');
+    }
+
+    const filePath = `${baseDir}${Date.now()}-${fallbackName}`;
+    const download = await fileSystem.downloadAsync(url, filePath, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    await Linking.openURL(download.uri);
+  };
+
+  const handleUploadInvoice = async (reading: GasReading) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      await invoiceUploadMutation.mutateAsync({
+        id: reading.id,
+        invoicePdf: {
+          uri: asset.uri,
+          name: asset.name || 'invoice.pdf',
+          type: asset.mimeType || 'application/pdf',
+        },
+      });
+    } catch (error: any) {
+      showError(error, t('gas.invoiceUploadError') || 'Failed to upload invoice');
+    }
+  };
+
+  const handleOpenMeterImage = async (reading: GasReading) => {
+    try {
+      await openProtectedFile(
+        apiClient.getGasMeterImageEndpoint(reading.id),
+        `meter-${reading.id}.jpg`,
+      );
+    } catch (error: any) {
+      showError(error, t('gas.meterImageOpenError') || 'Failed to open image');
+    }
+  };
+
+  const handleOpenInvoice = async (reading: GasReading) => {
+    try {
+      await openProtectedFile(
+        apiClient.getGasInvoiceEndpoint(reading.id),
+        `invoice-${reading.id}.pdf`,
+      );
+    } catch (error: any) {
+      showError(error, t('gas.invoiceOpenError') || 'Failed to open invoice');
+    }
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -418,7 +553,19 @@ export const GasReadingsScreen: React.FC = () => {
                   reading={reading}
                   previousReading={idx > 0 ? filteredReadings[idx - 1] : undefined}
                   onDelete={() => deleteMutation.mutate(reading.id)}
+                  onToggleReference={(item, isReference) =>
+                    referenceMutation.mutate({ id: item.id, isReference })
+                  }
+                  onUploadInvoice={handleUploadInvoice}
+                  onDeleteInvoice={(item) => invoiceDeleteMutation.mutate(item.id)}
+                  onOpenMeterImage={handleOpenMeterImage}
+                  onOpenInvoice={handleOpenInvoice}
                   isDeleting={deleteMutation.isPending && deleteMutation.variables === reading.id}
+                  isMutating={
+                    referenceMutation.isPending ||
+                    invoiceUploadMutation.isPending ||
+                    invoiceDeleteMutation.isPending
+                  }
                 />
               ))}
             </VStack>
@@ -646,7 +793,7 @@ export const GasReadingsScreen: React.FC = () => {
           value={customStartDate || new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
+          onChange={(_event, selectedDate) => {
             setShowStartPicker(Platform.OS === 'ios');
             if (selectedDate) {
               setCustomStartDate(selectedDate);
@@ -661,7 +808,7 @@ export const GasReadingsScreen: React.FC = () => {
           value={customEndDate || new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
+          onChange={(_event, selectedDate) => {
             setShowEndPicker(Platform.OS === 'ios');
             if (selectedDate) {
               setCustomEndDate(selectedDate);

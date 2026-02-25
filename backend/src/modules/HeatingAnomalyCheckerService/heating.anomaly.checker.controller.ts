@@ -23,9 +23,7 @@ export class HeatingAnomalyController {
   // Get anomalies for the authenticated user
   @Get()
   async getOpenAnomalies(@Req() req) {
-    // Stub: return empty array
-    // Full implementation: fetch anomalies for user
-    return [];
+    return this.checker.getOpenAnomalies(req.user.userId);
   }
 
   // Update anomaly status

@@ -11,7 +11,7 @@ import { FallbackStrategyService } from '../../common/fallback-strategy.service'
 import { MetricsService } from '../../common/metrics.service';
 import { ReportingService } from '../../common/reporting.service';
 import { CorrelationIdService } from '../../common/correlation-id.service';
-import { NotificationType } from 'src/generated/prisma';
+import { NotificationType } from '../../generated/prisma';
 
 type HeatingEventWithThermostat = {
   id: number;
@@ -58,7 +58,7 @@ export class HeatingAnomalyCheckerService {
       });
 
       for (const event of openEvents as HeatingEventWithThermostat[]) {
-        await this.checkEvent(event);
+        await this.checkEvent(event, 'OPEN');
       }
     } catch (error) {
       this.logger.error('Error in checkOpenIntervals', error);
@@ -66,8 +66,44 @@ export class HeatingAnomalyCheckerService {
     }
   }
 
+  @Cron('*/5 * * * *', {
+    name: 'check-recently-closed',
+    disabled:
+      process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
+  })
+  async checkRecentlyClosedIntervals() {
+    try {
+      const recentEvents = await this.prisma.heatingEvent.findMany({
+        where: {
+          isAnomaly: false,
+          timestampEnd: {
+            not: null,
+            gte: subDays(new Date(), 1), // Check last 24h, can be tuned
+          },
+          anomalyCheckedAt: null,
+        },
+        include: { thermostat: true },
+      });
+
+      for (const event of recentEvents as HeatingEventWithThermostat[]) {
+        await this.checkEvent(event, 'CLOSED');
+        // Mark as checked
+        await this.prisma.heatingEvent.updateMany({
+          where: { id: event.id, anomalyCheckedAt: null },
+          data: { anomalyCheckedAt: new Date() },
+        });
+      }
+    } catch (error) {
+      this.logger.error('Error in checkRecentlyClosedIntervals', error);
+      this.metrics.incrementCounter('db_errors_total');
+    }
+  }
+
   /** Provjera pojedinačnog eventa */
-  private async checkEvent(event: HeatingEventWithThermostat) {
+  private async checkEvent(
+    event: HeatingEventWithThermostat,
+    phase: 'OPEN' | 'CLOSED',
+  ) {
     try {
       const intervalKey = this.getIntervalKey(event.timestampStart);
 
@@ -100,7 +136,10 @@ export class HeatingAnomalyCheckerService {
       if (!stdDev && durations.length < 3) return;
 
       const currentDuration =
-        (Date.now() - event.timestampStart.getTime()) / 60000;
+        phase === 'CLOSED' && event.timestampEnd
+          ? (event.timestampEnd.getTime() - event.timestampStart.getTime()) /
+            60000
+          : (Date.now() - event.timestampStart.getTime()) / 60000;
 
       // Use enhanced anomaly detection with multi-factor analysis
       const anomalyResult = this.anomalyDetection.detectAnomalies(
@@ -112,13 +151,16 @@ export class HeatingAnomalyCheckerService {
           threshold: 2,
         },
         event.timestampStart,
+        phase,
       );
 
       // If anomaly detected, update and notify
       if (anomalyResult.isAnomaly) {
         const proposedEndTime =
-          anomalyResult.proposedEndTime ||
-          new Date(event.timestampStart.getTime() + avg * 60000);
+          phase === 'OPEN'
+            ? anomalyResult.proposedEndTime ||
+              new Date(event.timestampStart.getTime() + avg * 60000)
+            : null;
 
         // Use tolerant update (updateMany instead of update) to handle concurrent updates
         await this.prisma.heatingEvent.updateMany({
@@ -126,6 +168,7 @@ export class HeatingAnomalyCheckerService {
           data: {
             isAnomaly: true,
             proposedEndTime,
+            anomalyCheckedAt: phase === 'CLOSED' ? new Date() : null,
           },
         });
 
@@ -163,7 +206,7 @@ export class HeatingAnomalyCheckerService {
             0,
           )}min, prosjek: ${avg.toFixed(
             0,
-          )}min. Molimo provjerite i potvrdite završetak.`,
+          )}min. Molimo provjerite stanje grijanja.`,
           data: {
             type: 'SYSTEM_ALERT',
             intervalKey,
@@ -189,10 +232,14 @@ export class HeatingAnomalyCheckerService {
   }
 
   /** Vrati sve otvorene anomalije za kontroler */
-  async getOpenAnomalies() {
+  async getOpenAnomalies(userId?: number) {
     try {
       return await this.prisma.heatingEvent.findMany({
-        where: { isAnomaly: true, timestampEnd: null },
+        where: {
+          isAnomaly: true,
+          timestampEnd: null,
+          ...(userId ? { thermostat: { userId } } : {}),
+        },
         include: { thermostat: true },
       });
     } catch (error) {

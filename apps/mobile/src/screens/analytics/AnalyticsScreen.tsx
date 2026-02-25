@@ -28,7 +28,9 @@ import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
 
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
-const getDateRange = (timeRange: TimeRange) => {
+const getDateRange = (
+  timeRange: TimeRange,
+): { from: string; to: string; bucket: 'hour' | 'day' } => {
   const end = new Date();
   const start = new Date();
   switch (timeRange) {
@@ -120,13 +122,15 @@ export const AnalyticsScreen = () => {
     queryFn: () => apiClient.getGasReadings(),
   });
 
+  const fileSystem = FileSystem as any;
+
   const ensureDirectory = async (dir: string) => {
-    const info = await FileSystem.getInfoAsync(dir);
+    const info = await fileSystem.getInfoAsync(dir);
     if (info.exists && !info.isDirectory) {
-      await FileSystem.deleteAsync(dir, { idempotent: true });
+      await fileSystem.deleteAsync(dir, { idempotent: true });
     }
     if (!info.exists) {
-      await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+      await fileSystem.makeDirectoryAsync(dir, { intermediates: true });
     }
     return dir;
   };
@@ -162,9 +166,9 @@ export const AnalyticsScreen = () => {
 
       const candidates = (
         [
-          FileSystem.documentDirectory,
-          FileSystem.cacheDirectory,
-          FileSystem.temporaryDirectory,
+          fileSystem.documentDirectory,
+          fileSystem.cacheDirectory,
+          fileSystem.temporaryDirectory,
         ] as (string | null | undefined)[]
       ).filter(Boolean) as string[];
 
@@ -179,8 +183,8 @@ export const AnalyticsScreen = () => {
           const targetDir = `${baseDir}analytics_exports/`;
           await ensureDirectory(targetDir);
           const candidateUri = `${targetDir}${sanitizedName}`;
-          await FileSystem.writeAsStringAsync(candidateUri, meta.content, {
-            encoding: FileSystem.EncodingType.UTF8,
+          await fileSystem.writeAsStringAsync(candidateUri, meta.content, {
+            encoding: 'utf8',
           });
           fileUri = candidateUri;
           break;

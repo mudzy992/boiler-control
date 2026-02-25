@@ -50,13 +50,26 @@ class ApiClientService {
   }
 
   // Auth endpoints
-  async login(email: string, password: string) {
-    const response = await this.client.post('/auth/login', { email, password });
+  async login(identifier: string, password: string) {
+    const response = await this.client.post('/auth/login', {
+      identifier,
+      password,
+    });
     return response.data;
   }
 
-  async register(email: string, password: string, name: string) {
-    const response = await this.client.post('/auth/register', { email, password, name });
+  async register(
+    email: string,
+    password: string,
+    name: string,
+    username: string,
+  ) {
+    const response = await this.client.post('/auth/register', {
+      email,
+      password,
+      name,
+      username,
+    });
     return response.data;
   }
 
@@ -101,14 +114,6 @@ class ApiClientService {
     return response.data;
   }
 
-  // Heating endpoints
-  async getHeatingEvents(startDate?: string, endDate?: string) {
-    const response = await this.client.get('/heating-events', {
-      params: { startDate, endDate },
-    });
-    return response.data;
-  }
-
   // Gas endpoints
   async getGasReadings() {
     const response = await this.client.get('/gas/readings');
@@ -128,6 +133,73 @@ class ApiClientService {
   async addGasReadingPayload(reading: { counterValue: number; readingDate: string }) {
     const response = await this.client.post('/gas/reading', reading);
     return response.data;
+  }
+
+  async addGasReadingWithUpload(data: {
+    counterValue: number;
+    readingDate: string;
+    markAsReference?: boolean;
+    meterImage?: { uri: string; name?: string; type?: string };
+  }) {
+    const formData = new FormData();
+    formData.append('counterValue', String(data.counterValue));
+    formData.append('readingDate', data.readingDate);
+    if (data.markAsReference !== undefined) {
+      formData.append('markAsReference', String(data.markAsReference));
+    }
+    if (data.meterImage) {
+      formData.append('meterImage', {
+        uri: data.meterImage.uri,
+        name: data.meterImage.name || 'meter-image.jpg',
+        type: data.meterImage.type || 'image/jpeg',
+      } as any);
+    }
+
+    const response = await this.client.post('/gas/reading', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  async updateGasReference(id: number, isReference: boolean) {
+    const response = await this.client.patch(`/gas/reading/${id}/reference`, {
+      isReference,
+    });
+    return response.data;
+  }
+
+  async uploadGasInvoice(
+    id: number,
+    invoicePdf: { uri: string; name?: string; type?: string },
+    invoiceGasPriceExVat?: number,
+  ) {
+    const formData = new FormData();
+    formData.append('invoicePdf', {
+      uri: invoicePdf.uri,
+      name: invoicePdf.name || 'invoice.pdf',
+      type: invoicePdf.type || 'application/pdf',
+    } as any);
+    if (invoiceGasPriceExVat !== undefined) {
+      formData.append('invoiceGasPriceExVat', String(invoiceGasPriceExVat));
+    }
+
+    const response = await this.client.post(`/gas/reading/${id}/invoice`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  async deleteGasInvoice(id: number) {
+    const response = await this.client.delete(`/gas/reading/${id}/invoice`);
+    return response.data;
+  }
+
+  getGasMeterImageEndpoint(id: number) {
+    return `${API_CONFIG.BASE_URL}/gas/reading/${id}/meter-image`;
+  }
+
+  getGasInvoiceEndpoint(id: number) {
+    return `${API_CONFIG.BASE_URL}/gas/reading/${id}/invoice`;
   }
 
   async deleteGasReading(id: number) {
@@ -186,7 +258,13 @@ class ApiClientService {
     return response.data;
   }
 
-  async updateUserProfile(data: { name?: string; email?: string }) {
+  async updateUserProfile(data: {
+    name?: string;
+    username?: string;
+    homeLocation?: string;
+    gasPriceExVat?: number;
+    gasPriceEffectiveFrom?: string;
+  }) {
     const response = await this.client.put('/user', data);
     return response.data;
   }
@@ -208,7 +286,15 @@ class ApiClientService {
   }
 
   // Heating events
-  async getHeatingEvents(params?: Record<string, any>) {
+  async getHeatingEvents(
+    paramsOrStartDate?: Record<string, any> | string,
+    endDate?: string,
+  ) {
+    const params =
+      typeof paramsOrStartDate === 'string' || endDate !== undefined
+        ? { startDate: paramsOrStartDate, endDate }
+        : paramsOrStartDate;
+
     const response = await this.client.get('/heating-events', { params });
     return response.data;
   }

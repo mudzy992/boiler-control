@@ -4,12 +4,10 @@ import {
   AnomalyType,
 } from '../anomaly-detection.service';
 import { MetricsService } from '../metrics.service';
-import { StructuredLogger } from '../structured-logger';
 
 describe('AnomalyDetectionService', () => {
   let service: AnomalyDetectionService;
   let metricsService: MetricsService;
-  let structuredLogger: StructuredLogger;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,20 +20,11 @@ describe('AnomalyDetectionService', () => {
             exportPrometheus: jest.fn(() => ''),
           },
         },
-        {
-          provide: StructuredLogger,
-          useValue: {
-            log: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-          },
-        },
       ],
     }).compile();
 
     service = module.get<AnomalyDetectionService>(AnomalyDetectionService);
     metricsService = module.get<MetricsService>(MetricsService);
-    structuredLogger = module.get<StructuredLogger>(StructuredLogger);
   });
 
   describe('detectAnomalies', () => {
@@ -84,6 +73,7 @@ describe('AnomalyDetectionService', () => {
           threshold: 2,
         },
         new Date(),
+        'CLOSED',
       );
 
       expect(result.isAnomaly).toBe(true);
@@ -122,6 +112,7 @@ describe('AnomalyDetectionService', () => {
           threshold: 2,
         },
         new Date(),
+        'CLOSED',
       );
 
       expect(result.isAnomaly).toBe(true);
@@ -240,6 +231,10 @@ describe('AnomalyDetectionService', () => {
 
   describe('logAnomalyDetection', () => {
     it('should call structuredLogger.log with correct parameters', () => {
+      const loggerSpy = jest
+        .spyOn((service as any).structuredLogger, 'log')
+        .mockImplementation(() => undefined);
+
       const result = {
         isAnomaly: true,
         types: [AnomalyType.OVERSHOOT],
@@ -258,7 +253,7 @@ describe('AnomalyDetectionService', () => {
 
       service.logAnomalyDetection(1, 2, 3, result, context);
 
-      expect(structuredLogger.log).toHaveBeenCalledWith(
+      expect(loggerSpy).toHaveBeenCalledWith(
         'Anomaly Detection',
         expect.objectContaining({
           eventId: 1,
@@ -271,6 +266,10 @@ describe('AnomalyDetectionService', () => {
     });
 
     it('should include context details in log', () => {
+      const loggerSpy = jest
+        .spyOn((service as any).structuredLogger, 'log')
+        .mockImplementation(() => undefined);
+
       const result = {
         isAnomaly: true,
         types: [AnomalyType.OVERSHOOT],
@@ -289,7 +288,7 @@ describe('AnomalyDetectionService', () => {
 
       service.logAnomalyDetection(1, 2, 3, result, context);
 
-      expect(structuredLogger.log).toHaveBeenCalledWith(
+      expect(loggerSpy).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           currentDuration: context.currentDuration,

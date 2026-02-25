@@ -49,8 +49,11 @@ export class ApiClient {
   }
 
   // Auth endpoints
-  async login(email: string, password: string) {
-    const response = await this.client.post('/auth/login', { email, password });
+  async login(identifier: string, password: string) {
+    const response = await this.client.post('/auth/login', {
+      identifier,
+      password,
+    });
     return response.data;
   }
 
@@ -134,17 +137,78 @@ export class ApiClient {
   }
 
   async addGasReadingPayload(data: { counterValue: number; readingDate: string }) {
-    const response = await this.client.post('/gas/readings', data);
+    const response = await this.client.post('/gas/reading', data);
+    return response.data;
+  }
+
+  async addGasReadingWithUpload(data: {
+    counterValue: number;
+    readingDate: string;
+    markAsReference?: boolean;
+    meterImage?: File;
+  }) {
+    const form = new FormData();
+    form.append('counterValue', String(data.counterValue));
+    form.append('readingDate', data.readingDate);
+    if (data.markAsReference !== undefined) {
+      form.append('markAsReference', String(data.markAsReference));
+    }
+    if (data.meterImage) {
+      form.append('meterImage', data.meterImage);
+    }
+
+    const response = await this.client.post('/gas/reading', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   }
 
   async deleteGasReading(id: number) {
-    const response = await this.client.delete(`/gas/readings/${id}`);
+    const response = await this.client.delete(`/gas/reading/${id}`);
     return response.data;
   }
 
-  async getGasAnalysis(from: string, to: string) {
-    const response = await this.client.get('/gas/analysis', { params: { from, to } });
+  async updateGasReference(id: number, isReference: boolean) {
+    const response = await this.client.patch(`/gas/reading/${id}/reference`, {
+      isReference,
+    });
+    return response.data;
+  }
+
+  async uploadGasInvoice(id: number, invoicePdf: File, invoiceGasPriceExVat?: number) {
+    const form = new FormData();
+    form.append('invoicePdf', invoicePdf);
+    if (invoiceGasPriceExVat !== undefined) {
+      form.append('invoiceGasPriceExVat', String(invoiceGasPriceExVat));
+    }
+    const response = await this.client.post(`/gas/reading/${id}/invoice`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  async deleteGasInvoice(id: number) {
+    const response = await this.client.delete(`/gas/reading/${id}/invoice`);
+    return response.data;
+  }
+
+  getGasMeterImageUrl(id: number) {
+    return `${API_BASE_URL}/gas/reading/${id}/meter-image`;
+  }
+
+  getGasInvoiceUrl(id: number) {
+    return `${API_BASE_URL}/gas/reading/${id}/invoice`;
+  }
+
+  async getGasAnalysis(from?: string, to?: string) {
+    const params =
+      from && to
+        ? {
+            from,
+            to,
+          }
+        : undefined;
+    const response = await this.client.get('/gas/analysis', { params });
     return response.data;
   }
 

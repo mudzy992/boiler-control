@@ -46,6 +46,6 @@ export class HeatingController {
    */
   @Get()
   async getHeatingEvents(@Req() req) {
-    return this.heatingService.getHeatingEvents(req.user.id);
+    return this.heatingService.getHeatingEvents(req.user.userId);
   }
 }

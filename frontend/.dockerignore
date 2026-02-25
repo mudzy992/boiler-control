@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+.git
+.github
+.idea
+.vscode
+*.log
+.DS_Store
+Thumbs.db

@@ -3,8 +3,8 @@ services:
     container_name: boiler-control-backend
     image: boiler-control-backend-image
     build:
-      context: .
-      dockerfile: ./backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     env_file:
       - ./backend/.env
     environment:
@@ -40,8 +40,8 @@ services:
     container_name: boiler-control-frontend
     image: boiler-control-frontend-image
     build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
       args:
         - VITE_API_URL=/backend/api
     networks:

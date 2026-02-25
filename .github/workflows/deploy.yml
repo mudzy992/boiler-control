@@ -31,6 +31,7 @@ jobs:
             echo "➡️ Connecting to server and deploying Boiler Control Project..."
 
             APP_PATH="${{ secrets.APP_PATH }}"
+            COMPOSE_FILE="docker-compose.yml"
 
             if [ ! -d "$APP_PATH" ]; then
               echo "📂 Directory does not exist. Creating..."
@@ -42,20 +43,24 @@ jobs:
             # Ako direktorij nije git repo, kloniraj repo
             if [ ! -d ".git" ]; then
               echo "📦 Git repository not found. Cloning..."
+              ssh-keyscan github.com >> ~/.ssh/known_hosts
               git clone --branch main git@github.com:mudzy992/boiler-control.git .
+              CHANGES=$(git ls-files)
             else
+              OLD_HEAD=$(git rev-parse HEAD)
               echo "🔄 Pulling latest changes from GitHub..."
               git fetch origin main
               git reset --hard origin/main
+
+              CHANGES=$(git diff --name-only "$OLD_HEAD" HEAD || true)
             fi
 
             echo "🧰 Checking for changed files..."
-            CHANGES=$(git show --name-only --pretty="" HEAD)
             echo "$CHANGES"
 
             BACKEND_CHANGED=$(echo "$CHANGES" | grep '^backend/' || true)
             FRONTEND_CHANGED=$(echo "$CHANGES" | grep '^frontend/' || true)
-            DOCKER_CHANGED=$(echo "$CHANGES" | grep '^docker-compose.yml' || true)
+            DOCKER_CHANGED=$(echo "$CHANGES" | grep -E '(^docker-compose.yml$|^backend/Dockerfile$|^frontend/Dockerfile$|^backend/docker-compose.yml$|^frontend/docker-compose.yml$)' || true)
 
             echo "🧩 Backend changed: $BACKEND_CHANGED"
             echo "🧩 Frontend changed: $FRONTEND_CHANGED"
@@ -63,30 +68,18 @@ jobs:
 
             rebuild_backend() {
               echo "🔹 Rebuilding backend container..."
-              cd backend
-              docker-compose down
-              docker compose stop boiler-control-backend || true
-              docker compose rm -f -v boiler-control-backend || true
-              sleep 2
+              docker compose -f "$COMPOSE_FILE" stop boiler-control-backend || true
+              docker compose -f "$COMPOSE_FILE" rm -f boiler-control-backend || true
               docker rmi boiler-control-backend-image || true
-              docker-compose up --build -d boiler-control-backend
-              sudo fuser -k 3020/tcp || true
-              docker-compose up --build -d boiler-control-backend
-              cd ..
+              docker compose -f "$COMPOSE_FILE" up --build -d boiler-control-backend
             }
 
             rebuild_frontend() {
               echo "🔹 Rebuilding frontend container..."
-              cd frontend
-              docker-compose down
-              docker compose stop boiler-control-frontend || true
-              docker compose rm -f -v boiler-control-frontend || true
-              sleep 2
+              docker compose -f "$COMPOSE_FILE" stop boiler-control-frontend || true
+              docker compose -f "$COMPOSE_FILE" rm -f boiler-control-frontend || true
               docker rmi boiler-control-frontend-image || true
-              docker-compose up --build -d boiler-control-frontend
-              sudo fuser -k 3021/tcp || true
-              docker-compose up --build -d boiler-control-frontend
-              cd ..
+              docker compose -f "$COMPOSE_FILE" up --build -d boiler-control-frontend
             }
 
             if [ -n "$BACKEND_CHANGED" ]; then
@@ -105,7 +98,7 @@ jobs:
 
             if [ -z "$BACKEND_CHANGED$FRONTEND_CHANGED$DOCKER_CHANGED" ]; then
               echo "✅ No code changes detected. Checking container health..."
-              docker compose ps
+              docker compose -f "$COMPOSE_FILE" ps
             fi
 
             echo "✅ Deployment completed successfully!"

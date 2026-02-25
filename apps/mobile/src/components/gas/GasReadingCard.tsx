@@ -53,6 +53,7 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   const consumptionText = useColorModeValue('blue.700', 'blue.200');
   const standardBadgeBg = useColorModeValue('gray.300', 'gray.600');
   const standardBadgeText = useColorModeValue('gray.700', 'gray.100');
+  const hintTextColor = useColorModeValue('gray.500', 'gray.400');
 
   const formattedDate = dayjs(reading.readingDate).format('DD.MM.YYYY');
   const formattedTime = dayjs(reading.readingDate).format('HH:mm');
@@ -85,27 +86,27 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
               {reading.isInvoiceReference ? (
                 <Box px={2} py={1} rounded="full" bg="amber.500">
                   <Text fontSize="2xs" color="white" fontWeight="700">
-                    REFERENCE
+                    {t('gas.badgeReference')}
                   </Text>
                 </Box>
               ) : (
                 <Box px={2} py={1} rounded="full" bg={standardBadgeBg}>
                   <Text fontSize="2xs" color={standardBadgeText} fontWeight="700">
-                    STANDARD
+                    {t('gas.badgeStandard')}
                   </Text>
                 </Box>
               )}
               {reading.hasMeterImage && (
                 <Box px={2} py={1} rounded="full" bg="blue.500">
                   <Text fontSize="2xs" color="white" fontWeight="700">
-                    IMAGE
+                    {t('gas.badgeImage')}
                   </Text>
                 </Box>
               )}
               {reading.hasInvoicePdf && (
                 <Box px={2} py={1} rounded="full" bg="green.500">
                   <Text fontSize="2xs" color="white" fontWeight="700">
-                    INVOICE
+                    {t('gas.badgeInvoice')}
                   </Text>
                 </Box>
               )}
@@ -180,66 +181,85 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
           </Box>
         )}
 
-        <HStack flexWrap="wrap" space={2}>
-          {onToggleReference && (
-            <Pressable
-              onPress={() => onToggleReference(reading, !reading.isInvoiceReference)}
-              disabled={isMutating}
-              _pressed={{ opacity: 0.7 }}
-            >
-              <Box
-                px={3}
-                py={2}
-                rounded="md"
-                bg={reading.isInvoiceReference ? 'orange.500' : 'blue.500'}
+        <VStack space={2}>
+          <HStack flexWrap="wrap" space={2}>
+            {onToggleReference && (
+              <Pressable
+                onPress={() => onToggleReference(reading, !reading.isInvoiceReference)}
+                disabled={isMutating}
+                _pressed={{ opacity: 0.7 }}
               >
-                <Text color="white" fontSize="xs" fontWeight="700">
-                  {reading.isInvoiceReference ? 'Unset Reference' : 'Set Reference'}
-                </Text>
-              </Box>
-            </Pressable>
-          )}
+                <Box
+                  px={3}
+                  py={2}
+                  rounded="md"
+                  bg={reading.isInvoiceReference ? 'orange.500' : 'blue.500'}
+                >
+                  <Text color="white" fontSize="xs" fontWeight="700">
+                    {reading.isInvoiceReference
+                      ? t('gas.actionUnsetReference')
+                      : t('gas.actionSetReference')}
+                  </Text>
+                </Box>
+              </Pressable>
+            )}
 
-          {reading.hasMeterImage && onOpenMeterImage && (
-            <Pressable onPress={() => onOpenMeterImage(reading)} disabled={isMutating}>
-              <Box px={3} py={2} rounded="md" bg="blue.600">
-                <Text color="white" fontSize="xs" fontWeight="700">
-                  Open Image
-                </Text>
-              </Box>
-            </Pressable>
-          )}
+            {reading.hasMeterImage && onOpenMeterImage && (
+              <Pressable onPress={() => onOpenMeterImage(reading)} disabled={isMutating}>
+                <Box px={3} py={2} rounded="md" bg="blue.600">
+                  <Text color="white" fontSize="xs" fontWeight="700">
+                    {t('gas.actionOpenImage')}
+                  </Text>
+                </Box>
+              </Pressable>
+            )}
+          </HStack>
 
-          {reading.isInvoiceReference && onUploadInvoice && (
-            <Pressable onPress={() => onUploadInvoice(reading)} disabled={isMutating}>
-              <Box px={3} py={2} rounded="md" bg="green.600">
-                <Text color="white" fontSize="xs" fontWeight="700">
-                  {reading.hasInvoicePdf ? 'Replace Invoice' : 'Upload Invoice'}
-                </Text>
-              </Box>
-            </Pressable>
-          )}
+          {reading.isInvoiceReference ? (
+            <VStack space={2}>
+              <Text fontSize="xs" fontWeight="600" color={subtextColor}>
+                {t('gas.invoiceActionsTitle')}
+              </Text>
+              <HStack flexWrap="wrap" space={2}>
+                {onUploadInvoice && (
+                  <Pressable onPress={() => onUploadInvoice(reading)} disabled={isMutating}>
+                    <Box px={3} py={2} rounded="md" bg="green.600">
+                      <Text color="white" fontSize="xs" fontWeight="700">
+                        {reading.hasInvoicePdf
+                          ? t('gas.actionReplaceInvoice')
+                          : t('gas.actionAddInvoice')}
+                      </Text>
+                    </Box>
+                  </Pressable>
+                )}
 
-          {reading.hasInvoicePdf && onOpenInvoice && (
-            <Pressable onPress={() => onOpenInvoice(reading)} disabled={isMutating}>
-              <Box px={3} py={2} rounded="md" bg="teal.600">
-                <Text color="white" fontSize="xs" fontWeight="700">
-                  Open Invoice
-                </Text>
-              </Box>
-            </Pressable>
-          )}
+                {reading.hasInvoicePdf && onOpenInvoice && (
+                  <Pressable onPress={() => onOpenInvoice(reading)} disabled={isMutating}>
+                    <Box px={3} py={2} rounded="md" bg="teal.600">
+                      <Text color="white" fontSize="xs" fontWeight="700">
+                        {t('gas.actionOpenInvoice')}
+                      </Text>
+                    </Box>
+                  </Pressable>
+                )}
 
-          {reading.hasInvoicePdf && onDeleteInvoice && (
-            <Pressable onPress={() => onDeleteInvoice(reading)} disabled={isMutating}>
-              <Box px={3} py={2} rounded="md" bg="red.600">
-                <Text color="white" fontSize="xs" fontWeight="700">
-                  Delete Invoice
-                </Text>
-              </Box>
-            </Pressable>
+                {reading.hasInvoicePdf && onDeleteInvoice && (
+                  <Pressable onPress={() => onDeleteInvoice(reading)} disabled={isMutating}>
+                    <Box px={3} py={2} rounded="md" bg="red.600">
+                      <Text color="white" fontSize="xs" fontWeight="700">
+                        {t('gas.actionDeleteInvoice')}
+                      </Text>
+                    </Box>
+                  </Pressable>
+                )}
+              </HStack>
+            </VStack>
+          ) : (
+            <Text fontSize="xs" color={hintTextColor}>
+              {t('gas.invoiceReferenceHint')}
+            </Text>
           )}
-        </HStack>
+        </VStack>
       </VStack>
     </Box>
   );

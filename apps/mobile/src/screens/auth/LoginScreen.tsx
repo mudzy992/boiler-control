@@ -83,10 +83,10 @@ export const LoginScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    {t('auth.emailOrUsername') || 'Email or Username'}
+                    {t('auth.emailOrUsername')}
                   </Text>
                   <FormInput
-                    placeholder={t('auth.emailPlaceholder') || 'you@example.com or username'}
+                    placeholder={t('auth.emailOrUsernamePlaceholder')}
                     value={identifier}
                     onChangeText={setIdentifier}
                     autoCapitalize="none"

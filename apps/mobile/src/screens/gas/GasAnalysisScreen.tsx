@@ -250,6 +250,7 @@ export const GasAnalysisScreen: React.FC = () => {
 
   const periodStart = analysis.period?.startDate ?? analysis.period?.from;
   const periodEnd = analysis.period?.endDate ?? analysis.period?.to;
+  const periodMode = analysis.period?.mode;
   const totalConsumption =
     analysis.consumptionFromReferenceM3 ??
     analysis.totalConsumption ??
@@ -263,6 +264,12 @@ export const GasAnalysisScreen: React.FC = () => {
   const averageFlowTemp = analysis.efficiency?.averageFlowTemp ?? analysis.avgFlowTemp ?? 0;
   const gasUsagePerHeatingHour =
     analysis.efficiency?.gasUsagePerHeatingHour ?? analysis.efficiency?.m3PerHour ?? 0;
+  const periodModeLabel =
+    periodMode === 'reference_to_current'
+      ? t('gas.analysisModeReference')
+      : periodMode === 'last_30_days'
+        ? t('gas.analysisModeLast30')
+        : t('gas.analysisModeExplicit');
 
   return (
     <Box flex={1} bg={bgColor} safeArea>
@@ -278,6 +285,31 @@ export const GasAnalysisScreen: React.FC = () => {
             </Text>
           </VStack>
 
+          <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
+            <VStack space={1}>
+              <HStack alignItems="center" space={2}>
+                <Icon as={Ionicons} name="git-compare-outline" size={5} color={blueIcon} />
+                <Text fontSize="sm" fontWeight="700" color={blueText}>
+                  {t('gas.analysisWindowTitle')}
+                </Text>
+              </HStack>
+              <Text fontSize="xs" color={blueIcon}>
+                {periodModeLabel}
+              </Text>
+              <Text fontSize="xs" color={blueIcon}>
+                {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
+                {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
+              </Text>
+              {analysis.referenceReading && (
+                <Text fontSize="xs" color={blueIcon}>
+                  {t('gas.analysisReferenceReading')}:{' '}
+                  {dayjs(analysis.referenceReading.readingDate).format('DD.MM.YYYY')} (
+                  {analysis.referenceReading.counterValue.toFixed(2)} m³)
+                </Text>
+              )}
+            </VStack>
+          </Box>
+
           {/* Summary Stats */}
           <HStack space={3}>
             <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
@@ -290,7 +322,9 @@ export const GasAnalysisScreen: React.FC = () => {
                     color={subtextColor}
                     textTransform="uppercase"
                   >
-                    {t('gas.analysisTotalUse')}
+                    {periodMode === 'reference_to_current'
+                      ? t('gas.analysisTotalUseReference')
+                      : t('gas.analysisTotalUse')}
                   </Text>
                 </HStack>
                 <Text fontSize="lg" fontWeight="bold" color={textColor}>
@@ -363,12 +397,12 @@ export const GasAnalysisScreen: React.FC = () => {
           <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
             <VStack space={3}>
               <Text fontSize="md" fontWeight="600" color={textColor}>
-                {t('gas.analysisCostBreakdown') || 'Estimated Cost (17% VAT)'}
+                {t('gas.analysisCostBreakdown')}
               </Text>
               <HStack justifyContent="space-between" alignItems="center">
                 <VStack>
                   <Text fontSize="sm" color={subtextColor}>
-                    Ex VAT
+                    {t('gas.analysisCostExVat')}
                   </Text>
                   <Text fontSize="lg" fontWeight="bold" color={textColor}>
                     {(analysis.costExVat ?? 0).toFixed(2)}
@@ -376,7 +410,7 @@ export const GasAnalysisScreen: React.FC = () => {
                 </VStack>
                 <VStack>
                   <Text fontSize="sm" color={subtextColor}>
-                    VAT (17%)
+                    {t('gas.analysisCostVat')}
                   </Text>
                   <Text fontSize="lg" fontWeight="bold" color={textColor}>
                     {(analysis.vatAmount ?? 0).toFixed(2)}
@@ -384,7 +418,7 @@ export const GasAnalysisScreen: React.FC = () => {
                 </VStack>
                 <VStack>
                   <Text fontSize="sm" color={subtextColor}>
-                    Incl VAT
+                    {t('gas.analysisCostIncVat')}
                   </Text>
                   <Text fontSize="lg" fontWeight="bold" color={textColor}>
                     {(analysis.costIncVat ?? 0).toFixed(2)}
@@ -398,24 +432,28 @@ export const GasAnalysisScreen: React.FC = () => {
             <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
               <VStack space={3}>
                 <Text fontSize="md" fontWeight="600" color={textColor}>
-                  {t('gas.analysisPriceWindows') || 'Price Windows'}
+                  {t('gas.analysisPriceWindows')}
                 </Text>
                 {analysis.priceBreakdown.map((row, idx) => (
                   <Box key={`${row.priceExVat}-${idx}`} bg={slateBg} borderWidth={1} borderColor={slateBorder} rounded="md" p={3}>
                     <HStack justifyContent="space-between" alignItems="center" mb={1}>
                       <Text fontSize="sm" color={textColor} fontWeight="600">
-                        {row.priceExVat.toFixed(4)} / m³
+                        {t('gas.analysisPriceExVatValue', { value: row.priceExVat.toFixed(4) })}
                       </Text>
                       <Text fontSize="xs" color={subtextColor}>
-                        {(row.source || 'MANUAL').toUpperCase()}
+                        {(row.source || t('gas.analysisPriceSourceManual')).toUpperCase()}
                       </Text>
                     </HStack>
                     <Text fontSize="xs" color={subtextColor}>
                       {(row.effectiveFrom && dayjs(row.effectiveFrom).format('DD.MM.YYYY')) || '—'} -{' '}
-                      {(row.effectiveTo && dayjs(row.effectiveTo).format('DD.MM.YYYY')) || 'current'}
+                      {(row.effectiveTo && dayjs(row.effectiveTo).format('DD.MM.YYYY')) ||
+                        t('gas.analysisPriceCurrent')}
                     </Text>
                     <Text fontSize="xs" color={subtextColor}>
-                      {row.consumptionM3.toFixed(2)} m³ | {(row.costExVat ?? 0).toFixed(2)} ex VAT
+                      {t('gas.analysisPriceConsumptionCost', {
+                        consumption: row.consumptionM3.toFixed(2),
+                        costExVat: (row.costExVat ?? 0).toFixed(2),
+                      })}
                     </Text>
                   </Box>
                 ))}
@@ -637,15 +675,11 @@ export const GasAnalysisScreen: React.FC = () => {
                   {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
                 </Text>
                 <Text fontSize="xs" color={blueIcon}>
-                  {analysis.period?.mode === 'reference_to_current'
-                    ? t('gas.analysisModeReference') || 'From last reference to current'
-                    : analysis.period?.mode === 'last_30_days'
-                      ? t('gas.analysisModeLast30') || 'Default last 30 days'
-                      : t('gas.analysisModeExplicit') || 'Custom period'}
+                  {periodModeLabel}
                 </Text>
                 {analysis.referenceReading && (
                   <Text fontSize="xs" color={blueIcon}>
-                    {t('gas.analysisReferenceReading') || 'Reference'}:{' '}
+                    {t('gas.analysisReferenceReading')}:{' '}
                     {dayjs(analysis.referenceReading.readingDate).format('DD.MM.YYYY')} (
                     {analysis.referenceReading.counterValue.toFixed(2)} m³)
                   </Text>

@@ -53,5 +53,4 @@ logs
 # Misc
 .eslintrc
 .prettierrc
-tsconfig.json
 jest.config.js

@@ -18,7 +18,6 @@ COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
 COPY . .
 
 RUN npx prisma generate
-RUN cat tsconfig.build.json
 RUN npm run build --verbose
 
 # Stage 3: production
@@ -34,8 +33,9 @@ COPY --from=build /usr/src/backend/app/node_modules ./node_modules
 COPY --from=build /usr/src/backend/app/package*.json ./
 # Make sure your prisma schema is available if needed at runtime
 COPY --from=build /usr/src/backend/app/prisma ./prisma
+COPY --from=build /usr/src/backend/app/src/generated ./dist/generated
 COPY --from=build /usr/src/backend/app/src/generated ./dist/src/generated
 
 EXPOSE 3020
-# Start NestJS directly
-CMD ["node", "dist/main.js"]
+# Start NestJS directly. Support both dist layouts.
+CMD ["sh", "-c", "if [ -f dist/src/main.js ]; then node dist/src/main.js; else node dist/main.js; fi"]

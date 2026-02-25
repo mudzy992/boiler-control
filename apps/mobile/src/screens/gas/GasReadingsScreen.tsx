@@ -3,7 +3,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { RefreshControl, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import * as Linking from 'expo-linking';
 import {
   Box,
@@ -195,27 +195,50 @@ export const GasReadingsScreen: React.FC = () => {
     },
   });
 
+  const resolveDownloadDirectory = () => {
+    try {
+      return Paths.cache;
+    } catch {
+      // Continue to document directory fallback.
+    }
+
+    try {
+      return Paths.document;
+    } catch {
+      return null;
+    }
+  };
+
+  const sanitizeFileName = (name: string) =>
+    name.replace(/[^a-zA-Z0-9._-]/g, '_');
+
   const openProtectedFile = async (url: string, fallbackName: string) => {
     const token = await SecureStorage.getToken();
     if (!token) {
       throw new Error('Authentication token missing');
     }
-    const fileSystem = FileSystem as any;
-    const baseDir =
-      fileSystem.cacheDirectory ||
-      fileSystem.documentDirectory ||
-      fileSystem.temporaryDirectory;
-    if (!baseDir) {
+
+    const baseDirectory = resolveDownloadDirectory();
+    if (!baseDirectory) {
       throw new Error('No local storage directory available for downloads');
     }
 
-    const filePath = `${baseDir}${Date.now()}-${fallbackName}`;
-    const download = await fileSystem.downloadAsync(url, filePath, {
+    const downloadsDirectory = baseDirectory.createDirectory('downloads');
+    downloadsDirectory.create({ idempotent: true, intermediates: true });
+
+    const targetFile = new File(
+      downloadsDirectory,
+      `${Date.now()}-${sanitizeFileName(fallbackName)}`,
+    );
+
+    const downloaded = await File.downloadFileAsync(url, targetFile, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      idempotent: true,
     });
-    await Linking.openURL(download.uri);
+
+    await Linking.openURL(downloaded.uri);
   };
 
   const handleUploadInvoice = async (reading: GasReading) => {

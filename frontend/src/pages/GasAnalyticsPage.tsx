@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
 import { StatCard } from '../components/StatCard';
 import { Button } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export const GasAnalyticsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [periodDays, setPeriodDays] = useState(30);
   const [useDefaultReferenceRange, setUseDefaultReferenceRange] = useState(true);
 
@@ -49,10 +51,19 @@ export const GasAnalyticsPage: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  const periodStart = analysisData?.period?.startDate ?? analysisData?.period?.from;
+  const periodEnd = analysisData?.period?.endDate ?? analysisData?.period?.to;
+  const periodModeLabel =
+    analysisData?.period?.mode === 'reference_to_current'
+      ? t('gas.analysisModeReference')
+      : analysisData?.period?.mode === 'last_30_days'
+        ? t('gas.analysisModeLast30')
+        : t('gas.analysisModeExplicit');
+
   if (error) {
     return (
       <div className="p-6 text-red-600 rounded-lg bg-red-50 dark:bg-red-900/20 dark:text-red-400">
-        Failed to load analytics. Please try again.
+        {t('gas.loadAnalyticsError')} {t('gas.loadAnalyticsErrorDesc')}
       </div>
     );
   }
@@ -61,29 +72,24 @@ export const GasAnalyticsPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-          Gas Analytics
+          {t('gas.analyticsPageTitle')}
         </h1>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Analyze your consumption patterns and trends over time.
-          {analysisData?.period?.mode === 'reference_to_current'
-            ? ' Showing default range from last reference to current balance.'
-            : analysisData?.period?.mode === 'last_30_days'
-              ? ' No reference found, using last 30 days.'
-              : ` Data for ${dateRange.from} to ${dateRange.to}.`}
+          {t('gas.analyticsPageSubtitle')}
         </p>
       </div>
 
       {/* Period Selector */}
       <div className="p-4 bg-white border border-gray-200 rounded-lg dark:border-slate-700 dark:bg-slate-800">
         <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">
-          Analyze Period
+          {t('gas.analyzePeriod')}
         </label>
         <div className="flex flex-wrap gap-2 mt-3 sm:gap-3">
           <Button
             onClick={() => setUseDefaultReferenceRange(true)}
             type={useDefaultReferenceRange ? 'primary' : 'default'}
           >
-            Reference → Current
+            {t('gas.periodReferenceCurrent')}
           </Button>
           {[7, 14, 30, 90, 365].map((days) => (
             <Button
@@ -100,6 +106,23 @@ export const GasAnalyticsPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="p-4 border border-blue-200 rounded-lg bg-blue-50 dark:border-blue-900/50 dark:bg-blue-900/10">
+        <p className="text-xs font-semibold tracking-wide text-blue-700 uppercase dark:text-blue-300">
+          {t('gas.analysisWindowTitle')}
+        </p>
+        <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">{periodModeLabel}</p>
+        <p className="text-xs text-blue-600 dark:text-blue-400">
+          {(periodStart && dayjs(periodStart).format('DD.MM.YYYY')) || '—'} -{' '}
+          {(periodEnd && dayjs(periodEnd).format('DD.MM.YYYY')) || '—'}
+        </p>
+        {analysisData?.referenceReading && (
+          <p className="text-xs text-blue-600 dark:text-blue-400">
+            {t('gas.analysisReferenceReading')}: {dayjs(analysisData.referenceReading.readingDate).format('DD.MM.YYYY')} (
+            {Number(analysisData.referenceReading.counterValue ?? 0).toFixed(2)} m³)
+          </p>
+        )}
+      </div>
+
       {isLoading && (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-4 border-gray-300 rounded-full animate-spin border-t-blue-600 dark:border-slate-700 dark:border-t-blue-500"></div>
@@ -111,9 +134,9 @@ export const GasAnalyticsPage: React.FC = () => {
           <svg className="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <p className="text-gray-600 dark:text-slate-400">No readings available yet.</p>
+          <p className="text-gray-600 dark:text-slate-400">{t('gas.noReadingsYet')}</p>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-500">
-            Add gas readings to see analytics and trends.
+            {t('gas.noReadingsAddFirst')}
           </p>
         </div>
       )}
@@ -123,47 +146,47 @@ export const GasAnalyticsPage: React.FC = () => {
           {/* Primary Metrics Grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Total Consumption"
+              title={t('gas.metricTotalConsumption')}
               value={analysisData.consumptionFromReferenceM3 ?? analysisData.totalGas ?? 0}
               suffix="m³"
             />
             <StatCard
-              title="Heating Hours"
+              title={t('gas.metricHeatingHours')}
               value={analysisData.totalHeatingHours ?? 0}
               suffix="hours"
             />
             <StatCard
-              title="Avg Flow Temp"
+              title={t('gas.metricAvgFlowTemp')}
               value={analysisData.avgFlowTemp ?? 0}
               suffix="°C"
             />
             <StatCard
-              title="Usage Per Hour"
+              title={t('gas.metricUsagePerHour')}
               value={analysisData.efficiency?.m3PerHour ?? 0}
               suffix="m³/h"
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard title="Cost Ex VAT" value={analysisData.costExVat ?? 0} suffix="" />
-            <StatCard title="VAT (17%)" value={analysisData.vatAmount ?? 0} suffix="" />
-            <StatCard title="Cost Inc VAT" value={analysisData.costIncVat ?? 0} suffix="" />
+            <StatCard title={t('gas.metricCostExVat')} value={analysisData.costExVat ?? 0} suffix="" />
+            <StatCard title={t('gas.metricVat')} value={analysisData.vatAmount ?? 0} suffix="" />
+            <StatCard title={t('gas.metricCostIncVat')} value={analysisData.costIncVat ?? 0} suffix="" />
           </div>
 
           {!!analysisData.priceBreakdown?.length && (
             <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-700 dark:bg-slate-800">
               <p className="text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-slate-300">
-                Price Windows
+                {t('gas.priceWindows')}
               </p>
               <div className="mt-3 overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="text-left text-gray-600 dark:text-slate-400">
-                      <th className="px-2 py-2">Price Ex VAT</th>
-                      <th className="px-2 py-2">Source</th>
-                      <th className="px-2 py-2">Effective</th>
-                      <th className="px-2 py-2">Consumption</th>
-                      <th className="px-2 py-2">Cost Ex VAT</th>
+                      <th className="px-2 py-2">{t('gas.priceExVat')}</th>
+                      <th className="px-2 py-2">{t('gas.source')}</th>
+                      <th className="px-2 py-2">{t('gas.effective')}</th>
+                      <th className="px-2 py-2">{t('gas.consumption')}</th>
+                      <th className="px-2 py-2">{t('gas.costExVat')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -177,7 +200,7 @@ export const GasAnalyticsPage: React.FC = () => {
                         </td>
                         <td className="px-2 py-2 text-gray-600 dark:text-slate-300">
                           {row.effectiveFrom ? dayjs(row.effectiveFrom).format('DD.MM.YYYY') : '—'} -{' '}
-                          {row.effectiveTo ? dayjs(row.effectiveTo).format('DD.MM.YYYY') : 'current'}
+                          {row.effectiveTo ? dayjs(row.effectiveTo).format('DD.MM.YYYY') : t('gas.priceCurrent')}
                         </td>
                         <td className="px-2 py-2 text-gray-600 dark:text-slate-300">
                           {Number(row.consumptionM3 ?? 0).toFixed(2)} m³
@@ -196,13 +219,13 @@ export const GasAnalyticsPage: React.FC = () => {
           {/* Efficiency Card */}
           <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <p className="text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-slate-300">
-              Heating Efficiency
+              {t('gas.heatingEfficiency')}
             </p>
             <div className="flex items-center gap-3 mt-4">
               <span className="text-3xl">{analysisData.efficiency?.label ? '✓' : '?'}</span>
               <div>
                 <p className="font-bold text-blue-600 dark:text-blue-400">
-                  {analysisData.efficiency?.label || 'NO DATA'}
+                  {analysisData.efficiency?.label || t('gas.noData')}
                 </p>
                 <p className="text-sm text-blue-600 dark:text-blue-400">
                   {typeof analysisData.efficiency?.m3PerHour === 'number' ? analysisData.efficiency.m3PerHour.toFixed(3) : '0.000'} m³/hour
@@ -215,15 +238,15 @@ export const GasAnalyticsPage: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div className="px-4 py-4 border-b border-gray-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Recent Readings
+                {t('gas.recentReadingsTitle')}
               </h2>
               <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-                Last 5 recorded readings with consumption data
+                {t('gas.recentReadingsSubtitle')}
               </p>
             </div>
             {readings.length === 0 ? (
               <div className="px-4 py-8 text-center">
-                <p className="text-gray-600 dark:text-slate-400">No readings available</p>
+                <p className="text-gray-600 dark:text-slate-400">{t('gas.noReadingsAvailable')}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-slate-700">
@@ -254,7 +277,7 @@ export const GasAnalyticsPage: React.FC = () => {
                               +{consumption.toFixed(2)} m³
                             </p>
                             <p className="text-xs text-gray-500 dark:text-slate-500">
-                              since last reading
+                              {t('gas.sinceLastReading')}
                             </p>
                           </div>
                         )}

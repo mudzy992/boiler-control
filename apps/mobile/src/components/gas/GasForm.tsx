@@ -106,6 +106,16 @@ export const GasForm: React.FC<GasFormProps> = ({
     return combined;
   };
 
+  const updateMeterImageFromAsset = (asset: ImagePicker.ImagePickerAsset) => {
+    const fallbackExtension =
+      asset.mimeType?.startsWith('image/') ? asset.mimeType.replace('image/', '') : 'jpg';
+    setMeterImage({
+      uri: asset.uri,
+      name: asset.fileName || `meter-${Date.now()}.${fallbackExtension}`,
+      type: asset.mimeType || 'image/jpeg',
+    });
+  };
+
   const pickMeterImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -121,12 +131,27 @@ export const GasForm: React.FC<GasFormProps> = ({
     });
 
     if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      setMeterImage({
-        uri: asset.uri,
-        name: asset.fileName || `meter-${Date.now()}.jpg`,
-        type: asset.mimeType || 'image/jpeg',
-      });
+      updateMeterImageFromAsset(result.assets[0]);
+    }
+  };
+
+  const takeMeterPhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      const errorMsg = t('gas.cameraPermissionDenied') || 'Camera permission denied';
+      setError(errorMsg);
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+      cameraType: ImagePicker.CameraType.back,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      updateMeterImageFromAsset(result.assets[0]);
     }
   };
 
@@ -332,32 +357,43 @@ export const GasForm: React.FC<GasFormProps> = ({
         <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
           {t('gas.meterImage') || 'Meter Image (optional)'}
         </FormControl.Label>
-        <HStack space={2}>
-          <Button
-            flex={1}
-            variant="outline"
-            onPress={pickMeterImage}
-            isDisabled={isLoading}
-            leftIcon={<Icon as={Ionicons} name="image-outline" size={4} color="brand.500" />}
-          >
-            {meterImage ? (t('gas.changeImage') || 'Change Image') : (t('gas.selectImage') || 'Select Image')}
-          </Button>
-          {meterImage && (
+        <VStack space={2}>
+          <HStack space={2}>
             <Button
-              variant="ghost"
-              colorScheme="red"
-              onPress={() => setMeterImage(null)}
+              flex={1}
+              variant="outline"
+              onPress={pickMeterImage}
               isDisabled={isLoading}
+              leftIcon={<Icon as={Ionicons} name="image-outline" size={4} color="brand.500" />}
             >
-              {t('common.clear')}
+              {t('gas.selectImage') || 'Select Image'}
             </Button>
+            <Button
+              flex={1}
+              variant="outline"
+              onPress={takeMeterPhoto}
+              isDisabled={isLoading}
+              leftIcon={<Icon as={Ionicons} name="camera-outline" size={4} color="brand.500" />}
+            >
+              {t('gas.takePhoto') || 'Take Photo'}
+            </Button>
+          </HStack>
+          {meterImage && (
+            <HStack space={2} alignItems="center">
+              <Text flex={1} fontSize="xs" color={textColor}>
+                {meterImage.name || meterImage.uri}
+              </Text>
+              <Button
+                variant="ghost"
+                colorScheme="red"
+                onPress={() => setMeterImage(null)}
+                isDisabled={isLoading}
+              >
+                {t('common.clear')}
+              </Button>
+            </HStack>
           )}
-        </HStack>
-        {meterImage && (
-          <Text mt={2} fontSize="xs" color={textColor}>
-            {meterImage.name || meterImage.uri}
-          </Text>
-        )}
+        </VStack>
       </FormControl>
 
       {/* iOS Date Picker */}

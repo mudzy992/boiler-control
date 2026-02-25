@@ -129,10 +129,10 @@ export const RegisterScreen = ({ navigation }: any) => {
 
                 <VStack space={2}>
                   <Text fontSize="sm" fontWeight="medium" color={textColor}>
-                    {t('auth.username') || 'Username'}
+                    {t('auth.username')}
                   </Text>
                   <FormInput
-                    placeholder={t('auth.usernamePlaceholder') || 'username'}
+                    placeholder={t('auth.usernamePlaceholder')}
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"

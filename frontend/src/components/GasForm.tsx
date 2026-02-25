@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 
 interface GasFormProps {
   open: boolean;
@@ -19,6 +20,8 @@ export const GasForm: React.FC<GasFormProps> = ({
   onSubmit,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
+
   const [formData, setFormData] = useState({
     counterValue: '',
     useCurrentDateTime: true,
@@ -48,20 +51,20 @@ export const GasForm: React.FC<GasFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.counterValue) {
-      newErrors.counterValue = 'Counter value is required';
+      newErrors.counterValue = t('gas.counterValueRequired');
     } else if (!/^\d+(\.\d{1,3})?$/.test(formData.counterValue)) {
-      newErrors.counterValue = 'Must be a valid decimal number (up to 3 places)';
+      newErrors.counterValue = t('gas.counterValueInvalidDecimal');
     } else if (parseFloat(formData.counterValue) <= 0) {
-      newErrors.counterValue = 'Counter value must be greater than 0';
+      newErrors.counterValue = t('gas.counterValueGreaterThanZero');
     }
 
     if (!formData.useCurrentDateTime && !formData.readingDate) {
-      newErrors.readingDate = 'Date is required';
+      newErrors.readingDate = t('gas.dateRequired');
     }
 
     const selectedDate = dayjs(formData.readingDate);
     if (selectedDate.isAfter(dayjs(), 'day')) {
-      newErrors.readingDate = 'Cannot add readings for future dates';
+      newErrors.readingDate = t('gas.futureDateError');
     }
 
     setErrors(newErrors);
@@ -95,7 +98,7 @@ export const GasForm: React.FC<GasFormProps> = ({
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Failed to add reading. Please try again.';
+        t('gas.addReadingError');
       setApiError(message);
     }
   };
@@ -106,10 +109,10 @@ export const GasForm: React.FC<GasFormProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Add Gas Reading
+          {t('gas.addReading')}
         </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-          Record a new counter value with timestamp.
+          {t('gas.recordSubtitle')}
         </p>
 
         {apiError && (
@@ -122,7 +125,7 @@ export const GasForm: React.FC<GasFormProps> = ({
           {/* Counter Value */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
-              Counter Value (m³) *
+              {t('gas.counterValueLabel')} *
             </label>
             <input
               type="number"
@@ -137,7 +140,7 @@ export const GasForm: React.FC<GasFormProps> = ({
                   ? 'border-red-500 dark:border-red-500'
                   : 'border-gray-300 dark:border-slate-600'
               }`}
-              placeholder="0.000"
+              placeholder={t('gas.enterMeterValue')}
               disabled={isLoading}
             />
             {errors.counterValue && (
@@ -160,7 +163,7 @@ export const GasForm: React.FC<GasFormProps> = ({
               disabled={isLoading}
             />
             <label htmlFor="useCurrentDateTime" className="text-sm text-gray-700 dark:text-slate-300">
-              Use current date & time
+              {t('gas.useCurrentDateTime')}
             </label>
           </div>
 
@@ -176,13 +179,13 @@ export const GasForm: React.FC<GasFormProps> = ({
               disabled={isLoading}
             />
             <label htmlFor="markAsReference" className="text-sm text-gray-700 dark:text-slate-300">
-              Mark as monthly invoice reference
+              {t('gas.markAsReference')}
             </label>
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
-              Meter Image (optional)
+              {t('gas.meterImage')}
             </label>
             <input
               type="file"
@@ -201,7 +204,7 @@ export const GasForm: React.FC<GasFormProps> = ({
             <>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
-                  Date *
+                  {t('gas.date')} *
                 </label>
                 <input
                   type="date"
@@ -217,7 +220,7 @@ export const GasForm: React.FC<GasFormProps> = ({
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
-                  Time *
+                  {t('gas.time')} *
                 </label>
                 <input
                   type="time"
@@ -243,14 +246,14 @@ export const GasForm: React.FC<GasFormProps> = ({
               disabled={isLoading}
               className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isLoading}
               className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800"
             >
-              {isLoading ? 'Adding...' : 'Add Reading'}
+              {isLoading ? t('common.loading') : t('gas.addReading')}
             </button>
           </div>
         </form>

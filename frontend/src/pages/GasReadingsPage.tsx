@@ -5,8 +5,10 @@ import { apiClient } from '../services/api';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { GasForm } from '../components/GasForm';
 import { Button, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export const GasReadingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const queryClient = useQueryClient();
   const token = localStorage.getItem('token');
@@ -85,7 +87,7 @@ export const GasReadingsPage: React.FC = () => {
 
   const openProtectedFile = async (url: string, fileName: string) => {
     if (!token) {
-      message.error('Authentication missing');
+      message.error(t('gas.authMissing'));
       return;
     }
     const response = await fetch(url, {
@@ -94,7 +96,7 @@ export const GasReadingsPage: React.FC = () => {
       },
     });
     if (!response.ok) {
-      throw new Error('Failed to load file');
+      throw new Error(t('gas.loadError'));
     }
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
@@ -115,7 +117,7 @@ export const GasReadingsPage: React.FC = () => {
       try {
         await invoiceUploadMutation.mutateAsync({ id: readingId, invoicePdf: file });
       } catch {
-        message.error('Failed to upload invoice');
+        message.error(t('gas.invoiceUploadError'));
       }
     };
     input.click();
@@ -155,7 +157,7 @@ export const GasReadingsPage: React.FC = () => {
   if (error) {
     return (
       <div className="p-6 text-red-600 rounded-lg bg-red-50 dark:bg-red-900/20 dark:text-red-400">
-        Failed to load readings. Please try again.
+        {t('gas.loadError')} {t('gas.loadErrorDesc')}
       </div>
     );
   }
@@ -163,10 +165,10 @@ export const GasReadingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
-        Gas Readings
+        {t('gas.title')}
       </h1>
       <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-        Track your gas consumption. {readings.length} reading{readings.length !== 1 ? 's' : ''} recorded.
+        {t('gas.subtitle')} {readings.length} {t('gas.readingsRecorded')}.
       </p>
 
       {/* Toolbar */}
@@ -177,7 +179,7 @@ export const GasReadingsPage: React.FC = () => {
             type='primary'
             size='large'
           >
-            📥 Export CSV
+            {t('gas.exportCsv')}
           </Button>
         )}
         <Button
@@ -185,7 +187,7 @@ export const GasReadingsPage: React.FC = () => {
           type='primary'
           size='large'
         >
-          + Add Reading
+          {t('gas.addReadingCta')}
         </Button>
       </div>
 
@@ -203,10 +205,10 @@ export const GasReadingsPage: React.FC = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p className="text-gray-600 dark:text-slate-400">
-            No gas readings recorded yet.
+            {t('gas.noReadingsYet')}
           </p>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-500">
-            Click "Add Reading" to create your first entry.
+            {t('gas.noReadingsAddFirst')}
           </p>
         </div>
       )}
@@ -227,12 +229,12 @@ export const GasReadingsPage: React.FC = () => {
                 onDeleteInvoice={(id) => invoiceDeleteMutation.mutate(id)}
                 onOpenMeterImage={(id) =>
                   void openProtectedFile(apiClient.getGasMeterImageUrl(id), `meter-${id}.jpg`).catch(
-                    () => message.error('Failed to open image'),
+                    () => message.error(t('gas.meterImageOpenError')),
                   )
                 }
                 onOpenInvoice={(id) =>
                   void openProtectedFile(apiClient.getGasInvoiceUrl(id), `invoice-${id}.pdf`).catch(
-                    () => message.error('Failed to open invoice'),
+                    () => message.error(t('gas.invoiceOpenError')),
                   )
                 }
                 isLoading={

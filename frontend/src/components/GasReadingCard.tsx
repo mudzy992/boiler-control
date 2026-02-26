@@ -20,6 +20,7 @@ interface GasReadingProps {
   };
   onDelete: (id: number) => void;
   onToggleReference?: (id: number, isReference: boolean) => void;
+  onUploadMeterImage?: (id: number) => void;
   onUploadInvoice?: (id: number) => void;
   onDeleteInvoice?: (id: number) => void;
   onOpenMeterImage?: (id: number) => void;
@@ -32,6 +33,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
   previousReading,
   onDelete,
   onToggleReference,
+  onUploadMeterImage,
   onUploadInvoice,
   onDeleteInvoice,
   onOpenMeterImage,
@@ -103,26 +105,34 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
       <div className="mt-3 space-y-2">
         <div className="flex flex-wrap gap-2">
           {onToggleReference && (
-            <button
-              type="button"
+            <Button
+              size="small"
+              type={reading.isInvoiceReference ? 'default' : 'primary'}
               onClick={() => onToggleReference(reading.id, !reading.isInvoiceReference)}
               disabled={isLoading}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold text-white ${
-                reading.isInvoiceReference ? 'bg-orange-600' : 'bg-blue-600'
-              } disabled:opacity-50`}
             >
               {reading.isInvoiceReference ? t('gas.actionUnsetReference') : t('gas.actionSetReference')}
-            </button>
+            </Button>
+          )}
+          {onUploadMeterImage && (
+            <Button
+              size="small"
+              type="primary"
+              ghost
+              onClick={() => onUploadMeterImage(reading.id)}
+              disabled={isLoading}
+            >
+              {reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')}
+            </Button>
           )}
           {reading.hasMeterImage && onOpenMeterImage && (
-            <button
-              type="button"
+            <Button
+              size="small"
               onClick={() => onOpenMeterImage(reading.id)}
               disabled={isLoading}
-              className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
             >
               {t('gas.actionOpenImage')}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -133,34 +143,34 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
             </p>
             <div className="flex flex-wrap gap-2">
               {onUploadInvoice && (
-                <button
-                  type="button"
+                <Button
+                  size="small"
+                  type="primary"
                   onClick={() => onUploadInvoice(reading.id)}
                   disabled={isLoading}
-                  className="rounded-md bg-green-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
                   {reading.hasInvoicePdf ? t('gas.actionReplaceInvoice') : t('gas.actionAddInvoice')}
-                </button>
+                </Button>
               )}
               {reading.hasInvoicePdf && onOpenInvoice && (
-                <button
-                  type="button"
+                <Button
+                  size="small"
+                  type="default"
                   onClick={() => onOpenInvoice(reading.id)}
                   disabled={isLoading}
-                  className="rounded-md bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
                   {t('gas.actionOpenInvoice')}
-                </button>
+                </Button>
               )}
               {reading.hasInvoicePdf && onDeleteInvoice && (
-                <button
-                  type="button"
+                <Button
+                  size="small"
+                  danger
                   onClick={() => onDeleteInvoice(reading.id)}
                   disabled={isLoading}
-                  className="rounded-md bg-red-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
                   {t('gas.actionDeleteInvoice')}
-                </button>
+                </Button>
               )}
             </div>
           </div>

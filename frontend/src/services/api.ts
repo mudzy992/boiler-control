@@ -144,15 +144,11 @@ export class ApiClient {
   async addGasReadingWithUpload(data: {
     counterValue: number;
     readingDate: string;
-    markAsReference?: boolean;
     meterImage?: File;
   }) {
     const form = new FormData();
     form.append('counterValue', String(data.counterValue));
     form.append('readingDate', data.readingDate);
-    if (data.markAsReference !== undefined) {
-      form.append('markAsReference', String(data.markAsReference));
-    }
     if (data.meterImage) {
       form.append('meterImage', data.meterImage);
     }
@@ -171,6 +167,15 @@ export class ApiClient {
   async updateGasReference(id: number, isReference: boolean) {
     const response = await this.client.patch(`/gas/reading/${id}/reference`, {
       isReference,
+    });
+    return response.data;
+  }
+
+  async uploadGasMeterImage(id: number, meterImage: File) {
+    const form = new FormData();
+    form.append('meterImage', meterImage);
+    const response = await this.client.post(`/gas/reading/${id}/meter-image`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   }

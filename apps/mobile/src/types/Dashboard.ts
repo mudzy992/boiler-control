@@ -32,6 +32,7 @@ export interface RecentHeatingEvent {
   targetTemp: number;
   currentTemp: number;
   hvacAction: string; // HEATING_ON, HEATING_OFF
+  isAnomaly?: boolean;
 }
 
 export interface LearningInterval {

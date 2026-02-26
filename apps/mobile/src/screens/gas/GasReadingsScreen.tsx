@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { RefreshControl, Platform } from 'react-native';
+import { Alert, RefreshControl, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
-import { File, Paths } from 'expo-file-system';
+import * as FileSystemLegacy from 'expo-file-system/legacy';
+import * as ImagePicker from 'expo-image-picker';
+import * as IntentLauncher from 'expo-intent-launcher';
 import * as Linking from 'expo-linking';
 import {
   Box,
@@ -100,7 +102,6 @@ export const GasReadingsScreen: React.FC = () => {
     mutationFn: (data: {
       counterValue: number;
       readingDate: string;
-      markAsReference?: boolean;
       meterImage?: { uri: string; name?: string; type?: string };
     }) =>
       apiClient.addGasReadingWithUpload(data),
@@ -158,6 +159,30 @@ export const GasReadingsScreen: React.FC = () => {
     },
   });
 
+  const meterImageUploadMutation = useMutation({
+    mutationFn: (payload: {
+      id: number;
+      meterImage: { uri: string; name?: string; type?: string };
+    }) => apiClient.uploadGasMeterImage(payload.id, payload.meterImage),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      toast.show({
+        render: () => (
+          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              {t('gas.meterImageUploaded') || 'Meter image uploaded'}
+            </Text>
+          </Box>
+        ),
+        duration: 2000,
+        placement: 'top',
+      });
+    },
+    onError: (error: any) => {
+      showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image');
+    },
+  });
+
   const invoiceUploadMutation = useMutation({
     mutationFn: (payload: {
       id: number;
@@ -195,22 +220,89 @@ export const GasReadingsScreen: React.FC = () => {
     },
   });
 
-  const resolveDownloadDirectory = () => {
-    try {
-      return Paths.cache;
-    } catch {
-      // Continue to document directory fallback.
-    }
-
-    try {
-      return Paths.document;
-    } catch {
-      return null;
-    }
-  };
-
   const sanitizeFileName = (name: string) =>
     name.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+  const sanitizeBaseName = (name: string) => {
+    const cleaned = sanitizeFileName(name);
+    const dotIndex = cleaned.lastIndexOf('.');
+    if (dotIndex <= 0) {
+      return cleaned || 'file';
+    }
+    return cleaned.slice(0, dotIndex) || 'file';
+  };
+
+  const getHeaderValue = (
+    headers: Record<string, string> | undefined,
+    headerName: string,
+  ) => {
+    if (!headers) return undefined;
+    const entry = Object.entries(headers).find(
+      ([key]) => key.toLowerCase() === headerName.toLowerCase(),
+    );
+    return entry?.[1];
+  };
+
+  const extensionFromMime = (mimeType?: string) => {
+    if (!mimeType) return '';
+    const normalized = mimeType.split(';')[0].trim().toLowerCase();
+    if (normalized === 'image/jpeg') return '.jpg';
+    if (normalized === 'image/png') return '.png';
+    if (normalized === 'image/webp') return '.webp';
+    if (normalized === 'application/pdf') return '.pdf';
+    return '';
+  };
+
+  const isSupportedFileMime = (mimeType?: string) => {
+    if (!mimeType) return false;
+    const normalized = mimeType.split(';')[0].trim().toLowerCase();
+    return (
+      normalized === 'image/jpeg' ||
+      normalized === 'image/png' ||
+      normalized === 'image/webp' ||
+      normalized === 'application/pdf'
+    );
+  };
+
+  const mimeFromExtension = (extension?: string) => {
+    if (!extension) return undefined;
+    const normalized = extension.toLowerCase();
+    if (normalized === '.jpg' || normalized === '.jpeg') return 'image/jpeg';
+    if (normalized === '.png') return 'image/png';
+    if (normalized === '.webp') return 'image/webp';
+    if (normalized === '.pdf') return 'application/pdf';
+    return undefined;
+  };
+
+  const extensionFromContentDisposition = (contentDisposition?: string) => {
+    if (!contentDisposition) return '';
+    const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+    const fileName = match?.[1];
+    if (!fileName) return '';
+    const extMatch = fileName.match(/(\.[a-zA-Z0-9]+)$/);
+    return extMatch?.[1]?.toLowerCase() || '';
+  };
+
+  const extensionFromFileName = (fileName?: string) => {
+    if (!fileName) return '';
+    const safeName = sanitizeFileName(fileName);
+    const extMatch = safeName.match(/(\.[a-zA-Z0-9]+)$/);
+    return extMatch?.[1]?.toLowerCase() || '';
+  };
+
+  const openLocalFile = async (fileUri: string, mimeType?: string) => {
+    if (Platform.OS === 'android') {
+      const contentUri = await FileSystemLegacy.getContentUriAsync(fileUri);
+      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: contentUri,
+        type: mimeType || undefined,
+        flags: 1,
+      });
+      return;
+    }
+
+    await Linking.openURL(fileUri);
+  };
 
   const openProtectedFile = async (url: string, fallbackName: string) => {
     const token = await SecureStorage.getToken();
@@ -218,27 +310,62 @@ export const GasReadingsScreen: React.FC = () => {
       throw new Error('Authentication token missing');
     }
 
-    const baseDirectory = resolveDownloadDirectory();
+    const baseDirectory =
+      FileSystemLegacy.cacheDirectory || FileSystemLegacy.documentDirectory;
     if (!baseDirectory) {
       throw new Error('No local storage directory available for downloads');
     }
 
-    const downloadsDirectory = baseDirectory.createDirectory('downloads');
-    downloadsDirectory.create({ idempotent: true, intermediates: true });
+    const downloadsDirectory = `${baseDirectory}downloads/`;
+    const directoryInfo = await FileSystemLegacy.getInfoAsync(downloadsDirectory);
+    if (!directoryInfo.exists) {
+      await FileSystemLegacy.makeDirectoryAsync(downloadsDirectory, {
+        intermediates: true,
+      });
+    }
 
-    const targetFile = new File(
-      downloadsDirectory,
-      `${Date.now()}-${sanitizeFileName(fallbackName)}`,
-    );
+    const fallbackBase = sanitizeBaseName(fallbackName);
+    const fallbackExtension = extensionFromFileName(fallbackName);
+    const prefix = `${Date.now()}-${fallbackBase}`;
+    const tempFileUri = `${downloadsDirectory}${prefix}.download`;
 
-    const downloaded = await File.downloadFileAsync(url, targetFile, {
+    const downloaded = await FileSystemLegacy.downloadAsync(url, tempFileUri, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      idempotent: true,
     });
+    if (downloaded.status < 200 || downloaded.status >= 300) {
+      throw new Error(`Download failed with status ${downloaded.status}`);
+    }
 
-    await Linking.openURL(downloaded.uri);
+    const contentDisposition = getHeaderValue(
+      downloaded.headers,
+      'content-disposition',
+    );
+    const contentType = getHeaderValue(downloaded.headers, 'content-type');
+    const resolvedExtension =
+      extensionFromContentDisposition(contentDisposition) ||
+      extensionFromMime(contentType) ||
+      fallbackExtension ||
+      '';
+    const resolvedMimeType =
+      (isSupportedFileMime(contentType) ? contentType : undefined) ||
+      mimeFromExtension(resolvedExtension);
+    if (!resolvedMimeType) {
+      throw new Error(
+        `Unexpected downloaded content type: ${contentType || 'unknown'}`,
+      );
+    }
+    const finalFileUri = `${downloadsDirectory}${prefix}${resolvedExtension}`;
+
+    if (finalFileUri !== downloaded.uri) {
+      await FileSystemLegacy.moveAsync({
+        from: downloaded.uri,
+        to: finalFileUri,
+      });
+    }
+
+    await openLocalFile(finalFileUri, resolvedMimeType);
   };
 
   const handleUploadInvoice = async (reading: GasReading) => {
@@ -270,7 +397,7 @@ export const GasReadingsScreen: React.FC = () => {
     try {
       await openProtectedFile(
         apiClient.getGasMeterImageEndpoint(reading.id),
-        `meter-${reading.id}.jpg`,
+        `meter-${reading.id}`,
       );
     } catch (error: any) {
       showError(error, t('gas.meterImageOpenError') || 'Failed to open image');
@@ -286,6 +413,92 @@ export const GasReadingsScreen: React.FC = () => {
     } catch (error: any) {
       showError(error, t('gas.invoiceOpenError') || 'Failed to open invoice');
     }
+  };
+
+  const toUploadMeterImage = (asset: ImagePicker.ImagePickerAsset) => {
+    const fallbackExtension = asset.mimeType?.startsWith('image/')
+      ? asset.mimeType.replace('image/', '')
+      : 'jpg';
+
+    return {
+      uri: asset.uri,
+      name: asset.fileName || `meter-${Date.now()}.${fallbackExtension}`,
+      type: asset.mimeType || 'image/jpeg',
+    };
+  };
+
+  const pickMeterImageFromGallery = async (reading: GasReading) => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      throw new Error(t('gas.imagePermissionDenied') || 'Image permission denied');
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+    });
+
+    if (result.canceled || !result.assets?.[0]) {
+      return;
+    }
+
+    await meterImageUploadMutation.mutateAsync({
+      id: reading.id,
+      meterImage: toUploadMeterImage(result.assets[0]),
+    });
+  };
+
+  const captureMeterImage = async (reading: GasReading) => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      throw new Error(t('gas.cameraPermissionDenied') || 'Camera permission denied');
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+      cameraType: ImagePicker.CameraType.back,
+    });
+
+    if (result.canceled || !result.assets?.[0]) {
+      return;
+    }
+
+    await meterImageUploadMutation.mutateAsync({
+      id: reading.id,
+      meterImage: toUploadMeterImage(result.assets[0]),
+    });
+  };
+
+  const handleUploadMeterImage = (reading: GasReading) => {
+    Alert.alert(
+      t('gas.meterImageActionTitle') || 'Meter Image',
+      t('gas.meterImageActionPrompt') || 'Choose how to add meter image',
+      [
+        {
+          text: t('gas.selectImage') || 'Select Image',
+          onPress: () => {
+            void pickMeterImageFromGallery(reading).catch((error) =>
+              showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
+            );
+          },
+        },
+        {
+          text: t('gas.takePhoto') || 'Take Photo',
+          onPress: () => {
+            void captureMeterImage(reading).catch((error) =>
+              showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
+            );
+          },
+        },
+        {
+          text: t('common.cancel') || 'Cancel',
+          style: 'cancel',
+        },
+      ],
+    );
   };
 
   const handleRefresh = async () => {
@@ -579,6 +792,7 @@ export const GasReadingsScreen: React.FC = () => {
                   onToggleReference={(item, isReference) =>
                     referenceMutation.mutate({ id: item.id, isReference })
                   }
+                  onUploadMeterImage={handleUploadMeterImage}
                   onUploadInvoice={handleUploadInvoice}
                   onDeleteInvoice={(item) => invoiceDeleteMutation.mutate(item.id)}
                   onOpenMeterImage={handleOpenMeterImage}
@@ -586,6 +800,7 @@ export const GasReadingsScreen: React.FC = () => {
                   isDeleting={deleteMutation.isPending && deleteMutation.variables === reading.id}
                   isMutating={
                     referenceMutation.isPending ||
+                    meterImageUploadMutation.isPending ||
                     invoiceUploadMutation.isPending ||
                     invoiceDeleteMutation.isPending
                   }

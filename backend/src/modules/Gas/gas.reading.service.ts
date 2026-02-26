@@ -33,7 +33,7 @@ export class GasReadingService {
     const [user, existingReading] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, timezone: true },
+        select: { id: true },
       }),
       this.findReadingForSameDay(userId, readingDate),
     ]);
@@ -61,31 +61,16 @@ export class GasReadingService {
       consumption = dto.counterValue - lastReading.counterValue;
     }
 
-    const referenceMonth = dto.markAsReference
-      ? this.getReferenceMonthKey(readingDate, user.timezone)
-      : null;
-
-    const created = await this.prisma.$transaction(async (tx) => {
-      if (dto.markAsReference && referenceMonth) {
-        await tx.gasReading.updateMany({
-          where: { userId, referenceMonth },
-          data: {
-            isInvoiceReference: false,
-            referenceMonth: null,
-          },
-        });
-      }
-
-      return tx.gasReading.create({
-        data: {
-          userId,
-          readingDate,
-          counterValue: dto.counterValue,
-          consumption: Number(consumption.toFixed(2)),
-          isInvoiceReference: !!dto.markAsReference,
-          referenceMonth,
-        },
-      });
+    // Reference state is managed only from the readings list action.
+    const created = await this.prisma.gasReading.create({
+      data: {
+        userId,
+        readingDate,
+        counterValue: dto.counterValue,
+        consumption: Number(consumption.toFixed(2)),
+        isInvoiceReference: false,
+        referenceMonth: null,
+      },
     });
 
     let fileInfo: {
@@ -196,6 +181,43 @@ export class GasReadingService {
           referenceMonth: null,
         },
       });
+    });
+
+    return this.mapGasReading(updated);
+  }
+
+  async uploadMeterImage(userId: number, readingId: number, meterImage: any) {
+    if (!meterImage) {
+      throw new BadRequestException('Meter image file is required');
+    }
+
+    const reading = await this.prisma.gasReading.findFirst({
+      where: { id: readingId, userId },
+      select: { id: true, meterImagePath: true },
+    });
+
+    if (!reading) {
+      throw new NotFoundException('Gas reading not found');
+    }
+
+    const storedFile = await this.fileStorage.storeGasReadingImage(readingId, {
+      buffer: meterImage.buffer,
+      mimetype: meterImage.mimetype,
+      size: meterImage.size,
+      originalname: meterImage.originalname,
+    });
+
+    if (reading.meterImagePath) {
+      await this.fileStorage.deleteFile(reading.meterImagePath);
+    }
+
+    const updated = await this.prisma.gasReading.update({
+      where: { id: readingId },
+      data: {
+        meterImagePath: storedFile.relativePath,
+        meterImageMime: storedFile.mimeType,
+        meterImageOriginalName: storedFile.originalName,
+      },
     });
 
     return this.mapGasReading(updated);

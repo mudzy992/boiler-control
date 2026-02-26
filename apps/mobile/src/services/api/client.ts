@@ -78,6 +78,14 @@ class ApiClientService {
     return response.data;
   }
 
+  async changePassword(currentPassword: string, newPassword: string) {
+    const response = await this.client.post('/auth/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return response.data;
+  }
+
   // Dashboard endpoints
   async getDashboard() {
     const response = await this.client.get('/dashboard');
@@ -138,15 +146,11 @@ class ApiClientService {
   async addGasReadingWithUpload(data: {
     counterValue: number;
     readingDate: string;
-    markAsReference?: boolean;
     meterImage?: { uri: string; name?: string; type?: string };
   }) {
     const formData = new FormData();
     formData.append('counterValue', String(data.counterValue));
     formData.append('readingDate', data.readingDate);
-    if (data.markAsReference !== undefined) {
-      formData.append('markAsReference', String(data.markAsReference));
-    }
     if (data.meterImage) {
       formData.append('meterImage', {
         uri: data.meterImage.uri,
@@ -164,6 +168,23 @@ class ApiClientService {
   async updateGasReference(id: number, isReference: boolean) {
     const response = await this.client.patch(`/gas/reading/${id}/reference`, {
       isReference,
+    });
+    return response.data;
+  }
+
+  async uploadGasMeterImage(
+    id: number,
+    meterImage: { uri: string; name?: string; type?: string },
+  ) {
+    const formData = new FormData();
+    formData.append('meterImage', {
+      uri: meterImage.uri,
+      name: meterImage.name || 'meter-image.jpg',
+      type: meterImage.type || 'image/jpeg',
+    } as any);
+
+    const response = await this.client.post(`/gas/reading/${id}/meter-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   }
@@ -262,6 +283,7 @@ class ApiClientService {
     name?: string;
     username?: string;
     homeLocation?: string;
+    password?: string;
     gasPriceExVat?: number;
     gasPriceEffectiveFrom?: string;
   }) {

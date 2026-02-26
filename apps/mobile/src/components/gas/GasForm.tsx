@@ -29,7 +29,6 @@ interface GasFormProps {
   onSubmit: (data: {
     counterValue: number;
     readingDate: string;
-    markAsReference?: boolean;
     meterImage?: { uri: string; name?: string; type?: string };
   }) => Promise<void>;
   isLoading?: boolean;
@@ -49,7 +48,6 @@ export const GasForm: React.FC<GasFormProps> = ({
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [markAsReference, setMarkAsReference] = useState(false);
   const [meterImage, setMeterImage] = useState<{
     uri: string;
     name?: string;
@@ -192,7 +190,6 @@ export const GasForm: React.FC<GasFormProps> = ({
       await onSubmit({
         counterValue: value,
         readingDate: readingDate.toISOString(),
-        markAsReference,
         meterImage: meterImage ?? undefined,
       });
 
@@ -201,7 +198,6 @@ export const GasForm: React.FC<GasFormProps> = ({
       setUseCurrentDateTime(true);
       setSelectedDate(new Date());
       setSelectedTime(new Date());
-      setMarkAsReference(false);
       setMeterImage(null);
     } catch (err: any) {
       // Extract backend validation message
@@ -328,30 +324,6 @@ export const GasForm: React.FC<GasFormProps> = ({
           </FormControl>
         </>
       )}
-
-      <FormControl>
-        <HStack
-          justifyContent="space-between"
-          alignItems="center"
-          bg={useColorModeValue('gray.50', 'dark.700')}
-          p={3}
-          rounded="md"
-        >
-          <HStack space={2} alignItems="center">
-            <Icon as={Ionicons} name="receipt-outline" size={5} color="orange.500" />
-            <Text fontSize="sm" fontWeight="500" color={textColor}>
-              {t('gas.markAsReference') || 'Mark as monthly invoice reference'}
-            </Text>
-          </HStack>
-          <Switch
-            size="sm"
-            isChecked={markAsReference}
-            onToggle={setMarkAsReference}
-            onTrackColor={switchTrackColor}
-            isDisabled={isLoading}
-          />
-        </HStack>
-      </FormControl>
 
       <FormControl>
         <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>

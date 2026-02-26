@@ -13,27 +13,36 @@ import {
   Pressable,
   ScrollView,
   Icon,
+  useToast,
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useNavigation } from '@react-navigation/native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
+import { FormInput } from '../../components/FormInput';
 import {
   scheduleDailyGasReadingReminder,
   cancelDailyGasReadingReminder,
 } from '../../services/notifications/notificationService';
 import { AppStorage } from '../../services/storage/AppStorage';
+import { apiClient } from '../../services/api/client';
 
 export const SettingsScreen = () => {
   const { user, logout } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
+  const toast = useToast();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [dailyGasReminder, setDailyGasReminder] = useState(true);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const languageLabel =
     i18n.language === 'bs-BS' ? t('settings.languageBosnian') : t('settings.languageEnglish');
@@ -59,6 +68,58 @@ export const SettingsScreen = () => {
       scheduleDailyGasReadingReminder(19, 0);
     }
   }, []);
+
+  const resetPasswordFields = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.show({
+        description: t('settings.changePasswordRequired'),
+        placement: 'top',
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.show({
+        description: t('auth.passwordsDontMatch'),
+        placement: 'top',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.show({
+        description: t('auth.passwordTooShort'),
+        placement: 'top',
+      });
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      await apiClient.changePassword(currentPassword, newPassword);
+
+      toast.show({
+        description: t('settings.changePasswordSuccess'),
+        placement: 'top',
+      });
+      resetPasswordFields();
+      setShowPasswordModal(false);
+    } catch (error: any) {
+      toast.show({
+        description:
+          error?.response?.data?.message || t('settings.changePasswordError'),
+        placement: 'top',
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -143,12 +204,13 @@ export const SettingsScreen = () => {
                 icon="person-outline"
                 title={user?.name || t('settings.profile')}
                 subtitle={user?.email}
+                onPress={() => (navigation as any).navigate('Profile')}
               />
               <Divider />
               <SettingItem
                 icon="key-outline"
                 title={t('settings.changePassword')}
-                onPress={() => console.log('Change password')}
+                onPress={() => setShowPasswordModal(true)}
               />
             </VStack>
           </Box>
@@ -331,44 +393,117 @@ export const SettingsScreen = () => {
           >
             {t('common.logout')}
           </Button>
-
-          <BottomSheetModal
-            isOpen={showLanguageModal}
-            onClose={() => setShowLanguageModal(false)}
-            snapPoints={['45%', '60%']}
-          >
-            <VStack space={3}>
-              <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                {t('settings.language')}
-              </Text>
-              <VStack space={2}>
-                <Pressable
-                  onPress={() => handleLanguageChange('en-US')}
-                  bg={i18n.language === 'en-US' ? selectedBg : 'transparent'}
-                  px={4}
-                  py={3}
-                  rounded="md"
-                >
-                  <Text fontSize="sm" fontWeight="600" color={textColor}>
-                    {t('settings.languageEnglish')}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleLanguageChange('bs-BS')}
-                  bg={i18n.language === 'bs-BS' ? selectedBg : 'transparent'}
-                  px={4}
-                  py={3}
-                  rounded="md"
-                >
-                  <Text fontSize="sm" fontWeight="600" color={textColor}>
-                    {t('settings.languageBosnian')}
-                  </Text>
-                </Pressable>
-              </VStack>
-            </VStack>
-          </BottomSheetModal>
         </VStack>
       </ScrollView>
+
+      <BottomSheetModal
+        isOpen={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+        snapPoints={['45%', '60%']}
+      >
+        <VStack space={3}>
+          <Text fontSize="lg" fontWeight="bold" color={textColor}>
+            {t('settings.language')}
+          </Text>
+          <VStack space={2}>
+            <Pressable
+              onPress={() => handleLanguageChange('en-US')}
+              bg={i18n.language === 'en-US' ? selectedBg : 'transparent'}
+              px={4}
+              py={3}
+              rounded="md"
+            >
+              <Text fontSize="sm" fontWeight="600" color={textColor}>
+                {t('settings.languageEnglish')}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleLanguageChange('bs-BS')}
+              bg={i18n.language === 'bs-BS' ? selectedBg : 'transparent'}
+              px={4}
+              py={3}
+              rounded="md"
+            >
+              <Text fontSize="sm" fontWeight="600" color={textColor}>
+                {t('settings.languageBosnian')}
+              </Text>
+            </Pressable>
+          </VStack>
+        </VStack>
+      </BottomSheetModal>
+
+      <BottomSheetModal
+        isOpen={showPasswordModal}
+        onClose={() => {
+          setShowPasswordModal(false);
+          resetPasswordFields();
+        }}
+        snapPoints={['55%', '80%']}
+      >
+        <VStack space={4}>
+          <Text fontSize="lg" fontWeight="bold" color={textColor}>
+            {t('settings.changePassword')}
+          </Text>
+
+          <VStack space={3}>
+            <VStack space={1}>
+              <Text fontSize="xs" color={subtextColor}>
+                {t('settings.currentPassword')}
+              </Text>
+              <FormInput
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </VStack>
+
+            <VStack space={1}>
+              <Text fontSize="xs" color={subtextColor}>
+                {t('settings.newPassword')}
+              </Text>
+              <FormInput
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </VStack>
+
+            <VStack space={1}>
+              <Text fontSize="xs" color={subtextColor}>
+                {t('settings.confirmNewPassword')}
+              </Text>
+              <FormInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </VStack>
+          </VStack>
+
+          <HStack space={2}>
+            <Button
+              flex={1}
+              variant="outline"
+              onPress={() => {
+                setShowPasswordModal(false);
+                resetPasswordFields();
+              }}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              flex={1}
+              onPress={handleChangePassword}
+              isLoading={isChangingPassword}
+            >
+              {t('common.save')}
+            </Button>
+          </HStack>
+        </VStack>
+      </BottomSheetModal>
     </Box>
   );
 };

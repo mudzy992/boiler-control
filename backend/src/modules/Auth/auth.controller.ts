@@ -13,6 +13,7 @@ import { Request } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from '../User/dto/register.dto';
 import { LoginDto } from '../User/dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 interface JwtRequest extends Request {
   user: {
@@ -40,5 +41,19 @@ export class AuthController {
   @Get('me')
   async me(@Req() req: JwtRequest) {
     return await this.authService.me(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(200)
+  async changePassword(
+    @Req() req: JwtRequest,
+    @Body() body: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      req.user.userId,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 }

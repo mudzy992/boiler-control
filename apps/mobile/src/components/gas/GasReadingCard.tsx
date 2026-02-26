@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   VStack,
@@ -6,7 +6,7 @@ import {
   Text,
   Icon,
   Pressable,
-  Wrap,
+  Actionsheet,
   useColorModeValue,
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,18 +58,22 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const deleteColor = useColorModeValue('red.500', 'red.400');
   const consumptionBg = useColorModeValue('blue.50', 'blue.900');
   const consumptionBorder = useColorModeValue('blue.200', 'blue.700');
   const consumptionText = useColorModeValue('blue.700', 'blue.200');
   const standardBadgeBg = useColorModeValue('gray.300', 'gray.600');
   const standardBadgeText = useColorModeValue('gray.700', 'gray.100');
-  const hintTextColor = useColorModeValue('gray.500', 'gray.400');
+  const actionTriggerBg = useColorModeValue('gray.100', 'gray.700');
+  const actionTriggerBorder = useColorModeValue('gray.200', 'gray.600');
+  const actionTriggerText = useColorModeValue('gray.700', 'gray.200');
+  const menuTitleColor = useColorModeValue('gray.500', 'gray.300');
+  const destructiveColor = useColorModeValue('red.600', 'red.300');
+
+  const [showActions, setShowActions] = useState(false);
 
   const formattedDate = dayjs(reading.readingDate).format('DD.MM.YYYY');
   const formattedTime = dayjs(reading.readingDate).format('HH:mm');
 
-  // Calculate consumption difference: previous (newer) - current (older)
   const consumption =
     previousReading && previousReading.counterValue >= reading.counterValue
       ? previousReading.counterValue - reading.counterValue
@@ -80,7 +84,18 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
       ? dayjs(previousReading.readingDate).diff(dayjs(reading.readingDate), 'day')
       : null;
 
-  const dailyConsumption = consumption && daysDiff && daysDiff > 0 ? consumption / daysDiff : null;
+  const dailyConsumption =
+    consumption && daysDiff && daysDiff > 0 ? consumption / daysDiff : null;
+
+  const isBusy = Boolean(isDeleting || isMutating);
+
+  const runAction = (action?: () => void) => {
+    setShowActions(false);
+    if (!action || isBusy) {
+      return;
+    }
+    requestAnimationFrame(() => action());
+  };
 
   return (
     <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4} mb={3}>
@@ -142,25 +157,30 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
             </HStack>
           </VStack>
 
-          {onDelete && (
-            <Pressable
-              onPress={() => onDelete(reading.id)}
-              disabled={isDeleting}
-              _pressed={{ opacity: 0.7 }}
-              ml={3}
+          <Pressable
+            onPress={() => setShowActions(true)}
+            disabled={isBusy}
+            _pressed={{ opacity: 0.8 }}
+            ml={3}
+          >
+            <Box
+              px={3}
+              py={2}
+              rounded="full"
+              bg={actionTriggerBg}
+              borderWidth={1}
+              borderColor={actionTriggerBorder}
             >
-              <Icon
-                as={Ionicons}
-                name="trash-outline"
-                size={6}
-                color={deleteColor}
-                opacity={isDeleting ? 0.5 : 1}
-              />
-            </Pressable>
-          )}
+              <HStack space={1.5} alignItems="center">
+                <Icon as={Ionicons} name="ellipsis-horizontal" size={4} color={actionTriggerText} />
+                <Text fontSize="xs" fontWeight="700" color={actionTriggerText}>
+                  {t('gas.actionsMenuTrigger')}
+                </Text>
+              </HStack>
+            </Box>
+          </Pressable>
         </HStack>
 
-        {/* Consumption difference */}
         {consumption !== null && (
           <Box
             bg={consumptionBg}
@@ -192,131 +212,127 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
           </Box>
         )}
 
-        <VStack space={2}>
-          <Wrap space={2}>
+        <Actionsheet
+          isOpen={showActions}
+          onClose={() => setShowActions(false)}
+          _backdrop={{
+            onTouchEnd: () => setShowActions(false),
+            bg: 'rgba(0,0,0,0.1)',
+          }}
+        >
+          <Actionsheet.Content>
+            <Text
+              fontSize="xs"
+              textTransform="uppercase"
+              letterSpacing={0.5}
+              color={menuTitleColor}
+              fontWeight="700"
+              mb={1}
+            >
+              {t('gas.actionsMenuTitle')}
+            </Text>
+
             {onToggleReference && (
-              <Pressable
-                onPress={() => onToggleReference(reading, !reading.isInvoiceReference)}
-                disabled={isMutating}
-                _pressed={{ opacity: 0.7 }}
+              <Actionsheet.Item
+                onPress={() =>
+                  runAction(() => onToggleReference(reading, !reading.isInvoiceReference))
+                }
               >
-                <Box
-                  px={3}
-                  py={2}
-                  rounded="full"
-                  bg={reading.isInvoiceReference ? 'orange.500' : 'blue.500'}
-                  shadow={1}
-                >
-                  <HStack space={1.5} alignItems="center">
-                    <Icon
-                      as={Ionicons}
-                      name={reading.isInvoiceReference ? 'flag' : 'flag-outline'}
-                      size={3.5}
-                      color="white"
-                    />
-                    <Text color="white" fontSize="xs" fontWeight="700">
-                      {reading.isInvoiceReference
-                        ? t('gas.actionUnsetReference')
-                        : t('gas.actionSetReference')}
-                    </Text>
-                  </HStack>
-                </Box>
-              </Pressable>
+                <HStack space={2} alignItems="center">
+                  <Icon
+                    as={Ionicons}
+                    name={reading.isInvoiceReference ? 'flag' : 'flag-outline'}
+                    size={4}
+                    color={textColor}
+                  />
+                  <Text color={textColor} fontWeight="600">
+                    {reading.isInvoiceReference
+                      ? t('gas.actionUnsetReference')
+                      : t('gas.actionSetReference')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
             )}
 
             {onUploadMeterImage && (
-              <Pressable onPress={() => onUploadMeterImage(reading)} disabled={isMutating}>
-                <Box px={3} py={2} rounded="full" bg="indigo.600" shadow={1}>
-                  <HStack space={1.5} alignItems="center">
-                    <Icon
-                      as={Ionicons}
-                      name={reading.hasMeterImage ? 'images-outline' : 'camera-outline'}
-                      size={3.5}
-                      color="white"
-                    />
-                    <Text color="white" fontSize="xs" fontWeight="700">
-                      {reading.hasMeterImage
-                        ? t('gas.actionReplaceImage')
-                        : t('gas.actionAddImage')}
-                    </Text>
-                  </HStack>
-                </Box>
-              </Pressable>
+              <Actionsheet.Item onPress={() => runAction(() => onUploadMeterImage(reading))}>
+                <HStack space={2} alignItems="center">
+                  <Icon
+                    as={Ionicons}
+                    name={reading.hasMeterImage ? 'images-outline' : 'camera-outline'}
+                    size={4}
+                    color={textColor}
+                  />
+                  <Text color={textColor} fontWeight="600">
+                    {reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
             )}
 
             {reading.hasMeterImage && onOpenMeterImage && (
-              <Pressable onPress={() => onOpenMeterImage(reading)} disabled={isMutating}>
-                <Box px={3} py={2} rounded="full" bg="blue.600" shadow={1}>
-                  <HStack space={1.5} alignItems="center">
-                    <Icon as={Ionicons} name="open-outline" size={3.5} color="white" />
-                    <Text color="white" fontSize="xs" fontWeight="700">
-                      {t('gas.actionOpenImage')}
-                    </Text>
-                  </HStack>
-                </Box>
-              </Pressable>
+              <Actionsheet.Item onPress={() => runAction(() => onOpenMeterImage(reading))}>
+                <HStack space={2} alignItems="center">
+                  <Icon as={Ionicons} name="open-outline" size={4} color={textColor} />
+                  <Text color={textColor} fontWeight="600">
+                    {t('gas.actionOpenImage')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
             )}
-          </Wrap>
 
-          {reading.isInvoiceReference ? (
-            <VStack space={2}>
-              <Text fontSize="xs" fontWeight="600" color={subtextColor}>
-                {t('gas.invoiceActionsTitle')}
-              </Text>
-              <Wrap space={2}>
-                {onUploadInvoice && (
-                  <Pressable onPress={() => onUploadInvoice(reading)} disabled={isMutating}>
-                    <Box px={3} py={2} rounded="full" bg="green.600" shadow={1}>
-                      <HStack space={1.5} alignItems="center">
-                        <Icon
-                          as={Ionicons}
-                          name={reading.hasInvoicePdf ? 'refresh-outline' : 'document-outline'}
-                          size={3.5}
-                          color="white"
-                        />
-                        <Text color="white" fontSize="xs" fontWeight="700">
-                          {reading.hasInvoicePdf
-                            ? t('gas.actionReplaceInvoice')
-                            : t('gas.actionAddInvoice')}
-                        </Text>
-                      </HStack>
-                    </Box>
-                  </Pressable>
-                )}
+            {reading.isInvoiceReference && onUploadInvoice && (
+              <Actionsheet.Item onPress={() => runAction(() => onUploadInvoice(reading))}>
+                <HStack space={2} alignItems="center">
+                  <Icon
+                    as={Ionicons}
+                    name={reading.hasInvoicePdf ? 'refresh-outline' : 'document-outline'}
+                    size={4}
+                    color={textColor}
+                  />
+                  <Text color={textColor} fontWeight="600">
+                    {reading.hasInvoicePdf
+                      ? t('gas.actionReplaceInvoice')
+                      : t('gas.actionAddInvoice')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
+            )}
 
-                {reading.hasInvoicePdf && onOpenInvoice && (
-                  <Pressable onPress={() => onOpenInvoice(reading)} disabled={isMutating}>
-                    <Box px={3} py={2} rounded="full" bg="teal.600" shadow={1}>
-                      <HStack space={1.5} alignItems="center">
-                        <Icon as={Ionicons} name="open-outline" size={3.5} color="white" />
-                        <Text color="white" fontSize="xs" fontWeight="700">
-                          {t('gas.actionOpenInvoice')}
-                        </Text>
-                      </HStack>
-                    </Box>
-                  </Pressable>
-                )}
+            {reading.isInvoiceReference && reading.hasInvoicePdf && onOpenInvoice && (
+              <Actionsheet.Item onPress={() => runAction(() => onOpenInvoice(reading))}>
+                <HStack space={2} alignItems="center">
+                  <Icon as={Ionicons} name="open-outline" size={4} color={textColor} />
+                  <Text color={textColor} fontWeight="600">
+                    {t('gas.actionOpenInvoice')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
+            )}
 
-                {reading.hasInvoicePdf && onDeleteInvoice && (
-                  <Pressable onPress={() => onDeleteInvoice(reading)} disabled={isMutating}>
-                    <Box px={3} py={2} rounded="full" bg="red.600" shadow={1}>
-                      <HStack space={1.5} alignItems="center">
-                        <Icon as={Ionicons} name="trash-outline" size={3.5} color="white" />
-                        <Text color="white" fontSize="xs" fontWeight="700">
-                          {t('gas.actionDeleteInvoice')}
-                        </Text>
-                      </HStack>
-                    </Box>
-                  </Pressable>
-                )}
-              </Wrap>
-            </VStack>
-          ) : (
-            <Text fontSize="xs" color={hintTextColor}>
-              {t('gas.invoiceReferenceHint')}
-            </Text>
-          )}
-        </VStack>
+            {reading.isInvoiceReference && reading.hasInvoicePdf && onDeleteInvoice && (
+              <Actionsheet.Item onPress={() => runAction(() => onDeleteInvoice(reading))}>
+                <HStack space={2} alignItems="center">
+                  <Icon as={Ionicons} name="trash-outline" size={4} color={destructiveColor} />
+                  <Text color={destructiveColor} fontWeight="700">
+                    {t('gas.actionDeleteInvoice')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
+            )}
+
+            {onDelete && (
+              <Actionsheet.Item onPress={() => runAction(() => onDelete(reading.id))}>
+                <HStack space={2} alignItems="center">
+                  <Icon as={Ionicons} name="trash-outline" size={4} color={destructiveColor} />
+                  <Text color={destructiveColor} fontWeight="700">
+                    {t('gas.actionDeleteReading')}
+                  </Text>
+                </HStack>
+              </Actionsheet.Item>
+            )}
+          </Actionsheet.Content>
+        </Actionsheet>
       </VStack>
     </Box>
   );

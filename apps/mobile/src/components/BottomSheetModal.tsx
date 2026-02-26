@@ -2,6 +2,8 @@ import React, { useRef, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { Box, useColorModeValue } from 'native-base';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
 interface BottomSheetModalProps {
   isOpen: boolean;
@@ -27,6 +29,13 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({
   const bgColor = useColorModeValue('white', 'gray.800');
   const handleColor = useColorModeValue('gray.300', 'gray.600');
 
+  const renderBackdrop = React.useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop disappearsOnIndex={-1} appearsOnIndex={0} {...props} opacity={0.5} />
+    ),
+    []
+  );
+
   React.useEffect(() => {
     if (isOpen) {
       bottomSheetRef.current?.expand();
@@ -43,12 +52,17 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({
       snapPoints={animatedSnapPoints}
       onClose={onClose}
       enablePanDownToClose
-      backgroundStyle={{
-        backgroundColor: bgColor,
-      }}
+      backdropComponent={renderBackdrop}
+      backgroundStyle={[
+        {
+          backgroundColor: bgColor,
+        },
+        styles.buttonSheetStyle,
+      ]}
       handleIndicatorStyle={{
         backgroundColor: handleColor,
       }}
+      style={styles.buttonSheetStyle}
     >
       <BottomSheetView style={styles.contentContainer}>
         <Box flex={1} width="100%">
@@ -64,5 +78,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  buttonSheetStyle: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.44,
+    shadowRadius: 10.32,
+
+    elevation: 16,
   },
 });

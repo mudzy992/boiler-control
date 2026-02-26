@@ -123,7 +123,7 @@ export const GasForm: React.FC<GasFormProps> = ({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: false,
       quality: 0.9,
     });
@@ -142,7 +142,7 @@ export const GasForm: React.FC<GasFormProps> = ({
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: false,
       quality: 0.9,
       cameraType: ImagePicker.CameraType.back,

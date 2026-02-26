@@ -31,14 +31,7 @@ export const SettingsStackNavigator = () => {
         component={SettingsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Profile',
-          headerBackTitle: 'Back',
-        }}
-      />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="HomeManagement"
         component={HomeManagementScreen}

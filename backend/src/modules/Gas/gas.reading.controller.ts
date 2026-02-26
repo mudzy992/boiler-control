@@ -72,6 +72,20 @@ export class GasReadingController {
     return this.service.updateReference(req.user.userId, +id, dto);
   }
 
+  @Post('reading/:id/meter-image')
+  @UseInterceptors(
+    FileInterceptor('meterImage', {
+      limits: { fileSize: IMAGE_MAX_SIZE_BYTES },
+    }),
+  )
+  uploadMeterImage(
+    @Req() req,
+    @Param('id') id: string,
+    @UploadedFile() meterImage: any,
+  ) {
+    return this.service.uploadMeterImage(req.user.userId, +id, meterImage);
+  }
+
   @Post('reading/:id/invoice')
   @UseInterceptors(
     FileInterceptor('invoicePdf', {

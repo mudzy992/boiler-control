@@ -12,6 +12,7 @@ import {
   useColorMode,
   useToast,
   Spinner,
+  ScrollView,
 } from 'native-base';
 import { useAuth } from '../../hooks/useAuth';
 import { FormInput } from '../../components/FormInput';
@@ -126,131 +127,136 @@ export const ProfileScreen = () => {
 
   return (
     <Box flex={1} bg={bgColor} safeArea>
-      <VStack flex={1} px={4} py={6} space={4}>
-        <Heading size="xl" color={textColor}>
-          Profile
-        </Heading>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 24 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <VStack flex={1} px={4} py={6} space={4}>
+          <Heading size="xl" color={textColor}>
+            Profile
+          </Heading>
 
-        <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-          <VStack space={3}>
-            <Text fontSize="md" fontWeight="semibold" color={textColor}>
-              Account
-            </Text>
-            <Divider />
+          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
             <VStack space={3}>
+              <Text fontSize="md" fontWeight="semibold" color={textColor}>
+                Account
+              </Text>
+              <Divider />
+              <VStack space={3}>
+                <Box>
+                  <Text fontSize="xs" color={subtextColor} mb={1}>
+                    Email
+                  </Text>
+                  <FormInput value={user?.email || ''} isDisabled />
+                </Box>
+                <Box>
+                  <Text fontSize="xs" color={subtextColor} mb={1}>
+                    Name
+                  </Text>
+                  <FormInput value={name} onChangeText={setName} />
+                </Box>
+                <Box>
+                  <Text fontSize="xs" color={subtextColor} mb={1}>
+                    Username
+                  </Text>
+                  <FormInput
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </Box>
+                <Box>
+                  <Text fontSize="xs" color={subtextColor} mb={1}>
+                    Home Location
+                  </Text>
+                  <FormInput value={homeLocation} onChangeText={setHomeLocation} />
+                </Box>
+              </VStack>
+            </VStack>
+          </Box>
+
+          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
+            <VStack space={3}>
+              <Text fontSize="md" fontWeight="semibold" color={textColor}>
+                Gas Price
+              </Text>
+              <Divider />
               <Box>
                 <Text fontSize="xs" color={subtextColor} mb={1}>
-                  Email
-                </Text>
-                <FormInput value={user?.email || ''} isDisabled />
-              </Box>
-              <Box>
-                <Text fontSize="xs" color={subtextColor} mb={1}>
-                  Name
-                </Text>
-                <FormInput value={name} onChangeText={setName} />
-              </Box>
-              <Box>
-                <Text fontSize="xs" color={subtextColor} mb={1}>
-                  Username
+                  Price per m³ (ex VAT)
                 </Text>
                 <FormInput
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                  autoCorrect={false}
+                  value={gasPriceExVat}
+                  onChangeText={setGasPriceExVat}
+                  keyboardType="decimal-pad"
                 />
               </Box>
-              <Box>
-                <Text fontSize="xs" color={subtextColor} mb={1}>
-                  Home Location
+              <HStack justifyContent="space-between">
+                <Text fontSize="sm" color={subtextColor}>
+                  VAT rate
                 </Text>
-                <FormInput value={homeLocation} onChangeText={setHomeLocation} />
-              </Box>
+                <Text fontSize="sm" color={textColor}>
+                  17%
+                </Text>
+              </HStack>
+              <HStack justifyContent="space-between">
+                <Text fontSize="sm" color={subtextColor}>
+                  Price per m³ (inc VAT)
+                </Text>
+                <Text fontSize="sm" color={textColor} fontWeight="600">
+                  {gasPriceIncVat !== null ? gasPriceIncVat.toFixed(4) : '—'}
+                </Text>
+              </HStack>
+              <HStack justifyContent="space-between">
+                <Text fontSize="sm" color={subtextColor}>
+                  Last update
+                </Text>
+                <Text fontSize="sm" color={textColor}>
+                  {gasPriceLastUpdatedAt
+                    ? new Date(gasPriceLastUpdatedAt).toLocaleDateString()
+                    : '—'}
+                </Text>
+              </HStack>
+              <HStack justifyContent="space-between">
+                <Text fontSize="sm" color={subtextColor}>
+                  Source
+                </Text>
+                <Text fontSize="sm" color={textColor}>
+                  {gasPriceSource || '—'}
+                </Text>
+              </HStack>
             </VStack>
-          </VStack>
-        </Box>
+          </Box>
 
-        <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-          <VStack space={3}>
-            <Text fontSize="md" fontWeight="semibold" color={textColor}>
-              Gas Price
-            </Text>
-            <Divider />
-            <Box>
-              <Text fontSize="xs" color={subtextColor} mb={1}>
-                Price per m³ (ex VAT)
+          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
+            <VStack space={3}>
+              <Text fontSize="md" fontWeight="semibold" color={textColor}>
+                Appearance
               </Text>
-              <FormInput
-                value={gasPriceExVat}
-                onChangeText={setGasPriceExVat}
-                keyboardType="decimal-pad"
-              />
-            </Box>
-            <HStack justifyContent="space-between">
-              <Text fontSize="sm" color={subtextColor}>
-                VAT rate
-              </Text>
-              <Text fontSize="sm" color={textColor}>
-                17%
-              </Text>
-            </HStack>
-            <HStack justifyContent="space-between">
-              <Text fontSize="sm" color={subtextColor}>
-                Price per m³ (inc VAT)
-              </Text>
-              <Text fontSize="sm" color={textColor} fontWeight="600">
-                {gasPriceIncVat !== null ? gasPriceIncVat.toFixed(4) : '—'}
-              </Text>
-            </HStack>
-            <HStack justifyContent="space-between">
-              <Text fontSize="sm" color={subtextColor}>
-                Last update
-              </Text>
-              <Text fontSize="sm" color={textColor}>
-                {gasPriceLastUpdatedAt
-                  ? new Date(gasPriceLastUpdatedAt).toLocaleDateString()
-                  : '—'}
-              </Text>
-            </HStack>
-            <HStack justifyContent="space-between">
-              <Text fontSize="sm" color={subtextColor}>
-                Source
-              </Text>
-              <Text fontSize="sm" color={textColor}>
-                {gasPriceSource || '—'}
-              </Text>
-            </HStack>
-          </VStack>
-        </Box>
+              <Divider />
+              <HStack alignItems="center" justifyContent="space-between">
+                <Text fontSize="md" color={textColor}>
+                  Dark Mode
+                </Text>
+                <Switch
+                  isChecked={colorMode === 'dark'}
+                  onToggle={toggleColorMode}
+                  colorScheme="brand"
+                />
+              </HStack>
+            </VStack>
+          </Box>
 
-        <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-          <VStack space={3}>
-            <Text fontSize="md" fontWeight="semibold" color={textColor}>
-              Appearance
-            </Text>
-            <Divider />
-            <HStack alignItems="center" justifyContent="space-between">
-              <Text fontSize="md" color={textColor}>
-                Dark Mode
-              </Text>
-              <Switch
-                isChecked={colorMode === 'dark'}
-                onToggle={toggleColorMode}
-                colorScheme="brand"
-              />
-            </HStack>
-          </VStack>
-        </Box>
+          <Button onPress={handleSave} isLoading={saving}>
+            Save Profile
+          </Button>
 
-        <Button onPress={handleSave} isLoading={saving}>
-          Save Profile
-        </Button>
-
-        <Button onPress={handleLogout} colorScheme="red" variant="outline">
-          Sign Out
-        </Button>
-      </VStack>
+          <Button onPress={handleLogout} colorScheme="red" variant="outline">
+            Sign Out
+          </Button>
+        </VStack>
+      </ScrollView>
     </Box>
   );
 };

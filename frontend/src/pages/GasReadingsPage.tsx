@@ -28,7 +28,6 @@ export const GasReadingsPage: React.FC = () => {
     mutationFn: async (data: {
       counterValue: number;
       readingDate: string;
-      markAsReference?: boolean;
       meterImage?: File;
     }) => {
       return apiClient.addGasReadingWithUpload(data);
@@ -57,6 +56,14 @@ export const GasReadingsPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+  });
+
+  const meterImageUploadMutation = useMutation({
+    mutationFn: async (payload: { id: number; meterImage: File }) =>
+      apiClient.uploadGasMeterImage(payload.id, payload.meterImage),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
     },
   });
 
@@ -118,6 +125,22 @@ export const GasReadingsPage: React.FC = () => {
         await invoiceUploadMutation.mutateAsync({ id: readingId, invoicePdf: file });
       } catch {
         message.error(t('gas.invoiceUploadError'));
+      }
+    };
+    input.click();
+  };
+
+  const handleUploadMeterImage = async (readingId: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        await meterImageUploadMutation.mutateAsync({ id: readingId, meterImage: file });
+      } catch {
+        message.error(t('gas.meterImageUploadError'));
       }
     };
     input.click();
@@ -225,6 +248,7 @@ export const GasReadingsPage: React.FC = () => {
                 onToggleReference={(id, isReference) =>
                   referenceMutation.mutate({ id, isReference })
                 }
+                onUploadMeterImage={handleUploadMeterImage}
                 onUploadInvoice={handleUploadInvoice}
                 onDeleteInvoice={(id) => invoiceDeleteMutation.mutate(id)}
                 onOpenMeterImage={(id) =>
@@ -240,6 +264,7 @@ export const GasReadingsPage: React.FC = () => {
                 isLoading={
                   deleteMutation.isPending ||
                   referenceMutation.isPending ||
+                  meterImageUploadMutation.isPending ||
                   invoiceUploadMutation.isPending ||
                   invoiceDeleteMutation.isPending
                 }

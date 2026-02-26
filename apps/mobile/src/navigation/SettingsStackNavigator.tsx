@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useColorModeValue } from 'native-base';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
+import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeManagementScreen } from '../screens/home/HomeManagementScreen';
 import { ScheduleManagementScreen } from '../screens/schedule/ScheduleManagementScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
@@ -29,6 +30,14 @@ export const SettingsStackNavigator = () => {
         name="SettingsMain"
         component={SettingsScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+          headerBackTitle: 'Back',
+        }}
       />
       <Stack.Screen
         name="HomeManagement"

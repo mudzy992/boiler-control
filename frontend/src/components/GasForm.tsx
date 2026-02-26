@@ -8,7 +8,6 @@ interface GasFormProps {
   onSubmit: (data: {
     counterValue: number;
     readingDate: string;
-    markAsReference?: boolean;
     meterImage?: File;
   }) => Promise<void>;
   isLoading?: boolean;
@@ -27,7 +26,6 @@ export const GasForm: React.FC<GasFormProps> = ({
     useCurrentDateTime: true,
     readingDate: dayjs().format('YYYY-MM-DD'),
     readingTime: dayjs().format('HH:mm'),
-    markAsReference: false,
   });
   const [meterImage, setMeterImage] = useState<File | null>(null);
 
@@ -40,7 +38,6 @@ export const GasForm: React.FC<GasFormProps> = ({
       useCurrentDateTime: true,
       readingDate: dayjs().format('YYYY-MM-DD'),
       readingTime: dayjs().format('HH:mm'),
-      markAsReference: false,
     });
     setMeterImage(null);
     setErrors({});
@@ -87,7 +84,6 @@ export const GasForm: React.FC<GasFormProps> = ({
       await onSubmit({
         counterValue: parseFloat(formData.counterValue),
         readingDate: readingDatetime,
-        markAsReference: formData.markAsReference,
         meterImage: meterImage || undefined,
       });
 
@@ -164,22 +160,6 @@ export const GasForm: React.FC<GasFormProps> = ({
             />
             <label htmlFor="useCurrentDateTime" className="text-sm text-gray-700 dark:text-slate-300">
               {t('gas.useCurrentDateTime')}
-            </label>
-          </div>
-
-          <div className="mb-4 flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="markAsReference"
-              checked={formData.markAsReference}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, markAsReference: e.target.checked }))
-              }
-              className="rounded border-gray-300 dark:border-slate-600"
-              disabled={isLoading}
-            />
-            <label htmlFor="markAsReference" className="text-sm text-gray-700 dark:text-slate-300">
-              {t('gas.markAsReference')}
             </label>
           </div>
 

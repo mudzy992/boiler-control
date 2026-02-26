@@ -56,26 +56,77 @@ export const DashboardScreen = () => {
     }
   }, [error, showError, t]);
 
-  // Calculate health score based on learning confidence
-  const calculateHealthScore = () => {
-    if (!dashboardData?.homes || dashboardData.homes.length === 0) {
-      return 0;
+  const clamp = (value: number, min = 0, max = 100) =>
+    Math.max(min, Math.min(max, value));
+
+  const calculateSystemHealthMetrics = () => {
+    const primaryHome = dashboardData?.homes?.[0];
+    if (!primaryHome) {
+      return { score: 50, confidence: 0 };
     }
 
-    const firstHome = dashboardData.homes[0];
-    const learningIntervals = firstHome.learningIntervals || [];
+    const components: Array<{ score: number; weight: number }> = [];
 
-    if (learningIntervals.length === 0) {
-      return 50; // Default if no learning data
+    const learningIntervals = primaryHome.learningIntervals || [];
+    let learningConfidencePercent = 0;
+    if (learningIntervals.length > 0) {
+      const avgLearningConfidence =
+        learningIntervals.reduce((sum, interval) => sum + interval.confidence, 0) /
+        learningIntervals.length;
+      learningConfidencePercent = clamp(avgLearningConfidence * 100);
+      components.push({ score: learningConfidencePercent, weight: 35 });
     }
 
-    // Average confidence across all intervals
-    const avgConfidence =
-      learningIntervals.reduce((sum, interval) => sum + interval.confidence, 0) /
-      learningIntervals.length;
+    const boiler = dashboardData?.system?.boiler;
+    if (
+      boiler &&
+      typeof boiler.actualFlowTemp === 'number' &&
+      typeof boiler.suggestedFlowTemp === 'number'
+    ) {
+      const flowDelta = Math.abs(boiler.actualFlowTemp - boiler.suggestedFlowTemp);
+      const flowScore = clamp(100 - flowDelta * 12.5);
+      components.push({ score: flowScore, weight: 25 });
+    }
 
-    // Scale confidence to health score (0-100)
-    return Math.min(avgConfidence * 100, 100);
+    const thermostats = primaryHome.thermostats || [];
+    if (thermostats.length > 0) {
+      const now = Date.now();
+      const freshCount = thermostats.filter((t) => {
+        if (!t.lastSeen) return false;
+        const lastSeenTime = new Date(t.lastSeen).getTime();
+        if (Number.isNaN(lastSeenTime)) return false;
+        const ageMinutes = (now - lastSeenTime) / 60000;
+        return ageMinutes <= 10;
+      }).length;
+      const freshnessScore = clamp((freshCount / thermostats.length) * 100);
+      components.push({ score: freshnessScore, weight: 25 });
+    }
+
+    const recentEvents = primaryHome.recentHeatingEvents || [];
+    if (recentEvents.length > 0) {
+      const anomalyCount = recentEvents.filter((e) => !!e.isAnomaly).length;
+      const anomalyRatio = anomalyCount / recentEvents.length;
+      const anomalyScore = clamp(100 - anomalyRatio * 100);
+      components.push({ score: anomalyScore, weight: 15 });
+    }
+
+    if (components.length === 0) {
+      return { score: 50, confidence: learningConfidencePercent };
+    }
+
+    const weightedScoreSum = components.reduce(
+      (sum, component) => sum + component.score * component.weight,
+      0,
+    );
+    const totalWeight = components.reduce(
+      (sum, component) => sum + component.weight,
+      0,
+    );
+
+    return {
+      score: clamp(weightedScoreSum / totalWeight),
+      confidence: learningConfidencePercent,
+    };
   };
 
   if (isLoading) {
@@ -119,8 +170,8 @@ export const DashboardScreen = () => {
   }
 
   const primaryHome = dashboardData?.homes?.[0];
-  const healthScore = calculateHealthScore();
-  const avgConfidence = primaryHome?.learningIntervals?.[0]?.confidence ?? 0;
+  const { score: healthScore, confidence: learningConfidencePercent } =
+    calculateSystemHealthMetrics();
   const isHeating =
     dashboardData?.system?.boiler?.heatingStart && !dashboardData?.system?.boiler?.heatingEnd;
 
@@ -188,7 +239,12 @@ export const DashboardScreen = () => {
           <AlertsCard dashboardData={dashboardData} />
 
           {/* Health Score */}
-          {primaryHome && <HealthScoreCard score={healthScore} confidence={avgConfidence * 100} />}
+          {primaryHome && (
+            <HealthScoreCard
+              score={healthScore}
+              confidence={learningConfidencePercent}
+            />
+          )}
 
           {/* Boiler Status */}
           <BoilerStatusCard boiler={dashboardData?.system?.boiler} />

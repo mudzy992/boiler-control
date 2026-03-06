@@ -92,6 +92,18 @@ describe('API Contract Tests (P1e)', () => {
         }
       }
     });
+
+    it('PATCH /api/boiler/current-temp should accept currentFlowTemp payload', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/api/boiler/current-temp')
+        .set('Authorization', 'Bearer mock-token')
+        .send({ currentFlowTemp: 52.5 });
+
+      if (response.status === 200) {
+        expect(response.body).toHaveProperty('success');
+        expect(response.body).toHaveProperty('data');
+      }
+    });
   });
 
   describe('Dashboard API Contract', () => {

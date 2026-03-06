@@ -1,30 +1,64 @@
 import React from 'react';
-import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
+import { Box, VStack, HStack, Text, Pressable, useColorModeValue } from 'native-base';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { BoilerData } from '../types/Dashboard';
 import { useTranslation } from '../hooks/useTranslation';
 
 interface BoilerStatusCardProps {
   boiler: BoilerData | null | undefined;
+  onSetCurrentTempPress?: () => void;
+  setCurrentTempLoading?: boolean;
 }
 
-export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) => {
+export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({
+  boiler,
+  onSetCurrentTempPress,
+  setCurrentTempLoading = false,
+}) => {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const accentColor = useColorModeValue('brand.500', 'brand.400');
+  const actionBtnBg = useColorModeValue('blue.50', 'blue.900');
+  const actionBtnBorder = useColorModeValue('blue.300', 'blue.700');
+  const actionBtnText = useColorModeValue('blue.700', 'blue.200');
 
   if (!boiler) {
     return (
       <Box bg={bgColor} borderWidth={1} borderColor={borderColor} rounded="lg" p={4} mb={3}>
-        <HStack space={2} alignItems="center">
-          <MaterialCommunityIcons name="alert-circle" size={20} color={mutedColor} />
-          <Text fontSize="sm" color={mutedColor}>
-            {t('boiler.notAvailable')}
-          </Text>
-        </HStack>
+        <VStack space={3}>
+          <HStack space={2} alignItems="center">
+            <MaterialCommunityIcons name="alert-circle" size={20} color={mutedColor} />
+            <Text fontSize="sm" color={mutedColor}>
+              {t('boiler.notAvailable')}
+            </Text>
+          </HStack>
+          {onSetCurrentTempPress && (
+            <Pressable
+              onPress={onSetCurrentTempPress}
+              disabled={setCurrentTempLoading}
+              _pressed={{ opacity: 0.8 }}
+            >
+              <Box
+                bg={actionBtnBg}
+                borderWidth={1}
+                borderColor={actionBtnBorder}
+                rounded="lg"
+                px={4}
+                py={3}
+                alignItems="center"
+              >
+                <Text fontSize="sm" fontWeight="700" color={actionBtnText}>
+                  {setCurrentTempLoading
+                    ? t('boiler.savingCurrentTemp')
+                    : t('boiler.setCurrentTemp')}
+                </Text>
+              </Box>
+            </Pressable>
+          )}
+        </VStack>
       </Box>
     );
   }
@@ -43,8 +77,15 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
     return `${hours}h ${minutes % 60}m`;
   };
 
-  const tempDiff = Math.abs(boiler.actualFlowTemp - boiler.suggestedFlowTemp);
-  const isOptimal = tempDiff <= 2;
+  const actualFlowTemp =
+    typeof boiler.actualFlowTemp === 'number' ? boiler.actualFlowTemp : null;
+  const suggestedFlowTemp =
+    typeof boiler.suggestedFlowTemp === 'number' ? boiler.suggestedFlowTemp : null;
+  const tempDiff =
+    actualFlowTemp !== null && suggestedFlowTemp !== null
+      ? Math.abs(actualFlowTemp - suggestedFlowTemp)
+      : null;
+  const isOptimal = tempDiff !== null && tempDiff <= 2;
 
   return (
     <Box
@@ -140,7 +181,9 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
                 </Text>
                 <HStack alignItems="baseline" space={0.5}>
                   <Text fontSize="2xl" fontWeight="800" color="blue.600">
-                    {boiler?.suggestedFlowTemp ? boiler.suggestedFlowTemp.toFixed(1) : '—'}
+                    {typeof boiler?.suggestedFlowTemp === 'number'
+                      ? boiler.suggestedFlowTemp.toFixed(1)
+                      : '—'}
                   </Text>
                   <Text fontSize="sm" fontWeight="600" color="blue.500">
                     °C
@@ -153,12 +196,16 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
             <Box flex={1}>
               <Box
                 bg={
-                  isOptimal
+                  tempDiff === null
+                    ? useColorModeValue('gray.100', 'gray.700')
+                    : isOptimal
                     ? useColorModeValue('green.50', 'green.900')
                     : useColorModeValue('orange.50', 'orange.900')
                 }
                 borderWidth={2}
-                borderColor={isOptimal ? 'green.400' : 'orange.400'}
+                borderColor={
+                  tempDiff === null ? useColorModeValue('gray.300', 'gray.600') : isOptimal ? 'green.400' : 'orange.400'
+                }
                 rounded="xl"
                 p={4}
                 alignItems="center"
@@ -170,14 +217,28 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
                   <Text
                     fontSize="2xl"
                     fontWeight="800"
-                    color={isOptimal ? 'green.600' : 'orange.600'}
+                    color={
+                      tempDiff === null
+                        ? useColorModeValue('gray.700', 'gray.200')
+                        : isOptimal
+                          ? 'green.600'
+                          : 'orange.600'
+                    }
                   >
-                    {boiler?.actualFlowTemp ? boiler.actualFlowTemp.toFixed(1) : '—'}
+                    {typeof boiler?.actualFlowTemp === 'number'
+                      ? boiler.actualFlowTemp.toFixed(1)
+                      : '—'}
                   </Text>
                   <Text
                     fontSize="sm"
                     fontWeight="600"
-                    color={isOptimal ? 'green.500' : 'orange.500'}
+                    color={
+                      tempDiff === null
+                        ? useColorModeValue('gray.600', 'gray.300')
+                        : isOptimal
+                          ? 'green.500'
+                          : 'orange.500'
+                    }
                   >
                     °C
                   </Text>
@@ -189,7 +250,9 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
           {/* Status indicator */}
           <Box
             bg={
-              isOptimal
+              tempDiff === null
+                ? useColorModeValue('gray.100', 'gray.700')
+                : isOptimal
                 ? useColorModeValue('green.50', 'green.900')
                 : useColorModeValue('orange.50', 'orange.900')
             }
@@ -197,14 +260,42 @@ export const BoilerStatusCard: React.FC<BoilerStatusCardProps> = ({ boiler }) =>
             px={4}
             py={3}
             borderLeftWidth={4}
-            borderLeftColor={isOptimal ? 'green.500' : 'orange.500'}
+            borderLeftColor={
+              tempDiff === null ? useColorModeValue('gray.400', 'gray.500') : isOptimal ? 'green.500' : 'orange.500'
+            }
           >
             <Text fontSize="sm" fontWeight="600" color={textColor}>
-              {isOptimal
-                ? t('boiler.optimal', { diff: tempDiff ? tempDiff.toFixed(1) : '—' })
-                : t('boiler.deviation', { diff: tempDiff ? tempDiff.toFixed(1) : '—' })}
+              {tempDiff === null
+                ? t('boiler.actualNotSet')
+                : isOptimal
+                  ? t('boiler.optimal', { diff: tempDiff.toFixed(1) })
+                  : t('boiler.deviation', { diff: tempDiff.toFixed(1) })}
             </Text>
           </Box>
+
+          {onSetCurrentTempPress && (
+            <Pressable
+              onPress={onSetCurrentTempPress}
+              disabled={setCurrentTempLoading}
+              _pressed={{ opacity: 0.8 }}
+            >
+              <Box
+                bg={actionBtnBg}
+                borderWidth={1}
+                borderColor={actionBtnBorder}
+                rounded="lg"
+                px={4}
+                py={3}
+                alignItems="center"
+              >
+                <Text fontSize="sm" fontWeight="700" color={actionBtnText}>
+                  {setCurrentTempLoading
+                    ? t('boiler.savingCurrentTemp')
+                    : t('boiler.setCurrentTemp')}
+                </Text>
+              </Box>
+            </Pressable>
+          )}
         </VStack>
       </VStack>
     </Box>

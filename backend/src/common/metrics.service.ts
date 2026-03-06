@@ -37,6 +37,7 @@ export interface Metrics {
   heating_events_created: number;
   heating_events_ended: number;
   anomalies_detected: number;
+  boiler_current_temp_updates_total: number;
   timestamp: string;
 }
 
@@ -75,6 +76,7 @@ export class MetricsService {
     heating_events_created: 0,
     heating_events_ended: 0,
     anomalies_detected: 0,
+    boiler_current_temp_updates_total: 0,
     timestamp: new Date().toISOString(),
   };
 
@@ -219,6 +221,10 @@ export class MetricsService {
       '# HELP anomalies_detected Total anomalies detected',
       '# TYPE anomalies_detected counter',
       `anomalies_detected ${this.metrics.anomalies_detected}`,
+      '',
+      '# HELP boiler_current_temp_updates_total Total manual boiler current temperature updates',
+      '# TYPE boiler_current_temp_updates_total counter',
+      `boiler_current_temp_updates_total ${this.metrics.boiler_current_temp_updates_total}`,
     ];
 
     return lines.join('\n');
@@ -261,6 +267,7 @@ export class MetricsService {
       heating_events_created: 0,
       heating_events_ended: 0,
       anomalies_detected: 0,
+      boiler_current_temp_updates_total: 0,
       timestamp: new Date().toISOString(),
     };
   }

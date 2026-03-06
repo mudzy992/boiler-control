@@ -402,6 +402,37 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         expect(response.status).toBe(401);
       });
     });
+
+    describe('PATCH /api/boiler/current-temp', () => {
+      it('should persist current boiler temp for authenticated user', async () => {
+        const response = await request(app.getHttpServer())
+          .patch('/api/boiler/current-temp')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({ currentFlowTemp: 52.5 });
+
+        expect([200, 201]).toContain(response.status);
+        expect(response.body).toHaveProperty('success', true);
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('currentFlowTemp', 52.5);
+      });
+
+      it('should reject out-of-range temperature', async () => {
+        const response = await request(app.getHttpServer())
+          .patch('/api/boiler/current-temp')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({ currentFlowTemp: 56 });
+
+        expect(response.status).toBe(400);
+      });
+
+      it('should reject request without authorization', async () => {
+        const response = await request(app.getHttpServer())
+          .patch('/api/boiler/current-temp')
+          .send({ currentFlowTemp: 52.5 });
+
+        expect(response.status).toBe(401);
+      });
+    });
   });
 
   describe('Weather Data Endpoints', () => {

@@ -92,6 +92,13 @@ export class ApiClient {
     return response.data;
   }
 
+  async setBoilerCurrentTemp(currentFlowTemp: number) {
+    const response = await this.client.patch('/boiler/current-temp', {
+      currentFlowTemp,
+    });
+    return response.data;
+  }
+
   async getBoilerStatus() {
     const response = await this.client.get('/boiler/status');
     return response.data;

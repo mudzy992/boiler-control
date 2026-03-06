@@ -208,6 +208,39 @@ Response: 200 OK
 ]
 ```
 
+### Set Current Boiler Flow Temperature
+```http
+PATCH /boiler/current-temp
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "currentFlowTemp": 52.5
+}
+
+Response: 200 OK
+{
+  "success": true,
+  "data": {
+    "userId": 1,
+    "currentFlowTemp": 52.5,
+    "setAt": "2026-03-06T10:15:00.000Z",
+    "latestBoilerHistoryId": 5001,
+    "latestBoilerHistoryUpdated": true
+  }
+}
+
+Response: 400 Bad Request (out of range)
+{
+  "statusCode": 400,
+  "message": [
+    "currentFlowTemp must not be greater than 55",
+    "currentFlowTemp must not be less than 48"
+  ],
+  "error": "Bad Request"
+}
+```
+
 ---
 
 ## Gas Readings

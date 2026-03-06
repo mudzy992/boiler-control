@@ -27,7 +27,10 @@ export const AlertsCard: React.FC<AlertsCardProps> = ({ dashboardData }) => {
       const boiler = dashboardData.system.boiler;
 
       // Flow temperature deviation alert
-      if (boiler.actualFlowTemp && boiler.suggestedFlowTemp) {
+      if (
+        typeof boiler.actualFlowTemp === 'number' &&
+        typeof boiler.suggestedFlowTemp === 'number'
+      ) {
         const tempDiff = Math.abs(boiler.actualFlowTemp - boiler.suggestedFlowTemp);
         if (tempDiff > 5) {
           alerts.push({

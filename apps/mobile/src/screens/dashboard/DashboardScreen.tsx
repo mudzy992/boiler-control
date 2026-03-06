@@ -12,8 +12,10 @@ import {
   HStack,
   Pressable,
   Icon,
+  Input,
+  useToast,
 } from 'native-base';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { getDashboard } from '../../api/dashboard.api';
@@ -24,6 +26,11 @@ import { BoilerStatusCard } from '../../components/BoilerStatusCard';
 import { ThermostatCard } from '../../components/ThermostatCard';
 import { AlertsCard } from '../../components/AlertsCard';
 import { useTranslation } from '../../hooks/useTranslation';
+import { BottomSheetModal } from '../../components/BottomSheetModal';
+import { apiClient } from '../../services/api/client';
+
+const MIN_CURRENT_FLOW_TEMP = 48;
+const MAX_CURRENT_FLOW_TEMP = 55;
 
 export const DashboardScreen = () => {
   const { t, i18n } = useTranslation();
@@ -32,8 +39,13 @@ export const DashboardScreen = () => {
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const headerBtnBg = useColorModeValue('gray.100', 'gray.700');
   const additionalHomesBg = useColorModeValue('blue.100', 'blue.900');
+  const sheetCancelBg = useColorModeValue('gray.200', 'gray.700');
   const navigation = useNavigation();
   const { showError } = useErrorHandler();
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [showSetTempSheet, setShowSetTempSheet] = React.useState(false);
+  const [currentTempInput, setCurrentTempInput] = React.useState('');
 
   const {
     data: dashboardData,
@@ -55,6 +67,86 @@ export const DashboardScreen = () => {
       showError(error, t('dashboard.loadError'));
     }
   }, [error, showError, t]);
+
+  const setCurrentTempMutation = useMutation({
+    mutationFn: async (temp: number) => {
+      return await apiClient.setBoilerCurrentTemp(temp);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['gas-analysis'] }),
+      ]);
+      setShowSetTempSheet(false);
+      toast.show({
+        render: () => (
+          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              {t('boiler.currentTempUpdated')}
+            </Text>
+          </Box>
+        ),
+        duration: 2000,
+        placement: 'top',
+      });
+    },
+    onError: (mutationError) => {
+      showError(mutationError, t('boiler.currentTempUpdateError'));
+    },
+  });
+
+  const openSetCurrentTempSheet = React.useCallback(() => {
+    const boiler = dashboardData?.system?.boiler;
+    const suggested =
+      typeof boiler?.actualFlowTemp === 'number'
+        ? boiler.actualFlowTemp
+        : typeof boiler?.suggestedFlowTemp === 'number'
+          ? boiler.suggestedFlowTemp
+          : 52;
+    setCurrentTempInput(suggested.toFixed(1));
+    setShowSetTempSheet(true);
+  }, [dashboardData?.system?.boiler]);
+
+  const submitCurrentTemp = React.useCallback(() => {
+    const normalized = currentTempInput.replace(',', '.').trim();
+    const parsed = Number(normalized);
+
+    if (!Number.isFinite(parsed)) {
+      toast.show({
+        render: () => (
+          <Box bg="red.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              {t('boiler.currentTempValidation')}
+            </Text>
+          </Box>
+        ),
+        duration: 2500,
+        placement: 'top',
+      });
+      return;
+    }
+
+    const rounded = Math.round(parsed * 10) / 10;
+    if (rounded < MIN_CURRENT_FLOW_TEMP || rounded > MAX_CURRENT_FLOW_TEMP) {
+      toast.show({
+        render: () => (
+          <Box bg="red.500" px={3} py={2} rounded="md" mb={2}>
+            <Text color="white" fontSize="sm">
+              {t('boiler.currentTempRangeError', {
+                min: MIN_CURRENT_FLOW_TEMP,
+                max: MAX_CURRENT_FLOW_TEMP,
+              })}
+            </Text>
+          </Box>
+        ),
+        duration: 2500,
+        placement: 'top',
+      });
+      return;
+    }
+
+    setCurrentTempMutation.mutate(rounded);
+  }, [currentTempInput, setCurrentTempMutation, t, toast]);
 
   const clamp = (value: number, min = 0, max = 100) =>
     Math.max(min, Math.min(max, value));
@@ -247,7 +339,11 @@ export const DashboardScreen = () => {
           )}
 
           {/* Boiler Status */}
-          <BoilerStatusCard boiler={dashboardData?.system?.boiler} />
+          <BoilerStatusCard
+            boiler={dashboardData?.system?.boiler}
+            onSetCurrentTempPress={openSetCurrentTempSheet}
+            setCurrentTempLoading={setCurrentTempMutation.isPending}
+          />
 
           {/* Weather */}
           {dashboardData?.system?.weather && <WeatherCard weather={dashboardData.system.weather} />}
@@ -284,6 +380,67 @@ export const DashboardScreen = () => {
           )}
         </VStack>
       </ScrollView>
+
+      <BottomSheetModal
+        isOpen={showSetTempSheet}
+        onClose={() => setShowSetTempSheet(false)}
+        snapPoints={['45%', '60%']}
+      >
+        <VStack space={4} py={2}>
+          <Text fontSize="lg" fontWeight="700" color={textColor}>
+            {t('boiler.setCurrentTemp')}
+          </Text>
+          <Text fontSize="sm" color={mutedColor}>
+            {t('boiler.currentTempRangeHint', {
+              min: MIN_CURRENT_FLOW_TEMP,
+              max: MAX_CURRENT_FLOW_TEMP,
+            })}
+          </Text>
+
+          <Input
+            value={currentTempInput}
+            onChangeText={setCurrentTempInput}
+            keyboardType="decimal-pad"
+            placeholder={`${MIN_CURRENT_FLOW_TEMP} - ${MAX_CURRENT_FLOW_TEMP}`}
+            fontSize="lg"
+          />
+
+          <HStack space={3}>
+            <Pressable
+              flex={1}
+              onPress={() => setShowSetTempSheet(false)}
+              _pressed={{ opacity: 0.7 }}
+              disabled={setCurrentTempMutation.isPending}
+            >
+              <Box
+                bg={sheetCancelBg}
+                rounded="lg"
+                py={3}
+                alignItems="center"
+              >
+                <Text fontWeight="600" color={textColor}>
+                  {t('common.cancel')}
+                </Text>
+              </Box>
+            </Pressable>
+
+            <Pressable
+              flex={1}
+              onPress={submitCurrentTemp}
+              _pressed={{ opacity: 0.7 }}
+              disabled={setCurrentTempMutation.isPending}
+            >
+              <Box bg="brand.500" rounded="lg" py={3} alignItems="center">
+                <Text fontWeight="600" color="white">
+                  {setCurrentTempMutation.isPending
+                    ? t('boiler.savingCurrentTemp')
+                    : t('boiler.saveCurrentTemp')}
+                </Text>
+              </Box>
+            </Pressable>
+          </HStack>
+        </VStack>
+      </BottomSheetModal>
     </Box>
   );
 };

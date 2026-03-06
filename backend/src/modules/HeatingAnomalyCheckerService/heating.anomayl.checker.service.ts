@@ -265,6 +265,7 @@ export class HeatingAnomalyCheckerService {
       }
 
       const boiler = await this.prisma.boilerHistory.findFirst({
+        where: { userId: event.thermostat.userId },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -296,7 +297,7 @@ export class HeatingAnomalyCheckerService {
           timestampEnd: endTime,
           roomCurrentTemp: event.roomCurrentTemp,
           roomTargetTemp: event.roomTargetTemp,
-          boilerFlowTemp: boiler?.suggestedFlowTemp || 0,
+          boilerFlowTemp: boiler?.actualFlowTemp ?? boiler?.suggestedFlowTemp ?? 0,
         });
       }
 

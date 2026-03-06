@@ -35,6 +35,9 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       weatherCache: {
         findFirst: jest.fn(),
       },
+      user: {
+        findUnique: jest.fn(),
+      },
       $transaction: jest.fn(async (ops) => {
         // Simple mock transaction: execute all operations in sequence
         return Promise.all(ops);

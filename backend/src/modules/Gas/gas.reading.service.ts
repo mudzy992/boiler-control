@@ -468,7 +468,7 @@ export class GasReadingService {
           (h.heatingEnd.getTime() - h.heatingStart.getTime()) / 60000;
         totalMinutes += duration;
         weightedTempSum +=
-          duration * (h.actualFlowTemp || h.suggestedFlowTemp || 0);
+          duration * (h.actualFlowTemp ?? h.suggestedFlowTemp ?? 0);
       }
     }
 

@@ -221,13 +221,19 @@ export class ThermostatPollingService {
 
     this.structuredLogger.log('Starting heating start transaction', ctx);
 
-    const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const lastWeatherTemp = await this.prisma.weatherCache.findFirst({
-      orderBy: { fetchedAt: 'desc' },
-    });
+    const [lastBoilerHistory, userState, lastWeatherTemp] = await Promise.all([
+      this.prisma.boilerHistory.findFirst({
+        where: { userId: device.userId },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: device.userId },
+        select: { currentBoilerFlowTemp: true },
+      }),
+      this.prisma.weatherCache.findFirst({
+        orderBy: { fetchedAt: 'desc' },
+      }),
+    ]);
 
     // Wrap multi-step DB operations in transaction for atomicity
     const [event] = await this.prisma.$transaction([
@@ -246,7 +252,10 @@ export class ThermostatPollingService {
           userId: device.userId,
           externalTemp: lastWeatherTemp?.temperature || 0,
           suggestedFlowTemp: flowTemp,
-          actualFlowTemp: lastBoilerHistory?.suggestedFlowTemp,
+          actualFlowTemp:
+            userState?.currentBoilerFlowTemp ??
+            lastBoilerHistory?.actualFlowTemp ??
+            null,
           heatingStart: now,
           heatingEnd: null,
         },

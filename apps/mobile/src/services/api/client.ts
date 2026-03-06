@@ -239,6 +239,13 @@ class ApiClientService {
     return response.data;
   }
 
+  async setBoilerCurrentTemp(currentFlowTemp: number) {
+    const response = await this.client.patch('/boiler/current-temp', {
+      currentFlowTemp,
+    });
+    return response.data;
+  }
+
   // Notification endpoints
   async getNotifications() {
     const response = await this.client.get('/notifications');

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button } from 'antd';
+import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '../services/api';
 import { StatCard } from '../components/StatCard';
@@ -51,7 +51,7 @@ interface Weather {
 interface Boiler {
   externalTemp: number;
   suggestedFlowTemp: number;
-  actualFlowTemp: number;
+  actualFlowTemp: number | null;
 }
 
 interface Recommendation {
@@ -173,6 +173,9 @@ type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
 };
 
+const MIN_CURRENT_FLOW_TEMP = 48;
+const MAX_CURRENT_FLOW_TEMP = 55;
+
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<ProcessedDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -192,6 +195,9 @@ export const DashboardPage: React.FC = () => {
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [setTempModalOpen, setSetTempModalOpen] = useState(false);
+  const [setTempValue, setSetTempValue] = useState<number | null>(null);
+  const [setTempSubmitting, setSetTempSubmitting] = useState(false);
 
   const { data: homeProfile } = useQuery({
     queryKey: ['home-profile'],
@@ -293,6 +299,46 @@ export const DashboardPage: React.FC = () => {
     fetchDashboard();
     loadNotifications();
   }, [loadNotifications]);
+
+  const openSetTempModal = useCallback(() => {
+    const boiler = data?.boiler;
+    const fallback =
+      typeof boiler?.actualFlowTemp === 'number'
+        ? boiler.actualFlowTemp
+        : boiler?.suggestedFlowTemp ?? 52;
+    setSetTempValue(Number(fallback.toFixed(1)));
+    setSetTempModalOpen(true);
+  }, [data?.boiler]);
+
+  const submitSetTemp = useCallback(async () => {
+    if (typeof setTempValue !== 'number' || Number.isNaN(setTempValue)) {
+      message.error('Enter a valid temperature value');
+      return;
+    }
+
+    if (setTempValue < MIN_CURRENT_FLOW_TEMP || setTempValue > MAX_CURRENT_FLOW_TEMP) {
+      message.error(
+        `Temperature must be between ${MIN_CURRENT_FLOW_TEMP}°C and ${MAX_CURRENT_FLOW_TEMP}°C`,
+      );
+      return;
+    }
+
+    try {
+      setSetTempSubmitting(true);
+      await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
+
+      const result = (await apiClient.getDashboard()) as DashboardResponse;
+      setData(processDashboardData(result));
+
+      message.success('Current boiler temperature updated');
+      setSetTempModalOpen(false);
+    } catch (error) {
+      console.error('Failed to update current boiler temp:', error);
+      message.error('Failed to update current boiler temperature');
+    } finally {
+      setSetTempSubmitting(false);
+    }
+  }, [setTempValue]);
 
   const loadHeatingRange = useCallback(async () => {
     if (!range?.[0] || !range?.[1]) return;
@@ -637,11 +683,29 @@ export const DashboardPage: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12}>
-          <Card title="Boiler Status" className="shadow-sm">
+          <Card
+            title="Boiler Status"
+            className="shadow-sm"
+            extra={
+              <Button size="small" type="primary" onClick={openSetTempModal}>
+                Set current temp
+              </Button>
+            }
+          >
             <div className="space-y-2">
               <p><strong>Suggested Flow Temp:</strong> {data.boiler.suggestedFlowTemp.toFixed(1)}°C</p>
-              <p><strong>Actual Flow Temp:</strong> {data.boiler.actualFlowTemp.toFixed(1)}°C</p>
-              <p><strong>Delta:</strong> {(data.boiler.actualFlowTemp - data.boiler.suggestedFlowTemp).toFixed(1)}°C</p>
+              <p>
+                <strong>Actual Flow Temp:</strong>{' '}
+                {typeof data.boiler.actualFlowTemp === 'number'
+                  ? `${data.boiler.actualFlowTemp.toFixed(1)}°C`
+                  : '—'}
+              </p>
+              <p>
+                <strong>Delta:</strong>{' '}
+                {typeof data.boiler.actualFlowTemp === 'number'
+                  ? `${(data.boiler.actualFlowTemp - data.boiler.suggestedFlowTemp).toFixed(1)}°C`
+                  : '—'}
+              </p>
             </div>
           </Card>
         </Col>
@@ -1010,6 +1074,31 @@ export const DashboardPage: React.FC = () => {
             />
           </>
         )}
+      </Modal>
+
+      <Modal
+        title="Set current flow temperature"
+        open={setTempModalOpen}
+        onCancel={() => setSetTempModalOpen(false)}
+        onOk={submitSetTemp}
+        confirmLoading={setTempSubmitting}
+        okText={setTempSubmitting ? 'Saving...' : 'Save'}
+      >
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Text type="secondary">
+            Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
+          </Text>
+          <InputNumber
+            value={setTempValue ?? undefined}
+            onChange={(value) => setSetTempValue(typeof value === 'number' ? value : null)}
+            min={MIN_CURRENT_FLOW_TEMP}
+            max={MAX_CURRENT_FLOW_TEMP}
+            step={0.1}
+            precision={1}
+            style={{ width: '100%' }}
+            addonAfter="°C"
+          />
+        </Space>
       </Modal>
     </div>
   );

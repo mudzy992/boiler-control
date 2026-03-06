@@ -62,7 +62,7 @@ export interface HomeDashboard {
 export interface BoilerData {
   externalTemp: number;
   suggestedFlowTemp: number;
-  actualFlowTemp: number;
+  actualFlowTemp: number | null;
   heatingStart: string | null;
   heatingEnd: string | null;
 }

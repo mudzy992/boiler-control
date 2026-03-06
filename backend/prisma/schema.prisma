@@ -22,6 +22,12 @@ model User {
   homeLocation  String?
   currentBoilerFlowTemp Float?
   currentBoilerFlowTempSetAt DateTime?
+<<<<<<< Updated upstream
+=======
+
+  activeHomeProfile   HomeProfile? @relation("ActiveHomeProfile", fields: [activeHomeProfileId], references: [id])
+  activeHomeProfileId Int? @unique
+>>>>>>> Stashed changes
 
   avatarUrl     String?
   timezone      String?

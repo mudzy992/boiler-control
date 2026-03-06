@@ -241,6 +241,9 @@ export const DashboardPage: React.FC = () => {
   const [setTempModalOpen, setSetTempModalOpen] = useState(false);
   const [setTempValue, setSetTempValue] = useState<number | null>(null);
   const [setTempSubmitting, setSetTempSubmitting] = useState(false);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
   const normalizedRange = useMemo(() => {
@@ -1030,6 +1033,9 @@ useEffect(() => {
           />
         </Space>
       </Modal>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     </div>
   );

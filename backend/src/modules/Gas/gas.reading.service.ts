@@ -90,6 +90,9 @@ export class GasReadingService {
 =======
         weightedTempSum +=
           duration * (h.actualFlowTemp ?? h.suggestedFlowTemp ?? 0);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       }
     });

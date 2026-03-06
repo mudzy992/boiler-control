@@ -706,6 +706,14 @@ export const DashboardPage: React.FC = () => {
                   ? `${(data.boiler.actualFlowTemp - data.boiler.suggestedFlowTemp).toFixed(1)}°C`
                   : '—'}
               </p>
+              <Space>
+                <Button size="small" type="primary" onClick={openSetTempModal}>
+                  Set current temp
+                </Button>
+                <Text type="secondary">
+                  Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
+                </Text>
+              </Space>
             </div>
           </Card>
         </Col>

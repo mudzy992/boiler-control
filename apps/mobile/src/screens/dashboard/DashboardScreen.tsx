@@ -12,7 +12,6 @@ import {
   HStack,
   Pressable,
   Icon,
-  Input,
   useToast,
 } from 'native-base';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +27,7 @@ import { AlertsCard } from '../../components/AlertsCard';
 import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
+import { FormInput } from '../../components/FormInput';
 
 const MIN_CURRENT_FLOW_TEMP = 48;
 const MAX_CURRENT_FLOW_TEMP = 55;
@@ -397,12 +397,13 @@ export const DashboardScreen = () => {
             })}
           </Text>
 
-          <Input
+          <FormInput
             value={currentTempInput}
             onChangeText={setCurrentTempInput}
             keyboardType="decimal-pad"
             placeholder={`${MIN_CURRENT_FLOW_TEMP} - ${MAX_CURRENT_FLOW_TEMP}`}
-            fontSize="lg"
+            style={{ fontSize: 18 }}
+            isDisabled={setCurrentTempMutation.isPending}
           />
 
           <HStack space={3}>

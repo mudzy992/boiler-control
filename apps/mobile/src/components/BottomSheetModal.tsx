@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Box, useColorModeValue } from 'native-base';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -24,7 +24,27 @@ export const BottomSheetModal: React.FC<BottomSheetModalProps> = ({
   snapPoints = ['50%', '90%'],
 }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const animatedSnapPoints = useMemo(() => snapPoints, [snapPoints]);
+  const { height: windowHeight } = useWindowDimensions();
+  const animatedSnapPoints = useMemo(
+    () =>
+      snapPoints.map((point) => {
+        if (typeof point === 'number') return point;
+        const trimmed = point.trim();
+
+        if (trimmed.endsWith('%')) {
+          const percent = Number(trimmed.slice(0, -1));
+          if (Number.isFinite(percent)) {
+            return Math.max(1, (windowHeight * percent) / 100);
+          }
+        }
+
+        const parsed = Number(trimmed);
+        if (Number.isFinite(parsed)) return parsed;
+
+        return Math.max(1, windowHeight * 0.5);
+      }),
+    [snapPoints, windowHeight],
+  );
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const handleColor = useColorModeValue('gray.300', 'gray.600');

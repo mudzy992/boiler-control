@@ -139,10 +139,17 @@ export class HeatingAnomalyCheckerService {
     });
     if (!event) throw new Error('Event not found');
 
+<<<<<<< Updated upstream
     let endTime = event.proposedEndTime ?? new Date();
     if (dto.proposedEndTime) endTime = dto.proposedEndTime;
     if (dto.confirm && !dto.proposedEndTime)
       endTime = event.proposedEndTime ?? new Date();
+=======
+      const boiler = await this.prisma.boilerHistory.findFirst({
+        where: { userId: event.thermostat.userId },
+        orderBy: { createdAt: 'desc' },
+      });
+>>>>>>> Stashed changes
 
     await this.prisma.heatingEvent.update({
       where: { id: eventId },
@@ -164,7 +171,45 @@ export class HeatingAnomalyCheckerService {
       boilerFlowTemp: boiler?.suggestedFlowTemp || 0,
     });
 
+<<<<<<< Updated upstream
     return { success: true, eventId, timestampEnd: endTime };
+=======
+      if (result.count === 0) {
+        return { success: false, error: 'Event not found or already updated' };
+      }
+
+      // Pozovi recommendation da izračuna na temelju stvarnog završetka
+      if (event.roomCurrentTemp && event.roomTargetTemp) {
+        await this.heatingRecommendation.processHeatingEvent({
+          userId: event.thermostat.userId,
+          deviceId: event.thermostat.id,
+          timestampStart: event.timestampStart,
+          timestampEnd: endTime,
+          roomCurrentTemp: event.roomCurrentTemp,
+          roomTargetTemp: event.roomTargetTemp,
+          boilerFlowTemp: boiler?.actualFlowTemp ?? boiler?.suggestedFlowTemp ?? 0,
+        });
+      }
+
+      this.structuredLogger.log('Anomaly confirmed', {
+        deviceId: event.thermostat.id,
+        userId: event.thermostat.userId,
+        eventId,
+        module: 'anomaly-checker',
+        action: 'anomaly_confirmed',
+        endTime,
+      });
+
+      return { success: true, eventId, timestampEnd: endTime };
+    } catch (error) {
+      this.logger.error(`Error confirming anomaly ${eventId}`, error);
+      this.metrics.incrementCounter('db_errors_total');
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+>>>>>>> Stashed changes
   }
 
   /** Interval key helper */

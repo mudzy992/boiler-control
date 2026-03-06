@@ -8,6 +8,7 @@ import {
 } from '../Heating/engine/types';
 import { WeatherService } from '../Weather/weather.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
+import { MetricsService } from '../../common/metrics.service';
 
 export interface FlowTempCalculationResult {
   flowTemp: number;
@@ -17,14 +18,25 @@ export interface FlowTempCalculationResult {
   intervalKey: string;
 }
 
+export interface SetCurrentTempResult {
+  userId: number;
+  currentFlowTemp: number;
+  setAt: Date;
+  latestBoilerHistoryId: number | null;
+  latestBoilerHistoryUpdated: boolean;
+}
+
 @Injectable()
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
   private readonly DEFAULT_ANON_CITY = 'Visoko';
+  private readonly MIN_CURRENT_FLOW_TEMP = 48;
+  private readonly MAX_CURRENT_FLOW_TEMP = 55;
 
   constructor(
     private prisma: PrismaService,
     private weatherService: WeatherService,
+    private metricsService: MetricsService,
   ) {}
 
   /**
@@ -216,4 +228,82 @@ export class BoilerService {
 
     return `${dayType}_${part}`;
   }
+<<<<<<< Updated upstream
+=======
+
+  /**
+   * Fetch boiler history for a user
+   */
+  async getBoilerHistory(userId: number) {
+    try {
+      const history = await this.prisma.boilerHistory.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      });
+      return history;
+    } catch (error) {
+      this.logger.error('Error fetching boiler history', error);
+      return [];
+    }
+  }
+
+  /**
+   * Persist user-confirmed current boiler flow temperature and
+   * sync it to the latest boiler history row (if one exists).
+   */
+  async setCurrentTemp(
+    userId: number,
+    currentFlowTemp: number,
+  ): Promise<SetCurrentTempResult> {
+    if (
+      currentFlowTemp < this.MIN_CURRENT_FLOW_TEMP ||
+      currentFlowTemp > this.MAX_CURRENT_FLOW_TEMP
+    ) {
+      throw new Error(
+        `Current flow temperature must be between ${this.MIN_CURRENT_FLOW_TEMP}°C and ${this.MAX_CURRENT_FLOW_TEMP}°C`,
+      );
+    }
+
+    const setAt = new Date();
+
+    const latestHistory = await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          currentBoilerFlowTemp: currentFlowTemp,
+          currentBoilerFlowTempSetAt: setAt,
+        },
+      });
+
+      const latest = await tx.boilerHistory.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      });
+
+      if (latest) {
+        await tx.boilerHistory.update({
+          where: { id: latest.id },
+          data: { actualFlowTemp: currentFlowTemp },
+        });
+      }
+
+      return latest;
+    });
+
+    this.metricsService.incrementCounter('boiler_current_temp_updates_total');
+    this.logger.log(
+      `[BoilerCurrentTemp] User=${userId} Temp=${currentFlowTemp} SetAt=${setAt.toISOString()}`,
+    );
+
+    return {
+      userId,
+      currentFlowTemp,
+      setAt,
+      latestBoilerHistoryId: latestHistory?.id ?? null,
+      latestBoilerHistoryUpdated: !!latestHistory,
+    };
+  }
+>>>>>>> Stashed changes
 }

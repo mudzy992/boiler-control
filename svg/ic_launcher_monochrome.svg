@@ -1,0 +1,26 @@
+<!-- ic_launcher_monochrome.svg (za themed icons Android 13+) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <!-- Safe zone centered content -->
+  <circle cx="54" cy="57" r="26" fill="none" stroke="currentColor" stroke-width="1.5"/>
+
+  <!-- Flame silhouette -->
+  <path d="
+    M 54 26
+    C 54 26, 67 37, 69 48
+    C 71 59, 65 66, 54 67
+    C 43 66, 37 59, 39 48
+    C 41 37, 54 26, 54 26 Z" fill="currentColor"/>
+
+  <!-- Cutout inner flame -->
+  <path d="
+    M 54 38
+    C 54 38, 62 45, 62 52
+    C 62 58, 58 60, 54 60
+    C 50 60, 46 58, 46 52
+    C 46 45, 54 38, 54 38 Z" fill="white"/>
+
+  <!-- Gauge arc -->
+  <path d="M 36 70 A 22 22 0 0 1 72 70" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="54" cy="70" r="2" fill="currentColor"/>
+  <line x1="54" y1="70" x2="63" y2="63" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

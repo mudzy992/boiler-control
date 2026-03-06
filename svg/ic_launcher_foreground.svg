@@ -1,0 +1,59 @@
+<!-- ic_launcher_foreground.svg (108x108, safe zone 66x66 centered) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <linearGradient id="innerFlame" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+  </defs>
+
+  <!-- All elements within safe zone: 21,21 to 87,87 (66x66) -->
+
+  <!-- Boiler circle -->
+  <circle cx="54" cy="57" r="26" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="1.5"/>
+
+  <!-- Main flame -->
+  <path d="
+    M 54 26
+    C 54 26, 65 35, 67 43
+    C 69 51, 66 55, 62 58
+    C 66 55, 68 50, 67 45
+    C 69 49, 70 53, 68 58
+    C 66 63, 60 66, 54 67
+    C 48 66, 42 63, 40 58
+    C 38 53, 39 49, 41 45
+    C 40 50, 42 55, 46 58
+    C 42 55, 39 51, 41 43
+    C 43 35, 54 26, 54 26
+    Z" fill="white" opacity="0.95"/>
+
+  <!-- Inner flame -->
+  <path d="
+    M 54 36
+    C 54 36, 60 41, 61 46
+    C 62 51, 59 54, 54 56
+    C 49 54, 46 51, 47 46
+    C 48 41, 54 36, 54 36
+    Z" fill="url(#innerFlame)" opacity="0.85"/>
+
+  <!-- Center flame detail -->
+  <path d="
+    M 54 42
+    C 54 42, 57 45, 57 48
+    C 57 50, 56 52, 54 52
+    C 52 52, 51 50, 51 48
+    C 51 45, 54 42, 54 42
+    Z" fill="#FF8C00" opacity="0.8"/>
+
+  <!-- Temperature gauge at bottom -->
+  <path d="M 36 70 A 22 22 0 0 1 72 70" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Gauge indicator -->
+  <circle cx="54" cy="70" r="2" fill="white"/>
+  <line x1="54" y1="70" x2="62" y2="64" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Tick marks -->
+  <line x1="38" y1="67" x2="41" y2="65" stroke="white" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+  <line x1="54" y1="74" x2="54" y2="71" stroke="white" stroke-width="1" opacity="0.6" stroke-linecap="round"/>
+  <line x1="70" y1="67" x2="67" y2="65" stroke="white" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+</svg>

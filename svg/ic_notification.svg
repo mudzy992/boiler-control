@@ -1,0 +1,19 @@
+<!-- ic_notification.svg (24x24dp, white silhouette only) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Flame silhouette - must be single color white/transparent -->
+  <path d="
+    M 12 2
+    C 12 2, 18 7, 18 13
+    C 18 17, 15 20, 12 20
+    C 9 20, 6 17, 6 13
+    C 6 7, 12 2, 12 2 Z"
+    fill="white"/>
+  <!-- Inner cutout -->
+  <path d="
+    M 12 8
+    C 12 8, 15 11, 15 14
+    C 15 16, 13.5 17, 12 17
+    C 10.5 17, 9 16, 9 14
+    C 9 11, 12 8, 12 8 Z"
+    fill="#FF8C00" opacity="0"/>
+</svg>

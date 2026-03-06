@@ -4,15 +4,19 @@
     "slug": "boiler-control",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/new/boiler-control-icon-master.png",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
     ],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/new/splash_branding.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
+    },
+    "notification": {
+      "icon": "./assets/new/ic_notification.png",
+      "color": "#ffffff"
     },
     "ios": {
       "bundleIdentifier": "com.boilercontrol.app"
@@ -20,7 +24,9 @@
     "android": {
       "package": "com.boilercontrol.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/new/ic_launcher_foreground.png",
+        "backgroundImage": "./assets/new/ic_launcher_background.png",
+        "monochromeImage": "./assets/new/ic_launcher_monochrome.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

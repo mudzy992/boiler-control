@@ -24,7 +24,10 @@ model User {
   currentBoilerFlowTempSetAt DateTime?
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 

@@ -1,35 +1,3 @@
-<<<<<<< Updated upstream
-import { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  Col,
-  Row,
-  Typography,
-  Statistic,
-  Table,
-  Tag,
-  Button,
-  DatePicker,
-  Spin,
-  message,
-  Badge,
-  Space,
-  Alert,
-  Descriptions,
-} from "antd";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
-import { SyncOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-=======
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
@@ -38,22 +6,23 @@ import { StatCard } from '../components/StatCard';
 import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
->>>>>>> Stashed changes
 
-import {
-  getDashboard,
-  getHeatingEvents,
-  getHeatingStats,
-  getLearningTrends,
-} from "../api/dashboard.api";
-import { manualSyncBoiler } from "../api/boiler.api";
-import { updateHeatingAnomaly } from "../api/heating.anomaly.api";
+const { Text } = Typography;
 
-const { Title, Text } = Typography;
+// Notification types
+interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  message: string;
+  data?: any;
+  sentAt: string;
+  isRead: boolean;
+  sourceRef?: string;
+  createdAt: string;
+}
 
-<<<<<<< Updated upstream
-export const DashboardPage = () => {
-=======
 interface NotificationPreference {
   userId: number;
   type: string;
@@ -209,29 +178,17 @@ const MAX_CURRENT_FLOW_TEMP = 55;
 
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<ProcessedDashboard | null>(null);
->>>>>>> Stashed changes
   const [loading, setLoading] = useState(true);
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [selectedHomeId, setSelectedHomeId] = useState<number | null>(null);
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-    dayjs().startOf("day"),
-    dayjs().endOf("day"),
+  const [rangeLoading, setRangeLoading] = useState(true);
+  const [events, setEvents] = useState<HeatingEvent[]>([]);
+  const [summary, setSummary] = useState<HeatingSummaryResponse | null>(null);
+  const [isHeatingNow, setIsHeatingNow] = useState(false);
+  const [activeBucket, setActiveBucket] = useState<string | null>(null);
+  const [range, setRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().startOf('day'), // 00:00:00 today
+    dayjs(), // current time
   ]);
-  const [events, setEvents] = useState<any[]>([]);
-  const [stats, setStats] = useState<any[]>([]);
-  const [learning, setLearning] = useState<any[]>([]);
-  const [anomalyEndTime, setAnomalyEndTime] = useState<dayjs.Dayjs | null>(null);
 
-<<<<<<< Updated upstream
-  /* =========================
-     HELPERS
-  ========================= */
-  const isSingleDay = useMemo(
-    () => dateRange[0].isSame(dateRange[1], "day"),
-    [dateRange]
-  );
-  const bucket: "hour" | "day" = isSingleDay ? "hour" : "day";
-=======
   // Notification states
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference[]>([]);
@@ -263,97 +220,81 @@ export const DashboardPage: React.FC = () => {
   const weatherDisplay = useMemo(() => {
     if (currentWeather) {
       return {
-        from: dateRange[0].startOf("day").toISOString(),
-        to: dateRange[0].endOf("day").toISOString(),
+        outsideTemp: currentWeather.temperature ?? currentWeather.temp ?? null,
+        feelsLike: currentWeather.feelslike ?? currentWeather.feelsLike ?? null,
+        condition: currentWeather.condition_text ?? currentWeather.condition ?? null,
+        humidity: currentWeather.humidity ?? null,
+        windSpeed: currentWeather.wind_kph ?? currentWeather.windSpeed ?? null,
+        tempMin: currentWeather.temp_min ?? currentWeather.tempMin ?? null,
+        tempMax: currentWeather.temp_max ?? currentWeather.tempMax ?? null,
       };
     }
-    return {
-      from: dateRange[0].startOf("day").toISOString(),
-      to: dateRange[1].endOf("day").toISOString(),
-    };
-  }, [dateRange, isSingleDay]);
 
-  /* =========================
-     DATA LOAD
-  ========================= */
-  const loadDashboard = async () => {
-    setLoading(true);
+    if (data?.weather) {
+      return {
+        outsideTemp: data.weather.temp ?? data.weather.temperature ?? null,
+        feelsLike: data.weather.feelsLike ?? data.weather.feelslike ?? null,
+        condition: data.weather.condition ?? data.weather.condition_text ?? null,
+        humidity: data.weather.humidity ?? null,
+        windSpeed: data.weather.windSpeed ?? data.weather.wind_kph ?? null,
+        tempMin: data.weather.tempMin ?? data.weather.temp_min ?? null,
+        tempMax: data.weather.tempMax ?? data.weather.temp_max ?? null,
+      };
+    }
+
+    return null;
+  }, [currentWeather, data?.weather]);
+
+  const loadNotifications = useCallback(async () => {
     try {
-      const data = await getDashboard();
-      setDashboard(data);
-      if (data.homes.length > 0) setSelectedHomeId(data.homes[0].profile.id);
-    } catch {
-      message.error("Greška prilikom učitavanja dashboarda");
+      setNotificationsLoading(true);
+      const [notifs, prefs] = await Promise.all([
+        apiClient.getNotifications(),
+        apiClient.getNotificationPreferences(),
+      ]);
+      setNotifications(notifs);
+      setNotificationPreferences(prefs);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+      message.error('Error loading notifications');
     } finally {
-      setLoading(false);
+      setNotificationsLoading(false);
     }
-  };
-
-  const loadHeatingData = async () => {
-    if (!selectedHomeId) return;
-    try {
-      const ev = await getHeatingEvents({
-        homeProfileId: selectedHomeId,
-        ...normalizedRange,
-      });
-      const st = await getHeatingStats({
-        homeProfileId: selectedHomeId,
-        ...normalizedRange,
-        bucket,
-      });
-      const lr = await getLearningTrends({
-        homeProfileId: selectedHomeId,
-        from: dayjs().subtract(30, "day").toISOString(),
-        to: new Date().toISOString(),
-      });
-
-      setEvents(ev.data);
-      setStats(st.buckets);
-      setLearning(lr.points);
-    } catch {
-      message.error("Greška prilikom učitavanja podataka grijanja");
-    }
-  };
-
-  useEffect(() => {
-    loadDashboard();
   }, []);
 
+  const unreadNotifications = useMemo(
+    () => notifications.filter((n) => !n.isRead),
+    [notifications]
+  );
+
+  const handleMarkNotificationAsRead = useCallback(
+    async (notificationId: number) => {
+      try {
+        await apiClient.markNotificationAsRead(notificationId);
+        await loadNotifications();
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+        message.error('Failed to mark notification as read');
+      }
+    },
+    [loadNotifications]
+  );
+
   useEffect(() => {
-    if (selectedHomeId) loadHeatingData();
-  }, [selectedHomeId, normalizedRange]);
+    const fetchDashboard = async () => {
+      try {
+        const result = await apiClient.getDashboard() as DashboardResponse;
 
-  /* =========================
-     DERIVED DATA
-  ========================= */
-  const home = useMemo(() => {
-    if (!dashboard || !selectedHomeId) return null;
-    return dashboard.homes.find((h: any) => h.profile.id === selectedHomeId);
-  }, [dashboard, selectedHomeId]);
-
-  const thermostat = useMemo(() => home?.thermostats?.[0] || null, [home]);
-
-  const heatingActive = useMemo(() => {
-    const lastEvent = home?.recentHeatingEvents?.[0];
-    return lastEvent?.hvacAction === "HEATING_ON";
-  }, [home]);
-
-  const intervals = useMemo(() => {
-    if (!thermostat) return null;
-    const grouped: Record<string, string[]> = {
-      WORKING_DAY: [],
-      SATURDAY: [],
-      SUNDAY: [],
+        // Process the raw data to extract what we need
+        const processed = processDashboardData(result);
+        setData(processed);
+      } catch (error) {
+        console.error('Dashboard error:', error);
+        message.error('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
     };
-<<<<<<< Updated upstream
-    thermostat.program.forEach((p: any) => {
-      const h = Math.floor(p.startMinute / 60);
-      const m = (p.startMinute % 60).toString().padStart(2, "0");
-      const str = `${h}:${m} - ${p.targetTemp}°C`;
-      if (p.dayType === "WORKDAY") grouped.WORKING_DAY.push(str);
-      if (p.dayType === "SATURDAY") grouped.SATURDAY.push(str);
-      if (p.dayType === "SUNDAY") grouped.SUNDAY.push(str);
-=======
 
     fetchDashboard();
     loadNotifications();
@@ -513,167 +454,234 @@ export const DashboardPage: React.FC = () => {
     (data?.thermostatPrograms ?? []).forEach((p) => {
       if (!map.has(p.dayType)) map.set(p.dayType, []);
       map.get(p.dayType)!.push(p);
->>>>>>> Stashed changes
     });
-    return grouped;
-  }, [thermostat]);
+    return Array.from(map.entries()).map(([dayType, programs]) => ({
+      dayType,
+      programs: programs.sort((a, b) => a.orderIndex - b.orderIndex),
+    }));
+  }, [data?.thermostatPrograms]);
 
-  const summary = useMemo(() => {
-    if (events.length === 0) return null;
-    const totalMinutes = events.reduce((s, e) => s + e.durationMinutes, 0);
-    return {
-      cycles: events.length,
-      totalMinutes,
-      avgDuration: Math.round(totalMinutes / events.length),
-      avgTarget: (events.reduce((s, e) => s + e.targetTemp, 0) / events.length).toFixed(1),
-    };
-  }, [events]);
+  const activeProgram = useMemo(() => {
+    return getActiveProgram(data?.thermostatPrograms ?? []);
+  }, [data?.thermostatPrograms]);
 
-  const activeAnomaly = useMemo(() => {
-    console.log(events)
-  return events.find(
-    (e) => e.isAnomaly && !e.endedAt
-  );
-}, [events]);
+  const summaryMetrics = summary?.summary ?? {
+    totalCycles: 0,
+    totalDurationMin: 0,
+    avgDurationMin: 0,
+    avgIndoorTemp: 0,
+  };
 
-useEffect(() => {
-  if (activeAnomaly?.proposedEndTime) {
-    setAnomalyEndTime(dayjs(activeAnomaly.proposedEndTime));
-  } else {
-    setAnomalyEndTime(null);
-  }
-}, [activeAnomaly]);
+  const chartData = summary?.buckets ?? [];
 
+  const isHeatingActive = isHeatingNow;
+
+  // Calculate alerts and warnings
   const alerts = useMemo(() => {
-    const a: string[] = [];
-    if (events.filter((e) => e.durationMinutes < 20).length >= 3) {
-      a.push("Detektovani česti kratki ciklusi grijanja");
+    const a: { type: 'warning' | 'error' | 'info'; message: string; icon: React.ReactNode }[] = [];
+
+    // Short cycles detection
+    const shortCycles = events.filter((e) => e.durationMinutes < 20);
+    if (shortCycles.length >= 3) {
+      a.push({
+        type: 'warning',
+        message: `Detektovano ${shortCycles.length} kratkih ciklusa grijanja (< 20 min)`,
+        icon: <WarningOutlined />,
+      });
     }
+
+    // Overshoot detection
     const overshootAvg =
       events.reduce((s, e) => s + (e.targetTemp - e.currentTemp), 0) /
       (events.length || 1);
-    if (overshootAvg > 1.5) a.push("Mogući overshoot (previsoka ciljna temperatura)");
+    if (overshootAvg > 1.5) {
+      a.push({
+        type: 'warning',
+        message: `Mogući overshoot - prosječna razlika: ${overshootAvg.toFixed(1)}°C`,
+        icon: <WarningOutlined />,
+      });
+    }
+
+    // Long cycles detection
+    const longCycles = events.filter((e) => e.durationMinutes > 90);
+    if (longCycles.length > 0) {
+      a.push({
+        type: 'info',
+        message: `Detektovano ${longCycles.length} dugih ciklusa grijanja (> 90 min)`,
+        icon: <InfoCircleOutlined />,
+      });
+    }
+
+    // Anomalies
+    const anomalies = events.filter((e) => e.isAnomaly);
+    if (anomalies.length > 0) {
+      a.push({
+        type: 'error',
+        message: `${anomalies.length} anomalija(e) u odabranom periodu`,
+        icon: <WarningOutlined />,
+      });
+    }
+
     return a;
   }, [events]);
 
-  const getCurrentIntervalTemp = (
-    intervals: Record<string, string[]>,
-    events: any[]
-  ) => {
-    const now = dayjs();
-    const dayOfWeek = now.day();
-    let dayKey = "WORKING_DAY";
-    if (dayOfWeek === 6) dayKey = "SATURDAY";
-    else if (dayOfWeek === 0) dayKey = "SUNDAY";
-    const dayIntervals = intervals[dayKey] || [];
-    const nowMinutes = now.hour() * 60 + now.minute();
-    let currentTarget = dayIntervals[0]?.match(/(\d+:\d+)/)?.[0] || null;
-    for (let i = 0; i < dayIntervals.length; i++) {
-      const match = dayIntervals[i].match(/(\d+):(\d+)/);
-      if (!match) continue;
-      const [, h, m] = match;
-      const intervalStart = parseInt(h) * 60 + parseInt(m);
-      if (intervalStart <= nowMinutes) currentTarget = dayIntervals[i];
-      else break;
-    }
-    const lastEvent = events.find(
-      (e) => dayjs(e.startedAt).isBefore(now) && dayjs(e.endedAt).isAfter(now)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Spin size="large" />
+      </div>
     );
-    if (lastEvent) return lastEvent.currentTemp;
-    const tempMatch = currentTarget?.match(/(\d+(\.\d+)?)°C/);
-    return tempMatch ? parseFloat(tempMatch[1]) : "-";
-  };
+  }
 
-  if (loading) return <Spin fullscreen />;
-  if (!dashboard || !home) return null;
+  if (!data) {
+    return <Card>No data available</Card>;
+  }
 
-  const weather = dashboard.system.weather;
-  const boiler = dashboard.system.boiler;
+  const columns = [
+    {
+      title: 'Start Time',
+      dataIndex: 'startedAt',
+      key: 'startedAt',
+      render: (value: string) => new Date(value).toLocaleString(),
+    },
+    {
+      title: 'End Time',
+      dataIndex: 'endedAt',
+      key: 'endedAt',
+      render: (value: string | null) => (value ? new Date(value).toLocaleString() : '—'),
+    },
+    {
+      title: 'Duration (min)',
+      dataIndex: 'durationMinutes',
+      key: 'durationMinutes',
+    },
+    {
+      title: 'Current Temp',
+      dataIndex: 'currentTemp',
+      key: 'currentTemp',
+      render: (value: number) => `${value.toFixed(1)}°C`,
+    },
+    {
+      title: 'Target Temp',
+      dataIndex: 'targetTemp',
+      key: 'targetTemp',
+      render: (value: number) => `${value}°C`,
+    },
+    {
+      title: 'Action',
+      dataIndex: 'hvacAction',
+      key: 'hvacAction',
+      render: (value: string) => (value ? <Tag color="blue">{value}</Tag> : '—'),
+    },
+    {
+      title: 'Anomaly',
+      dataIndex: 'isAnomaly',
+      key: 'isAnomaly',
+      render: (value: boolean) => <Tag color={value ? 'red' : 'green'}>{value ? 'YES' : 'NO'}</Tag>,
+    },
+  ];
 
   return (
-    <div style={{ padding: 16 }}>
-      <Row justify="space-between" align="middle" gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Title level={3}>Boiler Control Dashboard</Title>
-        </Col>
-        <Col xs={24} sm={12} style={{ textAlign: "right" }}>
-          <Button icon={<SyncOutlined />} onClick={manualSyncBoiler}>
-            Refresh
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Dashboard</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Overview of your heating system performance and alerts.
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Badge count={unreadNotifications.length}>
+            <Button
+              onClick={() => setNotificationDrawerOpen(true)}
+              type='primary'
+            >
+              <BellOutlined />
+              <span>Notifications</span>
+            </Button>
+          </Badge>
+          <Button
+            onClick={() => setNotificationSettingsOpen(true)}
+            type='primary'
+          >
+            <SettingOutlined />
+            <span>Settings</span>
           </Button>
+          <Tag
+            color={isHeatingActive ? 'green' : 'default'}
+            className={
+              isHeatingActive
+                ? 'rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide'
+                : 'rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300'
+            }
+          >
+            {isHeatingActive ? 'Heating Active' : 'Idle / Not Heating'}
+          </Tag>
+        </div>
+      </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            title="Home Health Score"
+            value={Math.round(data.homeHealthScore)}
+            prefix={<HomeOutlined />}
+            suffix="%"
+            valueStyle={{ color: data.homeHealthScore > 70 ? '#22c55e' : '#f59e0b' }}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            title="Anomaly Rate"
+            value={data.anomalyRate}
+            prefix={<AlertOutlined />}
+            suffix="%"
+            valueStyle={{ color: data.anomalyRate < 20 ? '#22c55e' : '#ef4444' }}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            title="Current Temp"
+            value={data.currentTemp}
+            suffix="°C"
+            valueStyle={{ color: '#3b82f6' }}
+          />
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            title="Target Temp"
+            value={data.targetTemp}
+            suffix="°C"
+            valueStyle={{ color: '#ff6b3d' }}
+          />
         </Col>
       </Row>
 
-      {/* === TOP STATUS CARDS === */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={8}>
-          <Card title="Vremenska prognoza">
-            {weather ? (
-              <Descriptions size="small" column={1}>
-                <Descriptions.Item label="Temperatura">{weather.temperature.toFixed()} °C</Descriptions.Item>
-                <Descriptions.Item label="Osjećaj">{weather.feelslike.toFixed()} °C</Descriptions.Item>
-                <Descriptions.Item label="Vlažnost">{weather.humidity} %</Descriptions.Item>
-                <Descriptions.Item label="Vjetar">{weather.wind_kph} km/h</Descriptions.Item>
-                <Descriptions.Item label="Pritisak">{weather.pressure_mb} hPa</Descriptions.Item>
-                <Descriptions.Item label="Stanje">{weather.condition_text}</Descriptions.Item>
-              </Descriptions>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <Card title="System Information" className="shadow-sm">
+            {weatherLoading ? (
+              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Spin size="small" />
+                Loading weather...
+              </div>
+            ) : weatherDisplay ? (
+              <div className="space-y-2">
+                <p><strong>Outside Temp:</strong> {weatherDisplay.outsideTemp !== null ? `${Number(weatherDisplay.outsideTemp).toFixed(1)}°C` : '—'}</p>
+                <p><strong>Feels Like:</strong> {weatherDisplay.feelsLike !== null ? `${Number(weatherDisplay.feelsLike).toFixed(1)}°C` : '—'}</p>
+                <p><strong>Weather:</strong> {weatherDisplay.condition ?? '—'}</p>
+                <p><strong>Humidity:</strong> {weatherDisplay.humidity ?? '—'}%</p>
+                <p><strong>Wind Speed:</strong> {weatherDisplay.windSpeed ?? '—'} km/h</p>
+                <p><strong>Today Min/Max:</strong> {weatherDisplay.tempMin ?? '—'}°C / {weatherDisplay.tempMax ?? '—'}°C</p>
+              </div>
             ) : (
-              <Text type="secondary">Nema podataka</Text>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No weather data available</p>
             )}
           </Card>
         </Col>
-<<<<<<< Updated upstream
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card
-            title="Aktivni termostat"
-            extra={
-              <Badge
-                status={heatingActive ? "processing" : "default"}
-                text={heatingActive ? "Grije" : "Miruje"}
-              />
-            }
-          >
-            {thermostat ? (
-              <Descriptions size="small" column={1}>
-                <Descriptions.Item label="Target temperatura">
-                  {getCurrentIntervalTemp(intervals!, home.recentHeatingEvents)} °C
-                </Descriptions.Item>
-                <Descriptions.Item label="Temperatura polazne vode">{boiler.suggestedFlowTemp} °C</Descriptions.Item>
-                <Descriptions.Item label="Mode">
-                  <Tag color="blue">{thermostat.mode}</Tag>
-                </Descriptions.Item>
-              </Descriptions>
-            ) : (
-              <Text type="secondary">Nema aktivnog termostata</Text>
-            )}
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={24} lg={8}>
-          <Card title="Intervali grijanja">
-            {intervals ? (
-              <Descriptions size="small" column={1}>
-                {["WORKING_DAY", "SATURDAY", "SUNDAY"].map((dayKey) => (
-                  <Descriptions.Item key={dayKey} label={dayKey.replace("_", " ")}>
-                    <Space wrap>
-                      {intervals[dayKey]?.length > 0
-                        ? intervals[dayKey].map((interval: string, idx: number) => {
-                            const tempMatch = interval.match(/(\d+(\.\d+)?)°C/);
-                            const temp = tempMatch ? parseFloat(tempMatch[1]) : 22;
-                            let color = "blue";
-                            if (temp <= 21) color = "cyan";
-                            else if (temp >= 23) color = "volcano";
-                            return <Tag color={color} key={idx}>{interval}</Tag>;
-                          })
-                        : <Text type="secondary">-</Text>}
-                    </Space>
-                  </Descriptions.Item>
-                ))}
-              </Descriptions>
-            ) : (
-              <Text type="secondary">Intervali nisu definirani</Text>
-            )}
-=======
         <Col xs={24} sm={12}>
           <Card
             title="Boiler Status"
@@ -699,172 +707,217 @@ useEffect(() => {
                   : '—'}
               </p>
             </div>
->>>>>>> Stashed changes
           </Card>
         </Col>
       </Row>
 
-      {/* SUMMARY */}
-      {summary && (
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}><Card><Statistic title="Ciklusi" value={summary.cycles} /></Card></Col>
-          <Col xs={12} sm={6}><Card><Statistic title="Ukupno grijanje" value={summary.totalMinutes} suffix="min" /></Card></Col>
-          <Col xs={12} sm={6}><Card><Statistic title="Prosj. trajanje" value={summary.avgDuration} suffix="min" /></Card></Col>
-          <Col xs={12} sm={6}><Card><Statistic title="Prosj. target" value={summary.avgTarget} suffix="°C" /></Card></Col>
-        </Row>
-      )}
-
-      {activeAnomaly && (
-  <Card style={{ marginTop: 12 }}>
-    <Alert
-      type="warning"
-      showIcon
-      message="Detektovana anomalija grijanja"
-      description={
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <Text>
-            Sistem je primijetio da trenutni ciklus grijanja značajno
-            odstupa od uobičajenog trajanja za ovaj termin.
-          </Text>
-
-          <Text strong>
-            Predloženi završetak:&nbsp;
-            {activeAnomaly.proposedEndTime
-              ? dayjs(activeAnomaly.proposedEndTime).format("DD.MM.YYYY HH:mm")
-              : "nije dostupan"}
-          </Text>
-
-          <Space>
-            <DatePicker
-              showTime
-              value={anomalyEndTime}
-              onChange={(v) => setAnomalyEndTime(v)}
-            />
-
-            <Button
-              type="primary"
-              onClick={async () => {
-                try {
-                  await updateHeatingAnomaly(activeAnomaly.id, {
-                    proposedEndTime: anomalyEndTime
-                      ? anomalyEndTime.toISOString()
-                      : undefined,
-                    confirm: true,
-                  });
-
-                  message.success("Anomalija potvrđena");
-                  await loadHeatingData();
-                } catch {
-                  message.error("Greška pri potvrdi anomalije");
-                }
-              }}
-            >
-              Potvrdi završetak
-            </Button>
-          </Space>
-        </Space>
-      }
-    />
-  </Card>
-)}
-
+      {/* ALERTS AND WARNINGS */}
       {alerts.length > 0 && (
-        <Card style={{ marginTop: 12 }}>
-          {alerts.map((a) => (
-            <Alert key={a} type="warning" showIcon message={a} />
-          ))}
+        <Card title={<div className="flex items-center gap-2"><WarningOutlined /> Upozorenja i preporuke</div>} className="shadow-sm">
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {alerts.map((a, idx) => (
+              <Alert key={idx} type={a.type} showIcon icon={a.icon} message={a.message} />
+            ))}
+          </Space>
         </Card>
       )}
 
-      {/* RANGE + GRAPH */}
-      <Card style={{ marginTop: 16 }}>
-        <Space style={{ marginBottom: 12 }} wrap>
-          <DatePicker.RangePicker value={dateRange} onChange={(v) => v && setDateRange([v[0]!, v[1]!])} />
-          <Tag color="blue">{isSingleDay ? "Grafika po satu" : "Grafika po danu"}</Tag>
-          <Badge status={heatingActive ? "processing" : "default"} text={heatingActive ? "Grijanje aktivno" : "Grijanje neaktivno"} />
-        </Space>
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <Card title="Daily Heating Schedule" className="shadow-sm">
+            {scheduleByDay.length > 0 ? (
+              <Collapse
+                ghost
+                items={[
+                  {
+                    key: 'active-program',
+                    label: (
+                      <div className="flex items-center gap-3">
+                        <Badge color="#22c55e" text={null} />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">
+                            Active Program
+                          </span>
+                          {activeProgram ? (
+                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                              {formatStartMinute(activeProgram.startMinute)} · {activeProgram.targetTemp.toFixed(1)}°C
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              No active program
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ),
+                    children: (
+                      <div className="grid gap-3 mt-2 md:grid-cols-2 xl:grid-cols-3">
+                        {scheduleByDay.map((day) => (
+                          <div
+                            key={day.dayType}
+                            className="p-3 border rounded-lg border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">
+                                {day.dayType}
+                              </p>
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                {day.programs.length} blocks
+                              </span>
+                            </div>
+                            <div className="mt-2 space-y-2">
+                              {day.programs.map((p) => {
+                                const isActive =
+                                  activeProgram?.dayType === p.dayType &&
+                                  activeProgram?.orderIndex === p.orderIndex;
+                                return (
+                                  <div
+                                    key={`${day.dayType}-${p.orderIndex}`}
+                                    className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs shadow-sm ${
+                                      isActive
+                                        ? 'border-emerald-400 bg-emerald-100 font-bold text-emerald-800 shadow-lg shadow-emerald-200/50 dark:border-emerald-500/60 dark:bg-emerald-500/20 dark:text-emerald-100 dark:shadow-emerald-500/20'
+                                        : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
+                                    }`}
+                                  >
+                                    <span className={`font-mono ${isActive ? 'font-bold' : ''}`}>
+                                      {formatStartMinute(p.startMinute)}
+                                    </span>
+                                    <span className={`text-sm ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                                      {p.targetTemp.toFixed(1)}°C
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">No thermostat schedule configured.</p>
+            )}
+          </Card>
+        </Col>
+      </Row>
 
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={stats}>
-            <XAxis dataKey="label" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="totalDurationMin" />
-          </BarChart>
-        </ResponsiveContainer>
-
-        <Table
-          style={{ marginTop: 16 }}
-          size="small"
-          dataSource={events}
-          rowKey={(r) => `${r.deviceId}-${r.startedAt}`}
-          pagination={{ pageSize: 8 }}
-          columns={[
-            { title: "Start", dataIndex: "startedAt", render: (v) => dayjs(v).format("DD.MM HH:mm") },
-            { title: "End", dataIndex: "endedAt", render: (v) => v ? dayjs(v).format("DD.MM HH:mm") : "-" },
-            { title: "Target", dataIndex: "targetTemp" },
-            { title: "Current", dataIndex: "currentTemp" },
-            { title: "Trajanje", dataIndex: "durationMinutes", render: (v) => `${v} min` },
-            {
-  title: "Anomalija",
-  dataIndex: "isAnomaly",
-  render: (_, record) => {
-    if (!record.isAnomaly) return null;
-    return (
-      <Space direction="vertical" size={4}>
-        <Alert
-          type="warning"
-          message={`Predloženi završetak: ${record.proposedEndTime ? dayjs(record.proposedEndTime).format("DD.MM HH:mm") : "-"}`}
-
-          showIcon
-        />
-        <Space>
-          <DatePicker
+      <Card
+        title="Heating Events"
+        className="shadow-sm"
+        extra={
+          <DatePicker.RangePicker
             showTime
-            value={record.proposedEndTime ? dayjs(record.proposedEndTime) : null}
-            onChange={(v) => record.proposedEndTime = v?.toISOString() || null}
+            value={range}
+            onChange={(values) => {
+              if (values?.[0] && values?.[1]) setRange([values[0], values[1]]);
+            }}
           />
-          <Button
-            type="primary"
-            size="small"
-            onClick={async () => {
-              try {
-                await updateHeatingAnomaly(record.id, {
-                  proposedEndTime: record.proposedEndTime || undefined,
-                  confirm: true
-                });
-                message.success("Anomalija potvrđena");
-                await loadHeatingData(); // refresh events
-              } catch {
-                message.error("Greška pri potvrdi anomalije");
+        }
+      >
+        <Row gutter={[16, 16]} className="mb-4">
+          <Col xs={24} sm={12} lg={6}>
+            <StatCard
+              title="Total Cycles"
+              value={summaryMetrics.totalCycles}
+              prefix={<FireOutlined />}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <StatCard
+              title="Total Heating Time"
+              value={summaryMetrics.totalDurationMin}
+              suffix="min"
+              prefix={<ClockCircleOutlined />}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <StatCard
+              title="Avg Duration"
+              value={summaryMetrics.avgDurationMin}
+              suffix="min"
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <StatCard
+              title="Avg Indoor Temp"
+              value={summaryMetrics.avgIndoorTemp}
+              suffix="°C"
+            />
+          </Col>
+        </Row>
+
+        <div className="mb-4">
+          <Column
+            data={chartData}
+            xField="label"
+            yField="totalDurationMin"
+            height={260}
+            columnWidthRatio={0.6}
+            color={(datum: ChartDatum) =>
+              activeBucket === datum.label ? '#f59e0b' : '#60a5fa'
+            }
+            tooltip={{
+              customContent: (title, items) => {
+                if (!items || items.length === 0) return null;
+                const datum = chartData.find(d => d.label === title);
+                if (!datum) return null;
+
+                return (
+                  <div className="p-3 bg-white border rounded-lg shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">{title}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-300">
+                        Trajanje: <span className="font-medium">{datum.totalDurationMin} min</span>
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-300">
+                        Ciklusa: <span className="font-medium">{datum.cycles}</span>
+                      </div>
+                      {(datum as any).avgTargetTemp && (
+                        <div className="text-sm text-slate-600 dark:text-slate-300">
+                          Prosj. target: <span className="font-medium">{(datum as any).avgTargetTemp.toFixed(1)}°C</span>
+                        </div>
+                      )}
+                      {(datum as any).avgCurrentTemp && (
+                        <div className="text-sm text-slate-600 dark:text-slate-300">
+                          Prosj. stvarna: <span className="font-medium">{(datum as any).avgCurrentTemp.toFixed(1)}°C</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
               }
             }}
-          >
-            Potvrdi
-          </Button>
-        </Space>
-      </Space>
-    );
-  }
-}
+            onReady={(plot: PlotInstance) => {
+              plot.on('element:mouseenter', (evt: PlotEvent) => {
+                const label = evt?.data?.data?.label;
+                if (label) setActiveBucket(label);
+              });
+              plot.on('element:mouseleave', () => setActiveBucket(null));
+            }}
+          />
+        </div>
 
-          ]}
+        <Table
+          loading={rangeLoading}
+          dataSource={eventsWithBucket}
+          columns={columns}
+          pagination={{ pageSize: 10 }}
+          rowKey={(record) => record.id}
+          size="small"
+          rowClassName={(record) =>
+            record.bucketLabel === activeBucket
+              ? 'bg-amber-50 dark:bg-amber-500/10'
+              : ''
+          }
+          onRow={(record) => ({
+            onMouseEnter: () => setActiveBucket(record.bucketLabel),
+            onMouseLeave: () => setActiveBucket(null),
+          })}
         />
       </Card>
 
-<<<<<<< Updated upstream
-      {/* LEARNING */}
-      <Card title="Learning trend (30 dana)" style={{ marginTop: 16 }}>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={learning}>
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Line dataKey="avgConfidence" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
-      </Card>
-=======
       {/* NOTIFICATION DRAWER */}
       <Drawer
         title={<div className="flex items-center gap-2"><BellOutlined /> Notifikacije</div>}

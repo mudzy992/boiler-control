@@ -1,26 +1,3 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import { Controller, Post, UseGuards, Req, Logger } from '@nestjs/common';
-import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
-import { BoilerService } from './boiler.service';
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 import {
   Controller,
   Get,
@@ -35,31 +12,30 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { BoilerService } from './boiler.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SetCurrentTempDto } from './dto/set-current-temp.dto';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
+@ApiTags('Boiler')
+@ApiBearerAuth()
 @Controller('api/boiler')
 export class BoilerController {
   private readonly logger = new Logger(BoilerController.name);
 
   constructor(private readonly boilerService: BoilerService) {}
+
+  /**
+   * Get boiler history for user
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('history')
+  async getHistory(@Req() req) {
+    try {
+      const userId = req.user.userId;
+      const history = await this.boilerService.getBoilerHistory(userId);
+      return history;
+    } catch (error) {
+      this.logger.error('Failed to fetch boiler history', error);
+      return [];
+    }
+  }
 
   /**
    * Manualni sync / kreiranje jutarnjeg boiler history

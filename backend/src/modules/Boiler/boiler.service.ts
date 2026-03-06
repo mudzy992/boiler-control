@@ -108,8 +108,9 @@ export class BoilerService {
         if (seasonMode === 'AUTO') {
           // Simple auto logic: if average of min/max > 15°C -> SUMMER
           const avgTemp = (tempMin + tempMax) / 2;
-          if (avgTemp > 16) { // 16°C cut-off
-             return this.createOffResult(intervalKey, mode);
+          if (avgTemp > 16) {
+            // 16°C cut-off
+            return this.createOffResult(intervalKey, mode);
           }
         }
       }
@@ -199,7 +200,10 @@ export class BoilerService {
     };
   }
 
-  private createOffResult(intervalKey: string, mode: any): FlowTempCalculationResult {
+  private createOffResult(
+    intervalKey: string,
+    mode: any,
+  ): FlowTempCalculationResult {
     this.logger.log(`[BoilerCalc] Seasonality -> HEATING OFF`);
     return {
       flowTemp: 0,
@@ -228,8 +232,6 @@ export class BoilerService {
 
     return `${dayType}_${part}`;
   }
-<<<<<<< Updated upstream
-=======
 
   /**
    * Fetch boiler history for a user
@@ -305,23 +307,4 @@ export class BoilerService {
       latestBoilerHistoryUpdated: !!latestHistory,
     };
   }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 }

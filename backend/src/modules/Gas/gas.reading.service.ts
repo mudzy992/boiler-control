@@ -9,7 +9,6 @@ import { CreateGasReadingDto } from './dto/create-gas-reading.dto';
 import { UpdateGasReferenceDto } from './dto/update-gas-reference.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import { FileStorageService } from '../../common/file-storage.service';
-import { GasPriceSource } from '../../generated/prisma';
 
 const VAT_RATE = 0.17;
 
@@ -287,7 +286,7 @@ export class GasReadingService {
             priceExVat: dto.invoiceGasPriceExVat,
             vatRate: VAT_RATE,
             effectiveFrom,
-            source: GasPriceSource.INVOICE,
+            source: 'INVOICE',
           },
         });
 

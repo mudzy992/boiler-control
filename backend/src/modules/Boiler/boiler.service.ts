@@ -305,5 +305,8 @@ export class BoilerService {
       latestBoilerHistoryUpdated: !!latestHistory,
     };
   }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }

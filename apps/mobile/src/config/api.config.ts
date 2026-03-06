@@ -41,11 +41,3 @@ export const API_CONFIG = {
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 2,
 } as const;
-
-// Log the API URL in development for debugging
-if (__DEV__) {
-  console.log('API Configuration:', {
-    baseUrl: API_CONFIG.BASE_URL,
-    platform: Platform.OS,
-  });
-}

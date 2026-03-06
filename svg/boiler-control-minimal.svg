@@ -1,0 +1,61 @@
+<!-- boiler-control-minimal.svg - Cleaner version -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="minBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9500"/>
+      <stop offset="100%" style="stop-color:#FF5E00"/>
+    </linearGradient>
+    <filter id="softShadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#minBg)"/>
+
+  <!-- Central flame icon - clean and modern -->
+  <g transform="translate(512, 480)" filter="softShadow">
+    <!-- Outer flame -->
+    <path d="
+      M 0 -260
+      C 40 -220, 140 -140, 160 -60
+      C 180 20, 160 80, 120 120
+      C 160 80, 180 40, 175 -20
+      C 190 20, 200 80, 185 130
+      C 170 180, 100 220, 0 230
+      C -100 220, -170 180, -185 130
+      C -200 80, -190 20, -175 -20
+      C -180 40, -160 80, -120 120
+      C -160 80, -180 20, -160 -60
+      C -140 -140, -40 -220, 0 -260 Z"
+      fill="white"/>
+
+    <!-- Middle flame layer -->
+    <path d="
+      M 0 -160
+      C 25 -130, 90 -80, 100 -20
+      C 110 40, 90 90, 0 110
+      C -90 90, -110 40, -100 -20
+      C -90 -80, -25 -130, 0 -160 Z"
+      fill="rgba(255,200,100,0.6)"/>
+
+    <!-- Inner hot core -->
+    <path d="
+      M 0 -80
+      C 15 -60, 50 -30, 50 20
+      C 50 60, 30 80, 0 85
+      C -30 80, -50 60, -50 20
+      C -50 -30, -15 -60, 0 -80 Z"
+      fill="rgba(255,140,0,0.5)"/>
+  </g>
+
+  <!-- Bottom text -->
+  <text x="512" y="830" font-family="-apple-system, 'SF Pro Display', Arial, sans-serif"
+        font-weight="700" font-size="68" fill="white" text-anchor="middle" letter-spacing="10">
+    BOILER
+  </text>
+  <text x="512" y="905" font-family="-apple-system, 'SF Pro Display', Arial, sans-serif"
+        font-weight="300" font-size="48" fill="rgba(255,255,255,0.75)" text-anchor="middle" letter-spacing="14">
+    CONTROL
+  </text>
+</svg>

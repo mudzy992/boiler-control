@@ -1,0 +1,63 @@
+<!-- splash_branding.svg (288x288dp center branding image) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 288" width="288" height="288">
+  <defs>
+    <linearGradient id="splashFlameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#FF8C00"/>
+      <stop offset="100%" style="stop-color:#FF5500"/>
+    </linearGradient>
+    <linearGradient id="splashInnerFlame" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFE4B5"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="splashGlow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Boiler circle -->
+  <circle cx="144" cy="130" r="85" fill="none" stroke="#FF8C00" stroke-width="4" opacity="0.3"/>
+
+  <!-- Main flame -->
+  <g filter="splashGlow">
+    <path d="
+      M 144 30
+      C 144 30, 185 65, 195 100
+      C 205 135, 195 160, 180 175
+      C 195 160, 205 140, 200 115
+      C 210 135, 215 160, 205 185
+      C 195 210, 170 220, 144 225
+      C 118 220, 93 210, 83 185
+      C 73 160, 78 135, 88 115
+      C 83 140, 93 160, 108 175
+      C 93 160, 83 135, 93 100
+      C 103 65, 144 30, 144 30 Z"
+      fill="url(#splashFlameGrad)"/>
+  </g>
+
+  <!-- Inner flame -->
+  <path d="
+    M 144 80
+    C 144 80, 172 105, 177 135
+    C 182 165, 168 185, 144 190
+    C 120 185, 106 165, 111 135
+    C 116 105, 144 80, 144 80 Z"
+    fill="url(#splashInnerFlame)" opacity="0.9"/>
+
+  <!-- Center white hot spot -->
+  <path d="
+    M 144 120
+    C 144 120, 160 140, 160 155
+    C 160 170, 152 178, 144 180
+    C 136 178, 128 170, 128 155
+    C 128 140, 144 120, 144 120 Z"
+    fill="white" opacity="0.8"/>
+
+  <!-- Text -->
+  <text x="144" y="255" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="28" fill="#FF8C00" text-anchor="middle" letter-spacing="4">BOILER</text>
+  <text x="144" y="278" font-family="Arial, Helvetica, sans-serif" font-weight="300" font-size="18" fill="#FF8C00" text-anchor="middle" letter-spacing="6" opacity="0.7">CONTROL</text>
+</svg>

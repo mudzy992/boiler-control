@@ -1,9 +1,12 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Controller, Post, UseGuards, Req, Logger } from '@nestjs/common';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { BoilerService } from './boiler.service';
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 import {
@@ -21,6 +24,9 @@ import { BoilerService } from './boiler.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SetCurrentTempDto } from './dto/set-current-temp.dto';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

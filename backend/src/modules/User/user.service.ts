@@ -7,7 +7,6 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
-import { GasPriceSource } from '../../generated/prisma';
 
 const GAS_PRICE_VAT_RATE = 0.17;
 
@@ -33,7 +32,7 @@ export class UserService {
         prefersDarkMode: true,
         createdAt: true,
         updatedAt: true,
-        gasPriceHistories: {
+        GasPriceHistory: {
           orderBy: { effectiveFrom: 'desc' },
           take: 1,
           select: {
@@ -96,7 +95,7 @@ export class UserService {
             priceExVat: dto.gasPriceExVat!,
             vatRate: GAS_PRICE_VAT_RATE,
             effectiveFrom: gasPriceEffectiveFrom,
-            source: GasPriceSource.MANUAL,
+            source: 'MANUAL',
           },
         });
 
@@ -120,7 +119,7 @@ export class UserService {
           locale: true,
           prefersDarkMode: true,
           updatedAt: true,
-          gasPriceHistories: {
+          GasPriceHistory: {
             orderBy: { effectiveFrom: 'desc' },
             take: 1,
             select: {
@@ -137,8 +136,8 @@ export class UserService {
   }
 
   private mapUserResponse(user: any) {
-    const latestHistory = user.gasPriceHistories?.[0] || null;
-    const { gasPriceHistories, ...rest } = user;
+    const latestHistory = user.GasPriceHistory?.[0] || null;
+    const { GasPriceHistory, ...rest } = user;
     const gasPriceIncVat =
       user.gasPriceExVat === null || user.gasPriceExVat === undefined
         ? null

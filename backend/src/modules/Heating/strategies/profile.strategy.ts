@@ -1,4 +1,8 @@
-import { WindowType, HeatingType, InsulationType } from 'src/generated/prisma';
+import {
+  HomeProfile_windowType,
+  HomeProfile_heatingType,
+  HomeProfile_insulationType,
+} from 'src/generated/prisma/';
 import { FlowTempInput } from '../engine/types';
 import { BaseHeatingStrategy } from './base.strategy';
 
@@ -24,19 +28,21 @@ export class ProfileStrategy extends BaseHeatingStrategy {
 
     let windowFactor = 0;
     switch (input.homeProfile?.windowType) {
-      case WindowType.TRIPLE_GLAZED:
+      case HomeProfile_windowType.TRIPLE_GLAZED:
         windowFactor = -1;
         break;
-      case WindowType.DOUBLE_GLAZED:
+      case HomeProfile_windowType.DOUBLE_GLAZED:
         windowFactor = 0;
         break;
-      case WindowType.SINGLE_GLAZED:
+      case HomeProfile_windowType.SINGLE_GLAZED:
         windowFactor = 2;
         break;
     }
 
     const heatingFactor =
-      input.homeProfile?.heatingType === HeatingType.UNDERFLOOR ? -2 : 0;
+      input.homeProfile?.heatingType === HomeProfile_heatingType.UNDERFLOOR
+        ? -2
+        : 0;
 
     return areaFactor + heightFactor + windowFactor + heatingFactor;
   }
@@ -44,16 +50,16 @@ export class ProfileStrategy extends BaseHeatingStrategy {
   protected getInsulationFactor(input: FlowTempInput): number {
     let insulationFactor = 1.0;
     switch (input.homeProfile?.insulationType) {
-      case InsulationType.ADVANCED:
+      case HomeProfile_insulationType.ADVANCED:
         insulationFactor = 0.8;
         break;
-      case InsulationType.MINERAL_WOOL:
+      case HomeProfile_insulationType.MINERAL_WOOL:
         insulationFactor = 0.85;
         break;
-      case InsulationType.EPS:
+      case HomeProfile_insulationType.EPS:
         insulationFactor = 0.9;
         break;
-      case InsulationType.STANDARD:
+      case HomeProfile_insulationType.STANDARD:
         insulationFactor = 0.95;
         break;
       default:

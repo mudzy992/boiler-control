@@ -9,9 +9,9 @@ import {
   Min,
 } from 'class-validator';
 import {
-  InsulationType,
-  WindowType,
-  HeatingType,
+  HomeProfile_insulationType,
+  HomeProfile_windowType,
+  HomeProfile_heatingType,
   SeasonMode,
 } from 'src/generated/prisma';
 
@@ -34,19 +34,19 @@ export class CreateHomeProfileDto {
   @Max(5)
   ceilingHeight: number;
 
-  @IsEnum(InsulationType)
-  insulationType: InsulationType;
+  @IsEnum(HomeProfile_insulationType)
+  insulationType: HomeProfile_insulationType;
 
   @IsNumber()
   @Min(5)
   @Max(30)
   insulationThickness: number;
 
-  @IsEnum(WindowType)
-  windowType: WindowType;
+  @IsEnum(HomeProfile_windowType)
+  windowType: HomeProfile_windowType;
 
-  @IsEnum(HeatingType)
-  heatingType: HeatingType;
+  @IsEnum(HomeProfile_heatingType)
+  heatingType: HomeProfile_heatingType;
 
   @IsInt()
   @Min(1900)

@@ -1,14 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider     = "prisma-client-js"
   output       = "../src/generated/prisma"
   moduleFormat = "cjs"
-  transpile = true
+  transpile    = "true"
 }
 
 datasource db {
@@ -16,259 +10,211 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  username      String?  @unique
-  passwordHash  String
-  name          String?
-  homeLocation  String?
-  currentBoilerFlowTemp Float?
-  currentBoilerFlowTempSetAt DateTime?
-
-  activeHomeProfile   HomeProfile? @relation("ActiveHomeProfile", fields: [activeHomeProfileId], references: [id])
-  activeHomeProfileId Int? @unique
-
-  avatarUrl     String?
-  timezone      String?
-  locale        String?
-  prefersDarkMode Boolean?
-
-  isActive      Boolean   @default(true)
-  lastLoginAt   DateTime?
-
-  gasPriceExVat Float?
-
-  role          UserRole  @default(USER)
-  plan          UserPlan  @default(FREE)
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  homeProfiles      HomeProfile[]
-  thermostatDevices ThermostatDevice[]
-  recommendations   Recommendation[]
-  boilerHistories   BoilerHistory[]
-
-  devices                    UserDevice[]
-  notifications               Notification[]
-  notificationPreferences     NotificationPreference[]
-  gasReadings                 GasReading[]
-  gasPriceHistories           GasPriceHistory[]
+  id                                                Int                      @id @default(autoincrement())
+  email                                             String                   @unique
+  passwordHash                                      String
+  name                                              String?
+  createdAt                                         DateTime                 @default(now())
+  updatedAt                                         DateTime                 @updatedAt
+  homeLocation                                      String?
+  avatarUrl                                         String?
+  isActive                                          Boolean                  @default(true)
+  lastLoginAt                                       DateTime?
+  locale                                            String?
+  plan                                              UserPlan                 @default(FREE)
+  prefersDarkMode                                   Boolean?
+  role                                              UserRole                 @default(USER)
+  timezone                                          String?
+  activeHomeProfileId                               Int?                     @unique
+  gasPriceExVat                                     Float?
+  username                                          String?                  @unique
+  currentBoilerFlowTemp                             Float?
+  currentBoilerFlowTempSetAt                        DateTime?
+  boilerHistories                                   BoilerHistory[]
+  GasPriceHistory                                   GasPriceHistory[]
+  gasReadings                                       GasReading[]
+  homeProfiles                                      HomeProfile[]
+  notifications                                     Notification[]
+  notificationPreferences                           NotificationPreference[]
+  recommendations                                   Recommendation[]
+  thermostatDevices                                 ThermostatDevice[]
+  HomeProfile_User_activeHomeProfileIdToHomeProfile HomeProfile?             @relation("User_activeHomeProfileIdToHomeProfile", fields: [activeHomeProfileId], references: [id])
+  devices                                           UserDevice[]
 }
 
 model HomeProfile {
-  id                  Int                       @id @default(autoincrement())
-  user                User                      @relation(fields: [userId], references: [id])
-  userId              Int
-  homeName            String?
-  location            String?
-  floorArea           Float                                 // Grejni prostor 150m2
-  ceilingHeight       Float                                 // Visina plafona 230 cm
-  insulationType      InsulationType                        // Vrsta izolacije (STANDARD, EPS, MINERAL_WOOL, ADVANCED)
-  insulationThickness Float                                 // Debljina izolacije 10, 12, 15 cm
-  windowType          WindowType                            // Tip stolarije (SINGLE_GLAZED, DOUBLE_GLAZED, TRIPLE_GLAZED)
-  heatingType         HeatingType                           // Tip grijanja (RADIATOR, UNDERFLOOR, MIXED)
-  constructionYear    Int                                   // Godina izgradnje objekta
-  numberOfResidents   Int?
-  boilerModel         String?
-  hasFloorHeating     Boolean                   @default(false)
-  targetMorningTemp   Float?
-  targetDayTemp       Float?
-  targetNightTemp     Float?
-  preferredScheduleNotes String?
-  learningOffset      Float                     @default(0) // ± korekcija krivulje
-  learningConfidence  Float                     @default(0) // 0–1
-  seasonMode          SeasonMode                @default(WINTER) // Ljetni/Zimski režim
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
-  thermostatDevices   ThermostatDevice[]
-  intervalLearnings   HeatingIntervalLearning[]
+  id                                         Int                        @id @default(autoincrement())
+  userId                                     Int
+  floorArea                                  Float
+  ceilingHeight                              Float
+  insulationType                             HomeProfile_insulationType
+  insulationThickness                        Float
+  windowType                                 HomeProfile_windowType
+  constructionYear                           Int
+  createdAt                                  DateTime                   @default(now())
+  updatedAt                                  DateTime                   @updatedAt
+  learningConfidence                         Float                      @default(0)
+  learningOffset                             Float                      @default(0)
+  heatingType                                HomeProfile_heatingType
+  seasonMode                                 SeasonMode                 @default(WINTER)
+  boilerModel                                String?
+  hasFloorHeating                            Boolean                    @default(false)
+  homeName                                   String?
+  numberOfResidents                          Int?
+  preferredScheduleNotes                     String?
+  targetDayTemp                              Float?
+  targetMorningTemp                          Float?
+  targetNightTemp                            Float?
+  location                                   String?
+  intervalLearnings                          HeatingIntervalLearning[]
+  user                                       User                       @relation(fields: [userId], references: [id])
+  thermostatDevices                          ThermostatDevice[]
+  User_User_activeHomeProfileIdToHomeProfile User?                      @relation("User_activeHomeProfileIdToHomeProfile")
 
-  activeForUser User? @relation("ActiveHomeProfile")
+  @@index([userId])
 }
 
 model ThermostatDevice {
-  id            Int            @id @default(autoincrement())
-  user          User           @relation(fields: [userId], references: [id])
-  userId        Int
-  homeProfile   HomeProfile    @relation(fields: [homeProfileId], references: [id])
-  homeProfileId Int
-  vendor        String
-  deviceId      String
-  alias         String?
-  lastSeen      DateTime?
-  roomTargetTemp     Float?
-  roomCurrentTemp    Float?
-  mode          ThermostatMode @default(MANUAL) // MANUAL ili PROGRAM
-  heatingEvents HeatingEvent[]
+  id                Int                 @id @default(autoincrement())
+  alias             String?
+  lastSeen          DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  homeProfileId     Int
+  mode              ThermostatMode      @default(MANUAL)
+  deviceId          String
+  userId            Int
+  vendor            String
+  roomCurrentTemp   Float?
+  roomTargetTemp    Float?
+  lastSnapshotAt    DateTime?
+  heatingEvents     HeatingEvent[]
+  homeProfile       HomeProfile         @relation(fields: [homeProfileId], references: [id])
+  user              User                @relation(fields: [userId], references: [id])
   thermostatProgram ThermostatProgram[]
-  lastSnapshotAt  DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+
+  @@index([homeProfileId])
+  @@index([userId], map: "ThermostatDevice_userId_fkey")
 }
 
 model ThermostatProgram {
-  id             Int      @id @default(autoincrement())
-  deviceId       Int
-  dayType        DayType  // WORKDAY | SATURDAY | SUNDAY
-  startMinute    Int      // npr 6:30 = 390
-  targetTemp     Float    // 22,5
-  orderIndex     Int      // 0..5 (radi lakšeg sortiranja)
-  programHash    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  device ThermostatDevice @relation(fields: [deviceId], references: [id])
+  id          Int              @id @default(autoincrement())
+  deviceId    Int
+  dayType     DayType
+  startMinute Int
+  targetTemp  Float
+  orderIndex  Int
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  programHash String?
+  device      ThermostatDevice @relation(fields: [deviceId], references: [id])
 
   @@unique([deviceId, dayType, orderIndex])
 }
 
 model HeatingEvent {
-  id             Int              @id @default(autoincrement())
-  thermostat     ThermostatDevice @relation(fields: [deviceId], references: [id])
-  deviceId       Int
-  timestampStart DateTime                          // Početak grijanja
-  timestampEnd   DateTime?                         // Završetak grijanja
-  roomCurrentTemp    Float           @map("currentTemp")                  // Trenutna temperatura u prostoriji
-  roomTargetTemp     Float           @map("targetTemp")                   // Temperatura koja treba da se dostigne
-  hvacAction     String                            // Informacija da li je grijanje u toku ili ne
-  source         String
-  isAnomaly      Boolean         @default(false)   // Uočena anomalija (cron postavlja na true)
-  proposedEndTime DateTime?                        // Cron prijedlog za Završetak
-  userConfimed    Boolean        @default(false)   // Potvrda korisnika
-  anomalyCheckedAt DateTime? 
+  id               Int              @id @default(autoincrement())
+  roomCurrentTemp  Float            @map("currentTemp")
+  roomTargetTemp   Float            @map("targetTemp")
+  source           String
+  createdAt        DateTime         @default(now())
+  deviceId         Int
+  hvacAction       String
+  timestampEnd     DateTime?
+  timestampStart   DateTime
+  isAnomaly        Boolean          @default(false)
+  proposedEndTime  DateTime?
+  userConfimed     Boolean          @default(false)
+  anomalyCheckedAt DateTime?
+  thermostat       ThermostatDevice @relation(fields: [deviceId], references: [id])
 
-  createdAt DateTime @default(now())
+  @@index([deviceId], map: "HeatingEvent_deviceId_fkey")
 }
 
 model Recommendation {
   id                  Int      @id @default(autoincrement())
-  user                User     @relation(fields: [userId], references: [id])
   userId              Int
+  recommendedFlowTemp Float
+  expectedHeatTimeMin Float
+  confidenceScore     Float
+  createdAt           DateTime @default(now())
   date                DateTime
-  recommendedFlowTemp Float                               // Predložena temperatura vode kotla
-  expectedHeatTimeMin Float                               // Očekivano vrijeme zagrijavanja
-  confidenceScore     Float                               //
+  user                User     @relation(fields: [userId], references: [id])
 
-  createdAt DateTime @default(now())
+  @@index([userId], map: "Recommendation_userId_fkey")
 }
 
 model WeatherCache {
   id                Int      @id @default(autoincrement())
   city              String
-  temperature       Float // trenutna temperatura
-  feelslike         Float? // kako se osjeća
-  temp_min          Float? // minimalna današnja temperatura
-  temp_max          Float? // maksimalna današnja temperatura
-  temp_avg          Float? // prosječna dnevna temperatura
-  wind_kph          Float? // brzina vjetra
-  gust_kph          Float? // udari vjetra
-  wind_dir          String? // smjer vjetra
-  pressure_mb       Float? // atmosferski pritisak
-  humidity          Float? // vlaga
-  cloud             Int? // oblačnost (%)
-  uv_index          Float? // UV indeks
-  precipitation_mm  Float? // ukupna padavina
-  snow_cm           Float? // snijeg u cm
-  condition_text    String? // tekstualni opis (sunce, kiša, snijeg...)
-  sunrise           String? // vrijeme izlaska sunca
-  sunset            String? // vrijeme zalaska sunca
+  fetchedAt         DateTime @default(now())
+  humidity          Float?
+  cloud             Int?
+  condition_text    String?
+  feelslike         Float?
+  gust_kph          Float?
+  moon_illumination Int?
+  moon_phase        String?
   moonrise          String?
   moonset           String?
-  moon_phase        String?
-  moon_illumination Int?
-  fetchedAt         DateTime @default(now())
+  precipitation_mm  Float?
+  pressure_mb       Float?
+  snow_cm           Float?
+  sunrise           String?
+  sunset            String?
+  temp_avg          Float?
+  temp_max          Float?
+  temp_min          Float?
+  temperature       Float
+  uv_index          Float?
+  wind_dir          String?
+  wind_kph          Float?
 }
 
 model BoilerHistory {
-  id            Int       @id @default(autoincrement())
-  user          User      @relation(fields: [userId], references: [id])
-  userId        Int
-  externalTemp  Float                                // Trenutna vanjska temperatura
-  suggestedFlowTemp Float         @map("suggestedTemp")                       // Predložena temperatura vode kotla (polazna voda)
-  actualFlowTemp    Float?        @map("actualTemp")                          // Trenutna aktuelna temperatura vode kotla (polazna voda)
-  heatingStart  DateTime?                            // Početak grijanja
-  heatingEnd    DateTime?                            // Kraj grijanja
-  createdAt     DateTime  @default(now())
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  externalTemp      Float
+  suggestedFlowTemp Float     @map("suggestedTemp")
+  actualFlowTemp    Float?    @map("actualTemp")
+  heatingStart      DateTime?
+  heatingEnd        DateTime?
+  createdAt         DateTime  @default(now())
+  user              User      @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "BoilerHistory_userId_fkey")
 }
 
 model GasReading {
-  id            Int      @id @default(autoincrement())
-  user          User     @relation(fields: [userId], references: [id])
-  userId        Int
-  readingDate   DateTime
-  counterValue  Float    // Stanje brojila (m3)
-  consumption   Float?   // Potrošnja od zadnjeg očitavanja (m3)
-
-  meterImagePath String?
-  meterImageMime String?
-  meterImageOriginalName String?
-
-  isInvoiceReference Boolean @default(false)
-  referenceMonth DateTime?
-
-  invoicePdfPath String?
-  invoicePdfMime String?
+  id                     Int       @id @default(autoincrement())
+  userId                 Int
+  readingDate            DateTime
+  counterValue           Float
+  consumption            Float?
+  createdAt              DateTime  @default(now())
+  invoiceGasPriceExVat   Float?
+  invoicePdfMime         String?
   invoicePdfOriginalName String?
-  invoiceUploadedAt DateTime?
-  invoiceGasPriceExVat Float?
-  gasPriceHistories GasPriceHistory[]
-
-  createdAt    DateTime @default(now())
+  invoicePdfPath         String?
+  invoiceUploadedAt      DateTime?
+  isInvoiceReference     Boolean   @default(false)
+  meterImageMime         String?
+  meterImageOriginalName String?
+  meterImagePath         String?
+  referenceMonth         DateTime?
+  user                   User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, referenceMonth])
-}
-
-model GasPriceHistory {
-  id            Int            @id @default(autoincrement())
-  user          User           @relation(fields: [userId], references: [id])
-  userId        Int
-  priceExVat    Float
-  vatRate       Float          @default(0.17)
-  effectiveFrom DateTime
-  effectiveTo   DateTime?
-  source        GasPriceSource @default(MANUAL)
-  gasReadingId  Int?
-  gasReading    GasReading?    @relation(fields: [gasReadingId], references: [id])
-  createdAt     DateTime       @default(now())
-
-  @@index([userId, effectiveFrom])
-  @@index([userId, effectiveTo])
-}
-
-enum SeasonMode {
-  WINTER
-  SUMMER
-  AUTO
-}
-
-enum InsulationType {
-  STANDARD
-  EPS
-  MINERAL_WOOL
-  ADVANCED
-}
-
-enum WindowType {
-  SINGLE_GLAZED
-  DOUBLE_GLAZED
-  TRIPLE_GLAZED
-}
-
-enum HeatingType {
-  RADIATOR
-  UNDERFLOOR
-  MIXED
 }
 
 model HeatingIntervalLearning {
   id              Int         @id @default(autoincrement())
   homeProfileId   Int
-  intervalKey     String // npr. "weekday_morning_1"
+  intervalKey     String
   avgReachTimeMin Float
   avgOvershoot    Float
-  offset          Float       @default(0) // ± korekcija kotla
-  confidence      Float       @default(0) // 0–1
+  offset          Float       @default(0)
+  confidence      Float       @default(0)
   samples         Int         @default(0)
   lastUpdated     DateTime    @default(now())
   homeProfile     HomeProfile @relation(fields: [homeProfileId], references: [id])
@@ -285,56 +231,69 @@ model TuyaToken {
 }
 
 model UserDevice {
-  id              Int      @id @default(autoincrement())
-  user             User     @relation(fields: [userId], references: [id])
-  userId           Int
-
-  platform         String   // ios | android
-  expoPushToken    String   @unique
-  isActive         Boolean  @default(true)
-
-  lastSeenAt       DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  platform      String
+  expoPushToken String    @unique
+  isActive      Boolean   @default(true)
+  lastSeenAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Notification {
-  id           Int      @id @default(autoincrement())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       Int
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  type       NotificationType
+  title      String
+  message    String
+  data       Json?
+  sentAt     DateTime         @default(now())
+  deliveryOk Boolean          @default(true)
+  sourceRef  String?
+  createdAt  DateTime         @default(now())
+  isRead     Boolean          @default(false)
+  user       User             @relation(fields: [userId], references: [id])
 
-  type         NotificationType
-  title        String
-  message      String
-
-  data         Json?        // payload (flowTemp, eventId, etc.)
-  sentAt       DateTime     @default(now())
-  deliveryOk   Boolean      @default(true)
-  isRead       Boolean      @default(false)
-
-  sourceRef    String?      // npr. "daily_recommendation_2026-01-16"
-
-  createdAt    DateTime     @default(now())
-
+  @@unique([userId, sourceRef])
   @@index([userId])
   @@index([type])
-  @@unique([userId, sourceRef])
 }
 
 model NotificationPreference {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
+  id        Int              @id @default(autoincrement())
   userId    Int
-
   type      NotificationType
-  enabled   Boolean  @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  enabled   Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id])
 
   @@unique([userId, type])
+}
+
+model GasPriceHistory {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  priceExVat    Float
+  vatRate       Float     @default(0.17)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  source        String
+  gasReadingId  Int?
+  createdAt     DateTime  @default(now())
+  User          User      @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "GasPriceHistory_userId_fkey")
+}
+
+enum SeasonMode {
+  WINTER
+  SUMMER
+  AUTO
 }
 
 enum NotificationType {
@@ -370,7 +329,21 @@ enum UserPlan {
   ENTERPRISE
 }
 
-enum GasPriceSource {
-  MANUAL
-  INVOICE
+enum HomeProfile_insulationType {
+  STANDARD
+  EPS
+  MINERAL_WOOL
+  ADVANCED
+}
+
+enum HomeProfile_windowType {
+  SINGLE_GLAZED
+  DOUBLE_GLAZED
+  TRIPLE_GLAZED
+}
+
+enum HomeProfile_heatingType {
+  RADIATOR
+  UNDERFLOOR
+  MIXED
 }

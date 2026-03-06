@@ -5,9 +5,10 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider     = "prisma-client"
+  provider     = "prisma-client-js"
   output       = "../src/generated/prisma"
   moduleFormat = "cjs"
+  transpile = true
 }
 
 datasource db {
@@ -17,32 +18,15 @@ datasource db {
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
+  username      String?  @unique
   passwordHash  String
   name          String?
   homeLocation  String?
   currentBoilerFlowTemp Float?
   currentBoilerFlowTempSetAt DateTime?
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
   activeHomeProfile   HomeProfile? @relation("ActiveHomeProfile", fields: [activeHomeProfileId], references: [id])
   activeHomeProfileId Int? @unique
->>>>>>> Stashed changes
 
   avatarUrl     String?
   timezone      String?
@@ -51,6 +35,8 @@ model User {
 
   isActive      Boolean   @default(true)
   lastLoginAt   DateTime?
+
+  gasPriceExVat Float?
 
   role          UserRole  @default(USER)
   plan          UserPlan  @default(FREE)
@@ -67,19 +53,29 @@ model User {
   notifications               Notification[]
   notificationPreferences     NotificationPreference[]
   gasReadings                 GasReading[]
+  gasPriceHistories           GasPriceHistory[]
 }
 
 model HomeProfile {
   id                  Int                       @id @default(autoincrement())
   user                User                      @relation(fields: [userId], references: [id])
   userId              Int
+  homeName            String?
+  location            String?
   floorArea           Float                                 // Grejni prostor 150m2
   ceilingHeight       Float                                 // Visina plafona 230 cm
-  insulationType      String                                // Vrsta izolacije EPS Wool
+  insulationType      InsulationType                        // Vrsta izolacije (STANDARD, EPS, MINERAL_WOOL, ADVANCED)
   insulationThickness Float                                 // Debljina izolacije 10, 12, 15 cm
-  windowType          String                                // Tip stolarije double/ triple PVC, Wood
-  heatingType         String                                // Tip grijanja radijator, podno
+  windowType          WindowType                            // Tip stolarije (SINGLE_GLAZED, DOUBLE_GLAZED, TRIPLE_GLAZED)
+  heatingType         HeatingType                           // Tip grijanja (RADIATOR, UNDERFLOOR, MIXED)
   constructionYear    Int                                   // Godina izgradnje objekta
+  numberOfResidents   Int?
+  boilerModel         String?
+  hasFloorHeating     Boolean                   @default(false)
+  targetMorningTemp   Float?
+  targetDayTemp       Float?
+  targetNightTemp     Float?
+  preferredScheduleNotes String?
   learningOffset      Float                     @default(0) // ± korekcija krivulje
   learningConfidence  Float                     @default(0) // 0–1
   seasonMode          SeasonMode                @default(WINTER) // Ljetni/Zimski režim
@@ -87,6 +83,8 @@ model HomeProfile {
   updatedAt           DateTime                  @updatedAt
   thermostatDevices   ThermostatDevice[]
   intervalLearnings   HeatingIntervalLearning[]
+
+  activeForUser User? @relation("ActiveHomeProfile")
 }
 
 model ThermostatDevice {
@@ -138,6 +136,7 @@ model HeatingEvent {
   isAnomaly      Boolean         @default(false)   // Uočena anomalija (cron postavlja na true)
   proposedEndTime DateTime?                        // Cron prijedlog za Završetak
   userConfimed    Boolean        @default(false)   // Potvrda korisnika
+  anomalyCheckedAt DateTime? 
 
   createdAt DateTime @default(now())
 }
@@ -194,20 +193,72 @@ model BoilerHistory {
 }
 
 model GasReading {
-  id           Int      @id @default(autoincrement())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       Int
-  readingDate  DateTime
-  counterValue Float    // Stanje brojila (m3)
-  consumption  Float?   // Potrošnja od zadnjeg očitavanja (m3)
+  id            Int      @id @default(autoincrement())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        Int
+  readingDate   DateTime
+  counterValue  Float    // Stanje brojila (m3)
+  consumption   Float?   // Potrošnja od zadnjeg očitavanja (m3)
+
+  meterImagePath String?
+  meterImageMime String?
+  meterImageOriginalName String?
+
+  isInvoiceReference Boolean @default(false)
+  referenceMonth DateTime?
+
+  invoicePdfPath String?
+  invoicePdfMime String?
+  invoicePdfOriginalName String?
+  invoiceUploadedAt DateTime?
+  invoiceGasPriceExVat Float?
+  gasPriceHistories GasPriceHistory[]
 
   createdAt    DateTime @default(now())
+
+  @@unique([userId, referenceMonth])
+}
+
+model GasPriceHistory {
+  id            Int            @id @default(autoincrement())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        Int
+  priceExVat    Float
+  vatRate       Float          @default(0.17)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  source        GasPriceSource @default(MANUAL)
+  gasReadingId  Int?
+  gasReading    GasReading?    @relation(fields: [gasReadingId], references: [id])
+  createdAt     DateTime       @default(now())
+
+  @@index([userId, effectiveFrom])
+  @@index([userId, effectiveTo])
 }
 
 enum SeasonMode {
   WINTER
   SUMMER
   AUTO
+}
+
+enum InsulationType {
+  STANDARD
+  EPS
+  MINERAL_WOOL
+  ADVANCED
+}
+
+enum WindowType {
+  SINGLE_GLAZED
+  DOUBLE_GLAZED
+  TRIPLE_GLAZED
+}
+
+enum HeatingType {
+  RADIATOR
+  UNDERFLOOR
+  MIXED
 }
 
 model HeatingIntervalLearning {
@@ -261,6 +312,7 @@ model Notification {
   data         Json?        // payload (flowTemp, eventId, etc.)
   sentAt       DateTime     @default(now())
   deliveryOk   Boolean      @default(true)
+  isRead       Boolean      @default(false)
 
   sourceRef    String?      // npr. "daily_recommendation_2026-01-16"
 
@@ -291,6 +343,7 @@ enum NotificationType {
   HEATING_STARTED
   HEATING_ENDED
   SYSTEM_ALERT
+  GAS_READING_REMINDER
 }
 
 enum ThermostatMode {
@@ -315,4 +368,9 @@ enum UserPlan {
   FREE
   PRO
   ENTERPRISE
+}
+
+enum GasPriceSource {
+  MANUAL
+  INVOICE
 }

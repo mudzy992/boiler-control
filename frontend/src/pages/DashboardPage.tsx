@@ -238,22 +238,27 @@ export const DashboardPage: React.FC = () => {
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
-  const [setTempModalOpen, setSetTempModalOpen] = useState(false);
-  const [setTempValue, setSetTempValue] = useState<number | null>(null);
-  const [setTempSubmitting, setSetTempSubmitting] = useState(false);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
-  const normalizedRange = useMemo(() => {
-    if (isSingleDay) {
+  const { data: homeProfile } = useQuery({
+    queryKey: ['home-profile'],
+    queryFn: () => apiClient.getHomeProfile(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const homeProfileId = homeProfile?.id;
+
+  const {
+    data: currentWeather,
+    isLoading: weatherLoading,
+  } = useQuery({
+    queryKey: ['weather-current', homeProfileId],
+    queryFn: () => apiClient.getCurrentWeather(homeProfileId),
+    enabled: !!homeProfileId,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const weatherDisplay = useMemo(() => {
+    if (currentWeather) {
       return {
         from: dateRange[0].startOf("day").toISOString(),
         to: dateRange[0].endOf("day").toISOString(),
@@ -1014,41 +1019,6 @@ useEffect(() => {
           </>
         )}
       </Modal>
-
-      <Modal
-        title="Set current flow temperature"
-        open={setTempModalOpen}
-        onCancel={() => setSetTempModalOpen(false)}
-        onOk={submitSetTemp}
-        confirmLoading={setTempSubmitting}
-        okText={setTempSubmitting ? 'Saving...' : 'Save'}
-      >
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Text type="secondary">
-            Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
-          </Text>
-          <InputNumber
-            value={setTempValue ?? undefined}
-            onChange={(value) => setSetTempValue(typeof value === 'number' ? value : null)}
-            min={MIN_CURRENT_FLOW_TEMP}
-            max={MAX_CURRENT_FLOW_TEMP}
-            step={0.1}
-            precision={1}
-            style={{ width: '100%' }}
-            addonAfter="°C"
-          />
-        </Space>
-      </Modal>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     </div>
   );
 };

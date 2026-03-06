@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b8db47c7-e21f-4ef6-b686-a1a5a4fbb444" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/apps/mobile/com.facebook.react.fabric.mounting.MountItemDispatcher" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/mobile/com.facebook.react.fabric.mounting.SurfaceMountingManager" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/mobile/com.facebook.react.fabric.mounting.mountitems.IntBufferBatchMountItem" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/mobile/com.facebook.react.uimanager.ViewManager" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/mobile/com.facebook.react.uimanager.ViewManagerPropertyUpdater$GenericViewManagerDelegate" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/prisma/data-migration-enums.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/backend/prisma/schema.prisma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/Boiler/boiler.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/Boiler/boiler.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/Dashboard/dashboard.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/Dashboard/dashboard.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/Dashboard/dashboard.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/Dashboard/dashboard.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/Dashboard/dto/dashboard.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/Dashboard/dto/dashboard.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/HomeProfile/dto/create-home-profile.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/HomeProfile/dto/create-home-profile.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/HomeProfile/dto/update-home-profile.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/HomeProfile/dto/update-home-profile.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/HomeProfile/home.profile.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/HomeProfile/home.profile.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/modules/HomeProfile/home.profile.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/modules/HomeProfile/home.profile.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/m.ceric/Documents/GitHub/boiler-control" value="39C5cTTwTZCjpNqlWClypkLniTP" />
+    </persistenceIdMap>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="39C5cTTwTZCjpNqlWClypkLniTP" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.android.tools.idea.streaming.zoom.toolbar.visible": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/m.ceric/Documents/GitHub/boiler-control",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b8db47c7-e21f-4ef6-b686-a1a5a4fbb444" name="Changes" comment="" />
+      <created>1770187294652</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1770187294652</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

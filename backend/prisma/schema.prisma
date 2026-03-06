@@ -20,6 +20,8 @@ model User {
   passwordHash  String
   name          String?
   homeLocation  String?
+  currentBoilerFlowTemp Float?
+  currentBoilerFlowTempSetAt DateTime?
 
   avatarUrl     String?
   timezone      String?

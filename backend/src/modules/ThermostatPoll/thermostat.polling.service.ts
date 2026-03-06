@@ -154,6 +154,7 @@ export class ThermostatPollingService {
     flowTemp: number,
   ) {
     const now = new Date();
+<<<<<<< Updated upstream
     const lastBoilerHistory = await this.prisma.boilerHistory.findFirst({
       orderBy: { createdAt: 'desc' },
     });
@@ -172,6 +173,75 @@ export class ThermostatPollingService {
         source: 'THERMOSTAT',
       },
     });
+=======
+
+    const ctx: LogContext = {
+      runId,
+      deviceId: device.id,
+      userId: device.userId,
+      action: 'heating_start',
+    };
+
+    // Idempotency: skip if an event was already created in the same minute
+    const minuteSlotStart = new Date(Math.floor(now.getTime() / 60000) * 60000);
+    const existing = await this.prisma.heatingEvent.findFirst({
+      where: {
+        deviceId: device.id,
+        timestampStart: { gte: minuteSlotStart },
+      },
+    });
+
+    if (existing) {
+      this.structuredLogger.debug(
+        'Duplicate heating start detected; skipping',
+        ctx,
+      );
+      return;
+    }
+
+    this.structuredLogger.log('Starting heating start transaction', ctx);
+
+    const [lastBoilerHistory, userState, lastWeatherTemp] = await Promise.all([
+      this.prisma.boilerHistory.findFirst({
+        where: { userId: device.userId },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: device.userId },
+        select: { currentBoilerFlowTemp: true },
+      }),
+      this.prisma.weatherCache.findFirst({
+        orderBy: { fetchedAt: 'desc' },
+      }),
+    ]);
+
+    // Wrap multi-step DB operations in transaction for atomicity
+    const [event] = await this.prisma.$transaction([
+      this.prisma.heatingEvent.create({
+        data: {
+          deviceId: device.id,
+          timestampStart: now,
+          roomCurrentTemp: currentTemp,
+          roomTargetTemp: targetTemp,
+          hvacAction: 'HEATING_ON',
+          source: 'THERMOSTAT',
+        },
+      }),
+      this.prisma.boilerHistory.create({
+        data: {
+          userId: device.userId,
+          externalTemp: lastWeatherTemp?.temperature || 0,
+          suggestedFlowTemp: flowTemp,
+          actualFlowTemp:
+            userState?.currentBoilerFlowTemp ??
+            lastBoilerHistory?.actualFlowTemp ??
+            null,
+          heatingStart: now,
+          heatingEnd: null,
+        },
+      }),
+    ]);
+>>>>>>> Stashed changes
 
     await this.prisma.boilerHistory.create({
       data: {

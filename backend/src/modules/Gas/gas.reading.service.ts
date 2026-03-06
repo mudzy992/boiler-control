@@ -85,7 +85,12 @@ export class GasReadingService {
       if (h.heatingStart && h.heatingEnd) {
         const duration = (h.heatingEnd.getTime() - h.heatingStart.getTime()) / 60000;
         totalMinutes += duration;
+<<<<<<< Updated upstream
         weightedTempSum += duration * (h.actualFlowTemp || h.suggestedFlowTemp || 0);
+=======
+        weightedTempSum +=
+          duration * (h.actualFlowTemp ?? h.suggestedFlowTemp ?? 0);
+>>>>>>> Stashed changes
       }
     });
 

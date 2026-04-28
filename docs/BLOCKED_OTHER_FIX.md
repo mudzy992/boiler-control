@@ -12,46 +12,17 @@ This is typically caused by one of:
 
 ## Solution
 
-### 1. Fix Apache CSP Header
-Your current CSP header is incomplete. Use the fixed configuration in `APACHE_VHOST_CONFIG.conf`:
+### 1. Fix CSP Header (Traefik middleware)
+If you're using Traefik as the only entrypoint, set CSP via a `headers` middleware on the frontend router.
 
 Key changes:
-```apache
-# OLD (incomplete, causes blocking)
-Header always set Content-Security-Policy "default-src 'self';connect-src 'self' http://localhost:3020 ...>"
+Use `docker-compose.yml` labels for `boiler-security-headers` middleware.
 
-# NEW (complete and correct)
-Header always set Content-Security-Policy "default-src 'self'; \
-    connect-src 'self' https://boiler-control.hopto.org wss://boiler-control.hopto.org; \
-    img-src 'self' data: blob: https:; \
-    style-src 'self' 'unsafe-inline'; \
-    script-src 'self' 'unsafe-inline'; \
-    font-src 'self' data:; \
-    object-src 'none'; \
-    base-uri 'self'; \
-    form-action 'self'"
-```
+### 2. CORS
+When frontend and backend are served from the same host via Traefik (`/backend/...`), CORS is typically not needed at the proxy layer. If you still need it, configure it in the backend (NestJS `enableCors()`), not via Apache.
 
-### 2. Add CORS Headers
-Your Apache config is missing CORS headers. Add these:
-```apache
-Header always set "Access-Control-Allow-Origin" "https://boiler-control.hopto.org"
-Header always set "Access-Control-Allow-Methods" "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-Header always set "Access-Control-Allow-Headers" "Content-Type, Authorization, X-Requested-With"
-Header always set "Access-Control-Allow-Credentials" "true"
-```
-
-### 3. Enable ProxyPreserveHost
-Your proxy configuration should preserve the Host header:
-```apache
-ProxyPass /backend/ http://localhost:3020/
-ProxyPassReverse /backend/ http://localhost:3020/
-ProxyPreserveHost On          # Add this line
-
-ProxyPass / http://localhost:3021/
-ProxyPassReverse / http://localhost:3021/
-ProxyPreserveHost On          # Add this line
-```
+### 3. Proxy / routing
+Traefik handles host + path routing via labels (see `docker-compose.yml`).
 
 ### 4. Update Frontend API Client (Optional but Recommended)
 If API calls still fail, update the frontend API client to use relative URLs:
@@ -71,32 +42,9 @@ This way, both frontend and backend are accessed from the same domain.
 
 ## Implementation Steps
 
-1. **Update Apache Configuration**:
-   ```bash
-   # Edit your Apache vhost config
-   sudo nano /etc/apache2/sites-available/boiler-control-ssl.conf
-
-   # Replace with content from APACHE_VHOST_CONFIG.conf
-   ```
-
-2. **Enable Required Apache Modules**:
-   ```bash
-   sudo a2enmod headers
-   sudo a2enmod rewrite
-   sudo a2enmod proxy
-   sudo a2enmod proxy_http
-   ```
-
-3. **Test Configuration**:
-   ```bash
-   sudo apache2ctl configtest
-   # Should output: Syntax OK
-   ```
-
-4. **Restart Apache**:
-   ```bash
-   sudo systemctl restart apache2
-   ```
+1. **Apply Traefik security headers middleware**:
+   - Ensure `boiler-security-headers` middleware labels exist (in `docker-compose.yml`).
+   - Ensure routers reference it (frontend router, and optionally backend router).
 
 5. **Test Frontend API Calls**:
    - Open browser dev tools (F12)
@@ -114,6 +62,7 @@ This way, both frontend and backend are accessed from the same domain.
 sudo tail -f /var/log/apache2/boiler-control_error.log
 ```
 
+If you're not using Apache at all, skip this step and check Traefik logs instead.
 ### Check Browser Console
 Open browser DevTools (F12) → Console tab:
 - Look for "Content-Security-Policy" errors
@@ -129,7 +78,7 @@ curl http://localhost:3020/api/health
 curl http://localhost:3021/
 
 # Test through proxy
-curl -H "Host: boiler-control.hopto.org" https://localhost:443/backend/api/health
+curl -H "Host: boiler.ba101.top" https://localhost:443/backend/api/health
 ```
 
 ---
@@ -173,8 +122,7 @@ curl -H "Host: boiler-control.hopto.org" https://localhost:443/backend/api/healt
 
 ## Files to Use
 
-- **Apache Config**: [APACHE_VHOST_CONFIG.conf](./APACHE_VHOST_CONFIG.conf)
-- **Ready to copy and use in your Apache config**
+- **Traefik labels**: `docker-compose.yml`
 
 ---
 

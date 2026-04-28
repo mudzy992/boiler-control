@@ -27,9 +27,9 @@ const getApiBaseUrl = (): string => {
   // Android emulator needs 10.0.2.2 to reach host machine's localhost
   if (__DEV__) {
     if (Platform.OS === 'android') {
-      return 'https://boiler-control.hopto.org/backend/api';
+      return 'https://boiler.ba101.top/backend/api';
     }
-    return 'https://boiler-control.hopto.org/backend/api';
+    return 'https://boiler.ba101.top/backend/api';
   }
 
   // Fallback (should never reach here in production)

@@ -14,7 +14,7 @@ services:
       - "3021"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.boiler-frontend.rule=Host(`boiler-control.hopto.org`)"
+      - "traefik.http.routers.boiler-frontend.rule=Host(`boiler.ba101.top`)"
       - "traefik.http.routers.boiler-frontend.entrypoints=websecure"
       - "traefik.http.routers.boiler-frontend.tls=true"
       - "traefik.http.routers.boiler-frontend.tls.certresolver=le"

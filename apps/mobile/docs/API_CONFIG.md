@@ -50,7 +50,7 @@ export const API_CONFIG = {
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
       }
     }
   }

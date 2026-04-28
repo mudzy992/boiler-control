@@ -16,7 +16,7 @@ async function bootstrap() {
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:3021',
       'http://localhost:5173',
-      'https://boiler-control.hopto.org',
+      'https://boiler.ba101.top',
       'http://192.168.31.247:8082',
       'http://localhost:8082',
     ],

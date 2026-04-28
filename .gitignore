@@ -1,8 +1,49 @@
-.expo
-node_modules
-dist
-*.txt
-# Keep environment variables out of version control
-/backend/src/generated
+#############################
+# Source of truth .gitignore #
+#############################
 
-/apps/mobile/.expo
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+dist-ssr/
+web-build/
+
+# Logs
+logs/
+*.log
+npm-debug.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local env files (do not commit secrets)
+.env
+.env.*
+!.env.example
+
+# Expo (local state)
+.expo/
+
+# Metro / RN temp files
+.metro-health-check*
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.local
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Repo-specific
+*.txt
+/backend/src/generated

@@ -11,7 +11,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
       }
     },
     "preview": {
@@ -20,7 +20,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
       }
     },
     "production": {
@@ -29,7 +29,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler-control.hopto.org/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
       }
     }
   },

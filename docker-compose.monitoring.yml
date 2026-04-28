@@ -1,6 +1,15 @@
-# Local monitoring stack for development and testing
+# Monitoring stack (Prometheus + Grafana) behind Traefik (HTTPS)
 # Usage: docker-compose -f docker-compose.monitoring.yml up -d
-# Access: Prometheus http://localhost:9090, Grafana http://localhost:3000
+# Access:
+# - https://prometheus.ba101.top
+# - https://grafana.ba101.top
+#
+# Optional BasicAuth (recommended for internet-exposed monitoring):
+# - Add a basicauth middleware + attach it to the routers (kept out of defaults to avoid Traefik errors when users are not provided).
+# - Example labels to add:
+#   - traefik.http.middlewares.boiler-monitoring-auth.basicauth.users=<user:hashedpass>
+#   - traefik.http.routers.boiler-grafana.middlewares=boiler-monitoring-headers,boiler-monitoring-auth
+#   - traefik.http.routers.boiler-prometheus.middlewares=boiler-monitoring-headers,boiler-monitoring-auth
 
 version: '3.8'
 
@@ -8,8 +17,9 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: boiler-prometheus
-    ports:
-      - "9090:9090"
+    restart: unless-stopped
+    expose:
+      - "9090"
     volumes:
       - ./docs/internal/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -18,29 +28,61 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'
     networks:
+      - web
       - monitoring
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.boiler-prometheus.rule=Host(`prometheus.ba101.top`)"
+      - "traefik.http.routers.boiler-prometheus.entrypoints=websecure"
+      - "traefik.http.routers.boiler-prometheus.tls=true"
+      - "traefik.http.routers.boiler-prometheus.tls.certresolver=le"
+      - "traefik.http.routers.boiler-prometheus.middlewares=boiler-monitoring-headers"
+      - "traefik.http.services.boiler-prometheus.loadbalancer.server.port=9090"
 
   grafana:
     image: grafana/grafana:latest
     container_name: boiler-grafana
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
+    expose:
+      - "3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_SERVER_ROOT_URL=https://grafana.ba101.top
     volumes:
       - grafana-data:/var/lib/grafana
       - ./docs/internal/monitoring/grafana-provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
     networks:
+      - web
       - monitoring
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.boiler-grafana.rule=Host(`grafana.ba101.top`)"
+      - "traefik.http.routers.boiler-grafana.entrypoints=websecure"
+      - "traefik.http.routers.boiler-grafana.tls=true"
+      - "traefik.http.routers.boiler-grafana.tls.certresolver=le"
+      - "traefik.http.routers.boiler-grafana.middlewares=boiler-monitoring-headers"
+      - "traefik.http.services.boiler-grafana.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.customFrameOptionsValue=SAMEORIGIN"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.boiler-monitoring-headers.headers.stsPreload=true"
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
+
 
 volumes:
   prometheus-data:
@@ -49,5 +91,7 @@ volumes:
     driver: local
 
 networks:
+  web:
+    external: true
   monitoring:
     driver: bridge

@@ -22,7 +22,7 @@ export abstract class BaseHeatingStrategy implements HeatingCalculationStrategy 
     let finalTemp = baseCurveTemp + totalModifiers;
 
     // 5. Clamp
-    finalTemp = Math.max(35, Math.min(56, finalTemp));
+    finalTemp = Math.max(46, Math.min(55, finalTemp));
 
     return {
       baseCurveTemp,

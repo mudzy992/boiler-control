@@ -51,7 +51,7 @@ scrape_configs:
     metric_relabel_configs:
       # Keep only relevant metrics
       - source_labels: [__name__]
-        regex: '(reporting_.*|nodejs_.*|process_.*|http_.*)'
+        regex: '(reporting_.*|nodejs_.*|process_.*|http_.*|poll_.*|tuya_.*|weather_.*|adapter_.*|anomaly_.*|fallback_.*|db_errors_total|heating_events_.*|boiler_current_temp_updates_total|anomalies_detected)'
         action: keep
 
       # Drop high-cardinality metrics that could cause issues

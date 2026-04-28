@@ -22,7 +22,7 @@ services:
       - "9090"
     volumes:
       - ./docs/internal/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
+      - ./DATA/AppData/boiler-monitoring/prometheus:/prometheus:rw
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -54,7 +54,7 @@ services:
       - GF_SECURITY_DISABLE_GRAVATAR=true
       - GF_SERVER_ROOT_URL=https://grafana.ba101.top
     volumes:
-      - grafana-data:/var/lib/grafana
+      - ./DATA/AppData/boiler-monitoring/grafana:/var/lib/grafana:rw
       - ./docs/internal/monitoring/grafana-provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
@@ -83,12 +83,6 @@ services:
       timeout: 10s
       retries: 3
 
-
-volumes:
-  prometheus-data:
-    driver: local
-  grafana-data:
-    driver: local
 
 networks:
   web:

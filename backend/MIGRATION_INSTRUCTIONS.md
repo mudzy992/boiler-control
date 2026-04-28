@@ -20,7 +20,7 @@ npx prisma migrate resolve --rolled-back 20260203133327_standardize_home_profile
 Connect to your MySQL database using your preferred client:
 
 ```bash
-mysql -h inventory.hopto.org -P 3306 -u your_username -p boiler_assistant
+mysql -h sql.ba101.top -P 3306 -u your_username -p boiler_assistant
 ```
 
 Or use a GUI tool like MySQL Workbench, DBeaver, or phpMyAdmin.
@@ -30,7 +30,7 @@ Or use a GUI tool like MySQL Workbench, DBeaver, or phpMyAdmin.
 Execute the SQL script to update existing values:
 
 ```bash
-mysql -h inventory.hopto.org -P 3306 -u your_username -p boiler_assistant < prisma/data-migration-enums.sql
+mysql -h sql.ba101.top -P 3306 -u your_username -p boiler_assistant < prisma/data-migration-enums.sql
 ```
 
 Or copy the contents of `prisma/data-migration-enums.sql` and run it in your MySQL client.

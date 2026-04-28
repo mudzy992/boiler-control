@@ -1,5 +1,5 @@
 # Prometheus configuration for Boiler Control Backend
-# Metrics endpoint: http://backend:3020/metrics
+# Metrics endpoint: http://boiler-control-backend:3020/metrics
 
 global:
   # Prometheus scrape interval
@@ -18,7 +18,7 @@ scrape_configs:
   - job_name: 'backend-metrics'
     # Metrics scraped from backend service
     static_configs:
-      - targets: ['localhost:3020']
+      - targets: ['boiler-control-backend:3020']
         labels:
           service: 'boiler-control-backend'
           component: 'api-server'
@@ -62,7 +62,7 @@ scrape_configs:
   - job_name: 'backend-reporting'
     # Custom reporting metrics endpoint
     static_configs:
-      - targets: ['localhost:3020']
+      - targets: ['boiler-control-backend:3020']
         labels:
           service: 'boiler-control-backend'
           component: 'reporting'
@@ -85,7 +85,7 @@ scrape_configs:
 
 # Alert rules (optional)
 rule_files:
-  # - '/etc/prometheus/alert_rules.yml'
+  - '/etc/prometheus/prometheus-alert-rules.yml'
 
 # Alertmanager configuration (optional)
 # alerting:

@@ -4,6 +4,10 @@
 # - https://prometheus.ba101.top
 # - https://grafana.ba101.top
 #
+# CasaOS note:
+# - CasaOS often runs compose from a temp dir and won't have your repo `docs/` folder there.
+# - Use absolute paths under `/DATA/AppData/...` for Prometheus/Grafana config mounts.
+#
 # Optional BasicAuth (recommended for internet-exposed monitoring):
 # - Add a basicauth middleware + attach it to the routers (kept out of defaults to avoid Traefik errors when users are not provided).
 # - Example labels to add:
@@ -21,8 +25,8 @@ services:
     expose:
       - "9090"
     volumes:
-      - ./docs/internal/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./DATA/AppData/boiler-monitoring/prometheus:/prometheus:rw
+      - /DATA/AppData/boiler-monitoring/config/prometheus:/etc/prometheus:ro
+      - /DATA/AppData/boiler-monitoring/prometheus:/prometheus:rw
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -47,15 +51,15 @@ services:
     expose:
       - "3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SECURITY_DISABLE_GRAVATAR=true
       - GF_SERVER_ROOT_URL=https://grafana.ba101.top
     volumes:
-      - ./DATA/AppData/boiler-monitoring/grafana:/var/lib/grafana:rw
-      - ./docs/internal/monitoring/grafana-provisioning:/etc/grafana/provisioning:ro
+      - /DATA/AppData/boiler-monitoring/grafana:/var/lib/grafana:rw
+      - /DATA/AppData/boiler-monitoring/config/grafana-provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
     networks:

@@ -10,7 +10,7 @@ Create `.env` file in `backend/`:
 
 ```bash
 # Database Configuration
-DATABASE_HOST=inventory.hopto.org
+DATABASE_HOST=sql.ba101.top
 DATABASE_PORT=3306
 DATABASE_USER=mudzy
 DATABASE_PASSWORD=nije,kikiriki

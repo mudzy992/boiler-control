@@ -146,10 +146,10 @@
         "tooltip": { "mode": "single" }
       },
       "targets": [
-        { "expr": "rate(poll_runs_total[5m])", "refId": "A", "legendFormat": "poll_runs_total/s" },
-        { "expr": "rate(poll_runs_failed[5m])", "refId": "B", "legendFormat": "poll_runs_failed/s" }
+        { "expr": "increase(poll_runs_total[1h])", "refId": "A", "legendFormat": "poll runs (last 1h)" },
+        { "expr": "increase(poll_runs_failed[1h])", "refId": "B", "legendFormat": "poll failures (last 1h)" }
       ],
-      "title": "Polling rate",
+      "title": "Polling volume (last 1h)",
       "type": "timeseries"
     },
     {
@@ -170,12 +170,12 @@
       },
       "targets": [
         {
-          "expr": "(rate(poll_runs_success[5m]) / clamp_min(rate(poll_runs_total[5m]), 1e-9)) * 100",
+          "expr": "(increase(poll_runs_success[1h]) / clamp_min(increase(poll_runs_total[1h]), 1e-9)) * 100",
           "refId": "A",
           "legendFormat": "poll success %"
         }
       ],
-      "title": "Polling success (%)",
+      "title": "Polling success (%) (last 1h)",
       "type": "timeseries"
     },
     {
@@ -195,10 +195,10 @@
         "tooltip": { "mode": "single" }
       },
       "targets": [
-        { "expr": "rate(tuya_requests_total[5m])", "refId": "A", "legendFormat": "tuya req/s" },
-        { "expr": "rate(weather_requests_total[5m])", "refId": "B", "legendFormat": "weather req/s" }
+        { "expr": "increase(tuya_requests_total[1h])", "refId": "A", "legendFormat": "tuya requests (last 1h)" },
+        { "expr": "increase(weather_requests_total[1h])", "refId": "B", "legendFormat": "weather requests (last 1h)" }
       ],
-      "title": "External API request rate",
+      "title": "External API requests (last 1h)",
       "type": "timeseries"
     },
     {
@@ -218,11 +218,11 @@
         "tooltip": { "mode": "single" }
       },
       "targets": [
-        { "expr": "rate(tuya_timeout_errors[5m])", "refId": "A", "legendFormat": "tuya timeouts/s" },
-        { "expr": "rate(weather_timeout_errors[5m])", "refId": "B", "legendFormat": "weather timeouts/s" },
-        { "expr": "rate(db_errors_total[5m])", "refId": "C", "legendFormat": "db errors/s" }
+        { "expr": "increase(tuya_timeout_errors[1h])", "refId": "A", "legendFormat": "tuya timeouts (last 1h)" },
+        { "expr": "increase(weather_timeout_errors[1h])", "refId": "B", "legendFormat": "weather timeouts (last 1h)" },
+        { "expr": "increase(db_errors_total[1h])", "refId": "C", "legendFormat": "db errors (last 1h)" }
       ],
-      "title": "Timeouts & DB errors rate",
+      "title": "Timeouts & DB errors (last 1h)",
       "type": "timeseries"
     }
   ],

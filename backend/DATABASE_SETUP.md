@@ -1,5 +1,10 @@
 # Database Setup & Seeding Guide
 
+> ⚠️ **Note (2026-08-26):** the project has been migrated from MySQL to
+> PostgreSQL. Any MySQL-specific commands/connection strings below are
+> historical and may be stale — see `docs/MYSQL_TO_POSTGRES_MIGRATION.md`
+> for the current setup process and connection string format.
+
 This guide covers database setup, migration, and seeding for the Boiler Control system.
 
 ## Quick Start

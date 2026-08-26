@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 model User {
@@ -94,7 +94,7 @@ model ThermostatDevice {
   thermostatProgram ThermostatProgram[]
 
   @@index([homeProfileId])
-  @@index([userId], map: "ThermostatDevice_userId_fkey")
+  @@index([userId])
 }
 
 model ThermostatProgram {
@@ -128,7 +128,7 @@ model HeatingEvent {
   anomalyCheckedAt DateTime?
   thermostat       ThermostatDevice @relation(fields: [deviceId], references: [id])
 
-  @@index([deviceId], map: "HeatingEvent_deviceId_fkey")
+  @@index([deviceId])
 }
 
 model Recommendation {
@@ -141,7 +141,7 @@ model Recommendation {
   date                DateTime
   user                User     @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "Recommendation_userId_fkey")
+  @@index([userId])
 }
 
 model WeatherCache {
@@ -182,7 +182,7 @@ model BoilerHistory {
   createdAt         DateTime  @default(now())
   user              User      @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "BoilerHistory_userId_fkey")
+  @@index([userId])
 }
 
 model GasReading {
@@ -306,7 +306,7 @@ model GasPriceHistory {
   createdAt     DateTime  @default(now())
   User          User      @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "GasPriceHistory_userId_fkey")
+  @@index([userId])
 }
 
 enum SeasonMode {

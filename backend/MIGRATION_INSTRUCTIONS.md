@@ -1,5 +1,10 @@
 # Data Migration Instructions - Enum Standardization
 
+> ⚠️ **Note (2026-08-26):** this document predates the MySQL → PostgreSQL
+> migration. Any raw SQL / `mysql` CLI commands below are historical and
+> written for MySQL — see `docs/MYSQL_TO_POSTGRES_MIGRATION.md` for the
+> current database engine and setup process.
+
 ## ⚠️ Important: Follow these steps in order to avoid data loss
 
 The Prisma migration failed because existing data doesn't match the new enum values. We need to update the data first, then apply the schema migration.

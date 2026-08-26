@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '../generated/prisma/client';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaService
@@ -23,13 +23,14 @@ export class PrismaService
       const connectTimeout =
         Number(process.env.DATABASE_CONNECT_TIMEOUT_MS) || 5000;
       super({
-        adapter: new PrismaMariaDb({
+        adapter: new PrismaPg({
           host: process.env.DATABASE_HOST!,
+          port: Number(process.env.DATABASE_PORT) || 5432,
           user: process.env.DATABASE_USER!,
           password: process.env.DATABASE_PASSWORD!,
           database: process.env.DATABASE_NAME!,
-          connectionLimit: poolSize,
-          connectTimeout,
+          max: poolSize,
+          connectionTimeoutMillis: connectTimeout,
         }),
       });
     } else {

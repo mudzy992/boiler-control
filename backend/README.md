@@ -57,7 +57,7 @@ npm run test:smoke
 ### Technology Stack
 
 - **Framework**: NestJS 11 with TypeScript
-- **Database**: MySQL 8.0 with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM (migrated from MySQL — see `docs/MYSQL_TO_POSTGRES_MIGRATION.md`)
 - **Authentication**: JWT with Passport
 - **Validation**: class-validator + class-transformer
 - **Monitoring**: Prometheus metrics
@@ -100,9 +100,9 @@ Create `backend/.env`:
 
 ```env
 # Database
-DATABASE_URL="mysql://user:password@host:3306/boiler_assistant"
+DATABASE_URL="postgresql://user:password@host:5432/boiler_assistant"
 DATABASE_HOST="localhost"
-DATABASE_PORT=3306
+DATABASE_PORT=5432
 DATABASE_USER="boileruser"
 DATABASE_PASSWORD="yourpassword"
 DATABASE_NAME="boiler_assistant"
@@ -327,7 +327,7 @@ The dev server (`npm run start:dev`) automatically reloads on file changes.
 **Database connection fails:**
 
 - Check DATABASE_URL in `.env`
-- Ensure MySQL is running
+- Ensure PostgreSQL is running
 - Verify database credentials
 
 **Prisma client not found:**

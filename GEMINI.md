@@ -1,7 +1,7 @@
 # Boiler Control System - AI Agent Instructions
 
 ## Project Overview
-Monorepo for heating system management with NestJS backend, React production frontend (/frontend), and React Native mobile app (Expo + NativeBase). Database: MySQL with Prisma ORM.
+Monorepo for heating system management with NestJS backend, React production frontend (/frontend), and React Native mobile app (Expo + NativeBase). Database: PostgreSQL with Prisma ORM (migrated from MySQL — see docs/MYSQL_TO_POSTGRES_MIGRATION.md).
 
 ## Architecture & Structure
 
@@ -9,12 +9,11 @@ Monorepo for heating system management with NestJS backend, React production fro
 ```
 backend/           # NestJS API (port 3020)
 frontend/          # React production frontend (Vite, port 5173) ⭐ PRIMARY
-apps/mobile/       # React Native Expo app
-apps/web/          # Legacy/deprecated (use /frontend instead)
+mobile/            # React Native Expo app
 ```
 
 ### Frontend Architecture (Production - /frontend)
-**NOTE**: `/frontend` is the active production frontend. `apps/web` is deprecated for new features.
+**NOTE**: `/frontend` is the active production frontend. The old `apps/web` duplicate was removed (2026-08-26) — it was an unused, deprecated copy that was never wired into any deploy path.
 
 - **Framework**: React 19 + TypeScript + Vite
 - **UI Components**: Ant Design 5.x
@@ -81,7 +80,7 @@ cd frontend
 npm run dev             # Vite dev server (port 5173)
 
 # Mobile app (separate terminal)
-cd apps/mobile
+cd mobile
 npm run start           # Expo dev server
 npx expo start -c       # Clear cache if needed
 ```
@@ -124,10 +123,10 @@ npm run db:reset:seed       # Always re-seed before integration tests
 - **Navigation**: React Router v6 (useNavigate hook)
 - **Forms**: HTML form elements + validation, no external form libraries
 - **Components**: Functional components with TypeScript props interfaces
-- **Cross-platform parity**: Any business logic or feature changes implemented in `/frontend` must be mirrored in `apps/mobile` (and vice versa) unless explicitly documented as platform-specific.
+- **Cross-platform parity**: Any business logic or feature changes implemented in `/frontend` must be mirrored in `/mobile` (and vice versa) unless explicitly documented as platform-specific.
 
 ### Design System & Responsiveness (Frontend)
-- **Source of truth**: `/frontend` is the only production UI source. `apps/web` is deprecated for UI changes.
+- **Source of truth**: `/frontend` is the only production UI source. (`apps/web` was removed 2026-08-26.)
 - **Color tokens**: Use consistent light/dark tokens across pages (backgrounds, surfaces, borders, text). Prefer Tailwind palette + existing global CSS variables.
 - **Spacing**: Use consistent spacing scale (4/8/12/16/24/32). Avoid ad-hoc padding.
 - **Shadows & Radius**: Use subtle shadows (`shadow-sm`) and consistent radius (`rounded-lg`, `rounded-xl`).
@@ -148,7 +147,7 @@ npm run db:reset:seed       # Always re-seed before integration tests
 ### Environment Variables
 - **Backend**: `backend/.env` - `DATABASE_URL`, `JWT_SECRET`
 - **Frontend**: `frontend/.env` - `VITE_API_URL` (defaults to `http://localhost:3020/api`)
-- **Mobile**: `apps/mobile/.env` - `EXPO_PUBLIC_API_URL`
+- **Mobile**: `mobile/.env` - `EXPO_PUBLIC_API_URL`
 
 ## Common Gotchas
 
@@ -217,7 +216,7 @@ Use Expo Build service or development builds for production distribution
 - **Key Pattern**: All strings use `t('section.key')` pattern for consistency
 
 ### Mobile Error Handling
-- **Centralized**: `apps/mobile/src/services/api/error.handler.ts`
+- **Centralized**: `mobile/src/services/api/error.handler.ts`
 - **User Messages**: Friendly, localized error messages for all HTTP status codes
 - **Network Detection**: Distinguishes between network errors and server errors
 - **Toast UI**: Error toast appears at top, auto-dismisses after 4 seconds

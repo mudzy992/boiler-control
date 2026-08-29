@@ -1,6 +1,6 @@
 APP_PORT=3020
 
-# MySQL connection (replace with real values, do not commit)
+# MySQL connection (replace with real values, do not commit )
 # DATABASE_URL="mysql://mudzy:nije,kikiriki@sql.ba101.top:3306/boiler_assistant"
 # DATABASE_USER="mudzy"
 # DATABASE_PASSWORD="nije,kikiriki"

@@ -22,7 +22,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Local env files (do not commit secrets)
-*.apk
 .env
 .env.*
 !.env.example
@@ -48,4 +47,5 @@ lerna-debug.log*
 # Repo-specific
 *.txt
 *.apk
+apps/mobile/*.apk
 /backend/src/generated

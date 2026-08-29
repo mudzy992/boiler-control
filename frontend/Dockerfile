@@ -3,7 +3,7 @@ FROM node:20-slim AS build-stage
 
 WORKDIR /app
 
-# Build argument for API URL (defaults to backend service)1
+# Build argument for API URL (defaults to backend service ) 
 ARG VITE_API_URL=https://api.boiler-contro.ba101.top/api
 ENV VITE_API_URL=${VITE_API_URL}
 

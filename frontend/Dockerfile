@@ -1,40 +1,43 @@
-# Stage 1: Build the frontend
-FROM node:20-slim AS build-stage
+# ============================================================
+# Stage 1: Build
+# ============================================================
+FROM node:20-slim AS build
 
 WORKDIR /app
 
-# Build argument for API URL (defaults to backend service)
-ARG VITE_API_URL=https://api.boiler-contro.ba101.top/api
+# Vite environment variable - available during build only
+ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
-# FORSIRANO: bez obzira šta Coolify pošalje kao --build-arg NODE_ENV,
-# build stage MORA imati development da bi npm install povukao devDependencies (vite i sl.)
+# Build tools are devDependencies
 ENV NODE_ENV=development
 
-# Copy frontend package files
+# Install dependencies
 COPY package*.json ./
+RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
-# Copy frontend source
+# Copy source
 COPY . .
 
-RUN npm install --force --legacy-peer-deps --no-audit --no-fund || npm install --force --legacy-peer-deps
-
-RUN npm rebuild
-
+# Build production assets
 RUN npm run build
 
-# Stage 2: Production image
-FROM node:20-slim
 
-WORKDIR /app
+# ============================================================
+# Stage 2: Production
+# ============================================================
+FROM nginx:1.27-alpine AS production
 
-# ovdje je NODE_ENV=production sasvim OK, jer se ovo tiče runtime-a servera koji servira static fajlove, ne buildovanja
-ENV NODE_ENV=production
+# Remove default Nginx configuration
+RUN rm /etc/nginx/conf.d/default.conf
 
-RUN npm install -g serve
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=build-stage /app/dist ./dist
+# Copy production build
+COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 3021
+# Nginx
+EXPOSE 80
 
-CMD ["serve", "-s", "dist", "-l", "3021"]
+CMD ["nginx", "-g", "daemon off;"]

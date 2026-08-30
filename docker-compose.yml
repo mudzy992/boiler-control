@@ -26,10 +26,22 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://api.boiler-contro.ba101.top/api
+        VITE_API_URL: https://api.boiler-contro.ba101.top/api
     restart: unless-stopped
     expose:
       - "80"
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://127.0.0.1/health
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
 
 networks:
   db_net:

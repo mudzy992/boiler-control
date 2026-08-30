@@ -29,7 +29,7 @@ services:
         - VITE_API_URL=https://api.boiler-contro.ba101.top/api
     restart: unless-stopped
     expose:
-      - "3021"
+      - "80"
 
 networks:
   db_net:

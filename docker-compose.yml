@@ -8,6 +8,7 @@ services:
     environment:
       - TZ=Europe/Sarajevo
       - APP_PORT=3020
+      - FRONTEND_URL=https://boiler-contro.ba101.top
       - UPLOAD_ROOT_PATH=/usr/src/app/uploads
     volumes:
       - /etc/localtime:/etc/localtime:ro

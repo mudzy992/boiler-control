@@ -33,7 +33,7 @@
       "predictiveBackGestureEnabled": false
     },
     "extra": {
-      "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
+      "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
     }
   }
 }

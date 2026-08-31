@@ -11,16 +11,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
-      }
-    },
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
       }
     },
     "production": {
@@ -29,7 +20,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
       }
     }
   },

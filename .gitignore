@@ -46,6 +46,4 @@ lerna-debug.log*
 
 # Repo-specific
 *.txt
-*.apk
-apps/mobile/*.apk
 /backend/src/generated

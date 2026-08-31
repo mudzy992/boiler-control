@@ -1,43 +1,41 @@
-# ============================================================
-# Stage 1: Build
-# ============================================================
-FROM node:20-slim AS build
+# Stage 1: Build the frontend
+FROM node:20-slim AS build-stage
 
 WORKDIR /app
 
-# Vite environment variable - available during build only
-ARG VITE_API_URL
+# Build argument for API URL (defaults to backend service)1
+ARG VITE_API_URL=/backend/api
 ENV VITE_API_URL=${VITE_API_URL}
 
-# Build tools are devDependencies
-ENV NODE_ENV=development
-
-# Install dependencies
+# Copy frontend package files
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
-# Copy source
+# Copy frontend source
 COPY . .
 
-# Build production assets
-RUN npm run build
+# Install dependencies with retry logic for optional dependencies
+# npm install with --no-audit and --no-fund to speed up installation
+RUN npm install --force --legacy-peer-deps --no-audit --no-fund || npm install --force --legacy-peer-deps
 
+# Rebuild native modules for Linux platform
+RUN npm rebuild
 
-# ============================================================
-# Stage 2: Production
-# ============================================================
-FROM nginx:1.27-alpine AS production
+# Build the application with API URL
+RUN VITE_API_URL=${VITE_API_URL} npm run build
 
-# Remove default Nginx configuration
-RUN rm /etc/nginx/conf.d/default.conf
+# Stage 2: Production image
+FROM node:20-slim
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy production build
-COPY --from=build /app/dist /usr/share/nginx/html
+# Install serve to run the application
+RUN npm install -g serve
 
-# Nginx
-EXPOSE 80
+# Copy built assets from build stage (output to dist directory)
+COPY --from=build-stage /app/dist ./dist
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3021
+
+# Run the application
+CMD ["serve", "-s", "dist", "-l", "3021"]

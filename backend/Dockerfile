@@ -1,55 +1,28 @@
-# ============================================================
-# Stage 1: Dependencies
-# ============================================================
+# Stage 1: dependencies
 FROM node:20-slim AS dependencies
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openssl libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/backend/app
-
-# Build stage MUST contain devDependencies
-ENV NODE_ENV=development
 
 COPY package*.json ./
+RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
-RUN npm ci --no-audit --no-fund
-
-
-# ============================================================
-# Stage 2: Build
-# ============================================================
+# Stage 2: build
 FROM node:20-slim AS build
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openssl \
-    && rm -rf /var/lib/apt/lists/*
+# FIX: Re-install openssl here too for the build phase1
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/backend/app
-
-# Build MUST use development dependencies
-ENV NODE_ENV=development
 
 COPY --from=dependencies /usr/src/backend/app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
 RUN npx prisma generate
+RUN npm run build --verbose
 
-# Build NestJS
-RUN npm run build
-
-
-# ============================================================
-# Stage 3: Production
-# ============================================================
+# Stage 3: production
 FROM node:20-slim AS production
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openssl \
-    && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/src/backend/app
 
 ENV NODE_ENV=production
@@ -58,8 +31,11 @@ ENV UPLOAD_ROOT_PATH=/usr/src/app/uploads
 COPY --from=build /usr/src/backend/app/dist ./dist
 COPY --from=build /usr/src/backend/app/node_modules ./node_modules
 COPY --from=build /usr/src/backend/app/package*.json ./
+# Make sure your prisma schema is available if needed at runtime
 COPY --from=build /usr/src/backend/app/prisma ./prisma
+COPY --from=build /usr/src/backend/app/src/generated ./dist/generated
+COPY --from=build /usr/src/backend/app/src/generated ./dist/src/generated
 
 EXPOSE 3020
-
-CMD ["node", "dist/src/main.js"]
+# Start NestJS directly. Support both dist layouts.
+CMD ["sh", "-c", "if [ -f dist/src/main.js ]; then node dist/src/main.js; else node dist/main.js; fi"]

@@ -2,7 +2,7 @@ module.exports = ({ config }) => {
   // Default API URL for local development
   // Will be overridden by EAS build env vars for preview/production
   const extra = {
-    EXPO_PUBLIC_API_URL: 'https://boiler.ba101.top/backend/api',
+    EXPO_PUBLIC_API_URL: 'https://api.boiler-control.ba101.top/api',
     eas: {
       projectId: "c875e85d-ad10-4eb6-bdae-fa5038133ee7",
     },

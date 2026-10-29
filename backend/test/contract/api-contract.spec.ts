@@ -209,8 +209,8 @@ describe('API Contract Tests (P1e)', () => {
   });
 
   describe('Metrics API Contract (Public)', () => {
-    it('GET /api/metrics should return Prometheus-format metrics', async () => {
-      const response = await request(app.getHttpServer()).get('/api/metrics');
+    it('GET /metrics should return Prometheus-format metrics', async () => {
+      const response = await request(app.getHttpServer()).get('/metrics');
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('poll_runs_total');
@@ -220,9 +220,9 @@ describe('API Contract Tests (P1e)', () => {
       expect(response.text).toContain('# TYPE');
     });
 
-    it('GET /api/metrics/json should return metrics as JSON', async () => {
+    it('GET /metrics/json should return metrics as JSON', async () => {
       const response = await request(app.getHttpServer()).get(
-        '/api/metrics/json',
+        '/metrics/json',
       );
 
       expect(response.status).toBe(200);

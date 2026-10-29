@@ -36,10 +36,12 @@ try {
     for (const kind of ['PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'PrismaClientValidationError', 'PrismaClientUnknownRequestError', 'SyntaxError', 'TypeError', 'ReferenceError', 'Jest encountered an unexpected token', 'Exceeded timeout', 'Nest can\'t resolve dependencies', 'Unknown argument', 'does not exist', 'Unique constraint failed', 'Foreign key constraint']) {
       if (text.includes(kind)) hints.push(kind);
     }
-    for (const label of ['Expected', 'Received']) {
+    for (const label of ['Expected', 'Received', 'Expected value', 'Received value']) {
       const match = text.match(new RegExp(`${label}:\\s*(\\d{1,3})(?=\\s|$)`));
       if (match) hints.push(`${label} ${match[1]}`);
     }
+    const location = text.match(/(?:test|src)\/[\w./-]+\.spec\.ts:\d+:\d+/);
+    if (location) hints.push(location[0]);
     const prop = text.match(/Cannot read properties of (undefined|null) \(reading ['"]([\w]+)['"]\)/);
     if (prop) hints.push(`Cannot read ${prop[2]} of ${prop[1]}`);
     return [...new Set(hints)].slice(0, 6).join('; ');

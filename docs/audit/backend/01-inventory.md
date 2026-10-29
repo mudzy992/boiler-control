@@ -124,3 +124,51 @@ Samo statički hintovi; tranzitivni DI, aliasi, transakcije drugih naziva, runti
 | Ostalo | 0 | 0/0 | 0/0 | 0/0 | 0/0 |
 
 Grupisanje koristi dostupne putanje u Istanbul summaryju (`scripts/audit/coverage_summary.cjs`), nije novi Jest filter i ne mijenja imenilac zbirnog izvještaja. Brojke se zasnivaju na TypeScript/ts-jest instrumentaciji i source-mapovima; različiti nazivnici po metrici su mogući. Instrumentacija ne dokazuje sve rubne slučajeve, HTTP ugovor, stvarni runtime provider, pouzdanost ili odsustvo defekata. `backend_source` uključuje sve obuhvaćene ne-generisane fajlove u `src`, ne samo module; ne tvrditi da je svaka datoteka ili grana pokrivena.
+
+## Matrica modula → provjere → poznate praznine
+
+**VERIFIKOVANO u izvoru testova i audit skriptama:** sljedeća mapa opisuje direktno navedene suite/scenarije ili izolovane reprodukcije, ne stvarni line-by-line coverage. Naziv testa, učitavanje `AppModule` ili mock ne dokazuje da je poslovna grana uspješno izvršena. Posebno B-012 i B-025 pokazuju da neke asertacije mogu biti preskočene. Opći Jest i zasebni integracijski suite se preklapaju; skripte `scripts/audit/` nisu dio broja 167 Jest testova. Testovi/skripte koje navode stvarni servis s fake DB ne zamjenjuju stvarnu bazu, kompletan DI ni produkciju.
+
+Skraćenice: `A` = `backend/test/integration/api.integration.spec.ts`; `H` = `backend/test/integration/heating-polling.integration.spec.ts`; `C` = `backend/test/contract/api-contract.spec.ts`; `T` = `backend/test/unit/transactional-integrity.spec.ts`; `U` = `backend/test/unit/tuya-adapter.spec.ts`. Reference tačnih grupa su u navedenim fajlovima, a rezultati CI-ja i uslovi okruženja gore.
+
+| Modul | Provjere / ulaz → izlaz koji se može pripisati izvoru | Konkretna nepokrivena ili nedovoljno potvrđena grana |
+|---|---|---|
+| Auth | `A:56-196` registracija/login; `C:37-75`; `auth_session_repro.cjs` sintetički HTTP/JWT i fake DB. | Deaktivacija/poništavanje tokena i sesije nakon promjene lozinke u punom AppModule + stvarni PostgreSQL (S-003/S-004). |
+| Boiler | `H:335-413` historija i ručni unos; `C:78-108` ima uslovne asertacije; `formula_table.cjs` motor, ne čitav servis. | Prava provjera da ručni unos ne šalje uređajnu komandu, multi-device veza historije (B-024), DB greške i timeout providera. |
+| Dashboard | `A:342-395`, `C:111-121`; `dashboard_repro.cjs` stvarni servis/fake DB za dva uređaja i grupisanje. | HTTP+DB kontrakt dva različita uređaja/vlasnika i DST bucket, pravi provider i cijeli izlaz B-019/B-020. |
+| ExpoPush | `reminder_delivery_repro.cjs` koristi fake push, ne stvarni adapter. | Expo SDK ticket/receipt, partial failure i timeout ne potvrđuju se fake pushom; R-002. |
+| Gas | `gas_validation_repro.cjs` DTO/servis s lažnom DB; `upload_validation_repro.cjs` privremeni filesystem. | Konkretni HTTP multipart i stvarna PostgreSQL konkurentnost dnevnih unosa, vlasništvo i lifecycle fajlova (B-015–B-018, S-006). |
+| Heating | `H:66-170` POST/GET scenariji, uslovni i stub ograničenja B-001/B-012; `formula_table.cjs` pravi engine/sintetički input. | Upis stvarnog eventa kroz POST nije implementiran; golden/property test svih modela i stručna/fizička sigurnost nisu potvrđeni. |
+| HeatingAnomalyCheckerService | `H:235-284` GET; `anomaly_ownership_repro.cjs` i `anomaly_validation_repro.cjs` izolovani servis/pipe. | Negativni HTTP owner test nakon popravke DTO-a, konkurentni claim i stvarni raspored obrade (B-009/B-010, R-001). |
+| HeatingRecommendation | `H:171-234` GET i today stub; `learning_end_repro.cjs` stvarni servis/engine sa fake DB. | Prvi interval, idempotentan ponovljeni event i konkurentni PostgreSQL update; stvarni završni/vršni senzor (F-003/F-005/F-006). |
+| HomeProfile | `H:87-105` i `H:474-493` kreiraju profile direktno kroz Prisma kao testni setup, ne dokazuju HTTP CRUD. | Create/update/activate/delete kroz JWT, dva vlasnika, IANA zone i anomalije postojećeg `activeHomeProfileId`. |
+| Notification | `prisma-safe-updates.spec.ts` testira mock obrazac, a ne stvarnu autorizaciju; `http_postgres_repro.cjs` stvarni guard/kontroler/servis i disposable DB; `push_registration_repro.cjs` fake DB/push. | Sve IDOR varijante i puni AppModule, validirani token lifecycle/više uređaja i stvarni Expo receipt (B-006, R-006). |
+| Schedule | `cron_registration_repro.cjs` pravi gas servis/scheduler u sintetičkim modulima i ručni tick; `reminder_delivery_repro.cjs` fake DB/push. | Realni timer, puni AppModule, više replika, IANA DST i provider receipti nisu testirani. |
+| ThermostatDevice | `H:285-334`; `C:192-208` koristi drugačiju deklarisanu putanju i uslovne asertacije (B-025). | Vlastiti/tuđi/nepostojeći ID, tuđi `homeProfileId`, sve mutacije i dva uređaja uz stvarnu DB. |
+| ThermostatPoll | `T` direktno uvozi servis ali opisuje/mockira obrasce; `poll_metrics_repro.cjs`, `poll_overlap_repro.cjs`, `history_close_repro.cjs` izolovani stvarni servis. | Scheduler stvarnim vremenom, dva procesa i PostgreSQL race/rollback, stvarni status providera, promjene historije i idempotentnost side effecta (R-001/R-007/B-024). |
+| Tuya | `U` testira `TuyaAdapter` uz mock auth/program; `tuya_missing_fields_repro.cjs` i `program_sync_partial_repro.cjs` sintetički status/fake DB. | Stvarni DP ugovor, dvije konkurentne verzije rasporeda, partial DB failure na PostgreSQL-u i retry s redakcijom tajni (B-026/B-027). |
+| User | `A:197-267` GET/PUT; `auth_session_repro.cjs` testira stvarni profilni put i bcrypt s fake DB. | Efektivna revokacija svih sesija, promjena lozinke i username race u stvarnoj DB; politike deaktivacije i recovery. |
+| Weather | `H:414-453` ispituje stub, ne punu prognozu (B-012); `weather_repro.cjs` fake SDK, `openmeteo_fixture_replay.cjs` javni hourly fixture sa stvarnim SDK parserom. | Dnevni FlatBuffers sunrise/sunset i DST fixture, HTTP profil/two-location/owner, stvarni provider outage i licencni ugovor (W-001–W-005). |
+
+Kada je test naveden kao `H` ili `C`, to označava postojanje te testne grupe u izvoru, ne da svaka očekivana asertacija radi; redovi inventara nisu brojevi pokrivenih grana. CI run [40888715069](https://github.com/mudzy992/boiler-control/actions/runs/40888715069) za `14e2524` završio je uspješno, ali ne mjeri spomenute nepostojeće provjere.
+
+## Common: javne ulazne tačke, saradnici i testne praznine
+
+**VERIFIKOVANO u izvoru**, ne pretpostaviti da je svaki helper aktivan u produkciji. Common nema deklarisane cronove ili Prisma modele; HTTP adapteri i file storage obavljaju mrežni odnosno lokalni I/O samo kada se pozovu.
+
+| Common fajl | Izloženo / zavisnost | Direktna provjera ili konkretna praznina |
+|---|---|---|
+| `adapters/base-adapter.ts` | Timeout/retry/breaker wrapper; `CircuitBreaker`, `MetricsService`, logger. | B-004: timeout race ne abortira request; fake delayed HTTP + abort test nedostaje. |
+| `adapters/circuit-breaker.ts` | `canAttempt`, `recordFailure`, `recordSuccess`, `reset` i metrike; memorijsko stanje. | Testirati OPEN/HALF_OPEN s konkurentnim pokušajima i fake satom; Tuya adapter ima i zasebni breaker, `U` nije direktan test ove klase. |
+| `adapters/http-adapter.ts` | HTTP metode i podešavanje URL/headera preko `BaseAdapter`; axios. | Test timeout/retry/abort, statusi i redakcija bez pravog providera; ne tretirati mock kao mrežni test. |
+| `adapters/index.ts` | Re-export adaptera/tipova, nema zasebnog runtime I/O. | Uvozi/kompatibilnost izvoza provjeriti pri promjeni. |
+| `anomaly-detection.service.ts` | `detectAnomalies`, `calculateConfidence`, logovanje; `MetricsService`. | `common/tests/anomaly-detection.service.spec.ts` pokriva sintetičke scenarije; distribuciju stvarnih ciklusa i owner zaštitu ne potvrđuje. |
+| `common.module.ts` | Registracija 2 kontrolera i 6 providera/izvoza (`common.module.ts:11-29`). | Testovi kroz `AppModule` ne dokazuju svaku DI topologiju; test duplih instanci i shutdown po potrebi. |
+| `correlation-id.service.ts` | `AsyncLocalStorage`, run ID i asinhroni kontekst. | `common/tests/correlation-id.service.spec.ts` testira sinkroni, async i paralelni kontekst; request-to-worker/provider propagacija nije dokazana. |
+| `fallback-strategy.service.ts` | Lokalni fallback/cache i metrike. | `common/tests/fallback-strategy.service.spec.ts`; dodatni fake-clock dokaz preuranjenog TTL brisanja B-022; runtime caller i fizička sigurnost nisu potvrđeni. |
+| `file-storage.service.ts` | Lokalni write/read/delete slika/PDF; konfigurirani direktorij i filesystem. | `upload_validation_repro.cjs` provjerava fake MIME i putanju u disposable temp; HTTP upload, symlink konkurencija, virus scan i recovery nisu dokazani. |
+| `health.controller.ts` | `GET /health`, statički odgovor, `@Public`. | `A:396-405`; ne testira DB readiness ili provider dostupnost. |
+| `metrics.controller.ts` | Javne `/metrics` i `/metrics/reporting` JSON/text varijante, metrics/reporting servisi. | `A:268-341`, `C:212-233` provjeravaju oblike; mrežna izolacija i redakcija labela nisu potvrđene (S-001). |
+| `metrics.service.ts` | Procesni brojači i Prometheus izvoz/reset. | Direktno se koristi u common i API testovima; B-023 pokazuje da success brojač ne dokazuje uspjeh svakog uređaja. |
+| `reporting.service.ts` | Procesni izvještaj/alerti/score; `MetricsService`. | `common/tests/reporting.service.spec.ts` testira izvještaje i alerte; F-004 i nedostatak distribuisane agregacije ostaju. |
+| `structured-logger.ts` | Nest logger formatira kontekst i opcionalni correlation service. | Testirati redakciju providera/greške i injection/newline; postojanje strukturiranog konteksta ne dokazuje da tajne nisu logovane. |

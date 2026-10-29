@@ -100,8 +100,12 @@ const enUS = {
     efficiency: 'Efficiency',
     cycleDensity: 'Cycle Density',
     noCycleData: 'No cycle data for this range.',
-    aiInsights: 'AI Insights & Learning',
-    insightsDescription: 'Model confidence and sample coverage over time.',
+    // MO2-19: nije "AI" — sekcija prikazuje pouzdanost obične linearne
+    // regresije. Naziv i opis su usklađeni sa onim što se stvarno računa, i
+    // dodano je pojašnjenje da su brojevi procjene iz vlastitih podataka.
+    aiInsights: 'Prediction Model',
+    insightsDescription:
+      'Confidence and sample coverage of the linear prediction model. These are estimates based on your own data, not a comparison with other homes.',
     loadingInsights: 'Loading insights...',
     noInsights: 'No learning insights available for this range.',
     confidenceTrend: 'Confidence Trend',
@@ -110,10 +114,9 @@ const enUS = {
     trainingCoverage: 'Training Coverage',
     trainingDescription:
       'Data points in range: {{points}}. Keep schedules steady to improve predictions.',
-    performanceComparison: 'Performance Comparison',
-    vsSimilarHomes: 'vs. Similar Homes',
-    better: '{{percent}}% better',
-    improvement: '{{percent}}% improvement',
+    // MO2-19: performanceComparison / vsSimilarHomes / better / improvement su
+    // obrisani — služili su samo fiktivnom "Performance Comparison" bloku.
+    // analytics.vsLastYear je zadržan jer ga koristi getVsLastLabel().
     // Gas Consumption Card
     gasConsumption: 'Gas Consumption',
     gasConsumptionDesc: 'Daily meter readings and consumption analysis',
@@ -718,8 +721,12 @@ const bsBS = {
     efficiency: 'Efikasnost',
     cycleDensity: 'Gustoća ciklusa',
     noCycleData: 'Nema podataka o ciklustima u ovom periodu.',
-    aiInsights: 'AI uvidi i učenje',
-    insightsDescription: 'Pouzdanost modela i pokrivanje uzoraka tokom vremena.',
+    // MO2-19: nije "AI" — sekcija prikazuje pouzdanost obične linearne
+    // regresije. Naziv i opis su usklađeni sa onim što se stvarno računa, i
+    // dodano je pojašnjenje da su brojevi procjene iz vlastitih podataka.
+    aiInsights: 'Model predviđanja',
+    insightsDescription:
+      'Pouzdanost i pokrivanje uzoraka linearnog modela predviđanja. Ovo su procjene na osnovu vaših vlastitih podataka, a ne usporedba s drugim domovima.',
     loadingInsights: 'Učitavanje uvida...',
     noInsights: 'Nema dostupnih uvida o učenju za ovaj period.',
     confidenceTrend: 'Trend pouzdanosti',
@@ -728,10 +735,9 @@ const bsBS = {
     trainingCoverage: 'Pokrivanje obuke',
     trainingDescription:
       'Točka podataka u periodu: {{points}}. Održavajte rasporede stabilnim da poboljšate prognose.',
-    performanceComparison: 'Usporedba performansi',
-    vsSimilarHomes: 'u odnosu na slične domove',
-    better: '{{percent}}% bolje',
-    improvement: '{{percent}}% poboljšanja',
+    // MO2-19: performanceComparison / vsSimilarHomes / better / improvement su
+    // obrisani — služili su samo fiktivnom "Performance Comparison" bloku.
+    // analytics.vsLastYear je zadržan jer ga koristi getVsLastLabel().
     // Gas Consumption Card
     gasConsumption: 'Potrošnja plina',
     gasConsumptionDesc: 'Dnevna očitanja brojača i analiza potrošnje',

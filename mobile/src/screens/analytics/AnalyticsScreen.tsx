@@ -716,32 +716,18 @@ export const AnalyticsScreen = () => {
             )}
           </Box>
 
-          {/* Comparison */}
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-            <Heading size="sm" color={textColor} mb={3}>
-              {t('analytics.performanceComparison')}
-            </Heading>
-            <VStack space={3}>
-              <HStack justifyContent="space-between">
-                <Text color={subtextColor}>{t('analytics.vsSimilarHomes')}</Text>
-                <HStack alignItems="center" space={1}>
-                  <Text color="green.500" fontWeight="600">
-                    {t('analytics.better', { percent: '12' })}
-                  </Text>
-                  <Icon as={Ionicons} name="arrow-down" size={4} color="green.500" />
-                </HStack>
-              </HStack>
-              <HStack justifyContent="space-between">
-                <Text color={subtextColor}>{t('analytics.vsLastYear')}</Text>
-                <HStack alignItems="center" space={1}>
-                  <Text color="green.500" fontWeight="600">
-                    {t('analytics.improvement', { percent: '18' })}
-                  </Text>
-                  <Icon as={Ionicons} name="arrow-down" size={4} color="green.500" />
-                </HStack>
-              </HStack>
-            </VStack>
-          </Box>
+          {/*
+            MO2-19: ovdje je bio blok "Performance Comparison" koji je prikazivao
+            "12% better" i "18% improvement" kao hardkodovane stringove u JSX-u.
+            Nijedna od te dvije vrijednosti nije dolazila iz API odgovora — bile
+            su izmišljene konstante predstavljene kao činjenice, pa je korisnik
+            mogao donositi odluke na osnovu brojeva koji ne postoje.
+
+            Uklonjeno dok backend ne servira stvarnu usporedbu (normalizacija po
+            stepen-danima, FEAT-5/FORM-1). Ključevi performanceComparison,
+            vsSimilarHomes, better i improvement su obrisani iz oba jezika;
+            analytics.vsLastYear je zadržan jer ga koristi getVsLastLabel().
+          */}
 
           {/* Export Button */}
           <Button

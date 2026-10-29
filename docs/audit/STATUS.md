@@ -483,3 +483,38 @@ Od sedam otvorenih pitanja, vlasnik je odgovorio na četiri koja blokiraju Talas
 - Commit `80670ed` push-an na `arena/1bfee051-boiler-control` (14 fajlova, 2040 insertions); `git rev-parse HEAD` i `git rev-parse origin/arena/1bfee051-boiler-control` se poklapaju.
 - **PR nije otvoren** — remote je ponudio link, nije korišten. Provjereno: `gh pr list --head arena/1bfee051-boiler-control --state all` → prazan izlaz.
 - Iz commit-a izbačen `scripts/audit/__pycache__/` (artefakt lokalne provjere). `.gitignore` **nema** pravila za `__pycache__`/`*.pyc`, a `.gitignore` je izvan dozvoljenog opsega — preporuka vlasniku da ga doda pri merge-u.
+
+## Implementacija — 10 quick wins ZAVRŠENO (2026-10-29)
+
+Svih 10 quick wins iz `master_roadmap.py` (ključ `quick_wins`, verificirano 10/10) je implementirano, commitovano i push-ano na `arena/1bfee051-boiler-control`. **PR nije otvoren** — vlasnik ručno radi pull i merge (trajna uputa).
+
+| # | ID | Commit | Šta je urađeno | Verifikacija |
+|---|----|--------|----------------|--------------|
+| 1 | `SEC-1` | `4be40fb` | Zatvoren IDOR na `POST /api/notifications/:id/read` — atomski `id + userId` | 4/4 jest PASS (uz `jest.mock`, jer `prisma generate` blokira `binaries.prisma.sh`); **negativni test**: vraćen ranjivi kod → 4/4 FAIL → ponovno ispravljeno → PASS |
+| 2 | `MO2-1` | `d8b06c6` | Jedan API host, uklonjen hardkodovani dev fallback | `tsc --noEmit` exit 0; `npx expo config --json` → `https://api.boiler-control.ba101.top/api` |
+| 3 | `MO2-22` | `cd5ad51` | CSV export prebačen na `expo-file-system/legacy` | `tsc --noEmit` exit 0 |
+| 4 | `MO2-3` | `895c48c` | Deep link cilja registrovanu rutu + cold-start notifikacija | `mobile_inventory.py` exit 0; **negativni test** `screen: 'GasReadings'` → exit 1 |
+| 5 | `MO2-5` | `3614967` | `showError` stvarno prikazuje toast korisniku (ranije 0 pozivalaca) | `tsc --noEmit` exit 0 |
+| 6 | `MO2-19` | `f10529b` | Uklonjene izmišljene „12 %/18 %" komparacije iz analitike | `tsc --noEmit` exit 0; `grep "percent: '"` → 0; i18n paritet **en 485 / bs 485** |
+| 7 | `FE2-1` | `5a2aa16` | `type-check` više nije lažno zelen (`tsconfig` `files: []`); 12 grešaka popravljeno | `type-check` exit 0; `--listFiles` → 26 fajlova iz `src`; **negativni test** → exit 2; `build` exit 0 |
+| 8 | `FE2-6` | `0179355` | Sigurnosni headeri + gzip + ispravljene 3 mrtve favicon reference + `theme-color` + dinamički `<html lang>` | `type-check` exit 0; `build` exit 0; strukturna provjera nginx.conf |
+| 9 | `FE2-12` | `3ad87e9` | Obrisano 5 mrtvih API metoda; 8/8 mutacija dobilo `onError` poruku | `type-check` exit 0; `build` exit 0; 4 nova i18n ključa u oba jezika |
+| 10 | `FE2-16` | `68c6a5d` | Dodana ESLint flat konfiguracija + `frontend` CI job | `lint` exit 0 (0 grešaka, 12 upozorenja); **negativni test** → exit 1; `type-check` exit 0; `build` exit 0 |
+
+### Ispravke vlastitih tvrdnji tokom implementacije
+
+- **FE2-12:** backlog (`frontend/06-improvements-backlog.md:64`) zapisuje **4** nepozvane API metode; pojedinačnim grep-om verificirano je da ih je stvarno **5** (`getBoilerStatus`, `getHeatingAnomalies`, `getWeather`, `addGasReadingPayload`, `generateReport`). Jedini repo-wide pogodak za `addGasReadingPayload` je `mobile/src/services/api/client.ts:141` — mobilna vlastita metoda, ne potrošač.
+- **FE2-16:** frontend je bio na **ESLint 8.57.1** s `@typescript-eslint` v6, dok backend već koristi ESLint 9 + `typescript-eslint` v8 flat config. Frontend je usklađen s backendom umjesto oslanjanja na eksperimentalnu flat podršku u v8.
+- **FE2-16:** `no-const-assign` je u ESLint-u **isključeno namjerno** (isključuje ga `tseslint.configs.recommended` jer TypeScript to već pokriva) — verificirano da `tsc` javlja **TS2588** na mutaciju konstante.
+
+### Šta NIJE verificirano (iskreno)
+
+- **`nginx -t` nije pokrenut** — u sandboxu nema ni `nginx` ni `docker`. `frontend/nginx.conf` je provjeren samo strukturno (zagrade, `add_header` sa `;`, `gzip on`); `curl -I` i e2e provjera headera nisu izvedeni.
+- **CSP je u `Content-Security-Policy-Report-Only`**, ne u enforce načinu. Razlog: antd 5 CSS-in-JS i `@ant-design/plots` canvas se nisu mogli e2e provjeriti u browseru iz sandboxa. Prebacivanje u enforce zahtijeva stvarnu browser provjeru.
+- **Frontend i mobile nemaju automatizovane testove** (`mobile`: `npm test` exit 127 — MO-012). Verifikacija je stoga `tsc --noEmit` + `build` + audit skripte, ne testovi.
+- **Backend baseline testova je i dalje 4 failed / 0 testova** (`npx jest test/unit/`) — naslijeđeno stanje, nije dirano u ovim quick wins.
+- CI `frontend` job je dodan i YAML je validiran, ali **njegov prvi stvarni run u Actions tek treba potvrditi**.
+
+### Preostalo
+
+**64 od 74 stavke** (Talas A 9 preostalih, B 7, C 16, D 16, E 26). Sljedeći po kritičnom putu (LANAC 2): `MO2-2` version gate → `API-1` → `API-2` → `FE2-8` + mobilni tipovi = **12.25–19.5 dana**.

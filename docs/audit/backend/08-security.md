@@ -16,6 +16,9 @@
 
 ## Prioritetni registar
 
+**B-009 — VISOKO potencijalno, VERIFIKOVANO u servisu; HTTP iskoristivost HIPOTEZA:** `PATCH /api/anomalies/:eventId` ne predaje user ID servisu; servis ne provjerava vlasnika pri pretrazi ili izmjeni događaja. Izolovana offline reprodukcija stvarnog servisa s fake bazom: `node scripts/audit/anomaly_ownership_repro.cjs`. Odvojena reprodukcija pokazuje da globalni ValidationPipe odbija sintetička DTO tijela. Nije HTTP ni produkcijski test; vidjeti B-009 u [04-findings.md](04-findings.md).
+
+
 Detaljni nalazi i test-first koraci su u [04-findings.md](04-findings.md) B-006 i B-007 te [07-redis-workers.md](07-redis-workers.md) R-004. Za prva dva potreban je izolovani multi-user integracijski test, za TTL test s uključenim guardom i kontrolisanim vremenom, uključujući odvojenu provjeru pouzdane proxy konfiguracije. Skripta `node scripts/audit/throttle_repro.cjs` reproducira samo lokalni storage i ne predstavlja test pune HTTP putanje ili produkcije.
 
 ### [S-001] Metrike bez deklarisanog JWT guarda — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (kod), HIPOTEZA (izloženost i uticaj)
@@ -37,3 +40,19 @@ Detaljni nalazi i test-first koraci su u [04-findings.md](04-findings.md) B-006 
 ## Sljedeće
 
 Dopuniti dokazima za svaki zahtjev, vlasništvo i odgovor, rizike upload-a i fajlova, token lifecycle i autentifikaciju, konfiguraciju deploy-a, dependency audit bez izlaganja tajni, testove autorizacije i prioritetni rollout/rollback. Ne proglašavati sigurnosni audit ili Fazu 1 završenim.
+
+### [S-003] Zamjena lozinke kroz profil bez ponovne potvrde — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (kod)
+- Gdje: `backend/src/modules/User/user.controller.ts:19-21`, `backend/src/modules/User/dto/update-user.dto.ts:40-44`, `backend/src/modules/User/user.service.ts:51-59,105-107`; zaštitni alternativni tok `backend/src/modules/Auth/auth.service.ts:136-168`.
+- Šta nije u redu i zašto: autentifikovani korisnik može proslijediti novu lozinku kroz profilni PUT, gdje se hashira i sprema bez potvrde prethodne lozinke. Odvojena ruta za promjenu lozinke traži staru lozinku. Validan ukradeni token bi na ovaj način mogao omogućiti promjenu lozinke bez poznavanja stare; stvarni kompromis nije utvrđen.
+- Dokaz: `UpdateUserDto.password` je dozvoljeno polje, `updateMe` nema argument niti provjeru stare lozinke. JWT guard provjerava potpis i postojanje korisnika (`backend/src/modules/Auth/jwt-auth.guard.ts:37-56`).
+- Preporuka: objediniti promjenu lozinke iza potvrde trenutne lozinke ili drugog odobrenog step-up mehanizma, ukloniti ili verzionirati profilno polje uz tranziciju instaliranih klijenata. Potrebna je zasebna politika revokacije i sesija da promjena ne ostavi ukradeni token valjanim.
+- Kako provjeriti: izolovani HTTP test za profilni update bez/sa lozinkom, tačnu/netačnu staru lozinku u namjenskoj ruti i ponašanje starih tokena prema odobrenom ugovoru; `cd backend && npm run test:integration` nakon dodavanja testova.
+- Trud: M — Zavisnosti: autentifikacijska politika, klijentska kompatibilnost i plan revokacije.
+
+### [S-004] Provjeravati aktivnost i revokaciju JWT sesija — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (izvor), HIPOTEZA (produkcijski rizik)
+- Gdje: `backend/src/modules/Auth/auth.module.ts:10-13`, `backend/src/modules/Auth/auth.service.ts:165-176`, `backend/src/modules/Auth/jwt-auth.guard.ts:37-56`, `backend/prisma/schema.prisma:21`.
+- Šta nije u redu i zašto: izdaju se tokeni s 24-satnim rokom; guard provjerava korisnikovo postojanje, ulogu i plan, ali ne učitava `isActive` niti verziju sesije. Prikazani postupak promjene lozinke ne mijenja sesijsku verziju. Potrebno je odrediti da li deaktivacija ili promjena lozinke trebaju opozvati postojeće tokene.
+- Dokaz: `select` guarda i update u `AuthService` ne sadrže stanje sesije/aktivnosti; ovo ne isključuje eventualnu vanjsku zaštitu koju nismo pregledali.
+- Preporuka: definisati sesijski model i politiku (isActive provjera, verzija tokena ili sesije, refresh rotation, opoziv pri osjetljivom događaju), kompatibilnost starih tokena i oporavak pri incidentu; tajne ne logovati.
+- Kako provjeriti: izdati sintetički token, deaktivirati korisnika/promijeniti lozinku i provjeriti dopuštenje prema odobrenoj politici; izolovani PostgreSQL i JWT testovi bez produkcijskih kredencijala.
+- Trud: M/L — Zavisnosti: politika sesija, mobilne/web verzije i migracija.

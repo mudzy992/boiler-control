@@ -66,7 +66,7 @@ def main() -> int:
     for name, expected, file, prefix in checks:
         present = markers(file, prefix)
         missing, extra = sorted(expected - present), sorted(present - expected)
-        print(f'{name}: source={len(expected)}, dokumentovano={len(expected & present)}, nedostaje={len(missing)}, višak={len(extra)}')
+        print(f'{name}: source={len(expected)}, ima_marker={len(expected & present)}, nedostaje={len(missing)}, višak={len(extra)}')
         for item in missing:
             print(f'  NEDOSTAJE {item}')
         for item in extra:

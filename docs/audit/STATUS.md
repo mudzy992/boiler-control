@@ -71,3 +71,10 @@
 - Kreirana je početna radna verzija `backend/01-inventory.md` i `backend/04-findings.md` s pet dokazima potkrijepljenih početnih nalaza; nijedan dokument još nije kompletan.
 - Dodana je read-only `scripts/audit/backend_inventory.py` (`--help`, `--json`) za popis praćenih modula, common fajlova, deklariranih ruta/cronova i Prisma definicija te upoređivanje oznaka s audit dokumentima. Trenutna provjera: 16/16 modula i 14/14 common fajlova imaju red; 0/69 deklaracija ruta i 0/27 modela/enuma dokumentovano pomoću markera, exit 1 očekivan jer katalozi još nisu izrađeni. Marker ne dokazuje detaljnost opisa niti registraciju kontrolera.
 - Primijećeno je pet cron deklaracija i duplikat jedninskog HomeProfile kontrolera; tri dekoratora duplikata ne znače da su aktivne dodatne rute. Nastaviti katalogom stvarno registriranih ruta, modelom podataka, pregledom koda, detaljima testne pokrivenosti i tematskim analizama.
+
+### Nastavak: početni API katalog i model podataka
+
+- Kreirani su radni `backend/02-api-catalog.md` (69 statičkih HTTP dekoratora, od čega 3 u duplikatnoj neregistrovanoj kopiji) i `backend/03-data-model.md` (15 modela i 12 enuma, indeksne hipoteze, relacije i oprez u vezi s migracijama). Ni ovi dokumenti nisu kompletni: DTO/validacija/vlasništvo/klijenti, produkcijska shema i mjerenja ostaju otvoreni.
+- Dopunjeni `backend/04-findings.md`: B-006 tuđa notifikacija, B-007 neautorizirano pokretanje masovnih podsjetnika, B-008 upotreba globalno najnovijeg weather zapisa u historiji i preporukama. Nalazi su statički; produkcija nije testirana niti mijenjana.
+- `python3 scripts/audit/backend_inventory.py` sada prijavljuje prisutne sve markere: 16/16 modula, 14/14 common fajlova, 69/69 ruta-dekoratora i 27/27 Prisma definicija. To nije dokaz da je sadržaj audita potpun, niti da je 69 ruta stvarno aktivno. `ima_marker` zamjenjuje prethodni dvosmisleni izraz `dokumentovano`.
+- Nastaviti detaljnim mapiranjem DTO/vlasništva, punim auditom sigurnosti, weather/formula/Redis-worker analizama, planom i samoprovjerom prije završetka Faze 1.

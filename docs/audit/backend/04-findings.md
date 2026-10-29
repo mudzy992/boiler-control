@@ -55,3 +55,27 @@
 - Preporuka: nakon provjere build/klijentskih ugovora ukloniti ili objediniti neregistrovani duplikat u samostalnom koraku, bez promjene aktivne rute i oblika odgovora.
 - Kako provjeriti da je riješeno: test registracije ruta i contract test GET/POST/PATCH jedninskog profila, uz provjeru postojećeg response mappinga; `cd backend && npm run test:integration` i `npm run build`.
 - Trud: S — Zavisnosti: potvrda da ne postoje vanjski importi/automatizacija izvan repozitorija.
+
+### [B-006] Označavanje tuđe notifikacije kao pročitane — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (statički kod)
+- Gdje: `backend/src/modules/Notification/notifications.controller.ts:26-27,67-70`, `backend/src/modules/Notification/notifications.service.ts:103-111`.
+- Šta nije u redu i zašto je bitno: kontroler zahtijeva JWT, ali ne predaje korisnički ID u `markAsRead`; servis traži i ažurira notifikaciju samo po ID-u. Autorizovani korisnik može promijeniti stanje tuđe notifikacije ako zna njen ID. Endpoint vraća ažurirani zapis, pa postoji i mogućnost otkrivanja sadržaja; stvarni incidenti nisu provjereni.
+- Dokaz: upiti `findUnique` i `update` imaju samo `where: { id: notificationId }`. Ovo je statički nalaz; nije slan zahtjev produkciji.
+- Preporuka: prioritetno ograničiti operaciju na `id` i autentifikovani `userId` u istoj atomskoj DB operaciji, uz jedinstven odgovor za nepostojeće i tuđe ID-ove; provjeriti logove bez izlaganja ličnih podataka. Do objave popravke procijeniti ograničavanje endpointa na rubnoj zaštiti, uz provjeru uticaja na klijente.
+- Kako provjeriti da je riješeno: u izolovanom integracijskom testu korisnik A označi svoju notifikaciju, ne može mijenjati ni čitati odgovor za B-ovu, nepostojeći i tuđi ID daju isti dogovoreni status, neautentifikovani zahtjev je odbijen; `cd backend && npm run test:integration`.
+- Trud: S — Zavisnosti: dogovoren kompatibilan status i sigurni regresijski testovi.
+
+### [B-007] Svaki prijavljeni korisnik može pokrenuti masovni test podsjetnika — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (statički kod)
+- Gdje: `backend/src/modules/Notification/notifications.controller.ts:26-27,159-167`, `backend/src/modules/Schedule/gas.reminder.service.ts:144-180`, `backend/src/app.module.ts:53-63`.
+- Šta nije u redu i zašto je bitno: komentar kaže „admin only“, ali ruta ima samo JWT guard na klasi i neposredno poziva funkciju za slanje korisnicima s uključenom preferencijom. U `AppModule` jedini globalni guard naveden je throttler izvan testa, ne role guard. Zloupotreba može izazvati neželjene notifikacije i potrošnju resursa; stvarni učinak zavisi od tokena, preferencija i debounce pravila.
+- Dokaz: nema `RolesGuard` ni role metapodataka na ruti/kontroleru; servis prolazi kroz ciljane korisnike i poziva `notifyUser`. Nije isprobavano u produkciji.
+- Preporuka: prioritetno onemogućiti testni endpoint u produkciji ili zahtijevati provjerenu administratorsku autorizaciju i zaseban restriktivni rate limit; pregledati i ostale testne rute. Ne oslanjati se na komentar.
+- Kako provjeriti da je riješeno: integracijski test u produkcijskom konfiguracijskom profilu odbija običnog korisnika i anonimni zahtjev, a samo odobreni administrator ili isključivo neprodukcijsko okruženje dobije dozvoljen odgovor; mock push provjerava da neautorizovan zahtjev ne šalje ništa. `cd backend && npm run test:integration`.
+- Trud: S — Zavisnosti: sigurnosna politika admina i deployment konfiguracija.
+
+### [B-008] Weather iz drugog grada može ući u historiju i preporuku — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (upit), HIPOTEZA (stvarni uticaj u produkciji)
+- Gdje: `backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:224-235,250-254`, `backend/src/modules/HeatingRecommendation/heating.recommendation.service.ts:94-103`.
+- Šta nije u redu i zašto je bitno: oba upita uzimaju najnoviji zapis čitave weather tabele bez filtera po lokaciji uređaja. Polling upisuje tu temperaturu u korisnikovu historiju, a servis preporuka uzima min/max iz istog globalnog skupa. Ako različiti korisnici pune cache za različite gradove, mogu se pripisati pogrešni vremenski podaci. Kada nema zapisa, polling bilježi `0` kao da je temperatura; ne tvrdi se da kod automatski upravlja kotlom.
+- Dokaz: oba `findFirst` sadrže samo `orderBy: { fetchedAt: 'desc' }`, bez `where`; upis koristi `lastWeatherTemp?.temperature || 0`. Stvarna učestalost i produkcijski skup lokacija nisu mjereni.
+- Preporuka: povezati dohvat i historiju s lokacijom profila/koordinatnim ključem, vremenskom zonom, vremenom mjerenja i kvalitetom; nedostupnost prikazati zasebno od legitimnih 0 °C. Budući da `BoilerHistory.externalTemp` nije nullable, promjena zahtijeva migracijski i backwards-compatible plan, bez automatskog mijenjanja postojećih mjerenja.
+- Kako provjeriti da je riješeno: izolovani integracijski test s dva korisnika i različitim gradovima gdje je noviji tuđi cache; provjeriti historiju i oba ulaza preporuke za odgovarajući profil, nedostatak podataka i stvarnih 0 °C. `cd backend && npm run test:integration`; dodatno contract i shadow/backtest prije aktiviranja novih formula.
+- Trud: M/L — Zavisnosti: weather ciljna shema, identitet lokacije, migracija i strategija odsutnih podataka.

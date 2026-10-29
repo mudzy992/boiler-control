@@ -55,6 +55,12 @@
 - **Testovi:** token prije/poslije promjene lozinke i deaktivacije, nevažeći credentials, old-client tranzicija, scraper radi iz dozvoljene mreže i nije dostupan nedozvoljenom; zajednički CI. **Skripte:** `scripts/smoke.sh --help` (planiran), `scripts/test-all.sh --help`.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; odluka o isteku starih sesija i najava klijentima; zavisi od auth politike i konfiguracije monitoringa.
 
+### 0.5 Sigurnosne nadogradnje zavisnosti (SEC-7)
+- **Cilj/fajlovi:** `backend/package.json`, `backend/package-lock.json`, testovi upload/proxy/Tuya i potencijalno `backend/Dockerfile`. S-007: prvo provjeriti advisory preduvjete i backend image/production deploy; grupisati kompatibilne zakrpe u odvojene male promjene i ponovo procijeniti tranzitivni graf, bez automatskog `npm audit fix --force`.
+- **Migracija/rollback, flag:** same bibliotečke nadogradnje ne zahtijevaju schema migraciju ni flag; Prisma promjenu izdvojiti i testirati migracije na praznoj i reprezentativnoj izolovanoj kopiji uz backup/restore proceduru. Rollback na prethodni image/lockfile nosi poznate advisories i prihvata se samo kao vremenski ograničen incidentni korak s odobrenom rubnom zaštitom.
+- **Testovi:** version-resolved `npm ls`, ponovljeni `npm audit --omit=dev --json` s redigovanim sažetkom, test multipart limita/abort-a, proxy/trusted subnet i auth throttling, Tuya HTTP ugovor, generisanje Prisma klijenta/migracija na privremenoj DB te zajednički lint/type-check/build/unit/integration CI. **Skripte:** postojeća `node scripts/audit/npm_audit_summary.cjs --help` i `node scripts/audit/upload_validation_repro.cjs --help`; CI branch-only workflow.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; poznati relevantni advisories zakrpljeni ili dokumentovano prihvaćeni s rokom, testovi zeleni, stare API/mobile integracije nepromijenjene. Zavisnosti: owner proxy/deploya, upgrade matrica i licence; prisustvo MySQL tranzitiva ne dokazuje da se koristi.
+
 ## Talas 1 — weather
 
 ### 1.1 Location expand i potvrđivanje (FEAT-1)
@@ -160,6 +166,8 @@
 | `scripts/audit/redis_lease_ci.cjs` | Postoji; CI-only primitivi na disposable Redis servisu; ne testira aplikacijski worker/BullMQ. | `node scripts/audit/redis_lease_ci.cjs --help`; 3.1–3.2. |
 | `scripts/audit/cron_registration_repro.cjs` | Postoji; sintetička Nest topologija sa stvarnim gas scheduler providerom, lažnom bazom i jednim ručnim tickom; ne testira produkciju ili više replika. | `node scripts/audit/cron_registration_repro.cjs --help`; 3.2–3.3. |
 | `scripts/audit/fallback_ttl_repro.cjs` | Postoji; fallback servis s lažnim satom, pokazuje preuranjeno brisanje osvježenog ključa. Nema dokazanog runtime callera. | `node scripts/audit/fallback_ttl_repro.cjs --help`; 3.3. |
+| `scripts/audit/auth_session_repro.cjs` | Postoji; lokalni HTTP s fake DB i stvarnim JWT/auth servisima pokazuje postojeće ponašanje sesija, ne popravak. | `node scripts/audit/auth_session_repro.cjs --help`; 0.4. |
+| `scripts/audit/npm_audit_summary.cjs` | Postoji; siguran sažetak postojećeg `npm audit` JSON-a, ne mijenja pakete. | `node scripts/audit/npm_audit_summary.cjs --help`; 0.5. |
 | `scripts/audit/module_graph.py` | Postoji; statički graf importova i direktnih Prisma markera, bez dinamičkog DI. | `python3 scripts/audit/module_graph.py --help`; inventar i samoprovjera. |
 | `scripts/test-all.sh` | PLAN: nepopravljajući lint, type-check, build, test i audit izvještaj; bez izvora/tajni u izvještaju; izlazni kod !=0 na padu. | `scripts/test-all.sh --help`; svaki korak. |
 | `scripts/dev-up.sh` | PLAN: pokrenuti isključivo namjenske test PostgreSQL/Redis servise sa izolovanim prefiksom/profilom; idempotentno, ispis statusa bez URL credentiala. | `scripts/dev-up.sh --help`; 1.1, 3.1–3.3. |

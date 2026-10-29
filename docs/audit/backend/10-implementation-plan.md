@@ -155,6 +155,8 @@
 
 ### 5.2 OpenAPI, health i održavanje
 
+- **Dopuna MAINT-4 / B-025:** prije generisanja ugovora popraviti contract suite uz odobrene rute i sintetički fixture; prvo dokazati da podmetnuti 404/500 ruši pozitivni test, zatim obavezni status, tijelo i side-effect te negativna autorizacija. `node scripts/audit/contract_assertions_repro.cjs --help` broji sintaktičke uslovne asertacije i pokreće odvojeni namjerno failing sintetički Jest, ne mijenja postojeće testove. Prihvat: svi stvarni contract testovi izvode asertacije, zeleni `cd backend && npm test -- --runInBand` i izolovani integration CI. Trud M; nema migracije ni API promjene, rollback samo testnih izmjena uz bilježenje vraćenih praznina; zavisi od ugovora i izolovanih fixturea.
+
 - **Dopuna OBS-1 / B-023:** prije izmjene metrika inventarisati postojeće scrape/dashboards; instrumentirati per-device ishode agregatno, ne kao ID label, te zasebno freshness posljednjeg valjanog snapshot-a. Zadržati kompatibilne stare metrike tokom tranzicije uz jasno značenje. Test-first: dva neuspješna uređaja, miješani uspjeh/greška, skip, bez snapshot-a, prazna lista i greška listanja; `node scripts/audit/poll_metrics_repro.cjs` je audit dokaz postojećeg ponašanja, a budući regresijski Jest test potvrđuje novi ugovor (`cd backend && npm test -- --runInBand`). Prihvatanje: nijedan neuspjeh nije prikazan kao uspješna obrada i ostali uređaji nastavljaju; cijeli CI zelen. Trud S/M; bez migracije DB; rollback na staru instrumentaciju uz privremeni alert za stale podatke, ne obustavljati polling. Klijentski HTTP ugovor se ne mijenja.
 - **Cilj/fajlovi:** `backend/src/main.ts`, DTO/kontroleri, `common/health.controller.ts`, Dockerfile/Compose; versionirani `/api/v1`, publicirani OpenAPI kao izvor tipova, liveness/readiness, odvojena migracija/deploy.
 - **Migracija/rollback, flag:** eventualna schema samo u odvojenom commitu; `API_V1_ENABLED` off i zaseban readiness rollout. Rollback ugasi novu rutu/readiness, stari API ostaje do definisanog roka.
@@ -163,7 +165,7 @@
 
 ## Katalog pomoćnih skripti
 
-**Postojeće audit skripte su read-only, osim privremenih runtime podataka u memoriji. Planirane skripte ne postoje i komande su njihove buduće specifikacije, ne tvrdnja da rade.** Sve nove skripte moraju imati `--help`, determinističke exit kodove, bez ugrađenih ili ispisanih tajni, te jasno označene ulaze/izlaze. Destruktivne radnje samo u eksplicitno izolovanom testnom okruženju uz višestruku potvrdu i provjeru cilja.
+**Postojeće audit skripte ne mijenjaju aplikaciju ni trajne podatke; neke stvaraju i uklanjaju privremene sintetičke fajlove ili, samo u CI-ju, koriste izolovane servise. Planirane skripte ne postoje i komande su njihove buduće specifikacije, ne tvrdnja da rade.** Sve nove skripte moraju imati `--help`, determinističke exit kodove, bez ugrađenih ili ispisanih tajni, te jasno označene ulaze/izlaze. Destruktivne radnje samo u eksplicitno izolovanom testnom okruženju uz višestruku potvrdu i provjeru cilja.
 
 | Skripta | Status, svrha, ulaz → izlaz i sigurnost | Način / korak |
 |---|---|---|
@@ -176,6 +178,7 @@
 | `scripts/audit/gas_validation_repro.cjs`, `dashboard_repro.cjs`, `reminder_delivery_repro.cjs`, `upload_validation_repro.cjs` | Postoje; izolovani sintetički DTO/servisi/storage; prethodne greške i ograničenja navedeni u audit dokumentima. | `node scripts/audit/<ime>.cjs --help`; 3.3, 5.0–5.1a. |
 | `scripts/audit/engine_replay.cjs`, `openmeteo_fixture_replay.cjs` | Postoje; ograničeni postojeći-engine replay i javni SDK fixture, nisu puni backtest ni provjera sunrise/DST. | `node scripts/audit/engine_replay.cjs --help`; `node scripts/audit/openmeteo_fixture_replay.cjs --help`; 1.2 i 2.1. |
 | `scripts/audit/redis_lease_ci.cjs` | Postoji; CI-only primitivi na disposable Redis servisu; ne testira aplikacijski worker/BullMQ. | `node scripts/audit/redis_lease_ci.cjs --help`; 3.1–3.2. |
+| `scripts/audit/contract_assertions_repro.cjs` | Postoji; statički AST originalnog testa i odvojeni Jest 404 primjer u privremenom direktoriju koji uklanja; ne izvršava originalni suite. | `node scripts/audit/contract_assertions_repro.cjs --help`; 5.2. |
 | `scripts/audit/history_close_repro.cjs` | Postoji; pravi poll end handler i sintetička fake DB, bez DB transakcija ili stvarnih događaja. | `node scripts/audit/history_close_repro.cjs --help`; 5.1b. |
 | `scripts/audit/learning_end_repro.cjs` | Postoji; pravi poll end handler, preporuka i engine, sintetička fake DB/push; bez uređaja. | `node scripts/audit/learning_end_repro.cjs --help`; 2.2. |
 | `scripts/audit/poll_metrics_repro.cjs`, `poll_overlap_repro.cjs`, `push_registration_repro.cjs` | Postoje; offline fake DB/push/scheduler reprodukcije, bez stvarne dostave ili produkcije. | `node scripts/audit/poll_metrics_repro.cjs --help`, `node scripts/audit/poll_overlap_repro.cjs --help`, `node scripts/audit/push_registration_repro.cjs --help`; 3.2–3.3, 5.2. |

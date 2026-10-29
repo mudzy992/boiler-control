@@ -79,7 +79,7 @@ Ovaj inventar nije završen. Marker za fajl ili modul dokazuje samo da red posto
 | `backend/test/unit/prisma-safe-updates.spec.ts` | Mockirani Prisma update obrasci i slučaj nepostojeće notifikacije. | Cross-user IDOR: testira mock obrazac, ne JWT + stvarnu DB vlasničku izolaciju. |
 | `backend/test/unit/transactional-integrity.spec.ts` | Mockirani poll start/end, transakcijski obrasci i minutni ključ. | Race s dvije stvarne transakcije/procesa ili Redis outage/lease; mock nije dokaz DB idempotentnosti. |
 | `backend/test/unit/tuya-adapter.spec.ts` | Mockirani adapter/snapshot, cache, breaker i metrike. | Ugovor stvarnog Tuya uređaja/API-ja, provider timeout i rate budžet u produkciji. |
-| `backend/test/contract/api-contract.spec.ts` | HTTP contract scenariji za auth, boiler i dashboard kroz `AppModule`. | Kompletni contract svih 66 deklaracija, verzije klijenata ili produkcijska infrastruktura. |
+| `backend/test/contract/api-contract.spec.ts` | HTTP contract scenariji za auth, boiler i dashboard kroz `AppModule`. | Kompletni contract svih 66 deklaracija, verzije klijenata ili produkcijska infrastruktura; B-025: 11/14 slučajeva ima sve direktne `expect` unutar `if`, a više testnih putanja ne odgovara deklarisanim rutama. |
 | `backend/test/integration/api.integration.spec.ts` | API integracija nad AppModule/Prisma, auth i profilni slučajevi. | Sve kombinacije dva korisnika, fajl storage outage, ili revokacija JWT tokena. |
 | `backend/test/integration/heating-polling.integration.spec.ts` | API scenariji grijanja, preporuke, anomalije, uređaja, historije i weather-a. | Neki testovi imaju uslovne asertacije i prihvataju prazne odgovore: B-012. Ne dokazuje rad stvarnog poll cron-a ili stvarnog providera. |
 

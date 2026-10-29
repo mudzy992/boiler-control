@@ -17,9 +17,6 @@
       "icon": "./assets/new/ic_notification.png",
       "color": "#ffffff"
     },
-    "ios": {
-      "bundleIdentifier": "com.boilercontrol.app"
-    },
     "android": {
       "package": "com.boilercontrol.app",
       "adaptiveIcon": {

@@ -73,25 +73,34 @@ module.exports = ({ config }) => {
       [
         "expo-build-properties",
         {
-            "android": {
-                "buildArchs": ["arm64-v8a"]
-            }
-        }
+          android: {
+            // Android 15 = API 35. Expo 54 zadano je compileSdk/targetSdk 36,
+            // pa se ovdje eksplicitno pinuje na 35.
+            compileSdkVersion: 35,
+            targetSdkVersion: 35,
+            // minSdkVersion NAMJERNO nije diran (Expo zadano 24 = Android 7.0),
+            // jer bi minSdk 35 onemogućio instalaciju na svim uređajima ispod
+            // Androida 15. Ako to želiš, dodaj `minSdkVersion: 35` ovdje.
+
+            // Najveća pojedinačna ušteda na veličini .apk-a: samo jedna ABI.
+            buildArchs: ["arm64-v8a"],
+
+            // R8/ProGuard je ISKLJUČEN po odluci vlasnika: smanjio bi APK, ali
+            // obfuskacija može slomiti runtime, a stvarni APK se ne može
+            // testirati u sandboxu.
+            enableMinifyInReleaseBuilds: false,
+            // shrinkResources zahtijeva minify, pa mora biti isključen uz njega.
+            enableShrinkResourcesInReleaseBuilds: false,
+
+            // Sigurna ušteda bez runtime rizika.
+            enablePngCrunchInReleaseBuilds: true,
+          },
+        },
       ],
     ],
-    ios: {
-      ...(config.ios || {}),
-      bundleIdentifier: config.ios?.bundleIdentifier || 'com.boilercontrol.app',
-      supportsTablet: config.ios?.supportsTablet ?? true,
-      config: {
-        ...(config.ios?.config || {}),
-        usesNonExemptEncryption: config.ios?.config?.usesNonExemptEncryption ?? false,
-      },
-      infoPlist: {
-        ...(config.ios?.infoPlist || {}),
-        UIBackgroundModes: config.ios?.infoPlist?.UIBackgroundModes || ['remote-notification'],
-      },
-    },
+    // iOS build je ukinut — aplikacija se distribuira isključivo kao Android
+    // .apk. Zato ovdje nema `ios` bloka: bio bi mrtva konfiguracija koja
+    // sugerira da iOS build postoji.
     android: {
       ...(config.android || {}),
       package: config.android?.package || 'com.boilercontrol.app',

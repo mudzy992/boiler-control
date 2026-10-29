@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, VStack, Heading, Text, Button, useColorModeValue } from 'native-base';
-import { Linking, Platform } from 'react-native';
+import { Linking } from 'react-native';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -13,23 +13,13 @@ import { useTranslation } from '../../hooks/useTranslation';
  */
 
 /**
- * Numerički App Store ID. Namjerno prazan: nije poznat iz repoa, a izmišljeni
- * ID bi korisnika odveo na tuđu aplikaciju. Dok ga vlasnik ne upiše, iOS
- * korisnik dobija tekstualno uputstvo umjesto dugmeta.
+ * Android-only distribucija (iOS build je ukinut), pa postoji samo Play Store
+ * link. Namjerno nema iOS grane: mrtva grana bi sugerirala da iOS build
+ * postoji, a `IOS_APP_STORE_ID` ionako nikad nije bio poznat iz repoa.
  */
-const IOS_APP_STORE_ID = '';
-
 function getStoreUrl(): string | null {
-  if (Platform.OS === 'android') {
-    const pkg = Constants.expoConfig?.android?.package;
-    return pkg ? `market://details?id=${pkg}` : null;
-  }
-
-  if (Platform.OS === 'ios' && IOS_APP_STORE_ID) {
-    return `https://apps.apple.com/app/id${IOS_APP_STORE_ID}`;
-  }
-
-  return null;
+  const pkg = Constants.expoConfig?.android?.package;
+  return pkg ? `market://details?id=${pkg}` : null;
 }
 
 type UpdateRequiredScreenProps = {

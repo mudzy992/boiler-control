@@ -33,24 +33,33 @@ try {
     for (const match of text.matchAll(/Cannot find module ['"]([^'"\r\n]+)['"]/g)) {
       if (/^[\w./@-]+$/.test(match[1])) hints.push(`missing module ${match[1]}`);
     }
-    for (const kind of ['PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'SyntaxError', 'TypeError', 'ReferenceError', 'Jest encountered an unexpected token', 'Exceeded timeout', 'Nest can\'t resolve dependencies']) {
+    for (const kind of ['PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'PrismaClientValidationError', 'PrismaClientUnknownRequestError', 'SyntaxError', 'TypeError', 'ReferenceError', 'Jest encountered an unexpected token', 'Exceeded timeout', 'Nest can\'t resolve dependencies', 'Unknown argument', 'does not exist', 'Unique constraint failed', 'Foreign key constraint']) {
       if (text.includes(kind)) hints.push(kind);
     }
-    return [...new Set(hints)].slice(0, 4).join('; ');
+    for (const label of ['Expected', 'Received']) {
+      const match = text.match(new RegExp(`${label}:\\s*(\\d{1,3})(?=\\s|$)`));
+      if (match) hints.push(`${label} ${match[1]}`);
+    }
+    const prop = text.match(/Cannot read properties of (undefined|null) \(reading ['"]([\w]+)['"]\)/);
+    if (prop) hints.push(`Cannot read ${prop[2]} of ${prop[1]}`);
+    return [...new Set(hints)].slice(0, 6).join('; ');
   }
   for (const suite of result.testResults || []) {
     if (suite.status !== 'failed') continue;
     const failed = (suite.assertionResults || []).filter((test) => test.status === 'failed');
     const items = failed.length ? failed.map((test) => ({name: test.fullName, message: (test.failureMessages || []).join('\n')})) : [{name: 'Suite failed before tests ran', message: suite.message}];
+    let suiteEmitted = 0;
     for (const item of items) {
       totalFailures++;
-      if (emitted++ >= 8) continue;
+      if (emitted >= 8 || suiteEmitted >= 4) continue;
+      emitted++;
+      suiteEmitted++;
       const suiteName = path.basename(suite.name || 'unknown');
       const detail = diagnostics(item.message);
       console.log(`::error title=Jest failure::${safe(`${suiteName}: ${item.name}${detail ? ` [${detail}]` : ''}`)}`);
     }
   }
-  if (totalFailures > 8) console.log(`::notice::${totalFailures - 8} additional failed tests or suites omitted from annotations.`);
+  if (totalFailures > emitted) console.log(`::notice::${totalFailures - emitted} additional failed tests or suites omitted from annotations.`);
 } catch (error) {
   console.log('::warning title=Jest report unavailable::The JSON result could not be read; inspect the original job log.');
   process.exit(1);

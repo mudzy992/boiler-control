@@ -3,6 +3,11 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { NavigationContainerRef } from '@react-navigation/native';
+import {
+  GAS_TAB_SCREENS,
+  MAIN_TAB_SCREENS,
+  ROOT_SCREENS,
+} from '../../constants/routes';
 
 export type NotificationPermissionStatus =
   | 'granted'
@@ -106,8 +111,12 @@ export const registerForPushNotifications = async (): Promise<PushRegistrationRe
 };
 
 /**
- * Handle deep link navigation from notification
- * Supports: myapp://gas/add-reading
+ * Handle deep link navigation from notification.
+ *
+ * MO2-3: cilj navigacije je registrovana ruta `Readings` (unutar `Gas` tab-a),
+ * NE `GasReadings`. `GasReadings` nikad nije bila registrovana ruta, pa je
+ * `navigate` bacao "The action 'NAVIGATE' ... was not handled" i push
+ * podsjetnik nije otvarao unos očitanja.
  */
 const handleDeepLink = (deepLink: string) => {
   if (!navigationRef) {
@@ -117,28 +126,51 @@ const handleDeepLink = (deepLink: string) => {
 
   // Parse deep link
   if (deepLink.includes('gas/add-reading')) {
-    // Navigate to Gas tab, then to GasReadings screen
-    navigationRef.navigate('Main', {
-      screen: 'Gas',
+    // Navigate to Gas tab, then to the Readings screen with the modal flag
+    navigationRef.navigate(ROOT_SCREENS.Main, {
+      screen: MAIN_TAB_SCREENS.Gas,
       params: {
-        screen: 'GasReadings',
+        screen: GAS_TAB_SCREENS.Readings,
         params: {
           openAddModal: true, // Custom param to trigger modal opening
         },
       },
     });
   } else if (deepLink.includes('gas')) {
-    navigationRef.navigate('Main', {
-      screen: 'Gas',
+    navigationRef.navigate(ROOT_SCREENS.Main, {
+      screen: MAIN_TAB_SCREENS.Gas,
     });
   } else if (deepLink.includes('dashboard')) {
-    navigationRef.navigate('Main', {
-      screen: 'Dashboard',
+    navigationRef.navigate(ROOT_SCREENS.Main, {
+      screen: MAIN_TAB_SCREENS.Dashboard,
     });
   } else if (deepLink.includes('heating')) {
-    navigationRef.navigate('Main', {
-      screen: 'Heating',
+    navigationRef.navigate(ROOT_SCREENS.Main, {
+      screen: MAIN_TAB_SCREENS.Heating,
     });
+  }
+};
+
+/**
+ * MO2-3 / MO-002: obrada cold-start notifikacije.
+ *
+ * Ako je aplikacija bila ugašena kada je korisnik tapnuo na push, listener iz
+ * `listenForNotifications` još nije bio registrovan, pa tap nije imao efekta.
+ * `getLastNotificationResponseAsync` vraća posljednji odgovor i time zatvara tu
+ * rupu.
+ */
+export const handleColdStartNotification = async () => {
+  try {
+    const response = await Notifications.getLastNotificationResponseAsync();
+    const deepLink = response?.notification.request.content.data?.deepLink as
+      | string
+      | undefined;
+
+    if (deepLink) {
+      handleDeepLink(deepLink);
+    }
+  } catch (error) {
+    console.warn('Failed to read last notification response:', error);
   }
 };
 

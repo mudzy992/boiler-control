@@ -16,10 +16,36 @@ MOBILE = ROOT / 'mobile'
 SRC = MOBILE / 'src'
 INVENTORY = ROOT / 'docs/audit/mobile/01-inventory.md'
 BACKEND_SRC = ROOT / 'backend/src/modules'
+ROUTES = SRC / 'constants/routes.ts'
 
 
 def read(path: Path) -> str:
     return path.read_text(encoding='utf-8') if path.is_file() else ''
+
+
+def route_constants() -> dict[str, str]:
+    """Mapira `KONSTANTA.Clan` -> stvarna vrijednost rute iz `src/constants/routes.ts`.
+
+    MO2-3: imena ruta su prešla sa string literalima na zajedničke konstante. Bez
+    ovog mapiranja inventar ne bi vidio ni registrovana imena ni deep link ciljeve,
+    pa bi provjera „svaki cilj je registrovan" postala lažno zelena (prazan skup
+    ciljeva trivialno zadovoljava uvjet).
+    """
+    text = read(ROUTES)
+    out: dict[str, str] = {}
+    for block in re.finditer(
+        r'export const ([A-Z][A-Z0-9_]*)\s*=\s*\{(.*?)\}\s*as const;', text, re.S
+    ):
+        const_name, body = block.group(1), block.group(2)
+        for m in re.finditer(r"([A-Za-z0-9_]+)\s*:\s*'([^']*)'", body):
+            out[f'{const_name}.{m.group(1)}'] = m.group(2)
+    return out
+
+
+def resolve(expr: str, consts: dict[str, str]) -> str:
+    """`'Gas'` -> Gas; `MAIN_TAB_SCREENS.Gas` -> Gas (ako je konstanta poznata)."""
+    expr = expr.strip().strip("'\"")
+    return consts.get(expr, expr)
 
 
 def ts_files(base: Path) -> list[Path]:
@@ -34,28 +60,70 @@ def collect() -> dict:
     navigators = sorted(p.name for p in ts_files(SRC / 'navigation'))
     services = sorted(p.name for p in ts_files(SRC / 'services'))
 
+    consts = route_constants()
+
     # registrovana imena ekrana u navigatorima (Stack.Screen/Tab.Screen, uključujući višelinijske)
+    # MO2-3: ime može biti string literal (name="Main") ili konstanta (name={ROOT_SCREENS.Main}).
     nav_text = '\n'.join(read(p) for p in ts_files(SRC / 'navigation'))
     nav_text += '\n' + read(SRC / 'screens/gas/GasScreen.tsx')
     registered = set(re.findall(r'<(?:Stack|Tab)\.Screen\s+name="([^"]+)"', nav_text))
+    registered |= {
+        resolve(m.group(1), consts)
+        for m in re.finditer(r'<(?:Stack|Tab)\.Screen\s+name=\{([A-Za-z0-9_.]+)\}', nav_text)
+    }
 
     # deep link ciljevi iz notificationService.handleDeepLink
+    # MO2-3: cilj može biti literal (screen: 'Gas') ili konstanta (screen: MAIN_TAB_SCREENS.Gas).
     notif = read(SRC / 'services/notifications/notificationService.ts')
-    deep_targets = re.findall(r"screen:\s*'([A-Za-z0-9_]+)'", notif)
+    deep_targets = [resolve(t, consts) for t in re.findall(r"screen:\s*'([A-Za-z0-9_]+)'", notif)]
+    deep_targets += [
+        resolve(m.group(1), consts)
+        for m in re.finditer(r'screen:\s*([A-Z][A-Z0-9_]*\.[A-Za-z0-9_]+)', notif)
+    ]
     bad_deep_targets = sorted({t for t in deep_targets if t not in registered})
+
+    # čuvar protiv lažno zelene: ako handler postoji a nijedan cilj nije prepoznat,
+    # to znači da parser ne razumije zapis — a ne da ciljeva nema.
+    parse_issues = []
+    if 'handleDeepLink' in notif and not deep_targets:
+        parse_issues.append(
+            'handleDeepLink postoji, ali nijedan deep link cilj nije prepoznat '
+            '(parser ne pokriva zapis) — provjera bi bila lažno zelena'
+        )
+    if not registered:
+        parse_issues.append(
+            'nije prepoznato nijedno registrovano ime ekrana — provjera bi bila lažno zelena'
+        )
 
     # ciljevi iz linking konfiguracije (RootNavigator): ključevi su imena ekrana
     root = read(SRC / 'navigation/RootNavigator.tsx')
     start = root.find('const linking')
-    linking_block = root[start:] if start >= 0 else ''
+    if start >= 0:
+        # Krećemo od prve `{`, a ne od `const linking`: inače anotacija tipa
+        # (`const linking: LinkingOptions<any> = {`) daje lažni cilj `linking`.
+        brace = root.find('{', start)
+        linking_block = root[brace:] if brace >= 0 else ''
+    else:
+        linking_block = ''
     end = linking_block.find('\n};')
     linking_block = linking_block[:end] if end >= 0 else linking_block
     structural = {'screens', 'config', 'prefixes'}
-    linking_targets = sorted(
-        {m.group(1).strip("'\"") for m in re.finditer(r"([A-Za-z0-9_'\-]+)\s*:", linking_block)}
-        - structural
-    )
+    # MO2-3: ključ može biti string literal ('add-reading':) ili izračunati ključ
+    # iz konstante ([GAS_TAB_SCREENS.Readings]:). Stari regex je vidio samo prvo.
+    linking_keys = {
+        m.group(1).strip("'\"") for m in re.finditer(r"([A-Za-z0-9_'\-]+)\s*:", linking_block)
+    }
+    linking_keys |= {
+        resolve(m.group(1), consts)
+        for m in re.finditer(r'\[\s*([A-Z][A-Z0-9_]*\.[A-Za-z0-9_]+)\s*\]\s*:', linking_block)
+    }
+    linking_targets = sorted(linking_keys - structural)
     bad_linking_targets = sorted(t for t in linking_targets if t not in registered)
+    if linking_block and not linking_targets:
+        parse_issues.append(
+            'linking konfiguracija postoji, ali nijedan cilj nije prepoznat '
+            '(parser ne pokriva zapis) — provjera bi bila lažno zelena'
+        )
 
     # API metode
     client = read(SRC / 'services/api/client.ts')
@@ -129,6 +197,9 @@ def collect() -> dict:
         'registered_screen_names': sorted(registered),
         'deep_link_targets': sorted(set(deep_targets)),
         'deep_link_targets_not_registered': bad_deep_targets,
+        'linking_targets': linking_targets,
+        'linking_targets_not_registered': bad_linking_targets,
+        'parse_issues': parse_issues,
         'methods_missing_in_inventory': missing_methods,
         'methods_defined_but_never_called': unused,
         'screens_without_i18n': sorted(screens_without_i18n),
@@ -156,6 +227,8 @@ def main() -> int:
         print(f"Registrovana imena ekrana: {', '.join(r['registered_screen_names'])}")
         print(f"Deep link ciljevi: {', '.join(r['deep_link_targets'])} -> "
               f"nepostojeći: {r['deep_link_targets_not_registered'] or 'nema'}")
+        print(f"Linking ciljevi: {', '.join(r['linking_targets'])} -> "
+              f"nepostojeći: {r['linking_targets_not_registered'] or 'nema'}")
         print(f"Ekran bez i18n: {r['screens_without_i18n'] or 'nema'}")
         print(f"Metode bez poziva: {len(r['methods_defined_but_never_called'])} "
               f"({', '.join(r['methods_defined_but_never_called'])})")
@@ -168,7 +241,10 @@ def main() -> int:
 
     ok = not (r['marker_issues']
               or any(r['rows_missing_in_inventory'].values())
-              or r['methods_missing_in_inventory'])
+              or r['methods_missing_in_inventory']
+              or r['parse_issues']
+              or r['deep_link_targets_not_registered']
+              or r['linking_targets_not_registered'])
     return 0 if ok else 1
 
 

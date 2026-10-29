@@ -206,3 +206,49 @@
 - Novi offline alat `scripts/audit/cors_headers_repro.cjs`: izolovana lokalna Nest HTTP reprodukcija identičnog middleware lanca iz `backend/src/main.ts` (`helmet` + `enableCors` s istim vrijednostima) uz statičke probere `trust proxy` i per-route `@Throttle` po `backend/src` i dokaz deploy konteksta iz komitovanih compose fajlova. Rezultat: CORS nije open (strani origin ne dobija refleksiju; string origin emituje fiksnu dozvoljenu vrijednost na svakom odgovoru — sigurno, ali implicitno), `credentials` ostaje isključen, preflight 204 s svih 6 deklariranih metoda i headerima `Content-Type, Authorization`, svih 9 helmet default headera prisutno; `trust proxy` nema u izvoru ni runtime defaultu, per-route `@Throttle` 0 pogođaka, backend u compose nema healthcheck a frontend ga ima, `expose` bez portova i traefik strip-prefix. Bez vanjske mreže, baze ili vjerodajnica; `--help` i determinističan exit.
 - Nova nalaza: **S-009** (throttling bez per-route limita + podijeljeni klijentski IP iza proxyja — VERIFIKOVANO konfiguracija/izolovana HTTP, HIPOTEZA produkcijska topologija), **B-028** (produkcijski image radi kao root i kopira development `node_modules` — VERIFIKOVANO Dockerfile), **B-029** (backend bez healthcheck/resource limita/backup runbooka, entrypoint s fiksnim `sleep 10` nije priključen — VERIFIKOVANO fajlovi, HIPOTEZA operativni uticaj), **B-030** (58 `any` anotacija u 28 fajlova, `anomayl` tipokratski naziv, 5 mrtvih tekst/log artefakata u Gitu — VERIFIKOVANO statički). Dopunjeni `04-findings.md`, `08-security.md` (uključujući status „nije završen CORS/proxy“ i S-006 helmet napomenu), plan koraci 0.3/5.2/5.5, katalog skripti i otvorena pitanja plana.
 - Formalna samoprovjera: 10 dokumenata, 57 nalaza, 26 koraka, 0 formalnih praznina; `backend_inventory.py` i `git diff --check` prolaze. CI [40891227131](https://github.com/mudzy992/boiler-control/actions/runs/40891227131) za `1fba83e` uspješan. Faza 1 ostaje otvorena: preostaju odluke vlasnika (produkcija, retencija, rate-limit politika) i novi CI za ovaj commit; aplikacijski kod i dalje nije izmijenjen u ovom radu.
+
+## Faza 1 — završna samoprovjera (sekcija 8 prompta) i izvještaj
+
+### Potvrde s dokazima
+
+- **Svaki modul/ruta ima red u inventaru:** 16/16 modula, 14/14 common fajlova, 69/69 deklaracija API ruta (tabela `02-api-catalog.md`), 15 modela i 5 cronova (`01-inventory.md`, `03-data-model.md`); `python3 scripts/audit/backend_inventory.py` prolazi i provjerava marker-poklapanje. Poklapanje markera ne potvrđuje semantiku niti sve dinamičke rute.
+- **Svaki nalaz ima lokaciju, dokaz i oznaku pouzdanosti:** 57 nalaza (B-001–B-030, S-001–S-009, W-001–W-005, F-001–F-006, R-001–R-007), format po sekciji 7 prompta; `python3 scripts/audit/document_selfcheck.py` → 10 dokumenata, 57 nalaza, 26 koraka, 0 formalnih praznina.
+- **Weather, formule, Redis/worker imaju kompletan dizajn, testni plan i rollback:** `05-weather.md` (ciljni dizajn, fixture/contract test plan, migracije/compat), `06-formulas.md` (svaka formula, sensitivity, shadow mode, backtest harness, metrički uspjeh), `07-redis-workers.md` (svaka stavka usvojeno/odgođeno/ne, degradacija, konfiguracija, metrike, strangler migracija i test plan).
+- **Svaka stavka plana ima kriterij prihvatanja i procjenu truda:** 26 koraka u `10-implementation-plan.md` s obavezna test polja, plus „Registar rizika i rollout/rollback“ i tabela sljedivosti svih 36 backlog ID-eva (sintaktički: nema nedostajućih ni viška).
+- **Izvorni kod aplikacije nije izmijenjen u auditu:** izuzetak su **korisničkim odobrenje** izmjene za dovođenje CI-ja na zeleno (PostgreSQL/Redis servisi, jest/Prisma konfiguracije, TTL/alias/fixture popravci i testovi), dokumentovane u historijskim zapispima ovog fajla; ovaj zadnji rad (CORS/DevOps/kvalitet nalazi) nije mijenjao aplikacijski kod. `git status` pri zatvaranju pokazuje samo `docs/audit/**` i `scripts/audit/**`.
+- **Nigdje nije ispisana vrijednost tajni:** tajne su tretirane samo kao lokacija + tip (S-005, S-008, SEC-0); skripte ne ispisuju vjerodajnice; jedan stari nesrećan ispisan primjer iz ranijeg rada nije ponovljen ni reprodukovao.
+- **Zastarjela dokumentacija je obrisana i opisana:** `docs/audit/00-cleanup-log.md` (56 putanja + povijesne odluke).
+- **Rad isključivo na aktivnoj grani:** `arena/94541967-boiler-control`; nema PR-a, nema pusha ni mergea prema `main`.
+- **Postojeći testovi su pokrenuti i stanje zapisano:** 167/167 općih i 49/49 integracijskih u branch CI (izolovani PostgreSQL/Redis), coverage sažeci i `npm audit` rezultati u `04-findings.md`/`08-security.md` i historijskim zapispima ovdje.
+- **Svaki korak plana ima obavezne testove i popis pomoćnih skripti:** markeri `Testovi` i `Skripte` u svakom koraku (provjera selfcheck-om); katalog skripti na kraju plana.
+- **Predloženi CI se pokreće samo na aktivnoj grani:** `.github/workflows/backend-audit.yml` ima `on.push.branches` s jednom aktivnom granom i `workflow_dispatch`, bez `pull_request`/`main`.
+
+### Broj nalaza po ozbiljnosti (57)
+
+- KRITIČNO: 0
+- VISOKO (uključujući „VISOKO potencijalno“): 19
+- SREDNJE: 36
+- NISKO: 2
+
+### Top 10 prioriteta (redoslijed iz plana, talas 0)
+
+1. **S-005/S-008/SEC-0** — provjera i rotacija stvarno aktivnih kredencijala (praćeni `.env`, log kandidati); incident korak prije bilo čega drugog.
+2. **B-006** — IDOR: označavanje tuđe notifikacije kao pročitane (korak 0.1).
+3. **B-007** — masovni testni gas endpoint dostupan običnom korisniku (korak 0.3).
+4. **B-009/B-010** — anomaly PATCH bez provjere vlasništva i bez DTO validacije (korak 0.2).
+5. **R-004 + S-009** — throttler TTL 60 ms, podijeljeni klijentski IP iza proxyja i odsustvo per-route limita (korak 0.3).
+6. **S-007** — 1 critical / 10 high u produkcijskom npm grafu; kompatibilne zakrpe (korak 0.5).
+7. **B-026** — nedostajuća Tuya polja postaju 0/false i mijenjaju lifecycle odluku (korak 0.6).
+8. **B-027** — prekinuta program sinkronizacija ostavlja mješavinu intervala (korak 0.7).
+9. **B-021 + S-008** — destruktivni seed/reset i praćeni logovi (korak 5.5 uz vlasničko odobrenje).
+10. **B-011/B-028/B-029** — Docker bez migracija/entrypointa, root image s dev zavisnostima, bez healthcheck/limita/backupa (korak 5.2).
+
+### Odluke koje trebaju korisnika
+
+1. **Incident/rotacija:** da li su vrijednosti iz `backend/.env` i log kandidata stvarne i aktivne; rotacija/revokacija (korak 0.0).
+2. **Produkcija:** odobren read-only pregled produkcijske baze/deploya (topologija proxyja, shema, backup/restore) — potrebno za B-011, 03-data-model, S-009 i sve migracijske korake.
+3. **Rate-limit politika i izvor klijentskog IP-a** (korak 0.3/S-009).
+4. **Retention/GDPR politika** (PRIV-1) i odobrenje brisanja/redakcije mrtvih artefakata i logova (MAINT-1/2, B-030).
+5. **Odobrenje plana:** talasi i feature flagovi su prijedlog; nijedan korak nije odobren za izvođenje dok vlasnik ne potvrdi.
+
+FAZA 1 ZAVRŠENA — čekam odobrenje za fazu 2

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import axios from 'axios';
 import { TuyaAdapter } from '../../src/modules/Boiler/adapter/tuya.adapter';
 import { TuyaAuthService } from '../../src/modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
@@ -61,6 +62,10 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
     jest.mock('axios');
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('Request Accounting & Metrics', () => {
     it('should increment totalRequests counter on successful fetch', async () => {
       const mockStatus = {
@@ -69,10 +74,14 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
         Power: true,
       };
 
-      // Mock axios.get
-      jest
-        .spyOn(adapter as any, 'fetchStatus')
-        .mockResolvedValueOnce(mockStatus);
+      // Exercise the real accounting path while isolating external HTTP and signing.
+      jest.spyOn(adapter as any, 'generateHeaders').mockResolvedValueOnce({});
+      jest.spyOn(axios, 'get').mockResolvedValueOnce({
+        data: {
+          success: true,
+          result: { status: Object.entries(mockStatus).map(([code, value]) => ({ code, value })) },
+        },
+      });
 
       (
         mockPrismaService.thermostatDevice.findFirst as jest.Mock
@@ -94,9 +103,8 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
     });
 
     it('should increment failedRequests counter on error', async () => {
-      jest
-        .spyOn(adapter as any, 'fetchStatus')
-        .mockRejectedValueOnce(new Error('Network error'));
+      jest.spyOn(adapter as any, 'generateHeaders').mockResolvedValueOnce({});
+      jest.spyOn(axios, 'get').mockRejectedValueOnce(new Error('Network error'));
 
       (
         mockPrismaService.thermostatDevice.findFirst as jest.Mock

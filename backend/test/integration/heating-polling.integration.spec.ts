@@ -106,6 +106,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Heating Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
 
@@ -208,6 +209,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Recommendations Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
@@ -273,6 +275,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Anomalies Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
@@ -324,6 +327,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Devices Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
@@ -375,6 +379,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Boiler Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
@@ -454,6 +459,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Weather Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
     });
 
@@ -495,6 +501,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Transaction Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
@@ -579,6 +586,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Correlation Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
     });
 
@@ -611,6 +619,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
           name: 'Edge Case Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
     });
 

@@ -83,7 +83,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
             name: 'Integration Test User',
           });
 
-        expect([201, 200]).toContain(response.status);
+        expect(response.status).toBe(201);
         expect(response.body).toHaveProperty('user');
         expect(response.body).toHaveProperty('token');
         expect(response.body.user.email).toBe(uniqueEmail);
@@ -217,6 +217,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           name: 'User Integration Test',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
@@ -360,6 +361,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           name: 'Dashboard Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
     });
 
@@ -505,6 +507,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           name: 'Logging Test User',
         });
 
+      expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
     });
 

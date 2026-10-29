@@ -46,6 +46,7 @@ describe('API Contract Tests (P1e)', () => {
         });
 
       // Response contract:
+      expect(response.status).toBe(201);
       if (response.status === 201 || response.status === 200) {
         expect(response.body).toHaveProperty('user');
         expect(response.body).toHaveProperty('token');

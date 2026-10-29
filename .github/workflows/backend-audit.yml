@@ -1,4 +1,4 @@
-name: Backend audit tests
+name: Audit checks
 
 on:
   push:
@@ -124,3 +124,29 @@ jobs:
           report_result=$?
           if [ "$result" -ne 0 ]; then exit "$result"; fi
           exit "$report_result"
+
+  # FE2-16: frontend provjere. Odvojen job jer `test` ima
+  # `defaults.run.working-directory: backend` i ovisi o postgres/redis
+  # servisima koji frontendu nisu potrebni.
+  frontend:
+    if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Type-check
+        run: npm run type-check
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build

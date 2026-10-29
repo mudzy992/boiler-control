@@ -518,3 +518,58 @@ Svih 10 quick wins iz `master_roadmap.py` (ključ `quick_wins`, verificirano 10/
 ### Preostalo
 
 **64 od 74 stavke** (Talas A 9 preostalih, B 7, C 16, D 16, E 26). Sljedeći po kritičnom putu (LANAC 2): `MO2-2` version gate → `API-1` → `API-2` → `FE2-8` + mobilni tipovi = **12.25–19.5 dana**.
+
+## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
+
+`MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").
+
+**Commiti:** `2b87231` (backend) → `dc67416` (mobile + docs).
+
+### Backend (`2b87231`)
+
+- `GET /api/app/config` — javno, `@Public()`, bez `@UseGuards`. Prefiks `api/` je u kontroleru jer `main.ts` nema `setGlobalPrefix`.
+- `AppConfigService` čita `MOBILE_MIN_SUPPORTED_VERSION`, `MOBILE_LATEST_VERSION`, `APP_VERSION_GATE_ENABLED`.
+- **Fail-safe:** neispravan semver → log + zadano; neispravan flag → log + `true`; gate ugašen → `minSupportedVersion = 0.0.0`; servis nikad ne baca.
+- Zadano: gate **uključen** s `minSupportedVersion = 1.0.0` (verzija koja je stvarno kod korisnika) — ne blokira nikoga dok se env ne podigne.
+- Bez nove zavisnosti: `semver` je u `backend/node_modules` ali **nije deklariran** (fantomska), pa se koristi strogi regex.
+
+### Mobile (`dc67416`)
+
+- `src/config/version.config.ts` — `getAppVersion()`, `compareVersions()`, `checkVersionGate()`.
+- **Fail-open:** korisnik se blokira **isključivo** kad backend nedvosmisleno kaže da je verzija premala. Mreža, timeout, HTTP 500, ne-JSON, neispravan semver i nepoznata lokalna verzija → aplikacija radi.
+- `UpdateRequiredScreen` se renderuje **umjesto** `NavigationContainer`, pa se gate ne može zaobići back dugmetom ni deep linkom; gate ima prednost nad auth-om.
+- **Jedan izvor verzije** (bila tri): `version` izbačen iz `app.json`, `app.config.js` čita `pkg.version`, `SettingsScreen` koristi `getAppVersion()`.
+- `expo-updates` 29.0.20 (dist-tag `sdk-54`), `runtimeVersion: { policy: 'appVersion' }`, `updates.url` iz jedinstvenog `EAS_PROJECT_ID`.
+- `eas.json`: dodat `preview`, svaki profil dobio `channel`, `submit.production` popunjen **isključivo preko `${env:...}`**.
+- `expo-application` 7.0.8 deklariran (bio fantomska zavisnost).
+
+### Verifikacija
+
+| Provjera | Rezultat |
+|---|---|
+| `jest src/common/tests/` | 5 suite-ova, **94 testa**, 0 padova |
+| Backend negativni test (`DEFAULT_MIN_SUPPORTED_VERSION`→9.9.9) | **7 failed** → vraćeno → PASS |
+| HTTP test (supertest) | `GET /api/app/config` → 200 bez tokena; `/app/config` → 404 |
+| `scripts/audit/mobile_version_gate.cjs` (NOVA) | **23/23** prolazi |
+| Negativni test harness-a (`openGate`→`mustUpdate:true`) | **4 pada**, exit 1 |
+| `mobile` `tsc --noEmit` | exit 0 |
+| backend `tsc` | baseline **213** = poslije **213** (0 novih) |
+| `expo config` version | **2.0.0** = `package.json` (bilo 1.0.0) |
+| 6 audit skripti | exit 0 |
+
+`scripts/audit/mobile_version_gate.cjs` transpajlira **stvarni** `version.config.ts` + `api.config.ts`, stub-uje expo module, podigne lokalni HTTP server i izvršava pravi `checkVersionGate()` — jer mobilni projekt nema test runner (MO-012, `npm test` exit 127).
+
+### Ispravke vlastitih tvrdnji
+
+- **„Svih 6 audit skripti exit 0"** — bilo je pogrešno: mjerio sam `rc=$?` iza pipe-a na `tail`, što vraća exit od `tail`-a (zamka zabilježena ranije u ovom istom dokumentu). Stvarno stanje: `backend_inventory.py` je **već bio exit 1 na `f5018b3`** (pomjereni brojevi linija u `notifications.controller.ts` nakon SEC-1), a `mobile_inventory.py` sam pokvario novim ekranom. **Oboje ispravljeno**: API katalog 69→70 redova uz **0** formalnih grešaka (bilo 13), inventar ekrana 14→15, dodani markeri za `app-config.{controller,service}.ts`.
+- **„Baseline 1021 tsc grešaka"** — izmjereno komandom bez `--types node,jest`; s CI komandom baseline je **213**.
+- **„8 providera"** u inventaru — stvarno **7** (brojao sam linije, uključujući zatvarajuću zagradu).
+
+### Šta NIJE verificirano
+
+- **`eas build --dry-run` NIJE pokrenut** — `eas-cli` nije instaliran u sandboxu (kriterij prihvatanja #3 ostaje otvoren).
+- **OTA isporuka preko `expo-updates` nije testirana** — treba EAS nalog i objavljen update.
+- **`UpdateRequiredScreen` nije viđen na stvarnom uređaju/emulatoru** — nema RN test runnera.
+- **Gate je testiran protiv lokalnog mock servera**, ne protiv stvarnog deployanog backenda.
+- **iOS dugme za store je skriveno** dok vlasnik ne upiše `IOS_APP_STORE_ID` (namjerno prazan — izmišljeni ID bi odveo na tuđu aplikaciju).
+- `submit.production` traži env varijable koje vlasnik mora postaviti (`GOOGLE_SERVICE_ACCOUNT_KEY_PATH`, `ASC_APP_ID`, `ASC_API_KEY_PATH`, `ASC_API_KEY_ISSUER_ID`, `ASC_API_KEY_ID`).

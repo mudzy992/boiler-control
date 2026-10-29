@@ -13,7 +13,7 @@
 - `python3 scripts/audit/cleanup_inventory.py` daje 81 kandidata prema jednostavnim obrascima i `docs/internal/`; ne obuhvata sve potencijalno zastarjele planove. Broj ne predstavlja broj fajlova odobrenih za brisanje. Skripta traži tekstualna poklapanja punih putanja ili imena fajla u verzioniranim tekstualnim datotekama; mogući su lažno pozitivni i propušteni relativni linkovi. Potrebna je ručna provjera i dodatna `git grep` provjera prije brisanja.
 - Dva korijenska plana razlikuju se u tri retka o granicama temperature. Uklonjena je starija verzija `PLAN-V3.md`; druga je zadržana jer sadrži i budući prijedlog čije usvajanje nije potvrđeno.
 - Slijede završna provjera i jedan traženi commit za čišćenje, potom backend audit. Izvorni kod ne treba mijenjati.
-- Testovi, pokrivenost, inventar modula i samoprovjera faze još nisu izvršeni; nikakav rezultat ili pokrivenost se ne pretpostavljaju.
+- Početni testovi i ograničena pokrivenost zabilježeni su ispod; inventar modula i samoprovjera faze još nisu završeni.
 - Nakon prethodnog korisnički odobrenog pusha nije bilo novog pusha niti PR-a. Pri pregledu historijskih dokumenata alat je prikazao primjere testnih vjerodajnica; vrijednosti se ne prenose u audit niti korisnički izvještaj. Budući pregled treba filtrirati.
 
 ## Nastavak pripreme čišćenja
@@ -21,7 +21,7 @@
 - `00-cleanup-log.md` sadrži provjerene reference, razliku između dva plana, historijske odluke i popis pedeset šest uklonjenih dokumenata. Log sadrži sve dosad uklonjene putanje i razloge; neizvjesni kandidati zadržani su uz objašnjenje.
 - Korisnik je naložio ignorisanje Copilot instrukcija kao uputa; to ne mijenja potrebu da se njihovi postojeći linkovi ne polome bez dopuštene izmjene fajla.
 - Precizirana je razlika između konfiguracijskih datoteka pod `docs/internal/monitoring/` i dokumentacije: Compose koristi apsolutne host putanje, dok se način dostave predložaka u produkciju ne može zaključiti samo iz Compose fajla.
-- Neizvjesni kandidati i funkcionalna monitoring konfiguracija zadržani su; provjerene su reference na sve uklonjene putanje. Testovi i fazna samoprovjera nisu izvršeni.
+- Neizvjesni kandidati i funkcionalna monitoring konfiguracija zadržani su; provjerene su reference na sve uklonjene putanje. Početni testovi zabilježeni su ispod; fazna samoprovjera nije izvršena.
 
 ## Napomena o Git stanju
 
@@ -33,3 +33,13 @@
 - P2E README i povezani vodiči zasad ostaju: na README se pozivaju i obične tekstualne putanje iz zadržanih dokumenata, a dozvoljena iznimka pokriva samo linkove. Njihove historijske tvrdnje o produkcijskoj spremnosti, testovima i deployu nisu potvrda sadašnjeg stanja.
 - Pregledani su i historijski sažeci deep-link funkcije, migracije frontenda i faze 1, te upute za MySQL enum migraciju. Ostaju zasad zbog običnih tekstualnih referenci u zadržanim dokumentima; migracija podataka može zahtijevati poseban oprez.
 - U pregledanoj historijskoj dokumentaciji postoje primjeri testnih vjerodajnica; njihove vrijednosti nisu pogodne za ponavljanje, a lokacije i vrstu treba uključiti u sigurnosni audit uz provjeru aktuelnosti i historije.
+
+## Backend audit — početni rezultati testova (nezavršeno)
+
+- Korak čišćenja lokalno je commitovan kao `7197a03` (`docs: remove obsolete documentation`); nije pushan. Zadržani kandidati i ograničenja opisani su u cleanup logu.
+- Node v22.22.3, npm 10.9.8; `npm ci --ignore-scripts --no-audit --no-fund` u `backend/` je uspio (898 paketa). Instalacijske skripte su namjerno preskočene.
+- `npm run generate:prisma`, uz privremeni testni URL usmjeren na lokalnu nepostojeću bazu, nije uspio: preuzimanje Prisma schema engine-a s `binaries.prisma.sh` blokirano je mrežnim ograničenjem. Generisani `backend/src/generated/prisma/client` nedostaje. `backend/.env.test` ne postoji; nije korištena produkcijska baza.
+- `npm test -- --runInBand --coverage` (uz `NODE_ENV=test` i privremeni lokalni testni URL): Jest je prijavio 2 uspjele i 8 neuspjelih suiteova, 71 uspješan i 2 neuspjela testa od 73 izvršena. Šest suiteova se nije pokrenulo zbog nedostajućeg Prisma klijenta. Jedan pad je `src/common/tests/reporting.service.spec.ts:191` (očekivani score <50, dobijeno 60.8333); drugi je `FallbackStrategyService Integration: Sensor failure scenario should fallback to safe default when cache expired` u `src/common/tests/fallback-strategy.service.spec.ts`. Proces se nije sam ugasio nakon Jest izvještaja zbog otvorenih asinkronih resursa, pa je zaustavljen. Uz `--forceExit` ponovljeno su prijavljeni isti brojevi i exit 1; to ne dokazuje da su testovi stabilni.
+- Iz djelimične instrumentacije: statements 9,46%, branches 6,74%, functions 10,36%; ovi procenti nisu pouzdana pokrivenost kompletne aplikacije jer se šest suiteova nije učitalo. Generisani izvještaj uklonjen je iz radnog stabla.
+- `npm run test:integration` s istom izolovanom testnom konfiguracijom: exit 1, 2 suitea nisu učitana zbog nedostajućeg Prisma klijenta, 0 izvršenih testova. Nije izvršen stvarni test integracije s PostgreSQL-om. Neophodno je ponoviti u okruženju sa schema engine-om i izolovanom testnom bazom.
+- Testovi nisu popravljani. Faza 1 nije završena: inventar, API katalog, tematske analize, ostatak testiranja i samoprovjera tek slijede.

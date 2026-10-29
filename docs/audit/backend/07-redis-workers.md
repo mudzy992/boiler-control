@@ -4,7 +4,7 @@
 
 1. **VERIFIKOVANO:** aplikacijski `AppModule` učitava `SchedulerModule`, a scheduler uključuje `ScheduleModule.forRoot()` i polling/dnevne/gas providere; anomaly modul je također u `AppModule` (`backend/src/app.module.ts:23-49`, `backend/src/modules/Schedule/schedule.module.ts:17-43`, `backend/src/modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module.ts:10-18`). Cron poslovi su zato deklarisani unutar API konteksta; broj i topologija produkcijskih replika nisu provjereni.
 2. **VERIFIKOVANO:** polling je svake minute i sekvencijalno čeka svaki uređaj (`backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:35-60`); dvije provjere anomalija su petominutne, dnevna preporuka i gas podsjetnik imaju zasebne cronove. Trajanje, preklapanje i produkcijski backlog nisu izmjereni.
-3. **VERIFIKOVANO:** nema deklarisanih Redis/BullMQ zavisnosti u `backend/package.json:28-56` ni Redis klijenta u pregledanom `backend/src`; privremeni CI Redis je stvaran servis, ali njegov `redis-cli ping` ne dokazuje aplikacijsko korištenje (`.github/workflows/backend-audit.yml:29-34,69-70`).
+3. **VERIFIKOVANO:** nema deklarisanih Redis/BullMQ zavisnosti u `backend/package.json:28-56` ni Redis klijenta u pregledanom `backend/src`; privremeni CI Redis je stvaran servis i zasebno su testirani osnovni lease primitivi, ali ni ping ni nezavisna audit skripta ne dokazuju aplikacijsko korištenje (`.github/workflows/backend-audit.yml`, run 40877308896).
 4. **VERIFIKOVANO:** polling provjera duplikata prethodi transakciji u kojoj se kreira događaj (`thermostat.polling.service.ts:205-212,238-250`), pa sama po sebi nije atomska zaštita od istovremenih procesa. Stvarna učestalost duplikata nije utvrđena.
 5. **VERIFIKOVANO:** push adapter hvata i loguje grešku slanja, ne obrađuje vraćene tickete/receipte; pozivajući servis zatim kreira notifikacijski zapis (`backend/src/modules/ExpoPush/expo.push.notification.service.ts:35-43`, `backend/src/modules/Notification/notifications.service.ts:80-93`). Upis nije dokaz isporuke.
 
@@ -140,7 +140,7 @@ Po redu: broj waiting/delayed/active/failed/stalled, **starost najstarijeg** job
 
 | Scenarij | Potrebna provjera | Pokretanje / status |
 |---|---|---|
-| PostgreSQL + Redis realni klijenti | Dvije API i dvije worker instance, atomic claim, idempotency, stale lease/fencing, Redis restart/eviction/full, DB rollback i outbox recovery. | Budući integration testovi u `.github/workflows/backend-audit.yml`; `cd backend && npm run test:integration`. **NIJE IZVEDENO:** sadašnji CI ping samo dokazuje Redis servis. |
+| PostgreSQL + Redis realni klijenti | Dvije API i dvije worker instance, atomic claim, idempotency, stale lease/fencing, Redis restart/eviction/full, DB rollback i outbox recovery. | Budući integration testovi u `.github/workflows/backend-audit.yml`; `cd backend && npm run test:integration`. **NIJE IZVEDENO:** aplikacijski worker/queue, DB gate, Redis restart i outbox test nisu implementirani; audit test Redis primitiva nije zamjena za njih. |
 | Fan-out i provider rate | Sintetičkih N uređaja, jedan job/slot, stabilna paginacija, limit po nalogu, neuspješan jedan uređaj ne blokira ostale; timeout/backoff/DLQ. | Budući unit/integration `cd backend && npm test -- --runInBand` i `npm run test:integration`. |
 | Overlap i kill -9 | Zaustaviti proces nakon DB commit-a ali prije queue ack-a; ponoviti posao, jedna DB posljedica i usklađen outbox; prekinuti lease/renew. | Budući deterministički integration/fault injection s izolovanim servisima; dokumentovati komandu nakon implementacije. |
 | Expo | Fake tickets/receipts, djelimični neuspjeh, timeout s nepoznatim ishodom, invalid token, retry i policy za mogući duplikat. | Budući Jest/integration, bez slanja stvarnih push poruka. |
@@ -149,3 +149,10 @@ Po redu: broj waiting/delayed/active/failed/stalled, **starost najstarijeg** job
 | Sigurnost/throttle | Login fail-closed, trusted proxy, više API procesa, ACL, Redis TLS i odsustvo tajni u logu/DLQ. | Budući security/integration test i deployment validacija. |
 
 **Status:** ovo je projektni prijedlog; Redis, queue i worker nisu dodani aplikaciji. Zaključci o produkcijskom stanju, performansama, runtime rasporedu i trošku čekaju odobrena mjerenja i testove.
+
+
+## Rezultat izolovanog Redis testa
+
+**VERIFIKOVANO na privremenom servisu:** [Actions run 40877308896](https://github.com/mudzy992/boiler-control/actions/runs/40877308896), `node scripts/audit/redis_lease_ci.cjs --ci`, koristi dva paralelna `redis-cli` procesa protiv CI Redis 7 kontejnera: dva konkurentna `SET NX PX` daju jednog vlasnika; nakon deterministički prisilnog isteka i preuzimanja novog vlasnika Lua compare-delete starog vlasnika vraća 0 i ne briše novi lock; nepovezani sintetički `INCR` se i dalje može izvršiti nakon gubitka leasa, što ilustrira zašto lock sam ne zaustavlja stale izvršioca. Test uklanja samo vlastita dva slučajna ključa. Tok i izlaz ne sadrže token, korisničke podatke ili vjerodajnice.
+
+**Ograničenje:** expiry je simuliran `PEXPIRE 0`, ne realnim prolaskom TTL-a; nema stvarnog app Redis klijenta, BullMQ-a, worker procesa, Redis restarta/replikacije/failovera, mrežne particije, kvarova persistencea, DB fencing implementacije ili vanjskog side effecta. Skripta ne dokazuje exactly-once, produkcijsku konfiguraciju ni sigurnost predloženog algoritma. Efemerni `trust`/CI kontejner nije model produkcijskog TLS/ACL-a.

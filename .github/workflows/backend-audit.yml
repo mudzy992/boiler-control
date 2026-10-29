@@ -105,12 +105,15 @@ jobs:
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |
           set +e
-          npm test -- --runInBand --forceExit --coverage --json --outputFile="$RUNNER_TEMP/audit-jest.json"
+          npm test -- --runInBand --forceExit --coverage --coverageReporters=json-summary --coverageReporters=json --coverageReporters=text --coverageReporters=lcov --coverageReporters=clover --json --outputFile="$RUNNER_TEMP/audit-jest.json"
           result=$?
           node ../scripts/audit/jest_report.cjs "$RUNNER_TEMP/audit-jest.json"
           report_result=$?
+          node ../scripts/audit/coverage_summary.cjs ../coverage/coverage-summary.json
+          coverage_result=$?
           if [ "$result" -ne 0 ]; then exit "$result"; fi
-          exit "$report_result"
+          if [ "$report_result" -ne 0 ]; then exit "$report_result"; fi
+          exit "$coverage_result"
       - name: Existing integration tests
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

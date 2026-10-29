@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Platform, Share } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+// MO2-22: top-level `expo-file-system` (19.x) NE izvozi documentDirectory /
+// cacheDirectory niti legacy metode — tamo su samo `Paths`, `File`, `Directory`
+// i throwing stubovi. Legacy API zivi na subpath-u `expo-file-system/legacy`.
+import * as FileSystem from 'expo-file-system/legacy';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import Svg, { Polyline } from 'react-native-svg';
@@ -122,7 +125,9 @@ export const AnalyticsScreen = () => {
     queryFn: () => apiClient.getGasReadings(),
   });
 
-  const fileSystem = FileSystem as any;
+  // MO2-22: bez `as any`. Cast je potiskivao TypeScript provjeru, pa se
+  // nedostajuce konstante i metode nisu videle pri kompajliranju.
+  const fileSystem = FileSystem;
 
   const ensureDirectory = async (dir: string) => {
     const info = await fileSystem.getInfoAsync(dir);
@@ -164,12 +169,14 @@ export const AnalyticsScreen = () => {
       const safeName = meta.filename.endsWith('.csv') ? meta.filename : `${meta.filename}.csv`;
       const sanitizedName = safeName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
+      // MO2-22: legacy API izvozi samo documentDirectory i cacheDirectory;
+      // temporaryDirectory ne postoji ni u top-level ni u legacy modulu.
       const candidates = (
-        [
-          fileSystem.documentDirectory,
-          fileSystem.cacheDirectory,
-          fileSystem.temporaryDirectory,
-        ] as (string | null | undefined)[]
+        [fileSystem.documentDirectory, fileSystem.cacheDirectory] as (
+          | string
+          | null
+          | undefined
+        )[]
       ).filter(Boolean) as string[];
 
       if (!candidates.length) {

@@ -178,7 +178,10 @@ describe('AnomalyDetectionService', () => {
     });
 
     it('should weight overshoot high (0.8)', () => {
-      const confidence = service.calculateConfidence([AnomalyType.OVERSHOOT], 10);
+      const confidence = service.calculateConfidence(
+        [AnomalyType.OVERSHOOT],
+        10,
+      );
       expect(confidence).toBeGreaterThan(0.75);
       expect(confidence).toBeLessThanOrEqual(0.8);
     });

@@ -15,7 +15,10 @@ export class CreateGasReadingDto {
   @Transform(({ value }) => Number(value))
   counterValue: number;
 
-  @ApiProperty({ description: 'Datum očitavanja', example: '2023-10-27T10:00:00Z' })
+  @ApiProperty({
+    description: 'Datum očitavanja',
+    example: '2023-10-27T10:00:00Z',
+  })
   @IsDateString()
   @IsNotEmpty()
   readingDate: string;

@@ -143,13 +143,10 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
       await service.createRunContext('outer operation', async (outerRunId) => {
         captured.push(outerRunId);
 
-        return service.createRunContext(
-          'inner operation',
-          (innerRunId) => {
-            captured.push(innerRunId);
-            return 'nested';
-          },
-        );
+        return service.createRunContext('inner operation', (innerRunId) => {
+          captured.push(innerRunId);
+          return 'nested';
+        });
       });
 
       expect(captured.length).toBe(2);
@@ -183,15 +180,21 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
 
       await Promise.all([
         service.createRunContext('parallel-1', async (runId) => {
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 10));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 10),
+          );
           results.push(runId);
         }),
         service.createRunContext('parallel-2', async (runId) => {
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 10));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 10),
+          );
           results.push(runId);
         }),
         service.createRunContext('parallel-3', async (runId) => {
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 10));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 10),
+          );
           results.push(runId);
         }),
       ]);
@@ -237,7 +240,9 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
 
       const operations = Array.from({ length: 10 }, (_, i) =>
         service.createRunContext(`concurrent-${i}`, async (runId) => {
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 20));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 20),
+          );
           results.push(runId);
         }),
       );

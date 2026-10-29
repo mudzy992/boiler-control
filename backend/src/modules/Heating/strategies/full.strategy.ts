@@ -38,7 +38,11 @@ export class FullStrategy extends ProfileStrategy {
 
     return {
       total: homeOffset + intervalOffset + eventOffset,
-      details: { home: homeOffset, interval: intervalOffset, events: eventOffset },
+      details: {
+        home: homeOffset,
+        interval: intervalOffset,
+        events: eventOffset,
+      },
     };
   }
 

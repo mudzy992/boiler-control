@@ -106,12 +106,14 @@ describe('Integration Tests: Backend API (P2a)', () => {
         const uniqueEmail = `duplicate_${Date.now()}@example.com`;
 
         // First registration
-        await request(app.getHttpServer()).post('/api/auth/register').send({
-          email: uniqueEmail,
-          username: uniqueEmail.split('@')[0],
-          password: 'TestPassword123!',
-          name: 'First User',
-        });
+        await request(app.getHttpServer())
+          .post('/api/auth/register')
+          .send({
+            email: uniqueEmail,
+            username: uniqueEmail.split('@')[0],
+            password: 'TestPassword123!',
+            name: 'First User',
+          });
 
         // Second registration with same email should fail
         const response = await request(app.getHttpServer())
@@ -159,12 +161,14 @@ describe('Integration Tests: Backend API (P2a)', () => {
 
       beforeAll(async () => {
         testUserEmail = `login_test_${Date.now()}@example.com`;
-        await request(app.getHttpServer()).post('/api/auth/register').send({
-          email: testUserEmail,
-          username: testUserEmail.split('@')[0],
-          password: testUserPassword,
-          name: 'Login Test User',
-        });
+        await request(app.getHttpServer())
+          .post('/api/auth/register')
+          .send({
+            email: testUserEmail,
+            username: testUserEmail.split('@')[0],
+            password: testUserPassword,
+            name: 'Login Test User',
+          });
       });
 
       it('should login with correct credentials', async () => {

@@ -19,11 +19,7 @@ export class GasReadingService {
     private fileStorage: FileStorageService,
   ) {}
 
-  async create(
-    userId: number,
-    dto: CreateGasReadingDto,
-    meterImage?: any,
-  ) {
+  async create(userId: number, dto: CreateGasReadingDto, meterImage?: any) {
     const readingDate = new Date(dto.readingDate);
     if (Number.isNaN(readingDate.getTime())) {
       throw new BadRequestException('Invalid reading date');
@@ -447,7 +443,10 @@ export class GasReadingService {
 
     const consumptionFromReferenceM3 =
       referenceReading && latestReading
-        ? Math.max(0, latestReading.counterValue - referenceReading.counterValue)
+        ? Math.max(
+            0,
+            latestReading.counterValue - referenceReading.counterValue,
+          )
         : totalGas;
 
     const history = await this.prisma.boilerHistory.findMany({

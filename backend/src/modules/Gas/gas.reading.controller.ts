@@ -146,6 +146,10 @@ export class GasReadingController {
   ) {
     const startDate = from ? new Date(from) : undefined;
     const endDate = to ? new Date(to) : undefined;
-    return this.service.getEfficiencyAnalysis(req.user.userId, startDate, endDate);
+    return this.service.getEfficiencyAnalysis(
+      req.user.userId,
+      startDate,
+      endDate,
+    );
   }
 }

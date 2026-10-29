@@ -222,9 +222,7 @@ describe('API Contract Tests (P1e)', () => {
     });
 
     it('GET /metrics/json should return metrics as JSON', async () => {
-      const response = await request(app.getHttpServer()).get(
-        '/metrics/json',
-      );
+      const response = await request(app.getHttpServer()).get('/metrics/json');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('poll_runs_total');

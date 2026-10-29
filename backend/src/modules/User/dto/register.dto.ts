@@ -13,7 +13,9 @@ import {
 export class RegisterDto {
   @IsEmail()
   @IsNotEmpty()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @IsString()

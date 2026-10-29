@@ -297,7 +297,8 @@ export class HeatingAnomalyCheckerService {
           timestampEnd: endTime,
           roomCurrentTemp: event.roomCurrentTemp,
           roomTargetTemp: event.roomTargetTemp,
-          boilerFlowTemp: boiler?.actualFlowTemp ?? boiler?.suggestedFlowTemp ?? 0,
+          boilerFlowTemp:
+            boiler?.actualFlowTemp ?? boiler?.suggestedFlowTemp ?? 0,
         });
       }
 

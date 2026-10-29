@@ -68,10 +68,10 @@ export class DashboardService {
 
     const [latestWeather, latestBoilerHistory, recommendations] =
       await Promise.all([
-      this.getLatestWeather(),
-      hasThermostat ? this.getLatestBoilerHistory(userId) : null,
-      this.getRecentRecommendations(userId),
-    ]);
+        this.getLatestWeather(),
+        hasThermostat ? this.getLatestBoilerHistory(userId) : null,
+        this.getRecentRecommendations(userId),
+      ]);
 
     const heatingStatus: Array<{ deviceId: number; isHeatingNow: boolean }> =
       hasThermostat ? await this.getHeatingStatus(userId) : [];

@@ -14,7 +14,7 @@
 - Da li su simulirane ručne operacije grijanja namjeran proizvodni ugovor ili ih treba ugasiti uz verzioniranje?
 - Koliko stvarnih timeouta i retry pokušaja ima u produkciji i postoji li dodatno otkazivanje unutar pojedinih HTTP biblioteka?
 
-**Status:** ovo nije kompletan popis nalaza. Potrebni su preostali segmenti iz zadatka, pregled potrošača i dopuna dokaza.
+**Status:** segmenti 3.2 zadatka (arhitektura/granice, pouzdanost, konkurentnost, sigurnost, observability, testovi, DevOps, kvalitet koda) imaju nalaze s lokacijama, dokazima i oznakama pouzdanosti; sigurnosne i infrastrukturne dopune su u [08-security.md](08-security.md). Otvoreno ostaje: potvrda produkcijske topologije i deploy procedure, cjelovita exploitabilnost zavisnosti i potvrda stvarnih API potrošača (vidjeti „Otvorena pitanja“).
 
 ### [B-001] Ručno kreiranje događaja vraća nepohranjen objekt — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO
 - Gdje: `backend/src/modules/Heating/heating.controller.ts:13-42`.
@@ -235,3 +235,27 @@
 - Preporuka: validirati kompletan provider payload, upis i čišćenje jednog verzioniranog dana izvršiti atomski, a hash/verziju potvrditi tek nakon uspješnog commita cijelog dana. Sinhronizaciju konkurentnih procesa zaštititi odgovarajućim DB locking/versioning mehanizmom; prethodni cjelovit raspored zadržati na grešci. Ne vršiti uređajne komande i ne prepravljati postojeće rasporede bez kontrole.
 - Kako provjeriti: test-first pad nakon svakog pojedinog upserta i prije cleanup-a, ponavljanje identičnog payload-a, uklonjeni interval, paralelni različiti payloadi, prazan/nevalidan program i oporavak; u izolovanom PostgreSQL-u assert all-or-nothing i konzistentnu verziju, s lažnim providerom. `cd backend && npm test -- --runInBand` i `npm run test:integration`.
 - Trud: M/L — Zavisnosti: provider ugovor, DB transakcijska i konkurentna semantika, ispitivanje trenutnih parcijalnih rasporeda bez ispisa podataka.
+
+### [B-028] Produkcijski image radi kao root i uključuje development zavisnosti — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (Dockerfile)
+- Gdje: `backend/Dockerfile:31-48` (production stage).
+- Šta nije u redu i zašto: završni stage nema `USER` direktivu, pa aplikacija radi kao root unutar kontejnera; production stage kopira cijeli `node_modules` iz build stagea postavljenog na `NODE_ENV=development`, bez prune-a development zavisnosti. Image je veći, a površina napada obuhvata build/test alate i pakete koje runtime ne koristi.
+- Dokaz: `rg -n '^USER' backend/Dockerfile` nema pogođaka; `COPY --from=build ... node_modules` slijedi stageove `ENV NODE_ENV=development`; `CMD ["node", "dist/src/main.js"]` pokreće proces bez promjene korisnika. Stvarni veličine i paketna stabla izmjeriti tek izgradnjom imagea u izolovanoj okolini.
+- Preporuka: dodati posvećenog korisnika koji nije root i u production stage instalirati samo produkcijske zavisnosti (odvojeno `npm ci --omit=dev` ili `npm prune --omit=dev`), uz B-011/B-029 u istom provjerenom image koraku; zadržati `openssl` zavisnost dok build ne traži.
+- Kako provjeriti: branch CI ili odobrena izolovana izgradnja imagea; `id` unutar kontejnera pokazuje non-root, lista instaliranih paketa ne sadrži development set, kontejner startuje i postojeći izolovani testovi ostaju zeleni.
+- Trud: S — Zavisnosti: vlasnik deploy-a, test izgradnje imagea, međudjelovanje s B-011 (entrypoint/migracije).
+
+### [B-029] Produkcijski backend nema healthcheck, resource limite niti automatizovani backup — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (compose/Dockerfile fajlovi), HIPOTEZA (operativni uticaj)
+- Gdje: `docker-compose.yml:1-23` (backend), `docker-compose.yml:34-45` (frontend healthcheck), `backend/Dockerfile:45-48`, `backend/docker-entrypoint.sh:1-14`.
+- Šta nije u redu i zašto: frontend servis deklarise healthcheck, a backend ga nema; nijedan servis nema resource limite; repozitorij nema backup/restore job ili skriptu za bazu; „čekanje na bazu“ je fiksni `sleep 10` u entrypoint skripti koju Dockerfile ne priključuje (CMD direktno pokreće `node dist/src/main.js`), pa start ne čeka ni gotovost DB-a niti migracije (vidjeti B-011).
+- Dokaz: `rg -n 'healthcheck' docker-compose.yml` ima pogotke isključivo u frontend servisu; `rg -n 'mem_limit|cpus|deploy:' docker-compose.yml` nema pogođaka; u compose fajlovima nema backup servisa; `backend/Dockerfile` nema `ENTRYPOINT` niti `USER`, a `backend/docker-entrypoint.sh:5-6` sadrži fiksni `sleep 10` i nije pozvan iz CMD-a. Stvarna operativna procedura izvan repozitorija nije pregledana.
+- Preporuka: dodati lagani liveness/readiness endpoint (bez tajni u odgovoru) i healthcheck backend servisa; dogovoriti resource limite po okruženju; definisati odvojen backup/restore runbook za bazu (povezano s PRIV-1/REL-4); entrypoint ili priključiti uz pravu readiness provjeru ili ukloniti umjesto fiksnog spavanja.
+- Kako provjeriti: smoke test izgrađenog imagea protiv izolovane baze pokazuje readiness prijelaz (odblokirana baza → ready, blokirana → not-ready); compose konfig deklarise backend healthcheck; probni restore je dokumentovan uz odobrenje vlasnika.
+- Trud: M — Zavisnosti: S-009 (topologija deploya), dogovor o health ugovoru, vlasnik backupa.
+
+### [B-030] Kvalitet koda: `any` anotacije, nekonzistentno imenovanje i mrtvi artefakti u repozitoriju — Ozbiljnost: NISKO — Pouzdanost: VERIFIKOVANO (statički prebrojavanje)
+- Gdje: `backend/src` — 58 `any` anotacija u 28 fajlova, najviše `modules/Dashboard/dashboard.controller.ts` (6), `modules/ThermostatPoll/thermostat.polling.service.ts` (5), `common/fallback-strategy.service.ts` (5), `modules/Tuya/tuya-http.adapter.ts` (4), `modules/Gas/gas.reading.service.ts` (4); `backend/src/modules/HeatingAnomalyCheckerService/heating.anomayl.checker.service.ts` (tipokratski naziv); `backend/cc.txt`, `backend/src/modules/Boiler/boiler.service.txt`, `backend/start-dev.log`, `backend/test-run.log`, `backend/p2b-test-run.log`.
+- Šta nije u redu i zašto: rasprostranjene `any` anotacije smanjuju tipsku sigurnost upravo u osetljivim modulima (dashboard, polling, fallback, Tuya HTTP); naziv s `anomayl` pogreškom olakšava import pogrešne datoteke (isti obrazac kao duplikat kontrolera u B-005); repozitorij prati tekst/log artefakte koje kod i build ne referenciraju, a dva loga su kandidati za osjetljive vrijednosti (S-008).
+- Dokaz: `rg -n 'as any|: any\b|<any>' backend/src --glob '!**/generated/**'` → 58 pogođaka u 28 fajlova; `rg -n '@ts-ignore|@ts-expect-error' backend/src` → 0 pogođaka; `git ls-files backend | rg '\.(txt|log|bak)$'` → navedena pet artefakata; logovi su već klasifikovani u S-008 bez ispisa vrijednosti.
+- Preporuka: postepeno zatezati tipove dok se dotični moduli i inače izmjenjuju (prije svega navedeni fajlovi); preimenovati servisnu datoteku uz kompatibilne importe u odvojenom koraku; mrtve artefakte arhivirati ili ukloniti uz zasebno odobrenje vlasnika (MAINT-1/MAINT-2), bez masovnog refaktoringa.
+- Kako provjeriti: prebrojavanje raste za dogovorene module prema dolje, `tsc --noEmit` i lint zeleni, nakon preimenovanja nema prekinutih referenci; artefakti su obrisani ili eksplicitno dokumentovano zadržani.
+- Trud: M — Zavisnosti: plan koraci 5.2/5.5, vlasnik i odobrenje za artefakte i historiju.

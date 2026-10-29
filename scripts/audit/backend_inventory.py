@@ -48,6 +48,28 @@ def markers(path: Path, prefix: str) -> set[str]:
     return set(re.findall(r'<!--\s*' + re.escape(prefix) + r':([^\n]*?)\s*-->', path.read_text(encoding='utf-8')))
 
 
+def route_row_check(path: Path, expected: set[str]) -> tuple[int, list[str]]:
+    """Provjeri oblik označenih tabela, ne semantiku, guardove ili autoritet."""
+    rows: dict[str, list[str]] = {}
+    errors: list[str] = []
+    if not path.exists():
+        return 0, ['API katalog ne postoji']
+    for line in path.read_text(encoding='utf-8').splitlines():
+        match = re.search(r'<!--\s*route:([^\n]*?)\s*-->', line)
+        if not match:
+            continue
+        marker = match.group(1)
+        if marker in rows:
+            errors.append(f'dupli red {marker}')
+        cells = [cell.strip() for cell in line.strip().strip('|').split('|')]
+        rows[marker] = cells
+        if len(cells) != 8 or any(not cell for cell in cells):
+            errors.append(f'neispravan broj/prazne kolone {marker}')
+    errors.extend(f'nedostaje red {m}' for m in sorted(expected - rows.keys()))
+    errors.extend(f'nepoznat red {m}' for m in sorted(rows.keys() - expected))
+    return len(rows), errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description='List tracked backend modules, common files, route decorators, cron decorators and Prisma definitions, or compare audit markers. No code or database writes.')
     parser.add_argument('--json', action='store_true', help='Print machine-readable source inventory instead of checking documentation markers.')
@@ -72,7 +94,14 @@ def main() -> int:
         for item in extra:
             print(f'  VIŠAK {item}')
         ok &= not missing and not extra
-    print('Napomena: regex provjerava samo prisustvo markera, ne provjerava ispravnost opisa, dinamičke rute niti registraciju kontrolera.')
+    route_count, row_errors = route_row_check(
+        ROOT / 'docs/audit/backend/02-api-catalog.md', {r['marker'] for r in data['routes']}
+    )
+    print(f'API redovi: {route_count}, formalnih grešaka={len(row_errors)}')
+    for error in row_errors:
+        print(f'  {error}')
+    ok &= not row_errors
+    print('Napomena: regex provjerava samo markere i neprazne kolone, ne ispravnost opisa, dinamičke rute niti registraciju kontrolera.')
     return 0 if ok else 1
 
 

@@ -263,3 +263,48 @@ Korisnik je 2026-10-29 rekao „nastavi dalje" nakon izjave o završetku Faze 1;
 - Novi dokumenti: `docs/audit/frontend/01-inventory.md` (uključujući mapu ekran→API→backend ruta), `02-architecture-findings.md`, `03-security-build.md`, `04-ux-quality.md`, `05-backend-plan-integration.md` (weather/formule/admin/realtime/OpenAPI/6-temski ukrštaj s backend planom), `06-improvements-backlog.md` (16 stavki FE2-1–FE2-16), `07-implementation-plan.md` (16 koraka u 5 talasa, crosswalk, katalog skripti, registar rizika i rollout/rollback).
 - Novi skripte: `scripts/audit/frontend_selfcheck.py` (7 dokumenata, 21 nalaz s markerima, 16 koraka, 16 backlog ID-eva, crosswalk backlog↔plan; negativni test s oduzetim markerom detektovan i povratak green) i `scripts/audit/frontend_inventory.py` (10/10 stranica, 5/5 komponenti, 11/11 ruta u inventaru; read-only).
 - Nijedan aplikacijski fajl nije izmijenjen u Fazi 2; frontendski `dist/` i `node_modules` nisu u repozitoriju. Faza 2 ostaje otvorena.
+
+## Faza 2 — završna samoprovjera (sekcija 8 prompta) i izvještaj
+
+### Potvrde s dokazima
+
+- **Svaki ekran/ruta/fajl ima red u inventaru:** 10/10 stranica, 5/5 komponenti, 11/11 ruta (`python3 scripts/audit/frontend_inventory.py` → OK), plus mapa ekran→API→backend ruta u `01-inventory.md`. Poklapanje imena nije semantička potvrda potpunosti opisa.
+- **Svaki nalaz ima lokaciju, dokaz i oznaku pouzdanosti:** 21 nalaz (FE-001–FE-021) u formatu sekcije 7; `python3 scripts/audit/frontend_selfcheck.py` → 7 dokumenata, 21 nalaz, 16 koraka, 16 backlog ID-eva, 0 formalnih praznina; negativni test (oduzeo marker → detektovan; povratak → green).
+- **Svaka stavka plana ima kriterij prihvatanja i procjenu truda:** 16 koraka u `07-implementation-plan.md` s markerima `Cilj/fajlovi`, `Migracija/rollback, flag`, `Testovi`, `Skripte`, `Prihvat/trud/kompatibilnost/zavisnosti`; crosswalk 16 FE2 ID-eva s backlogom; registar rizika i rollout/rollback prisutni.
+- **Izvorni kod aplikacije nije izmijenjen:** `git status` pokazuje samo `docs/audit/**` i `scripts/audit/**`; frontend `dist/` i `node_modules` nisu u repozitoriju.
+- **Nigdje nije ispisana vrijednost tajni:** token se u nalazima opisuje samo na nivou mehanizma (putanja/linija), bez vrijednosti.
+- **Rad isključivo na aktivnoj grani:** `arena/94541967-boiler-control`; bez PR-a i pusha prema `main`.
+- **Postojeći testovi su pokrenuti i stanje zapisano:** frontend nema testova (FE-014); stvarno izvođenje `npm ci` (531 paket), `npm run type-check` (lažno zeleno — solution tsconfig), `npx tsc --noEmit -p tsconfig.app.json` (**12 grešaka**, FE-001), `npm run build` (uspijeva, 2.972 kB / gzip 905 kB, FE-004), `npm run lint` (ne radi — nema konfiguracije, FE-015) — sve u tabeli u `01-inventory.md`.
+- **Svaki korak plana ima obavezne testove i popis pomoćnih skripti:** markeri u svakom koraku; katalog skripti (2 postoje + 3 planirane).
+- **CI se pokreće samo na aktivnoj grani:** postojeći `.github/workflows/backend-audit.yml` (push aktivna grana + workflow_dispatch); predloženi frontend workflow (FE2-7) u istom branch-only obrazcu.
+
+### Broj nalaza po ozbiljnosti (21)
+
+- KRITIČNO: 0
+- VISOKO: 3 (FE-001 lažni type-check + 12 grešaka; FE-002 JWT u localStorage; FE-003 lokacija nedostupna + dvostruki weather izvor)
+- SREDNJE: 8 (FE-004 bundle 2.972 kB; FE-005 i18n 5/14 fajlova; FE-006 mešoviti dohvati + setInterval; FE-007 swaovanе greške + console.log; FE-008 nginx bez headera/gzip; FE-009 tri suprotne deploy konfiguracije; FE-010 klijentska poslovna logika; FE-014 nema testova)
+- NISKO: 10 (FE-011 mrtav notification.api.ts; FE-012 delete bez onError; FE-013 a11y modala; FE-015 slomljen lint; FE-016 defanzivni shape-ovi; FE-017 home-profile forma; FE-018 index.html; FE-019 range/limit 500; FE-020 VAT hardcoded; FE-021 tabele + dark FOUC)
+
+### Top 10 prioriteta (redoslijed iz plana)
+
+1. **FE2-1** — pravi type-check (`tsc -p tsconfig.app.json`) + popravka 12 grešaka (korak 0.1).
+2. **FE2-16** — ESLint flat config + lint skripta (0.2).
+3. **FE2-12** — brisanje mrtvog `notification.api.ts` i nepozvanih metoda; `onError` na mutacije (0.3).
+4. **FE2-7** — jedna mjerodavna deploy konfiguracija + branch-only frontend CI (type-check, lint, build, e2e smoke) (1.1).
+5. **FE2-8** — OpenAPI codegen + contract testovi; zamjena ručnih tipova (1.2).
+6. **FE2-2** — httpOnly cookie + rotirani refresh, usklađeno s backend 0.4/SEC-4 (2.1).
+7. **FE2-6** — security headeri + gzip (+ `lang` iz i18next) (2.2).
+8. **FE2-3** — React Query ujedinjenje s globalnim defaultima i visibility pauzom (3.1).
+9. **FE2-4** — code-splitting/lazy rute + mjerena LCP (3.2).
+10. **FE2-9/FE2-5** — weather ekran v2 (lokacija u formi, starost, WMO) usklađeno s backend 1.1/1.2; i18n kompletnost s jezikim selektorom (4.1/3.3).
+
+### Odluke koje trebaju korisnika
+
+1. **Deploy topologija:** koja od tri compose varijante je produkcija; tko postavlja TLS/ivične header-e (FE-009; isto otvoreno pitanje iz Faze 1 B-029/S-009).
+2. **Auth migracija:** odobrenje httpOnly cookie + refresh i rok prelaza postojećih Bearer sesija (FE2-2, s backend 0.4).
+3. **Performanse:** ciljni LCP/veličinski pragovi i minimalni preglednici (FE2-4).
+4. **Poslovna logika:** je li health/alerts/granice 46–55 vs 48–55 jedan izvor u backendu ili shared modul; GEMINI paritet s mobile (FE2-14).
+5. **Admin ekran:** radi li se u ovom ciklusu i s kojim podacima (FE2-15, backend 5.2/OBS-1).
+6. **Weather layout:** da li weather dobija posvećenu stranicu ili ostaje dashboard kartica (FE2-9).
+
+FAZA 2 ZAVRŠENA — čekam odobrenje za fazu 3

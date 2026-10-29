@@ -1,11 +1,24 @@
 <!doctype html>
+<!--
+  FE2-6: `lang` je ovdje samo početni fallback (i18next fallbackLng je 'en-US').
+  Stvarnu vrijednost postavlja src/locales/config.ts iz i18next stanja, pa više
+  nije statički "en" bez obzira na odabrani jezik.
+-->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-     <link rel="icon" type="image/svg+xml" href="/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <!--
+      FE2-6: sve tri favicon reference bile su slomljene — pokazivale su na
+      /favicon-16x16.png i /favicon-32x32.png, a public/ stvarno sadrži
+      favicon-16.png, favicon-16.svg i favicon-32.png. Prva linija je uz to
+      deklarirala type="image/svg+xml" a ciljala na .png.
+    -->
+    <link rel="icon" type="image/svg+xml" href="/favicon-16.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- FE2-6: najčešći accent u UI kodu (#f59e0b). -->
+    <meta name="theme-color" content="#f59e0b" />
     <title>Boiler Control</title>
   </head>
   <body>

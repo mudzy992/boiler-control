@@ -428,4 +428,20 @@ function getDefaultLanguage(): string {
   return 'en-US';
 }
 
+/**
+ * FE2-6: `<html lang>` mora odražavati stvarno odabrani jezik, a ne statički
+ * "en" iz index.html. Bez ovoga čitači ekrana čitaju bosanski tekst engleskim
+ * izgovorom.
+ *
+ * Namjerno u modulu, a NE inline skriptom u index.html: CSP postavlja
+ * `script-src 'self'`, pa bi inline skripta bila blokirana kad CSP pređe iz
+ * Report-Only u obavezujući režim.
+ */
+function applyDocumentLanguage(lng: string) {
+  document.documentElement.lang = lng;
+}
+
+applyDocumentLanguage(i18n.language);
+i18n.on('languageChanged', applyDocumentLanguage);
+
 export default i18n;

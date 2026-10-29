@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ExpoPushService } from '../ExpoPush/expo.push.notification.service';
 import { NOTIFICATION_DEBOUNCE } from './util/debounce';
@@ -100,14 +100,27 @@ export class NotificationsService {
     });
   }
 
-  async markAsRead(notificationId: number) {
-    const existing = await this.prisma.notification.findUnique({
-      where: { id: notificationId },
-    });
-    if (!existing) return null;
-    return await this.prisma.notification.update({
-      where: { id: notificationId },
+  async markAsRead(notificationId: number, userId: number) {
+    // SEC-1: uslov mora biti atomski `id + userId`. Prijašnja verzija je tražila
+    // samo po `id`, pa je bilo koji prijavljeni korisnik mogao označiti tuđu
+    // notifikaciju pogađanjem ID-a (IDOR).
+    //
+    // `updateMany` s oba uslova je jedan atomski upis i NE otkriva postojanje
+    // tuđeg zapisa: `count === 0` je isti ishod i za "ne postoji" i za "nije
+    // tvoje", pa napadač ne može enumerirati tuđe notifikacije.
+    const result = await this.prisma.notification.updateMany({
+      where: { id: notificationId, userId },
       data: { isRead: true },
+    });
+
+    // Neotkrivajući odgovor: identičan za tuđi i nepostojeći ID.
+    // Baca 404 (a ne 403) namjerno — 403 bi potvrdio da zapis postoji.
+    if (result.count === 0) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    return await this.prisma.notification.findUnique({
+      where: { id: notificationId },
     });
   }
 

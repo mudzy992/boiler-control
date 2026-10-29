@@ -65,8 +65,9 @@ export class NotificationsController {
 
   // Označi notifikaciju kao pročitanu
   @Post(':id/read')
-  async markAsRead(@Param('id') id: number) {
-    return this.notificationsService.markAsRead(id);
+  async markAsRead(@Param('id') id: number, @User() userId: number) {
+    // SEC-1: userId je obavezan — bez njega je ruta bila IDOR.
+    return this.notificationsService.markAsRead(id, userId);
   }
 
   // Označi sve notifikacije kao pročitane

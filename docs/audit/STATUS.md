@@ -282,7 +282,7 @@ Korisnik je 2026-10-29 rekao „nastavi dalje" nakon izjave o završetku Faze 1;
 
 - KRITIČNO: 0
 - VISOKO: 3 (FE-001 lažni type-check + 12 grešaka; FE-002 JWT u localStorage; FE-003 lokacija nedostupna + dvostruki weather izvor)
-- SREDNJE: 8 (FE-004 bundle 2.972 kB; FE-005 i18n 5/14 fajlova; FE-006 mešoviti dohvati + setInterval; FE-007 swaovanе greške + console.log; FE-008 nginx bez headera/gzip; FE-009 tri suprotne deploy konfiguracije; FE-010 klijentska poslovna logika; FE-014 nema testova)
+- SREDNJE: 8 (FE-004 bundle 2.972 kB; FE-005 i18n 5/14 fajlova; FE-006 mešoviti dohvati + setInterval; FE-007 progutane greške + console.log; FE-008 nginx bez headera/gzip; FE-009 tri suprotne deploy konfiguracije; FE-010 klijentska poslovna logika; FE-014 nema testova)
 - NISKO: 10 (FE-011 mrtav notification.api.ts; FE-012 delete bez onError; FE-013 a11y modala; FE-015 slomljen lint; FE-016 defanzivni shape-ovi; FE-017 home-profile forma; FE-018 index.html; FE-019 range/limit 500; FE-020 VAT hardcoded; FE-021 tabele + dark FOUC)
 
 ### Top 10 prioriteta (redoslijed iz plana)

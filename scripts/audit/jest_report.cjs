@@ -49,7 +49,7 @@ try {
   for (const suite of result.testResults || []) {
     if (suite.status !== 'failed') continue;
     const failed = (suite.assertionResults || []).filter((test) => test.status === 'failed');
-    const items = failed.length ? failed.map((test) => ({name: test.fullName, message: (test.failureMessages || []).join('\n')})) : [{name: 'Suite failed before tests ran', message: suite.message}];
+    const items = failed.length ? failed.map((test) => ({name: test.fullName, message: (test.failureMessages || []).join('\n'), details: test.failureDetails || []})) : [{name: 'Suite failed before tests ran', message: suite.message, details: []}];
     let suiteEmitted = 0;
     for (const item of items) {
       totalFailures++;
@@ -57,7 +57,16 @@ try {
       emitted++;
       suiteEmitted++;
       const suiteName = path.basename(suite.name || 'unknown');
-      const detail = diagnostics(item.message);
+      const hints = [diagnostics(item.message)];
+      for (const detail of item.details) {
+        const name = detail && detail.name;
+        if (typeof name === 'string' && /^(Error|AssertionError|TypeError|ReferenceError|PrismaClient[A-Za-z]+)$/.test(name)) hints.push(name);
+        for (const key of ['actual', 'expected']) {
+          const value = detail?.matcherResult?.[key];
+          if (Number.isInteger(value) && value >= 100 && value <= 599) hints.push(`${key} status ${value}`);
+        }
+      }
+      const detail = hints.filter(Boolean).join('; ');
       console.log(`::error title=Jest failure::${safe(`${suiteName}: ${item.name}${detail ? ` [${detail}]` : ''}`)}`);
     }
   }

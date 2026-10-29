@@ -64,6 +64,7 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    jest.useRealTimers();
   });
 
   describe('Request Accounting & Metrics', () => {
@@ -136,112 +137,54 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
 
   describe('Circuit Breaker', () => {
     it('should open circuit breaker after 3 consecutive failures', async () => {
-      jest
-        .spyOn(adapter as any, 'fetchStatus')
-        .mockRejectedValue(new Error('Test failure'));
-
-      // Simulate 3 failures
+      jest.spyOn(adapter as any, 'generateHeaders').mockResolvedValue({});
+      const get = jest.spyOn(axios, 'get').mockRejectedValue(new Error('Network error'));
       for (let i = 0; i < 3; i++) {
-        try {
-          await adapter.fetchSnapshot(`test-device`);
-        } catch (e) {
-          // Expected
-        }
+        await expect(adapter.fetchSnapshot('test-device')).rejects.toThrow('Network error');
       }
-
-      // Fourth attempt should fail immediately due to circuit breaker
-      try {
-        await adapter.fetchSnapshot(`test-device`);
-      } catch (e) {
-        expect(e.message).toContain('Circuit breaker open');
-      }
-
-      const metrics = adapter.getMetrics();
-      expect(metrics.circuitBreakerTrips).toBeGreaterThan(0);
+      await expect(adapter.fetchSnapshot('test-device')).rejects.toThrow('Circuit breaker open');
+      expect(get).toHaveBeenCalledTimes(3);
+      expect(adapter.getMetrics().circuitBreakerTrips).toBe(1);
     });
 
     it('should reset circuit breaker after timeout', async () => {
-      jest
-        .spyOn(adapter as any, 'fetchStatus')
-        .mockRejectedValue(new Error('Test failure'));
-
-      // Trigger 3 failures to open the circuit
+      jest.useFakeTimers();
+      jest.spyOn(adapter as any, 'generateHeaders').mockResolvedValue({});
+      const get = jest.spyOn(axios, 'get').mockRejectedValue(new Error('Network error'));
       for (let i = 0; i < 3; i++) {
-        try {
-          await adapter.fetchSnapshot('test-device');
-        } catch (e) {
-          // Expected
-        }
+        await expect(adapter.fetchSnapshot('test-device')).rejects.toThrow('Network error');
       }
-
-      // Advance time beyond CB_RESET_TIME (60 seconds)
       jest.advanceTimersByTime(65000);
-
-      // Mock a successful response after reset
-      const mockStatus = { TempCurrent: 40, TempSet: 44, Power: true };
-      jest
-        .spyOn(adapter as any, 'fetchStatus')
-        .mockResolvedValueOnce(mockStatus);
-
-      (
-        mockPrismaService.thermostatDevice.findFirst as jest.Mock
-      ).mockResolvedValueOnce({
-        id: 1,
-        deviceId: 'test-device',
-      } as any);
-
-      (
-        mockPrismaService.thermostatProgram.findFirst as jest.Mock
-      ).mockResolvedValueOnce(null);
-
-      // Should now succeed after timeout reset
-      const snapshot = await adapter.fetchSnapshot('test-device');
-      expect(snapshot).toBeDefined();
+      get.mockResolvedValueOnce({ data: { success: true, result: { status: [] } } });
+      (mockPrismaService.thermostatDevice.findFirst as jest.Mock).mockResolvedValueOnce({ id: 1 });
+      await expect(adapter.fetchSnapshot('test-device')).resolves.toBeDefined();
+      expect(get).toHaveBeenCalledTimes(4);
     });
   });
 
   describe('Snapshot Cache (5s TTL)', () => {
-    it('should cache snapshot for 5 seconds', async () => {
-      const mockStatus = {
-        TempCurrent: 40,
-        TempSet: 44,
-        Power: true,
-      };
-
-      jest.spyOn(adapter as any, 'fetchStatus').mockResolvedValue(mockStatus);
-
-      (
-        mockPrismaService.thermostatDevice.findFirst as jest.Mock
-      ).mockResolvedValue({
-        id: 1,
-        deviceId: 'test-device',
-      } as any);
-
-      (
-        mockPrismaService.thermostatProgram.findFirst as jest.Mock
-      ).mockResolvedValue(null);
-
-      // First call should fetch
-      await adapter.fetchSnapshot('test-device-cache');
-
-      // Mock should have been called once
-      const initialCallCount = (mockTuyaAuthService.getAccessToken as jest.Mock)
-        .mock.calls.length;
-
-      // Second call within 5s should use cache
-      await adapter.fetchSnapshot('test-device-cache');
-
-      // Advance time beyond 5s
-      jest.advanceTimersByTime(6000);
-
-      // This should invalidate cache
-      await adapter.fetchSnapshot('test-device-cache');
-
-      // Verify cache behavior (getAccessToken called again after cache expired)
-      const finalCallCount = (mockTuyaAuthService.getAccessToken as jest.Mock)
-        .mock.calls.length;
-
-      expect(finalCallCount).toBeGreaterThan(initialCallCount);
+    it('should preserve snapshot values within TTL and refetch after expiry', async () => {
+      jest.useFakeTimers();
+      jest.spyOn(adapter as any, 'generateHeaders').mockResolvedValue({});
+      const get = jest.spyOn(axios, 'get').mockResolvedValue({
+        data: { success: true, result: { status: [
+          { code: 'TempCurrent', value: 40 },
+          { code: 'TempSet', value: 44 },
+          { code: 'Power', value: true },
+        ] } },
+      });
+      (mockPrismaService.thermostatDevice.findFirst as jest.Mock).mockResolvedValue({ id: 1 });
+      const first = await adapter.fetchSnapshot('test-device-cache');
+      jest.advanceTimersByTime(4999);
+      const cached = await adapter.fetchSnapshot('test-device-cache');
+      expect(cached).toEqual(first);
+      expect(get).toHaveBeenCalledTimes(1);
+      jest.advanceTimersByTime(1);
+      const refreshed = await adapter.fetchSnapshot('test-device-cache');
+      expect(refreshed.currentTemp).toBe(first.currentTemp);
+      expect(refreshed.targetTemp).toBe(first.targetTemp);
+      expect(refreshed.powerOn).toBe(first.powerOn);
+      expect(get).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -252,8 +195,8 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
 
       adapter.resetMetrics();
 
-      // Simulate requests approaching threshold
-      for (let i = 0; i < 1100; i++) {
+      // Simulate requests above the threshold
+      for (let i = 0; i < 1200; i++) {
         (adapter as any).requestMetrics.totalRequests++;
         (adapter as any).requestMetrics.successfulRequests++;
       }
@@ -266,29 +209,11 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
   });
 
   describe('Timeout Handling', () => {
-    it('should fail fast on timeout', async () => {
-      jest
-        .spyOn(adapter as any, 'fetchStatus')
-        .mockImplementationOnce(async () => {
-          // Simulate a timeout by throwing
-          throw new Error('timeout of 10000ms exceeded');
-        });
-
-      (
-        mockPrismaService.thermostatDevice.findFirst as jest.Mock
-      ).mockResolvedValueOnce({
-        id: 1,
-        deviceId: 'test-device',
-      } as any);
-
-      try {
-        await adapter.fetchSnapshot('test-device');
-        expect(true).toBe(false); // Should not reach here
-      } catch (e) {
-        expect(e.message).toContain('timeout');
-        const metrics = adapter.getMetrics();
-        expect(metrics.failedRequests).toBe(1);
-      }
+    it('should count and propagate a request timeout', async () => {
+      jest.spyOn(adapter as any, 'generateHeaders').mockResolvedValueOnce({});
+      jest.spyOn(axios, 'get').mockRejectedValueOnce(new Error('timeout of 10000ms exceeded'));
+      await expect(adapter.fetchSnapshot('test-device')).rejects.toThrow('timeout');
+      expect(adapter.getMetrics().failedRequests).toBe(1);
     });
   });
 });

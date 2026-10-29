@@ -308,3 +308,146 @@ Korisnik je 2026-10-29 rekao „nastavi dalje" nakon izjave o završetku Faze 1;
 6. **Weather layout:** da li weather dobija posvećenu stranicu ili ostaje dashboard kartica (FE2-9).
 
 FAZA 2 ZAVRŠENA — čekam odobrenje za fazu 3
+
+## Faza 3 — Mobile audit (početak)
+
+Korisnik je 2026-10-29 rekao „nastavi dalje sa Fazu 3 (mobile audit) unutar `docs/audit/`"; shvaćeno je kao odobrenje za Fazu 3 prema protokolu iz prompta. Rad na grani `arena/1bfee051-boiler-control` (HEAD `c0131ff`); prethodne sekcije ovog fajla spominju `arena/94541967-boiler-control` jer su pisane u ranijoj sesiji.
+
+- Pregled `mobile/`: **78 fajlova** (bez `node_modules`/`.expo`) — 14 ekrana, 12 komponenti, 4 navigatora, 8 servisa, 13 ostalih `src` fajlova, 15 root dokumenata, 12 asseta. **55 API metoda**: 40 u `services/api/client.ts`, 7 u `homeProfile.api.ts`, 4 u `thermostat.api.ts`, 4 u `src/api/dashboard.api.ts` (drugi API direktorij, bez 401 interceptora).
+- Stvarno izvođenje u `mobile/` (2026-10-29): `npm ci --ignore-scripts` **exit 0** (977 paketa, 474 MB; peer warning `native-base`↔`react` 19.1.0); `npm run type-check` **exit 0** (stvaran — `include: [src, App.tsx, index.js]`, `strict`, `noUnusedLocals`); `npm run lint` **exit 2** (`couldn't find the config "expo"`); `npm test` **exit 127** (`jest: not found`) → **0 testova** (MO-012). `npx expo config --type public`: verzija **1.0.0** (dok `package.json` kaže 2.0.0), scheme **`myapp`**, `android.package com.boilercontrol.app`, versionCode 1; `--type introspect`: `android.permissions = [RECORD_AUDIO, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, INTERNET]`, `react-native-web` nije instaliran.
+- Tipki dokaz za MO-001: `scripts/audit/mobile-probe/filesystem_api_probe.ts` + `tsconfig.json` — `npx tsc --noEmit -p ../scripts/audit/mobile-probe/tsconfig.json` → **exit 0**. Potvrđeno da `expo-file-system` 19.x (instalirano **19.0.22**, `package.json` traži `~19.0.21`) **ne izvozi** `documentDirectory`/`cacheDirectory`/`temporaryDirectory` kao modulske konstante (samo statički getteri klase `Paths`), dok `makeDirectoryAsync` postoji kao **throwing stub** iz `legacyWarnings`. Zbog toga je CSV export u `GasReadingsScreen.tsx:308-386` slomljen (MO-001, VISOKO).
+- Novi nalazi **MO-001–MO-027 (27)**: VISOKO 6 (MO-001 slomljen CSV export; MO-002 deep link + cold-start; MO-004 bez min-version/force-update uz 3 izvora verzije; MO-005 tri API hosta s dev fallbackom na produkciju; MO-008 Settings prekidači bez efekta; MO-018 centralni handler grešaka samo `console.error`), SREDNJE 10 (MO-003 push token bez deregistracije; MO-009 `ProfileScreen` bez i18n/React Query + PDV 17 % hardcoded; MO-010 SecureStorage web/Android fallback; MO-011 NativeBase↔React 19 + dva sistema stilizacije bez `tailwind.config.js`; MO-012 mrtav lint/test; MO-014 tri axios instance; MO-015 health score i pragovi u klijentu; MO-016 fiktivne „12 %/18 %" komparacije; MO-017 a11y — 3 `accessibilityLabel`, 0 `accessible`, 0 `testID`; MO-021 tri ekrana bez `t()`), NISKO 11 (MO-006 `BottomSheetModal` vraća `null` + `title` nekorišten; MO-007 splash fiksno 2500 ms bez `expo-splash-screen`; MO-013 mrtav kod; MO-019 4 akcije = `console.log`; MO-020 dokumenti u nešifriranom cacheu; MO-022 25 bosanskih ključeva u `enUS.gas.*`; MO-023 liste bez virtualizacije/memoizacije; MO-024 `scheme:'myapp'` + duplikat `app.json`/`app.config.js`; MO-025 `RECORD_AUDIO` + legacy storage; MO-026 backend `findAll` s upisom u GET; MO-027 polling bez `AppState` + dupli `/dashboard` ključ).
+- Novi dokumenti (7): `docs/audit/mobile/01-inventory.md` (inventar + mapa ekran→API→backend ruta + tabela svih 55 metoda + paritet web↔mobile), `02-architecture-findings.md`, `03-security-build.md`, `04-ux-quality.md`, `05-backend-plan-integration.md` (8 sekcija ukrštanja s backend i frontend planom), `06-improvements-backlog.md` (**22 stavke MO2-1–MO2-22**), `07-implementation-plan.md` (**22 koraka u 5 talasa**, crosswalk, katalog skripti, registar rizika i rollout/rollback).
+- Nove skripte: `scripts/audit/mobile_inventory.py` (read-only; 14/14 ekrana, 12/12 komponenti, 4/4 navigatora, 8/8 servisa, 55/55 API metoda imaju red u inventaru; markeri `mob:screens|components|navigators|services|apimethods` usklađeni; samostalno potvrđuje da deep link cilj `GasReadings` **nije registrovan** i da 3 ekrana nemaju i18n) i `scripts/audit/mobile_selfcheck.py` (7 dokumenata, 27 nalaza s obaveznim markerima, 22 plan koraka, 21 backlog ID, crosswalk backlog↔plan; 0 formalnih praznina). Obje imaju `--help` i `--json`, idempotentne su i **ne mijenjaju nijedan fajl** (potvrđeno: identičan izlaz u dva uzastopna pokretanja i nepromijenjeno radno stablo).
+- Negativni testovi (tri ubačena defekta, svi detektovani i vraćeni): oduzet marker `**Dokaz:**` iz MO-001 → `formalnih praznina: 1`, **exit 1**; preimenovan `MO2-5` → `MO2-99` → prijavljena `crosswalk: razlika backlog/plan ['MO2-5','MO2-99']`, **exit 1**; `mob:screens:14` → `mob:screens:99` → inventory prijavio nedostajući marker, **exit 1**. Nakon vraćanja obje skripte opet **exit 0**.
+- Ispravka vlastitih ranijih tvrdnji u ovoj fazi: (a) „nema virtualizovanih lista" **nije tačno** — `SectionList` postoji (`NotificationsScreen.tsx:2`), `FlatList` 0, `ScrollView` 12; (b) „25 ključeva razlike je parser artefakt" **nije tačno** — `grep -n` s granicama blokova pokazuje stvarne bosanske vrijednosti u `enUS.gas.*` (`config.ts:483-515`, MO-022); (c) „`makeDirectoryAsync` ne postoji" **nije tačno** — postoji kao throwing stub; (d) naivni/regex parseri nad `src/locales/config.ts` daju lažne rezultate (zbog `'{{value}} / m³'` i višelinijskih vrijednosti) — jedini pouzdan je string-aware tokenizator; ispravni brojevi: **en 550 / bs 525** ključeva, svih 374 statički korištenih ključeva postoji u oba jezika, 176 `en` ključeva nikad korišteno.
+- Nijedan aplikacijski fajl nije izmijenjen u Fazi 3; `mobile/node_modules` nije u repozitoriju.
+
+### Odluke koje trebaju korisnika (Faza 3)
+
+1. **Settings prekidači:** trebaju li biti stvarni (vezani na `NotificationPreference`) ili ih ukloniti? (MO-008)
+2. **Verzionisanje:** koji je mjerodavni izvor verzije i uvodi li se min-version gate / force-update prije backend promjena ugovora? (MO-004, MO2-2)
+3. **API host:** koji od tri hosta je produkcija i smije li dev fallback pokazivati na nju? (MO-005)
+4. **PDV i cijene:** stvarna stopa i treba li backend vraćati umjesto hardcoded 17 %? (MO-009)
+5. **Fiktivne metrike:** smiju li „AI Insights" i komparacije s drugim domovima ostati bez stvarnih podataka? (MO-016)
+6. **A11y prag:** minimalni zahtjevi za TalkBack/VoiceOver u ovom izdanju? (MO-017)
+7. **Mobile nadogradnje:** prioritet widgeta/lock screena, lokalnih notifikacija, offline unosa plina, prognoze upozorenja i biometrijske prijave? (MO2-13, MO2-14, MO2-16, MO2-17, MO2-18)
+
+
+## Faza 3 — završna samoprovjera (sekcija 8 prompta) i izvještaj
+
+### Potvrde s dokazima
+
+- **Svaki ekran/komponenta/fajl ima red u inventaru:** 14/14 ekrana, 12/12 komponenti, 4/4 navigatora, 8/8 servisa, **55/55 API metoda** (`python3 scripts/audit/mobile_inventory.py` → „Redova koji nedostaju u inventaru: nema", „Metode bez reda u inventaru: nema", exit 0), plus mapa ekran→API→backend ruta i tabela svih 55 metoda u `01-inventory.md`. Poklapanje imena nije semantička potvrda potpunosti opisa.
+- **Svaki nalaz ima lokaciju, dokaz i oznaku pouzdanosti:** 27 nalaza (MO-001–MO-027, bez praznina u numeraciji) u formatu sekcije 7; `python3 scripts/audit/mobile_selfcheck.py` → 7 dokumenata, 27 nalaza, 22 koraka, 21 backlog ID, **0 formalnih praznina**, exit 0. Tri negativna testa (oduzeo `**Dokaz:**` iz MO-001; `MO2-5`→`MO2-99`; `mob:screens:14`→`mob:screens:99`) → svi detektovani s **exit 1**, nakon vraćanja opet exit 0.
+- **Svaka stavka plana ima kriterij prihvatanja i procjenu truda:** 22 koraka u `07-implementation-plan.md` s markerima `Cilj/fajlovi`, `Migracija/rollback, flag`, `Testovi`, `Skripte`, `Prihvat/trud/kompatibilnost/zavisnosti`; crosswalk 21 MO2 ID s backlogom (razlika prazna); registar rizika i rollout/rollback prisutni.
+- **Izvorni kod aplikacije nije izmijenjen:** `git status --porcelain` → ` M docs/audit/STATUS.md`, `?? docs/audit/mobile/`, `?? scripts/audit/mobile-probe/`, `?? scripts/audit/mobile_inventory.py`, `?? scripts/audit/mobile_selfcheck.py` — nijedan aplikacijski fajl; `git ls-files mobile/node_modules` → **0** (nije u repozitoriju).
+- **Nigdje nije ispisana vrijednost tajni:** `grep -rE "eyJ[A-Za-z0-9_-]{10,}|AIza[0-9A-Za-z_-]{20,}|-----BEGIN"` nad svim Faza 3 artefaktima → **0 pogodaka**; `assets/google-services.json` je opisan samo strukturno (`01-inventory.md:113`), bez vrijednosti.
+- **Rad isključivo na aktivnoj grani:** `git rev-parse --abbrev-ref HEAD` → `arena/1bfee051-boiler-control`; bez PR-a i pusha prema `main`.
+- **Postojeći testovi su pokrenuti i stanje zapisano:** `npm ci --ignore-scripts` exit 0; `npm run type-check` **exit 0**; `npm run lint` **exit 2**; `npm test` **exit 127** → **0 testova, nema jest konfiguracije** (MO-012); `npx tsc --noEmit -p ../scripts/audit/mobile-probe/tsconfig.json` **exit 0** (MO-001). Ništa od toga nije popravljano (zabrana izmjene koda).
+- **Svaki korak plana ima obavezne testove i popis pomoćnih skripti:** markeri u svakom koraku; katalog skripti (3 postoje — `mobile_inventory.py`, `mobile_selfcheck.py`, `mobile-probe/filesystem_api_probe.ts` — i 4 planirane).
+- **CI se pokreće samo na aktivnoj grani — OTVORENO:** jedini postojeći workflow `.github/workflows/backend-audit.yml` je branch-only, ali na **staroj** grani `branches: [arena/94541967-boiler-control]` (linija 5), ne na `arena/1bfee051-boiler-control`. Nije izmijenjen jer `.github/workflows/**` **nije** među dozvoljenim putanjama (`docs/audit/**`, `scripts/audit/**`); potrebna je izričita odluka korisnika.
+
+### Broj nalaza po ozbiljnosti (27)
+
+- KRITIČNO: 0
+- VISOKO: 6 (MO-001 slomljen CSV export — `expo-file-system` 19.x bez direktorijskih konstanti; MO-002 deep link + cold-start; MO-004 bez min-version/force-update uz 3 izvora verzije; MO-005 tri API hosta, dev fallback na produkciju; MO-008 Settings prekidači bez efekta; MO-018 centralni handler grešaka samo `console.error`)
+- SREDNJE: 10 (MO-003 push token bez deregistracije; MO-009 `ProfileScreen` bez i18n/RQ + PDV 17 %; MO-010 SecureStorage fallback; MO-011 NativeBase↔React 19 + dva sistema stilizacije; MO-012 mrtav lint/test; MO-014 tri axios instance; MO-015 health score u klijentu; MO-016 fiktivne komparacije; MO-017 a11y; MO-021 tri ekrana bez `t()`)
+- NISKO: 11 (MO-006 `BottomSheetModal`; MO-007 splash 2500 ms; MO-013 mrtav kod; MO-019 akcije = `console.log`; MO-020 dokumenti u cacheu; MO-022 25 bosanskih ključeva u `enUS.gas.*`; MO-023 liste bez virtualizacije; MO-024 scheme/duplikat konfiguracije; MO-025 `RECORD_AUDIO` + legacy storage; MO-026 backend upis u GET; MO-027 polling bez `AppState`)
+
+### Top 10 prioriteta (redoslijed iz plana)
+
+1. **MO2-22** — ispraviti CSV export na `File`/`Paths` API (korak 0.1; tipki dokaz već postoji).
+2. **MO2-2** — jedan izvor verzije + min-version gate / force-update **prije** backend promjena ugovora (0.2).
+3. **MO2-5** — jedan API host + okruženje bez dev fallbacka na produkciju (0.3).
+4. **MO2-4** — centralni error handler koji stvarno prikazuje grešku; `onError` na mutacije (0.4).
+5. **MO2-3** — Settings prekidači vezani na `NotificationPreference` + perzistencija (0.2/0.4).
+6. **MO2-6** — deep link registracija + cold-start (`getLastNotificationResponseAsync`) (0.5).
+7. **MO2-7** — SecureStorage bez tihih fallbackova + obnova tokena (0.6, s backend SEC-4).
+8. **MO2-8** — lint + jest konfiguracija i prvi testovi (1.3) — preduslov za MO2-12 i MO2-14.
+9. **MO2-13** — performanse listi: virtualizacija + memoizacija (3.1).
+10. **MO2-15/MO2-17** — preporuke i weather v2 usklađeni s backend FEAT planom (4.2/4.3, s FE2-10/FE2-9).
+
+### Odluke koje trebaju korisnika
+
+1. **CI grana:** smijem li ažurirati `.github/workflows/backend-audit.yml` na aktivnu granu (putanja je izvan dozvoljenih)?
+2. **Settings prekidači:** stvarni (vezani na `NotificationPreference`) ili ih ukloniti? (MO-008)
+3. **Verzionisanje:** mjerodavni izvor verzije i uvođenje min-version gatea prije promjena ugovora? (MO-004, MO2-2)
+4. **API host:** koji od tri hosta je produkcija i smije li dev fallback pokazivati na nju? (MO-005)
+5. **PDV i cijene:** stvarna stopa i da li backend treba vraćati umjesto hardcoded 17 %? (MO-009)
+6. **Fiktivne metrike:** smiju li „AI Insights" i komparacije s drugim domovima ostati bez stvarnih podataka? (MO-016)
+7. **A11y prag:** minimalni zahtjevi za TalkBack/VoiceOver u ovom izdanju? (MO-017)
+8. **Mobile nadogradnje:** prioritet widgeta/lock screena, lokalnih notifikacija, offline unosa plina, prognoze upozorenja i biometrijske prijave? (MO2-13, MO2-14, MO2-16, MO2-17, MO2-18)
+
+FAZA 3 ZAVRŠENA — čekam odobrenje za fazu 4
+
+## Faza 4 — Objedinjeni plan (početak)
+
+Korisnik je 2026-10-29 rekao „nastavi dalje" nakon izjave o završetku Faze 3; shvaćeno je kao odobrenje za Fazu 4 prema istom obrascu kao u prethodnim fazama.
+
+- Isporuka: **`docs/audit/MASTER-ROADMAP.md`** (282 linije, 15 sekcija) — jedan prioritizirani roadmap za backend + frontend + mobile: talasi A–E, zavisnosti u 6 lanaca, kritični put, procjene u danima po talasu i po tracku, registar rizika, ključne odluke, „Quick wins (< 1 dan)" i „Šta NE raditi".
+- **74 stavke** iz tri backloga (36 backend, 16 frontend, 22 mobile). Prioritet je **izračunat, a ne procijenjen na oko**: `ICE = Impact × Confidence ÷ Effort`, pri čemu se Effort i Confidence **čitaju iz backlog tablica** (Confidence: `VERIFIKOVANO`→1.0, `HIPOTEZA`→0.5, bez oznake→0.7), a Impact je eksplicitno dodijeljen po stavci s obrazloženjem u `IMPACT_TABLA`. Rezultat: **72 VERIFIKOVANO, 2 HIPOTEZA** (`PRIV-2`, `FEAT-2`), 0 bez oznake.
+- Talasi: **A** 9 stavki / 11.75–19.5 dana (sigurnost + slomljena funkcionalnost), **B** 7 / 12.75–20.5 (preduslovi: test infra, version gate, ugovor API-ja), **C** 16 / 31.25–48.5 (ispravnost podataka, observability), **D** 16 / 37–57 (pouzdanost, performanse, auth migracija), **E** 26 / 86–137 (funkcionalnosti i preostali dug). Ukupno **179–282 dana** sekvencijalno, odnosno zid-sat ≈ najduži track (**backend 113–180 dana**) uz tri paralelna tracka.
+- **Kritični put** je LANAC 2: `MO2-1 → MO2-2 → API-1 → API-2 → FE2-8 + mobilni tipovi`, **12.25–19.5 dana**. Dok on nije gotov, nijedna promjena oblika API odgovora ne smije u produkciju jer instalirane mobilne verzije nemaju prisilno ažuriranje.
+- **10 quick wins** (< 1 dan, ukupno 2.5–5 dana): `SEC-1`, `FE2-1`, `FE2-6`, `MO2-1`, `MO2-19`, `MO2-22`, `MO2-5`, `FE2-12`, `FE2-16`, `MO2-3`.
+- **6 stavki s nadjačanim ICE-om**, jer čisti omjer koristi i cijene daje pogrešan signal kod ireverzibilnih posljedica: `SEC-0` (D→A, curenje tajni), `SEC-4` (D→A, token bez revokacije), `MO2-2` (ostaje B, ali je kapija), `API-1` (C→B, preduslov ugovora), `API-2` (E→B, preduslov za `FE2-8` i mobilne tipove), `FORM-1` (D→C, pogrešna preporuka košta stvarnog novca).
+- Nova skripta: **`scripts/audit/master_roadmap.py`** — read-only, idempotentna, `--help`/`--json`/`--top`. Effort i Confidence čita iz backloga (ne prepisuje ih), pa se poredak može reproducirati i revidirati. Negativni testovi (četiri ubačena defekta, svi detektovani i vraćeni): (1) oduzet Impact za `SEC-1` → `PROBLEM: SEC-1: nema dodijeljen Impact`, **exit 1**; (2) nepoznata oznaka truda u backlogu → `PROBLEM: MO2-3: effort None nije prepoznat`, **exit 1**; (3) oduzet `IMPACT_TABLA` unos za `API-2` → `PROBLEM: API-2: nema dodijeljen Impact`, **exit 1**; (4) oduzet `ICE_OVERRIDE` unos za `API-2` → skripta ostaje **exit 0** ali se `API-2` vraća u **Talas E**, čime je potvrđeno da override zaista mijenja talas, a ne samo ispis. Nakon vraćanja svih: **exit 0**, `API-2` u Talasu B, `problems: []`.
+
+  Napomena o vlastitoj grešci: prvi pokušaj testa (3) bio je loše konstruisan — zamjena stringa `"    'API-2': ('Talas B',"` pogodila je unos u `ICE_OVERRIDE`, a ne u `IMPACT_TABLA`, pa je test prošao (exit 0) iako nije testirao ono što je trebao. Ispravljen je ciljanjem pune linije `'API-2': (4, 'OpenAPI kao izvor tipova'),` i tek tada pao s exit 1.
+- Nijedan aplikacijski fajl nije izmijenjen u Fazi 4.
+
+## Faza 4 — završna samoprovjera (sekcija 8 prompta) i izvještaj
+
+### Potvrde s dokazima
+
+- **Prioritet je obrazložen, ne nagađan:** formula, skala i svaka ulazna vrijednost su u `scripts/audit/master_roadmap.py`; `python3 scripts/audit/master_roadmap.py --json` reprodukuje cijeli poredak. Impact ima pisano obrazloženje za svih 74 stavki (`PROBLEM: <id>: nema dodijeljen Impact` ako neka nedostaje — negativni test to potvrđuje).
+- **Svih 74 ID-jeva iz tri backloga prisutno je u roadmapu:** provjereno skriptom koji čita `--json` izlaz i traži svaki ID u `MASTER-ROADMAP.md` → **0 nedostajućih**; broj redova u svakoj talasnoj tabeli odgovara broju stavki tog talasa (A 9, B 6, C 16, D 16, E 27).
+- **Sve brojčane tvrdnje u dokumentu su izračunate, ne prepisane:** provjereno 13/13 (dani po talasu, dane po tracku, Talas A+B 16 stavki / 24.5–40 dana, quick wins 2.5–5 dana, ukupno 179–282 dana, kritični put 12.25–19.5 dana, 72/2 VERIFIKOVANO/HIPOTEZA). **Dvije greške su uhvaćene i ispravljene tijekom ove provjere** (v. „Ispravke vlastitih tvrdnji").
+- **Svaki korak ima kriterij prihvatanja i procjenu truda:** roadmap određuje samo **redoslijed**; kriteriji prihvatanja ostaju u faznim planovima (`backend/10-`, `frontend/07-`, `mobile/07-implementation-plan.md`) — sva tri fajla postoje i njihove selfcheck skripte prolaze.
+- **Izvorni kod aplikacije nije izmijenjen:** `git status --porcelain` → ` M docs/audit/STATUS.md`, `?? docs/audit/MASTER-ROADMAP.md`, `?? docs/audit/mobile/`, `?? scripts/audit/master_roadmap.py`, `?? scripts/audit/mobile-probe/`, `?? scripts/audit/mobile_inventory.py`, `?? scripts/audit/mobile_selfcheck.py` — nijedan aplikacijski fajl.
+- **Nigdje nije ispisana vrijednost tajni:** `grep -rE "eyJ[A-Za-z0-9_-]{10,}|AIza[0-9A-Za-z_-]{20,}|-----BEGIN|password *= *["'][^"']{6,}"` nad `MASTER-ROADMAP.md` i `master_roadmap.py` → **0 pogodaka**.
+- **Rad isključivo na aktivnoj grani:** `arena/1bfee051-boiler-control`; bez PR-a i pusha prema `main`.
+- **Postojeći testovi su pokrenuti i stanje zapisano:** backend (Faza 1), frontend (Faza 2 — 0 testova, `type-check` lažno zelen), mobile (Faza 3 — `npm test` exit 127, `npm run lint` exit 2, `npm run type-check` exit 0). U Fazi 4 nije pokretan novi test jer nije mijenjan nijedan aplikacijski fajl.
+- **Sve skripte na koje se roadmap poziva postoje i rade:** `document_selfcheck.py` (exit 0, 10 dokumenata / 57 nalaza / 26 koraka), `backend_inventory.py` (exit 0, 69 API redova), `frontend_selfcheck.py` (exit 0, 21 nalaz / 16 koraka), `mobile_selfcheck.py` (exit 0, 27 nalaza / 22 koraka / 22 backlog stavke), `mobile_inventory.py` (exit 0), `master_roadmap.py` (exit 0) — **6/6 zeleno**.
+- **CI se pokreće samo na aktivnoj grani — OTVORENO (nepromijenjeno iz Faze 3):** `.github/workflows/backend-audit.yml:5` je i dalje `branches: [arena/94541967-boiler-control]`. Putanja je izvan dozvoljenih, pa traži izričitu odluku vlasnika (otvoreno pitanje 1 u Fazi 3).
+
+### Ispravke vlastitih tvrdnji u ovoj fazi
+
+1. **Kritični put:** napisao sam „8.5–14.5 dana" napamet; stvarni zbir raspona po oznakama truda je **12.25–19.5 dana**. Ispravljeno.
+2. **Pouzdanost:** napisao sam „71 VERIFIKOVANO ... 1 bez oznake"; nakon dodavanja `MO2-22` stvarno stanje je **72 VERIFIKOVANO, 2 HIPOTEZA, 0 bez oznake**. Ispravljeno na dva mjesta.
+3. **Referenca na nepostojeću skriptu:** roadmap je navodio `scripts/audit/backend_selfcheck.py` koji ne postoji; stvarne skripte su `document_selfcheck.py` i `backend_inventory.py`. Ispravljeno.
+4. **Defekt naslijeđen iz Faze 3 (ispravljen na početku Faze 4):** `MO2-1` je bio mapiran na **dva različita koraka** — `0.1` (CSV export) i `1.1` (API host), a u backlogu `MO2-1` označava API host. CSV export (`MO-001`) nije imao vlastitu backlog stavku. Dodata **`MO2-22`**, korak `0.1` premapiran, crosswalk i `STATUS.md` usklađeni; `mobile_selfcheck.py` ponovno **exit 0** (22 backlog stavke / 22 koraka).
+5. **Kontradikcija o kritičnom putu:** sažetak roadmapa navodio je `SEC-0/SEC-4 → MO2-2 → API-1 → API-2 → FE2-8`, dok su detaljna sekcija i procjena od 12.25–19.5 dana računali `MO2-1` kao početak lanca. `SEC-0`/`SEC-4` pripadaju sigurnosnom lancu i **ne blokiraju** ugovor API-ja. Sažetak ispravljen na `MO2-1 → MO2-2 → API-1 → API-2 → FE2-8`.
+6. **Poredak talasa je kršio vlastitu zavisnost:** `API-2` (OpenAPI codegen) je po čistom ICE-u (1.333, trud L) pao u **Talas E**, dok `FE2-8` koji od njega zavisi stoji u **Talu C** — potrošač bi se radio prije svog izvora. Dodato kao šesti override (`API-2`: E→B). Provjera zavisnosti sada javlja **0 lanaca koji krše poredak talasa**. Posljedica: Talas B 6→**7** stavki (12.75–20.5 dana), Talas E 27→**26** (86–137 dana), Talas A+B 15→**16** stavki (24.5–40 dana), override 5→**6** — sve reference u oba fajla usklađene.
+
+### Broj nalaza po ozbiljnosti (kumulativno, sve faze)
+
+- Faza 1 backend: 57 nalaza u 10 dokumenata (35 backlog stavki)
+- Faza 2 frontend: 21 nalaz (FE-001–FE-021; 16 backlog stavki FE2-1–FE2-16)
+- Faza 3 mobile: 27 nalaza (MO-001–MO-027: 6 VISOKO / 10 SREDNJE / 11 NISKO; 22 backlog stavke MO2-1–MO2-22)
+- **Faza 4 ne dodaje nove nalaze** — objedinjuje 74 backlog stavke u jedan izvršni redoslijed.
+
+### Top 10 prioriteta (po izračunatom ICE-u)
+
+1. **SEC-1** (ICE 5.0, S) — IDOR: čitanje tuđih zapisa; atomski `id+userId`.
+2. **FE2-1** (4.0, S) — pravi type-check (`tsc -p tsconfig.app.json`) + 12 grešaka.
+3. **FE2-6** (4.0, S) — security headeri + gzip u nginx-u.
+4. **MO2-1** (4.0, S) — jedan API host; dev fallback ne smije na produkciju.
+5. **MO2-19** (4.0, S) — ukloniti fiktivne „12 %/18 %" metrike.
+6. **MO2-22** (4.0, S) — popraviti CSV export na `File`/`Paths` API.
+7. **MO2-5** (4.0, S) — centralni handler grešaka koji stvarno prikazuje grešku.
+8. **SEC-0** (1.667, L — **override u Talas A**) — rotacija stvarnih kredencijala; vlasnikova akcija.
+9. **SEC-4** (1.667, L — **override u Talas A**) — auth s revokacijom i rotiranim refreshom.
+10. **FE2-12 / FE2-16 / MO2-3** (3.0, S) — mrtav kod + `onError`, ESLint konfiguracija, ispravan deep link.
+
+### Odluke koje trebaju korisnika
+
+1. **Kredencijali (SEC-0):** tko rotira/revokuje stvarne aktivne ključeve i do kada? Jedina stavka koja ne čeka inženjera.
+2. **Deploy topologija (FE2-7, MO2-1):** koji host je produkcija — `api.boiler-control.ba101.top/api`, `boiler.ba101.top/backend/api` ili treći? Bez toga nijedna konfiguracija okruženja nije konačna.
+3. **Version gate (MO2-2):** uvodimo li `expo-updates` + min-version endpoint prije bilo koje promjene API ugovora? Ako ne, mobile izdanja moraju ostati zaključana na starom ugovoru.
+4. **Auth migracija (SEC-4, FE2-2):** rok prelaska s Bearer u `localStorage` na httpOnly cookie + rotirani refresh i način gašenja postojećih sesija.
+5. **Mjerodavna formula (FORM-1, FEAT-7):** postoji li referentna vrijednost s kojom se smije uporediti postojeći izračun potrošnje i preporuka?
+6. **Obim ciklusa:** ide li Talas E (26 stavki, 86–137 dana) u ovaj ciklus ili se planira zasebno?
+7. **CI grana:** smijem li ažurirati `.github/workflows/backend-audit.yml` na aktivnu granu (putanja je izvan dozvoljenih)?
+
+FAZA 4 ZAVRŠENA — audit je kompletan (Faze 1–4); čekam odluke po sedam otvorenih pitanja iznad prije bilo koje implementacije

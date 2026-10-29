@@ -1,0 +1,14 @@
+{
+  "extends": "../../../mobile/node_modules/expo/tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "expo-file-system": ["../../../mobile/node_modules/expo-file-system/build/index.d.ts"],
+      "expo-file-system/legacy": ["../../../mobile/node_modules/expo-file-system/build/legacy/index.d.ts"]
+    }
+  },
+  "include": ["filesystem_api_probe.ts"],
+  "exclude": []
+}

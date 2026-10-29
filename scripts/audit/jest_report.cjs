@@ -25,16 +25,29 @@ try {
   console.log(`::notice title=Jest summary::${safe(summary)}`);
   let emitted = 0;
   let totalFailures = 0;
+  function diagnostics(message) {
+    // Emit only allowlisted diagnostics, never arbitrary test output or values.
+    const text = String(message || '').replace(/\x1b\[[0-9;]*m/g, '');
+    const hints = [];
+    for (const code of new Set(text.match(/TS\d{4}/g) || [])) hints.push(code);
+    for (const match of text.matchAll(/Cannot find module ['"]([^'"\r\n]+)['"]/g)) {
+      if (/^[\w./@-]+$/.test(match[1])) hints.push(`missing module ${match[1]}`);
+    }
+    for (const kind of ['PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'SyntaxError', 'TypeError', 'ReferenceError', 'Jest encountered an unexpected token', 'Exceeded timeout', 'Nest can\'t resolve dependencies']) {
+      if (text.includes(kind)) hints.push(kind);
+    }
+    return [...new Set(hints)].slice(0, 4).join('; ');
+  }
   for (const suite of result.testResults || []) {
     if (suite.status !== 'failed') continue;
     const failed = (suite.assertionResults || []).filter((test) => test.status === 'failed');
-    const items = failed.length ? failed.map((test) => test.fullName) : ['Suite failed before tests ran'];
-    for (const name of items) {
+    const items = failed.length ? failed.map((test) => ({name: test.fullName, message: (test.failureMessages || []).join('\n')})) : [{name: 'Suite failed before tests ran', message: suite.message}];
+    for (const item of items) {
       totalFailures++;
       if (emitted++ >= 8) continue;
-      // The suite filename and test names are defined in repository test sources.
       const suiteName = path.basename(suite.name || 'unknown');
-      console.log(`::error title=Jest failure::${safe(`${suiteName}: ${name}`)}`);
+      const detail = diagnostics(item.message);
+      console.log(`::error title=Jest failure::${safe(`${suiteName}: ${item.name}${detail ? ` [${detail}]` : ''}`)}`);
     }
   }
   if (totalFailures > 8) console.log(`::notice::${totalFailures - 8} additional failed tests or suites omitted from annotations.`);

@@ -11,6 +11,7 @@ describe('FallbackStrategyService', () => {
   let metricsService: MetricsService;
 
   beforeEach(async () => {
+    jest.useFakeTimers();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FallbackStrategyService,
@@ -38,6 +39,8 @@ describe('FallbackStrategyService', () => {
 
   afterEach(() => {
     service.clearCache();
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   describe('getTuyaFallback', () => {
@@ -212,19 +215,19 @@ describe('FallbackStrategyService', () => {
       expect(result.fallbackType).toBe(FallbackType.CACHED_STATE);
     });
 
-    it('should fallback to safe default when cache expired', (done) => {
+    it('should fallback to safe default when cache expired', () => {
       const deviceId = 1;
       const userId = 100;
 
       service.cacheSensorReading('tuya_temp_1', 68, 0.1);
+      jest.advanceTimersByTime(5999);
+      expect(service.getTuyaFallback(deviceId, userId).usedCache).toBe(true);
+      jest.advanceTimersByTime(1);
 
-      setTimeout(() => {
-        const result = service.getTuyaFallback(deviceId, userId);
-        expect(result.fallbackType).toBe(FallbackType.SAFE_DEFAULT);
-        expect(result.fallbackValue).toBe(60);
-        expect(result.usedCache).toBe(false);
-        done();
-      }, 7000);
+      const result = service.getTuyaFallback(deviceId, userId);
+      expect(result.fallbackType).toBe(FallbackType.SAFE_DEFAULT);
+      expect(result.fallbackValue).toBe(60);
+      expect(result.usedCache).toBe(false);
     });
   });
 });

@@ -173,22 +173,23 @@ describe('ReportingService', () => {
         startTime,
         endTime,
         {
-          anomaliesTotal: 50,
-          anomaliesOvershoot: 20,
-          anomaliesEarlyStop: 15,
-          anomaliesProlongedIdle: 10,
-          anomaliesRapidCycling: 5,
-          fallbacksTotal: 30,
-          fallbacksSensorFailure: 10,
-          fallbacksAdapterTimeout: 10,
-          fallbacksCachedState: 10,
+          anomaliesTotal: 150,
+          anomaliesOvershoot: 60,
+          anomaliesEarlyStop: 45,
+          anomaliesProlongedIdle: 30,
+          anomaliesRapidCycling: 15,
+          fallbacksTotal: 160,
+          fallbacksSensorFailure: 60,
+          fallbacksAdapterTimeout: 50,
+          fallbacksCachedState: 50,
           tuyaTimeouts: 20,
           weatherTimeouts: 10,
           circuitBreakerTrips: 10,
         },
       );
 
-      expect(criticalReport.healthScore).toBeLessThan(50);
+      // All four capped penalties apply: 100 - 30 - 20 - 15 - 10.
+      expect(criticalReport.healthScore).toBe(25);
     });
   });
 

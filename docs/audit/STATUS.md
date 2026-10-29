@@ -252,3 +252,14 @@
 5. **Odobrenje plana:** talasi i feature flagovi su prijedlog; nijedan korak nije odobren za izvođenje dok vlasnik ne potvrdi.
 
 FAZA 1 ZAVRŠENA — čekam odobrenje za fazu 2
+
+## Faza 2 — Frontend audit (početak)
+
+Korisnik je 2026-10-29 rekao „nastavi dalje" nakon izjave o završetku Faze 1; shvaćeno je kao odobrenje za Fazu 2 prema protokolu iz prompta.
+
+- Pregled `frontend/`: 28 fajlova u `src`, 10 ruta/stranica, 5 komponenti, 2 konteksta, 2 servisa, 1 hook, inline i18n (en-US/bs-BS u `locales/config.ts`). Nema test skripte, nema test direktorija.
+- Stvarno izvođenje (2026-10-29): `npm ci` uspjeh (531 paket); **`npm run type-check` lažno zeleno** — korenski `tsconfig.json` je solution-format (`"files": []`) pa `tsc --noEmit` ne kompajlira ništa; stvarna `tsc -p tsconfig.app.json` daje **11 grešaka** (DashboardPage 215/870/1058/1060, HomeProfilePage 16, notification.api.ts 5×); `npm run build` uspijeva: **jedan JS čip 2.972 kB / gzip 905 kB** (vite upozorenje >500 kB); `npm run lint` ne radi (nema ESLint konfiguracije, exit 2).
+- Nova nalaza FE-001–FE-020 (20): VISOKO 3 (lažni type-check + 11 grešaka; JWT u localStorage bez refresha; nemoguć unos lokacije + dvostruki weather izvor), SREDNJE 8 (bundle bez splitinga; i18n u 5/14 fajlova; mešoviti dohvati + setInterval bez visibility; gas analitika swallowa greške; nginx bez headera/gzip; tri suprotne deploy konfiguracije; klijentska poslovna logika + obrnut overshoot; nema testova), NISKO 9 (mrtav notification.api.ts; delete bez onError; a11y modala; slomljen lint; defanzivni shape-ovi; home-profile forma bez location/seasonMode; index.html bez CSP/lang; range/limit 500; VAT 1.17 hardcoded).
+- Novi dokumenti: `docs/audit/frontend/01-inventory.md` (uključujući mapu ekran→API→backend ruta), `02-architecture-findings.md`, `03-security-build.md`, `04-ux-quality.md`, `05-backend-plan-integration.md` (weather/formule/admin/realtime/OpenAPI/6-temski ukrštaj s backend planom), `06-improvements-backlog.md` (16 stavki FE2-1–FE2-16), `07-implementation-plan.md` (16 koraka u 5 talasa, crosswalk, katalog skripti, registar rizika i rollout/rollback).
+- Novi skripte: `scripts/audit/frontend_selfcheck.py` (7 dokumenata, 20 nalaza s markerima, 16 koraka, 16 backlog ID-eva, crosswalk backlog↔plan; negativni test s oduzetim markerom detektovan i povratak green) i `scripts/audit/frontend_inventory.py` (10/10 stranica, 5/5 komponenti, 11/11 ruta u inventaru; read-only).
+- Nijedan aplikacijski fajl nije izmijenjen u Fazi 2; frontendski `dist/` i `node_modules` nisu u repozitoriju. Faza 2 ostaje otvorena.

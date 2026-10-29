@@ -136,3 +136,18 @@
 
 - Nakon pusha audit commitova do `c37c1de`, branch-only GitHub Actions [run 40873918268](https://github.com/mudzy992/boiler-control/actions/runs/40873918268) je uspješan: ESLint 0, TypeScript 0, build, 10 suiteova/167 općih testova i 2 suitea/49 integracijskih; dva skupa se preklapaju. Ovo potvrđuje taj commit, ne automatski buduće commitove. Brojčani coverage nije pročitan iz dostupnih anotacija; e2e skripta i dalje nema config, a ovaj CI run ne dokazuje stvarne providere, production deploy, rad aplikacije s Redisom ni produkcijski ownership.
 - GitHub je prijavio upozorenje o runtime prelasku checkout/setup-node actiona s Node 20 na Node 24 i migraciji `ubuntu-latest` na Ubuntu 26; kompatibilnost pratiti u idućim CI runovima, bez tvrdnje da je sadašnja aplikacija migrirana na Node 24 (verziju aplikacijskog Nodea konfigurira workflow zasebno).
+
+### Dashboard: sekundarni upit i bucket semantika
+
+- `node scripts/audit/dashboard_repro.cjs` izvršava stvarni servis s fake DB i sintetičkim redovima: pokazuje da se temperatura prvog uređaja pripisuje i drugom događaju i da prazan rezultat ipak zadaje lookup `id: undefined` (B-019). Ovo ne dokazuje cross-user pristup niti ponašanje pravog Prisma klijenta.
+- Isti test s dva različita dana u UTC pokazuje spajanje istog sata u jedan bucket u summary/stats (B-020). Je li riječ o grešci ili namjernom profilu sata dana zavisi od ugovora. Korištenje server-local datuma naspram UTC dodatno treba DST integracijski test.
+
+### Ograničeni replay i destruktivni seed
+
+- `node scripts/audit/engine_replay.cjs --demo` izvršava stvarni postojeći engine nad tri sintetička unaprijed poravnata snapshota, odbacuje jedan future timestamp; dva prihvaćena daju mean delta 0 i mean absolute delta 1 °C naspram sintetičkih baseline vrijednosti. Poseban sintetički `--input` test potvrdio je odbacivanje budućeg vremena i nedostajuće zone/provenance; izlaz su samo agregati. To nije puni backtest, ne provjerava stvarnu provenance, ne ocjenjuje kandidata, udobnost ili potrošnju i ne dokazuje sigurnost/uštedu.
+- B-021: postojeći `npm run db:seed` koristi konfiguriranu DB i radi niz `deleteMany` bez vidljive zaštite cilja; `db:reset` je također destruktivan. Nije pokretan. Seed kod ima i console tekst s testnom lozinkom; vrijednost nije uključena u audit. Test/seed raditi samo nakon odobrenja sigurnog izolovanog alata, ne nad produkcijom.
+- [CI run 40874183279](https://github.com/mudzy992/boiler-control/actions/runs/40874183279) za `1558937` uspješan; ne potvrđuje naknadne lokalne promjene niti vanjske providere.
+
+### Javni upstream weather fixture
+
+- Pronađen je i uz MIT licencu/porijeklo sačuvan javni Open-Meteo SDK FlatBuffers testni fixture (`scripts/audit/fixtures/`), ne privatni podatak niti svjež snimak iz produkcije. `node scripts/audit/openmeteo_fixture_replay.cjs` izvršava stvarni instalirani parser s offline stubom `fetch`, potvrđuje 2 odgovora i 168 satnih temperatura po odgovoru, prema upstream asercijama. Nema daily/sunrise/sunset sekcije, te W-002 stvarna sunrise semantika, puni response shape i DST test **ostaju otvoreni**. Sandbox ne dozvoljava direktni provider host; live API nije pozvan.

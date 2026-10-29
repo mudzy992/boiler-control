@@ -98,3 +98,9 @@
 | Shadow i kvalitet | Snimiti forecast s valid time, upariti opažanja, grešku i starost; bez primjene. | Budući backtest harness i nadgledani canary; pragove definisati prije rollouta. |
 
 **Status:** dizajn je prijedlog, ne izvršena implementacija. Potrebni su stvarni provider fixture, verifikacija uslova/produkcije i povezivanje s planovima formula, sigurnosti i workera.
+
+### Naknadni javni upstream fixture: šta potvrđuje, a šta ne
+
+**VERIFIKOVANO (offline, stvarni instalirani SDK):** pronađen je javni Open-Meteo SDK [testni fixture u izvornom repozitoriju](https://github.com/open-meteo/sdk/blob/7a3c6097fe803f55670b1da1411f6095a9ac0ee0/swift/Tests/OpenMeteoSdkTests/ApiTests.swift), na kojem upstream test provjerava dvije lokacije i satnu temperaturu. Bajtovi i MIT licenca uz navođenje porijekla su u `scripts/audit/fixtures/`; SHA-256 i ograničenja u tamošnjem README-u. Upstream ima komentarisani primjer provider URL-a, ali stvarne okolnosti nastanka fixturea nisu potvrđene: ne nazivati ga vlastitim svježim snimkom produkcijskog API-ja.
+
+`node scripts/audit/openmeteo_fixture_replay.cjs` pokreće stvarni instalirani `openmeteo` 1.2.3 `fetchWeatherApi` uz lokalni `fetch` stub: dva size-prefixed odgovora, po 168 satnih vrijednosti, prve približno 10,6455/22,45, prva lokalna satna oznaka s offsetom kako je očekuje upstream test. `daily()` je null. Skripta provjerava integritet SHA-256 i ne zove mrežu. Ovo **ne potvrđuje** `valuesInt64` za sunrise/sunset, runtime DST, mapping svih varijabli ni oblik produkcijskog `forecast_days=1` odgovora. Direktna reprodukcija aplikacijskog mapiranja u `weather_repro.cjs` ostaje sintetička; snimljeni/odobreni dnevni provider fixture i dalje nedostaje. Direktni pristup hostu providera iz ovog sandboxa nije dozvoljen, pa nije pokretan live fetch.

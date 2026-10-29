@@ -68,6 +68,29 @@ jobs:
           npx prisma migrate deploy
       - name: Verify temporary Redis
         run: docker exec "${{ job.services.redis.id }}" redis-cli ping
+      - name: Lint without modifying files
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: |
+          set +e
+          npx eslint 'src/**/*.ts' 'test/**/*.ts' --format json > "$RUNNER_TEMP/audit-eslint.json"
+          result=$?
+          node ../scripts/audit/ci_diagnostics.cjs eslint "$RUNNER_TEMP/audit-eslint.json"
+          report_result=$?
+          if [ "$result" -ne 0 ]; then exit "$result"; fi
+          exit "$report_result"
+      - name: Type-check
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: |
+          set +e
+          npx tsc --noEmit --incremental false > "$RUNNER_TEMP/audit-tsc.txt" 2>&1
+          result=$?
+          node ../scripts/audit/ci_diagnostics.cjs tsc "$RUNNER_TEMP/audit-tsc.txt"
+          report_result=$?
+          if [ "$result" -ne 0 ]; then exit "$result"; fi
+          exit "$report_result"
+      - name: Build
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: npm run build
       - name: Existing tests and coverage
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

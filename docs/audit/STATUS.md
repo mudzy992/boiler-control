@@ -78,3 +78,10 @@
 - Dopunjeni `backend/04-findings.md`: B-006 tuđa notifikacija, B-007 neautorizirano pokretanje masovnih podsjetnika, B-008 upotreba globalno najnovijeg weather zapisa u historiji i preporukama. Nalazi su statički; produkcija nije testirana niti mijenjana.
 - `python3 scripts/audit/backend_inventory.py` sada prijavljuje prisutne sve markere: 16/16 modula, 14/14 common fajlova, 69/69 ruta-dekoratora i 27/27 Prisma definicija. To nije dokaz da je sadržaj audita potpun, niti da je 69 ruta stvarno aktivno. `ima_marker` zamjenjuje prethodni dvosmisleni izraz `dokumentovano`.
 - Nastaviti detaljnim mapiranjem DTO/vlasništva, punim auditom sigurnosti, weather/formula/Redis-worker analizama, planom i samoprovjerom prije završetka Faze 1.
+
+### Weather analiza
+
+- Dodan `backend/05-weather.md`: pregled protoka i stvarnih potrošača, pet početnih nalaza, vremensko mapiranje i cache, prijedlog lokacija i DTO-a, SWR/provider fallback, testna matrica, kompatibilnost i rollout/rollback. Analiza nije potvrđena stvarnim provider fixtureom niti produkcijskim podacima; komercijalni status i ugovor s Open-Meteom su otvoreni.
+- Dodan `scripts/audit/weather_repro.cjs`: offline izvršava stvarni `WeatherService` uz sintetički SDK odgovor, fake bazu i isključen stvarni provider. `--help` i dva uzastopna pokretanja su prošli, deterministički JSON pokazuje pogrešan sat za `feelslike`, zadnji sat za vjetar, pomjeranje sintetičkog sunrise instanta i gubitak jedinog fake stale zapisa pri padu osvježavanja. Reprodukcija ne dokazuje semantiku stvarnog SDK sunrise polja.
+- Utvrđeno da timeout/retry wrapper zaista obuhvata sirovi `fetch`, iako ne osigurava njegovo otkazivanje; weather-specifični brojači u `WeatherHttpAdapter.get` ne obuhvataju pozive koji idu direktno kroz `executeWithCircuitBreaker`. Marker provjera inventara i `git diff --check` prolaze; ne znače da su svi opisi završeni.
+- Faza 1 ostaje otvorena: inventar/DTO/IDOR detalji, sigurnost, formule i backtest, Redis/worker, backlog, implementacijski plan, stvarni fixture i samoprovjera nisu završeni.

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Platform, Share } from 'react-native';
 // MO2-22: top-level `expo-file-system` (19.x) NE izvozi documentDirectory /
 // cacheDirectory niti legacy metode — tamo su samo `Paths`, `File`, `Directory`

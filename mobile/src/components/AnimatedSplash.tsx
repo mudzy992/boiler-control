@@ -80,7 +80,15 @@ export const AnimatedSplash: React.FC<AnimatedSplashProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    // RN 0.88 je uklonio `StyleSheet.absoluteFillObject`. Predložena zamjena
+    // `absoluteFill` OVDJE NE RADI: to je registrovani style (broj), a ovo
+    // mjesto ga spread-a — spread broja bi tiho proizveo prazan objekt i
+    // splash bi izgubio position/ivice. Zato je objekt inlajnovan.
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',

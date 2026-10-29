@@ -1,4 +1,3 @@
-import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useColorModeValue } from 'native-base';
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';

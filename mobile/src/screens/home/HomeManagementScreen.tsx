@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { RefreshControl } from 'react-native';
 import {
   Box,
@@ -447,7 +447,14 @@ export const HomeManagementScreen = () => {
     <Box flex={1} bg={bgColor} safeArea>
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={Boolean(isRefetching)} onRefresh={() => refetch()} />
+          <RefreshControl
+            refreshing={Boolean(isRefetching)}
+            // RN 0.88: `onRefresh` mora vratiti `void | Promise<void>`, a
+            // React Query `refetch()` vraca rezultat — namjerno se odbacuje.
+            onRefresh={() => {
+              void refetch();
+            }}
+          />
         }
       >
         <VStack px={4} py={6} space={4}>

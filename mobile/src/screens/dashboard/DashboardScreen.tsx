@@ -273,7 +273,12 @@ export const DashboardScreen = () => {
         refreshControl={
           <RefreshControl
             refreshing={isFetching}
-            onRefresh={() => refetch()}
+            // RN 0.88 suzio je `onRefresh` na `() => void | Promise<void>`,
+            // a React Query `refetch()` vraca `Promise<QueryObserverResult>`.
+            // Rezultat se namjerno odbacuje.
+            onRefresh={() => {
+              void refetch();
+            }}
             tintColor="brand.400"
           />
         }

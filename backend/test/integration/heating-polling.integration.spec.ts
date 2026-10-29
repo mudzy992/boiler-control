@@ -101,6 +101,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Heating Test User',
         });
@@ -202,6 +203,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Recommendations Test User',
         });
@@ -266,6 +268,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Anomalies Test User',
         });
@@ -316,6 +319,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Devices Test User',
         });
@@ -366,6 +370,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Boiler Test User',
         });
@@ -444,6 +449,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Weather Test User',
         });
@@ -484,6 +490,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Transaction Test User',
         });
@@ -567,6 +574,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Correlation Test User',
         });
@@ -598,6 +606,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Edge Case Test User',
         });

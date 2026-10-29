@@ -78,6 +78,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           .post('/api/auth/register')
           .send({
             email: uniqueEmail,
+            username: uniqueEmail.split('@')[0],
             password: 'TestPassword123!',
             name: 'Integration Test User',
           });
@@ -103,6 +104,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
         // First registration
         await request(app.getHttpServer()).post('/api/auth/register').send({
           email: uniqueEmail,
+          username: uniqueEmail.split('@')[0],
           password: 'TestPassword123!',
           name: 'First User',
         });
@@ -112,6 +114,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           .post('/api/auth/register')
           .send({
             email: uniqueEmail,
+            username: uniqueEmail.split('@')[0],
             password: 'TestPassword123!',
             name: 'Second User',
           });
@@ -124,6 +127,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           .post('/api/auth/register')
           .send({
             email: 'invalid-email',
+            username: 'invalid_email_test',
             password: 'TestPassword123!',
             name: 'Invalid Email User',
           });
@@ -136,6 +140,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           .post('/api/auth/register')
           .send({
             email: `weak_${Date.now()}@example.com`,
+            username: `weak_${Date.now()}`,
             password: 'weak',
             name: 'Weak Password User',
           });
@@ -152,6 +157,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
         testUserEmail = `login_test_${Date.now()}@example.com`;
         await request(app.getHttpServer()).post('/api/auth/register').send({
           email: testUserEmail,
+          username: testUserEmail.split('@')[0],
           password: testUserPassword,
           name: 'Login Test User',
         });
@@ -206,6 +212,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'User Integration Test',
         });
@@ -348,6 +355,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Dashboard Test User',
         });
@@ -445,6 +453,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
             .post('/api/auth/register')
             .send({
               email: `concurrent_${i}_${Date.now()}@example.com`,
+              username: `concurrent_${i}_${Date.now()}`,
               password: 'TestPassword123!',
               name: `Concurrent User ${i}`,
             }),
@@ -468,6 +477,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
           .post('/api/auth/register')
           .send({
             email: `sequential_${i}_${Date.now()}@example.com`,
+            username: `sequential_${i}_${Date.now()}`,
             password: 'TestPassword123!',
             name: `Sequential User ${i}`,
           });
@@ -490,6 +500,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
         .post('/api/auth/register')
         .send({
           email,
+          username: email.split('@')[0],
           password: 'TestPassword123!',
           name: 'Logging Test User',
         });

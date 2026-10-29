@@ -39,7 +39,8 @@ describe('API Contract Tests (P1e)', () => {
       const response = await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
-          email: 'contract-test@example.com',
+          email: `contract_${Date.now()}@example.com`,
+          username: `contract_${Date.now()}`,
           password: 'Test123!',
           name: 'Test User',
         });

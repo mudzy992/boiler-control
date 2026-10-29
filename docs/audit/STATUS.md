@@ -648,3 +648,83 @@ zamjena (6 markera × 2 pojave) uz `assert n == 2` da se ne pogode rasponi poput
 **Šta NIJE verificirano:** ponašanje protiv deployanog backenda; integracioni
 testovi (`npx prisma generate` ne prolazi u sandboxu jer `binaries.prisma.sh`
 nije dostupan — CI to radi preko `npm run generate:prisma`).
+
+---
+
+## API-2 — OpenAPI kao provjeren ugovor
+
+**Status:** implementirano i verificirano (prva faza; codegen klijentskih
+tipova je `FE2-8`).
+
+**Problem.** Swagger se montirao na `/api/docs`, ali specifikacija **nije
+bila dokazana**: nije postojao nijedan komitovani artefakt, pa se nije moglo
+utvrditi ni da je potpuna ni da li se mijenja na nekompatibilan način.
+`DocumentBuilder` je bio inline u `main.ts`, pa bi svaki generator morao
+duplicirati postavke i neizbježno driftati.
+
+**Rješenje.**
+
+1. **`backend/src/openapi.config.ts`** — jedinstveni izvor istine.
+   `buildOpenApiConfig()`, `createOpenApiDocument()`,
+   `serializeOpenApiDocument()`. Serijalizacija **dubinski sortira ključeve**,
+   jer bez toga promjena redoslijeda ruta u modulu daje lažni diff i CI
+   provjera bi bila beskorisna. `main.ts` i generator zovu iste funkcije.
+2. **`backend/scripts/generate-openapi.ts`** (`npm run openapi:generate`) —
+   pokreće stvarnu aplikaciju bez `listen`, piše ugovor u
+   **`contracts/openapi.json`**, a s `--check` samo upoređuje i vraća exit 1
+   pri odstupanju.
+3. **CI korak „OpenAPI contract in sync (API-2)"** u `backend-audit.yml`,
+   nakon `Build` (jer `prepare` već pokrene `generate:prisma`).
+
+**Potpuna dokumentovanost.** Bilo je **16 kontrolera, samo 11 s `@ApiTags`**.
+Dodato 6 tagova na 5 kontrolera (`Metrics`, `Auth`, `Home Profiles`,
+`Home Profile` ×2, `Notifications`) → sada **16/16** i **0 operacija bez
+taga**.
+
+**Rezultat (stvarno generisano):** `openapi 3.0.0`, **54 putanje, 67
+operacija, 14 šema, 16 tagova**.
+
+**Unakrsna provjera potpunosti.** 70 route dekoratora u kodu → 67
+jedinstvenih `(verb, path)` parova → u specu **0 nedostaje, 0 viška**.
+Razlika 70 vs 67 nisu izgubljene rute nego **3 duplikata**:
+
+| Rute | Deklarisano dvaput |
+| --- | --- |
+| `GET /api/home-profile` | `home.profile.controller.ts` i `home.profile.single.controller.ts` |
+| `POST /api/home-profile` | isto |
+| `PATCH /api/home-profile/{id}` | isto |
+
+Ovo je već bilo zabilježeno (`01-inventory.md:9`, `02-api-catalog.md:5` i
+`:74-76` — „Neregistrovana kopija*"), a sada je nezavisno potvrđeno.
+**Važno:** spec odražava **runtime stvarnost** (67 operacija), ne statičke
+deklaracije — upravo to znači „provjeren ugovor".
+
+**Verifikacija (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `npm run openapi:generate` | exit 0, artefakt zapisan |
+| `--check` kad je usklađeno | exit 0 |
+| **Mutacijski test** (uklonjen `/api/weather` iz artefakta) | **exit 1**, „ugovor se razlikuje od komitovanog artefakta" |
+| `tsc` bez stuba (isti uslovi kao baseline) | **213 = tačno baseline**, 0 novih |
+| `npx eslint` (7 fajlova) | exit 0 |
+| 6 audit skripti | svih 6 exit 0 |
+| YAML workflow | 14 koraka, OpenAPI korak prisutan |
+
+**Ispravka vlastite greške iz API-1.** Prošli commit `dba58a5` sam predao uz
+tvrdnju „svih 6 audit skripti exit 0". Provjera čistog worktree-a na tom
+commitu pokazala je **`backend_inventory.py` exit 1** —
+`NEDOSTAJE backend/src/common/stub-endpoint.ts`: dodao sam fajl u
+`backend/src/common/` bez odgovarajućeg `<!-- common:... -->` markera u
+`01-inventory.md`. Sada ispravljeno. Pouka: „skripta prolazi" mora biti
+izmjereno nad **commitovanim** stanjem, ne nad radnim stablom usred izmjena.
+
+**Napomena o sandboxu.** `prisma generate` ovdje ne prolazi
+(`binaries.prisma.sh` nije dostupan, ni s `--no-engine`), pa je za
+instanciranje aplikacije korišten **privremeni** stub generisan iz
+`prisma/schema.prisma` (12 enuma, 15 model delegata). Direktorij
+`backend/src/generated` je gitignored (`.gitignore:51`), pa stub **nije
+komitovan** — u CI zamjenjuje ga pravi `generate:prisma`.
+
+**Šta NIJE verificirano:** generisanje klijentskih tipova za frontend/mobile
+(to je `FE2-8`); ponašanje CI koraka u stvarnom GitHub Actions okruženju.

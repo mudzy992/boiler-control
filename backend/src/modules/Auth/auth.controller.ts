@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from '../User/dto/register.dto';
 import { LoginDto } from '../User/dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 interface JwtRequest extends Request {
   user: {
@@ -21,6 +22,7 @@ interface JwtRequest extends Request {
   };
 }
 
+@ApiTags('Auth')
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

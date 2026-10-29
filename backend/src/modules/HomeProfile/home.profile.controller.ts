@@ -13,8 +13,10 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { HomeProfileService } from './home.profile.service';
 import { CreateHomeProfileDto } from './dto/create-home-profile.dto';
 import { UpdateHomeProfileDto } from './dto/update-home-profile.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
+@ApiTags('Home Profiles')
 @Controller('api/home-profiles')
 export class HomeProfileController {
   constructor(private readonly service: HomeProfileService) {}
@@ -60,6 +62,7 @@ export class HomeProfileController {
 }
 
 @UseGuards(JwtAuthGuard)
+@ApiTags('Home Profile')
 @Controller('api/home-profile')
 export class HomeProfileSingleController {
   constructor(private readonly service: HomeProfileService) {}

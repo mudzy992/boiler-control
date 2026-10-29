@@ -101,6 +101,14 @@ jobs:
       - name: Build
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: npm run build
+      # API-2: ugovor mora ostati usklađen s komitovanim artefaktom.
+      # `prepare` je već pokrenuo `generate:prisma`, pa generator može
+      # instancirati aplikaciju. Pad znači da je neko promijenio rutu/DTO a
+      # nije regenerisao `contracts/openapi.json` — tj. potencijalno
+      # nekompatibilna promjena za frontend/mobile koji iz njega generišu tipove.
+      - name: OpenAPI contract in sync (API-2)
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: npm run openapi:generate -- --check
       - name: Existing tests and coverage
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

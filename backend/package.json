@@ -13,6 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
     "generate:prisma": "prisma generate",
+    "openapi:generate": "ts-node --transpile-only -r tsconfig-paths/register scripts/generate-openapi.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:integration": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest --config jest-integration.config.js --runInBand --forceExit --testTimeout=300000",

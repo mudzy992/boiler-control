@@ -63,6 +63,7 @@ Svaki red: **VERIFIKOVANO** ime i izvoz/ulazna tačka iz navedenog fajla. Zavisn
 | <!-- common:backend/src/common/metrics.service.ts --> `backend/src/common/metrics.service.ts` | Procesni brojači i Prometheus izvoz. |
 | <!-- common:backend/src/common/reporting.service.ts --> `backend/src/common/reporting.service.ts` | Izvještaji, health score i alerti. |
 | <!-- common:backend/src/common/structured-logger.ts --> `backend/src/common/structured-logger.ts` | Strukturiranje log konteksta. |
+| <!-- common:backend/src/common/stub-endpoint.ts --> `backend/src/common/stub-endpoint.ts` | API-1 ugovor za stub endpointe: `501` + `reason`, `STUB_ENDPOINTS_MODE` rollback. |
 
 ## Status pokrivenosti
 

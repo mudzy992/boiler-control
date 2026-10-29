@@ -3,11 +3,13 @@ import type { Response } from 'express';
 import { MetricsService } from './metrics.service';
 import { ReportingService } from './reporting.service';
 import { Public } from '../modules/Auth/public.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 /**
  * Metrics endpoint for Prometheus scraping.
  * Lightweight and read-only, no external API calls.
  */
+@ApiTags('Metrics')
 @Controller('metrics')
 export class MetricsController {
   constructor(

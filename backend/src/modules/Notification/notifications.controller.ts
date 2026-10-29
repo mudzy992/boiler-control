@@ -14,6 +14,7 @@ import { RegisterDeviceDTO } from './dto/register-device.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GasReminderService } from '../Schedule/gas.reminder.service';
 import { NotificationType } from 'src/generated/prisma';
+import { ApiTags } from '@nestjs/swagger';
 
 interface ManualNotificationDTO {
   userId: number;
@@ -24,6 +25,7 @@ interface ManualNotificationDTO {
 }
 
 @UseGuards(JwtAuthGuard)
+@ApiTags('Notifications')
 @Controller('api/notifications')
 export class NotificationsController {
   constructor(

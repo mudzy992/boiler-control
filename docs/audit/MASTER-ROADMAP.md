@@ -247,11 +247,11 @@ Uz tri paralelna tracka zid-sat je otprilike **najduži track** (**113–180 dan
 | Odluka | Blokira | Preporuka | **Odluka vlasnika (2026-10-29)** |
 |---|---|---|---|
 | Koji je produkcijski API host | `MO2-1`, `FE2-7`, cijeli LANAC 2 | Jedan host u `.env`, dev fallback = greška, ne drugi produkcijski server. | **`api.boiler-control.ba101.top/api`.** Dev fallback se uklanja (greška, ne drugi host). |
-| Uvodi li se version gate | `MO2-2`, `API-1`, sve promjene ugovora | Da, prije prve promjene shape-a. Bez toga mobile izdanja moraju ostati zaključana na starom ugovoru. | _još otvoreno_ |
+| Uvodi li se version gate | `MO2-2`, `API-1`, sve promjene ugovora | Da, prije prve promjene shape-a. Bez toga mobile izdanja moraju ostati zaključana na starom ugovoru. | **Da — prije prve promjene API ugovora.** `MO2-2` postaje tvrdi preduslov za `API-1`/`API-2`/`SEC-4`/`FEAT-7`. |
 | Rotacija kredencijala | `SEC-0`, `SEC-4` | Odmah, i nezavisno od ovog plana — to je vlasnikova akcija od pola dana. | **Agent priprema runbook + secret manager konfiguraciju, vlasnik odobrava prije izvršenja.** Bez ispisa tajni u chat ili repo. |
 | Auth: cookie + refresh ili ostaje Bearer | `SEC-4`, `FE2-2`, `MO2-7` | Cookie + rotirani refresh, uz vremenski ograničen dual-mode. | **httpOnly cookie + rotirani refresh**, s dual-mode prelazom. |
-| Mjerodavni izračun formule | `FORM-1`, `FEAT-5`, `FEAT-3`, `FE2-14`, `MO2-12` | Jedan izvor u backendu; klijenti ne računaju. | _još otvoreno_ |
-| Obim ciklusa (ide li Talas E) | Planiranje kapaciteta | Talas A+B obavezno; C po kapacitetu; E zasebno planirati. | _još otvoreno_ |
+| Mjerodavni izračun formule | `FORM-1`, `FEAT-5`, `FEAT-3`, `FE2-14`, `MO2-12` | Jedan izvor u backendu; klijenti ne računaju. | **Sad samo `FEAT-7`** (parsiranje/validacija — očigledno pogrešno ponašanje). `FORM-1` odgođen dok vlasnik ne nađe referentne senzorske uzorke; do tada se preporuka **ne mijenja**. |
+| Obim ciklusa (ide li Talas E) | Planiranje kapaciteta | Talas A+B obavezno; C po kapacitetu; E zasebno planirati. | **Sve, uključujući Talas E** — 74 stavke, 179–282 dana. Radi se inkrementalno po talasima, počev od quick wins. |
 
 ## Šta NE raditi
 

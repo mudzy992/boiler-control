@@ -465,7 +465,18 @@ Od sedam otvorenih pitanja, vlasnik je odgovorio na četiri koja blokiraju Talas
 | 4 | Auth migracija | **httpOnly cookie + rotirani refresh** | `SEC-4` + `FE2-2` idu u tom pravcu, uz dual-mode prelaz da postojeće Bearer sesije ne padnu odmah. |
 | 7 | CI grana | **Odobreno ažuriranje na aktivnu granu** | Izvršeno: `.github/workflows/backend-audit.yml` — obje reference (linija 5 `on.push.branches`, linija 14 `if:` guard) prebačene na `arena/1bfee051-boiler-control`; YAML validiran parserom (`on.push.branches`, `workflow_dispatch` i jedan job `test` potvrđeni). |
 
-**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E).
+**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E). — **riješenо u drugom krugu, v. ispod.**
+
+### Drugi krug odluka (2026-10-29)
+
+| Pitanje | Odluka | Posljedica za plan |
+|---|---|---|
+| Version gate (`MO2-2`) | **Da — prije prve promjene API ugovora** | `MO2-2` je tvrdi preduslov za `API-1`, `API-2`, `SEC-4` i `FEAT-7`. Nijedan API shape se ne mijenja dok backend `minSupportedVersion` + mobilni „update required" ekran ne postoje. |
+| Mjerodavna formula (`FORM-1` / `FEAT-7`) | **Sad samo `FEAT-7`; `FORM-1` odgoditi** | `FEAT-7` (string `false`→`true`, prazan/negativan broj, odbijanje manjeg historijskog očitanja) ide jer je očigledno pogrešno. `FORM-1` (porijeklo overshoot signala, staro učenje) **ne dirati** dok vlasnik ne nađe referentne senzorske uzorke — bez reference nema dokaza da je nova preporuka bolja. |
+| Obim ciklusa | **Sve, uključujući Talas E** | 74 stavke, 179–282 dana. Radi se inkrementalno po talasima; Talas E nije izdvojen u zaseban ciklus. |
+| Početak implementacije | **Quick wins** | Kreće se s 10 quick wins (2.5–5 dana ukupno). |
+
+**Ispravka vlastite greške:** u pitanju o početku implementacije napisao sam „Svi quick wins odjednom (**7** stavki)", a scoring stvarno vraća **10** (`SEC-1`, `FE2-1`, `FE2-6`, `MO2-1`, `MO2-19`, `MO2-22`, `MO2-5`, `FE2-12`, `FE2-16`, `MO2-3`). Popis u ovom zapisu je mjerodavan.
 
 ### Stanje isporuke
 

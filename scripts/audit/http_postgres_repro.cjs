@@ -8,7 +8,7 @@ if (process.argv.includes('--help')) {
   console.log('Upotreba: node scripts/audit/http_postgres_repro.cjs --ci\nSamo efemerni PostgreSQL servis u branch-only GitHub Actions workflowu: stvarni JWT guard, kontroler, servis i Prisma transakcija s dva sintetička korisnika. Svi upisi se namjerno rollbackuju; bez Expo/vanjske mreže. Skripta pokazuje postojeći propust, NIJE regresijski test ispravljenog ponašanja. Ne koristiti s produkcijskom ili trajnom bazom.');
   process.exit(0);
 }
-if (process.argv.length !== 3 || process.argv[2] !== '--ci' || process.env.GITHUB_ACTIONS !== 'true' || process.env.GITHUB_REF !== 'refs/heads/arena/94541967-boiler-control' || process.env.AUDIT_DISPOSABLE_POSTGRES !== '1' || process.env.DATABASE_HOST !== '127.0.0.1' || process.env.DATABASE_NAME !== 'audit' || process.env.DATABASE_USER !== 'audit') {
+if (process.argv.length !== 3 || process.argv[2] !== '--ci' || process.env.GITHUB_ACTIONS !== 'true' || process.env.GITHUB_REF !== 'refs/heads/arena/1bfee051-boiler-control' || process.env.AUDIT_DISPOSABLE_POSTGRES !== '1' || process.env.DATABASE_HOST !== '127.0.0.1' || process.env.DATABASE_NAME !== 'audit' || process.env.DATABASE_USER !== 'audit') {
   console.error('Odbijeno: dopušten je samo eksplicitno označeni izolovani GitHub Actions PostgreSQL servis.'); process.exit(2);
 }
 const root = path.resolve(__dirname, '../..');

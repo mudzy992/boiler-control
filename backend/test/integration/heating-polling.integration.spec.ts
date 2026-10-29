@@ -218,16 +218,17 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
     });
 
     describe('GET /api/recommendations/today', () => {
-      it('should return today recommendations', async () => {
+      // API-1: ruta je stub. Prije je vracala [] sto je bilo nerazlucivo od
+      // "nema preporuka za danas", pa sada eksplicitno vraca 501.
+      it('should return 501 Not Implemented (stub)', async () => {
         const response = await request(app.getHttpServer())
           .get('/api/recommendations/today')
           .set('Authorization', `Bearer ${authToken}`);
 
-        expect([200, 204]).toContain(response.status);
-
-        if (response.status === 200) {
-          expect(Array.isArray(response.body)).toBe(true);
-        }
+        expect(response.status).toBe(501);
+        expect(response.body.reason).toBe('stub-not-implemented');
+        expect(response.body.endpoint).toBe('GET /api/recommendations/today');
+        expect(response.body.alternative).toBe('GET /api/recommendations');
       });
     });
   });
@@ -430,18 +431,19 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
     });
 
     describe('GET /api/weather (retrieve weather data)', () => {
-      it('should return weather data', async () => {
+      // API-1: ruta je stub. Prije je vracala {} sto je bilo nerazlucivo od
+      // "nema vremenskih podataka", pa sada eksplicitno vraca 501.
+      it('should return 501 Not Implemented (stub)', async () => {
         const response = await request(app.getHttpServer())
           .get('/api/weather')
           .set('Authorization', `Bearer ${authToken}`);
 
-        expect([200, 204]).toContain(response.status);
-
-        if (response.status === 200 && response.body) {
-          if (response.body.current) {
-            expect(typeof response.body.current.temperature).toBe('number');
-          }
-        }
+        expect(response.status).toBe(501);
+        expect(response.body.reason).toBe('stub-not-implemented');
+        expect(response.body.endpoint).toBe('GET /api/weather');
+        expect(response.body.alternative).toBe(
+          'GET /api/weather/current/{homeProfileId}',
+        );
       });
 
       it('should reject request without authorization', async () => {

@@ -11,7 +11,7 @@ if (process.argv.includes('--help')) {
   process.exit(0);
 }
 const container = process.env.AUDIT_REDIS_CONTAINER || '';
-if (process.argv.length !== 3 || process.argv[2] !== '--ci' || process.env.GITHUB_ACTIONS !== 'true' || process.env.GITHUB_REF !== 'refs/heads/arena/94541967-boiler-control' || process.env.AUDIT_DISPOSABLE_REDIS !== '1' || !/^[a-f0-9]{12,64}$/i.test(container)) {
+if (process.argv.length !== 3 || process.argv[2] !== '--ci' || process.env.GITHUB_ACTIONS !== 'true' || process.env.GITHUB_REF !== 'refs/heads/arena/1bfee051-boiler-control' || process.env.AUDIT_DISPOSABLE_REDIS !== '1' || !/^[a-f0-9]{12,64}$/i.test(container)) {
   console.error('Odbijeno: potreban je eksplicitni izolovani Actions Redis servis.'); process.exit(2);
 }
 const prefix = `audit-lease-${crypto.randomBytes(16).toString('hex')}`;

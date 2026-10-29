@@ -1,0 +1,84 @@
+Kandidat	Reference izvan skupa kandidata (samo putanje)
+backend/MIGRATION_INSTRUCTIONS.md	docs/MYSQL_TO_POSTGRES_MIGRATION.md
+backend/P2B_IMPLEMENTATION.md	backend/README.md
+docs/DASHBOARD_UPDATES_SUMMARY.md	—
+docs/DEEP_LINK_IMPLEMENTATION_SUMMARY.md	docs/DEEP_LINK_NOTIFICATIONS_README.md, docs/DOCUMENTATION_INDEX.md
+docs/DOCKER_REFACTORING_SUMMARY.md	—
+docs/EXECUTIVE_SUMMARY.md	—
+docs/FINAL_SUMMARY.md	docs/DOCUMENTATION_INDEX.md
+docs/IMPLEMENTATION_COMPLETE.md	docs/DOCUMENTATION_INDEX.md, docs/GAS_FEATURES_INDEX.md, docs/GAS_FEATURES_VERIFICATION.md, docs/README.md, docs/READY_FOR_DEPLOYMENT.md, docs/V2_DELIVERABLES_MANIFEST.md, docs/V2_DOCUMENTATION_INDEX.md, docs/V2_SESSION_COMPLETION_REPORT.md
+docs/IMPLEMENTATION_SUMMARY.md	docs/DEEP_LINK_NOTIFICATIONS_README.md, docs/DOCUMENTATION_INDEX.md, docs/GAS_FEATURES_INDEX.md, docs/READY_FOR_DEPLOYMENT.md
+docs/MIGRATION_COMPLETION_REPORT.md	—
+docs/MIGRATION_STATUS_FINAL.md	—
+docs/MIGRATION_SUMMARY.md	docs/FRONTEND_MIGRATION_INDEX.md, docs/FRONTEND_QUICKSTART.md, docs/FRONTEND_V2_OVERVIEW.md
+docs/P2E_COMPLETION_SUMMARY.md	—
+docs/P2E_README.md	.github/copilot-instructions.md, backend/README.md, docs/README.md, docs/README_MONOREPO.md
+docs/PHASE_1_COMPLETE.md	docs/FILE_MANIFEST.md
+docs/PHASE_2_MIGRATION_COMPLETE.md	—
+docs/PHASE_3_COMPLETION_CHECKLIST.md	—
+docs/PHASE_3_DELIVERABLES_SUMMARY.md	—
+docs/PHASE_3_DOCUMENTS_INDEX.md	—
+docs/PHASE_3_EXECUTIVE_SUMMARY.md	—
+docs/PHASE_3_FINAL_STATUS.md	—
+docs/PHASE_3_MERGED_STATUS.md	—
+docs/PHASE_3_PLUS_DAY_2_SUMMARY.md	—
+docs/PHASE_3_PLUS_HEATINGSCREEN_INTEGRATION.md	—
+docs/PHASE_3_PLUS_IMPLEMENTATION_PLAN.md	—
+docs/PHASE_3_PLUS_KICKOFF_STATUS.md	—
+docs/PHASE_3_PLUS_QA_TEST_PLAN.md	—
+docs/PHASE_3_PLUS_STATUS_TRACKER.md	—
+docs/PHASE_3_PLUS_TASK_ACCEPTANCE_SUMMARY.md	—
+docs/PHASE_3_REFACTOR_SUMMARY.md	—
+docs/PHASE_3_REVIEW_COMPLETE.md	—
+docs/PHASE_3_STATUS_MAP.md	—
+docs/PROJECT_SUMMARY.md	docs/FILE_MANIFEST.md, docs/QUICK_REFERENCE.md, docs/README.md
+docs/V2_IMPLEMENTATION_COMPLETE.md	docs/README.md, docs/V2_DELIVERABLES_MANIFEST.md, docs/V2_DOCUMENTATION_INDEX.md, docs/V2_SESSION_COMPLETION_REPORT.md
+docs/WEB_GAS_IMPLEMENTATION_COMPLETE.md	docs/GAS_FEATURES_INDEX.md, docs/GAS_FEATURES_VERIFICATION.md, docs/READY_FOR_DEPLOYMENT.md
+docs/internal/DIRECTORY_OVERVIEW.md	—
+docs/internal/REORGANIZATION_COMPLETE.md	—
+docs/internal/logs/BATCH2_VERIFICATION_REPORT.md	—
+docs/internal/logs/BATCH3_P2a_VERIFICATION.md	—
+docs/internal/logs/backend_progress_log.md	—
+docs/internal/monitoring/BASELINE_METRICS.md	—
+docs/internal/monitoring/MONITORING_SETUP.md	—
+docs/internal/monitoring/grafana-dashboard.json	—
+docs/internal/monitoring/grafana-provisioning/dashboards/boiler-mini-dashboard.json	—
+docs/internal/monitoring/grafana-provisioning/dashboards/dashboards.yml	—
+docs/internal/monitoring/grafana-provisioning/datasources/prometheus.yml	docker-compose.monitoring.yml
+docs/internal/monitoring/prometheus-alert-rules.yml	—
+docs/internal/monitoring/prometheus.yml	docker-compose.monitoring.yml
+docs/internal/pipeline/BATCH2_COMPLETION.md	—
+docs/internal/pipeline/BATCH2_EXECUTION_REPORT.md	—
+docs/internal/pipeline/BATCH2_IMPLEMENTATION_CHECKLIST.md	—
+docs/internal/pipeline/BATCH3_P2a_CHECKLIST.md	—
+docs/internal/pipeline/BATCH3_P2a_COMPLETION.md	—
+docs/internal/pipeline/CLEANUP_SUMMARY.md	—
+docs/internal/pipeline/COMPLETION_CHECKLIST.md	—
+docs/internal/pipeline/DELIVERY_SUMMARY.md	—
+docs/internal/pipeline/FRONTEND_INTEGRATION_GUIDE.md	—
+docs/internal/pipeline/P2B_IMPLEMENTATION_SUMMARY.md	—
+docs/internal/pipeline/P2C_COMPLETION_REPORT.md	—
+docs/internal/pipeline/P2C_IMPLEMENTATION_SUMMARY.md	—
+docs/internal/pipeline/P2D_IMPLEMENTATION_SUMMARY.md	—
+docs/internal/pipeline/P2E_DEPLOYMENT_GUIDE.md	—
+docs/internal/pipeline/P2E_DOCUMENTATION_DIRECTORY_MANIFEST.md	—
+docs/internal/pipeline/P2E_DOCUMENTATION_INDEX.md	—
+docs/internal/pipeline/P2E_FINAL_STATUS_REPORT.md	—
+docs/internal/pipeline/P2E_IMPLEMENTATION_SUMMARY.md	—
+docs/internal/pipeline/P2E_READINESS_CHECKLIST.md	—
+docs/internal/pipeline/P2E_ROLLBACK_PLAN.md	—
+docs/internal/pipeline/TEAM_HANDOFF_CHECKLIST.md	—
+docs/internal/pipeline/TYPESCRIPT_COMPILATION_FIX.md	—
+docs/internal/pipeline/batch2-summary.md	docs/PROJECT_STATUS.md
+docs/internal/pipeline/batch3-plan.md	docs/PROJECT_STATUS.md
+docs/internal/pipeline/correlation-als-migration.md	—
+docs/internal/runbooks/P2E_TROUBLESHOOTING_RUNBOOK.md	—
+docs/internal/snapshots/API_CHANGE_SNAPSHOT.md	—
+docs/internal/snapshots/API_SNAPSHOT_SUMMARY.md	—
+docs/internal/snapshots/BATCH2_CHANGES_DIFF.md	—
+docs/internal/snapshots/P2B_DIFF_REPORT.md	—
+docs/internal/snapshots/P2C_DIFF_REPORT.md	—
+docs/internal/snapshots/P2D_DIFF_REPORT.md	—
+mobile/PHASE_3_GUIDE.md	docs/BACKEND_WRITE_OPERATIONS_AUDIT.md
+
+Ukupno: 81; reference zahtijevaju ručnu provjeru.

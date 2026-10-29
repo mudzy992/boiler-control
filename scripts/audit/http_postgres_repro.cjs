@@ -42,16 +42,21 @@ async function main() {
         const notice = await tx.notification.create({data:{userId:b.id,type:'SYSTEM_ALERT',title:'synthetic',message:'synthetic',isRead:false}});
         const jwt = new JwtService({secret:crypto.randomBytes(32).toString('hex')});
         let reminderCalls = 0;
+        // Plain wrapper prevents Nest lifecycle scanning on Prisma's interactive-transaction proxy.
+        // Delegates still execute real SQL through the same rollback-only transaction.
+        const prisma = {user:tx.user, notification:tx.notification};
         stage = 'nest-bootstrap';
         const testing = await Test.createTestingModule({controllers:[NotificationsController],providers:[
           JwtAuthGuard,
           {provide:JwtService,useValue:jwt},
-          {provide:PrismaService,useValue:tx},
-          {provide:NotificationsService,useValue:new NotificationsService(tx,{})},
+          {provide:PrismaService,useValue:prisma},
+          {provide:NotificationsService,useValue:new NotificationsService(prisma,{})},
           {provide:GasReminderService,useValue:{triggerDailyReminders:async()=>{reminderCalls++;return {ok:true};}}},
         ]}).compile();
+        stage = 'nest-create-app';
         const app = testing.createNestApplication({logger:false});
         app.useGlobalPipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true,transform:true,transformOptions:{enableImplicitConversion:true}}));
+        stage = 'nest-init';
         await app.init();
         try {
           stage = 'http-unauthenticated';
@@ -82,6 +87,8 @@ main().catch(error => {
   const name = known.includes(error?.name) ? error.name : 'OtherError';
   const code = /^P\d{4}$/.test(error?.code || '') ? ` ${error.code}` : '';
   const numeric = error?.name === 'AssertionError' && Number.isInteger(error.actual) && Number.isInteger(error.expected) ? ` actual=${error.actual} expected=${error.expected}` : '';
-  console.log(`::error title=Audit security reproduction::Stage ${stage}; ${name}${code}${numeric}. No values or messages emitted.`);
+  const property = String(error?.message || '').match(/^Cannot read properties of (undefined|null) \(reading '([A-Za-z_][A-Za-z_0-9]*)'\)/);
+  const hint = property ? `; read ${property[2]} of ${property[1]}` : '';
+  console.log(`::error title=Audit security reproduction::Stage ${stage}; ${name}${code}${numeric}${hint}. No values or messages emitted.`);
   process.exitCode = 1;
 });

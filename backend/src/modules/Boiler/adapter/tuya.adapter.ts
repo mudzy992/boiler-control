@@ -169,38 +169,8 @@ export class TuyaAdapter {
     deviceId: string,
     runId?: string,
   ): Promise<Record<string, any>> {
-    // Check circuit breaker first
-    const cbState = this.circuitBreaker.get(deviceId);
-    if (cbState?.isOpen) {
-      // If we have a recent cached snapshot, return it instead of failing hard
-      const cached = this.snapshotCache.get(deviceId);
-      if (cached && Date.now() - cached.timestamp < this.SNAPSHOT_CACHE_TTL) {
-        this.structuredLogger.warn(
-          'Returning cached snapshot due to open circuit',
-          {
-            deviceId,
-            runId,
-            module: 'tuya-adapter',
-            action: 'circuit_open_return_cache',
-          },
-        );
-        this.requestMetrics.circuitBreakerTrips++;
-        return cached.data as Record<string, any>;
-      }
-      this.checkCircuitBreaker(deviceId);
-    }
-
-    // Check snapshot cache (5s TTL for coalescing)
-    const cached = this.snapshotCache.get(deviceId);
-    if (cached && Date.now() - cached.timestamp < this.SNAPSHOT_CACHE_TTL) {
-      this.structuredLogger.debug('Snapshot from cache', {
-        deviceId,
-        runId,
-        module: 'tuya-adapter',
-        action: 'cache_hit',
-      });
-      return cached.data;
-    }
+    // Cached snapshots are handled by fetchSnapshot, not as raw Tuya status.
+    this.checkCircuitBreaker(deviceId);
 
     const path = `/v1.0/devices/${deviceId}`;
     const headers = await this.generateHeaders(path, 'GET');
@@ -332,6 +302,20 @@ export class TuyaAdapter {
     deviceId: string,
     runId?: string,
   ): Promise<ThermostatSnapshot> {
+    const cached = this.snapshotCache.get(deviceId);
+    if (cached && Date.now() - cached.timestamp < this.SNAPSHOT_CACHE_TTL) {
+      if (this.circuitBreaker.get(deviceId)?.isOpen) {
+        this.requestMetrics.circuitBreakerTrips++;
+      }
+      this.structuredLogger.debug('Snapshot from cache', {
+        deviceId,
+        runId,
+        module: 'tuya-adapter',
+        action: 'cache_hit',
+      });
+      return cached.data;
+    }
+
     const status = await this.fetchStatus(deviceId, runId); // <-- samo JEDAN GET
 
     const currentTemp = (status['TempCurrent'] ?? null) / 2;

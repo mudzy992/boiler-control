@@ -49,7 +49,7 @@ try {
   for (const suite of result.testResults || []) {
     if (suite.status !== 'failed') continue;
     const failed = (suite.assertionResults || []).filter((test) => test.status === 'failed');
-    const items = failed.length ? failed.map((test) => ({name: test.fullName, message: (test.failureMessages || []).join('\n'), details: test.failureDetails || []})) : [{name: 'Suite failed before tests ran', message: suite.message, details: []}];
+    const items = failed.length ? failed.map((test) => ({name: test.fullName, message: (test.failureMessages || []).join('\n') || suite.message, details: test.failureDetails || []})) : [{name: 'Suite failed before tests ran', message: suite.message, details: []}];
     let suiteEmitted = 0;
     for (const item of items) {
       totalFailures++;

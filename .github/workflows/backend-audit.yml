@@ -66,6 +66,11 @@ jobs:
         run: |
           npm run generate:prisma
           npx prisma migrate deploy
+      - name: Reproduce notification authorization in disposable PostgreSQL
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        env:
+          AUDIT_DISPOSABLE_POSTGRES: '1'
+        run: node ../scripts/audit/http_postgres_repro.cjs --ci
       - name: Verify temporary Redis
         run: docker exec "${{ job.services.redis.id }}" redis-cli ping
       - name: Lint without modifying files

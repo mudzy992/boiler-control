@@ -56,18 +56,18 @@
 - Kako provjeriti da je riješeno: test registracije ruta i contract test GET/POST/PATCH jedninskog profila, uz provjeru postojećeg response mappinga; `cd backend && npm run test:integration` i `npm run build`.
 - Trud: S — Zavisnosti: potvrda da ne postoje vanjski importi/automatizacija izvan repozitorija.
 
-### [B-006] Označavanje tuđe notifikacije kao pročitane — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (statički kod)
+### [B-006] Označavanje tuđe notifikacije kao pročitane — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (izolovani HTTP i fake DB)
 - Gdje: `backend/src/modules/Notification/notifications.controller.ts:26-27,67-70`, `backend/src/modules/Notification/notifications.service.ts:103-111`.
 - Šta nije u redu i zašto je bitno: kontroler zahtijeva JWT, ali ne predaje korisnički ID u `markAsRead`; servis traži i ažurira notifikaciju samo po ID-u. Autorizovani korisnik može promijeniti stanje tuđe notifikacije ako zna njen ID. Endpoint vraća ažurirani zapis, pa postoji i mogućnost otkrivanja sadržaja; stvarni incidenti nisu provjereni.
-- Dokaz: upiti `findUnique` i `update` imaju samo `where: { id: notificationId }`. Ovo je statički nalaz; nije slan zahtjev produkciji.
+- Dokaz: upiti `findUnique` i `update` imaju samo `where: { id: notificationId }`. `node scripts/audit/http_security_repro.cjs` uz stvarni JWT guard, controller, notification servis i fake bazu: sintetički korisnik A dobije 201 i promijeni B-ovu notifikaciju; bez tokena 401. Nije pokrenut puni AppModule, realna baza, middleware/WAF/proxy ili produkcija; odgovor je iz fake DB.
 - Preporuka: prioritetno ograničiti operaciju na `id` i autentifikovani `userId` u istoj atomskoj DB operaciji, uz jedinstven odgovor za nepostojeće i tuđe ID-ove; provjeriti logove bez izlaganja ličnih podataka. Do objave popravke procijeniti ograničavanje endpointa na rubnoj zaštiti, uz provjeru uticaja na klijente.
 - Kako provjeriti da je riješeno: u izolovanom integracijskom testu korisnik A označi svoju notifikaciju, ne može mijenjati ni čitati odgovor za B-ovu, nepostojeći i tuđi ID daju isti dogovoreni status, neautentifikovani zahtjev je odbijen; `cd backend && npm run test:integration`.
 - Trud: S — Zavisnosti: dogovoren kompatibilan status i sigurni regresijski testovi.
 
-### [B-007] Svaki prijavljeni korisnik može pokrenuti masovni test podsjetnika — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (statički kod)
+### [B-007] Svaki prijavljeni korisnik može pokrenuti masovni test podsjetnika — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (izolovani HTTP i fake servis)
 - Gdje: `backend/src/modules/Notification/notifications.controller.ts:26-27,159-167`, `backend/src/modules/Schedule/gas.reminder.service.ts:144-180`, `backend/src/app.module.ts:53-63`.
 - Šta nije u redu i zašto je bitno: komentar kaže „admin only“, ali ruta ima samo JWT guard na klasi i neposredno poziva funkciju za slanje korisnicima s uključenom preferencijom. U `AppModule` jedini globalni guard naveden je throttler izvan testa, ne role guard. Zloupotreba može izazvati neželjene notifikacije i potrošnju resursa; stvarni učinak zavisi od tokena, preferencija i debounce pravila.
-- Dokaz: nema `RolesGuard` ni role metapodataka na ruti/kontroleru; servis prolazi kroz ciljane korisnike i poziva `notifyUser`. Nije isprobavano u produkciji.
+- Dokaz: nema `RolesGuard` ni role metapodataka na ruti/kontroleru; servis prolazi kroz ciljane korisnike i poziva `notifyUser`. `node scripts/audit/http_security_repro.cjs`: sintetički obični korisnik s validnim JWT dobije 201 i pozove fake reminder servis jednom. Nema stvarnog slanja, pune AppModule konfiguracije niti produkcije; infrastrukturalne barijere nisu provjerene.
 - Preporuka: prioritetno onemogućiti testni endpoint u produkciji ili zahtijevati provjerenu administratorsku autorizaciju i zaseban restriktivni rate limit; pregledati i ostale testne rute. Ne oslanjati se na komentar.
 - Kako provjeriti da je riješeno: integracijski test u produkcijskom konfiguracijskom profilu odbija običnog korisnika i anonimni zahtjev, a samo odobreni administrator ili isključivo neprodukcijsko okruženje dobije dozvoljen odgovor; mock push provjerava da neautorizovan zahtjev ne šalje ništa. `cd backend && npm run test:integration`.
 - Trud: S — Zavisnosti: sigurnosna politika admina i deployment konfiguracija.
@@ -88,10 +88,10 @@
 - Kako provjeriti da je riješeno: izolovani HTTP integracijski test s uključenim JWT guardom, stvarnom izolovanom PostgreSQL bazom i dva korisnika: A može mijenjati vlastitu anomaliju, A ne može mijenjati B-ovu, nepostojeći i tuđi ID imaju isti dogovoreni odgovor, invalid ID/DTO i anonimni poziv se odbijaju, te nema recommendation side effecta za neovlaštenu izmjenu. `cd backend && npm run test:integration` nakon dodavanja namjenskog testa.
 - Trud: S/M — Zavisnosti: dogovoreni kompatibilan response i testovi vlasništva/konkurentnosti.
 
-### [B-010] DTO anomalije nema validator dekoratore — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (izolovani pipe), HIPOTEZA (kompletni HTTP put)
+### [B-010] DTO anomalije nema validator dekoratore — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (izolovani pipe i odabrani HTTP slučaj), HIPOTEZA (produkcijski put)
 - Gdje: `backend/src/modules/HeatingAnomalyCheckerService/dto/heating-anomaly.dto.ts:2-5`, `backend/src/main.ts:28-38`, `backend/src/modules/HeatingAnomalyCheckerService/heating.anomaly.checker.controller.ts:30-35`.
 - Šta nije u redu i zašto: klasa DTO ima dva polja bez `class-validator` dekoratora, dok globalni pipe koristi `whitelist` i `forbidNonWhitelisted`. Sintetička validacija odbija i očekivanu vrijednost `confirm`, pa klijent možda ne može koristiti endpoint u produkcijskom bootstrapu.
-- Dokaz: `node scripts/audit/anomaly_validation_repro.cjs` učitava stvarnu DTO klasu i `ValidationPipe` s produkcijskim opcijama; `{confirm:true}`, `{}`, `null` i odsutna vrijednost vraćaju 400. Nije testiran cijeli Nest HTTP put niti produkcija. Ovo ograničenje ne popravlja nedostajuću servisnu autorizaciju B-009.
+- Dokaz: `node scripts/audit/anomaly_validation_repro.cjs` učitava stvarnu DTO klasu i `ValidationPipe` s produkcijskim opcijama; `{confirm:true}`, `{}`, `null` i odsutna vrijednost vraćaju 400. `node scripts/audit/http_security_repro.cjs` dodatno izvršava lokalni Nest controller, stvarni JWT guard i isti pipe: `{confirm:true}` dobije 400 i mock anomaly servis nije pozvan. To nije puni AppModule ni produkcija, niti je svako moguće tijelo provjereno preko HTTP-a. Ovo ograničenje ne popravlja nedostajuću servisnu autorizaciju B-009.
 - Preporuka: definisati validator dekoratore za boolean i ISO timestamp, transformaciju datuma i business pravila; prvo osigurati B-009, zatim popravljati DTO, da uklanjanje trenutne validacijske prepreke ne izloži neautorizovanu izmjenu.
 - Kako provjeriti da je riješeno: HTTP test s identičnim globalnim pipeom, vlastitom i tuđom anomalijom, validnom potvrdom i datumom, lošim datumom, dodatnim poljem i praznim tijelom; `cd backend && npm run test:integration` nakon dodavanja testa.
 - Trud: S/M — Zavisnosti: autorizacija B-009 i dogovor praznog/validnog requesta.

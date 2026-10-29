@@ -1,0 +1,68 @@
+# Backlog nadogradnji backenda — radna verzija
+
+## Sažetak: pet prioriteta
+
+1. Zaštita vlasništva anomalija i notifikacija, s razumijevanjem da HTTP iskoristivost B-009 još nije potvrđena (`04-findings.md`, B-006/B-009/B-010).
+2. Ispravna politika throttlinga i kontrola testnih ruta (`07-redis-workers.md`, R-004; `04-findings.md`, B-007).
+3. Tačna lokacija i svježina weather ulaza prije promjena formula (`05-weather.md`, W-001–W-003).
+4. Učenje i računanje samo u shadow modu dok stručnjak ne potvrdi sigurnost (`06-formulas.md`, F-001–F-003).
+5. DB idempotentnost, siguran outbox i odvojen worker tek nakon dokazivog isključivog cutovera (`07-redis-workers.md`, R-001–R-003).
+
+## Otvorena pitanja
+
+- Koje su poslovne mogućnosti i sigurnosne politike prioritetne, koje mobile verzije ostaju podržane, te postoje li obaveze za retenciju i brisanje?
+- Dostupnost stručnjaka za grijanje, model kotla/ogrjevnih tijela, projektna temperatura i dozvoljeni opsezi nisu utvrđeni; nisu dati kao operativne postavke.
+- Realni broj uređaja, opterećenje, budžet i produkcijska topologija nisu izmjereni. Procjene truda su red veličine, ne rokovi. **Nijedna backlog stavka nije odobrenje za implementaciju.**
+
+## Metod
+
+Problemi povezani s već potvrđenim kodom imaju oznaku **VERIFIKOVANO** i izvor. Korist, dizajn i prihvatni pragovi su prijedlozi/**HIPOTEZA** dok se ne potvrde s vlasnikom, stručno i testovima. S/M/L znači mali/srednji/veliki zahvat uključujući implementaciju i testove; ne podrazumijeva vremensku garanciju. Detaljni redoslijed i testovi su u `10-implementation-plan.md`.
+
+## Sigurnost i privatnost
+
+| ID | Problem i dokaz | Prijedlog i korist | Trud | Rizik / zavisnosti | Kriterij prihvatanja |
+|---|---|---|---|---|---|
+| SEC-1 | **VERIFIKOVANO:** notifikacijski update po ID bez userId (`notifications.service.ts:103-111`, B-006). | Atomski `id+userId`, neotkrivajući odgovor i regresijski test. | S | Izmjena statusa/odgovora klijentima; DTO/API ugovor. | Dva korisnika: vlastiti radi, tuđi/nepostojeći identičan odbijen odgovor; nema izmjene. |
+| SEC-2 | **VERIFIKOVANO:** anomaly update nema owner scope, DTO validacija odbija primjere (`heating.anomaly.checker.controller.ts:30-35`, B-009/B-010). | Najprije owner guard, zatim validatori i pravila datuma; spriječiti otvaranje IDOR-a uklanjanjem validatora. | M | Postojeća mobile kompatibilnost; sec test-first. | Vlastita validna izmjena uspije, tuđi ID ne uzrokuje side effect, neispravan DTO odbijen. |
+| SEC-3 | **VERIFIKOVANO:** TTL 60 ms i masovni testni podsjetnik bez admin guarda (`app.module.ts:23-33`, R-004; `notifications.controller.ts:159-167`). | Dogovoriti limit u ms, uključiti guard u HTTP testu; testni endpoint isključiti ili zaštititi adminom. | M | Ne blokirati legitimne klijente; proxy/IP i product odluka. | 101 zahtjev unutar odobrenog intervala testno ograničen, običan korisnik ne može masovno slati. |
+| SEC-4 | **VERIFIKOVANO:** PUT profila mijenja lozinku bez stare; guard ne gleda `isActive`/sesijsku verziju (`user.service.ts:51-59`, `jwt-auth.guard.ts:37-56`). | Postupni step-up/change-password, revokacija, kratki access i rotirani refresh tokeni; razmotriti 2FA nakon oporavka računa. | L | Logout starih sesija, migracija i gubitak pristupa; usvojena auth politika. | Token nakon opoziva/deaktivacije odbijen prema dogovorenom ugovoru; 2FA recovery testiran prije aktivacije. |
+| SEC-5 | **VERIFIKOVANO:** MIME i veličina se provjeravaju iz upload metapodataka (`common/file-storage.service.ts:101-120`); sadržaj nije pregledan u toj metodi. | Content sniff/signature, izolirani private storage, antivirus ako odobren; vlasnički download i retention. | L | Trošak, lažno pozitivni nalazi, velika migracija fajlova; test infrastruktura. | Fake MIME ne prolazi; tuđi račun ne može čitati; brisanje/restore fajla i metapodataka testirani. |
+| SEC-6 | **VERIFIKOVANO:** `GET` metrika bez deklarisanog JWT i reporting s ID labelama (`metrics.controller.ts:11-59`, `reporting.service.ts:450-459`). | Privatna scrape mreža/autentifikacija, minimizacija labela i zaštita logova. | M | Prekid postojećeg monitoringa; mrežni inventar. | Nedozvoljen izvor odbijen, scraper radi, bez PII labela. |
+| PRIV-1 | **VERIFIKOVANO:** model ima profile, događaje, notifikacije i upload putanje (`prisma/schema.prisma:12-43,174-208,266-283`); produkcijska retention politika nepoznata. | Izvoz/brisanje naloga uz inventory, ograničenu retenciju i odvojeno upravljanje backupima; pravna procjena. | L | Nepovratni podaci, zakonske obaveze, backup/restore. | Probno brisanje uklanja ili anonimizira povezane redove/fajlove prema odobrenoj politici, restore runbook dokumentovan. |
+| PRIV-2 | **HIPOTEZA:** potreban dokaz integriteta osjetljivih korisničkih/admin radnji. | Minimalni audit log s actor, akcijom i ishodom bez tokena/lozinke; retention/access policy. | M | PII, veličina i rizik curenja; SEC-4 i privatnost. | Promjena lozinke, ownership odbijanje i admin trigger imaju kontrolisan audit zapis bez tajni i testirani pristup. |
+
+## Funkcionalnosti
+
+| ID | Problem i dokaz | Prijedlog i korist | Trud | Rizik / zavisnosti | Kriterij prihvatanja |
+|---|---|---|---|---|---|
+| FEAT-1 | **VERIFIKOVANO:** weather servis traži samo dan (`Weather/weather.service.ts:91-97`). | 72-satni i sedmodnevni forecast po potvrđenim koordinatama; sedmični plan s procjenom vremenske prognoze, prvo samo preporuka. | L | Netočna prognoza i DST; `05-weather.md`, odobrena licenca i DTO. | Dva profila/tz, više dana i stale provider testovi, stari klijent zadržava ugovor. |
+| FEAT-2 | **HIPOTEZA:** korisna su upozorenja na mraz kod odsustva. | Advisory upozorenje na osnovu lokacije, kvaliteta i svježine prognoze; ne slati komandu kotlu. | M | Lažan osjećaj sigurnosti; W-001 i kriteriji stručnjaka. | Test mraza, odsutne/stale prognoze, cooldown i korisničke preference. |
+| FEAT-3 | **VERIFIKOVANO:** obračun koristi cijenu na kraju intervala i `Float` (`Gas/gas.reading.service.ts:506-529`). | Procjena računa s versioniranim cijenama, prikazom pretpostavki, decimal aritmetikom i vidljivom nesigurnošću. | L | Promjena računa/proračuna i migracija; potvrda tarife. | Golden računi s promjenom cijene, zaokruživanjem i nepotpunim očitanjima. |
+| FEAT-4 | **VERIFIKOVANO:** uređaji pripadaju korisniku/profilu, ali boiler history je po korisniku (`schema.prisma:77-98,174-186`). | Model više kotlova i vezivanje historije za odgovarajući uređaj/profil, bez automatskog upravljanja. | L | Historijski redovi neidentifikovani; migracija i kompatibilnost. | Dva uređaja/profila ne miješaju historiju; stari neidentifikovani redovi označeni kao nepoznati. |
+| FEAT-5 | **VERIFIKOVANO:** gas servis označava m³/h kao efficiency (`gas.reading.service.ts:473-475,559-561,642-647`). | Ponuditi indikatore potrošnje i kvaliteta, a validiranu efikasnost tek uz energiju, uslove i stručno definisanu metodologiju. | L | Obmanjujući KPI; mjerenje i stručna validacija. | Nedostajući/nesrazmjerni podaci daju insufficient-data; nema tvrdnji o efikasnosti bez dogovorenih mjerenja. |
+| FEAT-6 | **VERIFIKOVANO:** postoji dashboard export (`Dashboard/dashboard.controller.ts:59-61`). | Proširiti izvoze s filterom vlasnika, vremenskom zonom i mašinski čitljivim formatom; velik izvoz asinhrono tek po mjerenju. | M | Privatnost, CSV injection, memorija; PRIV-1. | Tuđi profil odbijen, redovi i tz ispravni, opasne spreadsheet ćelije sigurne. |
+
+## Pouzdanost, performanse i observability
+
+| ID | Problem i dokaz | Prijedlog i korist | Trud | Rizik / zavisnosti | Kriterij prihvatanja |
+|---|---|---|---|---|---|
+| REL-1 | **VERIFIKOVANO:** weather stale se briše prije uspješnog refresha (`Weather/weather.service.ts:38-51`). | SWR, posljednja poznata vrijednost po lokaciji s dobi i bounded fallback. | L | Stale prognoza, druga lokacija; koordinatni identitet i cache politika. | Provider timeout čuva ispravan cache, dob/quality eksplicitni, nema tuđeg grada. |
+| REL-2 | **VERIFIKOVANO:** poll sekvencijalan i check-before-create (`ThermostatPoll/thermostat.polling.service.ts:45-60,205-212`). | Radnik po uređaju, ograničena konkurentnost, DB ključ/outbox i retry/DLQ. | L | Dvostruki side effecti i Redis outage; R-001 i cutover gate. | Dva procesa + retry/kilI reprodukuju jedan poslovni zapis, provider limit se poštuje. |
+| REL-3 | **VERIFIKOVANO:** Expo greške se hvataju, ticket se ne obrađuje (`ExpoPush/expo.push.notification.service.ts:35-43`). | Durable outbox, ticket/receipt, status unknown i kontrolisani retry. | L | Neodređeni provider ishod; cannot guarantee exactly-once. | Fake Expo timeout i djelimični receipt daju tačna stanja i ne prijavljuju lažan delivery. |
+| PERF-1 | **VERIFIKOVANO:** upiti zadnjeg eventa i weather-a nemaju predložene kompozitne indekse u shemi (`schema.prisma:115-132,147-172`, `thermostat.polling.service.ts:82-85`). | Benchmark na realističnoj anonimnoj kopiji, ciljano dodati indekse nakon mjerenja. | M | Trošak upisa/storage; DB copy i rollback. | `EXPLAIN (ANALYZE, BUFFERS)` i p95 prije/poslije dokazani, bez degradacije write budžeta. |
+| PERF-2 | **VERIFIKOVANO:** poll učitava sve uređaje sa user i profil/learning relacijama (`thermostat.polling.service.ts:45-50`). | Paginirati uređaje i selektovati potrebna polja; izbjegavati N+1 gdje ga benchmark potvrdi. | M | Pagination race i više upita; workload mjerenje. | Veliki sintetički dataset bounded memorija, svi uređaji tačno jednom planirani i query budget. |
+| OBS-1 | **VERIFIKOVANO:** procesne metrike i health vraća statični status (`common/metrics.service.ts:45-58`, `common/health.controller.ts:15-21`). | Odvojeni liveness/readiness, per-instance metrike i agregacija; alarmi za queue lag/stale. | M | Readiness može prekinuti promet tokom DB incidenta; strategija orkestratora. | DB outage razlikuje alive/not-ready, monitoring scrape test i bez PII labela. |
+
+## API, održavanje i kvalitet
+
+| ID | Problem i dokaz | Prijedlog i korist | Trud | Rizik / zavisnosti | Kriterij prihvatanja |
+|---|---|---|---|---|---|
+| API-1 | **VERIFIKOVANO:** postoje stub `POST /api/heating-events`, `GET /api/weather`, `/recommendations/today` (B-001–B-003). | Verzijski ugovori s eksplicitnim unavailable/unsupported; ukloniti stub tek nakon identifikacije potrošača. | M/L | Stari klijenti očekuju sadašnji oblik; API semver i telemetrija. | Legacy fixture ostaje podržan, novi ugovor razlikuje no-data od neimplementiranog i ima contract test. |
+| API-2 | **VERIFIKOVANO:** Swagger se montira na `/api/docs` (`backend/src/main.ts:40-50`); nije dokazano da je potpuna specifikacija. | OpenAPI kao provjeren ugovor za `/api/v1` i generisane klijentske tipove nakon validacije svih DTO/statusa. | L | Generator može promijeniti klijente; frontend/mobile odvojene faze. | CI diff OpenAPI-ja, contract testovi vlasništva i kompatibilnosti stare verzije. |
+| MAINT-1 | **VERIFIKOVANO:** postoje duplikatni HomeProfile kontroler i praćena `boiler.service.txt`, logovi, `migrations_backup` (`01-inventory.md`, `git ls-files`). | Dokumentovati namjenu i reference, uklanjati samo uz zasebno odobrenje; ne dirati migracije dok se ne provjeri produkcija. | S/M | Gubitak historije ili skrivena referenca; backup i analiza. | Nema referenci u build/deploy, relevantna historija sačuvana, green testovi. |
+| MAINT-2 | **VERIFIKOVANO:** CI trenutno koristi PostgreSQL/Redis i postojeće testove (`.github/workflows/backend-audit.yml:17-110`), ali test env isključuje scheduler i throttler. | Nastaviti jedan branch-only workflow, dodati namjenske guard/scheduler i Redis integration testove i coverage prag tek nakon mjerenja. | M | Lažno zelen CI, flakiness i verzija sheme; test-first. | Ne-test guard test i stvarna Redis komanda iz aplikacije se izvršavaju, branch-only trigger i CI zelen. |
+| MAINT-3 | **VERIFIKOVANO:** `/health` vraća samo statički status (`backend/src/common/health.controller.ts:15-21`); Dockerfile ne definiše `HEALTHCHECK` (`backend/Dockerfile:44-65`). | Razdvojiti liveness/readiness, reproducibilan build i zasebnu migracijsku operaciju; validirati image/node kompatibilnost. | M/L | Deployment prekid; pregled entrypoint/Compose i verzije baze. | Kontrolisani DB outage: liveness ostaje, readiness pada; image smoke i restore rollback test. |
+
+## Status
+
+Backlog je početni i treba dopuniti nakon preostalih sigurnosnih, inventory i DevOps nalaza, te prioritizacije s vlasnikom. Nijedna predložena mogućnost nije implementirana niti odobrena ovim auditom.

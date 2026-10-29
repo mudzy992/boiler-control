@@ -64,6 +64,14 @@
 - Kako provjeriti: u ne-testnoj konfiguraciji integracijskog testa poslati 101 zahtjev unutar 60 s i potvrditi 429, proći fake time ili sačekati kontrolisani istek te potvrditi reset; testirati login/registration posebno, dva API procesa i očekivani shared storage. Pokrenuti namjenski budući suite s `NODE_ENV`/servisima koji stvarno uključuju guard, ne oslanjati se na postojeći `NODE_ENV=test` CI.
 - Trud: S za jedinicu i test, M/L za siguran distribuirani limit — Zavisnosti: sigurnosna politika, proxy/WAF i kompatibilnost klijenata.
 
+### [R-005] Podsjetnik javlja uspjeh i kad nijedan push nije pokušan — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (stvarni servisi i fake DB/push)
+- Gdje: `backend/src/modules/Notification/notifications.service.ts:71-93`, `backend/src/modules/Schedule/gas.reminder.service.ts:54-80,107-127,167-196`.
+- Šta nije u redu i zašto: `notifyUser` tiho vraća bez slanja pri isključenoj preferenci, debounce-u ili nedostajućim tokenima. Pozivaoci i dalje broje poziv kao uspješan; ručni test tvrdi da zanemaruje preference, ali poziva isti servis koji ih poštuje. Zato broj „sent“ i `success:true` ne dokazuju ni pokušaj slanja, kamoli Expo receipt.
+- Dokaz: `node scripts/audit/reminder_delivery_repro.cjs` izvršava oba stvarna servisa s fake bazom i pushom: jedan ciljani korisnik bez tokena rezultira summary „Sent to 1 users, 0 failed“ uz nula poziva pushu i nula DB upisa; isključena preferenca daje `success:true` u pojedinačnom testu, takođe bez slanja/upisa. Nema stvarne DB, HTTP-a, Expo servisa, cron scheduler-a ni produkcijskih podataka. Nalaz o ignorisanim ticketima/receiptima je zasebno R-002.
+- Preporuka: eksplicitni tip rezultata `skipped_preference`, `skipped_debounce`, `no_token`, `submitted`, `failed`, `unknown`, a stvarni delivery tek nakon potvrđenog receipt-a; brojati svaku kategoriju odvojeno. Ugovor test rute i preference uskladiti prije promjene i zaštititi testne rute prema B-007.
+- Kako provjeriti: test slučajeva bez tokena, isključena preferenca, debounce, invalid token, prihvaćeni/odbijeni ticket, receipt i timeout; bez slanja stvarnim korisnicima. Provjeriti counters i response nakon uvođenja outboxa u `cd backend && npm run test:integration`.
+- Trud: M/L — Zavisnosti: Expo ticket/receipt ugovor, outbox, kompatibilnost klijenata i autorizacija.
+
 ## Odluke: gdje usvojiti, odgoditi ili ne usvojiti
 
 Brojevi TTL-ova/konkurentnosti su **početne hipoteze za testiranje**, ne odobrena produkcijska konfiguracija. Redis outage politike vrijede za predloženi sistem.

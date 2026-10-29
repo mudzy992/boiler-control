@@ -73,6 +73,11 @@ jobs:
         run: node ../scripts/audit/http_postgres_repro.cjs --ci
       - name: Verify temporary Redis
         run: docker exec "${{ job.services.redis.id }}" redis-cli ping
+      - name: Verify Redis lease primitives in disposable service
+        env:
+          AUDIT_DISPOSABLE_REDIS: '1'
+          AUDIT_REDIS_CONTAINER: ${{ job.services.redis.id }}
+        run: node ../scripts/audit/redis_lease_ci.cjs --ci
       - name: Lint without modifying files
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

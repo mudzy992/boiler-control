@@ -68,7 +68,7 @@ Ovaj inventar nije završen. Marker za fajl ili modul dokazuje samo da red posto
 
 ## Pregled testova — direktna veza i poznate praznine
 
-**VERIFIKOVANO:** Git prati deset backend `*.spec.ts` fajlova, u nastavku navedene tačke su na osnovu uvoza i opisa testova, a ne rezultat precizne instrumentirane pokrivenosti svake grane. Opći Jest `backend/jest.config.js` pretražuje `src` i `test`, pa obuhvata i integracijske suiteove; zasebni `backend/jest-integration.config.js` obuhvata samo `test/integration`. Stoga se 167 općih i 49 zasebnih integracijskih testova iz [CI runa 40865068767](https://github.com/mudzy992/boiler-control/actions/runs/40865068767) preklapa, nije 216 nezavisnih testova. Run je za `e0dc116`, ne za ove naknadne lokalne audit commitove. CI anotira broj testova (`scripts/audit/jest_report.cjs:22-25`), a novi reporter objavljuje i zbirne coverage procentе. U [runu 40878022861](https://github.com/mudzy992/boiler-control/actions/runs/40878022861) zbirno: statements 3320/15150 (21,91%), branches 1450/11311 (12,81%), functions 700/3447 (20,30%), lines 1431/2984 (47,95%). To se odnosi na Jest konfigurirani skup fajlova; sastav (uključujući potencijalno generisane fajlove) tek treba izmjeriti prije tumačenja. Nije semantička pokrivenost ili e2e test. Lokalni raniji parcijalni coverage zbog Prisma greške ne predstavlja pokrivenost cijelog projekta (detalji `docs/audit/STATUS.md`).
+**VERIFIKOVANO:** Git prati deset backend `*.spec.ts` fajlova, u nastavku navedene tačke su na osnovu uvoza i opisa testova, a ne rezultat precizne instrumentirane pokrivenosti svake grane. Opći Jest `backend/jest.config.js` pretražuje `src` i `test`, pa obuhvata i integracijske suiteove; zasebni `backend/jest-integration.config.js` obuhvata samo `test/integration`. Stoga se 167 općih i 49 zasebnih integracijskih testova iz [CI runa 40865068767](https://github.com/mudzy992/boiler-control/actions/runs/40865068767) preklapa, nije 216 nezavisnih testova. Run je za `e0dc116`, ne za ove naknadne lokalne audit commitove. CI anotira broj testova (`scripts/audit/jest_report.cjs:22-25`), a novi reporter objavljuje i zbirne coverage procentе. U [runu 40878022861](https://github.com/mudzy992/boiler-control/actions/runs/40878022861) zbirno: statements 3320/15150 (21,91%), branches 1450/11311 (12,81%), functions 700/3447 (20,30%), lines 1431/2984 (47,95%). To se odnosi na Jest konfigurirani skup fajlova, koji uključuje generisane fajlove i jednu testnu skriptu; razgradnja po grupama prikazana je ispod. Nije semantička pokrivenost ili e2e test. Lokalni raniji parcijalni coverage zbog Prisma greške ne predstavlja pokrivenost cijelog projekta (detalji `docs/audit/STATUS.md`).
 
 | Testni fajl | Šta se može potvrditi iz uvoza i naziva | Šta se ovim ne dokazuje |
 |---|---|---|
@@ -85,4 +85,42 @@ Ovaj inventar nije završen. Marker za fajl ili modul dokazuje samo da red posto
 
 **VERIFIKOVANO:** `cd backend && npm run test:e2e` lokalno izlazi 1 prije suitea jer `backend/test/jest-e2e.json` nedostaje (B-013). `test:smoke` postoji kao skripta (`backend/package.json:23`), ali ovdje nije pokretan; može zahtijevati dostupnu aplikaciju i konfiguraciju. Sadašnje GitHub testno okruženje (`.github/workflows/backend-audit.yml:40`) postavlja `NODE_ENV=test`: `AppModule` ne registruje ThrottlerGuard (`backend/src/app.module.ts:21-33,53-64`), a cronovi su disabled ili polling provider izostavljen (`backend/src/modules/Schedule/schedule.module.ts:15-43`, `ThermostatPoll/thermostat.polling.service.ts:35-38`). Sam zeleni CI ne potvrđuje runtime raspored ili throttling.
 
-Nedostaje razlaganje stvarnog CI coverage izvještaja po grupama izvora/generisanih fajlova, broj nedeterminističkih neuspjeha na ponovljenim izolovanim runovima, e2e servisni bootstrap i pobrojane direktne veze test → svaki DTO/metoda. Lokalna početna testiranja su nailazila na ograničenje preuzimanja Prisma enginea; raniji popravljeni testovi opisani su u `STATUS.md` i ne treba ih smatrati dokazom sveobuhvatnosti.
+Nedostaje semantičko mapiranje funkcija na testove, broj nedeterminističkih neuspjeha na ponovljenim izolovanim runovima, e2e servisni bootstrap i pobrojane direktne veze test → svaki DTO/metoda. Lokalna početna testiranja su nailazila na ograničenje preuzimanja Prisma enginea; raniji popravljeni testovi opisani su u `STATUS.md` i ne treba ih smatrati dokazom sveobuhvatnosti.
+
+## Dopuna: statički graf uvoza i direktnih Prisma pristupa
+
+Sljedeća tabela generisana je `python3 scripts/audit/module_graph.py` iz **Gitom praćenih** `backend/src/modules/**/*.ts`; `common` i `prisma` su interni segmenti, ne tvrdnja da je sve DI-modul. Graf je usmjeren od vlasnika fajla ka direktno importovanom segmentu. Modeli su samo regex prepoznati kao `prisma.<model>.…` ili `tx.<model>.…`; pozivi kroz druge varijable, skriveni dinamički importi, naslijeđeni servisi i runtime DI nisu obuhvaćeni. Komentari/TS-only importi mogu biti uključeni; broj fajlova uključuje DTO/kontrolere i ne znači broj servisa. Tabela nije dokaz stvarnih SQL poziva ni autorizacije.
+
+| Modul | Praćenih TS | Direktni interni importi | Prisma nazivi u direktnom `prisma`/`tx` pristupu | Deklarisani jobovi |
+|---|---:|---|---|---|
+| `Auth` | 11 | `User`, `prisma` | `user` | — |
+| `Boiler` | 9 | `Auth`, `Heating`, `Notification`, `Tuya`, `Weather`, `common`, `prisma` | `boilerHistory`, `heatingEvent`, `heatingIntervalLearning`, `homeProfile`, `thermostatDevice`, `thermostatProgram`, `user` | — |
+| `Dashboard` | 4 | `Auth`, `Boiler`, `Notification`, `Tuya`, `Weather`, `common`, `prisma` | `boilerHistory`, `heatingEvent`, `heatingIntervalLearning`, `homeProfile`, `recommendation`, `thermostatDevice`, `weatherCache` | — |
+| `ExpoPush` | 2 | `Notification` | — | — |
+| `Gas` | 6 | `Auth`, `common`, `prisma` | `boilerHistory`, `gasPriceHistory`, `gasReading`, `user` | — |
+| `Heating` | 10 | `Auth`, `prisma` | `heatingEvent` | — |
+| `HeatingAnomalyCheckerService` | 4 | `Auth`, `ExpoPush`, `HeatingRecommendation`, `Notification`, `common`, `prisma` | `boilerHistory`, `heatingEvent` | `backend/src/modules/HeatingAnomalyCheckerService/heating.anomayl.checker.service.ts:49`, `backend/src/modules/HeatingAnomalyCheckerService/heating.anomayl.checker.service.ts:69` |
+| `HeatingRecommendation` | 3 | `Auth`, `Heating`, `prisma` | `heatingIntervalLearning`, `recommendation`, `thermostatDevice`, `weatherCache` | — |
+| `HomeProfile` | 6 | `Auth`, `prisma` | `homeProfile`, `user` | — |
+| `Notification` | 6 | `Auth`, `ExpoPush`, `Schedule`, `prisma` | `notification`, `notificationPreference`, `userDevice` | — |
+| `Schedule` | 3 | `Boiler`, `Heating`, `HeatingRecommendation`, `Notification`, `ThermostatPoll`, `Tuya`, `common`, `prisma` | `heatingIntervalLearning`, `notification`, `recommendation`, `user`, `weatherCache` | `backend/src/modules/Schedule/daily.recommendation.service.ts:21`, `backend/src/modules/Schedule/gas.reminder.service.ts:21` |
+| `ThermostatDevice` | 5 | `Auth`, `prisma` | `homeProfile`, `thermostatDevice`, `thermostatProgram` | — |
+| `ThermostatPoll` | 1 | `Boiler`, `HeatingRecommendation`, `Notification`, `common`, `prisma` | `boilerHistory`, `heatingEvent`, `thermostatDevice`, `user`, `weatherCache` | `backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:35` |
+| `Tuya` | 3 | `common`, `prisma` | `tuyaToken` | — |
+| `User` | 6 | `Auth`, `prisma` | `gasPriceHistory`, `user` | — |
+| `Weather` | 4 | `Auth`, `common`, `prisma` | `homeProfile`, `weatherCache` | — |
+
+Samo statički hintovi; tranzitivni DI, aliasi, transakcije drugih naziva, runtime registracija i semantički opseg nisu dokazani.
+
+### Pokrivenost razdvojena od generisanog koda
+
+[Run 40879591615](https://github.com/mudzy992/boiler-control/actions/runs/40879591615), commit `a75d02a`, koristeći isti Jest `collectCoverageFrom`, anotira grupe po putanji bez izlistavanja imena fajlova:
+
+| Grupa | Fajlova | Statements | Branches | Functions | Lines |
+|---|---:|---:|---:|---:|---:|
+| `backend/src` bez `src/generated` | 97 | 1479/2877 (51,41%) | 603/1720 (35,06%) | 187/455 (41,10%) | 1337/2612 (51,19%) |
+| `backend/src/generated` | 16 | 1841/12175 (15,12%) | 847/9535 (8,88%) | 513/2974 (17,25%) | 94/277 (33,94%) |
+| `backend/test` | 1 | 0/98 (0%) | 0/56 (0%) | 0/18 (0%) | 0/95 (0%) |
+| Ostalo | 0 | 0/0 | 0/0 | 0/0 | 0/0 |
+
+Grupisanje koristi dostupne putanje u Istanbul summaryju (`scripts/audit/coverage_summary.cjs`), nije novi Jest filter i ne mijenja imenilac zbirnog izvještaja. Brojke se zasnivaju na TypeScript/ts-jest instrumentaciji i source-mapovima; različiti nazivnici po metrici su mogući. Instrumentacija ne dokazuje sve rubne slučajeve, HTTP ugovor, stvarni runtime provider, pouzdanost ili odsustvo defekata. `backend_source` uključuje sve obuhvaćene ne-generisane fajlove u `src`, ne samo module; ne tvrditi da je svaka datoteka ili grana pokrivena.

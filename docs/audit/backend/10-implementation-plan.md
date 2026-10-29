@@ -144,6 +144,8 @@
 - **Prihvat/trud/kompatibilnost/zavisnosti:** M, svaki događaj prikazuje stanje svojeg uređaja, query ima owner scope, novi bucket ugovor je dokazan s DST; zadržati legacy polja dok ne budu poznati web/mobile potrošači.
 
 ### 5.2 OpenAPI, health i održavanje
+
+- **Dopuna OBS-1 / B-023:** prije izmjene metrika inventarisati postojeće scrape/dashboards; instrumentirati per-device ishode agregatno, ne kao ID label, te zasebno freshness posljednjeg valjanog snapshot-a. Zadržati kompatibilne stare metrike tokom tranzicije uz jasno značenje. Test-first: dva neuspješna uređaja, miješani uspjeh/greška, skip, bez snapshot-a, prazna lista i greška listanja; `node scripts/audit/poll_metrics_repro.cjs` je audit dokaz postojećeg ponašanja, a budući regresijski Jest test potvrđuje novi ugovor (`cd backend && npm test -- --runInBand`). Prihvatanje: nijedan neuspjeh nije prikazan kao uspješna obrada i ostali uređaji nastavljaju; cijeli CI zelen. Trud S/M; bez migracije DB; rollback na staru instrumentaciju uz privremeni alert za stale podatke, ne obustavljati polling. Klijentski HTTP ugovor se ne mijenja.
 - **Cilj/fajlovi:** `backend/src/main.ts`, DTO/kontroleri, `common/health.controller.ts`, Dockerfile/Compose; versionirani `/api/v1`, publicirani OpenAPI kao izvor tipova, liveness/readiness, odvojena migracija/deploy.
 - **Migracija/rollback, flag:** eventualna schema samo u odvojenom commitu; `API_V1_ENABLED` off i zaseban readiness rollout. Rollback ugasi novu rutu/readiness, stari API ostaje do definisanog roka.
 - **Testovi:** spec diff, legacy/mobile contract fixture, DB outage razlikuje alive/not-ready, Docker smoke; integration i branch CI. **Skripte:** `scripts/smoke.sh --help`, `scripts/test-all.sh --help`.

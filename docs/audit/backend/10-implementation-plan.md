@@ -110,6 +110,8 @@
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; HTTP DTO ostaje nepromijenjen, stale stanje eksplicitno; zavisi od 3.1 i Redis TLS/ACL/RPO odluke.
 
 ### 3.3 Push receipt i kontrolisani cache
+
+- **Dopuna REL-6 / R-006:** najprije usaglasiti semantiku `isActive` i identitet instalacije, te ponašanje logouta i više uređaja. Test-first dvije instalacije iste platforme, inactive, reaktivacija, transfer, istovremene registracije i globalni unique token u privremenoj PostgreSQL bazi, uz fake Expo; `node scripts/audit/push_registration_repro.cjs` pokazuje sadašnje ponašanje. Expand migracija samo po odobrenju, prije uvođenja novog unique ključa analizirati duplikate bez ispisa tokena; kompatibilni legacy endpoint i flag za novu registraciju. Rollback ugasi novi put uz očuvanje redova i mapiranja, bez brisanja aktivnih tokena; tek nakon provjere stare verzije klijenata. Prihvat: testirane dvije instalacije, odobreni lifecycle i zeleni unit/integration/CI; trud M/L, zavisi od politike vlasnika i migracije.
 - **Cilj/fajlovi:** `ExpoPush/expo.push.notification.service.ts`, Notification, queue i Weather/Tuya cache moduli; ticket/receipt, state `unknown`, bounded retry, zaseban cache Redis bez queue eviction.
 - **Migracija/rollback, flag:** additive delivery/outbox state; `PUSH_QUEUE_ENABLED`, `WEATHER_SWR_ENABLED` off do testova. Rollback obustavi dispatcher uz očuvanje neisporučenih redova; nema garancije exactly-once prema provideru.
 - **Testovi:** fake provider djelimični neuspjeh, ambiguous timeout, invalid token, TTL/cache tenant isolation i queue outage; integration. **Skripte:** `scripts/dev-up.sh --help`, `scripts/test-all.sh --help`, `scripts/smoke.sh --help`.

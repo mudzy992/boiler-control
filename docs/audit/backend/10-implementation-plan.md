@@ -104,6 +104,8 @@
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; nema izmjene API odgovora; zavisi od DB diff/backup i definicije poslovnih ključeva.
 
 ### 3.2 Worker, Redis i strangler migracija
+
+- **Dopuna R-007:** prije migracije izmjeriti trajanje i procijeniti privremeni lokalni `waitForCompletion` samo uz freshness alarm i test preskočenih tickova. `node scripts/audit/poll_overlap_repro.cjs` potvrđuje trenutno preklapanje ručnih tickova; budući testovi moraju obuhvatiti duži stvarni rad i dvije instance. Lokalni flag/guard nije zamjena za DB ključ iz 3.1. Rollback isključuje guard uz pojačan nadzor, ne dopušta dvostruki executor; nema DB migracije ni promjene HTTP ugovora za samu instrumentaciju. Prihvat: test potvrdi dogovoreno nepreklapanje unutar instance i otkrivanje stale snapshot-a, zasebno dokazani međuinstancijski gate i zeleni testovi. Trud S/M za lokalno, L za distribuirano; zavisi od budžeta svježine i 3.1.
 - **Cilj/fajlovi:** predloženi `backend/src/worker.ts`, `WorkerModule`, `docker-compose.yml`, queue providers i cron registracija; fan-out per device, granice, retry/DLQ i graceful shutdown.
 - **Migracija/rollback, flag:** nad 3.1; `WORKER_ENABLED`, `LEGACY_SCHEDULER_ENABLED`, početno samo shadow. Prije aktivnih jobova dokazati da oba puta poštuju isti DB gate; inače ekskluzivno ugasiti stari scheduler i dovršiti in-flight. Rollback zaustavlja novi executor, reconcile outbox, tek onda eventualno pali legacy; bez paralelnih side effecta.
 - **Testovi:** dvije API i dvije worker instance, lease expiry/fencing, Redis restart/outage, DB restart, kill -9, per-account rate i DLQ replay; `npm run test:integration` s Redis klijentom, ne samo ping. **Skripte:** `scripts/dev-up.sh --help`, `scripts/smoke.sh --help`, `scripts/test-all.sh --help`.

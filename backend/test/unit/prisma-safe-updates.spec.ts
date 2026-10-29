@@ -3,8 +3,14 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('Safe Prisma Update Patterns (P1a)', () => {
   let prismaService: PrismaService;
+  let notificationUpdate: jest.Mock;
+  let heatingUpdateMany: jest.Mock;
+  let userUpdate: jest.Mock;
 
   beforeEach(async () => {
+    notificationUpdate = jest.fn();
+    heatingUpdateMany = jest.fn();
+    userUpdate = jest.fn();
     // Mock Prisma service for these tests
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -13,17 +19,17 @@ describe('Safe Prisma Update Patterns (P1a)', () => {
           useValue: {
             notification: {
               findUnique: jest.fn(),
-              update: jest.fn(),
+              update: notificationUpdate,
               updateMany: jest.fn(),
             },
             heatingEvent: {
               findUnique: jest.fn(),
               update: jest.fn(),
-              updateMany: jest.fn(),
+              updateMany: heatingUpdateMany,
             },
             user: {
               findUnique: jest.fn(),
-              update: jest.fn(),
+              update: userUpdate,
             },
             homeProfile: {
               update: jest.fn(),
@@ -60,7 +66,7 @@ describe('Safe Prisma Update Patterns (P1a)', () => {
 
       if (!existing) {
         expect(existing).toBeNull();
-        expect(prismaService.notification.update).not.toHaveBeenCalled();
+        expect(notificationUpdate).not.toHaveBeenCalled();
         return;
       }
 
@@ -114,7 +120,7 @@ describe('Safe Prisma Update Patterns (P1a)', () => {
       });
 
       expect(result.count).toBe(0);
-      expect(prismaService.heatingEvent.updateMany).toHaveBeenCalledWith({
+      expect(heatingUpdateMany).toHaveBeenCalledWith({
         where: { id: eventId },
         data: { roomTargetTemp: 22 },
       });
@@ -198,7 +204,7 @@ describe('Safe Prisma Update Patterns (P1a)', () => {
       const result = event ? { success: true } : { success: false };
 
       expect(result.success).toBe(false);
-      expect(prismaService.heatingEvent.updateMany).not.toHaveBeenCalled();
+      expect(heatingUpdateMany).not.toHaveBeenCalled();
     });
 
     it('should updateMany and not crash if event exists', async () => {
@@ -254,7 +260,7 @@ describe('Safe Prisma Update Patterns (P1a)', () => {
 
       if (!existing) {
         // Safe: return without update
-        expect(prismaService.user.update).not.toHaveBeenCalled();
+        expect(userUpdate).not.toHaveBeenCalled();
         return;
       }
 

@@ -36,7 +36,7 @@ export class PrismaService
     } else {
       // Create PrismaClient without adapter to avoid attempting DB ops when env is missing
       // PrismaClient constructor expects an options argument; pass an empty object.
-      super({} as any);
+      super({});
     }
 
     // Now it's safe to assign to `this`

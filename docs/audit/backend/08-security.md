@@ -2,7 +2,7 @@
 
 ## Sažetak: pet početnih nalaza
 
-1. **VISOKO, VERIFIKOVANO u lokalnom HTTP testu s fake DB:** označavanje pojedinačne notifikacije ne provjerava korisnika (B-006, `04-findings.md`).
+1. **VISOKO, VERIFIKOVANO u izolovanom HTTP testu s PostgreSQL-om:** označavanje pojedinačne notifikacije ne provjerava korisnika (B-006, `04-findings.md`).
 2. **VISOKO, VERIFIKOVANO u lokalnom HTTP testu s fake servisom:** testni endpoint za masovni gas podsjetnik nema provjeru administratorske uloge (B-007, `04-findings.md`).
 3. **VISOKO, VERIFIKOVANO u izolovanom storageu:** TTL globalnog throttlera postavljen je na 60 ms umjesto komentarisane minute (R-004, `07-redis-workers.md`); testni CI isključuje guard.
 4. **SREDNJE, VERIFIKOVANO u izvoru:** `GET /metrics` i njegove reporting varijante nemaju JWT guard na kontroleru (`backend/src/common/metrics.controller.ts:1-12,23-59`, `backend/src/common/common.module.ts:12`); vanjska mrežna zaštita nije provjerena. Osjetljivost sadržaja i realna izloženost zahtijevaju zaseban pregled.
@@ -19,7 +19,7 @@
 **B-009 — VISOKO potencijalno, VERIFIKOVANO u servisu; HTTP iskoristivost HIPOTEZA:** `PATCH /api/anomalies/:eventId` ne predaje user ID servisu; servis ne provjerava vlasnika pri pretrazi ili izmjeni događaja. Izolovana offline reprodukcija stvarnog servisa s fake bazom: `node scripts/audit/anomaly_ownership_repro.cjs`. Izolovani lokalni HTTP test sa stvarnim guardom i produkcijskim opcijama pipea odbija `{confirm:true}` prije mock servisa; nije puni AppModule ni produkcijski test; vidjeti B-009 u [04-findings.md](04-findings.md).
 
 
-Detaljni nalazi i test-first koraci su u [04-findings.md](04-findings.md) B-006 i B-007 te [07-redis-workers.md](07-redis-workers.md) R-004. Za prva dva lokalni HTTP test sa sintetičkim korisnicima i fake DB/servisom potvrđuje opisane slučajeve (`node scripts/audit/http_security_repro.cjs`), ali je i dalje potreban izolovani multi-user PostgreSQL integracijski test kroz puni AppModule; za TTL test s uključenim guardom i kontrolisanim vremenom, uključujući odvojenu provjeru pouzdane proxy konfiguracije. Skripta `node scripts/audit/throttle_repro.cjs` reproducira samo lokalni storage i ne predstavlja test pune HTTP putanje ili produkcije.
+Detaljni nalazi i test-first koraci su u [04-findings.md](04-findings.md) B-006 i B-007 te [07-redis-workers.md](07-redis-workers.md) R-004. Za prva dva lokalni HTTP test sa sintetičkim korisnicima i fake DB/servisom potvrđuje opisane slučajeve (`node scripts/audit/http_security_repro.cjs`), a prvi je potvrđen i sa sintetičkim korisnicima u privremenom PostgreSQL-u ([run 40876239114](https://github.com/mudzy992/boiler-control/actions/runs/40876239114)); test s punim AppModuleom, deploy i infrastrukturnim pravilima ostaje potreban; za TTL test s uključenim guardom i kontrolisanim vremenom, uključujući odvojenu provjeru pouzdane proxy konfiguracije. Skripta `node scripts/audit/throttle_repro.cjs` reproducira samo lokalni storage i ne predstavlja test pune HTTP putanje ili produkcije.
 
 ### [S-001] Metrike bez deklarisanog JWT guarda — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (kod), HIPOTEZA (izloženost i uticaj)
 - Gdje: `backend/src/common/metrics.controller.ts:1-12,23-59`, `backend/src/common/common.module.ts:10-13`, `backend/src/common/reporting.service.ts:450-459`.

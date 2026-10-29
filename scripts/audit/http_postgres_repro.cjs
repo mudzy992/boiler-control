@@ -29,6 +29,8 @@ let stage = 'initialization';
 async function main() {
   const db = new PrismaService();
   let completed = false;
+  let userIds = [];
+  let notificationId;
   try {
     stage = 'connect';
     await db.$connect();
@@ -40,6 +42,8 @@ async function main() {
         const a = await tx.user.create({data:{email:`audit-a-${nonce}@example.invalid`,passwordHash:'not-a-real-hash'}});
         const b = await tx.user.create({data:{email:`audit-b-${nonce}@example.invalid`,passwordHash:'not-a-real-hash'}});
         const notice = await tx.notification.create({data:{userId:b.id,type:'SYSTEM_ALERT',title:'synthetic',message:'synthetic',isRead:false}});
+        userIds = [a.id, b.id];
+        notificationId = notice.id;
         const jwt = new JwtService({secret:crypto.randomBytes(32).toString('hex')});
         let reminderCalls = 0;
         // Plain wrapper prevents Nest lifecycle scanning on Prisma's interactive-transaction proxy.
@@ -79,7 +83,10 @@ async function main() {
       throw new Error('Expected rollback did not occur');
     } catch (error) { if (error !== ROLLBACK) throw error; }
     assert.equal(completed,true);
-    console.log('::notice title=Audit security reproduction::Synthetic user A modified user B notification in isolated PostgreSQL; USER invoked mock mass reminder. Transaction rolled back.');
+    stage = 'rollback-verification';
+    assert.equal(await db.user.count({where:{id:{in:userIds}}}), 0);
+    assert.equal(await db.notification.count({where:{id:notificationId}}), 0);
+    console.log('::notice title=Audit security reproduction::Synthetic user A modified user B notification in isolated PostgreSQL; USER invoked mock mass reminder. Transaction rolled back and record absence verified.');
   } finally { await db.$disconnect(); }
 }
 main().catch(error => {

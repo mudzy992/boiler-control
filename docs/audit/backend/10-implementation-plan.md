@@ -17,7 +17,7 @@
 
 ## Zajednička pravila svakog koraka
 
-- Test-first: prvo regresijski test koji demonstrira poznato ponašanje, zatim mala promjena i dokaz prolaza. `CI` ovdje znači postojeći `.github/workflows/backend-audit.yml` na aktivnoj grani `arena/94541967-boiler-control`, sa izolovanim PostgreSQL/Redis servisima, bez `pull_request`/`main` triggera. Sadašnji CI pokriva lint, type-check, build, 167 općih i 49 integracijskih testova koji se preklapaju (run `40865068767` na ranijem commitu); noviji lokalni audit commitovi nisu pushani niti je za njih pokrenut CI. Redis ping nije aplikacijski integration test, `NODE_ENV=test` isključuje postojeće cronove i throttler, pa su potrebni posebni testovi.
+- Test-first: prvo regresijski test koji demonstrira poznato ponašanje, zatim mala promjena i dokaz prolaza. `CI` ovdje znači postojeći `.github/workflows/backend-audit.yml` na aktivnoj grani `arena/94541967-boiler-control`, sa izolovanim PostgreSQL/Redis servisima, bez `pull_request`/`main` triggera. Sadašnji CI pokriva lint, type-check, build, 167 općih i 49 integracijskih testova koji se preklapaju (run `40865068767` na ranijem commitu); noviji audit commitovi su pushani na aktivnu granu; posljednji provjereni [run 40890674043](https://github.com/mudzy992/boiler-control/actions/runs/40890674043) za `bfb572c` je zelen. Redis ping nije aplikacijski integration test, `NODE_ENV=test` isključuje postojeće cronove i throttler, pa su potrebni posebni testovi.
 - Obavezne komande: `cd backend && npx eslint 'src/**/*.ts' 'test/**/*.ts' --ignore-pattern 'src/generated/**'` (bez `--fix`), `npx tsc --noEmit --incremental false --declaration false --types node,jest`, `npm run build`, `npm test -- --runInBand` i `npm run test:integration` uz izolovanu DB. Za specifične integracije koristiti servise iz CI ili odobrenu izolovanu okolinu. Nikada ne pokretati postojeći `npm run db:reset` ili `npm run db:seed` nad stvarnom bazom: oba su destruktivna, seed bez provjere cilja (B-021). Za testnu DB najprije dodati i odobriti sigurnosne barijere i izolovanu test-only ulogu.
 - **Prihvat za sve korake:** navedeni ciljani testovi, obavezne komande i branch-only CI zeleni, testni podaci bez tajni, starim klijentima održan ugovor ili odobren verzionirani prelaz, ažuriran dokaz u auditu. Nijedan korak ne podrazumijeva spajanje u `main`, PR, push bez korisničkog zahtjeva ili automatske komande kotlu.
 - Migracije: prvo porediti stvarnu shemu u odobrenom read-only pristupu, backup i restore provjera. Expand-only kada je moguće; povrat aplikacije na staro ponašanje prije povratne migracije. Skidanje stupaca/podataka, rollback s gubitkom podataka i `migrate reset` nad produkcijom zabranjeni; destruktivni contract tek zaseban odobren korak nakon rollback prozora.
@@ -104,7 +104,7 @@
 ### 2.2 Učenje i stručna kalibracija
 - **Cilj/fajlovi:** `HeatingRecommendation/heating.recommendation.service.ts`, `Heating/strategies/full.strategy.ts`, nova shadow verzija; popraviti prvi interval, idempotentne uzorke, confidence, porijeklo signala i post-event stanje (FORM-1, F-005/F-006), a smjer tek nakon definisanja semantike.
 - **Migracija/rollback, flag:** additive stabilni sample/event key i eventualna tabela modela; `LEARNING_V2_SHADOW` default off. Rollback isključi novo računanje, ostavi podatke; stare i nove statistike ne miješati.
-- **Testovi:** prvi uzorak, duplikat, dva konkurentna eventa, varijansa, početna/završna/vršna temperatura, promjena cilja, odsutni/stale snapshot, post-event stanje preporuke, brz/spor/overshoot sign, minimalni sample, drift/outlier; izolovani DB integration. **Skripte:** `scripts/backtest-formulas.ts --help`, postojeća `backtest_sketch.py --demo` i `node scripts/audit/learning_end_repro.cjs --help` (reprodukuje stari tok).
+- **Testovi:** prvi uzorak, duplikat, dva konkurentna eventa, varijansa, početna/završna/vršna temperatura, promjena cilja, odsutni/stale snapshot, post-event stanje preporuke, brz/spor/overshoot sign, minimalni sample, drift/outlier; izolovani DB integration. **Skripte:** `scripts/backtest-formulas.ts --help`, postojeća `backtest_sketch.py --demo` i `node scripts/audit/learning_end_repro.cjs --help` (uputa; bez `--help` reprodukuje stari tok).
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; samo paralelno računanje, stari response ne mijenjati; zavisi od 2.1 i stručne potvrde.
 
 ## Talas 3 — Redis i worker
@@ -156,7 +156,7 @@
 ### 5.1b Identitet boiler historije (FEAT-4 / B-024)
 - **Cilj/fajlovi:** `backend/prisma/schema.prisma`, polling end/start i analitički čitaoci; definisati da li više uređaja dijele jedan kotao, te dodati eksplicitni identitet ciklusa prije ciljanog zatvaranja. Bez promjene komandi uređaja.
 - **Migracija/rollback, flag:** nullable expand za eksplicitnu vezu; prethodno backup, izolovana schema provjera, statistički pregled i kontrolisan backfill isključivo nedvosmislenih redova, ostale označiti nepoznatim. `HISTORY_EVENT_LINK_ENABLED` default off; dual-write s provjerom, ali bez dvostrukog zatvaranja. Rollback gasi novi put i zadržava vezu/podatke; legacy zatvaranje samo nakon dogovorene procjene rizika B-024 i nadzora, bez automatskog brisanja redova.
-- **Testovi:** najprije dva istovremena eventa istog korisnika na različitim uređajima, nepoznat i odsutan start, drugi korisnik, idempotentni end, eventualno zajednički kotao i konkurentni end; zatim migration/rollback/replay u izolovanom PostgreSQL-u i `cd backend && npm run test:integration`. **Skripte:** postojeća `node scripts/audit/history_close_repro.cjs --help` pokazuje sadašnji tok s fake DB; planirane `scripts/dev-up.sh --help` i `scripts/test-all.sh --help`.
+- **Testovi:** najprije dva istovremena eventa istog korisnika na različitim uređajima, nepoznat i odsutan start, drugi korisnik, idempotentni end, eventualno zajednički kotao i konkurentni end; zatim migration/rollback/replay u izolovanom PostgreSQL-u i `cd backend && npm run test:integration`. **Skripte:** postojeća `node scripts/audit/history_close_repro.cjs --help` za uputu, bez `--help` za sadašnji tok s fake DB; planirane `scripts/dev-up.sh --help` i `scripts/test-all.sh --help`.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; zatvaranje tačno odgovara odobrenoj semantici i ne dira tuđe/nepovezane redove, nerešene stare veze ostaju označene, CI zelen; očuvati stari response oblik za instalirane klijente. Zavisno od modela kotla/uređaja, DB backupa i provjerenog expand/contract plana.
 
 ### 5.1a Dashboard stanje i vremenski bucket (FEAT-8)
@@ -167,13 +167,66 @@
 
 ### 5.2 OpenAPI, health i održavanje
 
-- **Dopuna MAINT-4 / B-025:** prije generisanja ugovora popraviti contract suite uz odobrene rute i sintetički fixture; prvo dokazati da podmetnuti 404/500 ruši pozitivni test, zatim obavezni status, tijelo i side-effect te negativna autorizacija. `node scripts/audit/contract_assertions_repro.cjs --help` broji sintaktičke uslovne asertacije i pokreće odvojeni namjerno failing sintetički Jest, ne mijenja postojeće testove. Prihvat: svi stvarni contract testovi izvode asertacije, zeleni `cd backend && npm test -- --runInBand` i izolovani integration CI. Trud M; nema migracije ni API promjene, rollback samo testnih izmjena uz bilježenje vraćenih praznina; zavisi od ugovora i izolovanih fixturea.
+- **Dopuna MAINT-4 / B-025:** prije generisanja ugovora popraviti contract suite uz odobrene rute i sintetički fixture; prvo dokazati da podmetnuti 404/500 ruši pozitivni test, zatim obavezni status, tijelo i side-effect te negativna autorizacija. `node scripts/audit/contract_assertions_repro.cjs --help` daje uputu, a pokretanje bez `--help` broji sintaktičke uslovne asertacije i pokreće odvojeni sintetički Jest s namjerno padajućim kontrolnim slučajem; skripta očekuje i provjerava taj pad, ne mijenja postojeće testove. Prihvat: svi stvarni contract testovi izvode asertacije, zeleni `cd backend && npm test -- --runInBand` i izolovani integration CI. Trud M; nema migracije ni API promjene, rollback samo testnih izmjena uz bilježenje vraćenih praznina; zavisi od ugovora i izolovanih fixturea.
 
 - **Dopuna OBS-1 / B-023:** prije izmjene metrika inventarisati postojeće scrape/dashboards; instrumentirati per-device ishode agregatno, ne kao ID label, te zasebno freshness posljednjeg valjanog snapshot-a. Zadržati kompatibilne stare metrike tokom tranzicije uz jasno značenje. Test-first: dva neuspješna uređaja, miješani uspjeh/greška, skip, bez snapshot-a, prazna lista i greška listanja; `node scripts/audit/poll_metrics_repro.cjs` je audit dokaz postojećeg ponašanja, a budući regresijski Jest test potvrđuje novi ugovor (`cd backend && npm test -- --runInBand`). Prihvatanje: nijedan neuspjeh nije prikazan kao uspješna obrada i ostali uređaji nastavljaju; cijeli CI zelen. Trud S/M; bez migracije DB; rollback na staru instrumentaciju uz privremeni alert za stale podatke, ne obustavljati polling. Klijentski HTTP ugovor se ne mijenja.
 - **Cilj/fajlovi:** `backend/src/main.ts`, DTO/kontroleri, `common/health.controller.ts`, Dockerfile/Compose; versionirani `/api/v1`, publicirani OpenAPI kao izvor tipova, liveness/readiness, odvojena migracija/deploy.
 - **Migracija/rollback, flag:** eventualna schema samo u odvojenom commitu; `API_V1_ENABLED` off i zaseban readiness rollout. Rollback ugasi novu rutu/readiness, stari API ostaje do definisanog roka.
 - **Testovi:** spec diff, legacy/mobile contract fixture, DB outage razlikuje alive/not-ready, Docker smoke; integration i branch CI. **Skripte:** `scripts/smoke.sh --help`, `scripts/test-all.sh --help`.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; stari klijenti zadržavaju podršku, vlasnik odobrava rok deprecijacije; zavisi od kompletne API matrice i deployment inventara.
+
+### 5.3 Upozorenja i metrika potrošnje (FEAT-2 / FEAT-5)
+- **Cilj/fajlovi:** Weather, Gas i Notification DTO/servisi, testni fixturei; upozorenje na mraz samo kao savjet uz potvrđenu svježinu/lokaciju, a m³/h jasno kao potrošnja, ne fizička efikasnost. Dogovoriti uslove aktiviranja, cooldown i jasnu oznaku nepoznatog.
+- **Migracija/rollback, flag:** po potrebi additive preference i poslovni idempotency ključ; `FROST_ALERT_ENABLED` default off. Rollback isključi novo kreiranje uz zadržavanje istorije i ne briše preference; stari gas response ostaje podržan uz verzioniranu semantiku.
+- **Testovi:** sintetički mraz, nepotpuna/stara prognoza, više lokacija, deaktivirana preferenca, cooldown, nema stvarne dostave; naziv m³/h i nedovoljni mjerni podaci; `cd backend && npm test -- --runInBand` i `npm run test:integration` u izolovanoj DB. **Skripte:** planirani `scripts/test-all.sh --help`, postojeći `node scripts/audit/weather_repro.cjs --help`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; nema upozorenja na pogrešnu lokaciju ni izmišljene efikasnosti, CI zelen; prethodni response se ne uklanja bez verzioniranja. Zavisnosti: 1.1–1.2, R-002/R-005, stručna i produktna odluka.
+
+### 5.4 Privatni export i audit događaji (FEAT-6 / PRIV-2)
+- **Cilj/fajlovi:** Dashboard export i auth/notification osjetljive radnje, predloženi access-controlled audit store; minimalni actor/akcija/ishod bez tokena ili podataka o fakturi, kontrolisana retencija i CSV injection zaštita.
+- **Migracija/rollback, flag:** eventualna additive audit tabela i indeksi nakon odobrene retention politike; `AUDIT_LOG_ENABLED` i nova verzija exporta isključeni pri početku. Rollback zaustavi nove zapise/izvoz prema politici, zadrži stare zapise uz ograničen pristup; izvoz se ne smije otvoriti bez owner filtera.
+- **Testovi:** dva korisnika, tuđi podaci, zabranjeni simboli u CSV ćelijama, potpunost i redakcija audit loga za uspjeh/neuspjeh, prava čitanja, arhiva i restore; `cd backend && npm run test:integration` s izolovanom DB i zajednički CI. **Skripte:** planirani `scripts/test-all.sh --help` i `scripts/smoke.sh --help`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; izvoz ograničen na vlasnika i bez formula injectiona, audit zapisi bez tajni, zeleni testovi; legacy export ostaje do verzionirane tranzicije. Zavisnosti: pravna/retention odluka, SEC-1/SEC-2 i 5.1.
+
+### 5.5 Sigurno testiranje i održavanje artefakata (REL-4 / MAINT-1 / MAINT-2)
+- **Cilj/fajlovi:** `backend/prisma/seed.ts`, skripte za disposable test bazu, CI i navedeni praćeni logovi/duplikati; odvojiti nedestruktivan sintetički seed, stroge provjere izolovanog cilja, te evidentirati i zasebno odobriti ne-dokumentarne artefakte.
+- **Migracija/rollback, flag:** bez promjene produkcijske sheme; zaštita se ne smije zaobići običnim flagom. Rollback alata ne smije omogućiti izvršavanje destruktivnog seeda nad nepoznatom bazom; čišćenje historije samo zasebnim odobrenjem.
+- **Testovi:** alat odbija pogrešan host/bazu prije konekcije, radi ponovljivo na disposable DB bez ispisa vjerodajnica, te namjerno neuspjeli test ruši CI; provjera specifičnog schedulera/throttlera/Redis integracije; `cd backend && npm test -- --runInBand` i `npm run test:integration`. **Skripte:** planirane `scripts/dev-up.sh --help`, `scripts/db-reset-seed.sh --help`, `scripts/test-all.sh --help`; postojeća `python3 scripts/audit/cleanup_inventory.py --help` je samo inventar.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; izolacioni negativni testovi i CI zeleni, nijedan produkcijski podatak nije dotaknut, aplikacijski ugovor nepromijenjen. Zavisnosti: dogovoren test DB allowlist, owner artefakata i odobrenje brisanja.
+
+### 5.6 Fallback i izmjerene performanse (REL-5 / PERF-1 / PERF-2)
+- **Cilj/fajlovi:** `common/fallback-strategy.service.ts`, polling query, ciljani Prisma indeksi i testovi; prvo utvrditi runtime caller fallbacka te mjeriti realistični sintetički workload, zatim riješiti TTL i ograničiti obim čitanja.
+- **Migracija/rollback, flag:** indeksi zasebnom reverzibilnom migracijom poslije `EXPLAIN (ANALYZE, BUFFERS)` u disposable DB i pregleda troškova upisa; eventualni `POLL_PAGINATION_ENABLED` default off. Rollback flagom/indeksom uz provjeru učinka i bez brisanja poslovnih podataka; fallback vrijednost ne smatrati fizički sigurnom bez stručnjaka.
+- **Testovi:** obnovljeni cache i stale timer, prazna/velika lista, stabilna paginacija tokom izmjena, bounded query count, upareni p95 i insert benchmark, nedostajući indeksi i rollback; `cd backend && npm test -- --runInBand` te `npm run test:integration`. **Skripte:** `node scripts/audit/fallback_ttl_repro.cjs --help` (uputa; bez opcije stari bug), planirani `scripts/dev-up.sh --help` i `scripts/test-all.sh --help`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; TTL regresija prolazi, mjereni query i write budžeti zadovoljeni bez propuštenih uređaja, CI zelen, stari API oblik ostaje; zavisi od reprezentativnog dataset-a, R-001 i stručne politike fallbacka.
+
+## Sljedivost svih backlog stavki prema planu
+
+Grupisani redovi su samo indeks; svaka navedena referenca je na zaseban gornji korak s testovima, kriterijem, rollbackom i procjenom. Nisu svi koraci odobreni za implementaciju.
+
+| Backlog ID | Korak plana |
+|---|---|
+| SEC-0 | 0.0 |
+| SEC-1 | 0.1 |
+| SEC-2 | 0.2 |
+| SEC-3 | 0.3 |
+| SEC-4, SEC-6 | 0.4 |
+| SEC-7 | 0.5 |
+| REL-7 | 0.6 |
+| REL-8 | 0.7 |
+| FEAT-1, REL-1 | 1.1–1.2 |
+| API-1, API-2 | 1.3, 5.2 |
+| FORM-1 | 2.1–2.2 |
+| REL-2 | 3.1–3.2 |
+| REL-3, REL-6 | 3.3 |
+| FEAT-7 | 5.0 |
+| FEAT-3, SEC-5, PRIV-1 | 5.1 |
+| FEAT-4 | 5.1b |
+| FEAT-8 | 5.1a |
+| OBS-1, MAINT-3, MAINT-4 | 5.2 |
+| FEAT-2, FEAT-5 | 5.3 |
+| FEAT-6, PRIV-2 | 5.4 |
+| REL-4, MAINT-1, MAINT-2 | 5.5 |
+| REL-5, PERF-1, PERF-2 | 5.6 |
 
 ## Katalog pomoćnih skripti
 

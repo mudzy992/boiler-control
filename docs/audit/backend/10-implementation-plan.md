@@ -25,6 +25,12 @@
 
 ## Talas 0 — hitna sigurnost i higijena
 
+### 0.0 Incident: provjera i rotacija mogućih tajni (SEC-0)
+- **Cilj/fajlovi:** `backend/.env`, `backend/.dockerignore`, deployment secret manager i incident evidencija. Vlasnik provjerava jesu li postojeća polja aktivna; vrijednosti se ne bilježe. Prije koda koordinisati revokaciju/rotaciju DB, JWT, Tuya i drugih stvarno korištenih ključeva i sesija, uz plan kontinuiteta.
+- **Migracija/rollback, flag:** nema DB schema migracije ni flag-a; rotirani kompromitovani ključ ne vraćati kao rollback. Najprije omogućiti novi secret manager i test pristupa, zatim deaktivirati stari prema provider proceduri. Čišćenje Git historije/image cache samo odvojeno i uz odobrenje; HEAD uklanjanje nije brisanje historije.
+- **Testovi:** izolovani testni canary potvrđuje da `.env` nije u build kontekstu i logovima, provjeriti DB/Tuya rad i JWT tranziciju bez prikazivanja vrijednosti, provjeriti da stari aktivni kredencijali više ne rade; zajednički CI. **Skripte:** postojeći siguran `scripts/audit/ci_diagnostics.cjs --help`, planirani `scripts/smoke.sh --help`, `scripts/test-all.sh --help`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** L; dogovoriti način i vrijeme isteka prethodnih sesija kod postojećih mobile klijenata, vlasnik/provider/operacije moraju odobriti i provesti rotaciju. Ovaj korak ne predstavlja odobrenje za promjene ili korištenje kredencijala.
+
 ### 0.1 Notifikacije: vlasništvo (SEC-1)
 - **Cilj/fajlovi:** `backend/src/modules/Notification/notifications.controller.ts`, `notifications.service.ts`, novi integracijski spec; atomski ograničiti update na korisnika i ID.
 - **Migracija/rollback, flag:** DB migracija nije potrebna; bez flag-a. Revert je tehnički moguć, ali vraća sigurnosni problem, zato privremeno isključiti rutu/rubni pristup po odobrenoj politici umjesto izlaganja ranjive verzije.

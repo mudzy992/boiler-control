@@ -95,3 +95,35 @@
 - Preporuka: definisati validator dekoratore za boolean i ISO timestamp, transformaciju datuma i business pravila; prvo osigurati B-009, zatim popravljati DTO, da uklanjanje trenutne validacijske prepreke ne izloži neautorizovanu izmjenu.
 - Kako provjeriti da je riješeno: HTTP test s identičnim globalnim pipeom, vlastitom i tuđom anomalijom, validnom potvrdom i datumom, lošim datumom, dodatnim poljem i praznim tijelom; `cd backend && npm run test:integration` nakon dodavanja testa.
 - Trud: S/M — Zavisnosti: autorizacija B-009 i dogovor praznog/validnog requesta.
+
+### [B-011] Docker kontekst isključuje migracije, a entrypoint nije priključen — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (fajlovi), HIPOTEZA (efekat u produkciji)
+- Gdje: `backend/.dockerignore:45-47`, `backend/Dockerfile:34-38,58-65`, `backend/docker-entrypoint.sh:1-12`, `docker-compose.yml:2-20`, `backend/docker-compose.yml:2-23`.
+- Šta nije u redu i zašto: `.dockerignore` isključuje sadržaj `prisma/migrations/*` osim lock fajla, a Dockerfile `COPY` radi iz tog build konteksta i završni stage kopira `prisma` iz builda. U prikazanim Dockerfile/Compose konfiguracijama nema priključenog `docker-entrypoint.sh`, niti poziva `migrate deploy`; sama skripta također ne pokreće migracije. Stvarna produkcijska deployment procedura nije pregledana i može migracije pokretati zasebno.
+- Dokaz: statička pravila Docker konteksta i `CMD ["node", "dist/src/main.js"]`; `git grep -F docker-entrypoint.sh` u praćenom kodu, izvan audit dokumenata, nije našao referencu. Nije građen niti pokretan image.
+- Preporuka: najprije utvrditi aktuelni deploy i produkcijsku Prisma historiju; odlučiti da li je migracijski image/poseban release job nosilac migracija, te eksplicitno uključiti potrebne SQL fajlove i kontrolisano pokretanje jednog migratora, bez automatskog resetovanja ili pokretanja više replika.
+- Kako provjeriti: na izolovanoj PostgreSQL bazi izgraditi image i provjeriti samo prisustvo migracijskih putanja; odraditi odobreni `prisma migrate deploy`, restart i probni backup/restore, zatim potvrditi readiness i rollback aplikacije bez brisanja podataka. Ne ispisivati env/secret vrijednosti.
+- Trud: M — Zavisnosti: produkcijski deployment inventory, schema diff i backup.
+
+### [B-012] Testni naziv ne garantuje uspjeh API-ja ili stvarnu pohranu — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO
+- Gdje: `backend/test/integration/heating-polling.integration.spec.ts:117-137,220-230,432-444`, `backend/src/modules/Heating/heating.controller.ts:20-42`, `backend/src/modules/Weather/weather.controller.ts:23-30`.
+- Šta nije u redu i zašto: test kreiranja događaja provjerava tijelo samo kod statusa 200/201, ali nema `expect` za sam status ni provjeru DB upisa. Weather test ne zahtijeva da `current` postoji; recommendation test prihvata i prazni niz. Zato ti testovi mogu proći za stubove ili dio neočekivanih statusa i ne dokazuju ugovor iz naziva.
+- Dokaz: navedene uslovne grane i stubovi; GitHub run `40865068767` je prošao, ali nije dokazao navedena svojstva.
+- Preporuka: za dogovorene aktivne ugovore asertirati očekivani status i semantiku, pozitivan i negativan slučaj i DB side effect; za stvarno nepodržane rute testirati eksplicitan unsupported status ili verzionirani legacy ugovor.
+- Kako provjeriti: namjerni fake 500/404 mora srušiti kreiranje testa; za podržano kreiranje insert + read-back, za weather fixture `current`/freshness, za recommendations zapis koji se mora vratiti; `cd backend && npm run test:integration` na izolovanoj bazi.
+- Trud: M — Zavisnosti: odluka o proizvodnom API ugovoru, stare mobile verzije.
+
+### [B-013] E2E skripta referencira nepostojeći Jest config — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (lokalno)
+- Gdje: `backend/package.json:22`; `backend/test/jest-e2e.json` ne postoji u checkoutu.
+- Šta nije u redu i zašto: namjenska komanda `npm run test:e2e` prekida se prije izvođenja suitea, pa je e2e provjera nedostupna; opći Jest prolaz nije dokaz e2e testiranja.
+- Dokaz: lokalno `cd backend && npm run test:e2e` završio s exit 1 jer Jest ne može razriješiti config. Sirovi izlaz nije prepisivan u audit; rezultati se ne smiju sabirati s CI testovima.
+- Preporuka: odlučiti da li održavati zaseban e2e config/okruženje ili ukloniti zastarjelu komandu uz pregled potrošača; za novu konfiguraciju ograničiti izolovane servise i zaštititi je od produkcijskih baza.
+- Kako provjeriti: e2e komanda izvrši barem jednu namjensku auth/ownership i smoke provjeru s izolovanim PostgreSQL/Redis, vrati !=0 na namjerno pogrešan odgovor i 0 na prolaz, dokumentovati u branch-only CI.
+- Trud: S/M — Zavisnosti: odluka o opsegu e2e i ugovorima.
+
+### [B-014] Greške čitanja i pisanja predstavljene kao prazni ili uspješni HTTP odgovori — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (kontrolni tok)
+- Gdje: `backend/src/modules/Heating/heating.service.ts:13-27`, `backend/src/modules/HeatingRecommendation/heating.recommendation.service.ts:201-211`, `backend/src/modules/Boiler/boiler.controller.ts:27-36,43-65,73-95`.
+- Šta nije u redu i zašto: servisi pri grešci vraćaju `[]`, a neke boiler metode vraćaju `success:false` i sirovi `error.message` umjesto izuzetka. To zamagljuje razliku greške i praznih podataka i može otkriti detalje implementacije; stvarni HTTP status zavisi od Nest defaulta i nije dodatno reproduciran.
+- Dokaz: catch grane u navedenim fajlovima. `POST` i `PATCH` nemaju eksplicitnu promjenu statusa u prikazanoj grani.
+- Preporuka: centralni exception filter s korelacijskim ID-em, interni redigovani log i stabilan versionirani error DTO, bez sirovih poruka; migrirati legacy odgovore tek nakon consumer pregleda.
+- Kako provjeriti: izolovano simulirati DB/provider grešku, dokazati ne-2xx i generičan error bez tajni te razlikovati prazan rezultat; contract test starog i novog API-ja. `cd backend && npm run test:integration`.
+- Trud: M — Zavisnosti: DTO verzioniranje, observability i stari klijenti.

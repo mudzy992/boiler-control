@@ -65,3 +65,24 @@ Svaki red: **VERIFIKOVANO** ime i izvoz/ulazna tačka iz navedenog fajla. Zavisn
 ## Status pokrivenosti
 
 Ovaj inventar nije završen. Marker za fajl ili modul dokazuje samo da red postoji, ne da je analiziran svaki javni metod, zavisnost, model, eksterni poziv ili test. API katalog i model podataka još nisu izrađeni; `backend_inventory.py` zato mora prijavljivati nedostajuće markere za te dokumente.
+
+## Pregled testova — direktna veza i poznate praznine
+
+**VERIFIKOVANO:** Git prati deset backend `*.spec.ts` fajlova, u nastavku navedene tačke su na osnovu uvoza i opisa testova, a ne rezultat precizne instrumentirane pokrivenosti svake grane. Opći Jest `backend/jest.config.js` pretražuje `src` i `test`, pa obuhvata i integracijske suiteove; zasebni `backend/jest-integration.config.js` obuhvata samo `test/integration`. Stoga se 167 općih i 49 zasebnih integracijskih testova iz [CI runa 40865068767](https://github.com/mudzy992/boiler-control/actions/runs/40865068767) preklapa, nije 216 nezavisnih testova. Run je za `e0dc116`, ne za ove naknadne lokalne audit commitove. Izvještaj u CI anodira broj testova (`scripts/audit/jest_report.cjs:22-25`); coverage procenti uspješnog runa nisu dostupni iz anotacija i nisu potvrđeni. Lokalni raniji parcijalni coverage zbog Prisma greške ne predstavlja pokrivenost cijelog projekta (detalji `docs/audit/STATUS.md`).
+
+| Testni fajl | Šta se može potvrditi iz uvoza i naziva | Šta se ovim ne dokazuje |
+|---|---|---|
+| `backend/src/common/tests/anomaly-detection.service.spec.ts` | `AnomalyDetectionService`, minimum uzoraka i različite vrste anomalija. | Stvarno trajanje ciklusa u produkciji, distribucija i kvalitet kalibracije; nije ownership test anomalija. |
+| `backend/src/common/tests/correlation-id.service.spec.ts` | Sinhroni i asinhroni `CorrelationIdService` konteksti. | Puni request → cron/worker → vanjski provider tracing, log redakcija. |
+| `backend/src/common/tests/fallback-strategy.service.spec.ts` | Common fallback/cache scenariji. | Da je fallback vrijednost sigurna za specifični kotao; da je cache međuprocesan. |
+| `backend/src/common/tests/reporting.service.spec.ts` | Report, health score i upozorenja. | Da heuristika mjeri sigurnost sistema ili da podaci bez uzoraka znače zdravo stanje. |
+| `backend/test/unit/prisma-safe-updates.spec.ts` | Mockirani Prisma update obrasci i slučaj nepostojeće notifikacije. | Cross-user IDOR: testira mock obrazac, ne JWT + stvarnu DB vlasničku izolaciju. |
+| `backend/test/unit/transactional-integrity.spec.ts` | Mockirani poll start/end, transakcijski obrasci i minutni ključ. | Race s dvije stvarne transakcije/procesa ili Redis outage/lease; mock nije dokaz DB idempotentnosti. |
+| `backend/test/unit/tuya-adapter.spec.ts` | Mockirani adapter/snapshot, cache, breaker i metrike. | Ugovor stvarnog Tuya uređaja/API-ja, provider timeout i rate budžet u produkciji. |
+| `backend/test/contract/api-contract.spec.ts` | HTTP contract scenariji za auth, boiler i dashboard kroz `AppModule`. | Kompletni contract svih 66 deklaracija, verzije klijenata ili produkcijska infrastruktura. |
+| `backend/test/integration/api.integration.spec.ts` | API integracija nad AppModule/Prisma, auth i profilni slučajevi. | Sve kombinacije dva korisnika, fajl storage outage, ili revokacija JWT tokena. |
+| `backend/test/integration/heating-polling.integration.spec.ts` | API scenariji grijanja, preporuke, anomalije, uređaja, historije i weather-a. | Neki testovi imaju uslovne asertacije i prihvataju prazne odgovore: B-012. Ne dokazuje rad stvarnog poll cron-a ili stvarnog providera. |
+
+**VERIFIKOVANO:** `cd backend && npm run test:e2e` lokalno izlazi 1 prije suitea jer `backend/test/jest-e2e.json` nedostaje (B-013). `test:smoke` postoji kao skripta (`backend/package.json:23`), ali ovdje nije pokretan; može zahtijevati dostupnu aplikaciju i konfiguraciju. Sadašnje GitHub testno okruženje (`.github/workflows/backend-audit.yml:40`) postavlja `NODE_ENV=test`: `AppModule` ne registruje ThrottlerGuard (`backend/src/app.module.ts:21-33,53-64`), a cronovi su disabled ili polling provider izostavljen (`backend/src/modules/Schedule/schedule.module.ts:15-43`, `ThermostatPoll/thermostat.polling.service.ts:35-38`). Sam zeleni CI ne potvrđuje runtime raspored ili throttling.
+
+Nedostaje stvarni uspješni CI coverage izvještaj dostupnih procenata, broj nedeterminističkih neuspjeha na ponovljenim izolovanim runovima, e2e servisni bootstrap i pobrojane direktne veze test → svaki DTO/metoda. Lokalna početna testiranja su nailazila na ograničenje preuzimanja Prisma enginea; raniji popravljeni testovi opisani su u `STATUS.md` i ne treba ih smatrati dokazom sveobuhvatnosti.

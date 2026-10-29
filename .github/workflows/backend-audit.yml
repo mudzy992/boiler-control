@@ -2,7 +2,7 @@ name: Backend audit tests
 
 on:
   push:
-    branches: [arena/94541967-boiler-control]
+    branches: [arena/1bfee051-boiler-control]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   test:
     # Manual dispatch is also restricted to this session's branch.
-    if: github.ref == 'refs/heads/arena/94541967-boiler-control'
+    if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:

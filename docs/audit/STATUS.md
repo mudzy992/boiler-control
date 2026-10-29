@@ -451,3 +451,24 @@ Korisnik je 2026-10-29 rekao „nastavi dalje" nakon izjave o završetku Faze 3;
 7. **CI grana:** smijem li ažurirati `.github/workflows/backend-audit.yml` na aktivnu granu (putanja je izvan dozvoljenih)?
 
 FAZA 4 ZAVRŠENA — audit je kompletan (Faze 1–4); čekam odluke po sedam otvorenih pitanja iznad prije bilo koje implementacije
+
+## Odluke vlasnika (2026-10-29) i priprema implementacije
+
+Korisnik je odobrio commit i push na aktivnu granu i izričito naredio: **nikad ne otvarati PR na ovoj grani — vlasnik ručno radi pull i merge.**
+
+Od sedam otvorenih pitanja, vlasnik je odgovorio na četiri koja blokiraju Talas A:
+
+| # | Pitanje | Odluka | Posljedica za plan |
+|---|---|---|---|
+| 2 | Deploy topologija | **`api.boiler-control.ba101.top/api`** je produkcija | `MO2-1` deblokiran: dev fallback (`boiler.ba101.top/backend/api`) se uklanja i zamjenjuje greškom; `.env.example` bez privatnog LAN IP-a; `docs/API_CONFIG.md` (`10.0.2.2`/`localhost`) uskladiti. |
+| 1 | Kredencijali (SEC-0) | **Agent priprema runbook + secret manager konfiguraciju; vlasnik odobrava prije izvršenja** | Agent **ne izvršava** rotaciju i **ne ispisuje** vrijednosti tajni — samo lokaciju i tip. Izlaz je dokument + konfiguracija, ne izvršena akcija. |
+| 4 | Auth migracija | **httpOnly cookie + rotirani refresh** | `SEC-4` + `FE2-2` idu u tom pravcu, uz dual-mode prelaz da postojeće Bearer sesije ne padnu odmah. |
+| 7 | CI grana | **Odobreno ažuriranje na aktivnu granu** | Izvršeno: `.github/workflows/backend-audit.yml` — obje reference (linija 5 `on.push.branches`, linija 14 `if:` guard) prebačene na `arena/1bfee051-boiler-control`; YAML validiran parserom (`on.push.branches`, `workflow_dispatch` i jedan job `test` potvrđeni). |
+
+**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E).
+
+### Stanje isporuke
+
+- Commit `80670ed` push-an na `arena/1bfee051-boiler-control` (14 fajlova, 2040 insertions); `git rev-parse HEAD` i `git rev-parse origin/arena/1bfee051-boiler-control` se poklapaju.
+- **PR nije otvoren** — remote je ponudio link, nije korišten. Provjereno: `gh pr list --head arena/1bfee051-boiler-control --state all` → prazan izlaz.
+- Iz commit-a izbačen `scripts/audit/__pycache__/` (artefakt lokalne provjere). `.gitignore` **nema** pravila za `__pycache__`/`*.pyc`, a `.gitignore` je izvan dozvoljenog opsega — preporuka vlasniku da ga doda pri merge-u.

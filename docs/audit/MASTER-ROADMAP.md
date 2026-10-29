@@ -240,18 +240,18 @@ Uz tri paralelna tracka zid-sat je otprilike **najduži track** (**113–180 dan
 | Refactor NativeBase → NativeWind bez testova | `MO2-8`: 0 testova, lint exit 2; `MO2-14` dira 12 komponenti. | `MO2-8` je preduslov; migracija po komponenti uz snapshot; flag za postepeno uključivanje. |
 | „Ispravka" formule promijeni preporuke bez reference | `FORM-1`: nema referentne vrijednosti za uporedbu. | Prije izmjene snimiti replay postojećih ulaza; shadow mode; vlasnik potvrđuje referentni izvor (otvoreno pitanje 5). |
 | Procjene u danima su grube | Računate iz oznake truda (S/M/L), ne iz razrađenih zadataka. | Tretirati kao red veličine; re-planirati nakon Talasa A kad se stvarna brzina izmjeri. |
-| CI workflow je na staroj grani | `.github/workflows/backend-audit.yml:5` → `branches: [arena/94541967-boiler-control]`, ne aktivna grana; putanja je izvan dozvoljenih (`docs/audit/**`, `scripts/audit/**`). | Traži izričito odobrenje vlasnika (otvoreno pitanje); dotad se provjere pokreću lokalno. |
+| ~~CI workflow je na staroj grani~~ **RIJEŠENO 2026-10-29** | Vlasnik odobrio izmjenu; `.github/workflows/backend-audit.yml` sada cilja `arena/1bfee051-boiler-control` na **obje** reference (linija 5 `on.push.branches` i linija 14 `if:` guard za `workflow_dispatch`). YAML validiran parserom. | Nema više akcije. Pri merge-u u `main` vlasnik mora ručno prebaciti trigger na `main`, jer workflow namjerno prati samo aktivnu granu. |
 
 ## Ključne odluke (bez njih se ne počinje)
 
-| Odluka | Blokira | Preporuka |
-|---|---|---|
-| Koji je produkcijski API host | `MO2-1`, `FE2-7`, cijeli LANAC 2 | Jedan host u `.env`, dev fallback = greška, ne drugi produkcijski server. |
-| Uvodi li se version gate | `MO2-2`, `API-1`, sve promjene ugovora | Da, prije prve promjene shape-a. Bez toga mobile izdanja moraju ostati zaključana na starom ugovoru. |
-| Rotacija kredencijala | `SEC-0`, `SEC-4` | Odmah, i nezavisno od ovog plana — to je vlasnikova akcija od pola dana. |
-| Auth: cookie + refresh ili ostaje Bearer | `SEC-4`, `FE2-2`, `MO2-7` | Cookie + rotirani refresh, uz vremenski ograničen dual-mode. |
-| Mjerodavni izračun formule | `FORM-1`, `FEAT-5`, `FEAT-3`, `FE2-14`, `MO2-12` | Jedan izvor u backendu; klijenti ne računaju. |
-| Obim ciklusa (ide li Talas E) | Planiranje kapaciteta | Talas A+B obavezno; C po kapacitetu; E zasebno planirati. |
+| Odluka | Blokira | Preporuka | **Odluka vlasnika (2026-10-29)** |
+|---|---|---|---|
+| Koji je produkcijski API host | `MO2-1`, `FE2-7`, cijeli LANAC 2 | Jedan host u `.env`, dev fallback = greška, ne drugi produkcijski server. | **`api.boiler-control.ba101.top/api`.** Dev fallback se uklanja (greška, ne drugi host). |
+| Uvodi li se version gate | `MO2-2`, `API-1`, sve promjene ugovora | Da, prije prve promjene shape-a. Bez toga mobile izdanja moraju ostati zaključana na starom ugovoru. | _još otvoreno_ |
+| Rotacija kredencijala | `SEC-0`, `SEC-4` | Odmah, i nezavisno od ovog plana — to je vlasnikova akcija od pola dana. | **Agent priprema runbook + secret manager konfiguraciju, vlasnik odobrava prije izvršenja.** Bez ispisa tajni u chat ili repo. |
+| Auth: cookie + refresh ili ostaje Bearer | `SEC-4`, `FE2-2`, `MO2-7` | Cookie + rotirani refresh, uz vremenski ograničen dual-mode. | **httpOnly cookie + rotirani refresh**, s dual-mode prelazom. |
+| Mjerodavni izračun formule | `FORM-1`, `FEAT-5`, `FEAT-3`, `FE2-14`, `MO2-12` | Jedan izvor u backendu; klijenti ne računaju. | _još otvoreno_ |
+| Obim ciklusa (ide li Talas E) | Planiranje kapaciteta | Talas A+B obavezno; C po kapacitetu; E zasebno planirati. | _još otvoreno_ |
 
 ## Šta NE raditi
 

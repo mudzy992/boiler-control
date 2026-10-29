@@ -25,19 +25,24 @@ const { NotificationsController } = require(path.join(root, 'backend/src/modules
 const { NotificationsService } = require(path.join(root, 'backend/src/modules/Notification/notifications.service.ts'));
 const { GasReminderService } = require(path.join(root, 'backend/src/modules/Schedule/gas.reminder.service.ts'));
 const ROLLBACK = new Error('AUDIT_ROLLBACK');
+let stage = 'initialization';
 async function main() {
   const db = new PrismaService();
   let completed = false;
   try {
+    stage = 'connect';
     await db.$connect();
+    stage = 'transaction';
     try {
       await db.$transaction(async tx => {
+        stage = 'synthetic-fixtures';
         const nonce = crypto.randomBytes(12).toString('hex');
         const a = await tx.user.create({data:{email:`audit-a-${nonce}@example.invalid`,passwordHash:'not-a-real-hash'}});
         const b = await tx.user.create({data:{email:`audit-b-${nonce}@example.invalid`,passwordHash:'not-a-real-hash'}});
         const notice = await tx.notification.create({data:{userId:b.id,type:'SYSTEM_ALERT',title:'synthetic',message:'synthetic',isRead:false}});
         const jwt = new JwtService({secret:crypto.randomBytes(32).toString('hex')});
         let reminderCalls = 0;
+        stage = 'nest-bootstrap';
         const testing = await Test.createTestingModule({controllers:[NotificationsController],providers:[
           JwtAuthGuard,
           {provide:JwtService,useValue:jwt},
@@ -49,13 +54,17 @@ async function main() {
         app.useGlobalPipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true,transform:true,transformOptions:{enableImplicitConversion:true}}));
         await app.init();
         try {
+          stage = 'http-unauthenticated';
           const auth = jwt.sign({userId:a.id});
           const missing = await request(app.getHttpServer()).post(`/api/notifications/${notice.id}/read`);
           assert.equal(missing.status,401);
+          stage = 'http-cross-user';
           const result = await request(app.getHttpServer()).post(`/api/notifications/${notice.id}/read`).set('Authorization',`Bearer ${auth}`);
           assert.equal(result.status,201);
+          stage = 'database-readback';
           const stored = await tx.notification.findUnique({where:{id:notice.id}});
           assert.equal(stored.userId,b.id); assert.equal(stored.isRead,true);
+          stage = 'http-reminder';
           const reminder = await request(app.getHttpServer()).post('/api/notifications/test-trigger-all-gas-reminders').set('Authorization',`Bearer ${auth}`);
           assert.equal(reminder.status,201); assert.equal(reminderCalls,1);
           completed = true;
@@ -68,4 +77,11 @@ async function main() {
     console.log('::notice title=Audit security reproduction::Synthetic user A modified user B notification in isolated PostgreSQL; USER invoked mock mass reminder. Transaction rolled back.');
   } finally { await db.$disconnect(); }
 }
-main().catch(() => { console.error('Izolovana PostgreSQL HTTP reprodukcija nije uspjela; detalji i vrijednosti nisu ispisani.'); process.exitCode = 1; });
+main().catch(error => {
+  const known = ['AssertionError','PrismaClientInitializationError','PrismaClientKnownRequestError','PrismaClientValidationError','TypeError','Error'];
+  const name = known.includes(error?.name) ? error.name : 'OtherError';
+  const code = /^P\d{4}$/.test(error?.code || '') ? ` ${error.code}` : '';
+  const numeric = error?.name === 'AssertionError' && Number.isInteger(error.actual) && Number.isInteger(error.expected) ? ` actual=${error.actual} expected=${error.expected}` : '';
+  console.log(`::error title=Audit security reproduction::Stage ${stage}; ${name}${code}${numeric}. No values or messages emitted.`);
+  process.exitCode = 1;
+});

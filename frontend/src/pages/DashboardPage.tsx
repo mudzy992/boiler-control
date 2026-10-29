@@ -24,9 +24,16 @@ interface Notification {
 }
 
 interface NotificationPreference {
+  // FE2-1: dopunjeno da odgovara onome što backend stvarno vrati.
+  // Prisma model NotificationPreference (backend/prisma/schema.prisma:285-295)
+  // ima id/createdAt/updatedAt, a GET /notifications/preferences vraća sirove
+  // Prisma objekte bez `select`, pa sva tri polja dolaze u odgovoru.
+  id: number;
   userId: number;
   type: string;
   enabled: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // Type definitions matching actual backend response
@@ -212,7 +219,9 @@ export const DashboardPage: React.FC = () => {
     isLoading: weatherLoading,
   } = useQuery({
     queryKey: ['weather-current', homeProfileId],
-    queryFn: () => apiClient.getCurrentWeather(homeProfileId),
+    // FE2-1: `homeProfileId` je `number | undefined`, ali `enabled: !!homeProfileId`
+    // garantuje da se queryFn ne poziva dok je undefined.
+    queryFn: () => apiClient.getCurrentWeather(homeProfileId!),
     enabled: !!homeProfileId,
     staleTime: 1000 * 60 * 10,
   });
@@ -867,7 +876,7 @@ export const DashboardPage: React.FC = () => {
               activeBucket === datum.label ? '#f59e0b' : '#60a5fa'
             }
             tooltip={{
-              customContent: (title, items) => {
+              customContent: (title: string, items: any[]) => {
                 if (!items || items.length === 0) return null;
                 const datum = chartData.find(d => d.label === title);
                 if (!datum) return null;

@@ -13,7 +13,9 @@ import {
   Spin,
 } from 'antd';
 import { apiClient } from '../services/api';
-import type { HomeProfileResponse, CreateHomeProfileDto, UpdateHomeProfileDto } from '../types/homeProfile';
+// FE2-1: CreateHomeProfileDto i UpdateHomeProfileDto su uklonjeni — bili su
+// uvezeni ali nikad korišteni (noUnusedLocals ih prijavljuje kao TS6196).
+import type { HomeProfileResponse } from '../types/homeProfile';
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,

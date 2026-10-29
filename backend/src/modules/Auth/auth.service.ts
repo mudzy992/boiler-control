@@ -113,7 +113,7 @@ export class AuthService {
   }
 
   async me(userId: number) {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,

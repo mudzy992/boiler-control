@@ -113,7 +113,6 @@ export class CorrelationIdService {
     fn: T,
   ): (...args: Parameters<T>) => ReturnType<T> {
     return ((...args: Parameters<T>) => {
-      const runId = this.getRunId();
       return fn(...args);
     }) as T;
   }

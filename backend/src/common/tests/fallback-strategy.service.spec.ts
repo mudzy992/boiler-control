@@ -8,7 +8,6 @@ import { StructuredLogger } from '../structured-logger';
 
 describe('FallbackStrategyService', () => {
   let service: FallbackStrategyService;
-  let metricsService: MetricsService;
 
   beforeEach(async () => {
     jest.useFakeTimers();
@@ -34,7 +33,6 @@ describe('FallbackStrategyService', () => {
     }).compile();
 
     service = module.get<FallbackStrategyService>(FallbackStrategyService);
-    metricsService = module.get<MetricsService>(MetricsService);
   });
 
   afterEach(() => {

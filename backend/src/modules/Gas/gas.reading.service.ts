@@ -96,7 +96,7 @@ export class GasReadingService {
       where: { id: created.id },
     });
 
-    return this.mapGasReading(finalReading!);
+    return this.mapGasReading(finalReading);
   }
 
   async findAll(userId: number) {
@@ -585,7 +585,7 @@ export class GasReadingService {
     dayStart.setUTCHours(0, 0, 0, 0);
     const dayEnd = new Date(readingDate);
     dayEnd.setUTCHours(23, 59, 59, 999);
-    return this.prisma.gasReading.findFirst({
+    return await this.prisma.gasReading.findFirst({
       where: {
         userId,
         readingDate: {

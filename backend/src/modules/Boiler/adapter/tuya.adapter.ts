@@ -363,7 +363,11 @@ export class TuyaAdapter {
     }
 
     const dayTypes: DayType[] = ['WORKDAY', 'SATURDAY', 'SUNDAY'];
-    const tuyaProgram: TuyaProgramByDay = {} as any;
+    const tuyaProgram: TuyaProgramByDay = {
+      WORKDAY: [],
+      SATURDAY: [],
+      SUNDAY: [],
+    };
 
     dayTypes.forEach((dayType, dayIdx) => {
       const start = dayIdx * 6;

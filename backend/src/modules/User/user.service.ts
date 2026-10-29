@@ -137,7 +137,8 @@ export class UserService {
 
   private mapUserResponse(user: any) {
     const latestHistory = user.GasPriceHistory?.[0] || null;
-    const { GasPriceHistory, ...rest } = user;
+    const { GasPriceHistory: _history, ...rest } = user;
+    void _history;
     const gasPriceIncVat =
       user.gasPriceExVat === null || user.gasPriceExVat === undefined
         ? null

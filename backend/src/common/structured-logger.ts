@@ -1,4 +1,4 @@
-import { Logger, Inject, Optional } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { CorrelationIdService } from './correlation-id.service';
 
 /**

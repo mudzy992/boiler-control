@@ -4,21 +4,14 @@ import { TuyaAdapter } from '../../src/modules/Boiler/adapter/tuya.adapter';
 import { TuyaAuthService } from '../../src/modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ProgramSyncService } from '../../src/modules/Boiler/adapter/program.sync.service';
-import { ThermostatSnapshot } from '../../src/modules/Boiler/adapter/thermostat-adapter.interface';
 
 describe('TuyaAdapter (P1b: Tuya Safety)', () => {
   let adapter: TuyaAdapter;
   let mockTuyaAuthService: jest.Mocked<TuyaAuthService>;
   let mockPrismaService: jest.Mocked<PrismaService>;
   let mockProgramSyncService: jest.Mocked<ProgramSyncService>;
-  let mockAxios: any;
 
   beforeEach(async () => {
-    // Mock axios
-    mockAxios = {
-      get: jest.fn(),
-    };
-
     // Mock services
     mockTuyaAuthService = {
       getAccessToken: jest.fn().mockResolvedValue('test-token'),
@@ -100,7 +93,7 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
         mockPrismaService.thermostatProgram.findFirst as jest.Mock
       ).mockResolvedValueOnce(null);
 
-      const snapshot = await adapter.fetchSnapshot('test-device');
+      await adapter.fetchSnapshot('test-device');
 
       const metrics = adapter.getMetrics();
       expect(metrics.totalRequests).toBe(1);
@@ -123,7 +116,7 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
 
       try {
         await adapter.fetchSnapshot('test-device');
-      } catch (e) {
+      } catch {
         // Expected to fail
       }
 
@@ -232,6 +225,7 @@ describe('TuyaAdapter (P1b: Tuya Safety)', () => {
       const metrics = adapter.getMetrics();
       const usagePercent = (metrics.totalRequests / dailyBudget) * 100;
 
+      expect(metrics.totalRequests).toBeGreaterThan(alertThreshold);
       expect(usagePercent).toBeGreaterThan(70);
     });
   });

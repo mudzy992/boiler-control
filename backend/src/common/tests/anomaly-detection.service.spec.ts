@@ -7,16 +7,17 @@ import { MetricsService } from '../metrics.service';
 
 describe('AnomalyDetectionService', () => {
   let service: AnomalyDetectionService;
-  let metricsService: MetricsService;
+  let incrementCounter: jest.Mock;
 
   beforeEach(async () => {
+    incrementCounter = jest.fn();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AnomalyDetectionService,
         {
           provide: MetricsService,
           useValue: {
-            incrementCounter: jest.fn(),
+            incrementCounter,
             exportPrometheus: jest.fn(() => ''),
           },
         },
@@ -24,7 +25,6 @@ describe('AnomalyDetectionService', () => {
     }).compile();
 
     service = module.get<AnomalyDetectionService>(AnomalyDetectionService);
-    metricsService = module.get<MetricsService>(MetricsService);
   });
 
   describe('detectAnomalies', () => {
@@ -58,9 +58,7 @@ describe('AnomalyDetectionService', () => {
 
       expect(result.isAnomaly).toBe(true);
       expect(result.types).toContain(AnomalyType.OVERSHOOT);
-      expect(metricsService.incrementCounter).toHaveBeenCalledWith(
-        'anomaly_overshoot_total',
-      );
+      expect(incrementCounter).toHaveBeenCalledWith('anomaly_overshoot_total');
     });
 
     it('should detect EARLY_STOP anomaly (duration < avg - 2σ)', () => {
@@ -78,9 +76,7 @@ describe('AnomalyDetectionService', () => {
 
       expect(result.isAnomaly).toBe(true);
       expect(result.types).toContain(AnomalyType.EARLY_STOP);
-      expect(metricsService.incrementCounter).toHaveBeenCalledWith(
-        'anomaly_early_stop_total',
-      );
+      expect(incrementCounter).toHaveBeenCalledWith('anomaly_early_stop_total');
     });
 
     it('should detect PROLONGED_IDLE anomaly (duration > 120min)', () => {
@@ -97,7 +93,7 @@ describe('AnomalyDetectionService', () => {
 
       expect(result.isAnomaly).toBe(true);
       expect(result.types).toContain(AnomalyType.PROLONGED_IDLE);
-      expect(metricsService.incrementCounter).toHaveBeenCalledWith(
+      expect(incrementCounter).toHaveBeenCalledWith(
         'anomaly_prolonged_idle_total',
       );
     });
@@ -117,7 +113,7 @@ describe('AnomalyDetectionService', () => {
 
       expect(result.isAnomaly).toBe(true);
       expect(result.types).toContain(AnomalyType.RAPID_CYCLING);
-      expect(metricsService.incrementCounter).toHaveBeenCalledWith(
+      expect(incrementCounter).toHaveBeenCalledWith(
         'anomaly_rapid_cycling_total',
       );
     });
@@ -134,9 +130,7 @@ describe('AnomalyDetectionService', () => {
         new Date(),
       );
 
-      expect(metricsService.incrementCounter).toHaveBeenCalledWith(
-        'anomaly_detected_total',
-      );
+      expect(incrementCounter).toHaveBeenCalledWith('anomaly_detected_total');
     });
 
     it('should return proposedEndTime based on averageDuration', () => {

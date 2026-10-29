@@ -10,7 +10,6 @@ import { MetricsService } from '../../src/common/metrics.service';
  * Tests for P1c: Transactional Integrity + Idempotency
  */
 describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
-  let service: ThermostatPollingService;
   let prismaService: any;
   let metricsService: MetricsService;
 
@@ -71,19 +70,15 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       ],
     }).compile();
 
-    service = module.get<ThermostatPollingService>(ThermostatPollingService);
+    expect(
+      module.get<ThermostatPollingService>(ThermostatPollingService),
+    ).toBeDefined();
     prismaService = module.get<any>(PrismaService);
     metricsService = module.get<MetricsService>(MetricsService);
   });
 
   describe('Heating Start: Transactional Atomicity', () => {
-    it('should wrap heatingEvent + boilerHistory creation in transaction', async () => {
-      const device = {
-        id: 1,
-        userId: 1,
-        deviceId: 'test-device',
-      };
-
+    it('should wrap heatingEvent + boilerHistory creation in transaction', () => {
       const mockEvent = { id: 100, timestampStart: new Date() };
       const mockBoilerHistory = { id: 200, userId: 1 };
 
@@ -100,7 +95,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(prismaService.$transaction).toBeDefined();
     });
 
-    it('should generate idempotency key based on device + minute slot', async () => {
+    it('should generate idempotency key based on device + minute slot', () => {
       const now = Date.now();
       const minuteSlot = Math.floor(now / 60000);
       const deviceId = 1;
@@ -112,7 +107,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(sourceRef).toBeTruthy();
     });
 
-    it('should prevent duplicate heating events within same minute', async () => {
+    it('should prevent duplicate heating events within same minute', () => {
       const minuteSlot = Math.floor(Date.now() / 60000);
       const sourceRef1 = `heating_start_1_${minuteSlot}`;
       const sourceRef2 = `heating_start_1_${minuteSlot}`;
@@ -133,7 +128,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(sourceRef1).not.toBe(sourceRef2);
     });
 
-    it('should increment heating_events_created metric', async () => {
+    it('should increment heating_events_created metric', () => {
       metricsService.resetMetrics();
       expect(metricsService.getMetrics().heating_events_created).toBe(0);
 
@@ -143,7 +138,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
   });
 
   describe('Heating End: Transactional Atomicity', () => {
-    it('should wrap heatingEvent + boilerHistory updates in transaction', async () => {
+    it('should wrap heatingEvent + boilerHistory updates in transaction', () => {
       prismaService.$transaction.mockResolvedValueOnce([
         { count: 1 }, // heatingEvent updated
         { count: 1 }, // boilerHistory updated
@@ -158,7 +153,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(Array.isArray(txOps)).toBeTruthy();
     });
 
-    it('should increment heating_events_ended metric', async () => {
+    it('should increment heating_events_ended metric', () => {
       metricsService.resetMetrics();
       expect(metricsService.getMetrics().heating_events_ended).toBe(0);
 
@@ -166,11 +161,11 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(metricsService.getMetrics().heating_events_ended).toBe(1);
     });
 
-    it('should update both heatingEvent and boilerHistory atomically', async () => {
+    it('should update both heatingEvent and boilerHistory atomically', () => {
       const transactionCalls: any[] = [];
-      prismaService.$transaction.mockImplementation(async (ops) => {
+      prismaService.$transaction.mockImplementation((ops) => {
         transactionCalls.push(ops);
-        return [{ count: 1 }, { count: 1 }];
+        return Promise.resolve([{ count: 1 }, { count: 1 }]);
       });
 
       // If transaction fails partway, both operations are rolled back
@@ -180,7 +175,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
   });
 
   describe('Polling Cycle: Metrics Tracking', () => {
-    it('should track poll_runs_total on pollAll start', async () => {
+    it('should track poll_runs_total on pollAll start', () => {
       metricsService.resetMetrics();
       expect(metricsService.getMetrics().poll_runs_total).toBe(0);
 
@@ -188,7 +183,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(metricsService.getMetrics().poll_runs_total).toBe(1);
     });
 
-    it('should track poll_runs_success on pollAll completion', async () => {
+    it('should track poll_runs_success on pollAll completion', () => {
       metricsService.resetMetrics();
       metricsService.incrementCounter('poll_runs_total');
       metricsService.incrementCounter('poll_runs_success');
@@ -198,7 +193,7 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
       expect(metrics.poll_runs_success).toBe(1);
     });
 
-    it('should track poll_runs_failed on error', async () => {
+    it('should track poll_runs_failed on error', () => {
       metricsService.resetMetrics();
       metricsService.incrementCounter('poll_runs_total');
       metricsService.incrementCounter('poll_runs_failed');

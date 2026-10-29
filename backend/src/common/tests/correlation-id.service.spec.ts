@@ -207,7 +207,7 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
   describe('Error Handling', () => {
     it('should propagate errors from sync functions', () => {
       expect(() => {
-        service.createRunContext('failing operation', (runId) => {
+        service.createRunContext('failing operation', () => {
           throw new Error('Test error');
         });
       }).toThrow('Test error');
@@ -215,7 +215,8 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
 
     it('should propagate errors from async functions', async () => {
       await expect(
-        service.createRunContext('async failing operation', async (runId) => {
+        service.createRunContext('async failing operation', async () => {
+          await Promise.resolve();
           throw new Error('Async error');
         }),
       ).rejects.toThrow('Async error');
@@ -239,12 +240,14 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
       const results: string[] = [];
 
       const operations = Array.from({ length: 10 }, (_, i) =>
-        service.createRunContext(`concurrent-${i}`, async (runId) => {
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.random() * 20),
-          );
-          results.push(runId);
-        }),
+        Promise.resolve(
+          service.createRunContext(`concurrent-${i}`, async (runId) => {
+            await new Promise((resolve) =>
+              setTimeout(resolve, Math.random() * 20),
+            );
+            results.push(runId);
+          }),
+        ),
       );
 
       await Promise.all(operations);
@@ -259,15 +262,23 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
       await Promise.all([
         service.createRunContext('root-a', async (runIdA) => {
           results.push(`root-a:${runIdA}`);
-          return service.createRunContext('child-a', async (runIdChildA) => {
-            results.push(`child-a:${runIdChildA}`);
-          });
+          return await service.createRunContext(
+            'child-a',
+            async (runIdChildA) => {
+              await Promise.resolve();
+              results.push(`child-a:${runIdChildA}`);
+            },
+          );
         }),
         service.createRunContext('root-b', async (runIdB) => {
           results.push(`root-b:${runIdB}`);
-          return service.createRunContext('child-b', async (runIdChildB) => {
-            results.push(`child-b:${runIdChildB}`);
-          });
+          return await service.createRunContext(
+            'child-b',
+            async (runIdChildB) => {
+              await Promise.resolve();
+              results.push(`child-b:${runIdChildB}`);
+            },
+          );
         }),
       ]);
 
@@ -307,7 +318,7 @@ describe('CorrelationIdService (AsyncLocalStorage)', () => {
     it('should handle getStore() inside context', async () => {
       let capturedStore: any = null;
 
-      await service.createRunContext('test operation', (runId) => {
+      await service.createRunContext('test operation', () => {
         capturedStore = service.getStore();
       });
 

@@ -113,7 +113,7 @@ export class HomeProfileService {
   }
 
   async create(userId: number, dto: CreateHomeProfileDto) {
-    return this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       const profile = await tx.homeProfile.create({
         data: {
           homeName: dto.homeName ?? null,

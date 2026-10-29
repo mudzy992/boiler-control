@@ -24,7 +24,9 @@ export class ProgramSyncService {
       const intervals = tuyaProgram[dayType] ?? [];
 
       if (!intervals.length) {
-        this.logger.warn(`No intervals for ${dayType}, deviceId=${deviceId}`);
+        this.logger.warn(
+          `No intervals for ${String(dayType)}, deviceId=${deviceId}`,
+        );
         continue;
       }
 
@@ -49,7 +51,9 @@ export class ProgramSyncService {
     // 1️⃣ Ako nema ničega u bazi → INSERT ALL
     if (existing.length === 0) {
       await this.insertAll(deviceId, dayType, intervals, programHash);
-      this.logger.log(`Inserted program for ${dayType}, deviceId=${deviceId}`);
+      this.logger.log(
+        `Inserted program for ${String(dayType)}, deviceId=${deviceId}`,
+      );
       return;
     }
 
@@ -66,7 +70,9 @@ export class ProgramSyncService {
       intervals.map((i) => i.orderIndex),
     );
 
-    this.logger.log(`Updated program for ${dayType}, deviceId=${deviceId}`);
+    this.logger.log(
+      `Updated program for ${String(dayType)}, deviceId=${deviceId}`,
+    );
   }
 
   private calculateHash(intervals: TuyaProgramInterval[]): string {

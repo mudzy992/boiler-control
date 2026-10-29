@@ -3,7 +3,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { StructuredLogger } from '../../src/common/structured-logger';
 
 /**
  * Integration Tests (P2a): End-to-end API validation
@@ -16,7 +15,6 @@ import { StructuredLogger } from '../../src/common/structured-logger';
 describe('Integration Tests: Backend API (P2a)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let logger: StructuredLogger;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -46,20 +44,6 @@ describe('Integration Tests: Backend API (P2a)', () => {
     await app.init();
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
-    try {
-      logger = moduleFixture.get<StructuredLogger>(StructuredLogger, {
-        strict: false,
-      });
-    } catch (e) {
-      const noopLogger: any = {
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        debug: () => {},
-        child: () => noopLogger,
-      };
-      logger = noopLogger as unknown as StructuredLogger;
-    }
   });
 
   afterAll(async () => {
@@ -157,7 +141,7 @@ describe('Integration Tests: Backend API (P2a)', () => {
 
     describe('POST /api/auth/login', () => {
       let testUserEmail: string;
-      let testUserPassword: string = 'TestPassword123!';
+      const testUserPassword: string = 'TestPassword123!';
 
       beforeAll(async () => {
         testUserEmail = `login_test_${Date.now()}@example.com`;

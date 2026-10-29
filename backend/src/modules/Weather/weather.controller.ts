@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req, Param } from '@nestjs/common';
+import { Controller, Get, UseGuards, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { WeatherService } from './weather.service';
@@ -24,7 +24,7 @@ export class WeatherController {
    * Get weather data for the authenticated user
    */
   @Get()
-  async getWeatherData(@Req() req) {
+  getWeatherData() {
     // Stub: return empty object or null
     // Full implementation: fetch from weather service and return current/forecast
     return {};

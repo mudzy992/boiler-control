@@ -26,7 +26,7 @@ export class RecommendationsController {
    * Get today's recommendations
    */
   @Get('today')
-  async getTodayRecommendations(@Req() req) {
+  getTodayRecommendations() {
     // Stub: return empty array
     // Full implementation: fetch today's recommendations from database
     return [];

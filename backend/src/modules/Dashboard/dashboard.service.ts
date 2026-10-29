@@ -571,7 +571,7 @@ export class DashboardService {
         this.DEFAULT_CITY,
       );
       return this.transformWeather(weatherData);
-    } catch (error) {
+    } catch {
       // Fallback to cache if fetch fails
       const cached = await this.prisma.weatherCache.findFirst({
         orderBy: { fetchedAt: 'desc' },

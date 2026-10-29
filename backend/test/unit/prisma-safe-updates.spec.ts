@@ -175,9 +175,9 @@ describe('Safe Prisma Update Patterns (P1a)', () => {
         },
       ];
 
-      await (prismaService as any).$transaction([]);
+      await (prismaService as any).$transaction(operations);
 
-      expect(mockTransaction).toHaveBeenCalled();
+      expect(mockTransaction).toHaveBeenCalledWith(operations);
     });
   });
 

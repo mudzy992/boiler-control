@@ -1,15 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ReportingService,
-  AlertSeverity,
-  HomeReportMetrics,
-} from '../reporting.service';
+import { ReportingService, HomeReportMetrics } from '../reporting.service';
 import { MetricsService } from '../metrics.service';
 import { StructuredLogger } from '../structured-logger';
 
 describe('ReportingService', () => {
   let service: ReportingService;
-  let metricsService: MetricsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,7 +29,6 @@ describe('ReportingService', () => {
     }).compile();
 
     service = module.get<ReportingService>(ReportingService);
-    metricsService = module.get<MetricsService>(MetricsService);
   });
 
   describe('recordAnomaly', () => {

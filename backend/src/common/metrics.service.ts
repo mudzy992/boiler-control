@@ -85,7 +85,8 @@ export class MetricsService {
    */
   incrementCounter(key: keyof Metrics, value: number = 1): void {
     if (typeof this.metrics[key] === 'number') {
-      (this.metrics[key] as number) += value;
+      const counter = key as Exclude<keyof Metrics, 'timestamp'>;
+      this.metrics[counter] += value;
       this.metrics.timestamp = new Date().toISOString();
     }
   }

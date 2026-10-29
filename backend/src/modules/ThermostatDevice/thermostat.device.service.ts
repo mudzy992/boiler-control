@@ -12,7 +12,7 @@ export class ThermostatDeviceService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(userId: number) {
-    return this.prisma.thermostatDevice.findMany({
+    return await this.prisma.thermostatDevice.findMany({
       where: { userId },
       include: {
         homeProfile: true,

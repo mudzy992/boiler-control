@@ -18,7 +18,7 @@ export class HeatingController {
    * Create a heating event (manual creation for testing)
    */
   @Post()
-  async createHeatingEvent(
+  createHeatingEvent(
     @Req() req,
     @Body()
     body: {

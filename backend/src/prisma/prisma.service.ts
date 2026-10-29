@@ -50,11 +50,7 @@ export class PrismaService
     }
 
     // Attempt to connect and surface any immediate connection errors
-    try {
-      await this.$connect();
-    } catch (err) {
-      throw err;
-    }
+    await this.$connect();
   }
 
   async onModuleDestroy(): Promise<void> {

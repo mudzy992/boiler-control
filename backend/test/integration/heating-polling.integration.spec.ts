@@ -5,8 +5,6 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { StructuredLogger } from '../../src/common/structured-logger';
-import { MetricsService } from '../../src/common/metrics.service';
 
 /**
  * Integration Tests: Heating & Polling Endpoints (P2a)
@@ -21,8 +19,6 @@ import { MetricsService } from '../../src/common/metrics.service';
 describe('Integration Tests: Heating & Polling (P2a)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let logger: StructuredLogger;
-  let metricsService: MetricsService;
 
   beforeAll(async () => {
     const builder = Test.createTestingModule({
@@ -59,28 +55,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
     await app.init();
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
-    try {
-      logger = moduleFixture.get<StructuredLogger>(StructuredLogger, {
-        strict: false,
-      });
-    } catch (e) {
-      const noopLogger: any = {
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        debug: () => {},
-        child: () => noopLogger,
-      };
-      logger = noopLogger as unknown as StructuredLogger;
-    }
-
-    try {
-      metricsService = moduleFixture.get<MetricsService>(MetricsService, {
-        strict: false,
-      });
-    } catch (e) {
-      metricsService = { getCounters: () => ({}) } as unknown as MetricsService;
-    }
   });
 
   afterAll(async () => {
@@ -196,7 +170,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
   describe('Recommendations Endpoints', () => {
     let authToken: string;
-    let userId: number;
 
     beforeAll(async () => {
       const email = `rec_test_${Date.now()}@example.com`;
@@ -211,7 +184,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
       expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
-      userId = registerResponse.body.user.id;
     });
 
     describe('GET /api/recommendations (retrieve recommendations)', () => {
@@ -262,7 +234,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
   describe('Anomalies Endpoints', () => {
     let authToken: string;
-    let userId: number;
 
     beforeAll(async () => {
       const email = `anomaly_test_${Date.now()}@example.com`;
@@ -277,7 +248,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
       expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
-      userId = registerResponse.body.user.id;
     });
 
     describe('GET /api/anomalies (retrieve anomalies)', () => {
@@ -314,7 +284,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
   describe('Thermostat Devices Endpoints', () => {
     let authToken: string;
-    let userId: number;
 
     beforeAll(async () => {
       const email = `device_test_${Date.now()}@example.com`;
@@ -329,7 +298,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
       expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
-      userId = registerResponse.body.user.id;
     });
 
     describe('GET /api/devices (retrieve user devices)', () => {
@@ -366,7 +334,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
   describe('Boiler Endpoints', () => {
     let authToken: string;
-    let userId: number;
 
     beforeAll(async () => {
       const email = `boiler_test_${Date.now()}@example.com`;
@@ -381,7 +348,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
       expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
-      userId = registerResponse.body.user.id;
     });
 
     describe('GET /api/boiler/history', () => {
@@ -487,7 +453,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
   });
 
   describe('Transactional Integrity Verification (P1c)', () => {
-    let authToken: string;
     let userId: number;
 
     beforeAll(async () => {
@@ -502,7 +467,6 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         });
 
       expect(registerResponse.status).toBe(201);
-      authToken = registerResponse.body.token;
       userId = registerResponse.body.user.id;
     });
 

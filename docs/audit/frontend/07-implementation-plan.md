@@ -2,7 +2,7 @@
 
 ## Sažetak: pet prioriteta
 
-1. **Talas 0:** stvarni type-check + popravka 11 grešaka, ESLint konfiguracija, čišćenje mrtvog koda i obrada grešaka mutacija (FE2-1/FE2-16/FE2-12).
+1. **Talas 0:** stvarni type-check + popravka 12 grešaka, ESLint konfiguracija, čišćenje mrtvog koda i obrada grešaka mutacija (FE2-1/FE2-16/FE2-12).
 2. **Talas 1:** jedna mjerodavna deploy konfiguracija + branch-only frontend CI (type-check, lint, build, e2e smoke) (FE2-7); zatim OpenAPI codegen i contract testovi (FE2-8).
 3. **Talas 2:** sigurnost — httpOnly cookie + refresh usklađeno s backend 0.4 (FE2-2) i security headeri + gzip (FE2-6).
 4. **Talas 3:** arhitektura i UX — React Query ujedinjenje (FE2-3), code-splitting (FE2-4), i18n kompletnost (FE2-5), a11y (FE2-13), testna infrastruktura (FE2-11).

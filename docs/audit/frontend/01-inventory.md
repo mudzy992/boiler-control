@@ -3,7 +3,7 @@
 ## Sažetak: pet ključnih činjenica
 
 1. **VERIFIKOVANO:** aplikacija ima 10 ruta i 10 stranica, 5 komponenti, 2 konteksta (Auth/Theme), 2 servisa (api, notification.api), 1 hook (useAuth) i inline i18n (en-US/bs-BS) u jednom fajlu; ukupno 28 fajlova u `frontend/src`, ~4600 linija.
-2. **VERIFIKOVANO (pokrenuto):** `npm run type-check` daje **lažno zeleno** — korenski `tsconfig.json` je solution-format (`"files": []`), pa `tsc --noEmit` ne provjerava ništa; stvarna provjera `tsc -p tsconfig.app.json` daje **11 grešaka** (FE-001).
+2. **VERIFIKOVANO (pokrenuto):** `npm run type-check` daje **lažno zeleno** — korenski `tsconfig.json` je solution-format (`"files": []`), pa `tsc --noEmit` ne provjerava ništa; stvarna provjera `tsc -p tsconfig.app.json` daje **12 grešaka** (FE-001).
 3. **VERIFIKOVANO (pokrenuto):** `npm run build` uspijeva i proizvodi **jedan JS čip od 2.972 kB (gzip 905 kB)** bez code-splittinga (FE-004); `npm run lint` **ne radi** — nema ESLint konfiguracije (FE-015).
 4. **VERIFIKOVANO:** ne postoji nijedan test — `package.json` nema test skriptu, nema test direktorija niti testing zavisnosti (FE-014).
 5. **VERIFIKOVANO:** `notification.api.ts` koristi `apiClient.get/post/patch` koji ne postoje na klasi `ApiClient`, a **niko ga ne importira** — mrtav, tipki slomljen kod (FE-011).
@@ -116,7 +116,7 @@ Sve pozive je moguće pratiti do backend ruta iz `docs/audit/backend/02-api-cata
 |---|---|---|
 | `npm ci --no-audit --no-fund` | uspjeh, 531 paket | 12 s |
 | `npm run type-check` (`tsc --noEmit`) | **exit 0 — lažno zeleno** | korenski tsconfig ima `"files": []` (solution format) pa ništa ne provjerava |
-| `npx tsc --noEmit -p tsconfig.app.json` | **11 grešaka** | `DashboardPage.tsx:215,870,1058,1060`, `HomeProfilePage.tsx:16` (2×), `notification.api.ts:27,32,36,40,48` |
+| `npx tsc --noEmit -p tsconfig.app.json` | **12 grešaka** | `DashboardPage.tsx:215,870,1058,1060`, `HomeProfilePage.tsx:16` (2×), `notification.api.ts:27,32,36,40,48` |
 | `npm run build` (vite) | uspjeh, 15.9 s | jedan čip `index-*.js` **2.972 kB / gzip 905 kB**; CSS 18.9 kB; vite upozorenje >500 kB |
 | `npm run lint` (eslint) | **ne radi**, exit 2 | "ESLint couldn't find a configuration file" — u `frontend/` nema eslint konfiguracije (backend je ima) |
 | testovi | **ne postoje** | nema `test` skripte niti test direktorija |

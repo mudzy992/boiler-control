@@ -131,3 +131,8 @@
 ### Upload reprodukcija
 
 - `scripts/audit/upload_validation_repro.cjs` koristi stvarni `FileStorageService` i samo sintetičke bajtove u novom privremenom direktoriju koji uklanja. Potvrđeno da se ne-PDF bajtovi čuvaju ako je deklarisani MIME PDF; neprihvatljivi MIME, prevelika deklarisana veličina i `../` putanja u izolovanim slučajevima odbijeni sa 400. Detalji/ograničenja S-006 u `backend/08-security.md`; nije pokrenut HTTP, guard, stvarna baza niti produkcijski storage, a stvarna iskoristivost i symlink prijetnja nisu dokazani.
+
+### Ponovna CI provjera audit grane
+
+- Nakon pusha audit commitova do `c37c1de`, branch-only GitHub Actions [run 40873918268](https://github.com/mudzy992/boiler-control/actions/runs/40873918268) je uspješan: ESLint 0, TypeScript 0, build, 10 suiteova/167 općih testova i 2 suitea/49 integracijskih; dva skupa se preklapaju. Ovo potvrđuje taj commit, ne automatski buduće commitove. Brojčani coverage nije pročitan iz dostupnih anotacija; e2e skripta i dalje nema config, a ovaj CI run ne dokazuje stvarne providere, production deploy, rad aplikacije s Redisom ni produkcijski ownership.
+- GitHub je prijavio upozorenje o runtime prelasku checkout/setup-node actiona s Node 20 na Node 24 i migraciji `ubuntu-latest` na Ubuntu 26; kompatibilnost pratiti u idućim CI runovima, bez tvrdnje da je sadašnja aplikacija migrirana na Node 24 (verziju aplikacijskog Nodea konfigurira workflow zasebno).

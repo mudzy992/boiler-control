@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -20,6 +20,9 @@ import {
   ROOT_SCREENS,
 } from '../constants/routes';
 import { handleColdStartNotification } from '../services/notifications/notificationService';
+import { UpdateRequiredScreen } from '../screens/common/UpdateRequiredScreen';
+import { checkVersionGate } from '../config/version.config';
+import type { VersionGateResult } from '../config/version.config';
 
 // Polyfill for BackHandler compatibility with React Navigation 7.x and RN 0.81.5
 if (typeof (BackHandler as any).removeEventListener !== 'function') {
@@ -82,15 +85,43 @@ export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, RootN
     // pa bi navigacija na `Main` pala kao "not handled".
     const coldStartHandled = React.useRef(false);
 
+    /**
+     * MO2-2: version gate. `null` znači da provjera još traje.
+     */
+    const [versionGate, setVersionGate] = useState<VersionGateResult | null>(null);
+
+    useEffect(() => {
+      let cancelled = false;
+      // `checkVersionGate` nikad ne baca: svaka greška (mreža, timeout,
+      // neočekivan odgovor) postaje fail-open rezultat.
+      void checkVersionGate().then((result) => {
+        if (!cancelled) setVersionGate(result);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
     useEffect(() => {
       restoreSession();
     }, [restoreSession]);
 
-    if (isLoading) {
+    // Gate ima prednost nad auth-om: zaključana verzija ne smije ni pokušati
+    // prijavu, jer korisnik ionako ne može dalje.
+    if (versionGate === null || isLoading) {
       return (
         <Center flex={1} bg={colorMode === 'dark' ? 'dark.900' : 'gray.50'}>
           <Spinner size="lg" color="brand.400" />
         </Center>
+      );
+    }
+
+    if (versionGate.mustUpdate) {
+      return (
+        <UpdateRequiredScreen
+          currentVersion={versionGate.currentVersion}
+          minSupportedVersion={versionGate.minSupportedVersion}
+        />
       );
     }
 

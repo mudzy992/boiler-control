@@ -16,6 +16,7 @@ import {
   useToast,
 } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
+import { getAppVersion } from '../../config/version.config';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useNavigation } from '@react-navigation/native';
@@ -365,7 +366,7 @@ export const SettingsScreen = () => {
               <SettingItem
                 icon="information-circle-outline"
                 title={t('settings.version')}
-                subtitle="2.0.0"
+                subtitle={getAppVersion()}
               />
               <Divider />
               <SettingItem

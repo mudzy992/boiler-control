@@ -2,7 +2,6 @@
   "expo": {
     "name": "Boiler Control",
     "slug": "boiler-control",
-    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/new/boiler-control-icon-master.png",
     "userInterfaceStyle": "light",

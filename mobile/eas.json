@@ -7,6 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
       "ios": {
         "simulator": true
       },
@@ -14,8 +15,16 @@
         "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
       }
     },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
+      }
+    },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "android": {
         "buildType": "apk"
       },
@@ -25,6 +34,17 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "${env:GOOGLE_SERVICE_ACCOUNT_KEY_PATH}",
+        "track": "internal"
+      },
+      "ios": {
+        "ascAppId": "${env:ASC_APP_ID}",
+        "ascApiKeyPath": "${env:ASC_API_KEY_PATH}",
+        "ascApiKeyIssuerId": "${env:ASC_API_KEY_ISSUER_ID}",
+        "ascApiKeyKeyId": "${env:ASC_API_KEY_ID}"
+      }
+    }
   }
 }

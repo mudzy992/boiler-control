@@ -1,10 +1,22 @@
+// MO2-2: `package.json` je JEDINI izvor verzije. Ranije su postojala tri koja
+// se ne slažu — `package.json` 2.0.0, `app.json` 1.0.0 i hardkodovano "2.0.0" u
+// `SettingsScreen.tsx`. `version` je izbačen iz `app.json`, a postavke čitaju
+// odavde.
+const pkg = require('./package.json');
+
+/**
+ * Jedan izvor za EAS projectId — koristi se i u `extra.eas.projectId` i u
+ * `updates.url`, pa se ne može desiti da se razilaze.
+ */
+const EAS_PROJECT_ID = 'c875e85d-ad10-4eb6-bdae-fa5038133ee7';
+
 module.exports = ({ config }) => {
   // Default API URL for local development
   // Will be overridden by EAS build env vars for preview/production
   const extra = {
     EXPO_PUBLIC_API_URL: 'https://api.boiler-control.ba101.top/api',
     eas: {
-      projectId: "c875e85d-ad10-4eb6-bdae-fa5038133ee7",
+      projectId: EAS_PROJECT_ID,
     },
   };
 
@@ -12,7 +24,23 @@ module.exports = ({ config }) => {
     ...config,
     name: config.name || 'Boiler Control',
     slug: config.slug || 'boiler-control',
-    version: config.version || '1.0.0',
+    // Jedini izvor verzije je package.json (MO2-2). `config.version` se
+    // namjerno NE koristi kao izvor — bio bi drugi, konkurentni izvor.
+    version: pkg.version,
+    // MO2-2 / expo-updates: OTA ispravke smiju ići samo na buildove iste
+    // native verzije. `appVersion` policy znači da promjena native koda
+    // (nova verzija) automatski čini stare JS bundleove nevažećim — to je
+    // upravo zaštita koju version gate treba.
+    runtimeVersion: config.runtimeVersion || { policy: 'appVersion' },
+    updates: {
+      enabled: true,
+      url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
+      // ON_LOAD + kratak fallback: aplikacija ne čeka mrežu predugo, a
+      // version gate ionako radi svoj poziv.
+      checkAutomatically: 'ON_LOAD',
+      fallbackToCacheTimeout: 0,
+      ...(config.updates || {}),
+    },
     orientation: config.orientation || 'portrait',
     icon: config.icon || './assets/new/boiler-control-icon-master.png',
     userInterfaceStyle: config.userInterfaceStyle || 'light',
@@ -30,6 +58,7 @@ module.exports = ({ config }) => {
     scheme: config.scheme || 'myapp',
     plugins: config.plugins || [
       'expo-font',
+      'expo-updates',
       '@react-native-community/datetimepicker',
       "expo-localization",
       [

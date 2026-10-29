@@ -22,12 +22,12 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 
 ## Struktura: 78 fajlova u `mobile/`
 
-<!-- mob:screens:14 -->
+<!-- mob:screens:15 -->
 <!-- mob:components:12 -->
 <!-- mob:navigators:4 -->
 <!-- mob:services:8 -->
 
-### Ekrani (14/14)
+### Ekrani (15/15)
 
 | # | Fajl | Linija | Navigator / ruta | `t()` | Primjećeno |
 |---|------|--------|------------------|-------|------------|
@@ -45,6 +45,7 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 | 12 | `src/screens/profile/ProfileScreen.tsx` | 262 | Settings stack → `Profile` | **0** | hardcoded EN, bez React Query, VAT 17% hardcoded (MO-009) |
 | 13 | `src/screens/notifications/NotificationsScreen.tsx` | 260 | Settings stack → `Notifications` | 12 | jedini ekran s `SectionList` (virtualizovano) |
 | 14 | `src/screens/notifications/NotificationPreferencesScreen.tsx` | 132 | Settings stack → `NotificationPreferences` | 5 | bez optimistic update; `type` se šalje kao `string` |
+| 15 | `src/screens/common/UpdateRequiredScreen.tsx` | 109 | **nije registrovan** — `RootNavigator` ga renderuje UMJESTO `NavigationContainer` | 7 | MO2-2 version-gate blokator; namjerno izvan navigacije da se ne može zaobići back dugmetom ni deep linkom; iOS dugme se krije dok `IOS_APP_STORE_ID` nije upisan |
 
 ### Navigatori (4/4)
 

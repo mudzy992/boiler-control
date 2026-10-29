@@ -52,6 +52,8 @@ Svaki red: **VERIFIKOVANO** ime i izvoz/ulazna tačka iz navedenog fajla. Zavisn
 | <!-- common:backend/src/common/adapters/http-adapter.ts --> `backend/src/common/adapters/http-adapter.ts` | HTTP adapter nad osnovnim adapterom. |
 | <!-- common:backend/src/common/adapters/index.ts --> `backend/src/common/adapters/index.ts` | Re-export adaptera i tipova. |
 | <!-- common:backend/src/common/anomaly-detection.service.ts --> `backend/src/common/anomaly-detection.service.ts` | Detekcija i izračun pouzdanosti anomalija. |
+| <!-- common:backend/src/common/app-config.controller.ts --> `backend/src/common/app-config.controller.ts` | Javni version-gate endpoint `GET /api/app/config` (MO2-2); `@Public()`, bez guard-a. |
+| <!-- common:backend/src/common/app-config.service.ts --> `backend/src/common/app-config.service.ts` | Čita `MOBILE_MIN_SUPPORTED_VERSION`/`MOBILE_LATEST_VERSION`/`APP_VERSION_GATE_ENABLED` iz env-a; fail-safe, nikad ne baca. |
 | <!-- common:backend/src/common/common.module.ts --> `backend/src/common/common.module.ts` | Registruje/izvozi common servise i kontrolere. |
 | <!-- common:backend/src/common/correlation-id.service.ts --> `backend/src/common/correlation-id.service.ts` | Korelacijski kontekst i `AsyncLocalStorage`. |
 | <!-- common:backend/src/common/fallback-strategy.service.ts --> `backend/src/common/fallback-strategy.service.ts` | Fallback i memorijski cache; sigurnost vrijednosti nije potvrđena za konkretan kotao. |
@@ -163,7 +165,9 @@ Kada je test naveden kao `H` ili `C`, to označava postojanje te testne grupe u 
 | `adapters/http-adapter.ts` | HTTP metode i podešavanje URL/headera preko `BaseAdapter`; axios. | Test timeout/retry/abort, statusi i redakcija bez pravog providera; ne tretirati mock kao mrežni test. |
 | `adapters/index.ts` | Re-export adaptera/tipova, nema zasebnog runtime I/O. | Uvozi/kompatibilnost izvoza provjeriti pri promjeni. |
 | `anomaly-detection.service.ts` | `detectAnomalies`, `calculateConfidence`, logovanje; `MetricsService`. | `common/tests/anomaly-detection.service.spec.ts` pokriva sintetičke scenarije; distribuciju stvarnih ciklusa i owner zaštitu ne potvrđuje. |
-| `common.module.ts` | Registracija 2 kontrolera i 6 providera/izvoza (`common.module.ts:11-29`). | Testovi kroz `AppModule` ne dokazuju svaku DI topologiju; test duplih instanci i shutdown po potrebi. |
+| `app-config.controller.ts` | `GET /api/app/config`, `@Public()`, bez `@UseGuards`. | `common/tests/app-config.service.spec.ts` (supertest) potvrđuje 200 bez Authorization headera, tačan oblik odgovora i 404 na `/app/config`; ponašanje pod stvarnim `JwtAuthGuard`-om nije testirano jer guard ovisi o Prismi. |
+| `app-config.service.ts` | `getAppConfig`, env čitanje, stroga semver validacija, kill switch. | `common/tests/app-config.service.spec.ts` — 19 testova (zadano, override, kill switch, fail-safe na neispravan env); negativnim testom (`DEFAULT_MIN_SUPPORTED_VERSION`→9.9.9) potvrđeno da test hvata regresiju. |
+| `common.module.ts` | Registracija 3 kontrolera i 7 providera/izvoza (`common.module.ts:14-33`); MO2-2 dodao `AppConfigController`/`AppConfigService`. | Testovi kroz `AppModule` ne dokazuju svaku DI topologiju; test duplih instanci i shutdown po potrebi. |
 | `correlation-id.service.ts` | `AsyncLocalStorage`, run ID i asinhroni kontekst. | `common/tests/correlation-id.service.spec.ts` testira sinkroni, async i paralelni kontekst; request-to-worker/provider propagacija nije dokazana. |
 | `fallback-strategy.service.ts` | Lokalni fallback/cache i metrike. | `common/tests/fallback-strategy.service.spec.ts`; dodatni fake-clock dokaz preuranjenog TTL brisanja B-022; runtime caller i fizička sigurnost nisu potvrđeni. |
 | `file-storage.service.ts` | Lokalni write/read/delete slika/PDF; konfigurirani direktorij i filesystem. | `upload_validation_repro.cjs` provjerava fake MIME i putanju u disposable temp; HTTP upload, symlink konkurencija, virus scan i recovery nisu dokazani. |

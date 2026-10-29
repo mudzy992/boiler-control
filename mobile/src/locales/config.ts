@@ -610,6 +610,14 @@ const enUS = {
     termsPrivacy: 'Terms & Privacy',
     developer: 'Developer',
   },
+  update: {
+    title: 'Update required',
+    body: 'This version of the app is no longer supported. Please update to continue using Boiler Control.',
+    currentVersion: 'Installed version',
+    requiredVersion: 'Minimum version',
+    updateButton: 'Update now',
+    manualHint: 'Please update the app from your app store.',
+  },
   errors: {
     networkError: 'Network error. Please check your connection and try again.',
     serverError: 'Server error. Please try again later.',
@@ -1201,6 +1209,14 @@ const bsBS = {
     helpSupport: 'Pomoć i podrška',
     termsPrivacy: 'Uslovi i privatnost',
     developer: 'Razvojni tim',
+  },
+  update: {
+    title: 'Potrebno ažuriranje',
+    body: 'Ova verzija aplikacije se više ne podržava. Ažurirajte je da biste nastavili koristiti Boiler Control.',
+    currentVersion: 'Instalirana verzija',
+    requiredVersion: 'Minimalna verzija',
+    updateButton: 'Ažuriraj sada',
+    manualHint: 'Ažurirajte aplikaciju kroz svoju trgovinu aplikacijama.',
   },
   errors: {
     networkError: 'Greška u konekciji. Provjeri internetsku konekciju i pokušaj ponovo.',

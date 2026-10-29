@@ -21,7 +21,19 @@ import Constants from 'expo-constants';
  * buildu prisutan, pa normalan razvoj radi bez `.env`.
  */
 const getApiBaseUrl = (): string => {
-  const extra = Constants.expoConfig?.extra ?? Constants.manifest?.extra ?? {};
+  // `Constants.manifest` je tipiziran kao `EmbeddedManifest` iz `expo-manifests`
+  // i sadrži samo `{ id, commitTime, assets }` — formalno NEMA `extra`. Ranije
+  // je ovdje stajao `Constants.manifest?.extra` bez sužavanja tipa, što je
+  // prolazilo samo zato što je starija verzija `expo-manifests` bila blaža;
+  // instalacija `expo-updates` (MO2-2) povukla je 1.0.11 i to razotkrila
+  // (TS2339). Runtime fallback se zadržava za starije manifeste, ali se tip
+  // sada eksplicitno sužava umjesto da se izvor tiho izgubi.
+  const manifestExtra = (
+    Constants.manifest as { extra?: { EXPO_PUBLIC_API_URL?: string } } | null
+  )?.extra;
+
+  const extra: { EXPO_PUBLIC_API_URL?: string } =
+    Constants.expoConfig?.extra ?? manifestExtra ?? {};
 
   // Postavljeno preko EAS build env varijabli (eas.json) ili lokalnog .env
   const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? extra.EXPO_PUBLIC_API_URL;

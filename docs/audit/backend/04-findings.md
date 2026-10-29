@@ -127,3 +127,35 @@
 - Preporuka: centralni exception filter s korelacijskim ID-em, interni redigovani log i stabilan versionirani error DTO, bez sirovih poruka; migrirati legacy odgovore tek nakon consumer pregleda.
 - Kako provjeriti: izolovano simulirati DB/provider grešku, dokazati ne-2xx i generičan error bez tajni te razlikovati prazan rezultat; contract test starog i novog API-ja. `cd backend && npm run test:integration`.
 - Trud: M — Zavisnosti: DTO verzioniranje, observability i stari klijenti.
+
+### [B-015] String `false` za gas referencu pretvara se u `true` — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (izolovani pipe), HIPOTEZA (stvarni HTTP učinak)
+- Gdje: `backend/src/main.ts:28-38`, `backend/src/modules/Gas/dto/update-gas-reference.dto.ts:4-7`, `gas.reading.controller.ts:66-72`, `gas.reading.service.ts:140-178`.
+- Šta nije u redu i zašto: `enableImplicitConversion` u stvarnom DTO-u s metapodatkom `boolean` pretvara neprazan string u `true` prije custom transformacije; sintetički `"false"` i `"not-a-boolean"` prolaze kao `true`, dok JSON boolean `false` ostaje `false`. Servis za `true` u transakciji uklanja referencu drugom očitanju istog mjeseca i postavlja ovo kao referencu. To može dati suprotan korisnički ishod ako klijent šalje string; upotreba takvog ulaza u produkciji nije provjerena.
+- Dokaz: `node scripts/audit/gas_validation_repro.cjs` koristi stvarne DTO/ValidationPipe opcije i asertira transformisane vrijednosti. Nije izvršen HTTP, guard ili stvarna DB transakcija.
+- Preporuka: strogi parser koji prihvata dogovorene oblike bez automatske `Boolean(string)` konverzije; po mogućnosti samo JSON boolean, ili eksplicitno podržati `true`/`false` za multipart. Nepoznate oblike odbiti. Prije isključenja implicitne konverzije globalno provjeriti uticaj na ostale API-je i legacy klijente.
+- Kako provjeriti: HTTP integracijski test na izolovanoj bazi za boolean true/false, string `true`/`false` u podržanim content-typeovima, prazno/nesmisleno/missing/null, te provjeriti tačan referentni zapis nakon svakog zahtjeva. `cd backend && npm run test:integration` nakon implementacije.
+- Trud: S/M — Zavisnosti: dogovoreni HTTP ugovor, klijenti i backfill postojećih neispravnih referenci tek nakon provjere.
+
+### [B-016] Prazan i negativan unos brojila prolazi DTO; prvi negativan prolazi servis — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (izolovani pipe i servis/fake DB)
+- Gdje: `backend/src/modules/Gas/dto/create-gas-reading.dto.ts:11-24`, `backend/src/modules/Gas/gas.reading.service.ts:22-67`.
+- Šta nije u redu i zašto: `counterValue` nema `Min(0)`, a implicitna/eksplicitna Number konverzija pretvara `''` u 0 prije `IsNotEmpty`; servis odbija manju vrijednost od posljednje samo kada posljednje očitanje postoji. Prvi negativni unos prolazi servis i može pokvariti kasnije razlike/potrošnju. DTO također nudi `markAsReference`, ali servis pri kreiranju uvijek postavlja `isInvoiceReference:false`.
+- Dokaz: `node scripts/audit/gas_validation_repro.cjs`: stvarni pipe prihvata sintetička `-1` i `'' → 0`; stvarni servis nad lažnom DB bez prethodnog očitanja šalje `-1` u create. Nema stvarne baze, HTTP-a, fajla ni produkcijskih podataka; DB shema nema deklarisan `CHECK` u Prisma modelu, stvarna produkcijska DB ograničenja nisu provjerena.
+- Preporuka: eksplicitno provjeriti prisustvo, format, konačnost, nenegativnost i definisanu preciznost prije numeričke konverzije; servisno zaštititi pravilo i za direktne pozive. Uskladiti dokumentaciju/deprecirati ili implementirati `markAsReference` prema ugovoru i testirati migraciju klijenata.
+- Kako provjeriti: HTTP + servis testovi za prazno/whitespace/null/nedostaje, `-1`, nulu, decimalni broj, NaN/Infinity, prvi i naredni unos, multipart i JSON, te stvarni DB read-back; analizirati postojeće podatke bez prikaza korisničkih vrijednosti.
+- Trud: S/M — Zavisnosti: DTO/klijentski ugovor, policy korekcije brojila i postavljanje reference.
+
+### [B-017] Dodavanje historijskog očitanja poredi se s globalno najnovijim očitanjem — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (servis i izolovani fake DB)
+- Gdje: `backend/src/modules/Gas/gas.reading.service.ts:22-67,583-595`.
+- Šta nije u redu i zašto: servis traži zadnje očitanje po datumu bez uslova `readingDate < novi datum`. Zato odbija ispravno manje historijsko očitanje ako već postoji kasnije veće, a eventualno prihvaćeno historijsko s višim stanjem ne provjerava se i prema neposrednom sljedećem očitanju. Postojeći `consumption` se ne preračunava za susjede; ponašanje pri zamjeni/resetu brojila treba proizvodnu odluku.
+- Dokaz: `node scripts/audit/gas_validation_repro.cjs` nad stvarnim servisom i lažnom DB: kasnije očitanje 200, ranije 100 → 400, bez HTTP-a ili stvarne baze. `findReadingForSameDay` računa dan u UTC. Ne tvrditi da postoji greška ako poslovno pravilo namjerno zabranjuje historijske unose — ta politika nije utvrđena.
+- Preporuka: eksplicitna politika monotonosti, historijskog unosa i promjene brojila; ako su historijski unosi dopušteni, porediti prethodnika i sljedbenika te atomarno ažurirati izvedene podatke, uz korisnikovu timezone/datumsku politiku.
+- Kako provjeriti: izolovano kreirati prethodni/srednji/sljedeći zapis, testirati dozvoljene i zabranjene kombinacije, reset/rollover, različite zone/DST te obračun potrošnje prije i poslije inserta.
+- Trud: M/L — Zavisnosti: domena, timezone, audit postojećih podataka i konkurentnost.
+
+### [B-018] Provjera jednog gas očitanja po danu nije atomska — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (izvor), HIPOTEZA (stvarni race)
+- Gdje: `backend/src/modules/Gas/gas.reading.service.ts:28-42,60-69,583-595`, `backend/prisma/schema.prisma:188-208`.
+- Šta nije u redu i zašto: servis provjerava postojanje očitanja u UTC danu, a zatim zasebno radi create. Prisma model nema unique ključ za korisnika i dan očitanja; unique `(userId, referenceMonth)` nije dnevni ključ. Dva paralelna zahtjeva mogu obojica proći prethodnu provjeru i upisati zapise za isti dan. Race nije reproduciran protiv PostgreSQL-a, niti je produkcijska DB shema provjerena.
+- Dokaz: statički kontrolni tok i Prisma model; nema tvrdnje da postoje duplikati ili da produkcijska DB nema dodatno ograničenje.
+- Preporuka: nakon odluke o poslovnoj vremenskoj zoni i datumu obračuna, provesti deduplikacijski audit pa eksplicitni stabilni day key i DB unique/konkurentni upis, migracijom bez gubitka podataka; vratiti smislen conflict.
+- Kako provjeriti: dvije konkurentne transakcije na izolovanoj PostgreSQL bazi i više API replika, oba startaju prije upisa; tačno jedan upis i jedan conflict. Testirati granicu UTC/lokalni dan, DST i postojeće duplikate prije migracije.
+- Trud: M/L — Zavisnosti: produkcijska shema, integritet podataka i izbor vremenske zone.

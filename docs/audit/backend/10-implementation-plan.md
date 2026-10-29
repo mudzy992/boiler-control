@@ -119,6 +119,12 @@
 
 ## Talas 5 — ostalo
 
+### 5.0 Gas unos, referenca i vremenski redoslijed (FEAT-7)
+- **Cilj/fajlovi:** `backend/src/modules/Gas/dto/create-gas-reading.dto.ts`, `update-gas-reference.dto.ts`, `gas.reading.service.ts`, integracijski testovi i po potrebi Prisma migracija. Uskladiti strogo parsiranje broja i booleana, rukovanje historijskim očitanjima i odluku o `markAsReference` (B-015–B-018).
+- **Migracija/rollback, flag:** DTO dio može bez schema migracije, uz verzioniran ugovor; jedinstveni dan samo poslije revizije duplikata, politike UTC/lokalni dan i additive backfilla. Planirati unaprijed `GAS_STRICT_VALIDATION_ENABLED` (ne postoji), rollback pisanja ugovora bez odbacivanja podataka, reverzibilne migracije i backup; ne uključivati staro ponašanje tiho kao sigurnosnu zaštitu.
+- **Testovi:** prvo negativni HTTP testovi boolean/string `false`, nepoznati boolean, nedostaje/prazno/null/negativno i decimalno brojilo; stvarna izolovana DB testira vremenske susjede, dva konkurentna upisa, DST i postojeće duplikate. `cd backend && npm run test:integration`. **Skripte:** sadašnja offline `node scripts/audit/gas_validation_repro.cjs --help`; planirane `scripts/test-all.sh --help`, `scripts/db-reset-seed.sh --help` (ne postoje).
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L, stari klijenti moraju imati dokumentovanu tranziciju; zavisi od poslovnog dogovora o historiji, resetu brojila i timezoneu. Offline audit reprodukcija pokazuje sadašnju grešku i namjerno će pasti nakon njenog ispravljanja: ažurirati je uz dokaz novog ponašanja.
+
 ### 5.1 Gas preciznost, retention i privatni fajlovi
 - **Cilj/fajlovi:** `Gas/gas.reading.service.ts`, `common/file-storage.service.ts`, Prisma schema i account delete/export; Decimal/mjerna politika, content signature, politika brisanja i file reconciliation.
 - **Migracija/rollback, flag:** additive decimal kolone, dual-read/write i validiran backfill; `GAS_DECIMAL_ENABLED` off. Rollback na staro čitanje uz zadržane nove kolone/fajlove; destructive cleanup tek nakon provjere backupa i retention politike.

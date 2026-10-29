@@ -57,6 +57,8 @@ jobs:
           echo "::add-mask::$test_value"
           echo "DATABASE_PASSWORD=$test_value" >> "$GITHUB_ENV"
           echo "JWT_SECRET=$test_value" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/audit-uploads"
+          echo "UPLOAD_ROOT_PATH=$RUNNER_TEMP/audit-uploads" >> "$GITHUB_ENV"
       - name: Install dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Prepare isolated database and Prisma client

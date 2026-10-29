@@ -1,0 +1,143 @@
+# Redis i pozadinski poslovi — audit i prijedlog
+
+## Sažetak: pet prioritetnih nalaza
+
+1. **VERIFIKOVANO:** aplikacijski `AppModule` učitava `SchedulerModule`, a scheduler uključuje `ScheduleModule.forRoot()` i polling/dnevne/gas providere; anomaly modul je također u `AppModule` (`backend/src/app.module.ts:23-49`, `backend/src/modules/Schedule/schedule.module.ts:17-43`, `backend/src/modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module.ts:10-18`). Cron poslovi su zato deklarisani unutar API konteksta; broj i topologija produkcijskih replika nisu provjereni.
+2. **VERIFIKOVANO:** polling je svake minute i sekvencijalno čeka svaki uređaj (`backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:35-60`); dvije provjere anomalija su petominutne, dnevna preporuka i gas podsjetnik imaju zasebne cronove. Trajanje, preklapanje i produkcijski backlog nisu izmjereni.
+3. **VERIFIKOVANO:** nema deklarisanih Redis/BullMQ zavisnosti u `backend/package.json:28-56` ni Redis klijenta u pregledanom `backend/src`; privremeni CI Redis je stvaran servis, ali njegov `redis-cli ping` ne dokazuje aplikacijsko korištenje (`.github/workflows/backend-audit.yml:29-34,69-70`).
+4. **VERIFIKOVANO:** polling provjera duplikata prethodi transakciji u kojoj se kreira događaj (`thermostat.polling.service.ts:205-212,238-250`), pa sama po sebi nije atomska zaštita od istovremenih procesa. Stvarna učestalost duplikata nije utvrđena.
+5. **VERIFIKOVANO:** push adapter hvata i loguje grešku slanja, ne obrađuje vraćene tickete/receipte; pozivajući servis zatim kreira notifikacijski zapis (`backend/src/modules/ExpoPush/expo.push.notification.service.ts:35-43`, `backend/src/modules/Notification/notifications.service.ts:80-93`). Upis nije dokaz isporuke.
+
+## Otvorena pitanja
+
+- Koliko je produkcijskih API replika, koji scheduler stvarno radi, jesu li poslovi duplirani, koliko uređaja i koji je Tuya rate limit/ugovor? Bez operativnih mjerenja nema potvrde opterećenja ni dimenzioniranja.
+- Koji je stvarni RPO/RTO, ugovorena dostupnost, kapacitet PostgreSQL/Redis, trošak hostinga i odgovornost dežurstva? Brojevi ispod su početne hipoteze, ne SLO niti naredba za produkciju.
+- Koji push tipovi su poslovno kritični i kako postupati nakon neodređenog ishoda Expo zahtjeva? Bez provider idempotency garancije nije moguće obećati exactly-once dostavu.
+- Stvarne verzije i konfiguraciju Redis/BullMQ, TLS/ACL, semantiku zaključavanja i trajnosti treba potvrditi prije implementacije. Ovaj dokument je dizajn, ne urađena migracija.
+
+## Trenutno stanje — dokaz i ograničenje
+
+| Deklaracija / stanje | VERIFIKOVANO u izvoru | Posljedica / otvoreno |
+|---|---|---|
+| Poll uređaja | `thermostat.polling.service.ts:35-60`: `*/1 * * * *`, izostavljen provider u `NODE_ENV=test`, cron disabled i u developmentu. Sekvencijalna petlja. | HIPOTEZA: ako ukupan krug traje duže od intervala, pozivi se mogu preklopiti; provjeriti konkretno ponašanje verzije cron biblioteke i reproducirati. |
+| Otvorene anomalije | `heating.anomayl.checker.service.ts:49-62`: `*/5 * * * *`, lista otvorenih i sekvencijalna obrada. | Dvije replike mogu obraditi isti događaj; potrebno je DB uslovno preuzimanje. |
+| Nedavno zatvorene | `heating.anomayl.checker.service.ts:69-94`: `*/5`, prethodna 24 h, `anomalyCheckedAt=null`, oznaka poslije obrade. | Izbor prije oznake nije atomično preuzimanje; padajući proces ili konkurencija mogu ponavljati obradu. |
+| Dnevna preporuka | `daily.recommendation.service.ts:20-24,74-93`: `0 0 * * *`; komentar kaže 6:00, ali cron izraz znači ponoć u zoni schedulera; zona nije eksplicitno postavljena u dekoratoru. Kreiranje preporuke prije provjere notifikacije. | Vremenska zona procesa i efektivni trenutak nisu utvrđeni; ponavljanja mogu kreirati više preporuka. |
+| Gas podsjetnik | `gas.reminder.service.ts:21-25`: konfigurabilan izraz, podrazumijevano `30 6 * * *`; komentar navodi UTC, ali dekorator ne navodi `timeZone`. | Zona zavisi od runtima/cron biblioteke; ne tvrditi da je u produkciji sigurno UTC. |
+| Duplikat provider | `schedule.module.ts:24-42` i `notifications.module.ts:7-10` oba registruju `GasReminderService`, oba s istim imenovanim cron dekoratorom. | Dvije DI registracije ne dokazuju dva izvršenja. U lokalno instaliranom `@nestjs/schedule` `scheduler.orchestrator.js:102-107` imenovane unose stavlja u mapu po istom imenu, što može zamijeniti raniji; produkcijsku verziju, instancu i runtime ponašanje treba integracijski dokazati. Ne zaključivati ni da je sve bezopasno ni da se sigurno dvostruko izvršava. |
+| Procesna stanja | `tuya.adapter.ts:46-53` 5 s snapshot Map i per-device breaker Map; `common/fallback-strategy.service.ts:34-36`, `common/metrics.service.ts:45-58`, `common/reporting.service.ts:71-72` procesne mape/brojači. | Nisu dijeljeni između procesa; u više DI instanci stanja mogu biti razdvojena čak i unutar jednog procesa. Metrike treba agregirati po instanci uz reset svijest. |
+| Tuya token | `backend/src/modules/Tuya/tuya.auth.service.ts:29-33,45-75`, `backend/prisma/schema.prisma:244-250`. | Token se čita iz PostgreSQL-a i obnavlja preko HTTP-a; konkurentni refresh je moguć. Ne ispisivati token/credentials. |
+| Throttler | `backend/src/app.module.ts:23-33,53-64`: bez eksplicitnog shared storagea; isključen u testu. Lokalno instalirani `@nestjs/throttler` 6.5.0 koristi `Map` u default storageu i TTL u milisekundama; `ttl: 60` je 60 ms, ne 60 s. | **VERIFIKOVANO:** offline storage reprodukcija `node scripts/audit/throttle_repro.cjs`. Svaka instanca default storagea ima zaseban Map; stvarna proxy/produkcijska topologija i HTTP rezultat nisu provjereni. Hitno provjeriti R-004 prije planiranja Redis storagea. |
+| Shutdown | `backend/src/main.ts:52-53` uključuje Nest shutdown hooks. | To samo po sebi ne dokazuje zaustavljanje aktivnih provider zahtjeva, durable završetak ili drained queue, koji trenutno ne postoji. |
+
+## Prioritetni nalazi
+
+### [R-001] Više API replika može duplicirati cron aktivnosti — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (registracija i neatomarni check), HIPOTEZA (stvarna produkcijska pojava)
+- Gdje: `backend/src/app.module.ts:23-49`, `backend/src/modules/Schedule/schedule.module.ts:17-43`, `backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:205-212,238-250`, `backend/src/modules/Schedule/daily.recommendation.service.ts:74-93`.
+- Šta nije u redu i zašto: svaki API kontekst koji učita scheduler može zakazivati posao; polling provjerava postojeći događaj prije zasebne transakcije upisa, a dnevni posao prvo upisuje preporuku. Dva konkurentna izvršavanja mogu proći iste provjere; ne znamo da li se to u produkciji dogodilo.
+- Dokaz: statičke deklaracije i redoslijed kodnih operacija. **Nije testirano** sa dvije replike i stvarnim providerom.
+- Preporuka: poseban worker kontekst, DB-enforced idempotency/atomic claims, siguran prelaz u kojem jedino jedna generacija izvodi side-effecte. Redis lock sam nije zamjena za PostgreSQL integritet, posebno pri isteku leasa i mrežnoj particiji.
+- Kako provjeriti: dva izolovana workera i dvije API instance istovremeno obrade isti slot/uređaj uz barijeru; provjeriti jedan poslovni upis/outbox, te ponovno pokretanje usred transakcije. Pokrenuti budući integration suite s PostgreSQL i Redis u branch-only CI (`cd backend && npm run test:integration`).
+- Trud: L — Zavisnosti: identitet događaja/slotova, migracije, outbox, kontrolisana tranzicija.
+
+### [R-002] Push zapis ne potvrđuje isporuku — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO
+- Gdje: `backend/src/modules/ExpoPush/expo.push.notification.service.ts:35-43`, `backend/src/modules/Notification/notifications.service.ts:74-93`.
+- Šta nije u redu i zašto: izuzetak slanja se uhvati bez propagiranja; tickete i receipte kod ne obrađuje, a servis zatim može kreirati zapis. `deliveryOk` default iz sheme sam po sebi ne dokazuje stvarnu isporuku. Konkurentni debounce check i slanje nisu jedna atomska operacija.
+- Dokaz: `sendPushNotificationsAsync` rezultat se ne čuva, `catch` samo loguje; `notifyUser` poslije poziva radi `notification.create`; `backend/prisma/schema.prisma:266-280`.
+- Preporuka: outbox transakcijom zajedno s poslovnim događajem, odvojeno stanje `pending/submitted/provider_accepted/receipt_error/unknown` i ograničeni retry; ticket/receipt radnik i invalidacija tokena samo po verificiranim provider odgovorima. Ne tvrditi exactly-once na neodređenom mrežnom ishodu.
+- Kako provjeriti: fake Expo uspjeh, djelimično odbijanje, timeout prije/poslije slanja, pogrešan token, ponavljanje istog outboxa i zakasnjeli receipt, uz DB provjeru stanja i neduplikacije; `cd backend && npm run test:integration` u izolovanoj bazi.
+- Trud: L — Zavisnosti: schema migracija, provider ugovor, dozvoljeni retry rizici i UI kompatibilnost.
+
+### [R-003] Tuya refresh i pojedinačni poll bez dijeljenog single-flighta — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (kod), HIPOTEZA (opterećenje)
+- Gdje: `backend/src/modules/Tuya/tuya.auth.service.ts:29-33,45-75`, `backend/src/modules/Boiler/adapter/tuya.adapter.ts:46-53,300-319`.
+- Šta nije u redu i zašto: token čitanje, vanjsko osvježavanje i upsert nisu jedno međuprocesno zaključavanje; snapshot Map je po instanci i nakon cache miss-a ne registruje in-flight promise. Konkurencija može napraviti ponovljene pozive; kvote i stvarni broj nisu izmjereni.
+- Dokaz: kod provjerava cache pa direktno zove `fetchStatus`; refresh nakon isteka direktno zove vanjski endpoint.
+- Preporuka: kratki single-flight per nalog za refresh i per uređaj za snapshot, ograničen rate i konkurentnost; nakon osvajanja locka ponovo čitati token. Lock s ownership tokenom, renewal i compare-delete; bez ispisa tokena. Ne dozvoliti zastarjeloj instanci da prepiše noviji zapis.
+- Kako provjeriti: dva workera i fake provider s odgođenim odgovorom, expiry leasa, mrežnom particijom i neuspjehom; dokazati bounded pozive i bez curenja tokena; budući `npm run test:integration` s Redis/PostgreSQL servisima.
+- Trud: M/L — Zavisnosti: identitet Tuya naloga, ugovor/limiti i usklađenost baze.
+
+### [R-004] Throttler interval je 60 ms umjesto namjeravanih 60 s — Ozbiljnost: VISOKO — Pouzdanost: VERIFIKOVANO (instalirana verzija i izolovani storage)
+- Gdje: `backend/src/app.module.ts:23-33,53-64`, zaključana zavisnost `@nestjs/throttler` u `backend/package-lock.json`; instalirana verzija 6.5.0, `backend/node_modules/@nestjs/throttler/README.md` (TTL u ms) i `dist/throttler.service.js` (direktno koristi `ttl` kao `ttlMilliseconds`).
+- Šta nije u redu i zašto: komentar u aplikaciji kaže sekunde i postavlja `ttl: 60`, dok verzija biblioteke koristi milisekunde. Konfiguracija ograničava 100 zahtjeva po 60 ms, ne po 60 s; zaštita login/registracije je zato mnogo slabija od očigledno namjeravanog intervala. Efektivni produkcijski promet/proxy/WAF nisu provjereni; testni `NODE_ENV` isključuje guard.
+- Dokaz: `node scripts/audit/throttle_repro.cjs` koristi stvarni instalirani default storage i lažni sat: 101. zahtjev je blokiran, a nakon 61 ms sljedeći više nije blokiran. Nije HTTP niti produkcijski test. Default provider kreira `ThrottlerStorageService` s lokalnim `Map` ako storage nije zadan.
+- Preporuka: prioritetno potvrditi namjeravani interval sa vlasnikom i dodati test-first HTTP test s uključenim guardom u izolovanom okruženju, zatim koristiti eksplicitni helper `seconds(60)` ili 60000 ms. Procijeniti rubni login limit i nadzor dok se promjena ne objavi; provjeriti trusted proxy i prilagoditi pragove da ne blokiraju legitimne korisnike. Ovo je plan, ne neovlaštena izmjena koda.
+- Kako provjeriti: u ne-testnoj konfiguraciji integracijskog testa poslati 101 zahtjev unutar 60 s i potvrditi 429, proći fake time ili sačekati kontrolisani istek te potvrditi reset; testirati login/registration posebno, dva API procesa i očekivani shared storage. Pokrenuti namjenski budući suite s `NODE_ENV`/servisima koji stvarno uključuju guard, ne oslanjati se na postojeći `NODE_ENV=test` CI.
+- Trud: S za jedinicu i test, M/L za siguran distribuirani limit — Zavisnosti: sigurnosna politika, proxy/WAF i kompatibilnost klijenata.
+
+## Odluke: gdje usvojiti, odgoditi ili ne usvojiti
+
+Brojevi TTL-ova/konkurentnosti su **početne hipoteze za testiranje**, ne odobrena produkcijska konfiguracija. Redis outage politike vrijede za predloženi sistem.
+
+| Komponenta | Odluka, korist i početna politika | Redis nedostupan / rizik / trošak |
+|---|---|---|
+| Poll fan-out | **USVOJITI nakon R-001**: scheduler kreira kontrolisane poslove po uređaju i vremenskom slotu; limit po nalogu/provideru, odvojeni radnici. Prvo izmjeriti trajanje; početni concurrency npr. 2, podesiti prema kvoti i p95. | Pauzirati enqueue/obradu, alert na starost posljednjeg uspješnog poll-a; ne pokrenuti neograničeni fallback polling po API replikama. Trošak Redis + worker + DB indeks; rizik stale podataka. |
+| Anomaly OPEN/CLOSED | **USVOJITI** kroz izdvojene jobove, DB claim/conditional update, idempotentne promjene i outbox. | Čekati oporavak, iskazati kašnjenje; ne označiti događaj obrađenim prije stvarne obrade. |
+| Dnevna preporuka | **USVOJITI nakon jedinstvenog ključa** po korisniku/profilu/lokalnom datumu/verziji; fiksirati IANA zonu, DST i definiciju dana, poslovni zapis + outbox u transakciji. | Odgoditi izradu, ne kreirati duplikate. Ne mijenjati algoritam temperatura kao dio migracije workera. |
+| Gas podsjetnik | **USVOJITI** nakon uklanjanja/ograničenja testnih ruta B-007; key po korisniku i lokalnom danu. | Čekati oporavak, TTL po poslovnoj vrijednosti podsjetnika; ne spamati zaostale podsjetnike nakon dugog outagea. |
+| Weather refresh | **USVOJITI** SWR + jedan refresh po validiranom koordinatnom ključu (`05-weather.md`); svježina i kvalitet u DTO-u. | Poslužiti PostgreSQL last-known-good ispravne lokacije uz `stale/age` unutar maksimalne starosti, inače unavailable; nema lažne nule ili tuđeg grada. |
+| Push i Expo receipt | **USVOJITI fazno**: DB outbox, delivery job, provjera ticket/receipt-a, DLQ i bezbjedna obrada tokena. | Sačuvati durable outbox u PostgreSQL; dispatcher nastavlja po oporavku. Ne obećavati tačno jednom ako je providerov ishod nepoznat. |
+| Izvještaji | **ODGODITI** red dok mjerenje ne pokaže sporo/ponavljano generisanje; agregacije i indeksiranje prvo. | API ograničen na provjerene sinhrone izvještaje; ako red postane potreban, vratiti status posla i mogućnost ponavljanja. |
+| Upload/faktura | **ODGODITI** asinkronu obradu dok se ne definišu antivirus, privatno skladište i obrada grešaka; sam HTTP upload mora validirati i trajno sačuvati fajl prije potvrde. | Nema potvrde da je obrada uspjela ako nije; fajl i DB referenca zahtijevaju recovery/reconciliation. Queue payload samo ID, nikad sadržaj fajla ili osjetljive metapodatke. |
+| Dashboard cache | **ODGODITI** do profila sporih upita; ako treba, key user+profile+verzija+parametri, kratki TTL i invalidacija na relevantne upise. | Siguran ograničen DB fallback po korisniku ili 503 uz zaštitu baze; ne vraćati cache drugog korisnika. Trošak invalidacije i rizik curenja. |
+| Tuya token | **USVOJITI single-flight**, Redis cache tokena **ODGODITI**: trenutna DB je source of truth; tokeni su tajne. | Redis outage: izbjegavati paralelni refresh; koristiti još važeći DB token, u suprotnom fail closed ili DB-lock pristup tek nakon posebnog testiranja. TLS/ACL, minimalni TTL i bez logovanja. |
+| Tuya snapshot | **USVOJITI oprezno** uz key nalog+uređaj+verzija i kratku TTL, timestamp/quality i invalidaciju po promjeni programa. | Ograničeni lokalni cache s age/stale i ograničenim provider pozivima; ne koristiti stale kao dokaz fizičkog stanja ili za automatsku komandu. |
+| Distribuirani throttle | **USVOJITI** after provjere trusted proxy/client IP, izolovane rate-limit ključeve i verziju storage adaptera. | Fail-closed za login/registraciju i osjetljive operacije, ili prethodno odobren rubni limit; za read rute eventualni bounded local fallback samo uz eksplicitnu politiku. |
+| Dijeljeni breaker | **ODGODITI** dok lokalni breaker, per-provider kvota i rate limiter nisu izmjereni; složenost distribuiranog stanja i particije može pogoršati dostupnost. | Lokalni breaker i strogi limit uz eksplicitno označen degrade mode; ne prikazivati lokalno stanje kao globalno. |
+| Pub/sub i SSE | **ODGODITI** dok live-status potreba nije potvrđena. Pub/sub je prolazan, nije izvor istine ni pouzdan event log. | Reconnect uz provjeru ovlasti i ponovni fetch iz baze; fallback na kontrolisani polling. Trošak konekcija i zaštite tenant podataka. |
+
+## Predložena arhitektura i semantika
+
+**Prijedlog, nije implementirano.** Odvojiti `ApiModule` (HTTP, bez provider-a cron radnika) od `WorkerModule` (prava potrebna za poslove, bez HTTP servera). `backend/src/worker.ts` poziva `NestFactory.createApplicationContext(WorkerModule)` i uključuje shutdown hooks. `ScheduleModule.forRoot()` i job registracija smiju se pojaviti samo u scheduler/worker kontekstu kada se flag prebaci. Paziti na postojeću dvostruku registraciju `GasReminderService`: ne uvoziti staru punu `AppModule` u worker jer bi se ponovo uključili API cronovi.
+
+### Redovi i ograničenje rada
+
+- BullMQ i `@nestjs/bullmq` su **predložene** nove zavisnosti, tačne podržane verzije i Job Schedulers API provjeriti pri implementaciji. Odvojeni `poll-dispatch`, `poll-device`, `anomaly`, `daily`, `gas-reminder`, `weather-refresh`, `push-delivery`, `push-receipts` redovi omogućavaju odvojene kvote; izvještaji/upload tek nakon odluke iz tabele.
+- Dispatcher stvara jedan job po **internom** device ID-u i slotu, u malim paginiranim serijama; ID npr. `poll-<hashedDevice>-<epochSlot>` bez dvotačke i bez PII. Redni `jobId` deduplicira samo u granicama životnog ciklusa joba; nakon uklanjanja joba ili Redis gubitka **nije trajna poslovna zaštita**. DB unique idempotency i poslovne tranzicije su obavezni.
+- Poll worker dohvata aktuelno vlasništvo uređaja i konfiguraciju iz baze (ne vjeruje starom queue payloadu); provider limiter po Tuya nalogu plus globalni plafon, bounded concurrency, realni HTTP abort/timeout. Retry s exponential backoff+jitter samo za prolazne greške; trajne greške/invalid uređaj odmah u fail-state, nakon limita u DLQ. Sam timeout/redelivery može preklopiti spori provider poziv pa DB claim/fencing i provider specifična semantika ostaju nužni.
+- Event-start i event-end se štite kroz uslovne update-e i transakcije/unique identitet definisan proizvodnim pravilom, ne samo Redis lock; integritet se mora dokazati za preklapajuće slotove i replay. Za zatvoreni event obraditi samo jednom po stabilnom event ID-u/verziji. DB migracije dodaju ključeve tek nakon identifikacije i rješavanja postojećih duplikata bez gubitka podataka.
+- Dnevni/gas jobovi koriste determinističan lokalni datum i jedinstven poslovni ključ. Prije retry-a provjeriti da rezultat još ima smisla nakon dugog outages-a. DLQ čuva minimum podataka, razlog kod bez tajni i kontrolisan replay. Korisnik ne mora biti obaviješten dvaput da bi retry bio tehnički uspješan.
+- **At-least-once, ne exactly-once:** queue retry/stall i network timeout mogu ponoviti posao. Outbox + jedinstveni ključ u istoj DB transakciji štiti DB efekte; slanje eksternom provideru nakon neodređenog ishoda može biti duplikat, osim ako provider nudi provjerenu idempotentnost. Evidentirati `unknown`, ograničiti retry i dogovoriti poslovnu politiku.
+
+### Lock, lease i zaštita od gubitka vlasništva
+
+Redis `SET key randomToken NX PX ttl` s jedinstvenim nepredvidivim tokenom po vlasniku; compare-and-delete/renew atomarnom Lua skriptom. Nakon locka ponovo pročitati cache/DB. TTL i renewal moraju biti veći od realnog p99, provjeriti zastajanje event loop-a i maksimalni rok. Redis lease sam ne sprečava prethodnog vlasnika da nastavi nakon expiry-a ili failovera: prije side effecta koristiti fencing token provjeravan u DB/provideru gdje je moguće, odnosno DB transakcijski claim/unique constraint. Ako nije moguće garantovati sigurno isključivanje, odgoditi side effect i obavijestiti operatera. Redis replikacija/failover nije automatski konsenzus i može izgubiti lock.
+
+### Redis konfiguracija, izolacija i degradacija
+
+- Queue/lock instanca ili namjenski managed deployment sa **`maxmemory-policy noeviction`**; cache je odvojen deployment/instanca s ograničenim TTL-ovima i kontrolisanom eviction politikom (npr. `allkeys-lru`), jer eviction queue/lock ključeva ugrožava pouzdanost. Ako postoji samo jedna instanca, `noeviction` i alarm/kapacitet su sigurniji od evikcije queue podataka; ne dijeliti neograničen cache s njom.
+- TLS, ACL korisnici/ograničeni prefiksi gdje platforma podržava, tajne iz secret managera, interna mreža, bez javnog porta, odvojena okruženja, backup i verifikacija restorea, audit pristupa. Loš ili nepostojeći TLS/ACL u produkciji nije prihvatljiva podrazumijevana postavka.
+- AOF (npr. `appendfsync everysec`) i RDB snapshot prema odobrenom RPO/RTO; AOF `everysec` i asinhrona replikacija i dalje mogu izgubiti posljednje upise. Reprodukovati failover, puni disk, AOF rewrite, restore i korupciju; PostgreSQL outbox/reconciliation je potreban za rekonstrukciju i kad queue izgubi poslove. Ne tvrditi da AOF garantuje nula gubitaka.
+- Granice memorije, `noeviction` greške i vrijeme/dužinu zaostalih poslova pratiti i uzbunjivati; Redis treba odvojene privilegije za queue, cache i operativnu administraciju. Za privremeni CI nema produkcijskih tajni niti izlaganja na korisnički browser.
+- Graceful shutdown: prestati prihvatati jobove, signalizirati spremnost false, dovršiti/otkazati uz ograničeni rok i renewal, zatvoriti queue, Redis i Prisma konekcije; nezavršen job mora biti povratljiv i idempotentan. Kill -9 i prisilni restart simulirati u testu, ne oslanjati se samo na SIGTERM.
+
+### Predloženi Compose i konfiguracija
+
+U budućoj maloj izmjeni `docker-compose.yml`: API servis bez scheduler provajdera, zaseban `boiler-control-worker` s istim verzioniranim imageom i worker entrypointom, izolovana privatna mreža; Redis servis ili managed Redis, healthcheck, persistent volume samo za queue varijantu, ograničeni resursi i zavisnosti readiness-a. `depends_on`/healthcheck sami nisu garancija spremnosti ili trajnosti; aplikacija mora imati bounded reconnect i semantiku iz tabele. Ne izlagati Redis port javnosti. Planirati PostgreSQL migracije zasebno, expand/backfill/validate, rollback i backup prije aktivacije.
+
+Predloženi env **nazivi**, bez vrijednosti ili vjerodajnica: `REDIS_QUEUE_URL`, `REDIS_CACHE_URL`, `REDIS_TLS_ENABLED`, `REDIS_USERNAME`, `REDIS_PASSWORD_FILE` ili secret manager reference, `WORKER_ENABLED`, `LEGACY_SCHEDULER_ENABLED`, `POLL_DISPATCH_ENABLED`, `POLL_CONCURRENCY`, `TUYA_RATE_LIMIT`, `PUSH_QUEUE_ENABLED`, `WEATHER_SWR_ENABLED`, `QUEUE_PREFIX`, `QUEUE_JOB_RETENTION_HOURS`. Validirati obavezne vrijednosti, minimalne TLS zahtjeve i izolaciju okruženja pri startu; ne logovati URL-ove koji mogu sadržati lozinku. Konačna imena zavise od implementacije, ne predstavljaju postojeće varijable.
+
+## Metrike i operativna politika
+
+Po redu: broj waiting/delayed/active/failed/stalled, **starost najstarijeg** joba, vrijeme čekanja i obrade p50/p95/p99, stopa retry/DLQ, broj idempotency konflikata, lock expiry/renew failure, provider timeout/rate-limit, broj uspješnih pollova i starost posljednjeg snapshot-a, outbox lag, stale weather i Redis reconnect. Pozvati operatera ako npr. najstariji poll prelazi dogovoreni freshness budžet ili outbox raste duže od dogovorenog prozora; pragove postaviti tek nakon mjerenja. Ne koristiti token, email, koordinate ili device ID kao labels u high-cardinality metrikama. Napraviti runbook za pregled stanja bez tajni, DLQ replay, obustavu određenog job tipa i oporavak iz DB outboxa.
+
+## Migracija bez prekida i rollback
+
+1. **Mjerenje i priprema:** testni servis/izolirana baza, broj replika, trajanje i postojeći duplikati; definisati poslovnu idempotenciju i ukloniti sigurnosni B-007. Migracije su expand-only s backupom i testiranim restoreom, bez promjene postojećih API DTO-ova.
+2. **Uvesti zajednički safety gate prije paralelnog rada:** starim i novim izvršavaocima treba ista DB-enforced zaštita/claim, uključujući sve side effecte. Ako stari kod **ne poštuje** zajednički gate, Redis lock koji koristi samo novi worker ne čini paralelni rad sigurnim. U tom slučaju kratko zaustaviti stari scheduler, potvrditi in-flight završetak i tek onda aktivirati novog izvršioca; bolje mali kontrolisani zastoj nego dupli događaji/slanja.
+3. **Shadow:** novi dispatcher/proračun samo bilježi namjere bez side effecta; usporediti broj slotova, starost, propuste, duplikate i rezultate s legacy procesom. Zasebni prefixi, bez pristupa tajnama u izvještaju. Deduplikacija i DB gate testirani prije ikakvog aktivnog canary-ja.
+4. **Canary i cutover:** jedan tip posla, ograničeni skup uređaja/profila, jedan izvor side effecta po ključu, monitoring i ručni operator. Jasno ugasiti legacy za preneseni segment prije aktivnog novog, osim ako *oba* provjereno koriste isti gate. Postepeno proširiti uz testiranu usklađenost tz/DST i rate budgeta.
+5. **Rollback:** zaustaviti nove dispatchere i worker izvršioce, drain/reconcile outbox i utvrditi nedovršene poslove; tek poslije potvrde ekskluzivnosti vratiti legacy scheduler pod postojećim DB gateom. Ako ga stari kod ne podržava, ne upaliti oba; prihvatiti kontrolisani zastoj dok se ne uspostavi isključivi režim. Ne rollbackovati shemu brisanjem poslovnih zapisa; Redis i outbox zadržati za replay/reviziju. Potvrditi API contract i realno stanje poslova.
+
+## Testni plan
+
+| Scenarij | Potrebna provjera | Pokretanje / status |
+|---|---|---|
+| PostgreSQL + Redis realni klijenti | Dvije API i dvije worker instance, atomic claim, idempotency, stale lease/fencing, Redis restart/eviction/full, DB rollback i outbox recovery. | Budući integration testovi u `.github/workflows/backend-audit.yml`; `cd backend && npm run test:integration`. **NIJE IZVEDENO:** sadašnji CI ping samo dokazuje Redis servis. |
+| Fan-out i provider rate | Sintetičkih N uređaja, jedan job/slot, stabilna paginacija, limit po nalogu, neuspješan jedan uređaj ne blokira ostale; timeout/backoff/DLQ. | Budući unit/integration `cd backend && npm test -- --runInBand` i `npm run test:integration`. |
+| Overlap i kill -9 | Zaustaviti proces nakon DB commit-a ali prije queue ack-a; ponoviti posao, jedna DB posljedica i usklađen outbox; prekinuti lease/renew. | Budući deterministički integration/fault injection s izolovanim servisima; dokumentovati komandu nakon implementacije. |
+| Expo | Fake tickets/receipts, djelimični neuspjeh, timeout s nepoznatim ishodom, invalid token, retry i policy za mogući duplikat. | Budući Jest/integration, bez slanja stvarnih push poruka. |
+| Cache i izolacija | TTL, ownership, freshness, dvije lokacije/korisnika, lock gubitak, Redis outage i ograničenje DB fallbacka. | Budući integration + contract testovi; ne koristiti produkcijske tajne. |
+| Cron/DST i registracija | Dvije DI registracije gas providera, jedna/no-op side effect, UTC i IANA timezone, DST praznine/preklopi i proces restart. | Budući fake-clock Nest test i dvije replike; potvrditi ponašanje tačne zaključane verzije schedule paketa. |
+| Sigurnost/throttle | Login fail-closed, trusted proxy, više API procesa, ACL, Redis TLS i odsustvo tajni u logu/DLQ. | Budući security/integration test i deployment validacija. |
+
+**Status:** ovo je projektni prijedlog; Redis, queue i worker nisu dodani aplikaciji. Zaključci o produkcijskom stanju, performansama, runtime rasporedu i trošku čekaju odobrena mjerenja i testove.

@@ -83,6 +83,10 @@ describe('Integration Tests: Backend API (P2a)', () => {
             name: 'Integration Test User',
           });
 
+        if (response.status !== 201) {
+          // Status only: no response body, token or personal data in CI diagnostics.
+          throw new Error(`AUDIT_REGISTRATION_HTTP_STATUS_${response.status}`);
+        }
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty('user');
         expect(response.body).toHaveProperty('token');

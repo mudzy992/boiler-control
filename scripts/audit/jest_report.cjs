@@ -29,7 +29,9 @@ try {
     // Emit only allowlisted diagnostics, never arbitrary test output or values.
     const text = String(message || '').replace(/\x1b\[[0-9;]*m/g, '');
     const hints = [];
-    for (const code of new Set(text.match(/TS\d{4}/g) || [])) hints.push(code);
+    const status = text.match(/AUDIT_REGISTRATION_HTTP_STATUS_(\d{3})/);
+    if (status) hints.push(`registration HTTP status ${status[1]}`);
+    for (const code of new Set(text.match(/\b(?:TS\d{4}|P\d{4}|ECONNREFUSED|ECONNRESET|EADDRINUSE|EACCES|EPERM)\b/g) || [])) hints.push(code);
     for (const match of text.matchAll(/Cannot find module ['"]([^'"\r\n]+)['"]/g)) {
       if (/^[\w./@-]+$/.test(match[1])) hints.push(`missing module ${match[1]}`);
     }

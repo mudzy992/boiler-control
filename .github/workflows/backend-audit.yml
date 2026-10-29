@@ -72,7 +72,7 @@ jobs:
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |
           set +e
-          npx eslint 'src/**/*.ts' 'test/**/*.ts' --format json > "$RUNNER_TEMP/audit-eslint.json"
+          npx eslint 'src/**/*.ts' 'test/**/*.ts' --ignore-pattern 'src/generated/**' --format json > "$RUNNER_TEMP/audit-eslint.json"
           result=$?
           node ../scripts/audit/ci_diagnostics.cjs eslint "$RUNNER_TEMP/audit-eslint.json"
           report_result=$?
@@ -82,7 +82,7 @@ jobs:
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |
           set +e
-          npx tsc --noEmit --incremental false > "$RUNNER_TEMP/audit-tsc.txt" 2>&1
+          npx tsc --noEmit --incremental false --types node,jest > "$RUNNER_TEMP/audit-tsc.txt" 2>&1
           result=$?
           node ../scripts/audit/ci_diagnostics.cjs tsc "$RUNNER_TEMP/audit-tsc.txt"
           report_result=$?

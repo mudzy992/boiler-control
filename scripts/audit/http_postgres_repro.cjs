@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-/* CI-only, intentional vulnerability demonstration; all synthetic DB writes roll back. */
+/* CI-only: regresijski dokaz da SEC-1 (IDOR) drži + demonstracija i dalje otvorenog nalaza za masovni gas reminder. Svi sintetički upisi se rollbackuju. */
 'use strict';
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 if (process.argv.includes('--help')) {
-  console.log('Upotreba: node scripts/audit/http_postgres_repro.cjs --ci\nSamo efemerni PostgreSQL servis u branch-only GitHub Actions workflowu: stvarni JWT guard, kontroler, servis i Prisma transakcija s dva sintetička korisnika. Svi upisi se namjerno rollbackuju; bez Expo/vanjske mreže. Skripta pokazuje postojeći propust, NIJE regresijski test ispravljenog ponašanja. Ne koristiti s produkcijskom ili trajnom bazom.');
+  console.log('Upotreba: node scripts/audit/http_postgres_repro.cjs --ci\nSamo efemerni PostgreSQL servis u branch-only GitHub Actions workflowu: stvarni JWT guard, kontroler, servis i Prisma transakcija s dva sintetička korisnika. Svi upisi se namjerno rollbackuju; bez Expo/vanjske mreže.\n\nSkripta je REGRESIJSKI DOKAZ, ne demonstracija propusta: SEC-1 je ispravio IDOR na POST /api/notifications/:id/read, pa cross-user pokušaj sada mora vratiti 404 i NE smije promijeniti zapis, dok vlasnik i dalje uspješno označava svoju notifikaciju (pozitivna kontrola). Masovni gas reminder se i dalje demonstrira kao OTVOREN nalaz: endpoint dokumentuje "admin only" ali nema RolesGuard, pa ga može pozvati svaki prijavljeni korisnik.\n\nNe koristiti s produkcijskom ili trajnom bazom.');
   process.exit(0);
 }
 if (process.argv.length !== 3 || process.argv[2] !== '--ci' || process.env.GITHUB_ACTIONS !== 'true' || process.env.GITHUB_REF !== 'refs/heads/arena/1bfee051-boiler-control' || process.env.AUDIT_DISPOSABLE_POSTGRES !== '1' || process.env.DATABASE_HOST !== '127.0.0.1' || process.env.DATABASE_NAME !== 'audit' || process.env.DATABASE_USER !== 'audit') {
@@ -68,12 +68,28 @@ async function main() {
           const missing = await request(app.getHttpServer()).post(`/api/notifications/${notice.id}/read`);
           assert.equal(missing.status,401);
           stage = 'http-cross-user';
+          // SEC-1: IDOR je ispravljen. Servis radi atomski updateMany po {id, userId}
+          // i baca NotFoundException kad je count 0 -- 404 namjerno umjesto 403, da
+          // odgovor ne otkrije postojanje tudjeg zapisa.
           const result = await request(app.getHttpServer()).post(`/api/notifications/${notice.id}/read`).set('Authorization',`Bearer ${auth}`);
-          assert.equal(result.status,201);
+          assert.equal(result.status,404);
           stage = 'database-readback';
+          // Kljucni dokaz: nije dovoljno da HTTP odgovor bude 404 -- upis se stvarno
+          // ne smije desiti. Zapis i dalje pripada B i ostaje neprocitan.
           const stored = await tx.notification.findUnique({where:{id:notice.id}});
-          assert.equal(stored.userId,b.id); assert.equal(stored.isRead,true);
+          assert.equal(stored.userId,b.id); assert.equal(stored.isRead,false);
+          stage = 'http-owner';
+          // Pozitivna kontrola: bez nje 404 ne bi dokazivao autorizaciju, jer bi bio
+          // jednako objasnjiv pokvarenim endpointom. Vlasnik mora proci.
+          const ownerAuth = jwt.sign({userId:b.id});
+          const own = await request(app.getHttpServer()).post(`/api/notifications/${notice.id}/read`).set('Authorization',`Bearer ${ownerAuth}`);
+          assert.equal(own.status,201);
+          const readByOwner = await tx.notification.findUnique({where:{id:notice.id}});
+          assert.equal(readByOwner.isRead,true);
           stage = 'http-reminder';
+          // OTVOREN NALAZ: endpoint dokumentuje "admin only" (notifications.controller.ts:163)
+          // ali kontroler ima samo @UseGuards(JwtAuthGuard) i nijedan @Roles, pa
+          // masovni reminder moze pokrenuti bilo koji prijavljeni korisnik.
           const reminder = await request(app.getHttpServer()).post('/api/notifications/test-trigger-all-gas-reminders').set('Authorization',`Bearer ${auth}`);
           assert.equal(reminder.status,201); assert.equal(reminderCalls,1);
           completed = true;
@@ -86,7 +102,7 @@ async function main() {
     stage = 'rollback-verification';
     assert.equal(await db.user.count({where:{id:{in:userIds}}}), 0);
     assert.equal(await db.notification.count({where:{id:notificationId}}), 0);
-    console.log('::notice title=Audit security reproduction::Synthetic user A modified user B notification in isolated PostgreSQL; USER invoked mock mass reminder. Transaction rolled back and record absence verified.');
+    console.log('::notice title=Audit security regression check::SEC-1 holds in isolated PostgreSQL - cross-user POST /api/notifications/:id/read returned 404 and left the record unread, while the owner still succeeded. Open finding remains: test-trigger-all-gas-reminders has no RolesGuard, so a USER invoked the mock mass reminder. Transaction rolled back and record absence verified.');
   } finally { await db.$disconnect(); }
 }
 main().catch(error => {

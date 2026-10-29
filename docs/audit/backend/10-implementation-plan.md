@@ -90,9 +90,9 @@
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; nijedna korisniku vidljiva preporuka ni uređaj nisu promijenjeni; zavisi od 1.3, odobrenih anonymiziranih podataka, stručne validacije.
 
 ### 2.2 Učenje i stručna kalibracija
-- **Cilj/fajlovi:** `HeatingRecommendation/heating.recommendation.service.ts`, `Heating/strategies/full.strategy.ts`, nova shadow verzija; popraviti prvi interval, idempotentne uzorke, confidence i smjer tek nakon definisanja semantike.
+- **Cilj/fajlovi:** `HeatingRecommendation/heating.recommendation.service.ts`, `Heating/strategies/full.strategy.ts`, nova shadow verzija; popraviti prvi interval, idempotentne uzorke, confidence, porijeklo signala i post-event stanje (FORM-1, F-005/F-006), a smjer tek nakon definisanja semantike.
 - **Migracija/rollback, flag:** additive stabilni sample/event key i eventualna tabela modela; `LEARNING_V2_SHADOW` default off. Rollback isključi novo računanje, ostavi podatke; stare i nove statistike ne miješati.
-- **Testovi:** prvi uzorak, duplikat, dva konkurentna eventa, varijansa, brz/spor/overshoot sign, minimalni sample, drift/outlier; izolovani DB integration. **Skripte:** `scripts/backtest-formulas.ts --help`, postojeća `backtest_sketch.py --demo`.
+- **Testovi:** prvi uzorak, duplikat, dva konkurentna eventa, varijansa, početna/završna/vršna temperatura, promjena cilja, odsutni/stale snapshot, post-event stanje preporuke, brz/spor/overshoot sign, minimalni sample, drift/outlier; izolovani DB integration. **Skripte:** `scripts/backtest-formulas.ts --help`, postojeća `backtest_sketch.py --demo` i `node scripts/audit/learning_end_repro.cjs --help` (reprodukuje stari tok).
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; samo paralelno računanje, stari response ne mijenjati; zavisi od 2.1 i stručne potvrde.
 
 ## Talas 3 — Redis i worker
@@ -170,6 +170,8 @@
 | `scripts/audit/gas_validation_repro.cjs`, `dashboard_repro.cjs`, `reminder_delivery_repro.cjs`, `upload_validation_repro.cjs` | Postoje; izolovani sintetički DTO/servisi/storage; prethodne greške i ograničenja navedeni u audit dokumentima. | `node scripts/audit/<ime>.cjs --help`; 3.3, 5.0–5.1a. |
 | `scripts/audit/engine_replay.cjs`, `openmeteo_fixture_replay.cjs` | Postoje; ograničeni postojeći-engine replay i javni SDK fixture, nisu puni backtest ni provjera sunrise/DST. | `node scripts/audit/engine_replay.cjs --help`; `node scripts/audit/openmeteo_fixture_replay.cjs --help`; 1.2 i 2.1. |
 | `scripts/audit/redis_lease_ci.cjs` | Postoji; CI-only primitivi na disposable Redis servisu; ne testira aplikacijski worker/BullMQ. | `node scripts/audit/redis_lease_ci.cjs --help`; 3.1–3.2. |
+| `scripts/audit/learning_end_repro.cjs` | Postoji; pravi poll end handler, preporuka i engine, sintetička fake DB/push; bez uređaja. | `node scripts/audit/learning_end_repro.cjs --help`; 2.2. |
+| `scripts/audit/poll_metrics_repro.cjs`, `poll_overlap_repro.cjs`, `push_registration_repro.cjs` | Postoje; offline fake DB/push/scheduler reprodukcije, bez stvarne dostave ili produkcije. | `node scripts/audit/poll_metrics_repro.cjs --help`, `node scripts/audit/poll_overlap_repro.cjs --help`, `node scripts/audit/push_registration_repro.cjs --help`; 3.2–3.3, 5.2. |
 | `scripts/audit/cron_registration_repro.cjs` | Postoji; sintetička Nest topologija sa stvarnim gas scheduler providerom, lažnom bazom i jednim ručnim tickom; ne testira produkciju ili više replika. | `node scripts/audit/cron_registration_repro.cjs --help`; 3.2–3.3. |
 | `scripts/audit/fallback_ttl_repro.cjs` | Postoji; fallback servis s lažnim satom, pokazuje preuranjeno brisanje osvježenog ključa. Nema dokazanog runtime callera. | `node scripts/audit/fallback_ttl_repro.cjs --help`; 3.3. |
 | `scripts/audit/auth_session_repro.cjs` | Postoji; lokalni HTTP s fake DB i stvarnim JWT/auth servisima pokazuje postojeće ponašanje sesija, ne popravak. | `node scripts/audit/auth_session_repro.cjs --help`; 0.4. |

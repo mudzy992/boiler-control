@@ -115,6 +115,9 @@ const enUS = {
     meterImageUploadError: 'Failed to upload meter image',
     meterImageOpenError: 'Failed to open image',
     authMissing: 'Authentication missing',
+    // FE2-12: dodano za onError poruke na mutacijama koje su ranije tiho padale.
+    deleteError: 'Failed to delete reading',
+    referenceError: 'Failed to update reference state',
     noReadings: 'No readings recorded',
     noReadingsYet: 'No gas readings recorded yet.',
     noReadingsAddFirst: 'Click "Add Reading" to create your first entry.',
@@ -171,6 +174,10 @@ const enUS = {
     enabled: 'Enabled',
     disabled: 'Disabled',
     noNotifications: 'No notifications',
+    // FE2-12: onError se ranije logovao samo u konzolu — korisnik nije vidio
+    // da akcija nije uspjela.
+    markAsReadError: 'Failed to mark notification as read',
+    markAllReadError: 'Failed to mark all notifications as read',
   },
   settings: {
     title: 'Settings',
@@ -316,6 +323,9 @@ const bsBS = {
     meterImageUploadError: 'Nije moguće učitati sliku brojila',
     meterImageOpenError: 'Nije moguće otvoriti sliku',
     authMissing: 'Nedostaje autentikacija',
+    // FE2-12: dodano za onError poruke na mutacijama koje su ranije tiho padale.
+    deleteError: 'Nije moguće obrisati očitanje',
+    referenceError: 'Nije moguće ažurirati referentno stanje',
     noReadings: 'Nema zabilježenih čitanja',
     noReadingsYet: 'Još nema unesenih očitanja plina.',
     noReadingsAddFirst: 'Klikni "Dodaj čitanje" da uneseš prvo očitanje.',
@@ -372,6 +382,10 @@ const bsBS = {
     enabled: 'Uključeno',
     disabled: 'Onemogućeno',
     noNotifications: 'Nema obavijesti',
+    // FE2-12: onError se ranije logovao samo u konzolu — korisnik nije vidio
+    // da akcija nije uspjela.
+    markAsReadError: 'Nije moguće označiti obavijest pročitanom',
+    markAllReadError: 'Nije moguće označiti sve obavijesti pročitanim',
   },
   settings: {
     title: 'Postavke',

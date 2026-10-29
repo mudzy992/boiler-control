@@ -99,10 +99,7 @@ export class ApiClient {
     return response.data;
   }
 
-  async getBoilerStatus() {
-    const response = await this.client.get('/boiler/status');
-    return response.data;
-  }
+  // FE2-12: getBoilerStatus() uklonjen — nijedan pozivatelj u frontendu.
 
   // Heating endpoints
   async getHeatingEvents() {
@@ -110,16 +107,11 @@ export class ApiClient {
     return response.data;
   }
 
-  async getHeatingAnomalies() {
-    const response = await this.client.get('/anomalies');
-    return response.data;
-  }
+  // FE2-12: getHeatingAnomalies() uklonjen — nijedan pozivatelj u frontendu.
 
   // Weather endpoints
-  async getWeather() {
-    const response = await this.client.get('/weather');
-    return response.data;
-  }
+  // FE2-12: getWeather() uklonjen — nijedan pozivatelj u frontendu;
+  // getCurrentWeather(homeProfileId) je metoda koja se stvarno koristi.
 
   async getCurrentWeather(homeProfileId: number) {
     const response = await this.client.get(`/weather/current/${homeProfileId}`);
@@ -143,10 +135,10 @@ export class ApiClient {
     return response.data;
   }
 
-  async addGasReadingPayload(data: { counterValue: number; readingDate: string }) {
-    const response = await this.client.post('/gas/reading', data);
-    return response.data;
-  }
+  // FE2-12: addGasReadingPayload() uklonjen — nijedan pozivatelj u frontendu;
+  // stvarno se koristi addGasReadingWithUpload(). Mobilna aplikacija ima
+  // vlastitu istoimenu metodu u mobile/src/services/api/client.ts:141, pa ovo
+  // brisanje na nju ne utječe.
 
   async addGasReadingWithUpload(data: {
     counterValue: number;
@@ -246,10 +238,8 @@ export class ApiClient {
     return response.data;
   }
 
-  async generateReport() {
-    const response = await this.client.post('/recommendations/generate', {});
-    return response.data;
-  }
+  // FE2-12: generateReport() uklonjen — nijedan pozivatelj u frontendu;
+  // getReports() ostaje jer se koristi.
 
   // Notification endpoints
   async getNotifications() {

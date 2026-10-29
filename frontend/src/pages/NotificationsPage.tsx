@@ -3,9 +3,11 @@ import dayjs from 'dayjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
 import { BellOutlined, CheckCircleOutlined, AlertOutlined, InfoOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export const NotificationsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const queryClient = useQueryClient();
 
@@ -29,6 +31,7 @@ export const NotificationsPage: React.FC = () => {
     },
     onError: (error) => {
       console.error('Failed to mark notification as read:', error);
+      message.error(t('notifications.markAsReadError'));
     },
   });
 
@@ -40,6 +43,7 @@ export const NotificationsPage: React.FC = () => {
     },
     onError: (error) => {
       console.error('Failed to mark all notifications as read:', error);
+      message.error(t('notifications.markAllReadError'));
     },
   });
 

@@ -37,6 +37,11 @@ export const GasReadingsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
       setShowAddModal(false);
     },
+    // FE2-12: mutacija je ranije tiho padala — korisnik nije dobijao nikakvu
+    // povratnu informaciju kad backend vrati grešku.
+    onError: () => {
+      message.error(t('gas.addReadingError'));
+    },
   });
 
   // Delete reading mutation
@@ -48,6 +53,9 @@ export const GasReadingsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
     },
+    onError: () => {
+      message.error(t('gas.deleteError'));
+    },
   });
 
   const referenceMutation = useMutation({
@@ -57,6 +65,9 @@ export const GasReadingsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
     },
+    onError: () => {
+      message.error(t('gas.referenceError'));
+    },
   });
 
   const meterImageUploadMutation = useMutation({
@@ -64,6 +75,9 @@ export const GasReadingsPage: React.FC = () => {
       apiClient.uploadGasMeterImage(payload.id, payload.meterImage),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+    },
+    onError: () => {
+      message.error(t('gas.meterImageUploadError'));
     },
   });
 
@@ -82,6 +96,9 @@ export const GasReadingsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
     },
+    onError: () => {
+      message.error(t('gas.invoiceUploadError'));
+    },
   });
 
   const invoiceDeleteMutation = useMutation({
@@ -89,6 +106,9 @@ export const GasReadingsPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+    },
+    onError: () => {
+      message.error(t('gas.invoiceDeleteError'));
     },
   });
 

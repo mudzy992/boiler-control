@@ -358,7 +358,6 @@ Verifies:
 - **Reporting Service**: [ReportingService](../../../src/common/reporting.service.ts)
 - **Prometheus Docs**: https://prometheus.io/docs/
 - **Grafana Docs**: https://grafana.com/docs/
-- **P2d Implementation**: [P2D_DIFF_REPORT.md](../snapshots/P2D_DIFF_REPORT.md)
 
 ---
 

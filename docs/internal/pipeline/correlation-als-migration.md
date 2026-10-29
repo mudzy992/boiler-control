@@ -317,7 +317,6 @@ npm run deploy:prod
 
 - **Service Implementation**: [CorrelationIdService](../../../src/common/correlation-id.service.ts)
 - **Tests**: [Correlation ID Tests](../../../src/common/tests/correlation-id.service.spec.ts)
-- **P2d Services**: [P2D_DIFF_REPORT.md](../../snapshots/P2D_DIFF_REPORT.md)
 - **Rollback Plan**: [P2E_ROLLBACK_PLAN.md](./P2E_ROLLBACK_PLAN.md)
 - **Production Checklist**: [P2E_READINESS_CHECKLIST.md](./P2E_READINESS_CHECKLIST.md)
 

@@ -317,7 +317,6 @@ The dev server (`npm run start:dev`) automatically reloads on file changes.
 - **AsyncLocalStorage Implementation**: [../docs/P2E_README.md](../docs/P2E_README.md)
 - **Architecture Overview**: [../docs/V2_ARCHITECTURE.md](../docs/V2_ARCHITECTURE.md)
 - **Database Setup**: [DATABASE_SETUP.md](./DATABASE_SETUP.md)
-- **P2B Implementation**: [P2B_IMPLEMENTATION.md](./P2B_IMPLEMENTATION.md)
 - **Deployment Guides**: [../docs/internal/pipeline/](../docs/internal/pipeline/)
 
 ## 🐛 Troubleshooting

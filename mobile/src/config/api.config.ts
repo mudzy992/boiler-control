@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 /**
@@ -8,32 +7,33 @@ import Constants from 'expo-constants';
 
 /**
  * Get the backend API base URL.
- * Priority order:
- * 1. Environment variable from EAS build (EXPO_PUBLIC_API_URL)
- * 2. app.config.js extra configuration
- * 3. Default development URL based on platform
+ *
+ * MO2-1: postoji JEDAN izvor konfiguracije i NEMA hardkodovanog fallback hosta.
+ *
+ * Prijašnja verzija je u `__DEV__` grani vraćala
+ * `https://boiler.ba101.top/backend/api` — stvarni, produkcijski sličan host.
+ * Posljedica: svaki developer i svaki lokalni build je bez najave slao saobraćaj
+ * (uključujući prijave) na tuđi server, a tri različita izvora u repu
+ * (`eas.json`, `.env.example`, `docs/API_CONFIG.md`) su se međusobno protivila.
+ *
+ * Sada nedostajuća konfiguracija pada glasno i u dev i u produkciji. Vrijednost
+ * dolazi iz `eas.json` env-a ili iz `app.config.js` → `extra`, koji je i u dev
+ * buildu prisutan, pa normalan razvoj radi bez `.env`.
  */
 const getApiBaseUrl = (): string => {
   const extra = Constants.expoConfig?.extra ?? Constants.manifest?.extra ?? {};
 
-  // Get the API URL from environment variables (set by EAS builds)
+  // Postavljeno preko EAS build env varijabli (eas.json) ili lokalnog .env
   const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? extra.EXPO_PUBLIC_API_URL;
 
   if (apiUrl) {
     return apiUrl;
   }
 
-  // Development defaults (when no env var is set)
-  // Android emulator needs 10.0.2.2 to reach host machine's localhost
-  if (__DEV__) {
-    if (Platform.OS === 'android') {
-      return 'https://boiler.ba101.top/backend/api';
-    }
-    return 'https://boiler.ba101.top/backend/api';
-  }
-
-  // Fallback (should never reach here in production)
-  throw new Error('API_URL not configured. Please set EXPO_PUBLIC_API_URL in eas.json or .env');
+  throw new Error(
+    'API_URL not configured. Set EXPO_PUBLIC_API_URL in eas.json, .env, ' +
+      'or app.config.js extra.',
+  );
 };
 
 export const API_CONFIG = {

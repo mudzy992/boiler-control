@@ -2,55 +2,65 @@
 
 ## Overview
 
-The backend API URL is centralized in a single location to ensure consistency across the application and prevent configuration drift.
+The backend API URL is centralized in a single location to ensure consistency
+across the application and prevent configuration drift.
+
+> **MO2-1 (2026-10-29):** this document previously described platform-specific
+> fallback hosts and an `eas.json` example that did not match the actual files.
+> The hardcoded `__DEV__` fallback has been **removed from the code**, so the
+> sections below now describe what the code really does.
 
 ## Architecture
 
 ### Single Source of Truth: `src/config/api.config.ts`
 
-- **Primary Config**: All API configuration is defined here
-- **Platform Handling**: Automatic detection of Android emulator vs iOS simulator
-- **Environment Variables**: Reads from `EXPO_PUBLIC_API_URL` set by EAS builds or local .env
+- **Primary Config**: all API configuration is defined here
+- **Environment Variables**: reads `EXPO_PUBLIC_API_URL`, set by EAS builds or a local `.env`
+- **No platform branching**: Android/iOS use the same value
+- **No fallback host**: if no value is configured, the app throws at startup
 
 ### Configuration Priority
 
-1. **EAS Build Environment** (Production/Preview/Development)
-   - Defined in `eas.json` per build profile
-   - Injected during build time
-2. **Local .env file** (Development only)
-   - For local development
-   - Not committed to repository
-3. **app.config.js default** (Fallback)
-   - Default development URL
-4. **Platform-specific defaults** (Last resort)
-   - Android: `http://10.0.2.2:3020/api` (emulator loopback)
-   - iOS: `http://localhost:3020/api`
+1. **`EXPO_PUBLIC_API_URL`** — from `eas.json` per build profile, or from a local `.env`
+2. **`extra.EXPO_PUBLIC_API_URL`** — from `app.config.js`
+
+If neither is set, `getApiBaseUrl()` throws:
+
+```
+API_URL not configured. Set EXPO_PUBLIC_API_URL in eas.json, .env, or app.config.js extra.
+```
+
+There is deliberately **no** hardcoded default. The previous version returned
+`https://boiler.ba101.top/backend/api` in `__DEV__`, which silently sent
+development traffic (including logins) to a real server.
 
 ## Files
 
-### 1. `src/config/api.config.ts` ✅ Single Source of Truth
+### 1. `src/config/api.config.ts` — Single Source of Truth
 
 ```typescript
 export const API_CONFIG = {
   BASE_URL: getApiBaseUrl(),
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 2,
-};
+} as const;
 ```
 
-### 2. `eas.json` - Build Profiles
+### 2. `eas.json` — Build Profiles
+
+Both profiles currently point at the production host:
 
 ```json
 {
   "build": {
     "development": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.31.247:3020/api"
+        "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
       }
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://boiler.ba101.top/backend/api"
+        "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
       }
     }
   }
@@ -59,26 +69,20 @@ export const API_CONFIG = {
 
 ### 3. `.env` (Local Development)
 
+`.env` is **not** committed. Copy `.env.example` and point it at your own
+backend. `.env.example` must never contain real private IP addresses or secrets.
+
 ```bash
-EXPO_PUBLIC_API_URL=http://192.168.31.247:3020/api
+EXPO_PUBLIC_API_URL=http://localhost:3020/api
 ```
 
-### 4. `app.config.js` - Expo Configuration
+### 4. `app.config.js` — Expo Configuration
 
-- Reads from environment variables
-- Provides defaults for development
-- Passes to `Constants.expoConfig.extra`
+Provides `extra.EXPO_PUBLIC_API_URL`, which reaches the app through
+`Constants.expoConfig.extra`. This is what makes `npx expo start` work without
+a `.env` file.
 
 ## Usage
-
-### In Application Code
-
-```typescript
-import { API_CONFIG } from '@/config/api.config';
-
-// API_CONFIG.BASE_URL is available everywhere
-console.log(API_CONFIG.BASE_URL);
-```
 
 ### In API Client
 
@@ -96,62 +100,57 @@ axios.create({
 ### Local Development
 
 1. Copy `.env.example` to `.env`
-2. Update `EXPO_PUBLIC_API_URL` to your local network IP
+2. Set `EXPO_PUBLIC_API_URL` to your backend address
 3. Run `npx expo start`
-4. The app will use your .env configuration
+
+Without a `.env`, the app uses `extra.EXPO_PUBLIC_API_URL` from `app.config.js`.
 
 ### Building with EAS
 
 ```bash
-# Development build (local network)
+# Development build
 eas build --profile development --platform android
 
-# Production build (public domain)
+# Production build
 eas build --profile production --platform android
 ```
 
+## Reaching a Local Backend from a Simulator
+
+There is no automatic platform default — set the address explicitly in `.env`:
+
+| Target | `EXPO_PUBLIC_API_URL` |
+|---|---|
+| Android emulator | `http://10.0.2.2:3020/api` |
+| iOS simulator | `http://localhost:3020/api` |
+| Physical device on LAN | `http://<your-machine-LAN-IP>:3020/api` |
+
 ## Migration Notes
 
-### What Was Removed ❌
+### What Was Removed
 
-- ❌ `EXPO_PUBLIC_API_URL_ANDROID` - No longer needed
-- ❌ `EXPO_PUBLIC_API_URL_IOS` - No longer needed
-- ❌ Platform-specific URL management in multiple files
-- ❌ Redundant getApiUrl() logic in client.ts
+- `EXPO_PUBLIC_API_URL_ANDROID` / `EXPO_PUBLIC_API_URL_IOS` — no longer needed
+- Platform-specific URL management in multiple files
+- Redundant `getApiUrl()` logic in `client.ts`
+- **`__DEV__` hardcoded fallback host** (MO2-1) — replaced by an explicit error
 
-### What Was Added ✅
+### What Was Added
 
-- ✅ Centralized `src/config/api.config.ts`
-- ✅ Simplified `eas.json` with single URL per profile
-- ✅ Cleaner `.env` structure
-- ✅ Platform detection in config layer only
-
-## Benefits
-
-1. **Single Source of Truth**: All URL logic in one place
-2. **Easier Maintenance**: Update URL in one location
-3. **No Desync**: Impossible to have mismatched URLs across platforms
-4. **Cleaner Code**: API client doesn't need to know about platforms
-5. **Better EAS Integration**: Clear separation of concerns
+- Centralized `src/config/api.config.ts`
+- Simplified `eas.json` with a single URL per profile
+- Fail-fast behaviour when the host is not configured
 
 ## Testing
 
 ### Verify Configuration
 
 ```bash
-# Check TypeScript compilation
+# TypeScript compilation (real check: src + App.tsx + index.js, strict)
 npm run type-check
 
-# Start development server
-npx expo start -c
-
-# Check console output
-# Should see: "API Configuration: { baseUrl: '...', platform: '...' }"
+# Resolve the effective public config, including extra.*
+npx expo config --type public --json
 ```
 
-### Platform Testing
-
-- **Android Emulator**: Should automatically use `10.0.2.2` in dev mode
-- **iOS Simulator**: Should use `localhost` in dev mode
-- **Physical Devices**: Should use LAN IP from env var
-- **Production Builds**: Should use production URL from eas.json
+`npx expo config --type public --json` should report
+`extra.EXPO_PUBLIC_API_URL = https://api.boiler-control.ba101.top/api`.

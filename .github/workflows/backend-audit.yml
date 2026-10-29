@@ -68,7 +68,21 @@ jobs:
         run: docker exec "${{ job.services.redis.id }}" redis-cli ping
       - name: Existing tests and coverage
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        run: npm test -- --runInBand --forceExit --coverage
+        run: |
+          set +e
+          npm test -- --runInBand --forceExit --coverage --json --outputFile="$RUNNER_TEMP/audit-jest.json"
+          result=$?
+          node ../scripts/audit/jest_report.cjs "$RUNNER_TEMP/audit-jest.json"
+          report_result=$?
+          if [ "$result" -ne 0 ]; then exit "$result"; fi
+          exit "$report_result"
       - name: Existing integration tests
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        run: npm run test:integration
+        run: |
+          set +e
+          npm run test:integration -- --json --outputFile="$RUNNER_TEMP/audit-integration.json"
+          result=$?
+          node ../scripts/audit/jest_report.cjs "$RUNNER_TEMP/audit-integration.json"
+          report_result=$?
+          if [ "$result" -ne 0 ]; then exit "$result"; fi
+          exit "$report_result"

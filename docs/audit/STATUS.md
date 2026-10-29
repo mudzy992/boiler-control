@@ -573,3 +573,78 @@ Svih 10 quick wins iz `master_roadmap.py` (ključ `quick_wins`, verificirano 10/
 - **Gate je testiran protiv lokalnog mock servera**, ne protiv stvarnog deployanog backenda.
 - **iOS dugme za store je skriveno** dok vlasnik ne upiše `IOS_APP_STORE_ID` (namjerno prazan — izmišljeni ID bi odveo na tuđu aplikaciju).
 - `submit.production` traži env varijable koje vlasnik mora postaviti (`GOOGLE_SERVICE_ACCOUNT_KEY_PATH`, `ASC_APP_ID`, `ASC_API_KEY_PATH`, `ASC_API_KEY_ISSUER_ID`, `ASC_API_KEY_ID`).
+
+---
+
+## API-1 — Ugovor za stub endpointe (B-001, B-002, B-003)
+
+**Status:** implementirano i verificirano.
+
+**Problem.** Tri endpointa su vraćala prividno ispravan odgovor za
+neimplementiranu funkcionalnost:
+
+- `POST /api/heating-events` → izmišljeni `Math.floor(Math.random() * 10000)` ID,
+  **ništa se nije upisivalo u bazu** (najgore: klijent je mislio da je zapis kreiran),
+- `GET /api/weather` → `{}`,
+- `GET /api/recommendations/today` → `[]`.
+
+`{}` i `[]` su **nerazlučivi od „nema podataka"**, pa klijent ne može znati da li
+zaista nema preporuka za danas ili endpoint uopšte nije implementiran.
+
+**Identifikacija potrošača (kriterij prihvatanja) — sva tri stuba imaju 0 potrošača.**
+
+| Stub | Šta stvarno rade klijenti | Potrošača |
+| --- | --- | --- |
+| `POST /api/heating-events` | kompletna lista `.post()` ruta u oba klijenta ne sadrži heating-events | **0** |
+| `GET /api/weather` | `getCurrentWeather()` zove `GET /weather/current/:homeProfileId` (druga ruta) | **0** |
+| `GET /api/recommendations/today` | `ReportsPage` zove `getReports()` → `GET /recommendations` | **0** |
+
+Rute koje **imaju** potrošače i nisu dirane: `GET /heating-events`,
+`GET /dashboard/heating-events`, `GET /recommendations`,
+`GET /weather/current/:homeProfileId`.
+
+**Rješenje.** Novi `backend/src/common/stub-endpoint.ts`:
+
+- `throwIfStubRejected(endpoint, { alternative })` baca
+  `UnimplementedEndpointException` → **`501 Not Implemented`** s tijelom
+  `{ statusCode, error, endpoint, reason: 'stub-not-implemented', message, alternative? }`.
+  `reason` je ono što razlikuje „neimplementirano" od „nema podataka".
+- `alternative` navodi stvarnu rutu koja radi (weather, recommendations).
+
+**Feature flag / rollback.** `STUB_ENDPOINTS_MODE`:
+
+- `reject` (**zadano**) → 501,
+- `legacy` → staro stub ponašanje, bez potrebe za deployem novog koda.
+
+Neispravna vrijednost pada na `reject` (fail-safe: zastavica ne smije moći
+ugasiti zaštitu) i loguje upozorenje.
+
+**Testovi.** `backend/src/common/tests/stub-endpoint.spec.ts` — **16 testova**,
+uključujući HTTP nivo (supertest) za sve tri rute i dokaz da `legacy` režim
+vraća stari `{}` / `[]`.
+
+```bash
+cd backend && npx jest src/common/tests/stub-endpoint.spec.ts   # 16 passed
+cd backend && npx jest src/common/tests/                        # 110 passed
+```
+
+**Verifikacija (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `npx jest src/common/tests/stub-endpoint.spec.ts` | 16/16, exit 0 |
+| `npx jest src/common/tests/` | 6 suite-ova / 110 testova, exit 0 (baseline 5/94 + novi 1/16) |
+| Mutacijski test (501 → 200 u pomagaču) | **4 failed / 12 passed, exit 1** — test hvata regresiju |
+| `npx tsc -p tsconfig.json --noEmit --types node,jest` | **213 = tačno baseline**, 0 novih grešaka |
+| `npx eslint` (5 promijenjenih fajlova) | exit 0 |
+| 6 audit skripti | svih 6 exit 0 |
+
+**Napomena o audit dokumentima.** Dodavanje importa pomjerilo je linije u tri
+kontrolera, pa su `file:line` markeri u `02-api-catalog.md` postali zastarjeli i
+`backend_inventory.py` je pao (exit 1, 12 formalnih grešaka). Ispravljeno 12
+zamjena (6 markera × 2 pojave) uz `assert n == 2` da se ne pogode rasponi poput
+`:20-49`. Skripta ponovo exit 0.
+
+**Šta NIJE verificirano:** ponašanje protiv deployanog backenda; integracioni
+testovi (`npx prisma generate` ne prolazi u sandboxu jer `binaries.prisma.sh`
+nije dostupan — CI to radi preko `npm run generate:prisma`).

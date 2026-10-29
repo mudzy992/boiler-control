@@ -1,4 +1,5 @@
 import { Controller, Get, Post, UseGuards, Req, Body } from '@nestjs/common';
+import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { HeatingService } from './heating.service';
@@ -28,8 +29,13 @@ export class HeatingController {
       roomFlowTemp: number;
     },
   ) {
-    // Stub: return basic event structure
-    // Full implementation deferred to P2c/P3a
+    // API-1 / B-001: ovo je bio stub koji je vraćao IZMIŠLJENI
+    // `Math.floor(Math.random() * 10000)` ID i NIŠTA nije upisivao u bazu —
+    // klijent je mislio da je zapis kreiran. Potrošači su verificirani:
+    // nijedan `.post()` u frontend/ ni mobile/ ne zove heating-events.
+    // `legacy` režim vraća staro ponašanje kao rollback put.
+    throwIfStubRejected('POST /api/heating-events');
+
     return {
       id: Math.floor(Math.random() * 10000),
       deviceId: body.deviceId,

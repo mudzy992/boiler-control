@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { HeatingRecommendationService } from './heating.recommendation.service';
@@ -27,8 +28,13 @@ export class RecommendationsController {
    */
   @Get('today')
   getTodayRecommendations() {
-    // Stub: return empty array
-    // Full implementation: fetch today's recommendations from database
+    // API-1 / B-003: `[]` je bilo nerazlučivo od „nema preporuka za danas".
+    // Potrošači su verificirani: frontend `ReportsPage` zove `getReports()`
+    // → `GET /api/recommendations`, a ne `/today`.
+    throwIfStubRejected('GET /api/recommendations/today', {
+      alternative: 'GET /api/recommendations',
+    });
+
     return [];
   }
 }

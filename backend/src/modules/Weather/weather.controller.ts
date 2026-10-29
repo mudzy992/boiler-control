@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards, Param } from '@nestjs/common';
+import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { WeatherService } from './weather.service';
@@ -25,8 +26,13 @@ export class WeatherController {
    */
   @Get()
   getWeatherData() {
-    // Stub: return empty object or null
-    // Full implementation: fetch from weather service and return current/forecast
+    // API-1 / B-002: `{}` je bilo nerazlučivo od „nema vremenskih podataka".
+    // Potrošači su verificirani: frontend/mobile koriste
+    // `GET /api/weather/current/:homeProfileId`, a ne ovu rutu.
+    throwIfStubRejected('GET /api/weather', {
+      alternative: 'GET /api/weather/current/{homeProfileId}',
+    });
+
     return {};
   }
 

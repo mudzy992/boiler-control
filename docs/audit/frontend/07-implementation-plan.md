@@ -91,11 +91,11 @@
 - **Testovi:** e2e: jezik BS na svim ekranima; selektor mijenja bez reloada i preživljava refresh; `document.lang` tačan; statička provjera da `pages/` nema novi hardcoded tekst (skripta brojanja). **Skripte:** `scripts/audit/frontend_inventory.py --help` (može izlaziti broj hardcoded stringova), planirani `scripts/test-all.sh --help`.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** M; zavisno od 0.2 (lint), 3.1 (tekstovi u komponentama).
 
-### 3.4 A11y popravke (FE2-13)
-- **Cilj/fajlovi:** `frontend/src/components/GasForm.tsx` (antd Modal ili ARIA set + focus trap + Escape), `frontend/src/components/MainLayout.tsx` (aria-label Switch).
+### 3.4 A11y i responzivnost (FE2-13)
+- **Cilj/fajlovi:** `frontend/src/components/GasForm.tsx` (antd Modal ili ARIA set + focus trap + Escape), `frontend/src/components/MainLayout.tsx` (aria-label Switch), tabele (`HeatingPage.tsx:91`, `BoilerPage.tsx:151`, `ReportsPage.tsx:76`, DashboardPage events) — `scroll={{ x }}` i/ili responzivne kolone, `frontend/src/index.css:34` (maskirajući `overflow-x: hidden`), `frontend/index.html` (minimalna inline skripta koja odmah primjenjuje `localStorage['boiler.theme']` — FE-021).
 - **Migracija/rollback, flag:** bez flaga.
-- **Testovi:** keyboard-only e2e walkthrough modala; axe sken bez serious nalaza na login/dashboard/gas ekranima. **Skripte:** planirani `scripts/test-all.sh --help`.
-- **Prihvat/trud/kompatibilnost/zavisnosti:** S; zavisno od 3.3 (tekstovi).
+- **Testovi:** keyboard-only e2e walkthrough modala; axe sken bez serious nalaza na login/dashboard/gas ekranima; e2e na 360 px širini: tabela horizontalno skrola, nijedan sadržaj nije režimiran; reload s dark temom bez svijetlog flasha (screenshot prije/poslije). **Skripte:** planirani `scripts/test-all.sh --help`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** S; zavisno od 3.3 (tekstovi), 3.2 (lazy rute, kako ne bi ometale mjeru FOUC-a).
 
 ### 3.5 Testna infrastruktura (FE2-11)
 - **Cilj/fajlovi:** `frontend/package.json` (vitest, @testing-library, playwright, mock server), `frontend/vitest.config.ts`, `frontend/test/**`, `frontend/e2e/**`.

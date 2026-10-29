@@ -45,6 +45,14 @@
 - Kako provjeriti: e2e: novi korisnik → prazno stanje → kreira profil s lokacijom → weather se pojavi na dashboardu; tipovi poklapaju OpenAPI (FE-016).
 - Trud: M — Zavisnosti: backend 1.1 (FEAT-1), FE-016 (OpenAPI tipovi).
 
+### [FE-021] Tabele bez horizontalnog skrolovanja na uskim ekranima; dark mode FOUC — Ozbiljnost: NISKO — Pouzdanost: VERIFIKOVANO (kod)
+- Gdje: `frontend/src/pages/HeatingPage.tsx:91`, `BoilerPage.tsx:151`, `ReportsPage.tsx:76`, `DashboardPage.tsx` (events tabela) — antd `Table` bez `scroll={{ x }}` i bez responzivnog skupa kolona; `frontend/src/index.css:34` (`body { overflow-x: hidden }` maskira prelijevanje umjesto da se riješi); `frontend/src/context/ThemeContext.tsx:22-30` (klasa `dark` se dodaje React `useEffect`-om) i `frontend/index.html` (nema inline skripte koja postavlja klasu prije rendera).
+- Šta nije u redu i za što je bitno: na mobilnim širinama tabele (6-7 kolona, npr. boiler history) prelijevaju, a `overflow-x: hidden` na body-u ih tiho režimira — korisnik ne vidi dio tabele i ne zna da postoji više; dark mode korisnik pri svakom reloadu kratko vidi svijetlu verziju (FOUC) jer `localStorage` provjera čeka JS bundle.
+- Dokaz: `rg -n 'scroll={\{' frontend/src` → bez rezultata; `index.css:34`; `ThemeContext.tsx:22-30`; `index.html` bez inline skripte.
+- Preporuka: `scroll={{ x: ... }}` + po potrebi skrivanje manje bitnih kolona na uskim širinama; u `index.html` dodati minimalnu inline skriptu koja odmah primjenjuje `localStorage['boiler.theme']`; uklanjanje/omekšavanje `overflow-x: hidden` nakon popravke prelijevanja.
+- Kako provjeriti: e2e na 360 px širini: tabela skrola horizontalno, nijedan sadržaj nije režimiran; reload s dark temom bez svijetlog flasha (Playwright screenshot prije/poslije).
+- Trud: S — Zavisnosti: FE2-13/FE-005 (UI rad), FE2-4 (lazy rute, kako ne bi ometale mjeru FOUC-a).
+
 ### [FE-020] VAT stopa hardcoded na klijentu — Ozbiljnost: NISKO — Pouzdanost: VERIFIKOVANO (kod)
 - Gdje: `frontend/src/pages/ProfilePage.tsx:93-98` (`watchedGasPrice * 1.17`), usporedba: `backend/src/modules/User/user.service.ts` (`GAS_PRICE_VAT_RATE = 0.17`, odgovor vraća `gasPriceVatRate`), `frontend/src/pages/GasAnalyticsPage.tsx` (PDV iz backend odgovora, ne hardcoded).
 - Šta nije u redu i zašto: ako se stopa promijeni (zakonska izmjena), backend i web će divergirati; odgovor već vraća `gasPriceVatRate`, a web ga ignoriše.

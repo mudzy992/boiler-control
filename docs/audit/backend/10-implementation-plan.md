@@ -67,6 +67,12 @@
 - **Testovi:** prije ispravke `node scripts/audit/tuya_missing_fields_repro.cjs --help` reproducira stari tok s fake statusom; zatim test-first za missing/null/NaN, 0 i false, partial payload, istekao snapshot, program bez intervala, start/end bez side effecta kad podaci nisu valjani i oporavak; stvarna privremena PostgreSQL + fake provider, `cd backend && npm test -- --runInBand` i `npm run test:integration`. Ništa ne šalje na stvarni uređaj.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; nevaljan snapshot jasno označen, ne proizvodi pogrešnu lifecycle promjenu, valjani 0/false rade prema provider ugovoru, freshness alarm i CI zeleni. Sačuvati stari HTTP ugovor ili verzionirati uz podršku instaliranih klijenata; zavisi od provjerenog Tuya modela, politike degradacije i stručne procjene sigurnosti.
 
+### 0.7 Atomska sinhronizacija intervala (REL-8 / B-027)
+- **Cilj/fajlovi:** `Boiler/adapter/program.sync.service.ts`, Tuya status parser, testovi; čitav validirani dan u transakciji, verzija/commit marker tek po dovršetku; definisati serijalizaciju upisa iste kombinacije uređaja i dana.
+- **Migracija/rollback, flag:** prvo snimiti broj nedosljednih redova i hashova bez identifikatora/sadržaja i usaglasiti provider fixture; početna ispravka može koristiti postojeću shemu uz transakcijski locking, a eventualna tabela verzija je additive expand nakon DB diff/backupa. `PROGRAM_SYNC_ATOMIC` default off, test canary bez uređajnih komandi. Rollback gasi novi sync, zadržava podatke i zaustavlja osvježavanje ako legacy nije siguran; ne prepisati stare mješovite redove bez pregledanog plana.
+- **Testovi:** `node scripts/audit/program_sync_partial_repro.cjs --help` je reprodukcija starog ponašanja; test-first pad nakon svakog upserta/before cleanup, retry, prazan/nepotpun payload, dvije konkurentne verzije i izolovana PostgreSQL transakcija. Pokrenuti `cd backend && npm test -- --runInBand` i `npm run test:integration`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; vidljivi su samo cijeli dosljedni rasporedi ili prethodna verzija, retry popravlja parcijalni stari zapis prema odobrenoj migraciji, testovi i CI zeleni. Bez promjene legacy API shapea ili uređajnih komandi; zavisi od validiranog Tuya ugovora, strategije backfilla i DB locking testa.
+
 ## Talas 1 — weather
 
 ### 1.1 Location expand i potvrđivanje (FEAT-1)
@@ -185,6 +191,7 @@
 | `scripts/audit/engine_replay.cjs`, `openmeteo_fixture_replay.cjs` | Postoje; ograničeni postojeći-engine replay i javni SDK fixture, nisu puni backtest ni provjera sunrise/DST. | `node scripts/audit/engine_replay.cjs --help`; `node scripts/audit/openmeteo_fixture_replay.cjs --help`; 1.2 i 2.1. |
 | `scripts/audit/redis_lease_ci.cjs` | Postoji; CI-only primitivi na disposable Redis servisu; ne testira aplikacijski worker/BullMQ. | `node scripts/audit/redis_lease_ci.cjs --help`; 3.1–3.2. |
 | `scripts/audit/contract_assertions_repro.cjs` | Postoji; statički AST originalnog testa i odvojeni Jest 404 primjer u privremenom direktoriju koji uklanja; ne izvršava originalni suite. | `node scripts/audit/contract_assertions_repro.cjs --help`; 5.2. |
+| `scripts/audit/program_sync_partial_repro.cjs` | Postoji; stvarni program sync, fake DB i injektovan pad; reprodukcija miješanih intervala bez stvarnog uređaja. | `node scripts/audit/program_sync_partial_repro.cjs --help`; 0.7. |
 | `scripts/audit/tuya_missing_fields_repro.cjs` | Postoji; pravi adapter i poll odluka, sintetički provider i fake DB, handleri su brojači; bez fizičke komande. | `node scripts/audit/tuya_missing_fields_repro.cjs --help`; 0.6. |
 | `scripts/audit/history_close_repro.cjs` | Postoji; pravi poll end handler i sintetička fake DB, bez DB transakcija ili stvarnih događaja. | `node scripts/audit/history_close_repro.cjs --help`; 5.1b. |
 | `scripts/audit/learning_end_repro.cjs` | Postoji; pravi poll end handler, preporuka i engine, sintetička fake DB/push; bez uređaja. | `node scripts/audit/learning_end_repro.cjs --help`; 2.2. |

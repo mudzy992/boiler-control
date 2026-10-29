@@ -43,3 +43,10 @@
 - Iz djelimične instrumentacije: statements 9,46%, branches 6,74%, functions 10,36%; ovi procenti nisu pouzdana pokrivenost kompletne aplikacije jer se šest suiteova nije učitalo. Generisani izvještaj uklonjen je iz radnog stabla.
 - `npm run test:integration` s istom izolovanom testnom konfiguracijom: exit 1, 2 suitea nisu učitana zbog nedostajućeg Prisma klijenta, 0 izvršenih testova. Nije izvršen stvarni test integracije s PostgreSQL-om. Neophodno je ponoviti u okruženju sa schema engine-om i izolovanom testnom bazom.
 - Testovi nisu popravljani. Faza 1 nije završena: inventar, API katalog, tematske analize, ostatak testiranja i samoprovjera tek slijede.
+
+## Privremena GitHub infrastruktura za testiranje
+
+- Po izričitom odobrenju korisnika dodan je `.github/workflows/backend-audit.yml` kao uska iznimka izvan prvobitnog opsega audita. Pokreće se samo na push ove aktivne grane; `workflow_dispatch` job dodatno provjerava istu granu (GitHub zahtijeva workflow i na podrazumijevanoj grani za ručno pokretanje). Ne koristi `pull_request` niti push prema `main`.
+- Svako pokretanje dobija jednokratne PostgreSQL 16 i Redis 7 servise; podaci nestaju nakon joba. Testni PostgreSQL koristi `trust` isključivo unutar privremenog GitHub runnera; testne vrijednosti se generišu tokom joba i maskiraju. Ne koristiti ovaj obrazac u produkciji. Migracija se primjenjuje samo na praznu testnu bazu.
+- Workflow generiše Prisma klijent, primjenjuje postojeću migraciju, provjerava Redis te pokreće postojeće testove i integracijske testove; Redis nije dokaz da ga aplikacija koristi. Nijedan rezultat GitHub pokretanja nije potvrđen dok se ne pregledaju stvarni logovi i status.
+- Aplikacija u produkciji nije dokaz prolaznosti testova niti zamjenjuje nedovršene isporuke audita. Faza 1 ostaje nezavršena; nedostaju backend inventar, analize, planovi i samoprovjera.

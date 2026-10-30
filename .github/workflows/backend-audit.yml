@@ -215,6 +215,13 @@ jobs:
             exit 1
           fi
           echo "localhost:3020 u dist/: nema"
+      # FE2-4 je manualChunks-om napravio KRUZAN odnos vendor-antd <-> vendor-icons.
+      # Sagradjeni bundle je zato padao pri evaluaciji i aplikacija je prikazivala
+      # prazan ekran - a tsc, eslint, Vitest i `curl /` (200) su svi prolazili, jer
+      # nijedan od njih ne evaluira bundle. Ovo je jedini korak koji to radi.
+      - name: Bundle evaluates and renders (FE2-7)
+        working-directory: .
+        run: node scripts/audit/frontend_chunk_graph.cjs
       - name: Install Playwright browsers (FE2-7)
         run: npx playwright install --with-deps chromium
       # Smoke nad SAGRADJENIM dist/: SPA se pokrene, API poziv ide na ugradjeni

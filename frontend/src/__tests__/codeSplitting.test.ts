@@ -84,7 +84,10 @@ describe('FE2-4: vite.config.ts grupiše vendor pakete u stabilne čipove', () =
     ['vendor-plots', '@ant-design/plots'],
     ['vendor-antd', '/antd/'],
     ['vendor-react', '/react/'],
-    ['vendor-icons', '@ant-design/icons'],
+    // FE2-7: icons je NAMJERNO u istom čipu kao antd, ne u vlastitom. FE2-4 ga
+    // je izdvojio u `vendor-icons`, što je stvorilo kružan odnos među čipovima
+    // (antd → icons → rc-util → vendor-antd) i srušilo evaluaciju bundlea.
+    ['vendor-antd', '@ant-design/icons'],
   ])('grupa %s se stvarno vraća za %s', (chunk, pattern) => {
     // Citirani oblici: `toContain('react')` bi preživjelo i u `react-router`,
     // pa bi asertcija bila prazna.

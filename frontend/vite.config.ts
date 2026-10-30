@@ -79,8 +79,26 @@ export default defineConfig({
           ) {
             return 'vendor-plots'
           }
-          if (id.includes('@ant-design/icons')) return 'vendor-icons'
+          // FE2-7 (ispravka FE2-4): `@ant-design/icons` MORA biti u istom čipu
+          // kao antd.
+          //
+          // FE2-4 ga je izdvojio u `vendor-icons`, ali antd bezuslovno importuje
+          // icons, a icons importuje `rc-util` — koji ovaj isti manualChunks
+          // prepoznaje preko `/rc-/` i smješta u `vendor-antd`. Nastao je
+          // KRUŽAN odnos između čipova: vendor-antd ↔ vendor-icons.
+          //
+          // Posljedica, izmjerena 2026-10-30 evaluacijom sagradjenog entry čipa:
+          //   TypeError: Cannot read properties of undefined (reading 'primary')
+          //     at vendor-icons-*.js  (B(P.primary), gdje je P uvezen iz vendor-antd)
+          // tj. React se uopšte nije mountovao i aplikacija je prikazivala prazan
+          // ekran. Vitest to NIJE mogao uhvatiti (čita izvorni kod, ne bundle),
+          // a ni `curl /` (vraća 200 jer je HTML ispravan) — jedino evaluacija
+          // bundlea.
+          //
+          // Dijeljenje ovdje ionako nije imalo koristi: pošto antd uvijek vuče
+          // icons, oni se nikad ne bi učitavali nezavisno.
           if (
+            id.includes('@ant-design/icons') ||
             id.includes('/antd/') ||
             id.includes('/rc-') ||
             id.includes('@rc-component')

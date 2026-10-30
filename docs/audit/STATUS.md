@@ -707,6 +707,47 @@ Puni jest: **39 failed / 357 passed / 396** — istih 39 pre-postojećih padova,
 +11 novih prolaznih. `openapi:generate --check` EXIT=0, sve 4 inventarske
 skripte EXIT=0, eslint 0 errors, tsc 1 pre-postojeća greška.
 
+### MAINT-4 — Ugovorni testovi bez uslovnih asertacija (B-025), 2026-10-30
+
+`test/contract/api-contract.spec.ts` je imao **16 uslovnih asertacija** oblika
+`if (response.status === 200) { ...expect... }` i gađao je **pet ruta koje ne
+postoje**. Deklarisane rute su `api/heating-events`, `api/anomalies`,
+`api/recommendations`, `api/devices`; test je zvao `/api/heating/events`,
+`/api/heating/anomalies`, `/api/recommendation/today`, `/api/thermostat/devices`.
+
+**Mjerenje prije popravke.** Bez lokalnog PostgreSQL-a nisam mogao znati šta
+endpointi stvarno vraćaju, pa sam prvo push-ao privremeni dijagnostički fajl
+koji je u CI-ju (run `41058112404`) izmjerio sve statuse i ispao ih u
+`::notice`. Rezultat:
+
+| Ruta | Status | Napomena |
+|---|---|---|
+| `/api/heating/events` | **404** | stvarno: `/api/heating-events` |
+| `/api/heating/anomalies` | **404** | stvarno: `/api/anomalies` |
+| `/api/recommendation/today` | **404** | stvarno: `/api/recommendations/today` |
+| `/api/thermostat/devices` | **404** | stvarno: `/api/devices` |
+| `/api/recommendations/today` | **501** | API-1 stub, `reject` režim |
+| `/api/devices/999999` | **404** | negativna kontrola |
+| duplikat `register` | **400** | negativna kontrola |
+| ostale ispravne rute | 200 | `array(0)` / dashboard objekat |
+
+Dakle **13 od 14 testova je "prolazilo" za 2–5 ms** na 404 odgovoru, a da se
+nijedna asertcija nije izvršila. Dijagnostički fajl je obrisan nakon mjerenja.
+
+**Novi test.** Sve rute su kopirane iz `@Controller`/`@Get` dekoratora; nema
+`if` oko `expect`; `beforeAll` registruje korisnika i koristi **važeći JWT**, pa
+pozitivni testovi dokazuju ugovor tijela a ne samo 401. Dodano **7 negativnih
+mutation provjera** (duplikat register 400, pogrešna lozinka 401,
+`/api/devices/999999` 404, bez tokena 401, nevažeći token 401, nevalidno tijelo
+400) te regresijski `it.each` koji asertira da se četiri zastarjele rute i dalje
+vraćaju 404 — da se pogrešne putanje ne mogu tiho vratiti.
+`/api/recommendations/today` asertira **501** s `endpoint`/`reason`/`alternative`
+umjesto da se pravim da vraća 200.
+
+CI (run `41058760713`): **405 testova, 0 pada**, tsc 0, eslint 0.
+Lokalno contract suite pada jer nema PostgreSQL-a (kao `test/integration/`):
+61 failed / 344 passed / 405.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

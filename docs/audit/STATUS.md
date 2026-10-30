@@ -748,6 +748,94 @@ CI (run `41058760713`): **405 testova, 0 pada**, tsc 0, eslint 0.
 Lokalno contract suite pada jer nema PostgreSQL-a (kao `test/integration/`):
 61 failed / 344 passed / 405.
 
+### MAINT-2 — CI workflowi: guard/scheduler i stvarne Redis komande, 2026-10-30
+
+CI je imao PostgreSQL **i** Redis (`backend-audit.yml:29-35`) te izvozio
+`REDIS_URL` (l.46), ali test env gasi dio aplikacije, pa je zelen CI dokazivao
+manje nego što je izgledalo.
+
+**Nalazi (svi VERIFIKOVANI, `file:linija`):**
+
+| Lokacija | Ponašanje u `NODE_ENV=test` |
+| --- | --- |
+| `app.module.ts:22` | preskače `ThrottlerModule.forRoot({ ttl: seconds(60), limit: 100 })` |
+| `app.module.ts:56` | preskače `{ provide: APP_GUARD, useClass: ThrottlerGuard }` |
+| `app.module.ts:42` | `SchedulerModule` je **uvijek** importovan (nije uslovljen) |
+| `schedule.module.ts:15,24-43,44` | `IS_TEST` izbacuje `ThermostatPollingService` iz `providers` **i** `exports` |
+| `daily.recommendation.service.ts:21-25` | `@Cron('0 0 * * *', { disabled: ... })` |
+| `gas.reminder.service.ts:21-25` | `@Cron(GAS_REMINDER_CRON, zadano '30 6 * * *', { disabled: ... })` |
+
+Branch-only trigger **nije** trebalo mijenjati — već je bio ispravan
+(`backend-audit.yml:4-5` + `if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'`).
+
+**Redis rupa.** Aplikacija **nije imala Redis klijenta**: `package.json` bez
+`ioredis`/`bull`/`cache-manager`, `src/` bez `REDIS_URL` i `createClient`, a
+`fallback-strategy.service.ts:70` je samo komentar „can be extended to Redis".
+`scripts/audit/redis_lease_ci.cjs` koristi `docker exec … redis-cli`, tj. radi
+**izvan** aplikacije. Kriterij MAINT-2 traži „stvarna Redis komanda iz
+aplikacije", što bez nove infrastrukture nije bilo ispunjivo — vlasnik je
+odobrio opt-in health servis.
+
+**Urađeno (3 commita):**
+
+1. `cd7a15f` — `maint2-nontest-guard.spec.ts`: modul se učitava s
+   `NODE_ENV≠test` pa se `@Module` dekoratori i `const IS_TEST` evaluiraju u
+   ne-testnom režimu. `APP_GUARD`/`ThrottlerGuard` se moraju dohvatiti iz
+   **istog** `require`-a jer `jest.resetModules()` ponovo učitava `@nestjs/core`
+   i kreira novi simbol (inače asertcija pada).
+2. `c430131` — `ioredis@^6.0.0` + `redis-health.service.ts` (PING, SET NX PX,
+   GET, PTTL, DEL), opt-in preko `REDIS_URL`. `HealthController` dodaje opciono
+   `redis` polje; `/health` u `contracts/openapi.json` **nema** response šemu, pa
+   `openapi:generate --check` prolazi nepromijenjen. Bez `REDIS_URL` tijelo je
+   identično kao prije — instalirane mobilne verzije ne vide razliku.
+3. `0192eca` — ispravka prazne `@Cron` asertcije (dolje).
+
+**Dva buga nađena verifikacijom, ne čitanjem koda:**
+
+- `lazyConnect: true` + `enableOfflineQueue: false` bacao je
+  **„Stream isn't writeable and enableOfflineQueue options is false"** na prvoj
+  komandi, jer socket još nije writeable. Offline red je sada uključen. Ovo bi
+  palo i u CI da nisam pokrenuo test lokalno.
+- Test „`@Cron` nije disabled izvan testa" imao je `if (cronMeta) { expect(...) }`
+  i bio je **prazan**. Izmjereno sondom: `getMetadataKeys(prototype)` vraća `[]`,
+  a `getMetadataKeys(prototype, 'metoda')` samo `design:*` — jer NestJS-ov
+  `SetMetadata` piše na `descriptor.value`, dakle na **samu funkciju metode**.
+  Ispravno čitanje je `getMetadata('SCHEDULE_CRON_OPTIONS', Svc.prototype.metoda)`.
+  Ta praznina je krila i drugi nalaz: izvorni kod glasi
+  `disabled: NODE_ENV === 'development' || NODE_ENV === 'test'`, pa je cron
+  **ugašen i u development env**, ne samo u testu. Test je koristio
+  `development`, pa bi pao da asertcija nije bila uslovna.
+
+**Verifikacija (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `maint2-nontest-guard.spec.ts` | 7/7 |
+| `redis-health.service.spec.ts` + `health.controller.spec.ts` s Redis-om | 13/13 |
+| Stvarne komande kroz `ioredis` (lokalni RESP server) | **36 komandi**: `get` 17, `set` 6, `del` 5, `pttl` 2, `ping` 1, `quit` 1 + handshake `client`/`info`/`hello` |
+| `openapi:generate --check` | exit 0 (ugovor nepromijenjen) |
+| CI `41061057521` (`cd7a15f`) | 411 testova, 0 pada |
+| CI `41064587272` (`c430131`) | 424 testova, 0 pada, **0 preskočenih** |
+| CI `41065477837` (`0192eca`) | **425 testova, 0 pada, 0 preskočenih**, tsc 0, eslint 0 |
+
+„0 preskočenih" u CI je suštinski dokaz: gated Redis testovi se tamo **stvarno
+izvršavaju** protiv pravog `redis:7`, jer workflow izvozi `REDIS_URL` (l.46),
+dok su lokalno preskočeni (sandbox nema Redis).
+
+**Šta NIJE verificirano:**
+
+- Lokalno su Redis testovi išli kroz **ručno napisan minimalni RESP server**, ne
+  kroz pravi Redis 7 (sandbox nema `redis-server` ni `docker`). Verificirana je
+  klijentska strana i protokol; Redis semantika (npr. ponašanje pod
+  istovremenim klijentima) samo u CI.
+- `ThermostatPollingService` **nije** izvršen end-to-end — asertira se metadata
+  registracija, ne stvarno polliranje.
+- Redis lease/lock **ne koristi nijedna poslovna logika**; servis se vježba samo
+  kroz `/health`. Uvođenje distributed lock-a je zasebna arhitektonska odluka.
+- **Coverage prag nije dodat** — kriterij ga traži „tek nakon mjerenja", a
+  mjerenje praga nije rađeno.
+- Stvarni Prometheus scrape i Grafana render.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

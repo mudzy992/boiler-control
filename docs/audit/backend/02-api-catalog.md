@@ -24,7 +24,7 @@ Globalni prefix/HTTP verzioniranje nije postavljeno u `backend/src/main.ts:8-57`
 
 | Metoda | Deklarisana putanja | Lokalni guard | Registracija | Ulaz / validacija | Vlasništvo / ograničenje | Potrošači | Dokaz |
 |---|---|---|---|---|---|---|---|
-| GET | `/health` | Nema deklarisanog JWT | Deklarisan u modulu* | Bez body/query DTO-a | Statični health; nema korisničkog resursa | Nije potvrđeno | <!-- route:backend/src/common/health.controller.ts:16 --> `backend/src/common/health.controller.ts:16` |
+| GET | `/health` | Nema deklarisanog JWT | Deklarisan u modulu* | Bez body/query DTO-a | Health; opciono `redis` polje uz `REDIS_URL` (MAINT-2); nema korisničkog resursa | Nije potvrđeno | <!-- route:backend/src/common/health.controller.ts:30 --> `backend/src/common/health.controller.ts:30` |
 | GET | `/metrics` | Nema deklarisanog JWT | Deklarisan u modulu* | Bez body/query DTO-a | Ne primjenjuje se korisničko vlasništvo; metrika S-001 | Nije potvrđeno | <!-- route:backend/src/common/metrics.controller.ts:25 --> `backend/src/common/metrics.controller.ts:25` |
 | GET | `/metrics/json` | Nema deklarisanog JWT | Deklarisan u modulu* | Bez body/query DTO-a | Ne primjenjuje se korisničko vlasništvo; metrika S-001 | Nije potvrđeno | <!-- route:backend/src/common/metrics.controller.ts:37 --> `backend/src/common/metrics.controller.ts:37` |
 | GET | `/metrics/reporting` | Nema deklarisanog JWT | Deklarisan u modulu* | Bez body/query DTO-a | Ne primjenjuje se korisničko vlasništvo; metrika S-001 | Nije potvrđeno | <!-- route:backend/src/common/metrics.controller.ts:48 --> `backend/src/common/metrics.controller.ts:48` |

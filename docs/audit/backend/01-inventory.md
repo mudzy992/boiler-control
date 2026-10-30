@@ -63,7 +63,9 @@ Svaki red: **VERIFIKOVANO** ime i izvoz/ulazna tačka iz navedenog fajla. Zavisn
 | <!-- common:backend/src/common/health.controller.ts --> `backend/src/common/health.controller.ts` | Health kontroler. |
 | <!-- common:backend/src/common/metrics.controller.ts --> `backend/src/common/metrics.controller.ts` | HTTP izvoz metrika i izvještaja. |
 | <!-- common:backend/src/common/metrics.service.ts --> `backend/src/common/metrics.service.ts` | Procesni brojači i Prometheus izvoz. |
+| <!-- common:backend/src/common/redis-health.service.ts --> `backend/src/common/redis-health.service.ts` | MAINT-2: opt-in Redis klijent (`ioredis`); aktivira se samo uz `REDIS_URL`. Bez njega je inertan (`lazyConnect`, ne otvara socket). Komande: PING, SET NX PX, GET, PTTL, DEL. |
 | <!-- common:backend/src/common/reporting.service.ts --> `backend/src/common/reporting.service.ts` | Izvještaji, health score i alerti. |
+| <!-- common:backend/src/common/seed-target-guard.ts --> `backend/src/common/seed-target-guard.ts` | REL-4: politika koja odbija destruktivni seed nad neprepoznatom bazom; `production` je uvijek odbijen. Dozvola preko `SEED_ALLOWED_DATABASES` / `SEED_ALLOW_ANY_TARGET` / `LOCAL_HOSTS`. |
 | <!-- common:backend/src/common/structured-logger.ts --> `backend/src/common/structured-logger.ts` | Strukturiranje log konteksta. |
 | <!-- common:backend/src/common/stub-endpoint.ts --> `backend/src/common/stub-endpoint.ts` | API-1 ugovor za stub endpointe: `501` + `reason`, `STUB_ENDPOINTS_MODE` rollback. |
 

@@ -22,6 +22,7 @@ import {
   DashboardHeatingSummaryResponseDto,
   DashboardResponseDto,
 } from './dto/dashboard-response.dto';
+import { DashboardHealthResponseDto } from './dto/dashboard-health-response.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
@@ -46,6 +47,20 @@ export class DashboardController {
   async getDashboard(@Req() req) {
     const userId = req.user?.userId;
     return this.dashboardService.getDashboard(userId ?? undefined);
+  }
+
+  /**
+   * FE2-14 (FE-010): health score i upozorenja — JEDAN IZVOR.
+   *
+   * Prije ovog endpointa web i mobile su računali health score RAZLIČITIM
+   * formulama i za isti ulaz davali različit broj. Sada oba klijenta čitaju
+   * odavde. Radi i za anonimnog korisnika (nema signala → zadani score).
+   */
+  @Get('health')
+  @ApiOkResponse({ type: DashboardHealthResponseDto })
+  async getHealth(@Req() req) {
+    const userId = req.user?.userId;
+    return this.dashboardService.getHealth(userId ?? undefined);
   }
 
   // =====================================

@@ -10,6 +10,17 @@ import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.in
 import { BoilerService } from '../Boiler/boiler.service';
 import { WeatherService } from '../Weather/weather.service';
 import { bucketKey } from '../../common/dashboard-bucket';
+import {
+  HEALTH_EVENT_SAMPLE,
+  HEALTH_WEIGHTS,
+  HEALTH_NO_DATA_SCORE,
+  FLOW_DELTA_PENALTY_PER_C,
+  buildHealthWarnings,
+  clampScore,
+  computeThermostatFreshnessScore,
+  computeWeightedHealthScore,
+  type HealthComponent,
+} from '../../common/heating-health';
 
 @Injectable()
 export class DashboardService {
@@ -601,6 +612,118 @@ export class DashboardService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // ======================================================
+  // HEALTH (FE2-14 / FE-010) — JEDAN IZVOR ZA WEB I MOBILE
+  // ======================================================
+
+  /**
+   * Health score i pravila upozorenja.
+   *
+   * Prije FE2-14 ovo su računali klijenti, i to **različito**: web
+   * `max(0, 100 - anomalije×15)`, mobile ponderisanu formulu. Za isti ulaz
+   * davali su različit broj. Logika je sada ovdje, u `common/heating-health.ts`.
+   *
+   * Anonimni korisnik nema profila ni uređaja, pa nema nijednog signala —
+   * vraća se `HEALTH_NO_DATA_SCORE` bez komponenti i upozorenja.
+   */
+  async getHealth(userId?: number) {
+    const computedAt = new Date().toISOString();
+
+    if (!userId) {
+      return {
+        score: HEALTH_NO_DATA_SCORE,
+        learningConfidence: 0,
+        components: [] as HealthComponent[],
+        warnings: [],
+        computedAt,
+      };
+    }
+
+    const homeProfiles = await this.getHomeProfiles(userId);
+    const devices = homeProfiles.flatMap((p) => p.thermostatDevices);
+    const thermostatIds = devices.map((t) => t.id);
+
+    const recentEvents =
+      thermostatIds.length > 0
+        ? await this.prisma.heatingEvent.findMany({
+            where: { deviceId: { in: thermostatIds } },
+            orderBy: { timestampStart: 'desc' },
+            take: HEALTH_EVENT_SAMPLE,
+          })
+        : [];
+
+    const latestBoiler = await this.getLatestBoilerHistory(userId);
+
+    const components: HealthComponent[] = [];
+
+    // 1. Samopouzdanje učenja (intervalLearnings.confidence je 0..1)
+    const learnings = homeProfiles.flatMap((p) => p.intervalLearnings);
+    let learningConfidence = 0;
+    if (learnings.length > 0) {
+      const avg =
+        learnings.reduce((sum, l) => sum + l.confidence, 0) / learnings.length;
+      learningConfidence = clampScore(avg * 100);
+      components.push({
+        key: 'learningConfidence',
+        score: learningConfidence,
+        weight: HEALTH_WEIGHTS.learningConfidence,
+      });
+    }
+
+    // 2. Odstupanje stvarne od preporučene temperature polaznog voda.
+    // `actualFlowTemp` je nullable u shemi, pa se signal izostavlja bez njega.
+    if (latestBoiler && typeof latestBoiler.actualFlowTemp === 'number') {
+      const delta = Math.abs(
+        latestBoiler.actualFlowTemp - latestBoiler.suggestedFlowTemp,
+      );
+      components.push({
+        key: 'flowDelta',
+        score: clampScore(100 - delta * FLOW_DELTA_PENALTY_PER_C),
+        weight: HEALTH_WEIGHTS.flowDelta,
+      });
+    }
+
+    // 3. Svježina termostata (udio uređaja viđenih unutar 10 min)
+    if (devices.length > 0) {
+      components.push({
+        key: 'thermostatFreshness',
+        score: computeThermostatFreshnessScore(devices.map((d) => d.lastSeen)),
+        weight: HEALTH_WEIGHTS.thermostatFreshness,
+      });
+    }
+
+    // 4. Stopa anomalija + pravila upozorenja na istom uzorku.
+    // `durationMinutes` koristi ISTU semantiku kao getHeatingEvents():
+    // round((end - start) / 60000), odnosno 0 kad ciklus još traje.
+    const eventInputs = recentEvents.map((e) => ({
+      durationMinutes: e.timestampEnd
+        ? Math.round(
+            (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000,
+          )
+        : 0,
+      targetTemp: e.roomTargetTemp,
+      currentTemp: e.roomCurrentTemp,
+      isAnomaly: e.isAnomaly,
+    }));
+
+    if (eventInputs.length > 0) {
+      const anomalyCount = eventInputs.filter((e) => e.isAnomaly).length;
+      components.push({
+        key: 'anomalyRate',
+        score: clampScore(100 - (anomalyCount / eventInputs.length) * 100),
+        weight: HEALTH_WEIGHTS.anomalyRate,
+      });
+    }
+
+    return {
+      score: computeWeightedHealthScore(components),
+      learningConfidence,
+      components,
+      warnings: buildHealthWarnings(eventInputs),
+      computedAt,
+    };
   }
 
   private async assertUserHasThermostat(userId: number) {

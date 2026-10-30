@@ -291,6 +291,51 @@
         ],
         "type": "object"
       },
+      "DashboardHealthResponseDto": {
+        "properties": {
+          "components": {
+            "description": "Signali koji su stvarno učestvovali. Prazan niz znači da nema nijednog podatka, pa je `score` jednak HEALTH_NO_DATA_SCORE.",
+            "items": {
+              "$ref": "#/components/schemas/HealthComponentDto"
+            },
+            "type": "array"
+          },
+          "computedAt": {
+            "description": "Kada je score izračunat (server vrijeme).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "learningConfidence": {
+            "description": "Prosječno samopouzdanje učenja kao postotak. 0 kad nema intervala učenja — tada signal ne učestvuje u scoreu.",
+            "example": 82,
+            "maximum": 100,
+            "minimum": 0,
+            "type": "number"
+          },
+          "score": {
+            "description": "Ponderisani health score. Kad nema nijednog signala vraća HEALTH_NO_DATA_SCORE (50), jer nema osnove za procjenu.",
+            "example": 74,
+            "maximum": 100,
+            "minimum": 0,
+            "type": "number"
+          },
+          "warnings": {
+            "description": "Upozorenja iz pravila analize. `targetShortfall` i `targetOvershoot` su odvojena pravila sa suprotnim predznakom.",
+            "items": {
+              "$ref": "#/components/schemas/HealthWarningDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "score",
+          "learningConfidence",
+          "components",
+          "warnings",
+          "computedAt"
+        ],
+        "type": "object"
+      },
       "DashboardHeatingBucketDto": {
         "properties": {
           "avgCurrentTemp": {
@@ -1189,6 +1234,76 @@
         ],
         "type": "object"
       },
+      "HealthComponentDto": {
+        "properties": {
+          "key": {
+            "description": "Koji signal ova komponenta predstavlja.",
+            "enum": [
+              "learningConfidence",
+              "flowDelta",
+              "thermostatFreshness",
+              "anomalyRate"
+            ],
+            "example": "learningConfidence",
+            "type": "string"
+          },
+          "score": {
+            "description": "Score ovog signala, 0–100.",
+            "example": 82,
+            "maximum": 100,
+            "minimum": 0,
+            "type": "number"
+          },
+          "weight": {
+            "description": "Ponder signala u ukupnom scoreu. Vrijednosti iz HEALTH_WEIGHTS.",
+            "example": 35,
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "score",
+          "weight"
+        ],
+        "type": "object"
+      },
+      "HealthWarningDto": {
+        "properties": {
+          "level": {
+            "description": "Nivo ozbiljnosti.",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ],
+            "example": "warning",
+            "type": "string"
+          },
+          "message": {
+            "description": "Zadani (bosanski) tekst upozorenja.",
+            "example": "Ciljna temperatura se ne dostiže - prosječno zaostajanje: 2.0°C",
+            "type": "string"
+          },
+          "type": {
+            "description": "Stabilan identifikator pravila, za lokalizaciju na klijentu.",
+            "enum": [
+              "shortCycles",
+              "longCycles",
+              "targetShortfall",
+              "targetOvershoot",
+              "anomalies"
+            ],
+            "example": "targetShortfall",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "level",
+          "message"
+        ],
+        "type": "object"
+      },
       "HomeProfileHeatingType": {
         "enum": [
           "RADIATOR",
@@ -1832,6 +1947,32 @@
         ],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/dashboard/health": {
+      "get": {
+        "operationId": "DashboardController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardHealthResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },

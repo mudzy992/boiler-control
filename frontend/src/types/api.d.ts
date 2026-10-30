@@ -229,6 +229,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DashboardController_getHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/heating-events": {
         parameters: {
             query?: never;
@@ -1009,6 +1025,27 @@ export interface components {
             hasProfile: boolean;
             hasThermostat: boolean;
         };
+        DashboardHealthResponseDto: {
+            /** @description Signali koji su stvarno učestvovali. Prazan niz znači da nema nijednog podatka, pa je `score` jednak HEALTH_NO_DATA_SCORE. */
+            components: components["schemas"]["HealthComponentDto"][];
+            /**
+             * Format: date-time
+             * @description Kada je score izračunat (server vrijeme).
+             */
+            computedAt: string;
+            /**
+             * @description Prosječno samopouzdanje učenja kao postotak. 0 kad nema intervala učenja — tada signal ne učestvuje u scoreu.
+             * @example 82
+             */
+            learningConfidence: number;
+            /**
+             * @description Ponderisani health score. Kad nema nijednog signala vraća HEALTH_NO_DATA_SCORE (50), jer nema osnove za procjenu.
+             * @example 74
+             */
+            score: number;
+            /** @description Upozorenja iz pravila analize. `targetShortfall` i `targetOvershoot` su odvojena pravila sa suprotnim predznakom. */
+            warnings: components["schemas"]["HealthWarningDto"][];
+        };
         DashboardHeatingBucketDto: {
             /** @description Zaokruženo na 2 decimale, 0 ako `cycles` = 0. */
             avgCurrentTemp: number;
@@ -1274,6 +1311,43 @@ export interface components {
             referenceMonth: string | null;
             /** @example 1 */
             userId: number;
+        };
+        HealthComponentDto: {
+            /**
+             * @description Koji signal ova komponenta predstavlja.
+             * @example learningConfidence
+             * @enum {string}
+             */
+            key: "learningConfidence" | "flowDelta" | "thermostatFreshness" | "anomalyRate";
+            /**
+             * @description Score ovog signala, 0–100.
+             * @example 82
+             */
+            score: number;
+            /**
+             * @description Ponder signala u ukupnom scoreu. Vrijednosti iz HEALTH_WEIGHTS.
+             * @example 35
+             */
+            weight: number;
+        };
+        HealthWarningDto: {
+            /**
+             * @description Nivo ozbiljnosti.
+             * @example warning
+             * @enum {string}
+             */
+            level: "info" | "warning" | "error";
+            /**
+             * @description Zadani (bosanski) tekst upozorenja.
+             * @example Ciljna temperatura se ne dostiže - prosječno zaostajanje: 2.0°C
+             */
+            message: string;
+            /**
+             * @description Stabilan identifikator pravila, za lokalizaciju na klijentu.
+             * @example targetShortfall
+             * @enum {string}
+             */
+            type: "shortCycles" | "longCycles" | "targetShortfall" | "targetOvershoot" | "anomalies";
         };
         /** @enum {string} */
         HomeProfileHeatingType: "RADIATOR" | "UNDERFLOOR" | "MIXED";
@@ -1655,6 +1729,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    DashboardController_getHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardHealthResponseDto"];
+                };
             };
         };
     };

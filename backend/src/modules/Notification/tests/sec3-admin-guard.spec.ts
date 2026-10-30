@@ -29,7 +29,7 @@ import request from 'supertest';
  */
 function handlerRef(
   name: 'testTriggerAllReminders' | 'testGasReminder',
-): unknown {
+): object {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   return NotificationsController.prototype[name];
 }

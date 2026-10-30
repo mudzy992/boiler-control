@@ -41,8 +41,10 @@ async function main() {
         const nonce = crypto.randomBytes(12).toString('hex');
         const a = await tx.user.create({data:{email:`audit-a-${nonce}@example.invalid`,passwordHash:'not-a-real-hash'}});
         const b = await tx.user.create({data:{email:`audit-b-${nonce}@example.invalid`,passwordHash:'not-a-real-hash'}});
+        // SEC-3: administrator za pozitivnu kontrolu masovnog remindera.
+        const admin = await tx.user.create({data:{email:`audit-admin-${nonce}@example.invalid`,passwordHash:'not-a-real-hash',role:'ADMIN'}});
         const notice = await tx.notification.create({data:{userId:b.id,type:'SYSTEM_ALERT',title:'synthetic',message:'synthetic',isRead:false}});
-        userIds = [a.id, b.id];
+        userIds = [a.id, b.id, admin.id];
         notificationId = notice.id;
         const jwt = new JwtService({secret:crypto.randomBytes(32).toString('hex')});
         let reminderCalls = 0;
@@ -87,11 +89,17 @@ async function main() {
           const readByOwner = await tx.notification.findUnique({where:{id:notice.id}});
           assert.equal(readByOwner.isRead,true);
           stage = 'http-reminder';
-          // OTVOREN NALAZ: endpoint dokumentuje "admin only" (notifications.controller.ts:163)
-          // ali kontroler ima samo @UseGuards(JwtAuthGuard) i nijedan @Roles, pa
-          // masovni reminder moze pokrenuti bilo koji prijavljeni korisnik.
+          // SEC-3 / B-007: endpoint JE zasticen. @Roles(UserRole.ADMIN) +
+          // @UseGuards(RolesGuard) na kontroleru; role dolazi iz baze preko
+          // JwtAuthGuard (jwt-auth.guard.ts:41-56). Obican korisnik mora biti
+          // odbijen, a servis se uopste ne smije pozvati.
           const reminder = await request(app.getHttpServer()).post('/api/notifications/test-trigger-all-gas-reminders').set('Authorization',`Bearer ${auth}`);
-          assert.equal(reminder.status,201); assert.equal(reminderCalls,1);
+          assert.equal(reminder.status,403); assert.equal(reminderCalls,0);
+          // Pozitivna kontrola: bez nje 403 ne bi dokazivao autorizaciju, jer bi
+          // bio jednako objasnjiv pokvarenim endpointom. Admin mora proci.
+          const adminAuth = jwt.sign({userId:admin.id});
+          const adminReminder = await request(app.getHttpServer()).post('/api/notifications/test-trigger-all-gas-reminders').set('Authorization',`Bearer ${adminAuth}`);
+          assert.equal(adminReminder.status,201); assert.equal(reminderCalls,1);
           completed = true;
         } finally { await app.close(); }
         throw ROLLBACK;
@@ -102,7 +110,7 @@ async function main() {
     stage = 'rollback-verification';
     assert.equal(await db.user.count({where:{id:{in:userIds}}}), 0);
     assert.equal(await db.notification.count({where:{id:notificationId}}), 0);
-    console.log('::notice title=Audit security regression check::SEC-1 holds in isolated PostgreSQL - cross-user POST /api/notifications/:id/read returned 404 and left the record unread, while the owner still succeeded. Open finding remains: test-trigger-all-gas-reminders has no RolesGuard, so a USER invoked the mock mass reminder. Transaction rolled back and record absence verified.');
+    console.log('::notice title=Audit security regression check::SEC-1 holds in isolated PostgreSQL - cross-user POST /api/notifications/:id/read returned 404 and left the record unread, while the owner still succeeded. SEC-3 also holds: test-trigger-all-gas-reminders returned 403 for a USER without invoking the mock mass reminder, and 201 for an ADMIN. Transaction rolled back and record absence verified.');
   } finally { await db.$disconnect(); }
 }
 main().catch(error => {

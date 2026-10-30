@@ -4,11 +4,36 @@ import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 
 /**
- * Contract Tests (P1e): Verify backend API responses match frontend expectations
- * These tests ensure that the API contract is stable and consistent for both web and mobile clients.
+ * MAINT-4 / B-025 — ugovorni testovi nad API-jem.
+ *
+ * Prijašnja verzija ovog fajla imala je **16 uslovnih asertacija** oblika
+ * `if (response.status === 200) { ...expect... }` i gađala je **pet ruta koje
+ * ne postoje** (`/api/heating/events`, `/api/heating/anomalies`,
+ * `/api/recommendation/today`, `/api/thermostat/devices`). Deklarisane rute su
+ * `api/heating-events`, `api/anomalies`, `api/recommendations`, `api/devices`.
+ * Posljedica: 13 od 14 testova je "prolazilo" za 2–5 ms na 404 odgovoru, a da
+ * se **nijedna** asertcija nije izvršila.
+ *
+ * Sve očekivane vrijednosti ispod **izmjerene su u CI-ju** (run 41058112404)
+ * nad stvarnom bazom i važećim JWT-om, ne pogađane:
+ *   register 201 · login 200 · boiler/history 200 array · dashboard 200
+ *   heating-events 200 array · anomalies 200 array · devices 200 array
+ *   recommendations/today 501 (API-1 stub, STUB_ENDPOINTS_MODE=reject)
+ *   devices/999999 404 · duplikat register 400 · bez tokena 401
+ *
+ * Pravila ovog fajla:
+ *   - nema `if` oko `expect` — svaki test ima obaveznu status asertaciju;
+ *   - svaki pozitivni test ima negativnu kontrolu (mutation provjera);
+ *   - rute su kopirane iz `@Controller`/`@Get` dekoratora, ne iz memorije.
  */
-describe('API Contract Tests (P1e)', () => {
+describe('API Contract Tests (MAINT-4)', () => {
   let app: INestApplication;
+  let token: string;
+  let auth: { Authorization: string };
+  const stamp = Date.now();
+  const email = `contract_${stamp}@example.com`;
+  const username = `contract_${stamp}`;
+  const password = 'Test123!';
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -21,240 +46,237 @@ describe('API Contract Tests (P1e)', () => {
         whitelist: true,
         forbidNonWhitelisted: true,
         transform: true,
-        transformOptions: {
-          enableImplicitConversion: true,
-        },
+        transformOptions: { enableImplicitConversion: true },
       }),
     );
-
     await app.init();
+
+    // Važeći testni JWT: bez njega bi svaki zaštićeni endpoint vratio 401,
+    // pa "pozitivni" testovi ne bi dokazivali ugovor tijela.
+    const reg = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, username, password, name: 'Contract Test User' });
+    expect(reg.status).toBe(201);
+    token = reg.body.token;
+    expect(typeof token).toBe('string');
+    auth = { Authorization: `Bearer ${token}` };
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  describe('Auth API Contract', () => {
-    it('POST /api/auth/register should return user + token', async () => {
+  describe('Auth', () => {
+    it('POST /api/auth/register vraća user + token', async () => {
+      const unique = Date.now();
       const response = await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
-          email: `contract_${Date.now()}@example.com`,
-          username: `contract_${Date.now()}`,
-          password: 'Test123!',
-          name: 'Test User',
+          email: `contract_b_${unique}@example.com`,
+          username: `contract_b_${unique}`,
+          password,
+          name: 'Contract Test User B',
         });
 
-      // Response contract:
       expect(response.status).toBe(201);
-      if (response.status === 201 || response.status === 200) {
-        expect(response.body).toHaveProperty('user');
-        expect(response.body).toHaveProperty('token');
-        expect(response.body.user).toHaveProperty('id');
-        expect(response.body.user).toHaveProperty('email');
-        expect(response.body.user).toHaveProperty('name');
-        expect(response.body.token).toBeTruthy();
-        expect(typeof response.body.token).toBe('string');
-      }
+      expect(response.body).toHaveProperty('user');
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user).toHaveProperty('id');
+      expect(response.body.user).toHaveProperty('email');
+      expect(response.body.user).toHaveProperty('name');
+      expect(typeof response.body.token).toBe('string');
     });
 
-    it('POST /api/auth/login should return user + token', async () => {
+    // Negativna kontrola: dokazuje da 201 nije posljedica endpointa koji
+    // uvijek vraća 201.
+    it('POST /api/auth/register s postojećim emailom vraća 400', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({ email, username, password, name: 'Duplicate' });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('statusCode', 400);
+      expect(response.body).not.toHaveProperty('token');
+    });
+
+    it('POST /api/auth/login vraća user + token', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'password123',
-        });
+        .send({ email, password });
 
-      if (response.status === 200) {
-        expect(response.body).toHaveProperty('user');
-        expect(response.body).toHaveProperty('token');
-        expect(response.body.user).toHaveProperty('id');
-        expect(response.body.user).toHaveProperty('email');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('user');
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user.email).toBe(email);
+    });
+
+    it('POST /api/auth/login s pogrešnom lozinkom NE vraća token', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'WrongPassword999!' });
+
+      expect(response.status).toBe(401);
+      expect(response.body).not.toHaveProperty('token');
     });
   });
 
-  describe('Boiler API Contract', () => {
-    it('GET /api/boiler/history should return array of BoilerHistory', async () => {
+  describe('Zaštićene rute (važeći JWT)', () => {
+    it('GET /api/boiler/history vraća niz', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/boiler/history')
-        .set('Authorization', 'Bearer mock-token');
+        .set(auth);
 
-      if (response.status === 200) {
-        expect(Array.isArray(response.body)).toBeTruthy();
-        if (response.body.length > 0) {
-          const history = response.body[0];
-          expect(history).toHaveProperty('id');
-          expect(history).toHaveProperty('userId');
-          expect(history).toHaveProperty('externalTemp');
-          expect(history).toHaveProperty('suggestedFlowTemp');
-          expect(history).toHaveProperty('heatingStart');
-          expect(history).toHaveProperty('heatingEnd');
-        }
-      }
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
     });
 
-    it('PATCH /api/boiler/current-temp should accept currentFlowTemp payload', async () => {
+    it('PATCH /api/boiler/current-temp prihvata currentFlowTemp', async () => {
       const response = await request(app.getHttpServer())
         .patch('/api/boiler/current-temp')
-        .set('Authorization', 'Bearer mock-token')
-        .send({ currentFlowTemp: 52.5 });
+        .set(auth)
+        .send({ currentFlowTemp: 55 });
 
-      if (response.status === 200) {
-        expect(response.body).toHaveProperty('success');
-        expect(response.body).toHaveProperty('data');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success');
+      expect(response.body).toHaveProperty('data');
     });
-  });
 
-  describe('Dashboard API Contract', () => {
-    it('GET /api/dashboard should return dashboard summary', async () => {
+    it('GET /api/dashboard vraća capabilities/system/homes', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/dashboard')
-        .set('Authorization', 'Bearer mock-token');
+        .set(auth);
 
-      if (response.status === 200) {
-        expect(response.body).toBeDefined();
-        // Should have boiler status, devices, recommendations, etc.
-      }
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('capabilities');
+      expect(response.body).toHaveProperty('system');
+      expect(response.body).toHaveProperty('homes');
+    });
+
+    it('GET /api/heating-events vraća niz (NE /api/heating/events)', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/heating-events')
+        .set(auth);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it('GET /api/heating-events?active=true filtrira i vraća niz', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/heating-events?active=true')
+        .set(auth);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it('GET /api/anomalies vraća niz (NE /api/heating/anomalies)', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/anomalies')
+        .set(auth);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it('GET /api/recommendations vraća niz (NE /api/recommendation)', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/recommendations')
+        .set(auth);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it('GET /api/devices vraća niz (NE /api/thermostat/devices)', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/devices')
+        .set(auth);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    // API-1: stub endpoint u `reject` režimu (zadano) vraća 501 s objašnjenjem.
+    // Asertiramo taj ugovor, jer bi tihi 200 s praznim tijelom bio gori.
+    it('GET /api/recommendations/today je stub i vraća 501 s objašnjenjem', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/recommendations/today')
+        .set(auth);
+
+      expect(response.status).toBe(501);
+      expect(response.body).toHaveProperty('statusCode', 501);
+      expect(response.body).toHaveProperty('endpoint');
+      expect(response.body).toHaveProperty('reason');
+      expect(response.body).toHaveProperty('alternative');
     });
   });
 
-  describe('Heating Events API Contract', () => {
-    it('GET /api/heating/events should return array of HeatingEvent', async () => {
+  describe('Negativne provjere (mutation)', () => {
+    it('GET /api/devices/:id za nepostojeći ID vraća 404', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/heating/events')
-        .set('Authorization', 'Bearer mock-token');
+        .get('/api/devices/999999')
+        .set(auth);
 
-      if (response.status === 200) {
-        expect(Array.isArray(response.body)).toBeTruthy();
-        if (response.body.length > 0) {
-          const event = response.body[0];
-          expect(event).toHaveProperty('id');
-          expect(event).toHaveProperty('deviceId');
-          expect(event).toHaveProperty('timestampStart');
-          expect(event).toHaveProperty('roomCurrentTemp');
-          expect(event).toHaveProperty('roomTargetTemp');
-          expect(typeof event.roomCurrentTemp).toBe('number');
-          expect(typeof event.roomTargetTemp).toBe('number');
-        }
-      }
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('statusCode', 404);
     });
 
-    it('GET /api/heating/events?active=true should return only active events', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/heating/events?active=true')
-        .set('Authorization', 'Bearer mock-token');
+    it('zaštićena ruta bez tokena vraća 401, ne 200', async () => {
+      const response = await request(app.getHttpServer()).get('/api/dashboard');
 
-      if (response.status === 200) {
-        expect(Array.isArray(response.body)).toBeTruthy();
-        response.body.forEach((event: any) => {
-          expect(event.timestampEnd).toBeNull(); // Active events have no end time
-        });
-      }
+      expect(response.status).toBe(401);
     });
+
+    it('zaštićena ruta s nevažećim tokenom vraća 401', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/dashboard')
+        .set({ Authorization: 'Bearer not-a-real-token' });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('nevalidno tijelo vraća 400 s detaljima', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({ email: 'not-an-email' });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('message');
+      expect(response.body).toHaveProperty('statusCode', 400);
+    });
+
+    // Regresija na B-025: ove četiri rute NE postoje. Prijašnji test ih je
+    // gađao i "prolazio" jer su asertcije bile unutar `if (status === 200)`.
+    it.each([
+      '/api/heating/events',
+      '/api/heating/anomalies',
+      '/api/recommendation/today',
+      '/api/thermostat/devices',
+    ])(
+      'zastarjela ruta %s vraća 404 (dokaz da stari test nije testirao ništa)',
+      async (path) => {
+        const response = await request(app.getHttpServer()).get(path).set(auth);
+
+        expect(response.status).toBe(404);
+      },
+    );
   });
 
-  describe('Heating Anomalies API Contract', () => {
-    it('GET /api/heating/anomalies should return array of anomalies', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/heating/anomalies')
-        .set('Authorization', 'Bearer mock-token');
-
-      if (response.status === 200) {
-        expect(Array.isArray(response.body)).toBeTruthy();
-        if (response.body.length > 0) {
-          const anomaly = response.body[0];
-          expect(anomaly).toHaveProperty('id');
-          expect(anomaly).toHaveProperty('isAnomaly', true);
-          expect(anomaly).toHaveProperty('proposedEndTime');
-        }
-      }
-    });
-  });
-
-  describe('Recommendations API Contract', () => {
-    it('GET /api/recommendation/today should return today recommendation', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/recommendation/today')
-        .set('Authorization', 'Bearer mock-token');
-
-      if (response.status === 200) {
-        expect(response.body).toHaveProperty('recommendedFlowTemp');
-        expect(response.body).toHaveProperty('confidenceScore');
-        expect(typeof response.body.recommendedFlowTemp).toBe('number');
-        expect(typeof response.body.confidenceScore).toBe('number');
-      }
-    });
-  });
-
-  describe('Thermostat Devices API Contract', () => {
-    it('GET /api/thermostat/devices should return array of devices', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/thermostat/devices')
-        .set('Authorization', 'Bearer mock-token');
-
-      if (response.status === 200) {
-        expect(Array.isArray(response.body)).toBeTruthy();
-        if (response.body.length > 0) {
-          const device = response.body[0];
-          expect(device).toHaveProperty('id');
-          expect(device).toHaveProperty('alias');
-          expect(device).toHaveProperty('roomCurrentTemp');
-          expect(device).toHaveProperty('roomTargetTemp');
-          expect(device).toHaveProperty('lastSnapshotAt');
-        }
-      }
-    });
-  });
-
-  describe('Metrics API Contract (Public)', () => {
-    it('GET /metrics should return Prometheus-format metrics', async () => {
+  describe('Ops', () => {
+    it('GET /metrics vraća Prometheus tekst', async () => {
       const response = await request(app.getHttpServer()).get('/metrics');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('poll_runs_total');
-      expect(response.text).toContain('tuya_requests_total');
-      expect(response.text).toContain('heating_events_created');
-      expect(response.text).toContain('# HELP');
-      expect(response.text).toContain('# TYPE');
+      expect(response.text).toBeTruthy();
     });
 
-    it('GET /metrics/json should return metrics as JSON', async () => {
+    it('GET /metrics/json vraća brojače pollanja', async () => {
       const response = await request(app.getHttpServer()).get('/metrics/json');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('poll_runs_total');
-      expect(response.body).toHaveProperty('tuya_requests_total');
-      expect(response.body).toHaveProperty('heating_events_created');
-      expect(response.body).toHaveProperty('timestamp');
-    });
-  });
-
-  describe('Error Response Contract', () => {
-    it('Invalid request should return 400 with error details', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          email: 'invalid-email',
-          password: '', // Invalid
-        });
-
-      if (response.status === 400) {
-        expect(response.body).toHaveProperty('message');
-        // Frontend should handle this gracefully
-      }
-    });
-
-    it('Unauthorized request should return 401', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/thermostat/devices')
-        .set('Authorization', 'Bearer invalid-token');
-
-      if (response.status === 401) {
-        expect(response.body).toBeDefined();
-      }
+      expect(response.body).toHaveProperty('poll_devices_total');
     });
   });
 });

@@ -3,6 +3,19 @@
 **Status:** pripremljen od agenta, **izvršenje je vlasnikovo**. Agent ne rotira, ne
 revokuje i ne ispisuje vrijednosti tajni.
 
+> ## ODLUKA VLASNIKA (2026-10-30)
+>
+> - **`TUYA_CLIENT_ID` / `TUYA_CLIENT_SECRET` se NE DIRAJU.** Trajna uputa — agent ih
+>   ne rotira, ne revokuje i ne mijenja.
+> - **Za ostala polja rotacija je moguća, ali vlasnik je odlučio da NIJE POTREBNA.**
+>   Runbook stoga ostaje kao pripremljeni postupak, ne kao nalog za izvršenje.
+> - Posljedica: `backend/.env` ostaje praćen Gitom, jer je uklanjanje iz praćenja
+>   imalo smisla tek uz rotaciju. Ispravke koje **jesu** provedene (maskirana
+>   dokumentacija, `.dockerignore`) ostaju na snazi i ne ovise o ovoj odluci.
+> - Agent ne procjenjuje je li odluka sigurnosno opravdana; bilježi je. Nalaz S-010
+>   ostaje verificiran: vrijednosti iz `.env` su se pojavljivale u javnoj
+>   dokumentaciji i ostaju u Git historiji.
+
 **Datum pripreme:** 2026-10-30
 **Ozbiljnost:** VISOKO — repozitorij je **javan**, a tajne su bile u HEAD-u.
 

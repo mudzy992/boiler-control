@@ -22,7 +22,7 @@ const mainSrc = read('src/main.ts');
 const anchors = {
   helmetDefault: /app\.use\(helmet\(\)\)/.test(mainSrc),
   originFromEnv: /origin:\s*frontendUrl/.test(mainSrc),
-  credentialsFalse: /credentials:\s*false/.test(mainSrc),
+  credentialsFromFlag: /credentials:\s*authCookieEnabled\(\)/.test(mainSrc),
   methodsList: /methods:\s*\[\s*'GET'\s*,\s*'POST'\s*,\s*'PUT'\s*,\s*'PATCH'\s*,\s*'DELETE'\s*,\s*'OPTIONS'\s*\]/.test(mainSrc),
   allowedHeaders: /allowedHeaders:\s*\[\s*'Content-Type'\s*,\s*'Authorization'\s*\]/.test(mainSrc),
   frontendUrlRequired: /throw new Error\('FRONTEND_URL environment variable is required'\)/.test(mainSrc),
@@ -72,17 +72,26 @@ async function main() {
   Get('ping')(PingController.prototype, 'ping', Object.getOwnPropertyDescriptor(PingController.prototype, 'ping'));
   Controller('api')(PingController);
 
-  const testing = await Test.createTestingModule({ controllers: [PingController] }).compile();
-  const app = testing.createNestApplication({ logger: false });
-  /* identical chain to main.ts: helmet defaults + enableCors with the same option values */
-  app.use(helmet());
-  app.enableCors({
-    origin: process.env.FRONTEND_URL,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,
-  });
-  await app.init();
+  /* SEC-4: main.ts sada postavlja `credentials: authCookieEnabled()`, pa se
+     reprodukcija pokreće DVAPUT — jednom sa zastavicom off (zadano, ponašanje
+     identično prijašnjem) i jednom s on (httpOnly refresh cookie zahtijeva
+     credentials). */
+  async function launch(credentials) {
+    const testing = await Test.createTestingModule({ controllers: [PingController] }).compile();
+    const app = testing.createNestApplication({ logger: false });
+    /* identical chain to main.ts: helmet defaults + enableCors with the same option values */
+    app.use(helmet());
+    app.enableCors({
+      origin: process.env.FRONTEND_URL,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials,
+    });
+    await app.init();
+    return app;
+  }
+
+  const app = await launch(false);
   const server = app.getHttpServer();
   const instance = app.getHttpAdapter().getInstance();
   const trustProxySetting = instance.get('trust proxy');
@@ -123,8 +132,30 @@ async function main() {
       .set('Access-Control-Request-Method', 'GET');
     assert.notEqual(preflightForeign.headers['access-control-allow-origin'], DISALLOWED_ORIGIN, 'foreign preflight origin must never be reflected');
 
+    /* --- SEC-4: prolaz sa zastavicom ON --- */
+    const appCred = await launch(true);
+    let credResult;
+    try {
+      const credServer = appCred.getHttpServer();
+      const withCred = await request(credServer).get('/api/ping').set('Origin', ALLOWED_ORIGIN);
+      assert.equal(withCred.headers['access-control-allow-credentials'], 'true', 'credentials must be emitted when the flag is on');
+      /* sigurnosno svojstvo se ne smije promijeniti: origin ostaje fiksna
+         vrijednost, nikad refleksija, iako su credentials uključeni */
+      assert.equal(withCred.headers['access-control-allow-origin'], ALLOWED_ORIGIN);
+      const foreign = await request(credServer).get('/api/ping').set('Origin', DISALLOWED_ORIGIN);
+      assert.notEqual(foreign.headers['access-control-allow-origin'], DISALLOWED_ORIGIN, 'request origin must never be reflected even with credentials on');
+      credResult = {
+        allowCredentialsHeader: withCred.headers['access-control-allow-credentials'],
+        originStillFixed: withCred.headers['access-control-allow-origin'] === ALLOWED_ORIGIN,
+        foreignOriginReflected: foreign.headers['access-control-allow-origin'] === DISALLOWED_ORIGIN,
+      };
+    } finally {
+      await appCred.close();
+    }
+
     console.log(JSON.stringify({
-      scope: 'local Nest HTTP app reproducing backend/src/main.ts middleware chain (helmet defaults + enableCors with the same option values); static probes over backend/src and committed compose files; no external network, database or credentials',
+      scope: 'local Nest HTTP app reproducing backend/src/main.ts middleware chain (helmet defaults + enableCors with the same option values), run twice for AUTH_COOKIE_REFRESH_ENABLED off and on; static probes over backend/src and committed compose files; no external network, database or credentials',
+      credentialsFlagOn: credResult,
       mainTsAnchors: anchors,
       composeEvidence,
       staticProbes: {

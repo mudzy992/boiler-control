@@ -561,7 +561,36 @@ a canary je utvrdio da su **stvarne vrijednosti tajni bile ispisane u dokumentac
 - Nije čistio Git historiju.
 - Nije ispisao nijednu vrijednost tajne.
 
-### Šta vlasnik MORA uraditi
+### Odluka vlasnika (2026-10-30)
+
+- **`TUYA_CLIENT_ID` / `TUYA_CLIENT_SECRET` se NE DIRAJU** — trajna uputa.
+- Rotacija ostalih polja je moguća, ali **nije potrebna** i ne izvršava se.
+- Posljedica: `backend/.env` ostaje praćen Gitom. Ispravke koje su provedene
+  (maskirana dokumentacija, `.dockerignore`) ne ovise o toj odluci i ostaju.
+- SEC-0 je time **zatvoren po vlasnikovoj odluci**, ne provedenom rotacijom.
+
+### SEC-4 — Faza 1 (backend) implementirana, 2026-10-30
+
+Rotirani refresh token i httpOnly cookie, **iza zastavice
+`AUTH_COOKIE_REFRESH_ENABLED` (zadano `off`)**:
+
+- Model `RefreshToken` + migracija `20261030000000_auth_refresh_token`
+  (dodatak samo; reverzibilno kroz `DROP TABLE`).
+- `RefreshTokenService` — `issue`/`rotate`/`revoke`/`revokeAllForUser`; token se
+  u bazi čuva kao SHA-256, **reuse detection** opoziva sve sesije korisnika.
+- `POST /api/auth/refresh` (rotacija) i `POST /api/auth/logout` (opoziv);
+  login/register postavljaju httpOnly cookie kad je zastavica uključena.
+- **`JwtAuthGuard` je nepromijenjen** — i dalje čita samo `Authorization:
+  Bearer`, pa instalirane mobilne verzije rade bez ijedne promjene.
+- `main.ts`: `credentials: authCookieEnabled()`; `cors_headers_repro.cjs` sada
+  dokazuje da `origin` ostaje fiksna vrijednost i s uključenim `credentials`.
+- Testovi **18/18** (`npx jest src/modules/Auth/tests/ --runInBand`).
+
+Detalji, dizajnerska odluka i šta ova faza NE radi:
+`docs/audit/backend/12-sec4-refresh-token.md`. **Otvoreno:** faze 2-3
+(frontend i mobile prelazak na cookie tok) te skraćivanje života access tokena.
+
+### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`
    prema runbook-u. **Rotacija ne čeka ništa** — vrijednosti su bile javne.

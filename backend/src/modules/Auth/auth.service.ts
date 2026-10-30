@@ -171,6 +171,14 @@ export class AuthService {
     return { message: 'Password updated successfully' };
   }
 
+  /**
+   * SEC-4: javni izdavač access tokena, potreban `/auth/refresh` koji nakon
+   * rotacije refresh tokena vraća novi access token.
+   */
+  issueAccessToken(userId: number): string {
+    return this.signToken(userId);
+  }
+
   private signToken(userId: number): string {
     const payload: JwtPayload = { userId };
     return this.jwtService.sign(payload);

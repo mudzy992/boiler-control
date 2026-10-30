@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { authCookieEnabled } from './modules/Auth/auth-cookie';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,7 +23,12 @@ async function bootstrap() {
     origin: frontendUrl,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,
+    // SEC-4: `credentials` je potrebno da browser pošalje httpOnly refresh
+    // cookie na /api/auth/refresh. Uslovljeno je zastavicom kako bi rollback
+    // bio čist — dok je `off`, CORS je doslovno kao prije ove promjene.
+    // Sigurno je i kad je `on` jer `origin` je fiksna vrijednost, ne refleksija
+    // (potvrđeno u scripts/audit/cors_headers_repro.cjs).
+    credentials: authCookieEnabled(),
   });
 
   // Global validation

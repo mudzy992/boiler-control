@@ -1017,8 +1017,9 @@ pa kontrast piksela nije pouzdano izračunat.
 
 ### FE2-14 — Poslovna logika duplirana na klijentu (FE-010), 2026-10-30
 
-Talas C, #23. Urađen je dio koji **ne traži odluku vlasnika**; arhitektonsko
-preseljenje logike ostaje otvoreno (vidi kraj sekcije).
+Talas C, #23. Prvi dio (granice, magijski brojevi, semantika overshoota) urađen
+je bez odluke vlasnika. Drugi dio — preseljenje health scorea i pravila
+upozorenja u **jedan izvor** — urađen je nakon odluke vlasnika (tačka 5).
 
 **1. Granice temperature duplirane na klijentu.** `MIN/MAX_CURRENT_FLOW_TEMP =
 48/55` postojale su kao dvije nezavisne kopije (`BoilerPage.tsx:16-17` i
@@ -1076,26 +1077,77 @@ Mutacija 3 je ovdje najvažnija: dokazuje da paritet test **stvarno** čita
 backend i pada kad se server promijeni, umjesto da samo uspoređuje dvije
 vrijednosti unutar frontenda.
 
-**Šta NIJE riješeno — traži odluku vlasnika.**
+**5. Odluka vlasnika: health score i upozorenja u backend (jedan izvor).**
 
-Preseljenje health score i pravila upozorenja u jedan izvor (backend endpoint
-ili shared modul). **Izmjereno stanje je gore nego što FE-010 opisuje:**
+Vlasnik je 2026-10-30 odabrao **backend endpoint** umjesto shared modula, i
+**oba** upozorenja (shortfall i overshoot) umjesto samo jednog.
 
-| | web | mobile |
+Dodan `GET /api/dashboard/health` (commit `7c3023e`):
+
+| komponenta | ponder | izračun |
 | --- | --- | --- |
-| health score | `max(0, 100 - anomalije×15)` — jedan faktor | ponderisano: learning **35** + flowDelta **25** + thermostat freshness **25** + anomalije **15** (`DashboardScreen.tsx:165-215`) |
-| overshoot/shortfall | postoji | **ne postoji** |
-| granice 48/55 | sada 1 izvor | 1 kopija (ukupno 2) |
+| `learningConfidence` | **35** | prosjek `HeatingIntervalLearning.confidence` × 100 |
+| `flowDelta` | **25** | clamp(100 − abs(`actualFlowTemp` − `suggestedFlowTemp`) × 12.5) |
+| `thermostatFreshness` | **25** | udio uređaja s `lastSeen` ≤ 10 min × 100 |
+| `anomalyRate` | **15** | clamp(100 − (anomalije ÷ uzorak) × 100) |
 
-Za **isti ulaz** web i mobile daju različit broj. Backend nema odgovarajući
-endpoint — Dashboard kontroler izlaže samo `/`, `heating-events`,
-`heating-status`, `heating-summary`, `heating-stats`, `learning-trends`,
-`export`.
+Usvojena je **ponderisana** (mobilna) formula jer sadrži više signala; web
+verzija s jednim faktorom bila bi regresija. Komponente bez podataka se
+izostavljaju, a rezultat se normalizuje po sumi pondera dostupnih; fallback je
+**50**. Ponderi su preuzeti 1:1 iz postojećeg mobilnog koda i **nisu stručno
+potvrđeni** — to je zabilježeno u doc-komentaru samog modula, ne samo ovdje.
 
-Kriterij prihvatanja („iste ulazne vrijednosti daju iste izlaze na web/mobile")
-zato **nije ispunjen** i ne može biti bez odluke: mobile formula je
-razrađenija i uključuje svježinu termostata te samopouzdanje učenja, čega web
-nema. Odabir formule je **proizvodna odluka**, ne tehnička.
+Upozorenja (`buildHealthWarnings`): `shortCycles` (warning) · `targetShortfall`
+(warning) · **`targetOvershoot` (warning, novo)** · `longCycles` (info) ·
+`anomalies` (error). Shortfall i overshoot su odvojena pravila i **ne smiju se
+paliti istovremeno** — test to zaključava.
+
+Logika je u `backend/src/common/heating-health.ts` kao **čista** funkcija (bez
+Prisma/DI), pa je testabilna bez baze — lokalno nema postgres-a.
+`durationMinutes` koristi istu semantiku kao `getHeatingEvents()`.
+
+Frontend sada čita endpoint (`apiClient.getDashboardHealth()`), a
+`frontend/src/constants/heatingAnalysis.ts` je **obrisan** — zadržati ga značilo
+bi vratiti upravo onu duplikaciju koju FE2-14 uklanja. Testovi te logike žive u
+`backend/src/common/tests/heating-health.spec.ts`.
+
+**⚠️ Promjena ponašanja koju treba znati:** backend računa upozorenja nad
+zadnjih `HEALTH_EVENT_SAMPLE` (20) događaja, bez obzira na odabrani raspon, dok
+je DashboardPage prije koristio raspon iz date pickera (do 500 događaja). Panel
+je sada „ukupno stanje sistema", a ne „analiza odabranog raspona".
+
+**Verifikacija backend dijela (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `jest src/common/tests/heating-health.spec.ts` | **23/23** |
+| `jest src` (CI annotation) | **448 passed, 0 failed**, 33 suites (bilo 425 → +23) |
+| backend `tsc` (CI komanda) | 1 greška — `gas.reading.service.ts:467`, fajl koji NIJE diran |
+| `eslint` na svih 5 fajlova | 0 problema (11 `prettier` grešaka ispravljeno `--fix`) |
+| `openapi:generate --check` | exit 0; **57 ruta** (bilo 56), **55 šema** (bilo 51) |
+| frontend `openapi:check` | exit 0 („tipovi su usklađeni s ugovorom") |
+| frontend `npm test` | **53/53** (bilo 59 — 6 testova `heatingAnalysis` uklonjeno zajedno s logikom) |
+| `backend_inventory.py` | exit 0; common **22/22**, route **73/73** |
+| inventarske skripte | 10 × exit 0 |
+| CI `41102580016` | oba joba success; tsc 0, eslint 0 |
+
+Test je uhvatio stvarnu grešku u mojoj implementaciji: `clampScore` je koristio
+`!Number.isFinite`, pa je `+Infinity` vraćao `0` umjesto `100`, poistovjećujući
+„nevalidno" (NaN) s „iznad granice". Ispravljeno na `Number.isNaN`.
+
+Jedini pad u `jest src` (`maint2-nontest-guard.spec.ts`) je **pre-postojeći** —
+potvrđeno preko `git stash push -u` / `pop`: pada i bez mojih izmjena.
+
+**Šta je ostalo otvoreno.**
+
+- **Mobile ne konzumira endpoint.** `DashboardScreen.tsx` i dalje računa
+  ponderisanu formulu lokalno. Formula je sada *usaglašena* s backendom pa je
+  broj isti, ali duplikacija nije uklonjena. `mobile/` nema CI ni test runner
+  (`npm test` exit 127), pa se taj dio **ne može verificirati ovdje**.
+- **Treća kopija granica 48/55** u `DashboardScreen.tsx:32-33` nije dirana.
+- **Endpoint nije pozvan kroz pravi HTTP stack** — nema e2e niti integracionog
+  testa za `GET /api/dashboard/health`; lokalno nema postgres-a.
+- **Ponderi nisu stručno potvrđeni** — preuzeti 1:1 iz postojećeg koda.
 
 ### Šta bi vlasnik uradio da je rotacija odobrena
 

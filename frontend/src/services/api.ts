@@ -4,6 +4,9 @@ import type {
   UpdateHomeProfileDto,
   HomeProfileResponse,
 } from '../types/homeProfile';
+// FE2-14: tipovi generisani iz `contracts/openapi.json` (FE2-8), tako da
+// potpis metode prati ugovor umjesto ručno pisane deklaracije.
+import type { components } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3020/api';
 
@@ -192,6 +195,21 @@ export class ApiClient {
 
   async getDashboardHeatingStatus() {
     const response = await this.client.get('/dashboard/heating-status');
+    return response.data;
+  }
+
+  /**
+   * FE2-14 (FE-010): health score i upozorenja iz JEDNOG izvora.
+   *
+   * Prije ovog endpointa DashboardPage je računao health score lokalno
+   * (`max(0, 100 - anomalije×15)`), a mobile drugom, ponderisanom formulom, pa
+   * su za isti ulaz davali različit broj. Sada oba klijenta čitaju odavde.
+   *
+   * Tip odgovora dolazi iz generisanog `src/types/api.d.ts`
+   * (`DashboardHealthResponseDto`), ne iz ručno pisane deklaracije.
+   */
+  async getDashboardHealth(): Promise<components['schemas']['DashboardHealthResponseDto']> {
+    const response = await this.client.get('/dashboard/health');
     return response.data;
   }
 

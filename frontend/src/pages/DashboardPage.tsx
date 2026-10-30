@@ -114,7 +114,6 @@ interface DashboardResponse {
 }
 
 interface ProcessedDashboard {
-  homeHealthScore: number;
   anomalyCount: number;
   anomalyRate: number;
   currentTemp: number;
@@ -182,15 +181,7 @@ import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
 } from '../constants/boilerLimits';
-// FE2-14 (FE-010): pragovi analize su bili magijski brojevi (20, 3, 1.5, 90,
-// 15) rasuti po ovoj datoteci i nigdje dokumentovani kao politika.
-import {
-  SHORT_CYCLE_MINUTES,
-  SHORT_CYCLE_COUNT_THRESHOLD,
-  LONG_CYCLE_MINUTES,
-  TARGET_SHORTFALL_WARN_C,
-  computeHealthScore,
-} from '../constants/heatingAnalysis';
+
 
 type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
@@ -401,12 +392,9 @@ export const DashboardPage: React.FC = () => {
     const recentEvents = home?.recentHeatingEvents || [];
     const thermostatPrograms = thermostat?.program ?? [];
 
-    // Calculate health score (0-100)
+    // FE2-14 (FE-010): health score se vise NE racuna ovdje — dolazi iz
+    // `GET /api/dashboard/health` (jedan izvor za web i mobile).
     const anomalies = recentEvents.filter(e => e.isAnomaly).length;
-    // FE2-14 (FE-010): formula izdvojena u constants/heatingAnalysis.ts.
-    // ⚠️ mobile računa health score DRUGOM formulom (ponderisano) — paritet je
-    // otvorena stavka FE2-14.
-    const healthScore = computeHealthScore(anomalies);
 
     // Calculate anomaly rate
     const anomalyRate = recentEvents.length > 0
@@ -414,7 +402,6 @@ export const DashboardPage: React.FC = () => {
       : 0;
 
     return {
-      homeHealthScore: healthScore,
       anomalyCount: anomalies,
       anomalyRate: anomalyRate,
       currentTemp: thermostat?.currentTemp || 0,
@@ -501,72 +488,38 @@ export const DashboardPage: React.FC = () => {
 
   const isHeatingActive = isHeatingNow;
 
-  // Calculate alerts and warnings
+  /**
+   * FE2-14 (FE-010): health score i upozorenja iz JEDNOG izvora (backend).
+   *
+   * Prije je DashboardPage imao vlastitu kopiju pravila upozorenja, a mobile
+   * vlastitu formulu za health score, pa su za isti ulaz davali različite
+   * rezultate. Sada oba klijenta čitaju `GET /api/dashboard/health`.
+   */
+  const healthQuery = useQuery({
+    queryKey: ['dashboard-health'],
+    queryFn: () => apiClient.getDashboardHealth(),
+    staleTime: 1000 * 60,
+  });
+
+  const healthScore = healthQuery.data?.score ?? 0;
+
+  /**
+   * Backend `level` je 'info' | 'warning' | 'error' — isti skup koji antd
+   * `<Alert type>` prima, pa se preslikava direktno.
+   *
+   * ⚠️ PROMJENA PONAŠANJA: backend računa upozorenja nad zadnjih
+   * `HEALTH_EVENT_SAMPLE` (20) događaja, bez obzira na odabrani raspon, dok je
+   * ovdje prije korišten raspon iz date pickera (do 500 događaja). Panel je
+   * sada „ukupno stanje sistema", a ne „analiza odabranog raspona".
+   */
   const alerts = useMemo(() => {
-    const a: { type: 'warning' | 'error' | 'info'; message: string; icon: React.ReactNode }[] = [];
-
-    // Short cycles detection
-    const shortCycles = events.filter(
-      (e) => e.durationMinutes < SHORT_CYCLE_MINUTES
-    );
-    if (shortCycles.length >= SHORT_CYCLE_COUNT_THRESHOLD) {
-      a.push({
-        type: 'warning',
-        message: `Detektovano ${shortCycles.length} kratkih ciklusa grijanja (< 20 min)`,
-        icon: <WarningOutlined />,
-      });
-    }
-
-    /**
-     * FE2-14 (FE-010): ispravljena semantika.
-     *
-     * Izraz `targetTemp - currentTemp` je POZITIVAN kad je trenutna temperatura
-     * ISPOD ciljne — dakle kad se cilj NE dostiže. To je **shortfall**
-     * (nedogrijavanje), a ne overshoot. Poruka je ranije glasila „Mogući
-     * overshoot", što je korisniku govorilo suprotno od onoga što je izmjereno:
-     * upozorenje se palilo upravo kad prostorija ZAOSTAJE za ciljem.
-     *
-     * Računica je namjerno ostala ista (ponašanje se ne mijenja, samo naziv i
-     * tekst), jer je detekcija zaostajanja korisna. Prava detekcija overshoota
-     * (`currentTemp - targetTemp`) bila bi DRUGO upozorenje i traži odluku
-     * vlasnika o politici — zabilježeno kao otvoreno pitanje u
-     * docs/audit/STATUS.md.
-     */
-    const shortfallAvg =
-      events.reduce((s, e) => s + (e.targetTemp - e.currentTemp), 0) /
-      (events.length || 1);
-    if (shortfallAvg > TARGET_SHORTFALL_WARN_C) {
-      a.push({
-        type: 'warning',
-        message: `Ciljna temperatura se ne dostiže - prosječno zaostajanje: ${shortfallAvg.toFixed(1)}°C`,
-        icon: <WarningOutlined />,
-      });
-    }
-
-    // Long cycles detection
-    const longCycles = events.filter(
-      (e) => e.durationMinutes > LONG_CYCLE_MINUTES
-    );
-    if (longCycles.length > 0) {
-      a.push({
-        type: 'info',
-        message: `Detektovano ${longCycles.length} dugih ciklusa grijanja (> 90 min)`,
-        icon: <InfoCircleOutlined />,
-      });
-    }
-
-    // Anomalies
-    const anomalies = events.filter((e) => e.isAnomaly);
-    if (anomalies.length > 0) {
-      a.push({
-        type: 'error',
-        message: `${anomalies.length} anomalija(e) u odabranom periodu`,
-        icon: <WarningOutlined />,
-      });
-    }
-
-    return a;
-  }, [events]);
+    const warnings = healthQuery.data?.warnings ?? [];
+    return warnings.map((w) => ({
+      type: w.level,
+      message: w.message,
+      icon: w.level === 'info' ? <InfoCircleOutlined /> : <WarningOutlined />,
+    }));
+  }, [healthQuery.data]);
 
   if (loading) {
     return (
@@ -667,10 +620,10 @@ export const DashboardPage: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Home Health Score"
-            value={Math.round(data.homeHealthScore)}
+            value={Math.round(healthScore)}
             prefix={<HomeOutlined />}
             suffix="%"
-            valueStyle={{ color: data.homeHealthScore > 70 ? '#22c55e' : '#f59e0b' }}
+            valueStyle={{ color: healthScore > 70 ? '#22c55e' : '#f59e0b' }}
           />
         </Col>
 

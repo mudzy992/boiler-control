@@ -61,6 +61,7 @@ Svaki red: **VERIFIKOVANO** ime i izvoz/ulazna tačka iz navedenog fajla. Zavisn
 | <!-- common:backend/src/common/file-storage.service.ts --> `backend/src/common/file-storage.service.ts` | Smještaj i privatno čitanje fajlova; validaciju i granice treba detaljno pregledati. |
 | <!-- common:backend/src/common/gas-input.ts --> `backend/src/common/gas-input.ts` | FEAT-7/B-015–B-016: strogi parseri za gas ulaz (`parseStrictBoolean`, `parseStrictCounterValue`) i zastavica `GAS_STRICT_VALIDATION` (zadano `on`, `off` vraća staro ponašanje). |
 | <!-- common:backend/src/common/health.controller.ts --> `backend/src/common/health.controller.ts` | Health kontroler. |
+| <!-- common:backend/src/common/heating-health.ts --> `backend/src/common/heating-health.ts` | FE2-14/FE-010: čista logika health scorea i upozorenja za `GET /api/dashboard/health` — jedan izvor za web i mobile. Ponderi (35/25/25/15) i pragovi su privremena politika preuzeta 1:1 iz postojećeg koda, bez stručne potvrde. |
 | <!-- common:backend/src/common/metrics.controller.ts --> `backend/src/common/metrics.controller.ts` | HTTP izvoz metrika i izvještaja. |
 | <!-- common:backend/src/common/metrics.service.ts --> `backend/src/common/metrics.service.ts` | Procesni brojači i Prometheus izvoz. |
 | <!-- common:backend/src/common/redis-health.service.ts --> `backend/src/common/redis-health.service.ts` | MAINT-2: opt-in Redis klijent (`ioredis`); aktivira se samo uz `REDIS_URL`. Bez njega je inertan (`lazyConnect`, ne otvara socket). Komande: PING, SET NX PX, GET, PTTL, DEL. |

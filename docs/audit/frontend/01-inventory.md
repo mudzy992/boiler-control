@@ -10,7 +10,7 @@
 
 ## Otvorena pitanja za vlasnika
 
-- Koji od tri compose rasporeda (korijenski `docker-compose.yml`, `frontend/docker-compose.yml` sa traefik labelama, `backend/docker-compose.yml`) je stvarna produkcija? (FE-009)
+- ~~Koji od tri compose rasporeda (korijenski `docker-compose.yml`, `frontend/docker-compose.yml` sa traefik labelama, `backend/docker-compose.yml`) je stvarna produkcija? (FE-009)~~ **RIJEŠENO 2026-10-30 (FE2-7, `1761876`):** mjerodavan je korijenski `docker-compose.yml`; `frontend/docker-compose.yml` je obrisan, `backend/docker-compose.yml` označen zamijenjenim. Otvoreno ostaje samo stvarno stanje servera (traefik mreža, certresolver, DNS), što se ne može provjeriti iz repozitorija.
 - Da li je planiran refresh token / httpOnly cookie model (vezano za backend SEC-4/S-004) prije uvođenja na web?
 - Koji je dogovoreni minimum podržanih preglednika i da li je gzip/brotli na ivici (traefik) ili u nginx?
 
@@ -64,10 +64,10 @@
 
 | Fajl | Namjena |
 |---|---|
-| `vite.config.ts` | samo `react()` plugin; `server.port: 80`; **nema** `build.rollupOptions`, nema analize, nema proxy |
-| `nginx.conf` | SPA `try_files`, `/assets/` 1y immutable, `/health` 200, blokira dotfileove; **nema** security headera niti gzip (FE-008) |
-| `Dockerfile` | 2 stage: build (`npm ci --legacy-peer-deps`, `npm run build`) → `nginx:1.27-alpine`; `ARG VITE_API_URL` u build stadijum |
-| `docker-compose.yml` (frontend) | traefik labele: host `boiler.ba101.top`, `VITE_API_URL=/backend/api`, `expose 3021` + loadbalancer port 3021 **iako nginx sluša 80** (FE-009) |
+| `vite.config.ts` | `react()` + `requireApiBaseUrl()` (FE2-7: rusi build bez `VITE_API_URL`); `server.port: 80`; `build.rollupOptions.output.manualChunks` po porodici paketa (FE2-4) |
+| `nginx.conf` | SPA `try_files`, `/assets/` 1y immutable, `/health` 200, blokira dotfileove; gzip **uključen** i security headeri dodani (FE2-6), CSP u report-only rezimu |
+| `Dockerfile` | 2 stage: build (`npm ci --legacy-peer-deps`, `npm run build`) → `nginx:1.27-alpine`; `ARG VITE_API_URL` **bez defaulta** — bez njega build sada pada (FE2-7) |
+| ~~`docker-compose.yml` (frontend)~~ | **OBRISAN 2026-10-30 (FE2-7).** Bio: traefik host `boiler.ba101.top`, `VITE_API_URL=/backend/api`, `expose 3021` + loadbalancer port 3021 **iako nginx sluša 80** (FE-009). Mjerodavan je korijenski `docker-compose.yml`; `backend/docker-compose.yml` je označen zamijenjenim |
 | `index.html` | nema CSP meta; `lang="en"` statički; faviconi (16/32) |
 | `tailwind.config.js` | `darkMode: 'class'`, `preflight: false` |
 | `DESIGN_SYSTEM.md` | dokumentovana paleta/tipografija (kontekst, ne dio builda) |

@@ -1243,6 +1243,129 @@ funkcije pa je mjerenje redoslijeda bilo bezvrijedno — sada se traži
   vlastiti module wrapper — to je očekivana cijena splittinga i ne utiče na
   inicijalno učitavanje, koje je prepolovljeno.
 
+### FE2-7 — Jedan mjerodavni deploy set + build bez localhost fallbacka (FE-009), 2026-10-30
+
+Talas C, #25. Commit `1761876`.
+
+**Odluke vlasnika (2026-10-30).** (1) Mjerodavan je **korijenski** `docker-compose.yml`
+s API hostom `api.boiler-control.ba101.top/api`; `frontend/` varijanta se briše.
+(2) Dev fallback se uklanja tako da **build pada**. (3) e2e ide u CI iako se
+lokalno ne može izvršiti.
+
+**Bug koji nalaz FE-009 nije spominjao.** `frontend/src/services/api.ts:11` je
+imalo:
+
+```js
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3020/api';
+```
+
+a `frontend/Dockerfile` ima `ARG VITE_API_URL` **bez defaulta**. Build pokrenut
+bez tog arga **nije padao** — samo bi u `dist/` ugradio localhost. Deployovana
+aplikacija bi onda zvala korisnikov vlastiti stroj, a simptom bi bio „učita se
+ali ništa ne radi". Ovo je ozbiljnije od samog nesklada compose fajlova.
+
+**Proturječnost compose setova (verificirano čitanjem fajlova).**
+
+| | varijanta A — korijenski | varijanta B — `frontend/` + `backend/` |
+|---|---|---|
+| API URL | `https://api.boiler-control.ba101.top/api` | `/backend/api` (relativan) |
+| frontend port | `expose: 80` ✅ poklapa se s `nginx.conf` `listen 80` | `expose: 3021` ❌ nginx sluša 80 |
+| traefik | **nema nijedne labele** ⇒ frontend nedostupan | ima, `boiler.ba101.top` + `PathPrefix(/backend/)` + stripprefix |
+| mreža | frontend **nema** `networks` | `web` |
+
+**Zašto u mjerodavnom setu NEMA `stripprefix`.** `grep -n "setGlobalPrefix"
+backend/src/main.ts` → **nema ga**; kontroleri nose prefiks sami
+(`@Controller('api/dashboard')`, `dashboard.controller.ts:36`). Klijent pogađa
+`https://api.boiler-control.ba101.top/api/dashboard/health`, Traefik to
+prosljeđuje nepromijenjeno, backend već vidi `/api/dashboard/health`. Skidanje
+`/api` bi dalo 404 na svim rutama. Hostovi **nisu izmišljeni** — oba su već bila
+u korijenskom fajlu, a `main.ts:16-19` baca grešku ako `FRONTEND_URL` nedostaje
+i koristi ga kao CORS `origin`.
+
+**Izmjene.**
+
+1. `api.ts` — fallback uklonjen: `(import.meta.env.VITE_API_URL ?? '').trim()`.
+2. `vite.config.ts` — `requireApiBaseUrl()` plugin ruši `vite build` ako
+   varijabla izostane. Guard je namjerno **build-time, ne runtime**: `api.ts` se
+   importuje i u Vitest testovima gdje varijabla nije postavljena, pa bi runtime
+   throw srušio cijeli suite. `command !== 'build'` poštedi dev i preview —
+   **provjereno**: `vite preview` se podigne na 4173 i ne pada.
+3. `docker-compose.yml` — traefik labele + mreža `web` za oba servisa.
+4. `frontend/docker-compose.yml` — **obrisan**.
+5. `backend/docker-compose.yml` — označen zamijenjenim (FE2-7 dopušta „ukloniti
+   **ili** označiti"; brisanje bi bilo neopozivo bez pristupa serveru).
+6. `frontend/.env.example` — šablon; `.gitignore` ga izričito dozvoljava.
+7. CI (frontend job, **13 koraka**) — job-level `VITE_API_URL` (jedna vrijednost
+   za build **i** e2e, da e2e ne prolazi nad drugim base-om), `docker compose
+   config`, audit skripta, provjera ugrađenog base-a, `type-check:e2e`,
+   Playwright install, e2e smoke. `timeout-minutes` 15 → 25.
+
+**Testovi.** `src/services/__tests__/apiBaseUrl.test.ts` (5) je namjerno
+**bihevioralan** — čita stvarni axios `baseURL`, ne grep nad izvorom, pa pada i
+ako se fallback vrati kroz drugi izraz. `e2e/smoke.spec.ts` (4) radi nad
+sagrađenim `dist/` preko `vite preview`. `scripts/audit/frontend_deploy_config_repro.cjs`
+ima 8 provjera bez dockera.
+
+**Verifikacija (lokalno).** `type-check` src EXIT=0; `type-check:e2e` EXIT=0;
+`lint` 0 grešaka / 13 pre-postojećih upozorenja; **vitest 7 fajlova / 69 testova**
+(bilo 6/64); `openapi:check` EXIT=0; build **bez** arga EXIT=1 s jasnom porukom;
+build **s** argom EXIT=0, 21 čip; svih 10 audit skripti EXIT=0. `vite preview`:
+`GET /` → 200 (8 JS referenci, FE2-4 splitting netaknut), entry čip 200,
+**API base ugrađen (1 pojava), `localhost:3020` odsutan (0)**, SPA fallback
+`/login` → 200. Shell fragmenti iz workflowa pokrenuti lokalno: pozitivno
+prolazi, negativno (ubacen localhost u `dist/`) pada s exit 1.
+
+**Mutacijska provjera.** Audit skripta — 9 mutacija, svaka pada: vraćen
+fallback; `expose` 80→3021; vraćen `frontend/docker-compose.yml`; dodan
+stripprefix; promijenjen `VITE_API_URL`; `FRONTEND_URL` na pogrešan host;
+`FRONTEND_URL` uklonjen; traefik port 80→3021; prazan compose. Unit test — 3
+mutacije: `||` fallback (4 pada), `??` fallback (1 pad), uklonjen `.trim()`
+(1 pad).
+
+**Moje greške ovog koraka, ispravljene.**
+
+- **`??` mutacija je prvo prolazila.** `vi.stubEnv('VITE_API_URL', '')` postavlja
+  **prazan string**, a `'' ?? 'x'` vraća `''` — pa test nikad nije pokrivao
+  slučaj kad varijabla **stvarno nedostaje**, što je upravo produkcijski
+  scenario. Dodan zaseban test s `undefined`.
+- **Dvije mutacije compose-a su bile prazne.** `open(p,'w').write(open(p).read())`
+  prvo **truncira** fajl pa onda čita prazno — mutacije su zapisale prazan fajl,
+  a skripta je pukla na `undefined.services` umjesto da padne na asertciji.
+  Ispravljeno i dodan eksplicitan assert na parsiranje.
+- **Treća mutacija je pogodila komentar.** Anchor `FRONTEND_URL=...` prvi put
+  pogađa zaglavlje-komentar u compose fajlu, ne stvarni env unos. Isti obrazac kao
+  `indexOf` nad komentarom u FE2-4.
+- **`localhost:3020` provjera je prvo lažno padala** jer JSDoc u `api.ts`
+  namjerno dokumentuje uklonjeni fallback. Riješeno pravim state machine-om za
+  skidanje komentara (naivni `//.*$` ne ide jer URL-ovi sadrže `//`).
+- **`playwright.config.ts` je imao `/health` kao readiness URL**, ali `vite
+  preview` servira statički `dist/` i ne koristi `nginx.conf` — `/health` tamo
+  nije endpoint. Promijenjeno na `/`.
+- `@types/node` je nedostajao, pa `type-check:e2e` nije prolazio; instaliran
+  `^22.20.5`. Provjereno da to nije srušilo type-check nad `src`.
+
+**Šta je ostalo otvoreno.**
+
+- **`docker compose config`, docker build i e2e izvršavanje NISU verificirani.**
+  Docker nije instaliran u ovom okruženju, a Chromium download pada
+  (`ECONNRESET` na `150.171.110.151`, `code=1`). CI je jedino mjesto gdje se to
+  može potvrditi — po odluci vlasnika e2e je dodan uprkos tome.
+- **Stvarno stanje servera nije provjereno i ne može se provjeriti iz
+  repozitorija:** postoji li traefik mreža `web` pod tim imenom, postoji li
+  certresolver `le`, i pokazuje li DNS za `api.boiler-control.ba101.top` na taj
+  traefik. Imena su preuzeta iz obrisane varijante i `docker-compose.monitoring.yml`.
+- **Traefik labele nikad nisu pokrenute protiv stvarnog traefika** — sintaksa je
+  prepisana iz postojećih fajlova u repu, ne potvrđena izvršavanjem.
+- **CORS cross-origin tok nije testiran.** Frontend `boiler-control.ba101.top` →
+  API `api.boiler-control.ba101.top` je cross-origin; backend `origin` je fiksna
+  vrijednost iz `FRONTEND_URL`. Vrijednosti se poklapaju, ali stvaran preflight
+  nije izvršen (S-009 repro nije proširen).
+- **`/health` nije provjeren kroz nginx** — postoji samo kao compose healthcheck
+  i nginx `location = /health`; `vite preview` ga ne servira.
+- `backend/docker-compose.yml` je i dalje u repu i i dalje proturječan
+  mjerodavnom setu (isto `container_name`, drugaciji host, stripprefix, bez
+  `FRONTEND_URL`). Označen je, ne obrisan.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

@@ -9,6 +9,7 @@ import { FallbackStrategyService } from './fallback-strategy.service';
 import { ReportingService } from './reporting.service';
 import { CorrelationIdService } from './correlation-id.service';
 import { FileStorageService } from './file-storage.service';
+import { RedisHealthService } from './redis-health.service';
 
 @Module({
   controllers: [MetricsController, HealthController, AppConfigController],
@@ -20,6 +21,7 @@ import { FileStorageService } from './file-storage.service';
     CorrelationIdService,
     FileStorageService,
     AppConfigService,
+    RedisHealthService,
   ],
   exports: [
     MetricsService,
@@ -29,6 +31,7 @@ import { FileStorageService } from './file-storage.service';
     CorrelationIdService,
     FileStorageService,
     AppConfigService,
+    RedisHealthService,
   ],
 })
 export class CommonModule {}

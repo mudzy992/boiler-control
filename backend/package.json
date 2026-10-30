@@ -50,6 +50,7 @@
     "expo-server-sdk": "^4.0.0",
     "helmet": "^8.1.0",
     "https": "^1.0.0",
+    "ioredis": "^6.0.0",
     "openmeteo": "^1.2.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

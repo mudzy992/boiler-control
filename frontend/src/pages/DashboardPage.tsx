@@ -176,12 +176,25 @@ type PlotEvent = {
   };
 };
 
+// FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u BoilerPage.tsx.
+// Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
+import {
+  MIN_CURRENT_FLOW_TEMP,
+  MAX_CURRENT_FLOW_TEMP,
+} from '../constants/boilerLimits';
+// FE2-14 (FE-010): pragovi analize su bili magijski brojevi (20, 3, 1.5, 90,
+// 15) rasuti po ovoj datoteci i nigdje dokumentovani kao politika.
+import {
+  SHORT_CYCLE_MINUTES,
+  SHORT_CYCLE_COUNT_THRESHOLD,
+  LONG_CYCLE_MINUTES,
+  TARGET_SHORTFALL_WARN_C,
+  computeHealthScore,
+} from '../constants/heatingAnalysis';
+
 type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
 };
-
-const MIN_CURRENT_FLOW_TEMP = 48;
-const MAX_CURRENT_FLOW_TEMP = 55;
 
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<ProcessedDashboard | null>(null);
@@ -390,7 +403,10 @@ export const DashboardPage: React.FC = () => {
 
     // Calculate health score (0-100)
     const anomalies = recentEvents.filter(e => e.isAnomaly).length;
-    const healthScore = Math.max(0, 100 - (anomalies * 15));
+    // FE2-14 (FE-010): formula izdvojena u constants/heatingAnalysis.ts.
+    // ⚠️ mobile računa health score DRUGOM formulom (ponderisano) — paritet je
+    // otvorena stavka FE2-14.
+    const healthScore = computeHealthScore(anomalies);
 
     // Calculate anomaly rate
     const anomalyRate = recentEvents.length > 0
@@ -490,8 +506,10 @@ export const DashboardPage: React.FC = () => {
     const a: { type: 'warning' | 'error' | 'info'; message: string; icon: React.ReactNode }[] = [];
 
     // Short cycles detection
-    const shortCycles = events.filter((e) => e.durationMinutes < 20);
-    if (shortCycles.length >= 3) {
+    const shortCycles = events.filter(
+      (e) => e.durationMinutes < SHORT_CYCLE_MINUTES
+    );
+    if (shortCycles.length >= SHORT_CYCLE_COUNT_THRESHOLD) {
       a.push({
         type: 'warning',
         message: `Detektovano ${shortCycles.length} kratkih ciklusa grijanja (< 20 min)`,
@@ -499,20 +517,36 @@ export const DashboardPage: React.FC = () => {
       });
     }
 
-    // Overshoot detection
-    const overshootAvg =
+    /**
+     * FE2-14 (FE-010): ispravljena semantika.
+     *
+     * Izraz `targetTemp - currentTemp` je POZITIVAN kad je trenutna temperatura
+     * ISPOD ciljne — dakle kad se cilj NE dostiže. To je **shortfall**
+     * (nedogrijavanje), a ne overshoot. Poruka je ranije glasila „Mogući
+     * overshoot", što je korisniku govorilo suprotno od onoga što je izmjereno:
+     * upozorenje se palilo upravo kad prostorija ZAOSTAJE za ciljem.
+     *
+     * Računica je namjerno ostala ista (ponašanje se ne mijenja, samo naziv i
+     * tekst), jer je detekcija zaostajanja korisna. Prava detekcija overshoota
+     * (`currentTemp - targetTemp`) bila bi DRUGO upozorenje i traži odluku
+     * vlasnika o politici — zabilježeno kao otvoreno pitanje u
+     * docs/audit/STATUS.md.
+     */
+    const shortfallAvg =
       events.reduce((s, e) => s + (e.targetTemp - e.currentTemp), 0) /
       (events.length || 1);
-    if (overshootAvg > 1.5) {
+    if (shortfallAvg > TARGET_SHORTFALL_WARN_C) {
       a.push({
         type: 'warning',
-        message: `Mogući overshoot - prosječna razlika: ${overshootAvg.toFixed(1)}°C`,
+        message: `Ciljna temperatura se ne dostiže - prosječno zaostajanje: ${shortfallAvg.toFixed(1)}°C`,
         icon: <WarningOutlined />,
       });
     }
 
     // Long cycles detection
-    const longCycles = events.filter((e) => e.durationMinutes > 90);
+    const longCycles = events.filter(
+      (e) => e.durationMinutes > LONG_CYCLE_MINUTES
+    );
     if (longCycles.length > 0) {
       a.push({
         type: 'info',

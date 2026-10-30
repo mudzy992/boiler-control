@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Table, Tag, Spin, message, Modal, Button, InputNumber, Space, Typography } from 'antd';
 import { apiClient } from '../services/api';
+// FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u DashboardPage.tsx.
+// Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
+import {
+  MIN_CURRENT_FLOW_TEMP,
+  MAX_CURRENT_FLOW_TEMP,
+} from '../constants/boilerLimits';
 
 interface BoilerEvent {
   id: number;
@@ -12,9 +18,6 @@ interface BoilerEvent {
   heatingEnd: string | null;
   createdAt: string;
 }
-
-const MIN_CURRENT_FLOW_TEMP = 48;
-const MAX_CURRENT_FLOW_TEMP = 55;
 
 export const BoilerPage: React.FC = () => {
   const [events, setEvents] = useState<BoilerEvent[]>([]);

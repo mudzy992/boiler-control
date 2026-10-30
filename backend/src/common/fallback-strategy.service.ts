@@ -12,6 +12,42 @@ export interface FallbackResult {
   fallbackValue: any;
   fallbackType: FallbackType;
   usedCache: boolean;
+  /**
+   * REL-5 / B-022: `false` samo kod hardkodirane zadane vrijednosti. Brojka
+   * (60 °C) NIJE stručno potvrđena kao sigurna za konkretan kotao i ne treba je
+   * primjenjivati kao komandu bez provjere. Kod stvarnih podataka (cache,
+   * posljednja poznata vrijednost) polje je izostavljeno.
+   */
+  safeDefaultValidated?: boolean;
+}
+
+/**
+ * REL-5 / B-022: zapis u fallback cacheu. `version` raste pri svakom upisu istog
+ * ključa, pa timer može provjeriti da li još pripada svom zapisu; `expiresAt`
+ * omogućava poštivanje stvarnog TTL-a iza zastavice.
+ */
+interface FallbackCacheEntry {
+  value: any;
+  timestamp: Date;
+  expiresAt: number;
+  version: number;
+}
+
+/**
+ * REL-5 / B-022: `on` uključi poštivanje stvarnog TTL-a zapisa pri čitanju.
+ * Zadano `off` jer mijenja efektivni životni vijek cachea (naslijeđeni prag je
+ * 30 min za Tuya, 24 h za weather, bez obzira na proslijeđeni `ttlMinutes`).
+ */
+const STRICT_TTL_FLAG = 'FALLBACK_STRICT_TTL_ENABLED';
+
+function strictTtlEnabled(logger: Logger): boolean {
+  const raw = (process.env[STRICT_TTL_FLAG] ?? '').trim().toLowerCase();
+  if (raw === '' || raw === 'off') return false;
+  if (raw === 'on') return true;
+  logger.warn(
+    `[${STRICT_TTL_FLAG}] nepoznata vrijednost; koristi se zadano off`,
+  );
+  return false;
 }
 
 /**
@@ -32,8 +68,13 @@ export class FallbackStrategyService {
   );
 
   // Simple in-memory cache for fallback values (can be extended to Redis)
-  private fallbackCache: Map<string, { value: any; timestamp: Date }> =
-    new Map();
+  private fallbackCache: Map<string, FallbackCacheEntry> = new Map();
+
+  /**
+   * REL-5 / B-022: po jedan timer PO KLJUČU. Prije ovoga svaki upis je zakazivao
+   * novi bezuslovni `delete`, pa je stariji timer mogao obrisati noviji zapis.
+   */
+  private expiryTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   constructor(private metricsService: MetricsService) {}
 
@@ -49,7 +90,7 @@ export class FallbackStrategyService {
     const cached = this.fallbackCache.get(cacheKey);
 
     // Use cached value if available and not too old (< 30 minutes)
-    if (cached && Date.now() - cached.timestamp.getTime() < 30 * 60 * 1000) {
+    if (this.isCacheUsable(cached, 30 * 60 * 1000)) {
       this.recordFallback(
         FallbackType.CACHED_STATE,
         'Tuya temperature from cache',
@@ -92,10 +133,12 @@ export class FallbackStrategyService {
     );
     return {
       triggered: true,
-      reason: 'Tuya adapter timeout - using safe default (60°C)',
+      reason:
+        'Tuya adapter timeout - using unvalidated safe default (60°C, not expert-confirmed)',
       fallbackValue: safeDefault,
       fallbackType: FallbackType.SAFE_DEFAULT,
       usedCache: false,
+      safeDefaultValidated: false,
     };
   }
 
@@ -111,10 +154,7 @@ export class FallbackStrategyService {
     const cached = this.fallbackCache.get(cacheKey);
 
     // Use cached value if available and not too old (< 24 hours for weather)
-    if (
-      cached &&
-      Date.now() - cached.timestamp.getTime() < 24 * 60 * 60 * 1000
-    ) {
+    if (this.isCacheUsable(cached, 24 * 60 * 60 * 1000)) {
       this.recordFallback(
         FallbackType.CACHED_STATE,
         'Weather data from cache',
@@ -166,6 +206,7 @@ export class FallbackStrategyService {
       fallbackValue: safeDefault,
       fallbackType: FallbackType.SAFE_DEFAULT,
       usedCache: false,
+      safeDefaultValidated: false,
     };
   }
 
@@ -173,13 +214,61 @@ export class FallbackStrategyService {
    * Cache a successful sensor reading for fallback use
    */
   cacheSensorReading(key: string, value: any, ttlMinutes: number = 30): void {
+    const now = Date.now();
+    const version = (this.fallbackCache.get(key)?.version ?? 0) + 1;
+
     this.fallbackCache.set(key, {
       value,
-      timestamp: new Date(),
+      timestamp: new Date(now),
+      expiresAt: now + ttlMinutes * 60 * 1000,
+      version,
     });
 
-    // Auto-expire cache after TTL
-    setTimeout(() => this.fallbackCache.delete(key), ttlMinutes * 60 * 1000);
+    // B-022: otkazati prethodni timer ISTOG ključa prije zakazivanja novog.
+    // Bez ovoga prvi timer briše ovaj, još svježi zapis.
+    const previous = this.expiryTimers.get(key);
+    if (previous) clearTimeout(previous);
+
+    const timer = setTimeout(
+      () => {
+        // Dvostruka zaštita: obrisati samo ako je zapis i dalje naše verzije.
+        const current = this.fallbackCache.get(key);
+        if (current && current.version === version) {
+          this.fallbackCache.delete(key);
+        }
+        if (this.expiryTimers.get(key) === timer) {
+          this.expiryTimers.delete(key);
+        }
+      },
+      ttlMinutes * 60 * 1000,
+    );
+
+    this.expiryTimers.set(key, timer);
+  }
+
+  /**
+   * REL-5 / B-022: je li zapis upotrebljiv. Sa zastavicom `on` poštuje stvarni
+   * `expiresAt` zapisa; bez nje zadržava naslijeđeni fiksni prag po tipu
+   * podatka, jer ga postojeći potrošači očekuju.
+   */
+  private isCacheUsable(
+    cached: FallbackCacheEntry | undefined,
+    legacyMaxAgeMs: number,
+  ): cached is FallbackCacheEntry {
+    if (!cached) return false;
+    if (strictTtlEnabled(this.logger)) return Date.now() < cached.expiresAt;
+    return Date.now() - cached.timestamp.getTime() < legacyMaxAgeMs;
+  }
+
+  /**
+   * REL-5 / B-022: opservabilnost — broj zapisa i stvarno zakazanih timera.
+   * Služi i kao dokaz da ponovljeni upisi istog ključa ne gomilaju timere.
+   */
+  getCacheStats(): { entries: number; pendingTimers: number } {
+    return {
+      entries: this.fallbackCache.size,
+      pendingTimers: this.expiryTimers.size,
+    };
   }
 
   /**
@@ -253,6 +342,10 @@ export class FallbackStrategyService {
    * Clear cache (useful for testing)
    */
   clearCache(): void {
+    // B-022: bez otkazivanja bi timer iz obrisanog zapisa mogao obrisati
+    // vrijednost upisanu NAKON clear-a.
+    for (const timer of this.expiryTimers.values()) clearTimeout(timer);
+    this.expiryTimers.clear();
     this.fallbackCache.clear();
   }
 }

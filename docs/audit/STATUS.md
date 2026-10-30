@@ -1153,6 +1153,35 @@ potvrđeno preko `git stash push -u` / `pop`: pada i bez mojih izmjena.
 
 Talas C, #24. Commit `b8cd9cf`.
 
+> **⚠️ NAKNADNA ISPRAVKA 2026-10-30 (`95ab2a0`).** Ovaj korak je proglašen
+> završenim uz zelen CI (run `41114017716`), ali je **isporučio bundle koji se
+> ruši pri učitavanju — korisnik bi vidio potpuno prazan ekran.**
+>
+> `manualChunks` je izdvojio `@ant-design/icons` u `vendor-icons`, dok je
+> `rc-util` (od kojeg icons zavisi) preko obrasca `/rc-/` išao u `vendor-antd` —
+> a antd bezuslovno importuje icons. Nastao je **kružan odnos među čipovima**
+> (`vendor-antd ↔ vendor-icons`), pa je pri evaluaciji čitan binding koji još
+> nije inicijaliziran:
+>
+> ```
+> TypeError: Cannot read properties of undefined (reading 'primary')
+>   at vendor-icons-*.js      (B(P.primary), P uvezen iz vendor-antd)
+> ```
+>
+> React se zato uopšte nije mountovao. **Nijedna mjera kojom je FE2-4 verificiran
+> to nije mogla vidjeti**: Vitest, `tsc` i `eslint` čitaju izvorni kod a ne
+> bundle, a `curl /` vraća 200 jer je HTML ispravan — pada tek JS.
+>
+> Ispravka: `@ant-design/icons` ide u **isti čip** kao antd (20 čipova umjesto
+> 21; inicijalni payload nepromijenjen, jer su icons i ranije bili u inicijalnom
+> učitavanju). Trajnu zaštitu dodaje `scripts/audit/frontend_chunk_graph.cjs`
+> (CI korak „Bundle evaluates and renders"), koji provjerava kružne odnose u
+> grafu čipova **i** stvarno evaluira entry čip u jsdom-u, tvrdeći da se login
+> forma renderuje.
+>
+> **Pouka:** „CI zelen" nije dokaz da aplikacija radi ako nijedan korak ne
+> izvršava sagradjeni artefakt.
+
 **Nalaz i njegova ispravka.** FE-004 je tvrdio da je aplikacija jedan JS čip od
 „2.972 kB (gzip 905 kB)". Ponovljeni bazni build 2026-10-30 daje
 `dist/assets/index-BQxeVzm2.js 2,975.35 kB │ gzip: 906.26 kB` — broj u nalazu je
@@ -1341,6 +1370,19 @@ mutacije: `||` fallback (4 pada), `??` fallback (1 pad), uklonjen `.trim()`
 - **`playwright.config.ts` je imao `/health` kao readiness URL**, ali `vite
   preview` servira statički `dist/` i ne koristi `nginx.conf` — `/health` tamo
   nije endpoint. Promijenjeno na `/`.
+- **Najozbiljnije: `curl` 200 sam tretirao kao dokaz da aplikacija radi.** Za
+  FE2-4 sam napisao da je „entry čip 200, API base ugrađen, `localhost:3020`
+  odsutan" i time proglasio bundle ispravnim. HTTP 200 dokazuje samo da
+  **server** radi i da je HTML ispravan — ne i da se JS izvršava. Bundle je u
+  tom trenutku padao pri evaluaciji (kružni čipovi iz FE2-4) i aplikacija bi
+  prikazala prazan ekran. Otkriveno je tek kad je e2e u CI stvarno otvorio
+  stranicu i nije našao nijedan element. **Pouka: nijedan artefakt nije
+  verificiran dok se ne izvrši.**
+- **Prva verzija nove audit skripte je sama bila nepouzdana.** Dinamička
+  evaluacija u jsdom-u nije izlagala `ShadowRoot` kao global, pa je antd-ov
+  `rc-util` bacio `ReferenceError` i React se unmountao (`#root` pao na 0
+  znakova). Izgledalo je kao bug aplikacije, a bio je propust moje probe —
+  ispravljeno, i mutacijski potvrđeno (uklanjanje `ShadowRoot` ruši provjeru).
 - `@types/node` je nedostajao, pa `type-check:e2e` nije prolazio; instaliran
   `^22.20.5`. Provjereno da to nije srušilo type-check nad `src`.
 

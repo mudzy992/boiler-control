@@ -168,5 +168,13 @@ jobs:
         run: npm run type-check
       - name: Lint
         run: npm run lint
+      # FE2-11: frontend je do sada imao nula testova (FE-014) - CI je provjeravao
+      # samo tipove, lint i build, pa je regresija u poslovnoj logici (npr.
+      # obrnut predznak potrosnje plina) prolazila neprimijeceno. Vitest pokriva
+      # GasForm validaciju, GasReadingCard izracun potrosnje i i18n fallback.
+      # Mutacijski testirano: svaka od te tri jedinice pada na namjerno unesenoj
+      # gresci, pa suite nije dekorativan.
+      - name: Unit and component tests (FE2-11)
+        run: npm test
       - name: Build
         run: npm run build

@@ -7,6 +7,8 @@
     "build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc -p tsconfig.app.json --noEmit",
     "openapi:generate": "node scripts/openapi-codegen.mjs --write",
     "openapi:check": "node scripts/openapi-codegen.mjs"
@@ -26,6 +28,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.10",
     "@vitejs/plugin-react": "^4.2.0",
@@ -35,11 +41,13 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^15.15.0",
+    "jsdom": "^26.1.0",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.0",
     "typescript-eslint": "^8.72.1",
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "vitest": "^3.2.4"
   }
 }

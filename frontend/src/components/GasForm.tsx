@@ -189,13 +189,29 @@ export const GasForm: React.FC<GasFormProps> = ({
                 <input
                   type="date"
                   value={formData.readingDate}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, readingDate: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, readingDate: e.target.value }));
+                    setErrors((prev) => ({ ...prev, readingDate: '' }));
+                  }}
                   max={dayjs().format('YYYY-MM-DD')}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 dark:bg-slate-700 dark:text-white ${
+                    errors.readingDate
+                      ? 'border-red-500 dark:border-red-500'
+                      : 'border-gray-300 dark:border-slate-600'
+                  }`}
                   disabled={isLoading}
                 />
+                {/*
+                  FE2-11: `validateForm()` je oduvijek postavljao
+                  `errors.readingDate` (obavezno + budući datum), ali ga nijedan
+                  JSX nije prikazivao — korisnik bi kliknuo "Add Reading" i ne
+                  bi dobio nikakvu poruku, forma se tiho nije slala.
+                */}
+                {errors.readingDate && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.readingDate}
+                  </p>
+                )}
               </div>
 
               <div className="mb-4">

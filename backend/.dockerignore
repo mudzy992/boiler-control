@@ -11,10 +11,13 @@ coverage
 test/
 __tests__/
 
-# Development
-.env.local
-.env.development
-.env.test
+# Development / secrets (SEC-0 / S-005)
+# Goli .env MORA biti izrijekom naveden: pravila poput .env.local ga ne pokrivaju,
+# pa bi bez ovog reda cijela datoteka s tajnama ušla u Docker build kontekst
+# i završila u slojevima image-a.
+.env
+.env.*
+!.env.example
 *.local
 
 # IDE

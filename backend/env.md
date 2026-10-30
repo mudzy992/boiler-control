@@ -1,3 +1,9 @@
+> **UPOZORENJE (SEC-0):** stvarne vrijednosti su uklonjene iz ovog fajla jer je
+> repozitorij javan. Tajne se drže ISKLJUČIVO u secret manageru i lokalnom
+> `backend/.env` koji nije praćen Gitom. Postupak rotacije:
+> `docs/audit/backend/11-secret-rotation-runbook.md`.
+> Vrijednosti koje su ovdje stajale morale su se rotirati — bile su u historiji.
+
 # =====================================================================
 # SANITIZED FILE — see docs/MYSQL_TO_POSTGRES_MIGRATION.md
 #
@@ -19,22 +25,22 @@ APP_PORT=3020
 # DATABASE_PORT=3306
 
 # Postgres connection (replace with real values, do not commit)
-DATABASE_URL="postgresql://boilercontrol:Mojalozinka!1@sql.ba101.top:5432/boilercontrol"
-DATABASE_USER="boilercontrol"
-DATABASE_PASSWORD="Mojalozinka!1"
-DATABASE_NAME="boilercontrol"
+DATABASE_URL=<DATABASE_URL: vrijednost iz secret managera>
+DATABASE_USER=<DATABASE_USER: vrijednost iz secret managera>
+DATABASE_PASSWORD=<DATABASE_PASSWORD: vrijednost iz secret managera>
+DATABASE_NAME=<DATABASE_USER: vrijednost iz secret managera>
 DATABASE_HOST="sql.ba101.top"
 DATABASE_PORT=5432
 DATABASE_POOL_SIZE=10
 DATABASE_CONNECT_TIMEOUT_MS=5000
 
-JWT_SECRET="bbeb461428b2b35208d90cdccf438e39"
+JWT_SECRET=<JWT_SECRET: vrijednost iz secret managera>
 JWT_EXPIRES_IN="3600s"
 
-WEATHER_API_KEY="8e968a22bfca43d18a6152747260301"
+WEATHER_API_KEY=<WEATHER_API_KEY: vrijednost iz secret managera>
 
-TUYA_CLIENT_ID="y3kg9wjqwghsj8ak5swj"
-TUYA_CLIENT_SECRET="7d2164fd310f4edcb590ecbdaf373cca"
+TUYA_CLIENT_ID=<TUYA_CLIENT_ID: vrijednost iz secret managera>
+TUYA_CLIENT_SECRET=<TUYA_CLIENT_SECRET: vrijednost iz secret managera>
 TUYA_REGION=EU
 TUYA_BASE_URL=https://openapi.tuyaeu.com
 

@@ -519,6 +519,58 @@ Svih 10 quick wins iz `master_roadmap.py` (ključ `quick_wins`, verificirano 10/
 
 **64 od 74 stavke** (Talas A 9 preostalih, B 7, C 16, D 16, E 26). Sljedeći po kritičnom putu (LANAC 2): `MO2-2` version gate → `API-1` → `API-2` → `FE2-8` + mobilni tipovi = **12.25–19.5 dana**.
 
+## Implementacija — SEC-0 priprema ZAVRŠENA, rotacija ČEKA VLASNIKA (2026-10-30)
+
+**Važno: repozitorij je JAVAN** (`gh api repos/mudzy992/boiler-control` → `"private": false`),
+a canary je utvrdio da su **stvarne vrijednosti tajni bile ispisane u dokumentaciji**
+`env.md` (6 polja) i `backend/env.md` (7 polja) — 13 pojava. Prethodni audit to
+**nije zabilježio**; S-005 i S-008 govore samo o `.env` i logovima. Novi nalaz je
+**S-010, KRITIČNO**.
+
+### Šta je agent uradio (verificirano)
+
+- **Maskirao 13 curenja** u `env.md` i `backend/env.md` — vrijednosti zamijenjene
+  placeholderima `<KEY: vrijednost iz secret managera>`, oba fajla dobila upozorenje
+  na vrhu. Vrijednosti nigdje nisu ispisane.
+- **`backend/.dockerignore`** sada izrijekom isključuje goli `.env` i `.env.*` uz
+  `!.env.example`. Prije toga su bila navedena samo `.env.local/.development/.test`,
+  što **ne** pokriva goli `.env` — cijela datoteka s tajnama ulazila je u Docker
+  build kontekst (S-005 potvrđen, ne hipotetski).
+- **Nova skripta `scripts/audit/env_leak_canary.cjs`** — read-only, idempotentna,
+  `--help`, stroga provjera argumenata, **bez ispisa vrijednosti**. Provjerava build
+  kontekst, curenje stvarnih vrijednosti u svih 478 Gitom praćenih fajlova, paritet
+  `.env` ↔ `.env.example` i praćenje. Prije ispravki: **EXIT 1, 13 curenja**;
+  poslije: **EXIT 0, `leaks: []`, `findings: []`**.
+- **Runbook `docs/audit/backend/11-secret-rotation-runbook.md`** — postupak po
+  provideru, redoslijed (prvo novo, onda staro), dual-mode za JWT, kriterij
+  prihvatanja, evidencija.
+- **Precizirano gdje se koja tajna koristi:** `JWT_SECRET` → `auth.module.ts:11`;
+  `DATABASE_PASSWORD` → `prisma.service.ts:18,30`; `TUYA_CLIENT_*` → HMAC potpis u
+  `tuya.adapter.ts:152-158`. **`DATABASE_URL` i `WEATHER_API_KEY` se ne čitaju ni u
+  jednom `.ts` fajlu u `src/`** → kandidati za revokaciju bez zamjene.
+- **Preciziran S-008:** canary je usporedio stvarne vrijednosti iz `.env` sa sva tri
+  praćena loga i **nijedna se ne pojavljuje** — logovi imaju samo imena polja s
+  placeholderom. Dakle S-008 nije curenje trenutnih tajni i nije razlog za hitnu
+  rotaciju; razlozi su S-005 i S-010.
+
+### Šta agent NIJE uradio (namjerno, izvan ovlasti)
+
+- Nije rotirao ni revokovao nijedan kredencijal.
+- Nije uklonio `backend/.env` iz Git praćenja — to se radi **tek nakon rotacije**, jer
+  uklanjanje iz HEAD-a ne briše historiju.
+- Nije čistio Git historiju.
+- Nije ispisao nijednu vrijednost tajne.
+
+### Šta vlasnik MORA uraditi
+
+1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`
+   prema runbook-u. **Rotacija ne čeka ništa** — vrijednosti su bile javne.
+2. Odlučiti o `WEATHER_API_KEY` i `DATABASE_URL` (ne koriste se u kodu → vjerojatno
+   revokacija bez zamjene).
+3. Nakon rotacije: `git rm --cached backend/.env` + tri praćena loga, pa canary.
+4. Odlučiti o čišćenju historije — **kozmetika**, ne zaštita; GitHub zadržava cache i
+   forkove.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

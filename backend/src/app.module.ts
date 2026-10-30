@@ -12,7 +12,7 @@ import { NotificationsModule } from './modules/Notification/notifications.module
 import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module';
 import { HeatingModule } from './modules/Heating/heating.module';
 import { HeatingRecommendationModule } from './modules/HeatingRecommendation/heating.recommendation.module';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard, seconds } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { GasReadingModule } from './modules/Gas/gas.reading.module';
 import { CommonModule } from './common/common.module';
@@ -23,11 +23,13 @@ import { CommonModule } from './common/common.module';
       ? []
       : [
           ThrottlerModule.forRoot({
-            // Throttler expects `ttl` in seconds and `limit` as number of
-            // requests per ttl. Converted from previous milliseconds value.
+            // SEC-3 / R-004: `ttl` je u MILISEKUNDAMA od @nestjs/throttler v5.
+            // Prijašnja golobrojna vrijednost od 60 značila je 60 ms, pa je 100
+            // zahtjeva bilo dopušteno unutar 60 milisekundi — praktično bez
+            // ograničenja. `seconds(60)` daje 60000 ms.
             throttlers: [
               {
-                ttl: 60,
+                ttl: seconds(60),
                 limit: 100,
               },
             ],

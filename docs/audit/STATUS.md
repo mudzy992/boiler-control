@@ -631,6 +631,42 @@ prolazi. Utječe na **svaki** boolean DTO u API-ju, ne samo na ovaj; empirijski
 potvrđeno sondom. Ne može se popraviti unutar jednog DTO-a bez globalne
 promjene `ValidationPipe`, pa je izdvojeno kao zaseban nalaz.
 
+### SEC-3 — Throttler TTL i admin guard na masovnom testnom endpointu, 2026-10-30
+
+Nalaz (`09-improvements-backlog.md:29`) imao je **dva** dijela, i oba su bila
+stvarno otvorena:
+
+1. **TTL (R-004) — bio je i dalje 60 milisekundi.** `app.module.ts` je nosio
+   komentar „Throttler expects `ttl` in seconds … Converted from previous
+   milliseconds value", ali vrijednost je ostala `ttl: 60`. Iz README-a paketa
+   `@nestjs/throttler@6.5.0`: *„The `ttl` is now in **milliseconds**. … use the
+   `seconds` helper … It just multiplies the ttl by 1000."* Dakle 100 zahtjeva
+   je bilo dopušteno unutar **60 milisekundi** — ograničenje praktično nije
+   postojalo. Ispravljeno na `ttl: seconds(60)` (= 60000 ms).
+   **Ispravka vlastite tvrdnje:** ranije je zabilježeno da je TTL dio „već
+   riješen" na osnovu komentara u kodu; komentar je bio netačan, a mjerenje je
+   pokazalo da svih 105 zahtjeva prolazi.
+2. **Admin guard (B-007).** `POST /api/notifications/test-trigger-all-gas-reminders`
+   poziva `triggerDailyReminders()`, koji šalje push **svim** registrovanim
+   korisnicima, a bio je zaštićen samo `JwtAuthGuard`-om. Dodat
+   `@Roles(UserRole.ADMIN)` + `@UseGuards(RolesGuard)`. Mehanizam
+   (`RolesGuard`, `Roles()`) je već postojao u `src/modules/Auth/`, ali ga
+   **nijedan** kontroler nije koristio; `req.user.role` već postavlja
+   `JwtAuthGuard` (`jwt-auth.guard.ts:52-54`), pa guard ne treba nove podatke.
+   `SUPPORT` namjerno **nema** pristup — masovni push je administrativna akcija.
+
+**Testovi 6/6** u dva nova fajla (`sec3-admin-guard.spec.ts`,
+`sec3-throttler.spec.ts`), oba TDD. Throttler test je morao u zaseban fajl i s
+**pravom** klasom kontrolera: ručno primijenjeni dekoratori na `prototype` ne
+registruju guard (izmjereno — svih 105 zahtjeva je prolazilo), a
+`Test.createTestingModule` s `NotificationsController` u istoj datoteci također
+spriječava registraciju. HTTP test dokazuje 403 za `USER` i 201 za `ADMIN`, te
+da `triggerDailyReminders` **nije** pozvan za običnog korisnika.
+
+Ugovor se nije mijenjao (`openapi:generate --check` EXIT=0), jer
+`@Roles`/`@UseGuards` ne utječu na šemu. Puni jest: **39 failed / 346 passed /
+385** — isto 39 pre-postojećih padova, +6 novih prolaznih.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

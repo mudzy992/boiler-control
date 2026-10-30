@@ -9,6 +9,9 @@ import {
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
+import { Roles } from '../Auth/roles.decorator';
+import { RolesGuard } from '../Auth/role.guard';
+import { UserRole } from '../../generated/prisma';
 import { User } from '../Auth/user.decorator';
 import { RegisterDeviceDTO } from './dto/register-device.dto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -165,7 +168,12 @@ export class NotificationsController {
    *
    * Example: POST /api/notifications/test-trigger-all-gas-reminders
    */
+  // SEC-3 / R-004: ovaj endpoint šalje push obavijest SVIM registrovanim
+  // korisnicima, pa ga običan korisnik ne smije moći pozvati. `JwtAuthGuard`
+  // (na klasi) već stavlja `role` na request.
   @Post('test-trigger-all-gas-reminders')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
   async testTriggerAllReminders() {
     return this.gasReminderService.triggerDailyReminders();
   }

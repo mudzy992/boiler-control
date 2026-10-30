@@ -8,7 +8,23 @@ import type {
 // potpis metode prati ugovor umjesto ručno pisane deklaracije.
 import type { components } from '../types/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3020/api';
+/**
+ * FE2-7 (FE-009): API base URL **bez** dev fallbacka.
+ *
+ * Prije ove izmjene linija je glasila:
+ *   `import.meta.env.VITE_API_URL || 'http://localhost:3020/api'`
+ * a `frontend/Dockerfile` ima `ARG VITE_API_URL` **bez defaulta**. Znači: build
+ * pokrenut bez tog arga — npr. `docker build` ručno, ili CI korak kojem env
+ * nedostaje — tiho bi ugradio `http://localhost:3020/api` u produkcijski
+ * bundle. Deployovana aplikacija bi onda zvala **korisnikov vlastiti
+ * localhost**, a simptom bi bio "aplikacija se učita ali ništa ne radi".
+ *
+ * Sada fallbacka nema. Nedostajuća vrijednost se ovdje pretvara u prazan
+ * string (relativni URL-ovi, bezopasno za testove i dev), a **produkcijski
+ * build pada** — vidi `requireApiBaseUrl()` u `vite.config.ts`. Odluka
+ * vlasnika: "Dev fallback se uklanja (greška, ne drugi host)".
+ */
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? '').trim();
 
 /**
  * SEC-4 (faza 2): dual-mode autentifikacija.

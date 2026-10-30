@@ -144,7 +144,11 @@ jobs:
   frontend:
     if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    env:
+      # FE2-7: jedna vrijednost za build I za e2e, da e2e ne moze prolaziti nad
+      # drugim base-om nego sto je ugradjen u bundle.
+      VITE_API_URL: https://api.boiler-control.ba101.top/api
     defaults:
       run:
         working-directory: frontend
@@ -166,6 +170,11 @@ jobs:
         run: npm run openapi:check
       - name: Type-check
         run: npm run type-check
+      # FE2-7: e2e fajlovi zive izvan `src`, pa ih `tsconfig.app.json` ne vidi.
+      # Bez ovog koraka ne prolaze kroz nijednu provjeru - a e2e se ne moze
+      # uvijek ni izvrsiti (treba Chromium), pa je type-check minimum.
+      - name: Type-check e2e (FE2-7)
+        run: npm run type-check:e2e
       - name: Lint
         run: npm run lint
       # FE2-11: frontend je do sada imao nula testova (FE-014) - CI je provjeravao
@@ -176,5 +185,39 @@ jobs:
       # gresci, pa suite nije dekorativan.
       - name: Unit and component tests (FE2-11)
         run: npm test
+      # FE2-7: mjerodavna deploy konfiguracija. `frontend/docker-compose.yml`
+      # je obrisan jer je bio proturjecan korijenskom setu (port 3021 vs nginx
+      # `listen 80`, drugaciji API host). Bez ove provjere takav raskid bi se
+      # mogao vratiti a da CI ostane zelen.
+      - name: Deploy config consistent (FE2-7)
+        working-directory: .
+        run: |
+          set -euo pipefail
+          test ! -f frontend/docker-compose.yml
+          docker compose -f docker-compose.yml config --quiet
+          echo "docker compose config: OK"
+          node scripts/audit/frontend_deploy_config_repro.cjs
+      # `requireApiBaseUrl()` u vite.config.ts rusi build ako VITE_API_URL
+      # izostane. Bez toga je nekada tiho ugradjivan http://localhost:3020/api.
       - name: Build
         run: npm run build
+      # Dokaz da je build arg zaista zavrsio u bundleu, a ne samo u configu.
+      - name: Verify embedded API base (FE2-7)
+        run: |
+          set -euo pipefail
+          echo "Ocekivani base: $VITE_API_URL"
+          grep -rl -- "$VITE_API_URL" dist/assets/*.js > /tmp/hits.txt
+          test -s /tmp/hits.txt
+          echo "Ugradjeno u: $(wc -l < /tmp/hits.txt) cip(ova)"
+          if grep -rql 'localhost:3020' dist/ ; then
+            echo "GRESKA: dev fallback je procurio u bundle" >&2
+            grep -rl 'localhost:3020' dist/ >&2
+            exit 1
+          fi
+          echo "localhost:3020 u dist/: nema"
+      - name: Install Playwright browsers (FE2-7)
+        run: npx playwright install --with-deps chromium
+      # Smoke nad SAGRADJENIM dist/: SPA se pokrene, API poziv ide na ugradjeni
+      # base, nijedan zahtjev ne ide na uklonjeni dev fallback.
+      - name: E2E smoke (FE2-7)
+        run: npm run test:e2e

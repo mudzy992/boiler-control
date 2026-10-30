@@ -1,3 +1,22 @@
+# ============================================================
+# FE2-7 (FE-009): ZAMIJENJEN — NIJE MJERODAVAN. NE KORISTI ZA DEPLOY.
+#
+# Mjerodavna konfiguracija je korijenski `docker-compose.yml` (odluka vlasnika
+# 2026-10-30). Ovaj fajl je dio obrisane Traefik varijante i proturjecan je:
+#
+#   - rute API na `boiler.ba101.top/backend/` i skida prefiks `/backend`, dok
+#     mjerodavni set koristi `api.boiler-control.ba101.top` BEZ skidanja
+#     prefiksa (backend nema `setGlobalPrefix`, kontroleri nose `api/...`);
+#   - definira isto `container_name: boiler-control-backend` kao korijenski
+#     fajl, pa bi istovremeno pokretanje oba seta dalo sukob imena;
+#   - nema `FRONTEND_URL`, a `backend/src/main.ts:16-19` baca gresku ako
+#     nedostaje — kontejner se ne bi ni podigao.
+#
+# Zadrzan je samo zato sto FE2-7 dozvoljava "ukloniti ILI oznaciti", a brisanje
+# bi bilo neopozivo bez pristupa produkcijskom serveru. Koristi korijenski
+# `docker-compose.yml`.
+# ============================================================
+
 services:
   boiler-control-backend:
     container_name: boiler-control-backend

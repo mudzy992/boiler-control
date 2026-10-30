@@ -9,7 +9,10 @@
     "lint": "eslint src",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium",
     "type-check": "tsc -p tsconfig.app.json --noEmit",
+    "type-check:e2e": "tsc -p tsconfig.e2e.json",
     "openapi:generate": "node scripts/openapi-codegen.mjs --write",
     "openapi:check": "node scripts/openapi-codegen.mjs"
   },
@@ -28,10 +31,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.49.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^22.20.5",
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.10",
     "@vitejs/plugin-react": "^4.2.0",

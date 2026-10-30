@@ -1,3 +1,26 @@
+# ============================================================
+# FE2-7 (FE-009): MJERODAVNA deploy konfiguracija.
+#
+# Odluka vlasnika (2026-10-30): ovaj fajl je jedini mjerodavni compose set za
+# aplikaciju. `frontend/docker-compose.yml` je obrisan, a
+# `backend/docker-compose.yml` je oznacen kao zamijenjen ovim fajlom.
+#
+# API host je `api.boiler-control.ba101.top/api` — odluka vlasnika zapisana u
+# `docs/audit/MASTER-ROADMAP.md:249`.
+#
+# ZASTO OVDJE NEMA `stripprefix` (za razliku od obrisane varijante):
+# backend nema `setGlobalPrefix` — kontroleri sami nose prefiks, npr.
+# `@Controller('api/dashboard')` (`dashboard.controller.ts:36`). Klijent pogađa
+# `https://api.boiler-control.ba101.top/api/dashboard/health`, Traefik to
+# prosljeđuje nepromijenjeno, i backend već vidi `/api/dashboard/health`.
+# Skidanje `/api` prefiksa bi dalo 404 na svim rutama.
+#
+# Hostovi nisu izmišljeni — oba su već postojala u ovom fajlu:
+#   - frontend: `FRONTEND_URL=https://boiler-control.ba101.top` (backend ga
+#     koristi kao CORS `origin`, `main.ts:16-23`, i baca grešku ako nedostaje)
+#   - API:      `VITE_API_URL=https://api.boiler-control.ba101.top/api`
+# ============================================================
+
 services:
   boiler-control-backend:
     container_name: boiler-control-backend
@@ -8,6 +31,7 @@ services:
     environment:
       - TZ=Europe/Sarajevo
       - APP_PORT=3020
+      # Mora biti TACNO origin frontend-a: backend ga koristi kao CORS origin.
       - FRONTEND_URL=https://boiler-control.ba101.top
       - UPLOAD_ROOT_PATH=/usr/src/app/uploads
     volumes:
@@ -15,10 +39,20 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /mnt/shared-app-files/boiler-control:/usr/src/app/uploads:rw
     networks:
+      # `web` da Traefik moze dosegnuti servis; `db_net` za bazu.
+      - web
       - db_net
     restart: unless-stopped
     expose:
       - "3020"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.boiler-backend.rule=Host(`api.boiler-control.ba101.top`)"
+      - "traefik.http.routers.boiler-backend.entrypoints=websecure"
+      - "traefik.http.routers.boiler-backend.tls=true"
+      - "traefik.http.routers.boiler-backend.tls.certresolver=le"
+      - "traefik.http.services.boiler-backend.loadbalancer.server.port=3020"
 
   boiler-control-frontend:
     container_name: boiler-control-frontend
@@ -27,10 +61,25 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        # OBAVEZNO: `frontend/vite.config.ts` (FE2-7) rusi build ako izostane.
+        # Bez ovoga je nekada tiho ugradjivan `http://localhost:3020/api`.
         VITE_API_URL: https://api.boiler-control.ba101.top/api
+    networks:
+      - web
     restart: unless-stopped
+    # Mora odgovarati `listen 80` u `frontend/nginx.conf`. Obrisana varijanta
+    # `frontend/docker-compose.yml` je ovdje imala 3021, pa Traefik nikad ne bi
+    # uspostavio vezu s kontejnerom (FE-009).
     expose:
       - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.boiler-frontend.rule=Host(`boiler-control.ba101.top`)"
+      - "traefik.http.routers.boiler-frontend.entrypoints=websecure"
+      - "traefik.http.routers.boiler-frontend.tls=true"
+      - "traefik.http.routers.boiler-frontend.tls.certresolver=le"
+      - "traefik.http.services.boiler-frontend.loadbalancer.server.port=80"
     healthcheck:
       test:
         - CMD
@@ -45,5 +94,9 @@ services:
       retries: 3
 
 networks:
+  # Mreza na kojoj slusa Traefik. Isti obrazac kao u obrisanoj varijanti i u
+  # `docker-compose.monitoring.yml`.
+  web:
+    external: true
   db_net:
     external: true

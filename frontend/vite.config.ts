@@ -1,8 +1,52 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
+/**
+ * FE2-7 (FE-009): produkcijski build MORA znati API base URL.
+ *
+ * `frontend/Dockerfile` deklariše `ARG VITE_API_URL` bez defaulta. Prije ove
+ * provjere build bez tog arga nije padao — samo bi u `dist/` ugradio prazan
+ * base, a `api.ts` je imao `|| 'http://localhost:3020/api'` fallback, pa je
+ * deployovana aplikacija tiho zvala korisnikov vlastiti localhost.
+ *
+ * Guard je namjerno ovdje (build-time), a NE u `api.ts` (runtime):
+ *  - `api.ts` se importuje i u Vitest testovima, gdje `VITE_API_URL` nije
+ *    postavljen — runtime throw bi srušio cijeli test suite;
+ *  - greška u buildu je jedini trenutak kad se problem može ispraviti.
+ *
+ * `command !== 'build'` preskače `vite dev` i Vitest (oba idu kao 'serve').
+ */
+function requireApiBaseUrl(): Plugin {
+  return {
+    name: 'fe2-7-require-api-base-url',
+    config(_config, env) {
+      if (env.command !== 'build') return
+      // `loadEnv` čita i `process.env` i `.env*` fajlove (process.env ima
+      // prednost), pa vrijedi isto što će Vite kasnije ugraditi u bundle.
+      const value = (loadEnv(env.mode, process.cwd(), 'VITE_').VITE_API_URL ?? '').trim()
+      if (value) return
+      throw new Error(
+        [
+          'FE2-7: VITE_API_URL nije postavljen, a ovo je produkcijski build.',
+          '',
+          'Bez njega bundle ne zna gdje je API, a nekadašnji fallback je bio',
+          "http://localhost:3020/api - deployovana aplikacija bi zvala korisnikov",
+          'vlastiti localhost. Build zato namjerno pada.',
+          '',
+          'Ispravka:',
+          '  - docker/compose: proslijedi build arg VITE_API_URL',
+          '    (produkcijska vrijednost: https://api.boiler-control.ba101.top/api)',
+          '  - lokalni build:  VITE_API_URL=... npm run build',
+          '  - lokalni dev:    upisi VITE_API_URL=... u frontend/.env.local',
+          '                    (gitignored; sablon: frontend/.env.example)',
+        ].join('\n')
+      )
+    }
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [requireApiBaseUrl(), react()],
   server: {
     port: 80
   },

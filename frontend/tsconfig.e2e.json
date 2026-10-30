@@ -1,0 +1,16 @@
+{
+  "//": [
+    "FE2-7: zaseban tsconfig za e2e fajlove.",
+    "tsconfig.app.json uključuje SAMO `src`, pa `e2e/` i `playwright.config.ts`",
+    "inače ne prolaze kroz nijedan type-check — a e2e se u ovom okruženju ne",
+    "može ni izvršiti (Chromium CDN nedostupan), pa je type-check jedina",
+    "automatska provjera koju ti fajlovi dobiju."
+  ],
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": false,
+    "noEmit": true
+  },
+  "include": ["e2e", "playwright.config.ts"]
+}

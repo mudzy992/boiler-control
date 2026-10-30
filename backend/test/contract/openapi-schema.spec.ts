@@ -120,12 +120,13 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       //
       // `UpdateGasReferenceDto` je skinut s ovog popisa u FEAT-7: dobio je
       // `@ApiProperty` kad mu je ispravljan B-015, pa više nije prazan.
+      // `LoginDto` i `RegisterDto` su skinuti s ovog popisa u SEC-4 fazi 3:
+      // dobili su `@ApiPropertyOptional` za `refreshTransport`, pa više nisu
+      // prazni. Novi `RefreshDto` nikad nije bio prazan (ima isto svojstvo).
       expect(empty.sort()).toEqual([
         'ChangePasswordDto',
         'CreateHomeProfileDto',
-        'LoginDto',
         'RegisterDeviceDTO',
-        'RegisterDto',
         'UpdateHeatingAnomalyDto',
         'UpdateHomeProfileDto',
         'UploadInvoiceDto',
@@ -138,7 +139,13 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       expect(responseRef('/api/auth/login', 'post', '200')).toBe(
         'LoginResponseDto',
       );
-      expect(propsOf('LoginResponseDto').sort()).toEqual(['token', 'user']);
+      // SEC-4 faza 3: `refreshToken` je opcionalno — prisutno samo kad klijent
+      // traži `refreshTransport: 'body'` (React Native) i kad je zastavica on.
+      expect(propsOf('LoginResponseDto').sort()).toEqual([
+        'refreshToken',
+        'token',
+        'user',
+      ]);
     });
 
     it('POST /api/auth/register je 201, ne 200 (Nest bez @HttpCode)', () => {
@@ -147,7 +154,11 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
         'RegisterResponseDto',
       );
       expect(responseRef('/api/auth/register', 'post', '200')).toBeNull();
-      expect(propsOf('RegisterResponseDto').sort()).toEqual(['token', 'user']);
+      expect(propsOf('RegisterResponseDto').sort()).toEqual([
+        'refreshToken',
+        'token',
+        'user',
+      ]);
     });
 
     it('GET /api/auth/me [200] -> AuthUserWithTimestampsDto', () => {

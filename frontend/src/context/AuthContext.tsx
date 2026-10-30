@@ -26,6 +26,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
   const [isLoading, setIsLoading] = useState(false);
 
+  // SEC-4: prije bilo čega pitamo backend da li je httpOnly refresh tok
+  // uključen. Dok je zastavica off ovo samo postavi `false` i ponašanje je
+  // identično prijašnjem.
+  useEffect(() => {
+    let cancelled = false;
+    apiClient.detectAuthMode().then((enabled) => {
+      if (cancelled || !enabled) return;
+      // Nema tokena u localStorage, ali možda postoji httpOnly cookie iz
+      // prethodne sesije — pokušaj tiho obnoviti umjesto da se korisnik
+      // odmah prebaci na login.
+      if (!localStorage.getItem('token')) {
+        apiClient.refreshSession().then((ok) => {
+          if (ok && !cancelled) setToken(localStorage.getItem('token'));
+        });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (!token) {
       return;
@@ -54,10 +75,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const logout = useCallback(() => {
+    // SEC-4: server-side opoziv je fire-and-forget — lokalno stanje se čisti
+    // odmah da UI ne čeka mrežu, a `apiClient.logout()` opoziva refresh
+    // sesiju na backendu kad je tok uključen.
+    void apiClient.logout();
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
-    apiClient.clearToken();
   }, []);
 
   const value: AuthContextType = {

@@ -1221,11 +1221,23 @@
         "type": "string"
       },
       "LoginDto": {
-        "properties": {},
+        "properties": {
+          "refreshTransport": {
+            "default": "cookie",
+            "enum": [
+              "cookie",
+              "body"
+            ],
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "LoginResponseDto": {
         "properties": {
+          "refreshToken": {
+            "type": "string"
+          },
           "token": {
             "description": "JWT access token",
             "type": "string"
@@ -1252,16 +1264,36 @@
         ],
         "type": "object"
       },
+      "RefreshDto": {
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "RegisterDeviceDTO": {
         "properties": {},
         "type": "object"
       },
       "RegisterDto": {
-        "properties": {},
+        "properties": {
+          "refreshTransport": {
+            "default": "cookie",
+            "enum": [
+              "cookie",
+              "body"
+            ],
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "RegisterResponseDto": {
         "properties": {
+          "refreshToken": {
+            "type": "string"
+          },
           "token": {
             "description": "JWT access token",
             "type": "string"
@@ -1546,6 +1578,16 @@
       "post": {
         "operationId": "AuthController_logout",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -1588,6 +1630,16 @@
       "post": {
         "operationId": "AuthController_refresh",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

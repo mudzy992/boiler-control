@@ -1,4 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+// SEC-4: `authCookieEnabled` je čista funkcija (čita env, nema DI), pa je
+// `common -> modules/Auth` ovdje bezopasan; isti obrazac već koriste
+// `app-config.controller.ts:3`, `health.controller.ts:2` i `metrics.controller.ts:5`.
+import { authCookieEnabled } from '../modules/Auth/auth-cookie';
 
 /**
  * MO2-2: ugovor koji mobilna aplikacija čita da odluči smije li raditi.
@@ -20,6 +24,14 @@ export interface AppConfig {
    * klijent ne smije blokirati korisnika — čak ni ako env var kaže suprotno.
    */
   versionGateEnabled: boolean;
+  /**
+   * SEC-4: govori klijentu smije li koristiti httpOnly refresh cookie tok.
+   *
+   * Ovo je jedini izvor istine — klijent NE smije imati vlastitu env zastavicu,
+   * jer bi neslaganje značilo da browser traži `credentials` koji backend nije
+   * dozvolio, a tada CORS **blokira cijeli odgovor** (ne samo cookie).
+   */
+  authRefreshEnabled: boolean;
 }
 
 /**
@@ -65,6 +77,7 @@ export class AppConfigService {
           DEFAULT_LATEST_VERSION,
         ),
         versionGateEnabled: false,
+        authRefreshEnabled: authCookieEnabled(),
       };
     }
 
@@ -78,6 +91,7 @@ export class AppConfigService {
         DEFAULT_LATEST_VERSION,
       ),
       versionGateEnabled: true,
+      authRefreshEnabled: authCookieEnabled(),
     };
   }
 

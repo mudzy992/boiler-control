@@ -1283,8 +1283,15 @@ export interface components {
         HomeProfileWindowType: "SINGLE_GLAZED" | "DOUBLE_GLAZED" | "TRIPLE_GLAZED";
         /** @enum {string} */
         LiveRecommendationSource: "LIVE_CALCULATION";
-        LoginDto: Record<string, never>;
+        LoginDto: {
+            /**
+             * @default cookie
+             * @enum {string}
+             */
+            refreshTransport: "cookie" | "body";
+        };
         LoginResponseDto: {
+            refreshToken?: string;
             /** @description JWT access token */
             token: string;
             user: components["schemas"]["AuthUserDto"];
@@ -1293,9 +1300,19 @@ export interface components {
             /** @example Password updated successfully */
             message: string;
         };
+        RefreshDto: {
+            refreshToken?: string;
+        };
         RegisterDeviceDTO: Record<string, never>;
-        RegisterDto: Record<string, never>;
+        RegisterDto: {
+            /**
+             * @default cookie
+             * @enum {string}
+             */
+            refreshTransport: "cookie" | "body";
+        };
         RegisterResponseDto: {
+            refreshToken?: string;
             /** @description JWT access token */
             token: string;
             user: components["schemas"]["AuthUserWithTimestampsDto"];
@@ -1460,7 +1477,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -1498,7 +1519,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

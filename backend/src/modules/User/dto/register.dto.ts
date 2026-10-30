@@ -2,6 +2,7 @@
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -9,6 +10,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
   @IsEmail()
@@ -43,4 +45,13 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   homeLocation?: string;
+
+  /**
+   * SEC-4 (faza 3): isto značenje kao u `LoginDto` — `cookie` (zadano, web)
+   * ili `body` (React Native bez browser cookie jar-a).
+   */
+  @ApiPropertyOptional({ enum: ['cookie', 'body'], default: 'cookie' })
+  @IsOptional()
+  @IsIn(['cookie', 'body'])
+  refreshTransport?: 'cookie' | 'body';
 }

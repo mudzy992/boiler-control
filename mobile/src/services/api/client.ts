@@ -9,8 +9,30 @@ import { API_CONFIG } from '../../config/api.config';
  * - Automatic 401 handling (logout on invalid token)
  * - Request/response interceptors
  */
+/**
+ * SEC-4 (faza 3): dual-mode autentifikacija za Android.
+ *
+ * Dok backend ima `AUTH_COOKIE_REFRESH_ENABLED=off`, ponašanje je doslovno ono
+ * prije ove promjene: token iz `SecureStorage` ide u `Authorization: Bearer`, a
+ * 401 ga briše.
+ *
+ * Kad je zastavica uključena (backend to oglašava poljem `authRefreshEnabled`
+ * u `GET /app/config`), klijent uz to drži i **rotirani refresh token** u
+ * Android Keystore i koristi ga za obnovu sesije:
+ *  - pri prijavi traži `refreshTransport: 'body'`, jer React Native **nema
+ *    browser cookie jar** pa se httpOnly cookie ovdje ne može osloniti;
+ *  - 401 pokreće JEDAN `POST /auth/refresh` i ponavlja izvorni zahtjev;
+ *  - `logout()` opoziva sesiju na serveru, ne samo lokalno.
+ *
+ * Sve je fail-safe: ako bilo koji korak ne uspije, klijent pada na postojeći
+ * Bearer tok umjesto da se sruši.
+ */
 class ApiClientService {
   private client: AxiosInstance;
+  /** Da li je backend uključio refresh tok. Zadano false. */
+  private refreshEnabled = false;
+  /** Jedan refresh za sve konkurentne 401 (sprječava lavinu zahtjeva). */
+  private refreshInFlight: Promise<boolean> | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -39,9 +61,31 @@ class ApiClientService {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        if (error.response?.status === 401) {
+        const status = error.response?.status;
+        const url = error.config?.url ?? '';
+        const alreadyRetried = (error.config as { _sec4Retried?: boolean } | undefined)
+          ?._sec4Retried;
+        const isAuthRoute =
+          url.includes('/auth/refresh') || url.includes('/auth/login');
+
+        // SEC-4: jedan pokušaj osvježavanja, pa tek onda brisanje tokena.
+        if (status === 401 && this.refreshEnabled && !alreadyRetried && !isAuthRoute) {
+          const refreshed = await this.refreshSession();
+          if (refreshed && error.config) {
+            const retry = error.config as typeof error.config & {
+              _sec4Retried?: boolean;
+            };
+            retry._sec4Retried = true;
+            const token = await SecureStorage.getToken();
+            if (token) retry.headers.Authorization = `Bearer ${token}`;
+            return this.client.request(retry);
+          }
+        }
+
+        if (status === 401) {
           // Token is invalid, clear it
           await SecureStorage.removeToken();
+          await SecureStorage.removeRefreshToken();
           // Note: Navigation to login should be handled by AuthContext
         }
         return Promise.reject(error);
@@ -49,12 +93,70 @@ class ApiClientService {
     );
   }
 
+  /**
+   * Čita `GET /app/config` i postavlja `refreshEnabled`.
+   * Namjerno ne baca: bez config-a klijent ostaje na starom Bearer toku.
+   */
+  async detectAuthMode(): Promise<boolean> {
+    try {
+      const response = await this.client.get('/app/config');
+      this.refreshEnabled = response.data?.authRefreshEnabled === true;
+    } catch {
+      this.refreshEnabled = false;
+    }
+    return this.refreshEnabled;
+  }
+
+  isRefreshEnabled(): boolean {
+    return this.refreshEnabled;
+  }
+
+  /**
+   * Obnavlja access token koristeći refresh token iz Keystore-a.
+   * Konkurentni pozivi dijele isti promise.
+   */
+  async refreshSession(): Promise<boolean> {
+    if (!this.refreshEnabled) return false;
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    this.refreshInFlight = (async () => {
+      try {
+        const refreshToken = await SecureStorage.getRefreshToken();
+        if (!refreshToken) return false;
+        const response = await this.client.post('/auth/refresh', { refreshToken });
+        const token = response.data?.token;
+        if (typeof token !== 'string' || token.length === 0) return false;
+        await SecureStorage.setToken(token);
+        // Backend rotira refresh token — stari je sada opozvan.
+        const rotated = response.data?.refreshToken;
+        if (typeof rotated === 'string' && rotated.length > 0) {
+          await SecureStorage.setRefreshToken(rotated);
+        }
+        return true;
+      } catch {
+        return false;
+      } finally {
+        this.refreshInFlight = null;
+      }
+    })();
+
+    return this.refreshInFlight;
+  }
+
   // Auth endpoints
   async login(identifier: string, password: string) {
     const response = await this.client.post('/auth/login', {
       identifier,
       password,
+      // SEC-4: RN nema browser cookie jar, pa refresh token tražimo u tijelu
+      // i čuvamo ga u Android Keystore. Backend polje poštuje samo kad je
+      // zastavica uključena; inače ga jednostavno ne vraća.
+      refreshTransport: 'body',
     });
+    const refreshToken = response.data?.refreshToken;
+    if (typeof refreshToken === 'string' && refreshToken.length > 0) {
+      await SecureStorage.setRefreshToken(refreshToken);
+    }
     return response.data;
   }
 
@@ -335,6 +437,26 @@ class ApiClientService {
 
   async clearToken() {
     await SecureStorage.removeToken();
+  }
+
+  /**
+   * SEC-4: opoziva refresh sesiju na serveru, pa čisti lokalnu pohranu.
+   * Greška s backend-a se namjerno guta — lokalna odjava mora uspjeti i kad
+   * mreža padne, a access token ionako ističe.
+   */
+  async logout() {
+    try {
+      if (this.refreshEnabled) {
+        const refreshToken = await SecureStorage.getRefreshToken();
+        if (refreshToken) {
+          await this.client.post('/auth/logout', { refreshToken });
+        }
+      }
+    } catch {
+      // namjerno ignorisano
+    }
+    await SecureStorage.removeToken();
+    await SecureStorage.removeRefreshToken();
   }
 }
 

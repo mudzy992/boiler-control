@@ -176,6 +176,80 @@ describe('SEC-4: auth cookie rute', () => {
       expect(res.cleared[0].name).toBe(REFRESH_COOKIE_NAME);
     });
 
+    it('login s refreshTransport=body NE postavlja cookie a vraća token u tijelu (Android/RN)', async () => {
+      const res = fakeRes();
+
+      const result = await controller.login(
+        {
+          identifier: 'a@b.c',
+          password: 'x',
+          refreshTransport: 'body',
+        } as never,
+        res as never,
+      );
+
+      // RN nema browser cookie jar, pa cookie ovdje NE smije biti postavljen —
+      // umjesto toga klijent dobija token i čuva ga u Android Keystore.
+      expect(res.cookies).toHaveLength(0);
+      expect((result as { refreshToken?: string }).refreshToken).toBe('rt-1');
+    });
+
+    it('login bez refreshTransport NE izlaže token u tijelu (web ostaje httpOnly)', async () => {
+      const res = fakeRes();
+
+      const result = await controller.login(
+        { identifier: 'a@b.c', password: 'x' },
+        res as never,
+      );
+
+      expect(res.cookies).toHaveLength(1);
+      expect(
+        (result as { refreshToken?: string }).refreshToken,
+      ).toBeUndefined();
+    });
+
+    it('refresh prihvata token iz tijela kad cookie ne postoji', async () => {
+      const res = fakeRes();
+      const req = { headers: {} } as never;
+
+      const result = await controller.refresh(req, res as never, {
+        refreshToken: 'rt-iz-tijela',
+      });
+
+      expect(refreshTokenService.rotate).toHaveBeenCalledWith(
+        'rt-iz-tijela',
+        expect.objectContaining({}),
+      );
+      expect(result.token).toBeDefined();
+      // transport ostaje isti kao ulazni: tijelo, ne cookie
+      expect(res.cookies).toHaveLength(0);
+    });
+
+    it('cookie ima prednost nad tijelom (web klijent ne može podvaliti stari token)', async () => {
+      const res = fakeRes();
+      const req = {
+        headers: { cookie: `${REFRESH_COOKIE_NAME}=rt-cookie` },
+      } as never;
+
+      await controller.refresh(req, res as never, {
+        refreshToken: 'rt-tijelo',
+      });
+
+      expect(refreshTokenService.rotate).toHaveBeenCalledWith(
+        'rt-cookie',
+        expect.objectContaining({}),
+      );
+    });
+
+    it('logout prihvata token iz tijela (Android/RN)', async () => {
+      const res = fakeRes();
+      const req = { headers: {} } as never;
+
+      await controller.logout(req, res as never, { refreshToken: 'rt-tijelo' });
+
+      expect(refreshTokenService.revoke).toHaveBeenCalledWith('rt-tijelo');
+    });
+
     it('logout bez cookie-a ne baca', async () => {
       const res = fakeRes();
       const req = { headers: {} } as never;

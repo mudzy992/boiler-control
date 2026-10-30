@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserPlan, UserRole } from 'src/generated/prisma';
 
 /**
@@ -74,6 +74,15 @@ export class LoginResponseDto {
 
   @ApiProperty({ type: String, description: 'JWT access token' })
   token: string;
+
+  /**
+   * SEC-4 (faza 3): prisutno SAMO kad je klijent u zahtjevu tražio
+   * `refreshTransport: 'body'` (React Native bez browser cookie jar-a) i kad je
+   * backend zastavica uključena. Web klijent ovo polje nikad ne dobija —
+   * njegov refresh token ostaje u httpOnly cookie-ju.
+   */
+  @ApiPropertyOptional({ type: String })
+  refreshToken?: string;
 }
 
 /** `POST /api/auth/register` */
@@ -83,6 +92,15 @@ export class RegisterResponseDto {
 
   @ApiProperty({ type: String, description: 'JWT access token' })
   token: string;
+
+  /**
+   * SEC-4 (faza 3): prisutno SAMO kad je klijent u zahtjevu tražio
+   * `refreshTransport: 'body'` (React Native bez browser cookie jar-a) i kad je
+   * backend zastavica uključena. Web klijent ovo polje nikad ne dobija —
+   * njegov refresh token ostaje u httpOnly cookie-ju.
+   */
+  @ApiPropertyOptional({ type: String })
+  refreshToken?: string;
 }
 
 /**

@@ -7,8 +7,29 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3020/api';
 
+/**
+ * SEC-4 (faza 2): dual-mode autentifikacija.
+ *
+ * Dok backend ima `AUTH_COOKIE_REFRESH_ENABLED=off`, ponašanje je doslovno ono
+ * prije ove promjene — token ide u `Authorization: Bearer`, a 401 čisti token i
+ * preusmjerava na /login.
+ *
+ * Kad je zastavica uključena (backend to oglašava poljem `authRefreshEnabled`
+ * u `GET /app/config`), klijent uz to šalje i httpOnly refresh cookie:
+ *  - `withCredentials: true`, pa browser šalje cookie;
+ *  - 401 pokreće JEDAN `POST /auth/refresh` i ponavlja izvorni zahtjev;
+ *  - `logout()` opoziva sesiju na serveru, ne samo lokalno.
+ *
+ * Zastavica se namjerno čita s backend-a, a NE iz vlastitog env-a: da klijent
+ * traži `credentials` koje backend nije dozvolio, browser bi **blokirao cijeli
+ * odgovor**, ne samo cookie.
+ */
 export class ApiClient {
   private client: AxiosInstance;
+  /** Da li je backend uključio httpOnly refresh tok. Zadano false. */
+  private cookieAuthEnabled = false;
+  /** Jedan refresh za sve konkurentne 401 (sprječava lavinu zahtjeva). */
+  private refreshInFlight: Promise<boolean> | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -24,20 +45,90 @@ export class ApiClient {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      // SEC-4: cookie se šalje samo kad backend to dozvoljava.
+      config.withCredentials = this.cookieAuthEnabled;
       return config;
     });
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
+      async (error: AxiosError) => {
+        const status = error.response?.status;
+        const url = error.config?.url ?? '';
+        const alreadyRetried = (error.config as { _sec4Retried?: boolean } | undefined)
+          ?._sec4Retried;
+        const isAuthRoute =
+          url.includes('/auth/refresh') || url.includes('/auth/login');
+
+        // SEC-4: jedan pokušaj osvježavanja, pa tek onda odjava.
+        if (status === 401 && this.cookieAuthEnabled && !alreadyRetried && !isAuthRoute) {
+          const refreshed = await this.refreshSession();
+          if (refreshed && error.config) {
+            const retry = error.config as typeof error.config & {
+              _sec4Retried?: boolean;
+            };
+            retry._sec4Retried = true;
+            const token = localStorage.getItem('token');
+            if (token) retry.headers.Authorization = `Bearer ${token}`;
+            return this.client.request(retry);
+          }
+        }
+
+        if (status === 401) {
           localStorage.removeItem('token');
           window.location.href = '/login';
         }
         return Promise.reject(error);
       }
     );
+  }
+
+  /**
+   * Čita `GET /app/config` i postavlja `cookieAuthEnabled`.
+   * Namjerno ne baca: ako config nije dostupan, klijent ostaje na starom
+   * Bearer toku umjesto da se sruši.
+   */
+  async detectAuthMode(): Promise<boolean> {
+    try {
+      const response = await this.client.get('/app/config');
+      this.cookieAuthEnabled = response.data?.authRefreshEnabled === true;
+    } catch {
+      this.cookieAuthEnabled = false;
+    }
+    return this.cookieAuthEnabled;
+  }
+
+  isCookieAuthEnabled(): boolean {
+    return this.cookieAuthEnabled;
+  }
+
+  /**
+   * Osvježava access token preko httpOnly cookie-ja.
+   * Konkurentni pozivi dijele isti promise; vraća false ako tok nije uključen
+   * ili backend odbije (istekao/opozvan refresh token).
+   */
+  async refreshSession(): Promise<boolean> {
+    if (!this.cookieAuthEnabled) return false;
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    this.refreshInFlight = (async () => {
+      try {
+        const response = await this.client.post('/auth/refresh');
+        const token = response.data?.token;
+        if (typeof token === 'string' && token.length > 0) {
+          this.setToken(token);
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      } finally {
+        this.refreshInFlight = null;
+      }
+    })();
+
+    return this.refreshInFlight;
   }
 
   setToken(token: string) {
@@ -57,8 +148,26 @@ export class ApiClient {
     return response.data;
   }
 
+  /**
+   * SEC-4: opoziva refresh sesiju na serveru, pa čisti lokalni token.
+   * Greška s backend-a se namjerno gutа — lokalna odjava mora uspjeti i kad
+   * mreža padne, a token ionako ističe.
+   */
   async logout() {
+    if (this.cookieAuthEnabled) {
+      try {
+        await this.client.post('/auth/logout');
+      } catch {
+        // namjerno ignorisano
+      }
+    }
     this.clearToken();
+  }
+
+  /** SEC-4: javna konfiguracija (version gate + stanje auth zastavice). */
+  async getAppConfig() {
+    const response = await this.client.get('/app/config');
+    return response.data;
   }
 
   // Dashboard endpoints

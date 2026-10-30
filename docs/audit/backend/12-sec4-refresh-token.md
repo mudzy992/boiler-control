@@ -2,7 +2,7 @@
 
 **Datum:** 2026-10-30
 **Nalaz:** SEC-4 / B-016 (`docs/audit/backend/08-security.md`, `02-findings.md:160`)
-**Status:** Faza 1 (backend) implementirana i iza zastavice; klijenti (frontend, mobile) još nisu prebačeni.
+**Status:** Faze 1–3 implementirane (backend + frontend + mobile) i sve iza zastavice.
 **Zastavica:** `AUTH_COOKIE_REFRESH_ENABLED` — zadano `off`.
 
 ---
@@ -107,13 +107,79 @@ TDD: `refresh-token.spec.ts` je napisan **prije** servisa i prvi prolaz je pao s
 node scripts/audit/cors_headers_repro.cjs        # EXIT=0
 ```
 
+---
+
+## Faza 2 — frontend (`frontend/`)
+
+Backend postaje **jedini izvor istine** o stanju zastavice: `AppConfig` je dobio
+polje `authRefreshEnabled`, pa klijent NE smije imati vlastitu env zastavicu.
+Razlog je konkretan: da klijent traži `credentials` koje backend nije dozvolio,
+browser **blokira cijeli odgovor**, ne samo cookie.
+
+| Fajl | Promjena |
+|---|---|
+| `backend/src/common/app-config.service.ts` | `authRefreshEnabled: authCookieEnabled()` u obje grane |
+| `frontend/src/services/api.ts` | `detectAuthMode()`, `refreshSession()`, `withCredentials` po zahtjevu, 401 → refresh → retry, `logout()` zove backend |
+| `frontend/src/context/AuthContext.tsx` | tiha obnova sesije pri pokretanju; odjava opoziva na serveru |
+
+Zaštićeno od petlje: refresh se ne pokreće na `/auth/refresh` ni `/auth/login`,
+svaki zahtjev se ponavlja **najviše jednom** (`_sec4Retried`), a konkurentni 401
+dijele isti promise (`refreshInFlight`) pa nema lavine zahtjeva.
+
+## Faza 3 — mobile (`mobile/`)
+
+**Android nema browser cookie jar**, pa se httpOnly cookie ovdje ne može
+osloniti. Zato je uveden drugi transport:
+
+- `LoginDto`/`RegisterDto` imaju `refreshTransport?: 'cookie' | 'body'`
+  (zadano `cookie`). Mobilni klijent šalje `'body'`.
+- Backend vraća refresh token u tijelu **samo** na taj eksplicitni zahtjev —
+  web klijent ga nikad ne dobija, pa httpOnly zaštita ostaje netaknuta.
+- `POST /auth/refresh` i `POST /auth/logout` prihvataju token iz **cookie-ja
+  ILI tijela**. Cookie ima prednost, pa web klijent ne može podvaliti stari
+  token preko tijela.
+- Refresh token se čuva u **Android Keystore** preko `expo-secure-store`.
+
+| Fajl | Promjena |
+|---|---|
+| `backend/src/modules/User/dto/login.dto.ts`, `register.dto.ts` | `refreshTransport` s `@IsIn(['cookie','body'])` |
+| `backend/src/modules/Auth/dto/refresh.dto.ts` | NOVO — tijelo za refresh/logout |
+| `backend/src/modules/Auth/auth.controller.ts` | `issueRefresh()`, dual-source refresh/logout |
+| `backend/src/modules/Auth/dto/auth-response.dto.ts` | opciono `refreshToken` u obje response šeme |
+| `mobile/src/services/storage/SecureStorage.ts` | `setRefreshToken`/`getRefreshToken`/`removeRefreshToken` |
+| `mobile/src/services/api/client.ts` | `detectAuthMode()`, `refreshSession()`, `logout()`, 401 → refresh → retry |
+| `mobile/src/context/AuthContext.tsx` | obnova sesije pri pokretanju; server-side odjava |
+
+Neispravna vrijednost `refreshTransport` se odbija s 400 (`@IsIn`), jer bi tiho
+vraćanje na `cookie` ostavilo mobilnog klijenta bez mogućnosti osvježavanja.
+
+### Testovi faza 2–3
+
+```bash
+cd backend
+npx jest src/modules/Auth/tests/ src/common/tests/app-config.service.spec.ts --runInBand   # 48/48
+cd ../frontend && npm run type-check   # EXIT=0
+cd ../mobile   && npm run type-check   # EXIT=0
+```
+
+**Frontend nema test runner** (0 testova u repou, nema vitest/jest), pa su
+frontend i mobile promjene verificirane **samo tipizacijom i lintom** — ne
+ponašanjem. Mobile `npm run lint` daje EXIT=2 i na HEAD-u jer
+`eslint-config-expo` nije u `package.json`.
+
+---
+
 ## Šta ova faza NE radi
 
 - **Ne mijenja `JwtAuthGuard`** — i dalje čita samo `Authorization: Bearer`.
-- **Ne prebacuje frontend ni mobile** na cookie tok (to je FE2-2 / MO2-7).
 - **Ne skraćuje život access tokena** — i dalje 24 h. Skraćivanje ima smisla
-  tek kad klijenti znaju osvježiti sesiju.
-- **Ne uklanja token iz `localStorage`** na frontendu.
+  tek kad je tok uključen u produkciji i izmjereno ponašanje.
+- **Ne uklanja token iz `localStorage`** na frontendu — access token je i dalje
+  tamo; zaštićen je samo dugotrajni refresh token.
+- **Nije isprobano na stvarnom uređaju ni u browseru.** Mobile tok ovisi o
+  `expo-secure-store` na Android Keystore-u, a emulator nije dostupan u ovom
+  okruženju; `SameSite`/`Secure` za cross-site deploy traži
+  `AUTH_COOKIE_SAME_SITE=none` + HTTPS i također nije potvrđeno.
 - Nova migracija **nije primijenjena ni na jednu stvarnu bazu** u ovom
   okruženju (nema lokalnog PostgreSQL-a); verificira je CI kroz
   `npx prisma migrate deploy` nad servisom `postgres:16`.

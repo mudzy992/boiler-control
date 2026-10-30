@@ -46,7 +46,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const restoreSession = useCallback(async () => {
     try {
       setIsLoading(true);
-      const savedToken = await SecureStorage.getToken();
+
+      // SEC-4: prvo pitamo backend da li je refresh tok uključen. Dok je
+      // zastavica off ovo postavi `false` i ponašanje je identično prijašnjem.
+      const refreshEnabled = await apiClient.detectAuthMode();
+
+      let savedToken = await SecureStorage.getToken();
+
+      // Access token je istekao (ili ga nema), ali refresh token postoji —
+      // obnovi sesiju umjesto da se korisnik odmah vrati na login.
+      if (!savedToken && refreshEnabled) {
+        const ok = await apiClient.refreshSession();
+        if (ok) savedToken = await SecureStorage.getToken();
+      }
 
       if (savedToken) {
         setToken(savedToken);
@@ -123,8 +135,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setUser(null);
       setToken(null);
-      await SecureStorage.removeToken();
-      await apiClient.clearToken();
+      // SEC-4: `apiClient.logout()` opoziva refresh sesiju na serveru (kad je
+      // tok uključen) i čisti oba tokena iz Keystore-a.
+      await apiClient.logout();
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;

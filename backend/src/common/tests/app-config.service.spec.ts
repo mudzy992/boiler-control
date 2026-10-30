@@ -127,6 +127,34 @@ describe('AppConfigService (MO2-2 version gate)', () => {
     });
   });
 
+  describe('SEC-4: authRefreshEnabled', () => {
+    it('zadano je false dok je AUTH_COOKIE_REFRESH_ENABLED off', () => {
+      delete process.env.AUTH_COOKIE_REFRESH_ENABLED;
+      const config = new AppConfigService().getAppConfig();
+      expect(config.authRefreshEnabled).toBe(false);
+    });
+
+    it('postaje true kad je zastavica uključena', () => {
+      process.env.AUTH_COOKIE_REFRESH_ENABLED = 'on';
+      const config = new AppConfigService().getAppConfig();
+      expect(config.authRefreshEnabled).toBe(true);
+    });
+
+    it('neispravna vrijednost zastavice ostaje false (fail-safe)', () => {
+      process.env.AUTH_COOKIE_REFRESH_ENABLED = 'mozda';
+      const config = new AppConfigService().getAppConfig();
+      expect(config.authRefreshEnabled).toBe(false);
+    });
+
+    it('polje je prisutno i kad je version gate isključen (klijenti ga uvijek čitaju)', () => {
+      process.env.APP_VERSION_GATE_ENABLED = 'false';
+      delete process.env.AUTH_COOKIE_REFRESH_ENABLED;
+      const config = new AppConfigService().getAppConfig();
+      expect(config.versionGateEnabled).toBe(false);
+      expect(config.authRefreshEnabled).toBe(false);
+    });
+  });
+
   it('servis nikad ne baca', () => {
     process.env.MOBILE_MIN_SUPPORTED_VERSION = '💥';
     process.env.APP_VERSION_GATE_ENABLED = '💥';
@@ -188,6 +216,8 @@ describe('GET /api/app/config (MO2-2 ugovor rute)', () => {
       minSupportedVersion: '1.0.0',
       latestVersion: '2.0.0',
       versionGateEnabled: true,
+      // SEC-4: novo polje; zadano false jer je zastavica off
+      authRefreshEnabled: false,
     });
   });
 

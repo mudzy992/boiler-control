@@ -117,15 +117,15 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 
 ## Mapa „ekran → API poziv → backend ruta"
 
-<!-- mob:apimethods:40 -->
-<!-- mob:apitable:55 -->
+<!-- mob:apimethods:44 -->
+<!-- mob:apitable:59 -->
 <!-- mob:endpoints:28 -->
 
-### Sve API metode (55) — inventar s potrošačem
+### Sve API metode (59) — inventar s potrošačem
 
-<!-- mob:apitable:55 -->
+<!-- mob:apitable:59 -->
 
-**`services/api/client.ts` (40 metoda):**
+**`services/api/client.ts` (44 metoda):**
 
 | Metoda | HTTP | Backend ruta | Potrošač |
 |---|---|---|---|
@@ -169,6 +169,10 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 | `getHeatingEvents` | GET | `/api/heating-events` | `HeatingScreen` |
 | `setToken` | — (lokalno) | — | `AuthContext` |
 | `clearToken` | — (lokalno) | — | `AuthContext` |
+| `detectAuthMode` | GET | `/api/app/config` | `AuthContext` |
+| `isRefreshEnabled` | — (lokalno) | — | `AuthContext` |
+| `refreshSession` | POST | `/api/auth/refresh` | `AuthContext` + 401 interceptor |
+| `logout` | POST | `/api/auth/logout` | `AuthContext` |
 
 **`services/api/homeProfile.api.ts` (7 metoda, vlastita axios instanca — MO-014):**
 

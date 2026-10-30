@@ -31,6 +31,22 @@ DATABASE_PASSWORD=<DATABASE_PASSWORD: vrijednost iz secret managera>
 DATABASE_NAME=<DATABASE_USER: vrijednost iz secret managera>
 DATABASE_HOST="sql.ba101.top"
 DATABASE_PORT=5432
+
+# ---------------------------------------------------------------------
+# REL-4 / B-021 — zaštita destruktivnog seeda i `prisma migrate reset`.
+# Seed briše sve retke iz 14 tabela, pa prije konekcije provjerava cilj
+# (backend/src/common/seed-target-guard.ts). NODE_ENV=production se uvijek
+# odbija i nijedan override to ne zaobilazi.
+# ---------------------------------------------------------------------
+# Lozinka testnog naloga koji seed kreira. Obavezna, bez defaulta; seed je
+# namjerno NE ispisuje na stdout.
+SEED_TEST_PASSWORD=<SEED_TEST_PASSWORD: lokalna vrijednost, ne commitovati>
+# CSV imena baza koje su izričito dozvoljene (npr. za CI disposable bazu).
+# Ostavi prazno ako nije potrebno.
+SEED_ALLOWED_DATABASES=
+# Eksplicitni override za nelokalni disposable host. Prima ISKLJUČIVO "on";
+# svaka druga vrijednost je neaktivna. Ne postavlja se u produkciji.
+SEED_ALLOW_ANY_TARGET=
 DATABASE_POOL_SIZE=10
 DATABASE_CONNECT_TIMEOUT_MS=5000
 

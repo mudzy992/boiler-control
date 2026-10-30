@@ -2,8 +2,42 @@ import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
 import { PrismaClient } from 'src/generated/prisma/client';
+import { assertSeedTargetAllowed } from 'src/common/seed-target-guard';
+
+const HELP = `
+Seed za boiler-control — REL-4 / B-021.
+
+Upotreba:
+  npm run db:seed            Pokreni seed (uz provjeru ciljne baze).
+  npm run db:seed -- --help  Prikaži ovu pomoć.
+
+Seed je DESTRUKTIVAN: briše sve retke iz 14 tabela prije upisa. Prije bilo
+kakve konekcije provjerava se ciljana baza (src/common/seed-target-guard.ts):
+  - NODE_ENV=production se uvijek odbija;
+  - baza mora imati testno ime ILI biti na SEED_ALLOWED_DATABASES;
+  - nelokalni host zahtijeva SEED_ALLOW_ANY_TARGET=on ili allowlist.
+
+Obavezne varijable:
+  DATABASE_HOST, DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
+  SEED_TEST_PASSWORD   lozinka testnog naloga (bez defaulta; ne ispisuje se)
+`.trim();
 
 async function main() {
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log(HELP);
+    return;
+  }
+
+  // REL-4: provjera cilja PRIJE nego što se otvori ijedna konekcija.
+  assertSeedTargetAllowed(process.env);
+
+  const seedPassword = process.env.SEED_TEST_PASSWORD;
+  if (!seedPassword) {
+    throw new Error(
+      'SEED_TEST_PASSWORD nije postavljen. Seed ne koristi hardkodiranu lozinku i ne ispisuje je.',
+    );
+  }
+
   const poolSize = Number(process.env.DATABASE_POOL_SIZE) || 5;
   const connectTimeout =
     Number(process.env.DATABASE_CONNECT_TIMEOUT_MS) || 5000;
@@ -42,7 +76,7 @@ async function main() {
 
     // Create test users
     console.log('👥 Creating users...');
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const hashedPassword = await bcrypt.hash(seedPassword, 10);
 
     const user1 = await prisma.user.create({
       data: {
@@ -348,9 +382,9 @@ async function main() {
     console.log('✅ Created sample notifications');
 
     console.log('\n✨ Seeding completed successfully!');
-    console.log(`\nTest account credentials:`);
+    console.log(`\nTest account:`);
     console.log(`Email: test@example.com`);
-    console.log(`Password: password123`);
+    console.log(`Password: (iz SEED_TEST_PASSWORD — namjerno se ne ispisuje)`);
     console.log(`\nDatabase contains:`);
     console.log(`- 1 user (PRO plan)`);
     console.log(`- 1 home profile`);

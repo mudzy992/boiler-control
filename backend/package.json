@@ -22,9 +22,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:smoke": "ts-node -r tsconfig-paths/register test/smoke-tests.ts",
-    "db:reset": "prisma migrate reset --force",
+    "db:reset": "npm run db:check-target && prisma migrate reset --force",
     "db:seed": "ts-node --transpile-only prisma/seed.ts",
-    "db:reset:seed": "npm run db:reset && npm run db:seed"
+    "db:reset:seed": "npm run db:reset && npm run db:seed",
+    "db:check-target": "ts-node --transpile-only -r tsconfig-paths/register scripts/require-safe-target.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

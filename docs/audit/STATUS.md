@@ -667,6 +667,46 @@ Ugovor se nije mijenjao (`openapi:generate --check` EXIT=0), jer
 `@Roles`/`@UseGuards` ne utječu na šemu. Puni jest: **39 failed / 346 passed /
 385** — isto 39 pre-postojećih padova, +6 novih prolaznih.
 
+### REL-4 — Izolacija destruktivnog seeda (B-021), 2026-10-30
+
+`prisma/seed.ts` je radio `deleteMany()` nad **14 tabela** i na kraju ispisivao
+`Password: password123` na stdout. Između pogrešnog `.env`-a i brisanja
+stvarnih podataka nije stajao nijedan uslov: `DATABASE_HOST`/`DATABASE_NAME`
+su se čitali i odmah koristili.
+
+**Guard.** Novi `src/common/seed-target-guard.ts` je **čista funkcija nad env
+objektom** — bez Prisme, bez mreže — pa se odbijanje desi prije prvog paketa
+prema bazi. Politika, od najstrožije:
+
+1. `NODE_ENV=production` → uvijek ODBIJ; **nijedan** override to ne zaobilazi
+   (test to izričito pokriva).
+2. Nedostaje `DATABASE_NAME` → ODBIJ.
+3. Baza na `SEED_ALLOWED_DATABASES` → DOZVOLI (bilo koji host).
+4. `SEED_ALLOW_ANY_TARGET=on` **i** testno ime → DOZVOLI (disposable CI baza).
+5. Lokalan host **i** testno ime → DOZVOLI.
+6. Sve ostalo → ODBIJ.
+
+`SEED_ALLOW_ANY_TARGET` prima **isključivo** `on`; `1`/`true`/`yes`/`ON` su
+neaktivni (testirano). `reason` nikad ne sadrži tajne — test to asertira
+ubacivanjem `DATABASE_PASSWORD` u ulaz.
+
+**Integracija.** `seed.ts` zove `assertSeedTargetAllowed(process.env)` prije
+`new PrismaClient`, traži `SEED_TEST_PASSWORD` (bez defaulta) i više ne ispisuje
+lozinku. `db:reset` sada ide preko `npm run db:check-target`
+(`scripts/require-safe-target.ts`, izlazi 0/1/2, `--help`), pa je i
+`prisma migrate reset --force` zaštićen istim pravilima — jedan izvor istine,
+bez dupliranja logike.
+
+**Testovi 11/11** (`src/common/tests/seed-target-guard.spec.ts`), TDD. CI dobija
+novi korak `seed_isolation_repro.cjs` koji nad disposable PostgreSQL-om dokazuje
+tri stvari: nepoznat cilj se odbija, **canary redak preživi** odbijeni pokušaj
+(restore test — dokaz da nijedan `DELETE` nije izvršen), te dozvoljeni cilj
+prolazi (pozitivna kontrola).
+
+Puni jest: **39 failed / 357 passed / 396** — istih 39 pre-postojećih padova,
++11 novih prolaznih. `openapi:generate --check` EXIT=0, sve 4 inventarske
+skripte EXIT=0, eslint 0 errors, tsc 1 pre-postojeća greška.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

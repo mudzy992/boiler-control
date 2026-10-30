@@ -102,25 +102,77 @@ describe('MAINT-2: aplikacija u NE-testnom okruženju', () => {
     expect(providers).not.toContain(ThermostatPollingService);
   });
 
-  it('@Cron na DailyRecommendationService nije disabled izvan testa', () => {
+  /**
+   * `@nestjs/schedule` v6 piše `@Cron` opcije preko `SetMetadata`, a NestJS-ov
+   * `SetMetadata` definira metapodatke na `descriptor.value` — dakle na SAMOJ
+   * FUNKCIJI metode, ne na paru `(prototype, imeMetode)`. Izmjereno sondom:
+   * `getMetadataKeys(prototype)` vraća prazno, `getMetadataKeys(prototype,
+   * 'metoda')` vraća samo `design:*`, a čitanje s funkcije vraća
+   * `{ name, disabled, cronTime }`.
+   */
+  function cronOptions(
+    Svc: { prototype: Record<string, unknown> },
+    methodName: string,
+  ) {
+    // `Svc.prototype[methodName]` je `unknown`, a `Reflect.getMetadata` trazi
+    // `Object` (TS2345) - zato eksplicitni cast na `object`.
+    return Reflect.getMetadata(
+      'SCHEDULE_CRON_OPTIONS',
+      Svc.prototype[methodName] as object,
+    ) as { name?: string; disabled?: boolean; cronTime?: string } | undefined;
+  }
+
+  it('@Cron NIJE disabled u production env (oba scheduler servisa)', () => {
+    process.env.NODE_ENV = 'production';
+    jest.resetModules();
+
     const { DailyRecommendationService } = req(
       'src/modules/Schedule/daily.recommendation.service',
     );
+    const { GasReminderService } = req(
+      'src/modules/Schedule/gas.reminder.service',
+    );
 
-    // @nestjs/schedule čita metapodatke s prototype-a klase. Ključ nije javno
-    // dokumentovan, pa test tolerira njegov izostanak, ali NE tolerira da je
-    // `disabled: true` upisan.
-    const proto = DailyRecommendationService.prototype as Record<
-      string,
-      unknown
-    >;
-    const cronMeta = (Reflect.getMetadata('__cronJobs__', proto) ??
-      Reflect.getMetadata('cron_jobs', proto)) as
-      Array<{ disabled?: boolean }> | undefined;
+    const daily = cronOptions(
+      DailyRecommendationService,
+      'generateDailyRecommendations',
+    );
+    const gas = cronOptions(GasReminderService, 'sendGasReminders');
 
-    expect(DailyRecommendationService).toBeDefined();
-    if (cronMeta) {
-      expect(cronMeta.every((m) => m.disabled !== true)).toBe(true);
+    // Metapodaci MORAJU postojati — bez ove asertcije test ne dokazuje ništo
+    // (upravo ta rupa je prije činila ovaj test praznim).
+    expect(daily).toBeDefined();
+    expect(gas).toBeDefined();
+    expect(daily?.name).toBe('daily-recommendations');
+    expect(gas?.name).toBe('gas-reading-reminder');
+    expect(daily?.cronTime).toBe('0 0 * * *');
+    expect(daily?.disabled).toBe(false);
+    expect(gas?.disabled).toBe(false);
+  });
+
+  it('@Cron JESTE disabled u development i test env (negativna kontrola)', () => {
+    // Izvorni kod glasi `disabled: NODE_ENV === 'development' || NODE_ENV ===
+    // 'test'` — dakle NIJE samo test env koji gasi cron. Izmjereno sondom: u
+    // development env `disabled` je također `true`. Bez ove kontrole gornji test
+    // bi prolazio i da je flag uvijek isti.
+    for (const env of ['development', 'test']) {
+      process.env.NODE_ENV = env;
+      jest.resetModules();
+
+      const { DailyRecommendationService } = req(
+        'src/modules/Schedule/daily.recommendation.service',
+      );
+      const { GasReminderService } = req(
+        'src/modules/Schedule/gas.reminder.service',
+      );
+
+      expect(
+        cronOptions(DailyRecommendationService, 'generateDailyRecommendations')
+          ?.disabled,
+      ).toBe(true);
+      expect(
+        cronOptions(GasReminderService, 'sendGasReminders')?.disabled,
+      ).toBe(true);
     }
   });
 

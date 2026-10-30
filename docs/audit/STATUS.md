@@ -928,6 +928,93 @@ testovi ne asertiraju ništa. Ovako je dokazano da svaka od tri jedinice
 - `jsdom` nije pravi browser: layout, stvarni date picker i antd animacije nisu
   pokriveni.
 
+### FE2-13 — Pristupačnost dijaloga, tabele na uskim ekranima, dark mode FOUC, 2026-10-30
+
+Rješava **FE-013** i **FE-021** (Talas C, #22).
+
+**FE-013 — GasForm dijalog bez ARIA/focus trap/Escape.** Custom overlay
+`fixed inset-0` nije imao nijedan `role`/`aria` atribut (grep po
+`role=|aria-|onKeyDown|Escape|tabIndex` vratio je **prazno**), nijedan keydown
+handler niti focus trap. Keyboard-only korisnik nije mogao zatvoriti modal, a
+screen reader nije oglašavao modalni kontekst.
+
+Dodano: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` na naslov,
+Escape zatvara, Tab/Shift+Tab kruže unutar dijaloga, fokus se pri otvaranju
+prebacuje u dijalog a pri zatvaranju vraća na element koji ga je imao.
+
+**FE-013 — veći bug nađen usput: labele nisu bile povezane s inputima.**
+Postavljanjem axe skena izmjeren je **CRITICAL** nalaz pravila `label`
+(„Ensure every form element has a label") na `input[type="file"]`. Sondom je
+utvrđeno da je uzrok širi od samog file polja: **4 od 5** labela u GasForm-u
+(counter, file, date, time) **nisu imale `htmlFor`**, pa ih screen reader ne
+čita uz polje, a `getByLabelText` ih ne može naći. Jedino je
+`useCurrentDateTime` bila ispravno povezana. Dodano `htmlFor` + `id` na sve
+četiri.
+
+Ovo je vrijedno zabilježiti kao pouku: nalaz FE-013 je navodio samo „Switch bez
+`aria-label`", a stvarno stanje je bilo gore — axe je to otkrio tek kad je
+postavljen kao automatizirana provjera, ne čitanjem koda.
+
+**FE-013 — tema Switch bez pristupačnog naziva.** `MainLayout.tsx:146` je imao
+samo Tooltip, koji se screen readeru ne čita. Dodan `aria-label`.
+
+**FE-021 — tabele bez horizontalnog skrolovanja.** Izmjeren broj kolona:
+Boiler 7, Heating 6, Reports 4, Dashboard 7 — i **nijedna** `width`
+deklaracija. Nijedna tabela nije imala `scroll={{ x }}` (grep po `scroll={{`
+vratio prazno), a `overflow-x: hidden` na `html, body, #root`
+(`index.css:34`) je prelijevanje tiho odsijecao. Dodano
+`scroll={{ x: 'max-content' }}` na sve četiri, pa svaka dobija vlastiti skrol
+kontejner (`.ant-table-content { overflow: auto }`) i maska ih više ne sakriva.
+`'max-content'` je uzet namjerno umjesto izmišljenih fiksnih širina.
+
+**FE-021 — dark mode FOUC.** Klasa `dark` se postavljala React `useEffect`-om
+(`ThemeContext.tsx:22-30`), dakle **nakon** prvog rendera, pa je dark-mode
+korisnik pri svakom reloadu kratko vidio svijetlu verziju. Dodana inline
+skripta u `<head>` — dakle **prije** `<div id="root">` — koja čita
+`localStorage` i postavlja klasu prije rendera.
+
+Ključ je izvezen (`export const THEME_STORAGE_KEY`), a test uspoređuje tu
+**stvarnu** konstantu s onom u `index.html`. Da je test umjesto toga regexom
+tražio tekst u izvoru, promjena ključa na jednom mjestu bi prošla neprimijećeno
+i tema bi se tiho resetovala pri svakom reloadu.
+
+**Testovi: 11 novih** u `accessibility.test.tsx` — ARIA semantika 3, tastatura
+3, upravljanje fokusom 2, axe sken 1, FOUC 2. Frontend ukupno **48/48**.
+`axe-core@4.14.0` je uzet direktno, bez `vitest-axe` (0.1.0, neodržavan
+omotač). Pravilo `color-contrast` je isključeno jer jsdom nema layout engine,
+pa kontrast piksela nije pouzdano izračunat.
+
+**Verifikacija (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `npm test` | **48/48** |
+| `tsc -p tsconfig.app.json --noEmit` | exit 0 |
+| `npm run lint` | exit 0 (0 errors, 13 pre-postojeća warnings) |
+| **Mutacija 1** — uklonjen `role="dialog"` | **8 testova PADA** |
+| **Mutacija 2** — Escape handler onesposobljen | **1 test PADA** |
+| **Mutacija 3** — uklonjen `htmlFor` s file inputa | **1 test PADA** (axe nalaz se vraća) |
+| **Mutacija 4** — `THEME_STORAGE_KEY` promijenjen | **1 test PADA** |
+| Restauracija | md5 + `diff` potvrdili sva 3 fajla identična backupu, suite opet 48/48 |
+| CI `41072814594` | oba joba success; frontend korak 8 success |
+| inventarske skripte | 9 × exit 0 (`backtest_sketch.py` exit 2 pre-postojeće) |
+
+**Šta NIJE urađeno / NIJE verificirano:**
+
+- **Playwright axe sken na ključnim ekranima NIJE implementiran**, i vizuelna
+  provjera „tabela na 360 px skrola" te „reload bez svijetlog flasha" **nije
+  izvršena**. Chromium download u sandboxu konkretno pada: „Failed to download
+  Chromium 131.0.6778.33 (playwright build v1148), Download failure, code=1".
+  axe sken je zato urađen u jsdomu (stvarni `axe-core`, ali bez layouta).
+- **`overflow-x: hidden` je zadržan namjerno.** Tabele sada skroluju interno pa
+  ih maska više ne sakriva, ali potpuno uklanjanje pravila zahtijeva vizuelnu
+  provjeru na 360 px, koja ovdje nije moguća. Uklonjeno bi riskiralo
+  horizontalni scrollbar iz sitnih prelijevanja koja ne mogu vidjeti.
+- Ostalih 5 komponenti i 10 stranica nemaju axe sken — pokriven je samo
+  GasForm.
+- `jsdom` ne provjerava stvarni focus ponašanjem browsera: focus trap je
+  testiran preko eksplicitnog `keyDown`, ne preko stvarnog Tab ponašanja.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

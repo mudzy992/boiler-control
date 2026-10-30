@@ -1388,10 +1388,21 @@ mutacije: `||` fallback (4 pada), `??` fallback (1 pad), uklonjen `.trim()`
 
 **Šta je ostalo otvoreno.**
 
-- **`docker compose config`, docker build i e2e izvršavanje NISU verificirani.**
-  Docker nije instaliran u ovom okruženju, a Chromium download pada
-  (`ECONNRESET` na `150.171.110.151`, `code=1`). CI je jedino mjesto gdje se to
-  može potvrditi — po odluci vlasnika e2e je dodan uprkos tome.
+- **Djelimično verificirano u CI (run `41127519323`, `completed success`, svih
+  15 koraka `success`).** Lokalno ovo nije bilo moguće — docker nije instaliran,
+  a Chromium download pada (`ECONNRESET` na `150.171.110.151`, `code=1`). CI je
+  potvrdio:
+  - ✅ `docker compose -f docker-compose.yml config --quiet` (korak „Deploy
+    config consistent") — mjerodavni set se parsira.
+  - ✅ `node scripts/audit/frontend_deploy_config_repro.cjs` (isti korak).
+  - ✅ `node scripts/audit/frontend_chunk_graph.cjs` (korak „Bundle evaluates and
+    renders") — bundle se evaluira i login forma se renderuje.
+  - ✅ **e2e smoke: `4 passed (3.4s)`** — iz anotacije `🎭 Playwright Run
+    Summary`, 0 failure anotacija. Testovi su stvarno izvršeni, nisu preskočeni.
+- **`docker build` i dalje NIJE verificiran nigdje.** Nijedan CI korak ne gradi
+  frontend image, pa `ARG VITE_API_URL` bez defaulta + build guard nisu
+  isprobani kroz stvarni Dockerfile. Ovo je jedini preostali dio koji se ne
+  poklapa između lokalnog `npm run build` i onoga što produkcija stvarno gradi.
 - **Stvarno stanje servera nije provjereno i ne može se provjeriti iz
   repozitorija:** postoji li traefik mreža `web` pod tim imenom, postoji li
   certresolver `le`, i pokazuje li DNS za `api.boiler-control.ba101.top` na taj

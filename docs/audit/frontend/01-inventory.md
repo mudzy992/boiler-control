@@ -4,7 +4,7 @@
 
 1. **VERIFIKOVANO:** aplikacija ima 10 ruta i 10 stranica, 5 komponenti, 2 konteksta (Auth/Theme), 2 servisa (api, notification.api), 1 hook (useAuth) i inline i18n (en-US/bs-BS) u jednom fajlu; ukupno 28 fajlova u `frontend/src`, ~4600 linija.
 2. **VERIFIKOVANO (pokrenuto):** `npm run type-check` daje **lažno zeleno** — korenski `tsconfig.json` je solution-format (`"files": []`), pa `tsc --noEmit` ne provjerava ništa; stvarna provjera `tsc -p tsconfig.app.json` daje **12 grešaka** (FE-001).
-3. **VERIFIKOVANO (pokrenuto):** `npm run build` uspijeva i proizvodi **jedan JS čip od 2.972 kB (gzip 905 kB)** bez code-splittinga (FE-004); `npm run lint` **ne radi** — nema ESLint konfiguracije (FE-015).
+3. **VERIFIKOVANO (pokrenuto):** `npm run build` uspijeva; **FE2-4 (2026-10-30) je uklonio jedan čip od 2.975,35 kB (gzip 906,26 kB)** — sada 21 čip, inicijalni JS 1.434,19 kB (gzip 451,87 kB) preko `React.lazy` + `manualChunks` (FE-004, riješeno). `npm run lint` **radi** — `frontend/eslint.config.mjs` postoji (FE-015 riješen ranije), daje 0 grešaka i 13 pre-postojećih upozorenja. *Ispravka: ova stavka je prvobitno navodila „2.972 kB" i „lint ne radi" — oba su zastarjela.*
 4. **VERIFIKOVANO:** ne postoji nijedan test — `package.json` nema test skriptu, nema test direktorija niti testing zavisnosti (FE-014).
 5. **VERIFIKOVANO:** `notification.api.ts` koristi `apiClient.get/post/patch` koji ne postoje na klasi `ApiClient`, a **niko ga ne importira** — mrtav, tipki slomljen kod (FE-011).
 

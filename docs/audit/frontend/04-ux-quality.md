@@ -2,7 +2,7 @@
 
 ## Sažetak: pet vrhunska nalaza
 
-1. **FE-004, VERIFIKOVANO (build):** cijela aplikacija je jedan JS čip od **2.972 kB (gzip 905 kB)** — nema lazy ruta niti chunking; Vite sam upozorava na limit 500 kB.
+1. **FE-004, RIJEŠENO 2026-10-30 (FE2-4):** aplikacija je bila jedan JS čip — **ispravka nalaza: 2.975,35 kB (gzip 906,26 kB)**, ne 2.972 kB kako je prvobitno zabilježeno. Sada `React.lazy` + `Suspense` po ruti i `manualChunks` po porodici paketa: **21 čip**, inicijalni JS pao na **1.434,19 kB (gzip 451,87 kB, −50,1%)**; `vendor-plots` (1.467,02 kB) se dohvaća tek na dashboardu.
 2. **FE-005, VERIFIKOVANO:** i18n pokrivaju samo 5 od 14 fajlova s UI-jem (`LoginPage`, gas stranice/komponente); Dashboard, Boiler, Heating, HomeProfile, Profile, Reports, Notifications i MainLayout su **hardcoded EN** (Dashboard miješa i hardcoded BS u upozorenjima); nema ručnog izbora jezika u UI, a bs prevodi imaju greške u kucanju.
 3. **FE-013, VERIFIKOVANO:** custom modal (GasForm) nema `role="dialog"`, aria atribut, focus trap niti Escape; tema Switch nema `aria-label`; ostali UI elementi koriste antd (relativno pristupačne).
 4. **FE-017, VERIFIKOVANO:** HomeProfile forma ne izlaže `location` (ključno za weather — FE-003) ni `seasonMode` (postoje u DTO), 404 se prikazuje kao greška umjesto "kreiraj profil" stanja, a defaulti nisu konzistentni (initial 22/20/18 vs fallback 20/21/18).
@@ -10,16 +10,19 @@
 
 ## Otvorena pitanja
 
-- Koje je planirano CILJNO vrijeme prvog rendera (LCP) na najslabijem ciljanom uređaju, da li se 905 kB gzip smatra prihvatljivim?
+- Koje je planirano CILJNO vrijeme prvog rendera (LCP) na najslabijem ciljanom uređaju? Nakon FE2-4 inicijalni payload je 451,87 kB gzip (bio 906,26 kB) — da li se to smatra prihvatljivim, ili treba dalje dijeliti `vendor-antd` (310,35 kB gzip)?
 - Da li je jezički selektor u UI obavezan (saobraćaj je pretežno BA, ali mobilna verzija ima en/bs)?
 
-### [FE-004] Jedan 2.972 kB JS čip bez code-splittinga — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (pokrenuto)
-- Gdje: `frontend/vite.config.ts` (nema `build.rollupOptions`, nema lazy), `frontend/src/App.tsx:4-16` (svih 10 stranica statički importovano), build izlaz: `dist/assets/index-BcIIGfqz.js 2,972.34 kB │ gzip: 905.50 kB` (2026-10-29).
-- Šta nije u redu i zašto: svaka posjeta preuzima i parsira cijeli bundle (React + antd + @ant-design/plots + react-query + axios + dayjs + i18next + svih 10 stranica) iako korisnik obično otvara 1-2 ekrana; na sporim vezama (grijanje aplikacija na jednostavnijim uređajima) to direktno usporava prvi ekran. Vite sam emituje upozorenje >500 kB.
-- Dokaz: `cd frontend && npm run build` → gornje brojeve (izvještaj sačuvan u radnom zapisku; `dist/` nije u repozitoriju).
-- Preporuka: `React.lazy` + `Suspense` po grupama ruta (npr. dashboard, gas, reports, profile), `manualChunks` za antd/plots/axios/dayjs; nakon toga izmjeriti velikost po čipu i LCP; ne uvoditi agresivno caching bez FE-008 headera.
-- Kako provjeriti: build izvještaj pokazuje više čipova, login čip bez pages; LCP na emuliranoj sporoj vezi (Playwright trace) unutar dogovorenog praga.
-- Trud: S/M — Zavisnosti: FE-014 (e2e mjeranje), dogovor o pragovima.
+### [FE-004] Jedan 2.975,35 kB JS čip bez code-splittinga — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (pokrenuto) — **RIJEŠENO 2026-10-30 (FE2-4)**
+- Gdje: `frontend/vite.config.ts` (nije imao `build.rollupOptions`, nije bilo lazy), `frontend/src/App.tsx:4-16` (svih 10 stranica statički importovano).
+- **Ispravka broja u nalazu:** prvobitno je zabilježeno „2.972 kB (gzip 905 kB)". Ponovljeni build 2026-10-30 daje **2.975,35 kB │ gzip: 906,26 kB** za `dist/assets/index-BQxeVzm2.js`. Razlika je tipfeler u izvornom zapisu, ne promjena koda — suština nalaza (jedan čip, bez splittinga) je stajala.
+- Šta nije bilo u redu i zašto: svaka posjeta preuzima i parsira cijeli bundle (React + antd + @ant-design/plots + react-query + axios + dayjs + i18next + svih 10 stranica) iako korisnik obično otvara 1-2 ekrana; na sporim vezama to direktno usporava prvi ekran. Vite sam emituje upozorenje >500 kB.
+- **Šta je urađeno (FE2-4):** (1) `App.tsx` — svih 10 stranica preko `React.lazy` (imenovani izvozi mapirani s `.then((m) => ({ default: m.X }))`) unutar jednog `Suspense` boundary-ja, fallback je namjerno običan `<div>` bez antd-a; (2) `vite.config.ts` — `build.rollupOptions.output.manualChunks(id)` grupiše po **porodici** paketa (plots+`@antv`+`/d3-`; antd+`/rc-`+`@rc-component`; react+scheduler; router; query; i18n; utils), jer dijeljenje roditelja od zavisnosti rizikuje greške inicijalizacije; `@ant-design/plots` se provjerava prije `@ant-design/icons`.
+- Rezultat (izmjereno 2026-10-30, 21 čip): inicijalni JS — ono što `dist/index.html` referencira — **1.434,19 kB / gzip 451,87 kB** (−51,8% / −50,1%); početni čip `index-CldOGUOq.js` **28,20 kB / gzip 9,33 kB**; `LoginPage` čip **1,75 kB**. Ukupna masa JS-a je nepromijenjena (2.969,62 kB vs 2.975,35 kB, −0,19%), tj. kod nije izgubljen nego preorganizovan. `vendor-plots` (1.467,02 kB) i `DashboardPage` (19,79 kB) **nisu** u `index.html` — dohvaćaju se tek kad se ruta posjeti.
+- Dokaz: `cd frontend && npm run build` → 21 čip i gornje brojeve; `grep -oE '(src|href)="/assets/[^"]+"' dist/index.html` pokazuje tačno 8 JS fajlova, bez `vendor-plots` i bez ijedne stranice. Regresiju čuva `frontend/src/__tests__/codeSplitting.test.ts` (11 testova).
+- Preporuka: ~~`React.lazy` + `Suspense` po grupama ruta, `manualChunks` za antd/plots/axios/dayjs~~ **uradeno**. Ostaje otvoreno: LCP na emuliranoj sporoj vezi nije izmjeren (Playwright browser CDN nedostupan u okruženju) i ne uvoditi agresivno caching bez FE-008 headera.
+- Kako provjeriti: build izvještaj pokazuje 21 čip i `index.html` bez stranica (✅ izmjereno); `npx vitest run src/__tests__/codeSplitting.test.ts` → 11/11 (✅); LCP na emuliranoj sporoj vezi (Playwright trace) unutar dogovorenog praga — **NIJE provjereno**, prag nije dogovoren.
+- Trud: S/M — **utrošeno S**. Zavisnosti: FE-014 (e2e mjeranje) i dogovor o LCP pragovima ostaju otvoreni; FE2-7 (mjeranje u CI) je sljedeći korak.
 
 ### [FE-005] i18n pokriva samo dio stranica; mješavina EN/BS; nema izbora jezika — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (kod + brojanje)
 - Gdje: `useTranslation` postoji samo u `LoginPage.tsx`, `GasReadingsPage.tsx`, `GasAnalyticsPage.tsx`, `GasReadingCard.tsx`, `GasForm.tsx`; ostalih 9 UI fajlova nema nijedan `t()` poziv; `DashboardPage.tsx:588-591,626-660,665-724,815...` hardcoded EN naspram `DashboardPage.tsx:488,500,510,520` hardcoded BS upozorenja; `locales/config.ts:406-429` (init + samo browser detekcija, bez ručnog izbora i bez perzistencije odabrana); bs greške: `locales/config.ts:258` ("cilje temperature"), `:259` ("na cilji").

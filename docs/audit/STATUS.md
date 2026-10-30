@@ -1149,6 +1149,100 @@ potvrđeno preko `git stash push -u` / `pop`: pada i bez mojih izmjena.
   testa za `GET /api/dashboard/health`; lokalno nema postgres-a.
 - **Ponderi nisu stručno potvrđeni** — preuzeti 1:1 iz postojećeg koda.
 
+### FE2-4 — Code-splitting frontend bundlea (FE-004), 2026-10-30
+
+Talas C, #24. Commit `b8cd9cf`.
+
+**Nalaz i njegova ispravka.** FE-004 je tvrdio da je aplikacija jedan JS čip od
+„2.972 kB (gzip 905 kB)". Ponovljeni bazni build 2026-10-30 daje
+`dist/assets/index-BQxeVzm2.js 2,975.35 kB │ gzip: 906.26 kB` — broj u nalazu je
+**tipfeler**, ne promjena koda. Suština nalaza je stajala: jedan čip, bez lazy
+ruta, bez `rollupOptions`, i Vite sam emituje upozorenje „>500 kB".
+
+**Šta je bilo pogrešno.** `App.tsx` je statički importovao svih 10 stranica, pa
+je svaka posjeta — uključujući `/login` — preuzimala i parsirala React + antd +
+`@ant-design/plots` + react-query + axios + dayjs + i18next + svih 10 stranica.
+`@ant-design/plots` koristi **samo** `DashboardPage.tsx:6` (provjereno:
+`grep -rn "@ant-design/plots" frontend/src/` → samo ta linija i
+`types/ant-design-plots.d.ts`), ali je bio u inicijalnom payloadu za svaku rutu.
+
+**Izmjene.**
+
+1. `frontend/src/App.tsx` — svih 10 stranica preko `React.lazy` unutar jednog
+   `Suspense` boundary-ja. Stranice izvoze **imenovane** (`export function
+   LoginPage`), a `lazy()` traži default izvoz, pa svaki poziv mapira modul:
+   `.then((m) => ({ default: m.LoginPage }))`. `RouteFallback` je namjerno
+   običan `<div>` **bez antd-a** — antd ionako dolazi s prvom stranicom koja ga
+   treba, a `<Spin>` u fallbacku bi povukao antd u inicijalno učitavanje.
+2. `frontend/vite.config.ts` — `build.rollupOptions.output.manualChunks(id)`.
+   Grupisanje je po **porodici** paketa, ne po pojedinačnom paketu: antd vuče
+   `rc-*` / `@rc-component/*`, a `@ant-design/plots` vuče `@antv/*` i `d3-*`.
+   Dijeliti roditelja od njegove zavisnosti u dva čipa rizikuje greške
+   inicijalizacije pri pokretanju, pa idu zajedno. `@ant-design/plots` se
+   provjerava **prije** `@ant-design/icons` jer oba počinju s `@ant-design/` —
+   kod ugniježđene instalacije (`plots/node_modules/icons`) to drži ikone uz
+   plots. `server.port: 80` je zadržan nepromijenjen.
+3. `frontend/src/__tests__/codeSplitting.test.ts` — 11 regresijskih testova.
+   Čitaju izvor preko Vite-ovog `?raw` sufiksa i `import.meta.glob`, **ne**
+   preko `node:fs`: u jsdom okruženju `import.meta.url` nije `file:` URL, pa
+   `new URL(…, import.meta.url)` baca `TypeError: The URL must be of scheme
+   file` (izmjereno — prva verzija testa je tako i pala).
+
+**Izmjereno (`npm run build`, 21 čip).**
+
+| | prije | poslije |
+|---|---|---|
+| početni čip | `index-BQxeVzm2.js` 2.975,35 kB / gzip 906,26 kB | `index-CldOGUOq.js` **28,20 kB / gzip 9,33 kB** |
+| inicijalni JS (referenciran u `dist/index.html`) | 2.975,35 kB / gzip 906,26 kB | **1.434,19 kB / gzip 451,87 kB (−51,8% / −50,1%)** |
+| ukupna masa JS-a | 2.975,35 kB | 2.969,62 kB (**−0,19%** ⇒ kod nije izgubljen, samo preorganizovan) |
+
+`index.html` referencira tačno 8 JS fajlova: `index`, `vendor-react`,
+`vendor-query`, `vendor-router`, `vendor-utils`, `vendor-icons`, `vendor-antd`,
+`vendor-i18n`. **`vendor-plots` (1.467,02 kB) i `DashboardPage` (19,79 kB) nisu
+među njima** — dohvaćaju se tek kad se ruta posjeti. `LoginPage` čip je 1,75 kB.
+
+**Verifikacija.** `npx vitest run` → **6 fajlova / 64 testa passed** (bilo
+5 fajlova / 53). `npm run type-check` EXIT=0. `npm run lint` EXIT=0 — 13
+upozorenja, 0 grešaka, i **nijedno** upozorenje nije u `App.tsx`,
+`vite.config.ts` niti u novom testu (svih 13 je u postojećim stranicama).
+`npm run build` EXIT=0 i deterministički (ponovljeni build daje iste hashove).
+
+**Mutacijska provjera** — da test nije prazan. Pet mutacija, svaka ruši test:
+
+| mutacija | rezultat |
+|---|---|
+| dodat statički `import { ReportsPage } from './pages/ReportsPage'` | 1 failed ✅ |
+| `manualChunks` → `manualChunksX` | 6 failed ✅ |
+| `return 'vendor-plots'` → `return 'vendor-antd'` | 6 failed ✅ |
+| `id.includes('@ant-design/icons')` premješten **prije** plots | 1 failed ✅ |
+| `id.includes('@ant-design/plots')` → `'@ant-design/XYZ'` | 6 failed ✅ |
+
+Kontrolni prolaz nakon vraćanja: 11/11. **Dvije asertcije su prvo lažno
+prolazile i morale su biti popravljene:** `toContain('manualChunks')` preživljava
+`manualChunksX`, a `indexOf('@ant-design/plots')` pogađa **komentar** iznad
+funkcije pa je mjerenje redoslijeda bilo bezvrijedno — sada se traži
+`manualChunks\s*[:(]` odnosno `id.includes('@ant-design/plots')`.
+
+**Šta je ostalo otvoreno.**
+
+- **LCP nije izmjeren.** Kriterij prihvatanja iz backloga traži LCP na
+  emuliranoj sporoj vezi; Playwright browser CDN nije dostupan u ovom okruženju
+  (`npx playwright install chromium` → `Download failure, code=1`), a ciljni
+  prag nikad nije dogovoren s vlasnikom. Taj dio prelazi na **FE2-7** (mjeranje
+  u CI). Veličina payloada je izmjerena i pada za ~50%; **vrijeme** prvog
+  rendera nije.
+- **Runtime render `Suspense` fallbacka nije viđen u pregledniku** — nema e2e,
+  pa se ne zna kako fallback izgleda na stvarnoj mreži niti koliko traje.
+- **`vendor-antd` (997,89 kB / gzip 310,35 kB) je i dalje u inicijalnom
+  payloadu** i najveći je pojedinačni čip. Daljnje dijeljenje antd-a nije
+  rađeno jer antd dijeli gotovo svaka stranica, pa bi korist bila mala.
+- **Vite i dalje upozorava** „Some chunks are larger than 500 kB" — zbog
+  `vendor-antd` i `vendor-plots`. Upozorenje `expo/tsconfig.base` je
+  **pre-postojeće** (pojavljuje se 2× i u baznom buildu, prije ikakve izmjene).
+- Ukupna gzip masa je neznatno **veća** (908,94 vs 906,26 kB) jer svaki čip nosi
+  vlastiti module wrapper — to je očekivana cijena splittinga i ne utiče na
+  inicijalno učitavanje, koje je prepolovljeno.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

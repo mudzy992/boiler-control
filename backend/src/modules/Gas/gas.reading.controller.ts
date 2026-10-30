@@ -19,7 +19,15 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { GasReadingService } from './gas.reading.service';
 import { CreateGasReadingDto } from './dto/create-gas-reading.dto';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { GasReadingResponseDto } from './dto/gas-reading-response.dto';
+import { GasAnalysisResponseDto } from './dto/gas-analysis-response.dto';
 import {
   IMAGE_MAX_SIZE_BYTES,
   PDF_MAX_SIZE_BYTES,
@@ -35,6 +43,7 @@ export class GasReadingController {
   constructor(private readonly service: GasReadingService) {}
 
   @Post('reading')
+  @ApiCreatedResponse({ type: GasReadingResponseDto })
   @UseInterceptors(
     FileInterceptor('meterImage', {
       limits: { fileSize: IMAGE_MAX_SIZE_BYTES },
@@ -49,11 +58,13 @@ export class GasReadingController {
   }
 
   @Get('readings')
+  @ApiOkResponse({ type: [GasReadingResponseDto] })
   findAll(@Req() req) {
     return this.service.findAll(req.user.userId);
   }
 
   @Get('latest')
+  @ApiOkResponse({ type: GasReadingResponseDto, nullable: true })
   getLatest(@Req() req) {
     return this.service.getLatest(req.user.userId);
   }
@@ -64,6 +75,7 @@ export class GasReadingController {
   }
 
   @Patch('reading/:id/reference')
+  @ApiOkResponse({ type: GasReadingResponseDto })
   updateReference(
     @Req() req,
     @Param('id') id: string,
@@ -73,6 +85,7 @@ export class GasReadingController {
   }
 
   @Post('reading/:id/meter-image')
+  @ApiCreatedResponse({ type: GasReadingResponseDto })
   @UseInterceptors(
     FileInterceptor('meterImage', {
       limits: { fileSize: IMAGE_MAX_SIZE_BYTES },
@@ -87,6 +100,7 @@ export class GasReadingController {
   }
 
   @Post('reading/:id/invoice')
+  @ApiCreatedResponse({ type: GasReadingResponseDto })
   @UseInterceptors(
     FileInterceptor('invoicePdf', {
       limits: { fileSize: PDF_MAX_SIZE_BYTES },
@@ -102,6 +116,7 @@ export class GasReadingController {
   }
 
   @Delete('reading/:id/invoice')
+  @ApiOkResponse({ type: GasReadingResponseDto })
   deleteInvoice(@Req() req, @Param('id') id: string) {
     return this.service.deleteInvoice(req.user.userId, +id);
   }
@@ -137,6 +152,7 @@ export class GasReadingController {
   }
 
   @Get('analysis')
+  @ApiOkResponse({ type: GasAnalysisResponseDto })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
   getAnalysis(

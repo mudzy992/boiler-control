@@ -1,6 +1,172 @@
 {
   "components": {
     "schemas": {
+      "AuthUserDto": {
+        "properties": {
+          "avatarUrl": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "example": "korisnik@example.ba",
+            "type": "string"
+          },
+          "homeLocation": {
+            "example": "Visoko",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "example": 1,
+            "type": "number"
+          },
+          "locale": {
+            "example": "bs",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "example": "Ime Prezime",
+            "nullable": true,
+            "type": "string"
+          },
+          "plan": {
+            "enum": [
+              "FREE",
+              "PRO",
+              "ENTERPRISE"
+            ],
+            "example": "FREE",
+            "type": "string"
+          },
+          "prefersDarkMode": {
+            "example": false,
+            "nullable": true,
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "USER",
+              "ADMIN",
+              "SUPPORT"
+            ],
+            "example": "USER",
+            "type": "string"
+          },
+          "timezone": {
+            "example": "Europe/Sarajevo",
+            "nullable": true,
+            "type": "string"
+          },
+          "username": {
+            "example": "korisnik",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "name",
+          "homeLocation",
+          "role",
+          "plan",
+          "avatarUrl",
+          "timezone",
+          "locale",
+          "prefersDarkMode"
+        ],
+        "type": "object"
+      },
+      "AuthUserWithTimestampsDto": {
+        "properties": {
+          "avatarUrl": {
+            "nullable": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "example": "korisnik@example.ba",
+            "type": "string"
+          },
+          "homeLocation": {
+            "example": "Visoko",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "example": 1,
+            "type": "number"
+          },
+          "locale": {
+            "example": "bs",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "example": "Ime Prezime",
+            "nullable": true,
+            "type": "string"
+          },
+          "plan": {
+            "enum": [
+              "FREE",
+              "PRO",
+              "ENTERPRISE"
+            ],
+            "example": "FREE",
+            "type": "string"
+          },
+          "prefersDarkMode": {
+            "example": false,
+            "nullable": true,
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "USER",
+              "ADMIN",
+              "SUPPORT"
+            ],
+            "example": "USER",
+            "type": "string"
+          },
+          "timezone": {
+            "example": "Europe/Sarajevo",
+            "nullable": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "username": {
+            "example": "korisnik",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "name",
+          "homeLocation",
+          "role",
+          "plan",
+          "avatarUrl",
+          "timezone",
+          "locale",
+          "prefersDarkMode",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "ChangePasswordDto": {
         "properties": {},
         "type": "object"
@@ -59,8 +225,288 @@
         ],
         "type": "object"
       },
+      "GasAnalysisPeriodDto": {
+        "properties": {
+          "from": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "explicit",
+              "reference_to_current",
+              "last_30_days"
+            ],
+            "example": "last_30_days",
+            "type": "string"
+          },
+          "to": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "mode"
+        ],
+        "type": "object"
+      },
+      "GasAnalysisReferenceReadingDto": {
+        "properties": {
+          "counterValue": {
+            "example": 12345.67,
+            "type": "number"
+          },
+          "id": {
+            "example": 1,
+            "type": "number"
+          },
+          "readingDate": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "readingDate",
+          "counterValue"
+        ],
+        "type": "object"
+      },
+      "GasAnalysisResponseDto": {
+        "properties": {
+          "avgFlowTemp": {
+            "example": 52.3,
+            "type": "number"
+          },
+          "consumptionFromReferenceM3": {
+            "example": 320.15,
+            "type": "number"
+          },
+          "costExVat": {
+            "example": 272.13,
+            "type": "number"
+          },
+          "costIncVat": {
+            "example": 318.39,
+            "type": "number"
+          },
+          "efficiency": {
+            "$ref": "#/components/schemas/GasEfficiencyDto"
+          },
+          "period": {
+            "$ref": "#/components/schemas/GasAnalysisPeriodDto"
+          },
+          "priceBreakdown": {
+            "items": {
+              "$ref": "#/components/schemas/GasPriceBreakdownRowDto"
+            },
+            "type": "array"
+          },
+          "referenceReading": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GasAnalysisReferenceReadingDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "totalGas": {
+            "example": 320.15,
+            "type": "number"
+          },
+          "totalHeatingHours": {
+            "example": 412.5,
+            "type": "number"
+          },
+          "vatAmount": {
+            "example": 46.26,
+            "type": "number"
+          }
+        },
+        "required": [
+          "period",
+          "totalGas",
+          "consumptionFromReferenceM3",
+          "totalHeatingHours",
+          "avgFlowTemp",
+          "costExVat",
+          "vatAmount",
+          "costIncVat",
+          "referenceReading",
+          "priceBreakdown",
+          "efficiency"
+        ],
+        "type": "object"
+      },
+      "GasEfficiencyDto": {
+        "properties": {
+          "label": {
+            "enum": [
+              "NO_DATA",
+              "EXCELLENT",
+              "GOOD",
+              "FAIR",
+              "POOR"
+            ],
+            "example": "EXCELLENT",
+            "type": "string"
+          },
+          "m3PerHour": {
+            "example": 0.412,
+            "type": "number"
+          }
+        },
+        "required": [
+          "m3PerHour",
+          "label"
+        ],
+        "type": "object"
+      },
+      "GasPriceBreakdownRowDto": {
+        "properties": {
+          "consumptionM3": {
+            "example": 123.4,
+            "type": "number"
+          },
+          "costExVat": {
+            "example": 105.04,
+            "type": "number"
+          },
+          "effectiveFrom": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "effectiveTo": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "priceExVat": {
+            "example": 0.8512,
+            "type": "number"
+          },
+          "source": {
+            "description": "Izvor cijene iz `GasPriceHistory.source`. Uočene vrijednosti: 'INVOICE', 'MANUAL'. Namjerno `string`, ne enum — polje dolazi iz baze i nije ograničeno šemom.",
+            "example": "MANUAL",
+            "type": "string"
+          }
+        },
+        "required": [
+          "priceExVat",
+          "consumptionM3",
+          "costExVat",
+          "source",
+          "effectiveFrom",
+          "effectiveTo"
+        ],
+        "type": "object"
+      },
+      "GasReadingResponseDto": {
+        "properties": {
+          "consumption": {
+            "example": 123.4,
+            "nullable": true,
+            "type": "number"
+          },
+          "counterValue": {
+            "example": 12345.67,
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hasInvoicePdf": {
+            "description": "Izvedeno iz invoicePdfPath; sirova putanja se ne izlaže.",
+            "type": "boolean"
+          },
+          "hasMeterImage": {
+            "description": "Izvedeno iz meterImagePath; sirova putanja se ne izlaže.",
+            "type": "boolean"
+          },
+          "id": {
+            "example": 1,
+            "type": "number"
+          },
+          "invoiceGasPriceExVat": {
+            "example": 0.85,
+            "nullable": true,
+            "type": "number"
+          },
+          "invoiceUploadedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "isInvoiceReference": {
+            "example": false,
+            "type": "boolean"
+          },
+          "readingDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "referenceMonth": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "userId": {
+            "example": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "counterValue",
+          "readingDate",
+          "consumption",
+          "createdAt",
+          "isInvoiceReference",
+          "referenceMonth",
+          "hasMeterImage",
+          "hasInvoicePdf",
+          "invoiceUploadedAt",
+          "invoiceGasPriceExVat"
+        ],
+        "type": "object"
+      },
       "LoginDto": {
         "properties": {},
+        "type": "object"
+      },
+      "LoginResponseDto": {
+        "properties": {
+          "token": {
+            "description": "JWT access token",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          }
+        },
+        "required": [
+          "user",
+          "token"
+        ],
+        "type": "object"
+      },
+      "MessageResponseDto": {
+        "properties": {
+          "message": {
+            "example": "Password updated successfully",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "RegisterDeviceDTO": {
@@ -69,6 +515,22 @@
       },
       "RegisterDto": {
         "properties": {},
+        "type": "object"
+      },
+      "RegisterResponseDto": {
+        "properties": {
+          "token": {
+            "description": "JWT access token",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserWithTimestampsDto"
+          }
+        },
+        "required": [
+          "user",
+          "token"
+        ],
         "type": "object"
       },
       "SetCurrentTempDto": {
@@ -274,6 +736,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -298,6 +767,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -312,6 +788,13 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserWithTimestampsDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -336,6 +819,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -953,6 +1443,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasAnalysisResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -972,6 +1469,20 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/GasReadingResponseDto"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1001,6 +1512,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasReadingResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1057,6 +1575,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasReadingResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1119,6 +1644,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasReadingResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1173,6 +1705,13 @@
         ],
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasReadingResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1211,6 +1750,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasReadingResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1230,6 +1776,16 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GasReadingResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": ""
           }
         },

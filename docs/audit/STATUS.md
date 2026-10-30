@@ -836,6 +836,98 @@ dok su lokalno preskočeni (sandbox nema Redis).
   mjerenje praga nije rađeno.
 - Stvarni Prometheus scrape i Grafana render.
 
+### FE2-11 — Frontend test infrastrukturna (FE-014), 2026-10-30
+
+Frontend je imao **nula testova**. CI je provjeravao samo `openapi:check`,
+`type-check`, `lint` i `build` — dakle regresija u poslovnoj logici (npr.
+obrnut predznak potrošnje plina) prolazila je neprimijećeno.
+
+**Izbor verzija (nije proizvoljan).** `vitest@5.0.5` traži Vite
+`^6.4.0 || ^7.0.0 || ^8.0.0`, a frontend je na Vite 5 — forsirao bi upgrade
+produkcijskog builda kao nuspojavu testova. Uzeta je `vitest@3.2.4` čija je
+`dependencies.vite` = `^5.0.0 || ^6.0.0 || ^7.0.0-0`. Ostatak stacka:
+`@testing-library/react@16.3.3` (React 19), `@testing-library/dom@10.4.2`,
+`@testing-library/jest-dom@7.0.1`, `@testing-library/user-event@14.6.8`,
+`jsdom@26.1.0`.
+
+`vitest.config.ts` je **odvojen** od `vite.config.ts` (produkcijski ima
+`server.port: 80`); `globals: false` s izričitim importima iz `vitest`, da
+`tsc -p tsconfig.app.json --noEmit` ne traži `types: ["vitest/globals"]`.
+`src/test/setup.ts` dodaje jest-dom matchere, `cleanup()`, te stubove za
+`window.confirm` (GasReadingCard ga zove prije brisanja) i `matchMedia`
+(antd ga čita pri renderu).
+
+**37 testova u 3 suitea:**
+
+| Suite | Testova | Šta zaključava |
+| --- | --- | --- |
+| `GasForm.test.tsx` | 13 | `validateForm()` (prazno / previše decimala / nula / ispravno), datum, slanje, API greške, Cancel |
+| `GasReadingCard.test.tsx` | 16 | izračun potrošnje i dnevnog prosjeka, kada se blok NE prikazuje, brisanje s `window.confirm`, značke, akcije |
+| `locales/__tests__/config.test.ts` | 8 | `fallbackLng`, paritet ključeva, prevodi, stvarni fallback, `<html lang>` (FE2-6) |
+
+**Popravljen stvarni bug (nađen testom).** `GasForm.validateForm()` je
+postavljao `errors.readingDate` (grane „obavezno" i „budući datum"), ali ga
+**nijedan JSX nije prikazivao** — postojao je samo prikaz za
+`errors.counterValue`. Korisnik bi odabrao nevažeći datum, kliknuo „Add
+Reading" i **ne bi dobio nikakvu poruku**; forma se tiho nije slala. Sada se
+greška prikazuje uz crveni okvir polja.
+
+**Nalaz: grana `futureDateError` je nedostižna kroz UI.** Date input ima
+`max={dayjs().format('YYYY-MM-DD')}`, pa budući datum daje
+`validity.rangeOverflow = true` i browser odbija submit **prije** nego
+`handleSubmit` uopšte počne (izmjereno: `checkValidity() = false`,
+`validationMessage = "Constraints not satisfied"`). Korisnik vidi browser
+tooltip, ne naš prevedeni tekst. Test to dokumentuje i namjerno zaobilazi
+constraint validation (`fireEvent.submit`) da testira samu komponentinu
+validaciju — jer kroz klik ta grana nije dostupna.
+
+**Nalaz: semantika `previousReading` je obrnuta od imena.**
+`GasReadingsPage.tsx:170-174` sortira **silazno** (`b - a`, najnovije prvi), pa
+je `previousReading = sortedReadings[index - 1]` zapravo **novije** očitanje.
+Zato `consumption = previousReading.counterValue - reading.counterValue` daje
+ispravan pozitivan predznak. Matematika je tačna, ime prop-a zbunjujuće; test
+koristi varijable `starije`/`novije` da se predznak ne može tiho obrnuti.
+
+**Ispravka vlastite greške.** Prvom grubom provjerom sam izvijestio „181/181
+i18n ključeva". Tačan broj je **183/183** — bash regex je preskočio ugniježđene
+`gas.units.m3` i `gas.units.m3h`. Paritet je potpun (nijedan ključ ne
+nedostaje), pa test fallback **namjerno uklanja** ključ iz `bs-BS` resursa da
+stvarno vježba `fallbackLng`; bez toga bi prošao i da fallback nije
+konfigurisan. Isto tako `i18n.options.fallbackLng` je normalizovan u **niz**
+`["en-US"]`, ne string.
+
+**Verifikacija (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `npm test` | **37/37** |
+| `npm run type-check` | exit 0 |
+| `npm run lint` | exit 0 (0 errors, 13 pre-postojeća warnings) |
+| **Mutacija 1** — GasForm bez provjere budućeg datuma | **1 test PADA** |
+| **Mutacija 2** — GasReadingCard obrnut predznak potrošnje | **3 testa PADAJU** |
+| **Mutacija 3** — i18n `fallbackLng: 'bs-BS'` | **2 testa PADAJU** |
+| Restauracija nakon mutacija | `diff` potvrdio sva 3 fajla identična backupu, suite opet 37/37 |
+| CI `41069792449` | oba joba success; frontend **korak 8 „Unit and component tests (FE2-11)": success** |
+| `frontend_inventory.py` | exit 0 (novi fajlovi nisu stranice/komponente) |
+
+Mutacijski test je ključan: bez njega bi „37 prolazi" moglo značiti i da
+testovi ne asertiraju ništa. Ovako je dokazano da svaka od tri jedinice
+**pada** na namjerno unesenoj grešci.
+
+**Šta NIJE urađeno / NIJE verificirano:**
+
+- **Playwright e2e smoke NIJE implementiran.** Kriterij traži i `test:e2e`
+  (login, dashboard, gas unos s mock backendom). Chromium download u sandboxu
+  **konkretno pada**: „Failed to download Chromium 131.0.6778.33 (playwright
+  build v1148), Download failure, code=1" — Playwright CDN nije na allowlistu.
+  Dodavanje CI koraka koji se ne može verificirati lokalno riskiralo bi zeleni
+  CI, pa je ostavljen vlasniku.
+- Pokrivenost (coverage) nije mjerena ni postavljena kao prag.
+- Testirane su samo 2 komponente i i18n; ostalih 5 komponenti i 10 stranica
+  nema testova.
+- `jsdom` nije pravi browser: layout, stvarni date picker i antd animacije nisu
+  pokriveni.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

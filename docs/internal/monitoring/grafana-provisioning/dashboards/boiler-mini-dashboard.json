@@ -21,28 +21,57 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "green", "value": 75 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
             ]
           },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "reporting_home_health_score", "refId": "A", "legendFormat": "healthScore" }
+        {
+          "expr": "reporting_home_health_score",
+          "refId": "A",
+          "legendFormat": "healthScore"
+        }
       ],
       "title": "Home health score (0-100)",
       "type": "timeseries"
@@ -51,20 +80,43 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "id": 2,
       "options": {
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "reporting_active_alerts", "refId": "A", "legendFormat": "{{severity}}" }
+        {
+          "expr": "reporting_active_alerts",
+          "refId": "A",
+          "legendFormat": "{{severity}}"
+        }
       ],
       "title": "Active alerts (by severity)",
       "type": "timeseries"
@@ -73,28 +125,57 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 10 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
             ]
           },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 7 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
       "id": 3,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "reporting_anomaly_rate_per_hour", "refId": "A", "legendFormat": "anomalies/hour" }
+        {
+          "expr": "reporting_anomaly_rate_per_hour",
+          "refId": "A",
+          "legendFormat": "anomalies/hour"
+        }
       ],
       "title": "Anomalies per hour",
       "type": "timeseries"
@@ -103,28 +184,57 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 3 },
-              { "color": "red", "value": 5 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 3
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
             ]
           },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 7 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
       "id": 4,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "reporting_fallback_rate_per_hour", "refId": "A", "legendFormat": "fallbacks/hour" }
+        {
+          "expr": "reporting_fallback_rate_per_hour",
+          "refId": "A",
+          "legendFormat": "fallbacks/hour"
+        }
       ],
       "title": "Fallbacks per hour",
       "type": "timeseries"
@@ -133,21 +243,48 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "unit": "ops"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 14 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
       "id": 5,
       "options": {
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "increase(poll_runs_total[1h])", "refId": "A", "legendFormat": "poll runs (last 1h)" },
-        { "expr": "increase(poll_runs_failed[1h])", "refId": "B", "legendFormat": "poll failures (last 1h)" }
+        {
+          "expr": "increase(poll_runs_total[1h])",
+          "refId": "A",
+          "legendFormat": "poll runs (last 1h)"
+        },
+        {
+          "expr": "increase(poll_runs_failed[1h])",
+          "refId": "B",
+          "legendFormat": "poll failures (last 1h)"
+        }
       ],
       "title": "Polling volume (last 1h)",
       "type": "timeseries"
@@ -156,47 +293,91 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 14 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
       "id": 6,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
         {
           "expr": "(increase(poll_runs_success[1h]) / clamp_min(increase(poll_runs_total[1h]), 1e-9)) * 100",
           "refId": "A",
-          "legendFormat": "poll success %"
+          "legendFormat": "cycles completed %"
         }
       ],
-      "title": "Polling success (%) (last 1h)",
-      "type": "timeseries"
+      "title": "Poll cycle completion (%) (last 1h)",
+      "type": "timeseries",
+      "description": "Dio ciklusa koji je ZAVRŠIO bez greške (poll_runs_success / poll_runs_total). NE govori jesu li uređaji obrađeni — ciklus završava i kad svi uređaji bace. Za stvarnu uspješnost obrade gledati panel \"Device processing success\"."
     },
     {
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "unit": "ops"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 21 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
       "id": 7,
       "options": {
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "increase(tuya_requests_total[1h])", "refId": "A", "legendFormat": "tuya requests (last 1h)" },
-        { "expr": "increase(weather_requests_total[1h])", "refId": "B", "legendFormat": "weather requests (last 1h)" }
+        {
+          "expr": "increase(tuya_requests_total[1h])",
+          "refId": "A",
+          "legendFormat": "tuya requests (last 1h)"
+        },
+        {
+          "expr": "increase(weather_requests_total[1h])",
+          "refId": "B",
+          "legendFormat": "weather requests (last 1h)"
+        }
       ],
       "title": "External API requests (last 1h)",
       "type": "timeseries"
@@ -205,37 +386,220 @@
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
           "unit": "ops"
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 21 },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
       "id": 8,
       "options": {
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
-        { "expr": "increase(tuya_timeout_errors[1h])", "refId": "A", "legendFormat": "tuya timeouts (last 1h)" },
-        { "expr": "increase(weather_timeout_errors[1h])", "refId": "B", "legendFormat": "weather timeouts (last 1h)" },
-        { "expr": "increase(db_errors_total[1h])", "refId": "C", "legendFormat": "db errors (last 1h)" }
+        {
+          "expr": "increase(tuya_timeout_errors[1h])",
+          "refId": "A",
+          "legendFormat": "tuya timeouts (last 1h)"
+        },
+        {
+          "expr": "increase(weather_timeout_errors[1h])",
+          "refId": "B",
+          "legendFormat": "weather timeouts (last 1h)"
+        },
+        {
+          "expr": "increase(db_errors_total[1h])",
+          "refId": "C",
+          "legendFormat": "db errors (last 1h)"
+        }
       ],
       "title": "Timeouts & DB errors (last 1h)",
       "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "(increase(poll_devices_success[1h]) / clamp_min(increase(poll_devices_total[1h]), 1e-9)) * 100",
+          "refId": "A",
+          "legendFormat": "devices processed %"
+        }
+      ],
+      "title": "Device processing success (%) (last 1h)",
+      "type": "timeseries",
+      "description": "OBS-1 / B-023: dio pokušaja po uređaju koji je stvarno obrađen (poll_devices_success / poll_devices_total). Ovo je mjera koja pada kad adapter ili baza ne rade, za razliku od panela o završetku ciklusa."
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "increase(poll_devices_failed[1h])",
+          "refId": "A",
+          "legendFormat": "failed"
+        },
+        {
+          "expr": "increase(poll_devices_no_snapshot[1h])",
+          "refId": "B",
+          "legendFormat": "no_snapshot"
+        },
+        {
+          "expr": "increase(poll_devices_incomplete[1h])",
+          "refId": "C",
+          "legendFormat": "incomplete"
+        },
+        {
+          "expr": "increase(poll_devices_skipped[1h])",
+          "refId": "D",
+          "legendFormat": "skipped (expected)"
+        }
+      ],
+      "title": "Device poll outcomes (last 1h)",
+      "type": "timeseries",
+      "description": "OBS-1 / B-023: razbijanje ishoda po uređaju. `failed` = izuzetak, `no_snapshot` = adapter bez odgovora, `incomplete` = snapshot bez temperature, `skipped` = adaptivni interval (očekivano, nije kvar)."
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "time() - clamp_max(poll_last_success_timestamp_seconds, time())",
+          "refId": "A",
+          "legendFormat": "seconds since last success"
+        }
+      ],
+      "title": "Snapshot staleness (s)",
+      "type": "timeseries",
+      "description": "OBS-1 / B-023: koliko sekundi je prošlo od posljednjeg ciklusa s barem jednim uspješno obrađenim uređajem (poll_last_success_timestamp_seconds). Raste i kad ciklusi i dalje \"uspješno\" završavaju."
     }
   ],
   "refresh": "30s",
   "schemaVersion": 27,
   "style": "dark",
-  "tags": ["boiler-control", "mini", "monitoring"],
-  "templating": { "list": [] },
-  "time": { "from": "now-6h", "to": "now" },
+  "tags": [
+    "boiler-control",
+    "mini",
+    "monitoring"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "Boiler Control - Mini Monitoring",
   "uid": "boiler-control-mini",
-  "version": 1
+  "version": 2
 }
-

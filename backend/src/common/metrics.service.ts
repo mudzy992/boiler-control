@@ -8,6 +8,17 @@ export interface Metrics {
   poll_runs_total: number;
   poll_runs_success: number;
   poll_runs_failed: number;
+  // OBS-1 / B-023: ishodi PO UREĐAJU, agregirano (bez user/device ID labela).
+  // `poll_runs_*` znači "ciklus je završio", što NIJE isto što i "uređaji su
+  // uspješno obrađeni" — Grafana panel koristi stare nazive pa oni ostaju.
+  poll_devices_total: number;
+  poll_devices_success: number;
+  poll_devices_failed: number;
+  poll_devices_skipped: number;
+  poll_devices_no_snapshot: number;
+  poll_devices_incomplete: number;
+  /** Gauge: unix sekunde posljednjeg ciklusa s barem jednim uspješnim uređajem; 0 = nikad. */
+  poll_last_success_timestamp_seconds: number;
   tuya_requests_total: number;
   tuya_requests_success: number;
   tuya_requests_failed: number;
@@ -47,6 +58,13 @@ export class MetricsService {
     poll_runs_total: 0,
     poll_runs_success: 0,
     poll_runs_failed: 0,
+    poll_devices_total: 0,
+    poll_devices_success: 0,
+    poll_devices_failed: 0,
+    poll_devices_skipped: 0,
+    poll_devices_no_snapshot: 0,
+    poll_devices_incomplete: 0,
+    poll_last_success_timestamp_seconds: 0,
     tuya_requests_total: 0,
     tuya_requests_success: 0,
     tuya_requests_failed: 0,
@@ -92,6 +110,18 @@ export class MetricsService {
   }
 
   /**
+   * Postavi gauge (apsolutna vrijednost, ne inkrement).
+   * OBS-1 / B-023: svježina posljednjeg valjanog snapshot-a.
+   */
+  setGauge(key: keyof Metrics, value: number): void {
+    if (typeof this.metrics[key] === 'number') {
+      const gauge = key as Exclude<keyof Metrics, 'timestamp'>;
+      this.metrics[gauge] = value;
+      this.metrics.timestamp = new Date().toISOString();
+    }
+  }
+
+  /**
    * Get all metrics as a plain object (Prometheus compatible)
    */
   getMetrics(): Metrics {
@@ -114,6 +144,34 @@ export class MetricsService {
       '# HELP poll_runs_failed Total failed poll cycles',
       '# TYPE poll_runs_failed counter',
       `poll_runs_failed ${this.metrics.poll_runs_failed}`,
+      '',
+      '# HELP poll_devices_total Total per-device poll attempts',
+      '# TYPE poll_devices_total counter',
+      `poll_devices_total ${this.metrics.poll_devices_total}`,
+      '',
+      '# HELP poll_devices_success Device polls that completed processing',
+      '# TYPE poll_devices_success counter',
+      `poll_devices_success ${this.metrics.poll_devices_success}`,
+      '',
+      '# HELP poll_devices_failed Device polls that threw an error',
+      '# TYPE poll_devices_failed counter',
+      `poll_devices_failed ${this.metrics.poll_devices_failed}`,
+      '',
+      '# HELP poll_devices_skipped Device polls skipped by the adaptive interval guard',
+      '# TYPE poll_devices_skipped counter',
+      `poll_devices_skipped ${this.metrics.poll_devices_skipped}`,
+      '',
+      '# HELP poll_devices_no_snapshot Device polls where the adapter returned no snapshot',
+      '# TYPE poll_devices_no_snapshot counter',
+      `poll_devices_no_snapshot ${this.metrics.poll_devices_no_snapshot}`,
+      '',
+      '# HELP poll_devices_incomplete Device polls with a snapshot missing current or target temperature',
+      '# TYPE poll_devices_incomplete counter',
+      `poll_devices_incomplete ${this.metrics.poll_devices_incomplete}`,
+      '',
+      '# HELP poll_last_success_timestamp_seconds Unix time of the last cycle with at least one successful device (0 = never)',
+      '# TYPE poll_last_success_timestamp_seconds gauge',
+      `poll_last_success_timestamp_seconds ${this.metrics.poll_last_success_timestamp_seconds}`,
       '',
       '# HELP tuya_requests_total Total Tuya API requests',
       '# TYPE tuya_requests_total counter',
@@ -239,6 +297,13 @@ export class MetricsService {
       poll_runs_total: 0,
       poll_runs_success: 0,
       poll_runs_failed: 0,
+      poll_devices_total: 0,
+      poll_devices_success: 0,
+      poll_devices_failed: 0,
+      poll_devices_skipped: 0,
+      poll_devices_no_snapshot: 0,
+      poll_devices_incomplete: 0,
+      poll_last_success_timestamp_seconds: 0,
       tuya_requests_total: 0,
       tuya_requests_success: 0,
       tuya_requests_failed: 0,

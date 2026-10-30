@@ -9,6 +9,24 @@ import { StructuredLogger, LogContext } from '../../common/structured-logger';
 import { MetricsService } from '../../common/metrics.service';
 import { NotificationType } from 'src/generated/prisma';
 
+/**
+ * OBS-1 / B-023: eksplicitan ishod obrade JEDNOG uređaja.
+ *
+ * Prije ovoga `pollDevice` je u svim granama vraćao `undefined`, pa `pollAll`
+ * nije mogao razlikovati "ciklus je završio" od "uređaji su obrađeni" i uvijek
+ * je brojao `poll_runs_success`.
+ */
+export type PollDeviceOutcome =
+  'success' | 'failed' | 'skipped' | 'no_snapshot' | 'incomplete';
+
+const OUTCOME_METRIC: Record<PollDeviceOutcome, string> = {
+  success: 'poll_devices_success',
+  failed: 'poll_devices_failed',
+  skipped: 'poll_devices_skipped',
+  no_snapshot: 'poll_devices_no_snapshot',
+  incomplete: 'poll_devices_incomplete',
+};
+
 @Injectable()
 export class ThermostatPollingService {
   private readonly logger = new Logger(ThermostatPollingService.name);
@@ -55,10 +73,42 @@ export class ThermostatPollingService {
         ctx,
       );
 
+      const outcomes: Record<PollDeviceOutcome, number> = {
+        success: 0,
+        failed: 0,
+        skipped: 0,
+        no_snapshot: 0,
+        incomplete: 0,
+      };
+
+      // Izolacija grešaka među uređajima ostaje: jedan neuspjeh ne prekida ostale.
       for (const device of devices) {
-        await this.pollDevice(device, runId);
+        const outcome = await this.pollDevice(device, runId);
+        outcomes[outcome] += 1;
       }
 
+      this.metricsService.incrementCounter(
+        'poll_devices_total',
+        devices.length,
+      );
+      for (const outcome of Object.keys(outcomes) as PollDeviceOutcome[]) {
+        this.metricsService.incrementCounter(
+          OUTCOME_METRIC[outcome] as any,
+          outcomes[outcome],
+        );
+      }
+
+      // Svježina se pomjera SAMO kad je barem jedan uređaj stvarno obrađen.
+      if (outcomes.success > 0) {
+        this.metricsService.setGauge(
+          'poll_last_success_timestamp_seconds',
+          Math.floor(Date.now() / 1000),
+        );
+      }
+
+      // `poll_runs_success` i dalje znači "ciklus je završio bez greške" —
+      // naziv i značenje su zadržani jer ih Grafana panel koristi. Za stvarnu
+      // uspješnost obrade gledati `poll_devices_*`.
       this.metricsService.incrementCounter('poll_runs_success');
     } catch (err) {
       this.metricsService.incrementCounter('poll_runs_failed');
@@ -70,7 +120,10 @@ export class ThermostatPollingService {
   // ----------------------------------
   // POLL SINGLE DEVICE
   // ----------------------------------
-  private async pollDevice(device: any, runId?: string) {
+  private async pollDevice(
+    device: any,
+    runId?: string,
+  ): Promise<PollDeviceOutcome> {
     const ctx: LogContext = {
       runId: runId || `poll_${Date.now()}`,
       deviceId: device.id,
@@ -91,11 +144,11 @@ export class ThermostatPollingService {
       );
       // 🧠 ADAPTIVNI CRON GUARD
       if (!this.shouldPollDevice(device, isHeating)) {
-        return;
+        return 'skipped';
       }
       // 2️⃣ Snapshot (jedina istina iz stvarnog svijeta)
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId, runId);
-      if (!snapshot) return;
+      if (!snapshot) return 'no_snapshot';
       // INFO: temperature su u adapteru već normalizovane i konvertovane u celzijuse
       const currentTemp =
         snapshot.currentTemp !== undefined ? snapshot.currentTemp : null;
@@ -125,7 +178,7 @@ export class ThermostatPollingService {
         });
       }
 
-      if (currentTemp === null || targetTemp === null) return;
+      if (currentTemp === null || targetTemp === null) return 'incomplete';
 
       // 3️⃣ Izračun preporučene polazne temperature (PURE)
       const flowResult = await this.boilerService.calculateFlowTemp(
@@ -175,11 +228,15 @@ export class ThermostatPollingService {
       this.logger.debug(
         `Device=${device.deviceId} | Current=${currentTemp} | Target=${targetTemp} | Heating=${heatingShouldBeOn} | Flow=${flowResult.flowTemp}`,
       );
+
+      return 'success';
     } catch (err) {
       this.logger.error(
         `Polling failed for device ${device.deviceId}: ${err.message}`,
         err.stack,
       );
+      // Greška ostaje izolovana na ovaj uređaj, ali se sada BROJI.
+      return 'failed';
     }
   }
 

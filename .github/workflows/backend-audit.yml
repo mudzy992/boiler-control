@@ -152,6 +152,13 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+      # FE2-8: generisani tipovi moraju odgovarati ugovoru. Backend korak
+      # "OpenAPI contract in sync" čuva `contracts/openapi.json` u skladu s
+      # kontrolerima; ovaj korak čuva `src/types/api.d.ts` u skladu s tim
+      # ugovorom. Bez njega bi promjena ugovora prošla CI a da frontend
+      # tipovi ostanu zastarjeli — tačno onaj tihi raskid koji FE2-8 brani.
+      - name: OpenAPI types in sync (FE2-8)
+        run: npm run openapi:check
       - name: Type-check
         run: npm run type-check
       - name: Lint

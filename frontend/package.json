@@ -7,7 +7,9 @@
     "build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint src",
-    "type-check": "tsc -p tsconfig.app.json --noEmit"
+    "type-check": "tsc -p tsconfig.app.json --noEmit",
+    "openapi:generate": "node scripts/openapi-codegen.mjs --write",
+    "openapi:check": "node scripts/openapi-codegen.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.0",

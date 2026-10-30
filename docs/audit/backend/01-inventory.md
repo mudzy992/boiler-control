@@ -2,7 +2,7 @@
 
 ## Sažetak: pet početnih nalaza
 
-1. **VERIFIKOVANO:** statički popis sadrži 16 direktorija modula i 14 ne-testnih TypeScript fajlova u `common`, uključujući četiri fajla adaptera (`python3 scripts/audit/backend_inventory.py --json`). Direktorij nije nužno Nest modul; registracija se mora zasebno provjeriti.
+1. **VERIFIKOVANO:** statički popis sadrži 16 direktorija modula i 19 ne-testnih TypeScript fajlova u `common`, uključujući četiri fajla adaptera (`python3 scripts/audit/backend_inventory.py --json`). Direktorij nije nužno Nest modul; registracija se mora zasebno provjeriti.
 2. **VERIFIKOVANO:** deklarisano je pet cron dekoratora: polling, dvije provjere anomalija, dnevna preporuka i gas reminder (`backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:35`, `backend/src/modules/HeatingAnomalyCheckerService/heating.anomayl.checker.service.ts:49,69`, `backend/src/modules/Schedule/daily.recommendation.service.ts:21`, `backend/src/modules/Schedule/gas.reminder.service.ts:21`). Njihovo izvršavanje zavisi od registracije i okruženja.
 3. **VERIFIKOVANO — RIJEŠENO (API-1):** `POST /api/heating-events` je vraćao generisani objekat bez upisa u bazu (izmišljeni `Math.random()` ID); sada vraća `501 Not Implemented` s `reason: "stub-not-implemented"` (`backend/src/modules/Heating/heating.controller.ts:21-48`). Potrošači verificirani: nijedan `.post()` u `frontend/` ni `mobile/` ne zove ovu rutu. Rollback: `STUB_ENDPOINTS_MODE=legacy`.
 4. **VERIFIKOVANO — RIJEŠENO (API-1):** `GET /api/weather` i `GET /api/recommendations/today` su vraćali prazne vrijednosti nerazlučive od „nema podataka"; sada vraćaju `501` s poljem `alternative` (`backend/src/modules/Weather/weather.controller.ts:27-37`, `backend/src/modules/HeatingRecommendation/recommendations.controller.ts:29-39`). Stvarne rute koje rade i imaju potrošače: `GET /api/weather/current/:homeProfileId` i `GET /api/recommendations`.
@@ -56,8 +56,10 @@ Svaki red: **VERIFIKOVANO** ime i izvoz/ulazna tačka iz navedenog fajla. Zavisn
 | <!-- common:backend/src/common/app-config.service.ts --> `backend/src/common/app-config.service.ts` | Čita `MOBILE_MIN_SUPPORTED_VERSION`/`MOBILE_LATEST_VERSION`/`APP_VERSION_GATE_ENABLED` iz env-a; fail-safe, nikad ne baca. |
 | <!-- common:backend/src/common/common.module.ts --> `backend/src/common/common.module.ts` | Registruje/izvozi common servise i kontrolere. |
 | <!-- common:backend/src/common/correlation-id.service.ts --> `backend/src/common/correlation-id.service.ts` | Korelacijski kontekst i `AsyncLocalStorage`. |
+| <!-- common:backend/src/common/dashboard-bucket.ts --> `backend/src/common/dashboard-bucket.ts` | FEAT-8/B-020: ključevi vremenskih bucket-a. v1 (zadano) čuva `HH:00` bez datuma i razliku summary=server-local / stats=UTC; `DASHBOARD_BUCKET_V2_ENABLED=on` daje hronološke UTC ključeve. |
 | <!-- common:backend/src/common/fallback-strategy.service.ts --> `backend/src/common/fallback-strategy.service.ts` | Fallback i memorijski cache; sigurnost vrijednosti nije potvrđena za konkretan kotao. |
 | <!-- common:backend/src/common/file-storage.service.ts --> `backend/src/common/file-storage.service.ts` | Smještaj i privatno čitanje fajlova; validaciju i granice treba detaljno pregledati. |
+| <!-- common:backend/src/common/gas-input.ts --> `backend/src/common/gas-input.ts` | FEAT-7/B-015–B-016: strogi parseri za gas ulaz (`parseStrictBoolean`, `parseStrictCounterValue`) i zastavica `GAS_STRICT_VALIDATION` (zadano `on`, `off` vraća staro ponašanje). |
 | <!-- common:backend/src/common/health.controller.ts --> `backend/src/common/health.controller.ts` | Health kontroler. |
 | <!-- common:backend/src/common/metrics.controller.ts --> `backend/src/common/metrics.controller.ts` | HTTP izvoz metrika i izvještaja. |
 | <!-- common:backend/src/common/metrics.service.ts --> `backend/src/common/metrics.service.ts` | Procesni brojači i Prometheus izvoz. |

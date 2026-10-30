@@ -9,6 +9,7 @@ import {
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 import { BoilerService } from '../Boiler/boiler.service';
 import { WeatherService } from '../Weather/weather.service';
+import { bucketKey } from '../../common/dashboard-bucket';
 
 @Injectable()
 export class DashboardService {
@@ -226,28 +227,30 @@ export class DashboardService {
       this.prisma.heatingEvent.count({ where }),
     ]);
 
-    const thermostatDeviceIds = events.map((t) => t.deviceId);
-
-    let currentTemp;
-    let targetTemp;
-    if (thermostatDeviceIds) {
-      const thermostat = await this.prisma.thermostatDevice.findFirst({
-        where: {
-          id: thermostatDeviceIds[0],
-        },
-      });
-
-      if (thermostat) {
-        currentTemp =
-          thermostat?.roomCurrentTemp !== undefined
-            ? thermostat.roomCurrentTemp
-            : null;
-        targetTemp =
-          thermostat?.roomTargetTemp !== undefined
-            ? thermostat.roomTargetTemp
-            : null;
-      }
-    }
+    // FEAT-8 / B-019: temperatura se mapira PO UREĐAJU, vlasnički filtrirano,
+    // i samo kada postoje redovi. Prije toga uziman je `events[0].deviceId`,
+    // ista vrijednost davala se svakom događaju, a `if (thermostatDeviceIds)`
+    // je bio true i za prazan niz pa je išao upit s `id: undefined` i bez
+    // ikakvog owner scope-a.
+    const deviceIds = [...new Set(events.map((e) => e.deviceId))];
+    type DeviceTemps = {
+      id: number;
+      roomCurrentTemp?: number | null;
+      roomTargetTemp?: number | null;
+    };
+    const devices: DeviceTemps[] = deviceIds.length
+      ? await this.prisma.thermostatDevice.findMany({
+          where: {
+            id: { in: deviceIds },
+            homeProfile: { userId },
+          },
+        })
+      : [];
+    // Eksplicitan tuple: bez njega TS iz `(number | DeviceTemps)[][]` izvodi
+    // beskoristan tip vrijednosti mape.
+    const deviceById = new Map<number, DeviceTemps>(
+      devices.map((d): [number, DeviceTemps] => [d.id, d]),
+    );
 
     return {
       data: events.map((e) => ({
@@ -257,8 +260,10 @@ export class DashboardService {
         endedAt: e.timestampEnd,
         currentTemp: e.roomCurrentTemp,
         targetTemp: e.roomTargetTemp,
-        curretTempThermostat: currentTemp,
-        targetTempThermostat: targetTemp,
+        curretTempThermostat:
+          deviceById.get(e.deviceId)?.roomCurrentTemp ?? null,
+        targetTempThermostat:
+          deviceById.get(e.deviceId)?.roomTargetTemp ?? null,
         hvacAction: e.hvacAction,
         source: e.source,
         durationMinutes: e.timestampEnd
@@ -330,13 +335,10 @@ export class DashboardService {
 
     for (const e of events) {
       const date = new Date(e.timestampStart);
-      const localDateLabel = `${date.getFullYear()}-${(date.getMonth() + 1)
-        .toString()
-        .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-      const label =
-        bucketType === 'hour'
-          ? `${date.getHours().toString().padStart(2, '0')}:00`
-          : localDateLabel;
+      // FEAT-8 / B-020: ključ je izdvojen u `common/dashboard-bucket`.
+      // v1 (zadano) čuva postojeću semantiku: `HH:00` bez datuma i
+      // server-local dan. v2 iza zastavice daje hronološke UTC ključeve.
+      const label = bucketKey(date, bucketType, 'server-local');
 
       if (!bucketsMap.has(label)) {
         bucketsMap.set(label, {
@@ -435,10 +437,9 @@ export class DashboardService {
 
     for (const e of events) {
       const date = new Date(e.timestampStart);
-      const label =
-        bucket === 'hour'
-          ? `${date.getHours().toString().padStart(2, '0')}:00`
-          : date.toISOString().split('T')[0];
+      // FEAT-8 / B-020: v1 ovdje koristi UTC dan (za razliku od summary),
+      // što je upravo nejednakost koju v2 uklanja.
+      const label = bucketKey(date, bucket === 'hour' ? 'hour' : 'day', 'utc');
 
       if (!bucketsMap.has(label))
         bucketsMap.set(label, {

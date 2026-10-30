@@ -139,7 +139,7 @@
 
 ### Dashboard: sekundarni upit i bucket semantika
 
-- `node scripts/audit/dashboard_repro.cjs` izvršava stvarni servis s fake DB i sintetičkim redovima: pokazuje da se temperatura prvog uređaja pripisuje i drugom događaju i da prazan rezultat ipak zadaje lookup `id: undefined` (B-019). Ovo ne dokazuje cross-user pristup niti ponašanje pravog Prisma klijenta.
+- `node scripts/audit/dashboard_repro.cjs` izvršava stvarni servis s fake DB i sintetičkim redovima. **Ažurirana u FEAT-8**: prije toga asertirala je pogrešno ponašanje (dokaz za B-019/B-020), a sada asertira ispravljeno — svaki događaj nosi temperaturu svog uređaja, tačno jedan vlasnički filtriran upit, prazna stranica bez lookupa — te uz `DASHBOARD_BUCKET_V2_ENABLED=on` dokazuje hronološke satne bucket-e. Legacy v1 semantika bucket-a ostaje zadana i skripta je također asertira. Ne dokazuje cross-user pristup niti ponašanje pravog Prisma klijenta.
 - Isti test s dva različita dana u UTC pokazuje spajanje istog sata u jedan bucket u summary/stats (B-020). Je li riječ o grešci ili namjernom profilu sata dana zavisi od ugovora. Korištenje server-local datuma naspram UTC dodatno treba DST integracijski test.
 
 ### Ograničeni replay i destruktivni seed

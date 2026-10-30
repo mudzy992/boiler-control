@@ -22,7 +22,14 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 10_000 },
   retries: 0,
-  reporter: [['list']],
+  /**
+   * `github` reporter pretvara svaki pad u `::error::` anotaciju. To nije
+   * kozmetika: logovi GitHub Actionsa se serviraju s blob storage hosta koji u
+   * nekim okruženjima nije dostižan, pa su anotacije (čitljive preko
+   * `GET /check-runs/{id}/annotations`) jedini kanal kojim se pad može
+   * dijagnosticirati bez otvaranja web UI-ja.
+   */
+  reporter: [['list'], ['github']],
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'retain-on-failure',

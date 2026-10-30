@@ -603,9 +603,18 @@ const enUS = {
     heatingSchedulesDesc: 'Configure heating programs',
     exportData: 'Export Data',
     exportDataDesc: 'Download your heating data',
-    clearCache: 'Clear Cache',
-    clearCacheDesc: 'Free up storage space',
-    version: 'Version',
+      clearCache: 'Clear Cache',
+      clearCacheDesc: 'Free up storage space',
+      // MO2-16: poruke za stvarno čišćenje keša (prije je bio console.log).
+      clearCacheSuccess: 'Cache cleared',
+      clearCacheEmpty: 'Cache was already empty',
+      clearCacheError: 'Failed to clear cache',
+      // PRIV-1 (izvoz/brisanje naloga) NE postoji na backendu — provjereno
+      // 2026-10-30: auth.controller.ts nema nijednu rutu za izvoz ili brisanje
+      // naloga. Zato se ne izmišlja endpoint; korisnik se vodi na postojeći,
+      // radni izvoz u Analitici.
+      exportRedirect: 'Opening Analytics export…',
+      version: 'Version',
     helpSupport: 'Help & Support',
     termsPrivacy: 'Terms & Privacy',
     developer: 'Developer',
@@ -1205,6 +1214,15 @@ const bsBS = {
     exportDataDesc: 'Preuzmi svoje podatke grijanja',
     clearCache: 'Očisti keš',
     clearCacheDesc: 'Oslobodi prostor za pohranu',
+    // MO2-16: poruke za stvarno čišćenje keša (prije je bio console.log).
+    clearCacheSuccess: 'Keš je očišćen',
+    clearCacheEmpty: 'Keš je već bio prazan',
+    clearCacheError: 'Čišćenje keša nije uspjelo',
+    // PRIV-1 (izvoz/brisanje naloga) NE postoji na backendu — provjereno
+    // 2026-10-30: auth.controller.ts nema nijednu rutu za izvoz ili brisanje
+    // naloga. Zato se ne izmišlja endpoint; korisnik se vodi na postojeći,
+    // radni izvoz u Analitici.
+    exportRedirect: 'Otvaram izvoz u Analitici…',
     version: 'Verzija',
     helpSupport: 'Pomoć i podrška',
     termsPrivacy: 'Uslovi i privatnost',

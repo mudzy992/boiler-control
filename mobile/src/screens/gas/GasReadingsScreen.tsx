@@ -30,6 +30,12 @@ import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
 import { SecureStorage } from '../../services/storage/SecureStorage';
+// MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
+// postavke i ovaj ekran čiste ISTU putanju.
+import {
+  getDownloadsDirectory,
+  purgeDownloadsDirectory,
+} from '../../services/storage/downloadCache';
 
 interface GasReading {
   id: number;
@@ -68,6 +74,27 @@ export const GasReadingsScreen: React.FC = () => {
       setShowAddModal(true);
     }
   }, [route.params?.openAddModal]);
+
+  /**
+   * MO2-16 (MO-020): čišćenje preuzetih dokumenata pri ulasku na ekran.
+   *
+   * Prije ove izmjene fakture i slike brojila su se preuzimale u
+   * `${cacheDirectory}downloads/` i tamo ostajale TRAJNO — `openLocalFile` je
+   * bio zadnja operacija, `deleteAsync` se nije pojavljivao nigdje u fajlu.
+   *
+   * NAMJERNO se ne briše odmah nakon otvaranja: `startActivityAsync` se
+   * rezolvira čim se vanjski preglednik POKRENE, ne kad završi s čitanjem, pa bi
+   * trenutno brisanje korisniku slomilo pregled dokumenta. Čišćenje pri mountu
+   * daje isti sigurnosni rezultat (ništa ne preživi sesiju) bez te utrke.
+   *
+   * Greška se namjerno guta: čišćenje cachea je održavanje, a ne funkcionalnost,
+   * pa neuspjeh ne smije spriječiti prikazivanje očitavanja.
+   */
+  React.useEffect(() => {
+    purgeDownloadsDirectory().catch(() => {
+      /* best-effort */
+    });
+  }, []);
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -310,13 +337,13 @@ export const GasReadingsScreen: React.FC = () => {
       throw new Error('Authentication token missing');
     }
 
-    const baseDirectory =
-      FileSystemLegacy.cacheDirectory || FileSystemLegacy.documentDirectory;
-    if (!baseDirectory) {
+    // MO2-16 (MO-020): putanja dolazi iz dijeljenog servisa, a ne sastavlja se
+    // ovdje. Da je svako mjesto gradi samo, „Clear cache" u postavkama bi mogao
+    // brisati drugi direktorij nego što ovaj ekran puni.
+    const downloadsDirectory = await getDownloadsDirectory();
+    if (!downloadsDirectory) {
       throw new Error('No local storage directory available for downloads');
     }
-
-    const downloadsDirectory = `${baseDirectory}downloads/`;
     const directoryInfo = await FileSystemLegacy.getInfoAsync(downloadsDirectory);
     if (!directoryInfo.exists) {
       await FileSystemLegacy.makeDirectoryAsync(downloadsDirectory, {

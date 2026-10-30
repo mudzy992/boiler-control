@@ -19,6 +19,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { getAppVersion } from '../../config/version.config';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
+// MO2-16 (MO-020): stvarno čišćenje keša umjesto console.log.
+import { purgeDownloadsDirectory } from '../../services/storage/downloadCache';
+import {
+  DASHBOARD_STACK_SCREENS,
+  MAIN_TAB_SCREENS,
+  ROOT_SCREENS,
+} from '../../constants/routes';
 import { useNavigation } from '@react-navigation/native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { FormInput } from '../../components/FormInput';
@@ -74,6 +81,70 @@ export const SettingsScreen = () => {
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
+  };
+
+  /**
+   * MO2-16 (MO-020): stvarno čišćenje keša.
+   *
+   * Prije ove izmjene `onPress` je bio `console.log('Clear cache')` — dugme je
+   * bilo potpuno inertno, pa korisnik nije mogao ni osloboditi prostor ni
+   * ukloniti preuzete fakture i slike brojila iz nešifriranog cachea.
+   *
+   * Briše se ISTI direktorij koji puni `GasReadingsScreen`, jer putanju daje
+   * dijeljeni servis `downloadCache`. Da svako mjesto gradi putanju samo,
+   * postavke bi brisale nešto drugo nego što ekran puni.
+   */
+  const handleClearCache = async () => {
+    try {
+      const { deletedFiles } = await purgeDownloadsDirectory();
+      toast.show({
+        description:
+          deletedFiles > 0
+            ? t('settings.clearCacheSuccess')
+            : t('settings.clearCacheEmpty'),
+        placement: 'top',
+      });
+    } catch {
+      toast.show({
+        description: t('settings.clearCacheError'),
+        placement: 'top',
+      });
+    }
+  };
+
+  /**
+   * MO2-16 (MO-019): „Export data" je bio `console.log('Export data')` — inertno
+   * dugme koje nije radilo ništa.
+   *
+   * PRIV-1 (backend izvoz/brisanje podataka naloga) NE postoji: provjereno
+   * 2026-10-30, `backend/src/modules/Auth/auth.controller.ts` nema nijednu rutu
+   * za izvoz ili brisanje naloga. Zato se ovdje NE izmišlja endpoint.
+   *
+   * Umjesto toga korisnik se vodi na postojeći, već implementiran izvoz u
+   * Analitici (`analyticsApi.exportAnalytics` → `GET /api/dashboard/export`,
+   * vraća CSV — `AnalyticsScreen.tsx` `handleExport`). Kad PRIV-1 bude
+   * implementiran, ovaj handler se preusmjerava na njega.
+   */
+  const handleExportData = () => {
+    toast.show({
+      description: t('settings.exportRedirect'),
+      placement: 'top',
+    });
+    // `useNavigation()` bez generika vraća prazan `ReactNavigation.RootParamList`,
+    // pa TypeScript ne može razriješiti overload za UGNIJEŽĐENU navigaciju
+    // (tab → stack → ekran) i prijavljuje TS2345. To je isti razlog zašto
+    // `notificationService.ts:25` drži `NavigationContainerRef<any>`.
+    //
+    // Cast je namjerno uzak i lokaliziran na ovaj poziv — potpis ispod opisuje
+    // stvarni oblik ugniježdenog navigate-a, a ne `any`.
+    const navigateNested = navigation.navigate as (
+      name: string,
+      params?: Record<string, unknown>
+    ) => void;
+    navigateNested(ROOT_SCREENS.Main, {
+      screen: MAIN_TAB_SCREENS.Dashboard,
+      params: { screen: DASHBOARD_STACK_SCREENS.Analytics },
+    });
   };
 
   const handleChangePassword = async () => {
@@ -343,14 +414,14 @@ export const SettingsScreen = () => {
                 icon="download-outline"
                 title={t('settings.exportData')}
                 subtitle={t('settings.exportDataDesc')}
-                onPress={() => console.log('Export data')}
+                onPress={handleExportData}
               />
               <Divider />
               <SettingItem
                 icon="trash-outline"
                 title={t('settings.clearCache')}
                 subtitle={t('settings.clearCacheDesc')}
-                onPress={() => console.log('Clear cache')}
+                onPress={handleClearCache}
               />
             </VStack>
           </Box>

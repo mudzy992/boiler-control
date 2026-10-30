@@ -1419,6 +1419,139 @@ mutacije: `||` fallback (4 pada), `??` fallback (1 pad), uklonjen `.trim()`
   mjerodavnom setu (isto `container_name`, drugaciji host, stripprefix, bez
   `FRONTEND_URL`). Označen je, ne obrisan.
 
+### MO2-16 — Permisije, nešifriran cache dokumenata i inertna dugmad u postavkama (MO-025, MO-020, MO-019), 2026-10-30
+
+Talas C, #27.
+
+**Nalaz je bio djelimično pogrešan, i to u dijelu koji određuje popravku.**
+`07-implementation-plan.md:116-132` implicira da se višak permisija uklanja kroz
+`expo-build-properties`. Mjerenje pokazuje drugo:
+
+- `grep -rl RECORD_AUDIO --include=AndroidManifest.xml mobile/node_modules` →
+  **0 pogodaka**. Nijedan paket ne deklarira tu permisiju u svom manifestu.
+- Stvarni izvor je **config plugin paketa `expo-image-picker`**:
+  `node_modules/expo-image-picker/plugin/src/withImagePicker.ts:66-68` i
+  `:130-132` dodaju `RECORD_AUDIO` **osim ako** je `microphonePermission === false`
+  (`:75`, `:139`). Plugin se pokreće **autolinkingom**, bez ijedne linije u
+  `app.config.js` — zato `grep` po `mobile/` nije našao ništa, a nalaz je izgledao
+  kao da permisija dolazi „iz build propertija".
+- `expo-build-properties` u ovom projektu postavlja samo `compileSdk`,
+  `targetSdk`, `buildArchs` i minify flagove — **ne permisije**.
+
+Popravka je zato u `plugins`, ne u `expo-build-properties`.
+
+**Zvuk se nigdje ne koristi:** `grep -rn "expo-av|Recording|recordAsync" mobile/src/`
+→ **0 pogodaka**. Permisija je bila čist višak, bez funkcionalnog gubitka.
+
+**Izmjena 1 — permisije (`mobile/app.config.js:86`).** Dodan
+`['expo-image-picker', { microphonePermission: false }]` u `plugins` niz.
+
+Mjerenje `npx expo config --type introspect --json` (EXIT=0), prije → poslije:
+
+| | prije | poslije |
+|---|---|---|
+| `android.permissions` | 4 | **3** |
+| `RECORD_AUDIO` u config listi | prisutna, **bez `maxSdkVersion`** (važi na svim Android verzijama) | **odsutna** |
+| `RECORD_AUDIO` u merged manifestu | običan `<uses-permission>` | `{"tools:node":"remove"}` |
+
+`tools:node="remove"` je **jače** od pukog izostavljanja: to je uputa Android
+manifest mergeru da unos ukloni, pa ga nijedan drugi paket ne može vratiti
+merge-om. `grep -c '"tools:node":"remove"'` nad cijelim izlazom = **1**.
+
+**Kamera nije dirnuta.** `CAMERA` se **ne pojavljuje** u `expo config --type
+introspect` ni prije ni poslije (0 pogodaka), jer je deklarira
+`node_modules/expo-image-picker/android/src/main/AndroidManifest.xml` i ulazi
+native merge-om. Odsustvo u config izlazu **nije** dokaz da je kamera slomljena —
+a stvarno se koristi: `GasForm.tsx:144` i `GasReadingsScreen.tsx:485`
+(`launchCameraAsync`). Da sam „dokaz" tražio samo u config izlazu, zaključio bih
+pogrešno u oba smjera.
+
+**Storage permisije su namjerno ostavljene.** `READ_/WRITE_EXTERNAL_STORAGE`
+dolaze iz manifesta `expo-file-system` i `expo-image-picker`, **oba s
+`maxSdkVersion="32"`** uz `tools:replace="android:maxSdkVersion"`. Uz `minSdk 24` /
+`targetSdk 35` važe samo na Android ≤12. `withImagePicker.ts:144-145` ih
+eksplicitno ne blokira, jer bi to slomilo izbor slika na starijim uređajima.
+
+**Izmjena 2 — cache dokumenata.** Novi servis
+`mobile/src/services/storage/downloadCache.ts` (`getDownloadsDirectory`,
+`purgeDownloadsDirectory`) je **jedan izvor istine** za putanju
+`${cacheDirectory}downloads/`. Prije je `GasReadingsScreen` sastavljao putanju
+sam, pa bi „Clear cache" u postavkama mogao brisati **drugi** direktorij nego što
+ekran puni — ista klasa greške kao tri kopije granica 48/55 u ovom projektu.
+
+Prije: fakture i slike brojila ostajale su **trajno** u nešifriranom cacheu —
+`deleteAsync` se nije pojavljivao **nigdje** u fajlu. Sada:
+`GasReadingsScreen.tsx:94` čisti direktorij pri mountu, a `:343` uzima putanju iz
+servisa.
+
+**Zašto se NE briše odmah nakon otvaranja**, iako backlog traži „nakon otvaranja
+dokumenta pozvan `deleteAsync`": `openLocalFile` (`:320`) koristi
+`IntentLauncher.startActivityAsync` (`:323`), koji se rezolvira čim se vanjski
+preglednik **pokrene**, ne kad završi s čitanjem fajla. Trenutno brisanje bi
+korisniku slomilo pregled dokumenta — popravljen nalaz, slomljena funkcija.
+Čišćenje pri mountu daje isti sigurnosni rezultat (ništa ne preživi sesiju) bez
+te utrke.
+
+**Izmjena 3 — postavke (`SettingsScreen.tsx`).** `console.log('Clear cache')` →
+`handleClearCache` (`:97`): stvarno brisanje plus toast s brojem obrisanih
+fajlova. Novi i18n ključevi dodani su u **oba** bloka (`enUS` 609-616, `bsBS`
+1218-1225); da su dodani samo u jedan, bosanski korisnik bi umjesto poruke dobio
+sirovi ključ.
+
+**„Export data" NIJE vezan na PRIV-1, jer PRIV-1 ne postoji.**
+`backend/src/modules/Auth/auth.controller.ts` nema nijednu rutu za izvoz ili
+brisanje naloga, a `find` za `ExportAnalyticsDto` → 0. Umjesto izmišljanja
+endpointa, dugme vodi na **postojeći, već implementiran** izvoz u Analitici
+(`analyticsApi.exportAnalytics` → `GET /api/dashboard/export`, vraća CSV;
+`AnalyticsScreen.tsx` `handleExport`). Kad PRIV-1 bude implementiran,
+`handleExportData` (`:128`) se preusmjerava na njega.
+
+**Verifikacija.**
+
+| Provjera | Rezultat |
+|---|---|
+| `npx expo config --type introspect --json` | EXIT=0; `android.permissions` 4→3; `RECORD_AUDIO` `tools:node="remove"` |
+| `npm run type-check` (`tsc --noEmit`, `include: ['src','App.tsx','index.js']`) | **EXIT=0** — pokriva i novi servis |
+| legacy API potpisi | `getInfoAsync` / `deleteAsync(uri, options)` / `readDirectoryAsync` postoje (`expo-file-system/build/legacy/FileSystem.d.ts:25,64,88`) |
+| `launchCameraAsync` i dalje prisutan | `GasForm.tsx:144`, `GasReadingsScreen.tsx:485` |
+
+**Nijedan unit test nije izvršen.** `mobile/` nema test runnera: `npm test` →
+**EXIT=127, `sh: 1: jest: not found`**, a `package.json` nema `jest` ključ.
+Backlog traži „test: nakon otvaranja dokumenta pozvan `deleteAsync`" — taj test
+**nije izvršiv** bez MO2-8, a `MASTER-ROADMAP.md:259-260` izričito zabranjuje
+usputno popravljanje mobilnih testova. Jest nije instaliran.
+
+**Moje greške ovog koraka, ispravljene.**
+
+- **Prvo mjerenje `modResults` je ispalo prazno i izgledalo je kao da fix ne
+  radi.** Tražio sam `mods.android.manifest.uses-permission`; stvarna putanja je
+  `_internal.modResults.android.manifest.manifest.uses-permission`. Da sam ostao
+  pri prvom ispisu, objavio bih pogrešan zaključak o vlastitoj izmjeni.
+- **`as never` cast je slomio type-check** (`TS2345: Argument of type
+  '["Main", never]' is not assignable to parameter of type 'never'`).
+  `useNavigation()` bez generika vraća prazan `RootParamList`, pa overload za
+  ugniježđenu navigaciju ne prolazi — isti razlog zašto
+  `notificationService.ts:25` drži `NavigationContainerRef<any>`. Riješeno
+  lokaliziranim tipiziranim castom, ne `as any`.
+- **Prva verzija purge `useEffect`-a je imala mrtvu varijablu** (`cancelled` se
+  dodjeljivala ali nikad čitala). Uklonjeno prije commita.
+
+**Šta je ostalo otvoreno.**
+
+- **Nije verificiran finalni `AndroidManifest.xml` u EAS buildu** — `eas-cli` nije
+  dostupan u ovom okruženju. Dokaz je `expo config --type introspect`, koji je
+  mjerodavan za merged manifest prije pakovanja, ali nije isto što i manifest
+  unutar APK-a.
+- **Runtime ponašanje čišćenja nije viđeno** — nema jest-a ni emulatora, pa
+  `purgeDownloadsDirectory` nije izvršena nad stvarnim fajlovima.
+- **PRIV-1 i dalje ne postoji** — izvoz/brisanje naloga
+  (`backend/09-improvements-backlog.md:33`) nije implementiran; „Export data" je
+  preusmjeravanje na postojeći izvoz, ne izvoz naloga.
+- **`SettingsScreen.tsx:446` („Help") i `:452` („Terms") su i dalje
+  `console.log`** — izvan obima MO2-16.
+- **Vlasnička odluka o Play obrascu** (pristup fajlovima) iz backloga nije
+  riješena i ne može se riješiti iz koda.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

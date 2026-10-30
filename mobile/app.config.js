@@ -61,6 +61,33 @@ module.exports = ({ config }) => {
       'expo-updates',
       '@react-native-community/datetimepicker',
       "expo-localization",
+      /**
+       * MO2-16 (MO-025): `expo-image-picker` NIJE bio naveden ovdje, pa ga je
+       * Expo autolinking pokretao bez argumenata — a plugin tada po defaultu
+       * dodaje `android.permission.RECORD_AUDIO`.
+       *
+       * Dokaz (izmjereno 2026-10-30, `expo config --type introspect --json`):
+       *   android.permissions[0] = android.permission.RECORD_AUDIO
+       *   modResults…uses-permission: RECORD_AUDIO, BEZ `maxSdkVersion`
+       * tj. permisija je vrijedila na svim verzijama Androida.
+       *
+       * Aplikacija nigdje ne snima zvuk: `expo-av`/`expo-audio` nisu ni
+       * instalirani, a grep po `src/` ne nalazi nijedan poziv za snimanje.
+       * `microphonePermission: false` čini dvije stvari u
+       * `expo-image-picker/plugin/src/withImagePicker.ts`: preskoči dodavanje
+       * permisije (l. 130) I aktivno je blokira (l. 136-142), pa je ne može
+       * vratiti nijedan drugi paket.
+       *
+       * Kamera se NAMJERNO ne dira — stvarno se koristi
+       * (`launchCameraAsync` u `GasForm.tsx:144` i `GasReadingsScreen.tsx:485`),
+       * pa bi `cameraPermission: false` slomio fotografisanje brojila.
+       */
+      [
+        'expo-image-picker',
+        {
+          microphonePermission: false,
+        },
+      ],
       [
         'expo-notifications',
         {

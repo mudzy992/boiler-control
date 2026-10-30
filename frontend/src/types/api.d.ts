@@ -1277,7 +1277,13 @@ export interface components {
         };
         /** @enum {string} */
         ThermostatMode: "MANUAL" | "PROGRAM" | "OFF";
-        UpdateGasReferenceDto: Record<string, never>;
+        UpdateGasReferenceDto: {
+            /**
+             * @description Da li je ovo očitanje referentno za mjesečni obračun. Prima boolean ili string "true"/"false"; sve ostalo se odbija s 400.
+             * @example true
+             */
+            isReference: boolean;
+        };
         UpdateHeatingAnomalyDto: Record<string, never>;
         UpdateHomeProfileDto: Record<string, never>;
         UpdateThermostatDeviceDto: {

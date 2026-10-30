@@ -9,6 +9,7 @@ import { CreateGasReadingDto } from './dto/create-gas-reading.dto';
 import { UpdateGasReferenceDto } from './dto/update-gas-reference.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import { FileStorageService } from '../../common/file-storage.service';
+import { isGasStrictValidationEnabled } from '../../common/gas-input';
 
 const VAT_RATE = 0.17;
 
@@ -41,32 +42,109 @@ export class GasReadingService {
       );
     }
 
-    const lastReading = await this.prisma.gasReading.findFirst({
-      where: { userId },
-      orderBy: { readingDate: 'desc' },
-    });
+    let created;
 
-    let consumption = 0;
-    if (lastReading) {
-      if (dto.counterValue < lastReading.counterValue) {
+    if (!isGasStrictValidationEnabled()) {
+      // ROLLBACK PUT (GAS_STRICT_VALIDATION=off): doslovno staro ponašanje,
+      // uključujući B-017 — uporedba s globalno najnovijim očitanjem.
+      const lastReading = await this.prisma.gasReading.findFirst({
+        where: { userId },
+        orderBy: { readingDate: 'desc' },
+      });
+
+      let consumption = 0;
+      if (lastReading) {
+        if (dto.counterValue < lastReading.counterValue) {
+          throw new BadRequestException(
+            'Novo stanje brojila ne može biti manje od prethodnog.',
+          );
+        }
+        consumption = dto.counterValue - lastReading.counterValue;
+      }
+
+      created = await this.prisma.gasReading.create({
+        data: {
+          userId,
+          readingDate,
+          counterValue: dto.counterValue,
+          consumption: Number(consumption.toFixed(2)),
+          isInvoiceReference: false,
+          referenceMonth: null,
+        },
+      });
+    } else {
+      // B-017: historijsko očitanje se upoređivalo s GLOBALNO najnovijim
+      // (`orderBy: readingDate desc` bez ograničenja datuma), pa je legitiman
+      // unos ranijeg datuma s manjim stanjem brojila bio odbijen iako je
+      // numerički niz hronološki rastao.
+      //
+      // Sada se gledaju STVARNI hronološki susjedi novog zapisa:
+      //   previous = zadnje očitanje PRIJE ovog datuma
+      //   next     = prvo očitanje NAKON ovog datuma
+      // Monotonost se provjerava u oba smjera, jer unos između dva postojeća
+      // zapisa može narušiti niz i s jedne i s druge strane.
+      const [previousReading, nextReading] = await Promise.all([
+        this.prisma.gasReading.findFirst({
+          where: { userId, readingDate: { lt: readingDate } },
+          orderBy: { readingDate: 'desc' },
+        }),
+        this.prisma.gasReading.findFirst({
+          where: { userId, readingDate: { gt: readingDate } },
+          orderBy: { readingDate: 'asc' },
+        }),
+      ]);
+
+      if (previousReading && dto.counterValue < previousReading.counterValue) {
         throw new BadRequestException(
-          'Novo stanje brojila ne može biti manje od prethodnog.',
+          'Novo stanje brojila ne može biti manje od prethodnog očitanja ' +
+            `(stanje na ${previousReading.readingDate.toISOString()} je ` +
+            `${previousReading.counterValue}).`,
         );
       }
-      consumption = dto.counterValue - lastReading.counterValue;
+
+      if (nextReading && dto.counterValue > nextReading.counterValue) {
+        throw new BadRequestException(
+          'Novo stanje brojila ne može biti veće od narednog očitanja ' +
+            `(stanje na ${nextReading.readingDate.toISOString()} je ` +
+            `${nextReading.counterValue}).`,
+        );
+      }
+
+      const consumption = previousReading
+        ? dto.counterValue - previousReading.counterValue
+        : 0;
+
+      // `created` i korekcija potrošnje narednog zapisa moraju biti atomski:
+      // bez toga bi unos između dva zapisa ostavio `nextReading.consumption`
+      // izračunat od starog prethodnika, što je nekonzistentno stanje.
+      created = await this.prisma.$transaction(async (tx) => {
+        const inserted = await tx.gasReading.create({
+          data: {
+            userId,
+            readingDate,
+            counterValue: dto.counterValue,
+            consumption: Number(consumption.toFixed(2)),
+            isInvoiceReference: false,
+            referenceMonth: null,
+          },
+        });
+
+        if (nextReading) {
+          await tx.gasReading.update({
+            where: { id: nextReading.id },
+            data: {
+              consumption: Number(
+                (nextReading.counterValue - dto.counterValue).toFixed(2),
+              ),
+            },
+          });
+        }
+
+        return inserted;
+      });
     }
 
     // Reference state is managed only from the readings list action.
-    const created = await this.prisma.gasReading.create({
-      data: {
-        userId,
-        readingDate,
-        counterValue: dto.counterValue,
-        consumption: Number(consumption.toFixed(2)),
-        isInvoiceReference: false,
-        referenceMonth: null,
-      },
-    });
 
     let fileInfo: {
       relativePath: string;

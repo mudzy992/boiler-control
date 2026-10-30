@@ -117,13 +117,15 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       // Prazne su ISKLJUČIVO ulazne šeme. Ako se ovdje pojavi nova stavka,
       // ili je dodan response DTO bez @ApiProperty, ili je ulazni DTO dobio
       // šemu pa ga treba skinuti s popisa.
+      //
+      // `UpdateGasReferenceDto` je skinut s ovog popisa u FEAT-7: dobio je
+      // `@ApiProperty` kad mu je ispravljan B-015, pa više nije prazan.
       expect(empty.sort()).toEqual([
         'ChangePasswordDto',
         'CreateHomeProfileDto',
         'LoginDto',
         'RegisterDeviceDTO',
         'RegisterDto',
-        'UpdateGasReferenceDto',
         'UpdateHeatingAnomalyDto',
         'UpdateHomeProfileDto',
         'UploadInvoiceDto',

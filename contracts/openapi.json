@@ -1300,7 +1300,16 @@
         "type": "string"
       },
       "UpdateGasReferenceDto": {
-        "properties": {},
+        "properties": {
+          "isReference": {
+            "description": "Da li je ovo očitanje referentno za mjesečni obračun. Prima boolean ili string \"true\"/\"false\"; sve ostalo se odbija s 400.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "isReference"
+        ],
         "type": "object"
       },
       "UpdateHeatingAnomalyDto": {

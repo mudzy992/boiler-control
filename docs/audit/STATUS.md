@@ -1514,6 +1514,7 @@ endpointa, dugme vodi na **postojeći, već implementiran** izvoz u Analitici
 | `npm run type-check` (`tsc --noEmit`, `include: ['src','App.tsx','index.js']`) | **EXIT=0** — pokriva i novi servis |
 | legacy API potpisi | `getInfoAsync` / `deleteAsync(uri, options)` / `readDirectoryAsync` postoje (`expo-file-system/build/legacy/FileSystem.d.ts:25,64,88`) |
 | `launchCameraAsync` i dalje prisutan | `GasForm.tsx:144`, `GasReadingsScreen.tsx:485` |
+| CI (run `41131075521`, commit `0ede7d5`) | **`completed success`** — job `test` 21 korak, job `frontend` 18 koraka, **0 failure anotacija** |
 
 **Nijedan unit test nije izvršen.** `mobile/` nema test runnera: `npm test` →
 **EXIT=127, `sh: 1: jest: not found`**, a `package.json` nema `jest` ključ.

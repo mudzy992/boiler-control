@@ -1015,6 +1015,88 @@ pa kontrast piksela nije pouzdano izračunat.
 - `jsdom` ne provjerava stvarni focus ponašanjem browsera: focus trap je
   testiran preko eksplicitnog `keyDown`, ne preko stvarnog Tab ponašanja.
 
+### FE2-14 — Poslovna logika duplirana na klijentu (FE-010), 2026-10-30
+
+Talas C, #23. Urađen je dio koji **ne traži odluku vlasnika**; arhitektonsko
+preseljenje logike ostaje otvoreno (vidi kraj sekcije).
+
+**1. Granice temperature duplirane na klijentu.** `MIN/MAX_CURRENT_FLOW_TEMP =
+48/55` postojale su kao dvije nezavisne kopije (`BoilerPage.tsx:16-17` i
+`DashboardPage.tsx:183-184`), a treća kopija je u
+`mobile/src/screens/dashboard/DashboardScreen.tsx:32-33`. Dodat
+`frontend/src/constants/boilerLimits.ts` kao jedinstveni izvor, s
+`isWithinFlowTempRange()` i `flowTempRangeMessage()`.
+
+**2. Ispravka nalaza: tvrdnja o 46 vs 48 ne stoji.** FE-010 tvrdi da je „UI
+ograničenje 48-55 strože od backend granice 46-55 pa je dio dozvoljenog raspona
+nedostižan iz weba". Provjereno:
+
+- `backend/src/modules/Boiler/dto/set-current-temp.dto.ts:14-15` ima **`@Min(48)`
+  i `@Max(55)`** — tačno kao web.
+- Broj 46 potiče iz `backend/src/modules/Heating/strategies/base.strategy.ts:25`
+  (`Math.max(46, Math.min(55, finalTemp))`), a to je clamp **izlaza preporuke**,
+  ne ograničenje korisničkog unosa.
+
+Nalaz je poistovjetio dvije različite veličine. Ništa nije „usklađeno" jer
+neslaganja nema; umjesto toga je paritet **zaključan testom** koji čita backend
+DTO i pada ako se granice raziđu.
+
+**3. Ispravljena semantika „overshoot" (stvarni bug).** `targetTemp -
+currentTemp` je pozitivan kad je trenutna temperatura **ispod** ciljne — dakle
+kad se cilj ne dostiže. Poruka je glasila „Mogući overshoot", što je korisniku
+govorilo **suprotno** od izmjerenog: upozorenje se palilo upravo kad prostorija
+zaostaje za ciljem. Preimenovano u shortfall.
+
+Računica je **namjerno ostala ista** da se ne promijeni koje slučajeve
+hvatamo — detekcija zaostajanja je korisna. Prava detekcija overshoota
+(`currentTemp - targetTemp`) bila bi drugo upozorenje i traži odluku o politici.
+
+**4. Magijski brojevi imenovani.** 20, 3, 1.5, 90 i 15 bili su rasuti po
+`DashboardPage.tsx` i nigdje dokumentovani kao politika — nalaz to izričito
+traži. Izdvojeni u `frontend/src/constants/heatingAnalysis.ts` s izričitom
+oznakom da su **privremena politika preuzeta 1:1 iz postojećeg koda, bez
+stručne potvrde**. `computeHealthScore()` izdvojen kao funkcija.
+
+**Verifikacija (stvarno izmjereno):**
+
+| Provjera | Rezultat |
+| --- | --- |
+| `npm test` | **59/59** (11 novih) |
+| `npm run type-check` | exit 0 |
+| `npm run lint` | exit 0 (0 errors, 13 pre-postojeća warnings) |
+| **Mutacija 1** — uklonjen clamp u `computeHealthScore` | **1 test PADA** |
+| **Mutacija 2** — donja granica isključiva (`>=` u `>`) | **1 test PADA** |
+| **Mutacija 3** — backend DTO `@Min(48)` → `@Min(46)` | **1 test PADA** (paritet hvata) |
+| **Mutacija 4** — `TARGET_SHORTFALL_WARN_C` 1.5 → 2.0 | **1 test PADA** |
+| Restauracija | `diff` potvrdio sva 3 fajla identična backupu, suite opet 59/59 |
+| CI `41098248837` | oba joba success; frontend korak 8 success |
+| inventarske skripte | 9 × exit 0 (`backtest_sketch.py` exit 2 pre-postojeće) |
+
+Mutacija 3 je ovdje najvažnija: dokazuje da paritet test **stvarno** čita
+backend i pada kad se server promijeni, umjesto da samo uspoređuje dvije
+vrijednosti unutar frontenda.
+
+**Šta NIJE riješeno — traži odluku vlasnika.**
+
+Preseljenje health score i pravila upozorenja u jedan izvor (backend endpoint
+ili shared modul). **Izmjereno stanje je gore nego što FE-010 opisuje:**
+
+| | web | mobile |
+| --- | --- | --- |
+| health score | `max(0, 100 - anomalije×15)` — jedan faktor | ponderisano: learning **35** + flowDelta **25** + thermostat freshness **25** + anomalije **15** (`DashboardScreen.tsx:165-215`) |
+| overshoot/shortfall | postoji | **ne postoji** |
+| granice 48/55 | sada 1 izvor | 1 kopija (ukupno 2) |
+
+Za **isti ulaz** web i mobile daju različit broj. Backend nema odgovarajući
+endpoint — Dashboard kontroler izlaže samo `/`, `heating-events`,
+`heating-status`, `heating-summary`, `heating-stats`, `learning-trends`,
+`export`.
+
+Kriterij prihvatanja („iste ulazne vrijednosti daju iste izlaze na web/mobile")
+zato **nije ispunjen** i ne može biti bez odluke: mobile formula je
+razrađenija i uključuje svježinu termostata te samopouzdanje učenja, čega web
+nema. Odabir formule je **proizvodna odluka**, ne tehnička.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

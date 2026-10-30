@@ -1333,7 +1333,11 @@ export interface components {
              */
             isReference: boolean;
         };
-        UpdateHeatingAnomalyDto: Record<string, never>;
+        UpdateHeatingAnomalyDto: {
+            confirm?: boolean;
+            /** Format: date-time */
+            proposedEndTime?: string;
+        };
         UpdateHomeProfileDto: Record<string, never>;
         UpdateThermostatDeviceDto: {
             alias?: string;

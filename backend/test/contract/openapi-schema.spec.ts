@@ -123,11 +123,12 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       // `LoginDto` i `RegisterDto` su skinuti s ovog popisa u SEC-4 fazi 3:
       // dobili su `@ApiPropertyOptional` za `refreshTransport`, pa više nisu
       // prazni. Novi `RefreshDto` nikad nije bio prazan (ima isto svojstvo).
+      // `UpdateHeatingAnomalyDto` je skinut s ovog popisa u SEC-2: dobio je
+      // `@ApiPropertyOptional` + validatore, pa više nije prazan.
       expect(empty.sort()).toEqual([
         'ChangePasswordDto',
         'CreateHomeProfileDto',
         'RegisterDeviceDTO',
-        'UpdateHeatingAnomalyDto',
         'UpdateHomeProfileDto',
         'UploadInvoiceDto',
       ]);

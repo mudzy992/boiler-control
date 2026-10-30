@@ -1345,7 +1345,15 @@
         "type": "object"
       },
       "UpdateHeatingAnomalyDto": {
-        "properties": {},
+        "properties": {
+          "confirm": {
+            "type": "boolean"
+          },
+          "proposedEndTime": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UpdateHomeProfileDto": {

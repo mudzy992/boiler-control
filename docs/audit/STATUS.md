@@ -587,8 +587,49 @@ Rotirani refresh token i httpOnly cookie, **iza zastavice
 - Testovi **18/18** (`npx jest src/modules/Auth/tests/ --runInBand`).
 
 Detalji, dizajnerska odluka i šta ova faza NE radi:
-`docs/audit/backend/12-sec4-refresh-token.md`. **Otvoreno:** faze 2-3
-(frontend i mobile prelazak na cookie tok) te skraćivanje života access tokena.
+`docs/audit/backend/12-sec4-refresh-token.md`.
+
+### SEC-4 — faze 2 i 3 (frontend + mobile) implementirane, 2026-10-30
+
+- Backend je **jedini izvor istine** o zastavici: `AppConfig.authRefreshEnabled`.
+- **Frontend:** `detectAuthMode()`, `refreshSession()`, `withCredentials` po
+  zahtjevu, 401 → refresh → retry, `logout()` sada opoziva sesiju na serveru.
+- **Mobile:** Android nema browser cookie jar, pa je uveden `refreshTransport:
+  'body'` — refresh token ide u Android Keystore (`expo-secure-store`).
+  Backend vraća token u tijelu **samo** na taj eksplicitni zahtjev, pa web
+  httpOnly zaštita ostaje netaknuta. `/auth/refresh` i `/auth/logout` prihvataju
+  token iz cookie-ja ILI tijela; cookie ima prednost.
+- Testovi **48/48**; tipizacija backend/frontend/mobile EXIT=0.
+- **Nije verificirano ponašanjem:** frontend nema test runner u repou, a
+  emulator za Android nije dostupan.
+
+### SEC-2 — IDOR i DTO validacija anomalija, 2026-10-30
+
+Riješeno u dva koraka, kako plan (`10-implementation-plan.md` 0.2) traži —
+**prvo vlasništvo, tek zatim validacija**:
+
+1. **Owner scope (B-009).** `confirmOrUpdateAnomaly` sada prima `userId` iz
+   JWT-a i filtrira i `findFirst` i `updateMany` po `thermostat.userId`, pa je
+   provjera **atomska** (bez TOCTOU). Prije toga je svaki prijavljeni korisnik
+   mogao zatvoriti tuđu anomaliju **i pokrenuti `processHeatingEvent` za tuđeg
+   korisnika**. Nedostajući `userId` se odbija prije bilo kakvog upita, jer
+   Prisma u `where`-u **ignoriše** `undefined`. Tuđi i nepostojeći ID daju isti
+   odgovor.
+2. **DTO validacija (B-010).** `UpdateHeatingAnomalyDto` nije imao nijedan
+   dekorator, pa je uz `whitelist: true` **svaki** legitimni zahtjev dobijao
+   400 — endpoint je bio neupotrebljiv. Dodati `@IsDate`/`@IsBoolean` +
+   `@ApiPropertyOptional`.
+
+Testovi **14/14** (7 owner + 7 DTO), oba TDD. Repro skripte
+`anomaly_ownership_repro.cjs` i `anomaly_validation_repro.cjs` su **prepisane**
+da asertiraju novo stanje (plan izričito zabranjuje stare asertije kao dokaz).
+
+**NOVI NALAZ B-023:** `main.ts` ima `enableImplicitConversion: true`, a
+class-transformer konvertuje **prije** `@Transform`, pa `Boolean('false') ===
+true`. String `'false'` u boolean polju dakle postaje `true` i `@IsBoolean()`
+prolazi. Utječe na **svaki** boolean DTO u API-ju, ne samo na ovaj; empirijski
+potvrđeno sondom. Ne može se popraviti unutar jednog DTO-a bez globalne
+promjene `ValidationPipe`, pa je izdvojeno kao zaseban nalaz.
 
 ### Šta bi vlasnik uradio da je rotacija odobrena
 

@@ -31,7 +31,10 @@ export class HeatingAnomalyController {
   async updateAnomaly(
     @Param('eventId') eventId: number,
     @Body() dto: UpdateHeatingAnomalyDto,
+    @Req() req,
   ) {
-    return this.checker.confirmOrUpdateAnomaly(eventId, dto);
+    // SEC-2: userId dolazi iz JWT-a, nikad iz tijela zahtjeva — klijent ga ne
+    // može podvaliti.
+    return this.checker.confirmOrUpdateAnomaly(eventId, dto, req.user.userId);
   }
 }

@@ -253,14 +253,31 @@ export class HeatingAnomalyCheckerService {
   async confirmOrUpdateAnomaly(
     eventId: number,
     dto: { proposedEndTime?: Date; confirm?: boolean },
+    userId: number,
   ) {
+    // SEC-2: Prisma u `where`-u **ignoriše** `undefined`, pa bi
+    // `thermostat: { userId: undefined }` tiho postalo "bez owner filtera".
+    // Zato se nedostajući userId odbija OVDJE, prije bilo kakvog upita.
+    if (typeof userId !== 'number' || !Number.isFinite(userId)) {
+      return { success: false, error: 'Event not found' };
+    }
+
     try {
-      const event = await this.prisma.heatingEvent.findUnique({
-        where: { id: eventId },
+      // SEC-2 (B-009): owner scope je OBAVEZAN. Prije ove izmjene ovdje je bio
+      // `findUnique({ where: { id } })`, pa je svaki prijavljeni korisnik mogao
+      // zatvoriti tuđu anomaliju i time pokrenuti `processHeatingEvent` za
+      // tuđeg korisnika.
+      //
+      // `userId` nema zadanu vrijednost namjerno: poziv bez vlasnika mora pasti
+      // na provjeri, ne tiho proći.
+      const event = await this.prisma.heatingEvent.findFirst({
+        where: { id: eventId, thermostat: { userId } },
         include: { thermostat: true },
       });
 
       if (!event) {
+        // Isti odgovor za tuđi i nepostojeći ID — da odgovor ne otkriva
+        // postoji li tuđa anomalija.
         return { success: false, error: 'Event not found' };
       }
 
@@ -275,8 +292,11 @@ export class HeatingAnomalyCheckerService {
         endTime = event.proposedEndTime ?? new Date();
 
       // Use tolerant update with updateMany
+      // SEC-2: owner filter je i u samom `updateMany` where-u, pa je provjera
+      // ATOMSKA — nema prozora između čitanja i upisa u kojem bi se vlasništvo
+      // moglo promijeniti (TOCTOU).
       const result = await this.prisma.heatingEvent.updateMany({
-        where: { id: eventId, isAnomaly: true },
+        where: { id: eventId, isAnomaly: true, thermostat: { userId } },
         data: {
           timestampEnd: endTime,
           isAnomaly: false,

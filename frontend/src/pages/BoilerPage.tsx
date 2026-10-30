@@ -148,7 +148,16 @@ export const BoilerPage: React.FC = () => {
         </div>
       </div>
       <Card className="shadow-sm" title={`Recent Boiler Events (${events.length})`}>
-        <Table rowKey="id" dataSource={events} columns={columns} pagination={{ pageSize: 8 }} />
+        <Table
+          rowKey="id"
+          dataSource={events}
+          columns={columns}
+          pagination={{ pageSize: 8 }}
+          // FE2-13 (FE-021): bez scroll={{ x }} tabela prelijeva na uskim ekranima,
+          // a `overflow-x: hidden` na body-u to prelijevanje tiho odsjeca — korisnik
+          // ne vidi dio kolona i ne zna da postoji jos.
+          scroll={{ x: 'max-content' }}
+        />
       </Card>
 
       <Modal

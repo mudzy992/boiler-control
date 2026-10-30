@@ -932,6 +932,9 @@ export const DashboardPage: React.FC = () => {
             onMouseEnter: () => setActiveBucket(record.bucketLabel),
             onMouseLeave: () => setActiveBucket(null),
           })}
+          // FE2-13 (FE-021): bez scroll={{ x }} tabela prelijeva na uskim ekranima,
+          // a `overflow-x: hidden` na body-u to prelijevanje tiho odsjeca.
+          scroll={{ x: 'max-content' }}
         />
       </Card>
 

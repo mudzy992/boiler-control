@@ -11,7 +11,14 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const THEME_STORAGE_KEY = 'boiler.theme';
+/**
+ * FE2-13 (FE-021): izvezeno namjerno — inline skripta u `index.html` koja
+ * sprječava dark-mode FOUC mora čitati ISTI ključ. Test
+ * `src/components/__tests__/accessibility.test.tsx` uspoređuje ovu vrijednost s
+ * onom u index.html, pa promjena ključa na jednom mjestu pada na CI umjesto da
+ * tiho resetuje temu pri svakom reloadu.
+ */
+export const THEME_STORAGE_KEY = 'boiler.theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<ThemeMode>(() => {

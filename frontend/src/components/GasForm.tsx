@@ -1,6 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+
+/**
+ * FE2-13: elementi između kojih Tab smije kružiti dok je dijalog otvoren.
+ * Bez focus trapa Tab odvodi fokus na stranu iza overlaya, pa korisnik koji
+ * koristi samo tastaturu "izgubi" dijalog.
+ */
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+function getFocusable(container: HTMLElement | null): HTMLElement[] {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+}
+
+/** Stabilan id naslova za `aria-labelledby`. */
+const DIALOG_TITLE_ID = 'gas-form-dialog-title';
 
 interface GasFormProps {
   open: boolean;
@@ -99,12 +121,67 @@ export const GasForm: React.FC<GasFormProps> = ({
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * FE2-13: dok je dijalog otvoren fokus ide u njega, a pri zatvaranju se vraća
+   * na element koji ga je imao prije. Bez ovoga korisnik koji koristi samo
+   * tastaturu nakon zatvaranja ostaje bez fokusa (ili ga dobije na <body>).
+   */
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusables = getFocusable(dialogRef.current);
+    (focusables[0] ?? dialogRef.current)?.focus();
+    return () => {
+      previouslyFocused?.focus?.();
+    };
+  }, [open]);
+
+  /**
+   * FE2-13: Escape zatvara, a Tab kruži unutar dijaloga. Prije toga dijalog nije
+   * imao nijednu tipkovnu interakciju — nije se mogao zatvoriti bez miša.
+   */
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusables = getFocusable(dialogRef.current);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    },
+    [onClose]
+  );
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={DIALOG_TITLE_ID}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+      >
+        <h2
+          id={DIALOG_TITLE_ID}
+          className="text-lg font-semibold text-gray-900 dark:text-white"
+        >
           {t('gas.addReading')}
         </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
@@ -120,10 +197,16 @@ export const GasForm: React.FC<GasFormProps> = ({
         <form onSubmit={handleSubmit}>
           {/* Counter Value */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+            {/* FE2-13 (FE-013): label bez htmlFor nije programski povezan s inputom,
+                pa ga screen reader ne čita uz polje (axe: critical "label"). */}
+            <label
+              htmlFor="gas-counter-value"
+              className="block text-sm font-medium text-gray-700 dark:text-slate-300"
+            >
               {t('gas.counterValueLabel')} *
             </label>
             <input
+              id="gas-counter-value"
               type="number"
               step="0.001"
               value={formData.counterValue}
@@ -164,10 +247,16 @@ export const GasForm: React.FC<GasFormProps> = ({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+            {/* FE2-13 (FE-013): isto kao counter — file input je bio bez labele,
+                što je axe prijavio kao critical "label" nalaz. */}
+            <label
+              htmlFor="gas-meter-image"
+              className="block text-sm font-medium text-gray-700 dark:text-slate-300"
+            >
               {t('gas.meterImage')}
             </label>
             <input
+              id="gas-meter-image"
               type="file"
               accept="image/png,image/jpeg,image/webp"
               onChange={(e) => setMeterImage(e.target.files?.[0] || null)}
@@ -183,10 +272,15 @@ export const GasForm: React.FC<GasFormProps> = ({
           {!formData.useCurrentDateTime && (
             <>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                {/* FE2-13 (FE-013): label bez htmlFor nije povezan s inputom. */}
+                <label
+                  htmlFor="gas-reading-date"
+                  className="block text-sm font-medium text-gray-700 dark:text-slate-300"
+                >
                   {t('gas.date')} *
                 </label>
                 <input
+                  id="gas-reading-date"
                   type="date"
                   value={formData.readingDate}
                   onChange={(e) => {
@@ -215,10 +309,15 @@ export const GasForm: React.FC<GasFormProps> = ({
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                {/* FE2-13 (FE-013): label bez htmlFor nije povezan s inputom. */}
+                <label
+                  htmlFor="gas-reading-time"
+                  className="block text-sm font-medium text-gray-700 dark:text-slate-300"
+                >
                   {t('gas.time')} *
                 </label>
                 <input
+                  id="gas-reading-time"
                   type="time"
                   value={formData.readingTime}
                   onChange={(e) =>

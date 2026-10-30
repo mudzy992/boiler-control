@@ -88,7 +88,15 @@ export const HeatingPage: React.FC = () => {
         </p>
       </div>
       <Card className="shadow-sm" title="Recent Heating Sessions">
-        <Table rowKey="id" dataSource={events} columns={columns} pagination={{ pageSize: 8 }} />
+        <Table
+          rowKey="id"
+          dataSource={events}
+          columns={columns}
+          pagination={{ pageSize: 8 }}
+          // FE2-13 (FE-021): bez scroll={{ x }} tabela prelijeva na uskim ekranima,
+          // a `overflow-x: hidden` na body-u to prelijevanje tiho odsjeca.
+          scroll={{ x: 'max-content' }}
+        />
       </Card>
     </div>
   );

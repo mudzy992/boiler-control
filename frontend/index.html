@@ -19,6 +19,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- FE2-6: najčešći accent u UI kodu (#f59e0b). -->
     <meta name="theme-color" content="#f59e0b" />
+    <!--
+      FE2-13 (FE-021): klasa `dark` se do sada postavljala React useEffect-om u
+      ThemeContext.tsx, dakle NAKON prvog rendera. Dark-mode korisnik je zato pri
+      svakom reloadu kratko vidio svijetlu verziju (FOUC). Ova skripta je inline i
+      izvršava se prije rendera, pa je prva naslikana slika već u pravoj temi.
+
+      Ključ MORA ostati usklađen s THEME_STORAGE_KEY u src/context/ThemeContext.tsx
+      ('boiler.theme'); test src/components/__tests__/themeFouc.test.ts to čuva.
+    -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('boiler.theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          // localStorage nedostupan (npr. private mode) — ostaje svijetla tema,
+          // što je i zadano ponašanje ThemeContext-a.
+        }
+      })();
+    </script>
     <title>Boiler Control</title>
   </head>
   <body>

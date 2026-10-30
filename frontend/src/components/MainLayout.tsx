@@ -148,6 +148,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               onChange={toggleMode}
               checkedChildren={<MoonOutlined />}
               unCheckedChildren={<SunOutlined />}
+              // FE2-13 (FE-013): Tooltip se ne čita screen readeru, pa je switch
+              // bio bez pristupačnog naziva — čitao bi se samo kao "switch".
+              aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
             />
           </Tooltip>
         </Header>

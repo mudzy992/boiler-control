@@ -225,6 +225,718 @@
         ],
         "type": "object"
       },
+      "DashboardBoilerHistoryDto": {
+        "properties": {
+          "actualFlowTemp": {
+            "description": "DB kolona `actualTemp`.",
+            "nullable": true,
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "externalTemp": {
+            "type": "number"
+          },
+          "heatingEnd": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "heatingStart": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "suggestedFlowTemp": {
+            "description": "DB kolona `suggestedTemp`.",
+            "type": "number"
+          },
+          "userId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "externalTemp",
+          "suggestedFlowTemp",
+          "actualFlowTemp",
+          "heatingStart",
+          "heatingEnd",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "DashboardCapabilitiesDto": {
+        "properties": {
+          "hasLearning": {
+            "type": "boolean"
+          },
+          "hasProfile": {
+            "type": "boolean"
+          },
+          "hasThermostat": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hasProfile",
+          "hasThermostat",
+          "hasLearning"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingBucketDto": {
+        "properties": {
+          "avgCurrentTemp": {
+            "description": "Zaokruženo na 2 decimale, 0 ako `cycles` = 0.",
+            "type": "number"
+          },
+          "avgTargetTemp": {
+            "description": "Zaokruženo na 2 decimale, 0 ako `cycles` = 0.",
+            "type": "number"
+          },
+          "cycles": {
+            "type": "number"
+          },
+          "label": {
+            "description": "`YYYY-MM-DD` za `day`, `HH:00` za `hour` (l.336-340).",
+            "type": "string"
+          },
+          "totalDurationMin": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "totalDurationMin",
+          "cycles",
+          "avgTargetTemp",
+          "avgCurrentTemp"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingEventDto": {
+        "properties": {
+          "currentTemp": {
+            "description": "Iz `roomCurrentTemp` (događaj, NOT NULL).",
+            "type": "number"
+          },
+          "curretTempThermostat": {
+            "description": "Vrijednost s termostata, `null` ako termostat nema `roomCurrentTemp`. Typo je iz izvornog koda.",
+            "nullable": true,
+            "type": "object"
+          },
+          "deviceId": {
+            "type": "number"
+          },
+          "durationMinutes": {
+            "description": "0 ako `timestampEnd` ne postoji.",
+            "type": "number"
+          },
+          "endedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "hvacAction": {
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "source": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "targetTemp": {
+            "description": "Iz `roomTargetTemp` (događaj, NOT NULL).",
+            "type": "number"
+          },
+          "targetTempThermostat": {
+            "description": "Vrijednost s termostata.",
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "deviceId",
+          "startedAt",
+          "endedAt",
+          "currentTemp",
+          "targetTemp",
+          "curretTempThermostat",
+          "targetTempThermostat",
+          "hvacAction",
+          "source",
+          "durationMinutes"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingEventsMetaDto": {
+        "properties": {
+          "limit": {
+            "description": "`take ?? total` — bez paginacije jednako `total`.",
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingEventsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardHeatingEventDto"
+            },
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/DashboardHeatingEventsMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingStatusDto": {
+        "properties": {
+          "deviceId": {
+            "type": "number"
+          },
+          "isHeatingNow": {
+            "description": "`lastEvent?.timestampEnd === null` (l.401).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deviceId",
+          "isHeatingNow"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingSummaryDto": {
+        "properties": {
+          "avgDurationMin": {
+            "description": "`Number((...).toFixed(2))`, 0 ako nema ciklusa (l.307).",
+            "type": "number"
+          },
+          "avgIndoorTemp": {
+            "description": "`Number((...).toFixed(2))`, 0 ako nema ciklusa (l.311).",
+            "type": "number"
+          },
+          "totalCycles": {
+            "description": "`events.length` (l.299).",
+            "type": "number"
+          },
+          "totalDurationMin": {
+            "description": "`Math.round(...)` (l.363).",
+            "type": "number"
+          }
+        },
+        "required": [
+          "totalCycles",
+          "totalDurationMin",
+          "avgDurationMin",
+          "avgIndoorTemp"
+        ],
+        "type": "object"
+      },
+      "DashboardHeatingSummaryResponseDto": {
+        "properties": {
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardHeatingBucketDto"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/DashboardHeatingSummaryDto"
+          }
+        },
+        "required": [
+          "summary",
+          "buckets"
+        ],
+        "type": "object"
+      },
+      "DashboardHomeDto": {
+        "properties": {
+          "learningIntervals": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardLearningIntervalDto"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/DashboardProfileDto"
+          },
+          "recentHeatingEvents": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardRecentHeatingEventDto"
+            },
+            "type": "array"
+          },
+          "thermostats": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardThermostatDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "thermostats",
+          "learningIntervals",
+          "recentHeatingEvents"
+        ],
+        "type": "object"
+      },
+      "DashboardLearningIntervalDto": {
+        "properties": {
+          "avgOvershoot": {
+            "type": "number"
+          },
+          "avgReachTimeMin": {
+            "type": "number"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "intervalKey": {
+            "type": "string"
+          },
+          "lastUpdated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "samples": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "intervalKey",
+          "avgReachTimeMin",
+          "avgOvershoot",
+          "offset",
+          "confidence",
+          "samples",
+          "lastUpdated"
+        ],
+        "type": "object"
+      },
+      "DashboardLiveRecommendationDto": {
+        "properties": {
+          "date": {
+            "description": "Date.now() — epoch milisekunde, nije ISO datum.",
+            "type": "number"
+          },
+          "recommendedFlowTemp": {
+            "description": "`boilerService.calculateFlowTemp().flowTemp` (boiler.service.ts:14) — `number`.",
+            "type": "number"
+          },
+          "source": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LiveRecommendationSource"
+              }
+            ]
+          }
+        },
+        "required": [
+          "date",
+          "recommendedFlowTemp",
+          "source"
+        ],
+        "type": "object"
+      },
+      "DashboardProfileDto": {
+        "properties": {
+          "ceilingHeight": {
+            "type": "number"
+          },
+          "floorArea": {
+            "type": "number"
+          },
+          "heatingType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HomeProfileHeatingType"
+              }
+            ]
+          },
+          "id": {
+            "type": "number"
+          },
+          "insulationType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HomeProfileInsulationType"
+              }
+            ]
+          },
+          "windowType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HomeProfileWindowType"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "floorArea",
+          "ceilingHeight",
+          "insulationType",
+          "windowType",
+          "heatingType"
+        ],
+        "type": "object"
+      },
+      "DashboardRecentHeatingEventDto": {
+        "properties": {
+          "currentTemp": {
+            "description": "Iz `roomCurrentTemp` (događaj).",
+            "type": "number"
+          },
+          "curretTempThermostat": {
+            "description": "NAMJERNO zadržan typo `curret` iz izvornog koda — preimenovanje bi slomilo FE.",
+            "nullable": true,
+            "type": "object"
+          },
+          "deviceId": {
+            "type": "number"
+          },
+          "durationMinutes": {
+            "description": "0 ako `timestampEnd` ne postoji (l.148-152).",
+            "type": "number"
+          },
+          "endedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "hvacAction": {
+            "description": "Slobodan string iz kolone `hvacAction`.",
+            "type": "string"
+          },
+          "isAnomaly": {
+            "type": "boolean"
+          },
+          "proposedEndTime": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "source": {
+            "description": "Slobodan string iz kolone `source`.",
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "targetTemp": {
+            "description": "Iz `roomTargetTemp` (događaj).",
+            "type": "number"
+          },
+          "targetTempThermostat": {
+            "description": "Ciljna temperatura s termostata u trenutku čitanja, ili null.",
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "deviceId",
+          "startedAt",
+          "endedAt",
+          "targetTemp",
+          "targetTempThermostat",
+          "currentTemp",
+          "curretTempThermostat",
+          "hvacAction",
+          "source",
+          "durationMinutes",
+          "isAnomaly",
+          "proposedEndTime"
+        ],
+        "type": "object"
+      },
+      "DashboardResponseDto": {
+        "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/DashboardCapabilitiesDto"
+          },
+          "homes": {
+            "description": "Prazan niz za anonimne pozive.",
+            "items": {
+              "$ref": "#/components/schemas/DashboardHomeDto"
+            },
+            "type": "array"
+          },
+          "system": {
+            "$ref": "#/components/schemas/DashboardSystemDto"
+          }
+        },
+        "required": [
+          "capabilities",
+          "system",
+          "homes"
+        ],
+        "type": "object"
+      },
+      "DashboardStoredRecommendationDto": {
+        "properties": {
+          "confidenceScore": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "date": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expectedHeatTimeMin": {
+            "type": "number"
+          },
+          "id": {
+            "type": "number"
+          },
+          "recommendedFlowTemp": {
+            "type": "number"
+          },
+          "userId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "recommendedFlowTemp",
+          "expectedHeatTimeMin",
+          "confidenceScore",
+          "createdAt",
+          "date"
+        ],
+        "type": "object"
+      },
+      "DashboardSystemDto": {
+        "properties": {
+          "boiler": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardBoilerHistoryDto"
+              }
+            ],
+            "description": "Samo za prijavljene s termostatom; u anonimnoj grani ključ ne postoji.",
+            "nullable": true,
+            "type": "object"
+          },
+          "recommendation": {
+            "description": "Anonimno: DashboardLiveRecommendationDto. Prijavljen: DashboardStoredRecommendationDto ili null.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DashboardLiveRecommendationDto"
+              },
+              {
+                "$ref": "#/components/schemas/DashboardStoredRecommendationDto"
+              }
+            ]
+          },
+          "weather": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardWeatherDto"
+              }
+            ],
+            "description": "Nula ako nema ni podataka ni keša.",
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "weather",
+          "recommendation"
+        ],
+        "type": "object"
+      },
+      "DashboardThermostatDto": {
+        "properties": {
+          "alias": {
+            "nullable": true,
+            "type": "object"
+          },
+          "currentTemp": {
+            "description": "Iz `roomCurrentTemp`.",
+            "nullable": true,
+            "type": "object"
+          },
+          "deviceId": {
+            "description": "Vanjski id uređaja (string), nije interni `id`.",
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "isHeatingNow": {
+            "description": "`heatingStatus.find(...)?.isHeatingNow ?? false` (l.110).",
+            "type": "boolean"
+          },
+          "lastSeen": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ThermostatMode"
+              }
+            ]
+          },
+          "program": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardThermostatProgramDto"
+            },
+            "type": "array"
+          },
+          "targetTemp": {
+            "description": "Iz `roomTargetTemp`.",
+            "nullable": true,
+            "type": "object"
+          },
+          "vendor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "alias",
+          "vendor",
+          "deviceId",
+          "mode",
+          "lastSeen",
+          "currentTemp",
+          "targetTemp",
+          "isHeatingNow",
+          "program"
+        ],
+        "type": "object"
+      },
+      "DashboardThermostatProgramDto": {
+        "properties": {
+          "dayType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DayType"
+              }
+            ]
+          },
+          "orderIndex": {
+            "type": "number"
+          },
+          "startMinute": {
+            "type": "number"
+          },
+          "targetTemp": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "dayType",
+          "startMinute",
+          "targetTemp",
+          "orderIndex"
+        ],
+        "type": "object"
+      },
+      "DashboardWeatherDto": {
+        "properties": {
+          "condition": {
+            "nullable": true,
+            "type": "object"
+          },
+          "feelsLike": {
+            "nullable": true,
+            "type": "object"
+          },
+          "humidity": {
+            "nullable": true,
+            "type": "object"
+          },
+          "pressure": {
+            "nullable": true,
+            "type": "object"
+          },
+          "sunrise": {
+            "nullable": true,
+            "type": "object"
+          },
+          "sunset": {
+            "nullable": true,
+            "type": "object"
+          },
+          "temp": {
+            "nullable": true,
+            "type": "object"
+          },
+          "uvIndex": {
+            "nullable": true,
+            "type": "object"
+          },
+          "windSpeed": {
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "temp",
+          "feelsLike",
+          "condition",
+          "humidity",
+          "windSpeed",
+          "pressure",
+          "uvIndex",
+          "sunrise",
+          "sunset"
+        ],
+        "type": "object"
+      },
+      "DayType": {
+        "enum": [
+          "WORKDAY",
+          "SATURDAY",
+          "SUNDAY"
+        ],
+        "type": "string"
+      },
       "GasAnalysisPeriodDto": {
         "properties": {
           "from": {
@@ -477,6 +1189,37 @@
         ],
         "type": "object"
       },
+      "HomeProfileHeatingType": {
+        "enum": [
+          "RADIATOR",
+          "UNDERFLOOR",
+          "MIXED"
+        ],
+        "type": "string"
+      },
+      "HomeProfileInsulationType": {
+        "enum": [
+          "STANDARD",
+          "EPS",
+          "MINERAL_WOOL",
+          "ADVANCED"
+        ],
+        "type": "string"
+      },
+      "HomeProfileWindowType": {
+        "enum": [
+          "SINGLE_GLAZED",
+          "DOUBLE_GLAZED",
+          "TRIPLE_GLAZED"
+        ],
+        "type": "string"
+      },
+      "LiveRecommendationSource": {
+        "enum": [
+          "LIVE_CALCULATION"
+        ],
+        "type": "string"
+      },
       "LoginDto": {
         "properties": {},
         "type": "object"
@@ -547,6 +1290,14 @@
           "currentFlowTemp"
         ],
         "type": "object"
+      },
+      "ThermostatMode": {
+        "enum": [
+          "MANUAL",
+          "PROGRAM",
+          "OFF"
+        ],
+        "type": "string"
       },
       "UpdateGasReferenceDto": {
         "properties": {},
@@ -907,6 +1658,13 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1052,6 +1810,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardHeatingEventsResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1135,6 +1900,16 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DashboardHeatingStatusDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1199,6 +1974,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardHeatingSummaryResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },

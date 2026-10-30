@@ -8,10 +8,30 @@ import {
   GetLearningTrendsDto,
   ExportAnalyticsDto,
 } from './dto/dashboard.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  DashboardHeatingEventsResponseDto,
+  DashboardLiveRecommendationDto,
+  DashboardStoredRecommendationDto,
+  DashboardHeatingStatusDto,
+  DashboardHeatingSummaryResponseDto,
+  DashboardResponseDto,
+} from './dto/dashboard-response.dto';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
+// `oneOf` u DashboardSystemDto.recommendation referencira ove dvije klase
+// samo preko $ref stringova, pa ih schema explorer sam ne registruje.
+// Bez ovog dekoratora ugovor bi imao viseće reference.
+@ApiExtraModels(
+  DashboardLiveRecommendationDto,
+  DashboardStoredRecommendationDto,
+)
 @Controller('api/dashboard')
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
@@ -22,6 +42,7 @@ export class DashboardController {
   // =====================================
 
   @Get()
+  @ApiOkResponse({ type: DashboardResponseDto })
   async getDashboard(@Req() req) {
     const userId = req.user?.userId;
     return this.dashboardService.getDashboard(userId ?? undefined);
@@ -32,16 +53,19 @@ export class DashboardController {
   // =====================================
 
   @Get('heating-events')
+  @ApiOkResponse({ type: DashboardHeatingEventsResponseDto })
   getHeatingEvents(@Req() req: any, @Query() query: GetHeatingEventsDto) {
     return this.dashboardService.getHeatingEvents(req.user.userId, query);
   }
 
   @Get('heating-status')
+  @ApiOkResponse({ type: [DashboardHeatingStatusDto] })
   getHeatingStatus(@Req() req: any) {
     return this.dashboardService.getHeatingStatus(req.user.userId);
   }
 
   @Get('heating-summary')
+  @ApiOkResponse({ type: DashboardHeatingSummaryResponseDto })
   getHeatingSummary(@Req() req: any, @Query() query: GetHeatingSummaryDto) {
     return this.dashboardService.getHeatingSummary(req.user.userId, query);
   }

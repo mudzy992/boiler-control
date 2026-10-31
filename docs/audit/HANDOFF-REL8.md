@@ -98,6 +98,67 @@ test koji assertuje jedinice, i provjeriti da li `Mode === '0'` grana (koja
 čita cilj iz baze, `activeInterval.targetTemp`) već ima °C — miješanje jedinica
 između te dvije grane je isto moguće.
 
+## REL-8 (#34) — KOD GOTOV I CI ZELEN; dokumentacija NIJE ažurirana
+
+**Stanje:** commitovano i pushano. Commiti `799a011` (implementacija) +
+`30188de` (TS2345 fix) + `48a3b41` (Prettier fix). CI run **`41233788265`** =
+`completed success`, sva tri joba (`test` 21, `frontend` 18, `mobile` 10).
+
+**ŠTA NEDOSTAJE — sljedeći turn mora dovršiti:**
+- `docs/audit/STATUS.md`: nema REL-8 sekciju
+- `docs/audit/backend/09-improvements-backlog.md`: REL-8 red (linija 54, 6
+  ćelija) NIJE označen kao riješen
+- `docs/audit/backend/04-findings.md`: B-027 nema razrješenje
+- Novi jest test NE postoji — verifikacija je samo `program_sync_atomic_probe.cjs`
+- Provjera homoglyfa u HANDOFF-u će naći cirilicu/CJK: to su **citirani
+  primjeri** u odjeljku o non-ASCII zamkama, NE defekti.
+
+**Šta je urađeno:**
+- Dodan `PROGRAM_SYNC_ATOMIC_FLAG` + `programSyncAtomicEnabled()` (zadano ON)
+- `syncDay` grana 3 je sada uslovna: atomski put ili stari put
+- Nova metoda `applyDayAtomically()` — upsert svih intervala + `deleteMany`
+  cleanup u jednom `this.prisma.$transaction(operations)`
+- Type-check: **nula novih grešaka**. Jedina greška u fajlu (`TS2538` na
+  `tuyaProgram[dayType]`) je **pre-postojeća** — verificirano na čistom HEAD-u
+  u worktreeu, gdje je na `:24` (pomaknuta na `:41` mojim umetnutim blokom).
+
+**ATOMICNOST JESTE VERIFICIRANA** — proba `program_sync_atomic_probe.cjs`
+(EXIT=0) dokazuje: pad na 2. upsertu ostavlja bazu netaknutu, retry završava
+posao i briše `orderIndex 2`, a kontrola sa zastavicom `off` i dalje ostavlja
+miješano stanje (što dokazuje da proba nešto hvata).
+
+**Šta NIJE verificirano — konkurentnost:**
+
+**Dvije CI lekcije (oba pada su bila moja):**
+1. `TS2345` na `operations.push(deleteMany)` — **lokalno se nije pojavio** jer
+   nedostaje generisani Prisma klijent pa je `upsert` tipa `any`. U CI-ju je
+   klijent generisan. **Lokalni `tsc` NE može zamijeniti CI type-check za
+   Prisma tipove.**
+2. Prettier grešku sam pushao jer sam commitovao ne provjerivši koju grešku
+   eslint javlja (vidio sam samo `errors=1`). **Uvijek ispisati greške, ne samo
+   broj.**
+
+`scripts/audit/program_sync_partial_repro.cjs` **pada** (EXIT=1), ali NE zato
+što je ispravka pogrešna. Njen fake repozitorij definiše `upsert` kao običnu
+`async` funkciju koja se **izvršava odmah pri pozivu**. Moj kod gradi niz
+operacija preko `.map()`, pa se u fake-u svi upserti izvrše **prije** nego što
+`$transaction` uopće bude pozvan — sintetički pad izbaci tokom izgradnje niza.
+
+Stvarni Prisma se ponaša drugačije: `prisma.thermostatProgram.upsert(...)`
+vraća `PrismaPromise` koji se **ne izvršava** dok se ne await-uje ili preda
+`$transaction`. Dakle kod je ispravan za stvarni Prisma, ali **fake harness ne
+modelira lazy PrismaPromise**, pa njime nije moguće dokazati all-or-nothing.
+
+**Idući korak:** proširiti fake da vraća lazy opise operacija i implementira
+`$transaction(ops)` koji izvršava redom i **poništava** na padu (rollback u
+memoriji). Tek tada se može assertovati da pad ostavlja bazu netaknutom.
+Alternativno: pravi integracijski test na PostgreSQL-u — ali PostgreSQL ovdje
+nije dostupan.
+
+**Konkurentnost NIJE riješena.** `$transaction` daje atomičnost, ne izolaciju
+protiv dva paralelna procesa. Kriterij prihvatanja traži „dva konkurentna synca
+potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
+
 ## Sljedeće po redoslijedu (Talas D)
 
 `docs/audit/MASTER-ROADMAP.md`. REL-7 (#33) gotov. Sljedeći:

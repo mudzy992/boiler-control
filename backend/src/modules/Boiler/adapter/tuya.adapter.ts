@@ -299,8 +299,16 @@ export class TuyaAdapter {
 
     // fallback
     // REL-7 (B-026): `?? 0` je pretvaralo nedostajući TempSet u stvarnih 0 °C.
+    // JEDINICE: `TempSet` dolazi iz Tuya statusa, NE iz baze, pa je u istom
+    // dupliranom formatu kao `TempCurrent` (44 -> 22) i mora se dijeliti s 2.
+    // Grana iznad koja cita `activeInterval.targetTemp` cita iz
+    // `prisma.thermostatProgram`, a ti redovi su vec normalizovani jer
+    // `decodeTuyaProgram` dijeli s 2 prije `syncProgram` upisa - tamo se NE
+    // dijeli ponovo. Prije ove ispravke fallback je vracao 44 umjesto 22, pa
+    // je `resolveHeatingState` vidio `20 < 44` i uvijek birao grijanje.
+    const rawTargetTemp = toNullableNumber(status['TempSet']);
     return {
-      targetTemp: toNullableNumber(status['TempSet']),
+      targetTemp: rawTargetTemp === null ? null : rawTargetTemp / 2,
     };
   }
 

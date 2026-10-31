@@ -44,9 +44,32 @@ Ispravka ne uvodi fail-safe stanje nego princip *ne bilježiti promjenu koju ne
 možemo posmatrati*. Zastavica `INCOMPLETE_SNAPSHOT_GUARD_ENABLED`, zadano
 UKLJUČENO.
 
-## NOVI NALAZ — otvoren, čeka vlasnika
+## NALAZ `TempSet /2` — RIJEŠEN (vlasnik potvrdio uslov)
 
-### `TempSet` se ne dijeli s 2 dok se `TempCurrent` dijeli — HIPOTEZA
+
+**RJEŠENJE (2026-10-31).** Vlasnik je potvrdio uslov: *ako `TempSet` dolazi iz
+Tuya adaptera, a ne iz baze, i on treba `/2`*. Provjereno u kodu —
+`tuya.adapter.ts:303` čita `status['TempSet']` (odgovor Tuya API-ja iz
+`fetchStatus`), **nije** iz baze. Nasuprot tome `activeInterval.targetTemp`
+dolazi iz `prisma.thermostatProgram` i **već je normalizovan** jer
+`decodeTuyaProgram` dijeli s 2 na `:393` prije `syncProgram` upisa — tamo se ne
+dijeli ponovo. Ispravka primijenjena samo na Tuya granu.
+
+Regression guard ažuriran na realistične duplirane vrijednosti (`TempSet:42`
+→ `targetTemp:21`); `TempSet:0` ostaje kao kontrola stvarne nule. Guard EXIT=0,
+jest 18/18, eslint (CI komanda) 0 errors, type-check 0 grešaka izvan Prisma
+kaskade.
+
+**OTVORENO (nije verificirano):** `test/unit/tuya-adapter.spec.ts:67,189`
+koristi `TempSet: 44` ali **ne assertuje apsolutnu ciljnu temperaturu** (testira
+brojanje zahtjeva i cache), pa ne štiti ovu ispravku. Vrijedi dodati test koji
+assertuje jedinice.
+
+---
+
+## (historijski) NOVI NALAZ — bio otvoren, čeka vlasnika
+
+### (historijski) `TempSet` se ne dijeli s 2 dok se `TempCurrent` dijeli — HIPOTEZA
 
 Vlasnik je potvrdio da Tuya vraća duplirane vrijednosti (44 → 22 °C).
 

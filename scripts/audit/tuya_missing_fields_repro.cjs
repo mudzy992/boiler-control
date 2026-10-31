@@ -47,8 +47,8 @@ async function run(status,isOpen){
   // REL-7 (B-026): ova skripta je prvobitno DOKAZIVALA bug. Sada je regression
   // guard — assertuje ispravljeno ponasanje. Aplikacija ne upravlja termostatom
   // (Tuya API je read-only), pa je steta bila u podacima, ne u fizickoj kontroli.
-  const missingCurrent=await run({Power:true,TempSet:21},false);
-  const missingPower=await run({TempCurrent:40,TempSet:21},true);
+  const missingCurrent=await run({Power:true,TempSet:42},false);
+  const missingPower=await run({TempCurrent:40,TempSet:42},true);
   const missingTarget=await run({TempCurrent:40,Power:true},true);
 
   // Nepotpuno -> nepoznato ostaje nepoznato, bez odluke i bez laznog upisa.
@@ -58,8 +58,8 @@ async function run(status,isOpen){
 
   // Kontrola: STVARNE nule i false moraju i dalje raditi (inace bi ispravka
   // pretvorila mjereno stanje u "nepoznato" i aplikacija bi oslijepila).
-  const realZeroTemp=await run({TempCurrent:0,Power:true,TempSet:21},false);
-  const realPowerOff=await run({TempCurrent:40,TempSet:21,Power:false},true);
+  const realZeroTemp=await run({TempCurrent:0,Power:true,TempSet:42},false);
+  const realPowerOff=await run({TempCurrent:40,TempSet:42,Power:false},true);
   const realZeroTarget=await run({TempCurrent:40,TempSet:0,Power:true},true);
   assert.deepEqual(realZeroTemp,{currentTemp:0,targetTemp:21,powerOn:true,starts:1,ends:0,snapshotWrites:1,tempWrites:1});
   assert.deepEqual(realPowerOff,{currentTemp:20,targetTemp:21,powerOn:false,starts:0,ends:1,snapshotWrites:1,tempWrites:0});

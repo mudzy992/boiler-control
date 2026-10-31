@@ -1777,10 +1777,28 @@ artefakt ne ide u repo.
 `type-check` exit 0 (0 grešaka), `lint` exit 0 (0 errors, 92 warnings),
 `test --ci` exit 0 (34/34).
 
-**Šta NIJE verificirano.** Ponašanje CI joba `mobile` u stvarnom GitHub Actions
-okruženju; runtime ponašanje komponenti (nema emulatora); nijedan komponentni
-test nije napisan iako je `@testing-library/react-native` instaliran; EAS build
-nije pokrenut.
+**CI ishod (VERIFICIRANO).** Run **`41212573242`** = `completed success` za
+commit `fd07a7d`. Sva tri joba zelena: `test` (21 korak), `frontend` (18),
+`mobile` (10). Koraci `mobile` joba — `Install dependencies`, `Type-check`,
+`Lint`, `Unit tests` — svi `success`. Provjereno preko
+`gh api …/actions/runs/{id}/jobs`, jer `gh run watch --exit-status` vraća 0 i
+dok je run još `in_progress`.
+
+Anotacije `mobile` joba: 11 warning + 1 notice, **sve objašnjivo i nijedna nije
+nova greška**. Deset warninga su `react-hooks/rules-of-hooks` u
+`AlertsCard.tsx:140-155` — upravo dokumentovani baseline. Jedanaesti je
+GitHub-ovo upozorenje da `actions/checkout@v4`/`setup-node@v4` ciljaju Node 20.
+Notice je najava migracije `ubuntu-latest` na Ubuntu 26.
+
+**Napomena o broju anotacija.** ESLint lokalno broji **12** `rules-of-hooks` u
+`AlertsCard.tsx` (linije 140-157), a CI prikazuje **10**. Razlog je GitHub-ov
+display limit po nivou, ne propuštena provjera — autoritativan broj je lokalni
+`npx eslint . --format json` (28 ukupno).
+
+**Šta NIJE verificirano.** Runtime ponašanje komponenti (nema emulatora);
+nijedan komponentni test nije napisan iako je `@testing-library/react-native`
+instaliran; EAS build nije pokrenut; 28 `rules-of-hooks` prekršaja je
+dokumentovano, ali **nije popravljeno**.
 
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 

@@ -2012,6 +2012,75 @@ sada `success`, uz `Type-check` i `Build` također `success`.
 lokalna komanda razlikuje po `--fix`. Provjera mora koristiti CI-jevu tačnu
 komandu.
 
+### REL-8 — Atomski upis dana Tuya programa (B-027), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** `program.sync.service.ts` je upisivao
+svaki interval zasebnim pozivom, svaki put s hashom **cijelog** programa, a
+`cleanupRemovedIntervals` tek nakon svih upsert-a. U cijelom fajlu **nije bilo
+nijednog `$transaction`** (pročitano svih 156 linija).
+
+Lanac kvara:
+
+| Linija | Šta radi | Problem |
+|---|---|---|
+| `:44` | `calculateHash(intervals)` | hash **cijelog** programa |
+| `:61-63` | `if (existing[0].programHash === programHash) return` | gleda **samo prvi** red |
+| `:116-137` | petlja upsert-a, svaki piše **isti** hash (`:127`, `:135`) | prvi red dobija novi hash iako ostali nisu upisani |
+| `:141-155` | `cleanupRemovedIntervals` | tek **nakon** svih upsert-a |
+
+Pad drugog upserta ostavljao je prvi red s novim hashom. Retry bi tada na
+`existing[0].programHash === programHash` zaključio da je dan ažuriran i
+preskočio preostale upise **i** cleanup — trajno miješano stanje, koje
+`tuya.adapter.ts:267` dalje čita pri izboru ciljne temperature.
+
+**Ispravka.** Nova `applyDayAtomically()` stavlja upsert svih intervala +
+`deleteMany` cleanup u jedan `this.prisma.$transaction(operations)`. Hash se
+zapisuje samo kao dio commita cijelog dana, pa djelimično stanje nikad ne
+dobija novi hash i retry stvarno ponovi posao. Zastavica
+`PROGRAM_SYNC_ATOMIC_ENABLED`, **zadano UKLJUČENO** (dosljedno REL-7).
+
+**Zašto postojeća repro skripta nije mogla poslužiti kao dokaz.**
+`program_sync_partial_repro.cjs` definise `upsert` kao običnu `async` funkciju
+koja se **izvršava odmah pri pozivu**. Stvarni Prisma vraća `PrismaPromise`
+koji se **ne izvršava** dok se ne await-uje ili preda `$transaction`. Zbog toga
+taj harness izvršava sve upserte tokom izgradnje niza, prije nego što
+`$transaction` uopće bude pozvan — njime se all-or-nothing ne može dokazati.
+Napisana je nova proba koja modelira lazy `PrismaPromise` i `$transaction` s
+rollbackom.
+
+**Verifikacija** (`scripts/audit/program_sync_atomic_probe.cjs`, EXIT=0):
+
+| Scenarij | Ishod | Značenje |
+|---|---|---|
+| Pad na 2. upsertu (atomski put) | `0:0/20/OLD, 1:480/21/OLD, 2:1080/18/OLD` | baza **netaknuta** |
+| Retry nakon pada | `0:0/22/NEW, 1:480/23/NEW` | posao završen, `orderIndex 2` obrisan |
+| Stari put (zastavica `off`) | `0:0/22/NEW, 1:480/21/OLD, 2:1080/18/OLD` | **miješano** |
+
+Treći red je ključan: kontrola dokazuje da proba stvarno hvata kvar, pa
+prolazak nije prazan.
+
+**Dvije CI lekcije — oba pada su bila moja.**
+
+1. **`TS2345` na `operations.push(deleteMany)` — lokalno se NIJE pojavio.**
+   Niz je bio izveden iz `.map()` nad upsertima, pa `push` nad `deleteMany` nije
+   prolazio. Lokalno nedostaje generisani Prisma klijent
+   (`binaries.prisma.sh` nedostupan), pa je `thermostatProgram.upsert` tipa
+   `any` i greška se ne okida; u CI-ju je klijent generisan i tipovi su stvarni.
+   **Lokalni `tsc` ne može zamijeniti CI type-check za Prisma tipove.**
+   Ispravljeno eksplicitnom tipizacijom `PrismaPromise<unknown>[]`.
+2. **Prettier greška je pushana** jer je commitovan samo broj grešaka
+   (`errors=1`) bez ispisa **koja** je greška. Pravilo: uvijek ispisati greške.
+
+Nakon obje ispravke CI je pozelenio.
+
+**Šta NIJE verificirano.** **Konkurentnost.** `$transaction` daje atomičnost,
+ne i izolaciju protiv dva paralelna procesa. Kriterij prihvatanja traži „dva
+konkurentna synca potvrđena na izolovanom PostgreSQL-u", a PostgreSQL u ovom
+okruženju nije dostupan — za to treba row lock ili optimistička verzija.
+**Nema jest testa**: verifikacija je samo preko probe skripte. Postojeća
+miješana stanja u bazi se ne popravljaju automatski — sljedeći sync s
+drugačijim hashom ih prepisuje.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

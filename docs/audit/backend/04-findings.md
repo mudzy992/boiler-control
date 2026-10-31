@@ -282,6 +282,23 @@
 - Kako provjeriti: test-first pad nakon svakog pojedinog upserta i prije cleanup-a, ponavljanje identičnog payload-a, uklonjeni interval, paralelni različiti payloadi, prazan/nevalidan program i oporavak; u izolovanom PostgreSQL-u assert all-or-nothing i konzistentnu verziju, s lažnim providerom. `cd backend && npm test -- --runInBand` i `npm run test:integration`.
 - Trud: M/L — Zavisnosti: provider ugovor, DB transakcijska i konkurentna semantika, ispitivanje trenutnih parcijalnih rasporeda bez ispisa podataka.
 
+- **RIJEŠENO (REL-8, 2026-10-31).** Nova `applyDayAtomically()` stavlja upsert
+  svih intervala + `cleanupRemovedIntervals` u jedan `prisma.$transaction`. Hash
+  se zapisuje samo kao dio commita cijelog dana, pa djelimično stanje nikad ne
+  dobija novi hash i retry na `existing[0].programHash` više ne može preskočiti
+  preostale upise. Zastavica `PROGRAM_SYNC_ATOMIC_ENABLED`, zadano UKLJUČENO.
+- **Korekcija dokaza.** Navedena repro skripta `program_sync_partial_repro.cjs`
+  **ne može** dokazati all-or-nothing: njen fake definira `upsert` kao običnu
+  `async` funkciju koja se izvršava **odmah pri pozivu**, dok stvarni Prisma
+  vraća `PrismaPromise` koji se ne izvršava dok se ne preda `$transaction`.
+  Napisana je `program_sync_atomic_probe.cjs` koja modelira lazy promise i
+  rollback: pad na drugom upsertu ostavlja bazu netaknutu, retry završava posao
+  i briše uklonjeni interval, a kontrola sa zastavicom `off` i dalje ostavlja
+  miješano stanje.
+- **OSTAJE OTVORENO:** konkurentnost nije verificirana — `$transaction` daje
+  atomičnost, ne izolaciju protiv dva paralelna procesa, a izolovani PostgreSQL
+  nije dostupan u ovom okruženju. Nema jest testa.
+
 ### [B-028] Produkcijski image radi kao root i uključuje development zavisnosti — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (Dockerfile)
 - Gdje: `backend/Dockerfile:31-48` (production stage).
 - Šta nije u redu i zašto: završni stage nema `USER` direktivu, pa aplikacija radi kao root unutar kontejnera; production stage kopira cijeli `node_modules` iz build stagea postavljenog na `NODE_ENV=development`, bez prune-a development zavisnosti. Image je veći, a površina napada obuhvata build/test alate i pakete koje runtime ne koristi.

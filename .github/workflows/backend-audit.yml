@@ -2,7 +2,7 @@ name: Audit checks
 
 on:
   push:
-    branches: [arena/1bfee051-boiler-control]
+    branches: [arena/1bfee051-boiler-control, arena/c9961f17-boiler-control]
   workflow_dispatch:
 
 permissions:
@@ -10,8 +10,10 @@ permissions:
 
 jobs:
   test:
-    # Manual dispatch is also restricted to this session's branch.
-    if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
+    # Manual dispatch is restricted to the two recorded Arena session branches.
+    if: >-
+      github.ref == 'refs/heads/arena/1bfee051-boiler-control' ||
+      github.ref == 'refs/heads/arena/c9961f17-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -142,7 +144,9 @@ jobs:
   # `defaults.run.working-directory: backend` i ovisi o postgres/redis
   # servisima koji frontendu nisu potrebni.
   frontend:
-    if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
+    if: >-
+      github.ref == 'refs/heads/arena/1bfee051-boiler-control' ||
+      github.ref == 'refs/heads/arena/c9961f17-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -241,7 +245,9 @@ jobs:
   # `pull_request` i `main` su namjerno IZOSTAVLJENI — workflow se okida samo
   # na push u ovu granu i ručno (vidi `on:` na vrhu datoteke).
   mobile:
-    if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
+    if: >-
+      github.ref == 'refs/heads/arena/1bfee051-boiler-control' ||
+      github.ref == 'refs/heads/arena/c9961f17-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:

@@ -98,10 +98,20 @@ test koji assertuje jedinice, i provjeriti da li `Mode === '0'` grana (koja
 čita cilj iz baze, `activeInterval.targetTemp`) već ima °C — miješanje jedinica
 između te dvije grane je isto moguće.
 
-## REL-8 (#34) — ZAPOČETO, NIJE VERIFICIRANO, NIJE COMMITOVANO
+## REL-8 (#34) — KOD GOTOV I CI ZELEN; dokumentacija NIJE ažurirana
 
-**Stanje:** izmjena je u radnom stablu (`program.sync.service.ts`), **nije
-commitovana**. HEAD je i dalje `0e544bf`.
+**Stanje:** commitovano i pushano. Commiti `799a011` (implementacija) +
+`30188de` (TS2345 fix) + `48a3b41` (Prettier fix). CI run **`41233788265`** =
+`completed success`, sva tri joba (`test` 21, `frontend` 18, `mobile` 10).
+
+**ŠTA NEDOSTAJE — sljedeći turn mora dovršiti:**
+- `docs/audit/STATUS.md`: nema REL-8 sekciju
+- `docs/audit/backend/09-improvements-backlog.md`: REL-8 red (linija 54, 6
+  ćelija) NIJE označen kao riješen
+- `docs/audit/backend/04-findings.md`: B-027 nema razrješenje
+- Novi jest test NE postoji — verifikacija je samo `program_sync_atomic_probe.cjs`
+- Provjera homoglyfa u HANDOFF-u će naći cirilicu/CJK: to su **citirani
+  primjeri** u odjeljku o non-ASCII zamkama, NE defekti.
 
 **Šta je urađeno:**
 - Dodan `PROGRAM_SYNC_ATOMIC_FLAG` + `programSyncAtomicEnabled()` (zadano ON)
@@ -112,7 +122,21 @@ commitovana**. HEAD je i dalje `0e544bf`.
   `tuyaProgram[dayType]`) je **pre-postojeća** — verificirano na čistom HEAD-u
   u worktreeu, gdje je na `:24` (pomaknuta na `:41` mojim umetnutim blokom).
 
-**ZAŠTO NIJE VERIFICIRANO — ključno za sljedeći turn:**
+**ATOMICNOST JESTE VERIFICIRANA** — proba `program_sync_atomic_probe.cjs`
+(EXIT=0) dokazuje: pad na 2. upsertu ostavlja bazu netaknutu, retry završava
+posao i briše `orderIndex 2`, a kontrola sa zastavicom `off` i dalje ostavlja
+miješano stanje (što dokazuje da proba nešto hvata).
+
+**Šta NIJE verificirano — konkurentnost:**
+
+**Dvije CI lekcije (oba pada su bila moja):**
+1. `TS2345` na `operations.push(deleteMany)` — **lokalno se nije pojavio** jer
+   nedostaje generisani Prisma klijent pa je `upsert` tipa `any`. U CI-ju je
+   klijent generisan. **Lokalni `tsc` NE može zamijeniti CI type-check za
+   Prisma tipove.**
+2. Prettier grešku sam pushao jer sam commitovao ne provjerivši koju grešku
+   eslint javlja (vidio sam samo `errors=1`). **Uvijek ispisati greške, ne samo
+   broj.**
 
 `scripts/audit/program_sync_partial_repro.cjs` **pada** (EXIT=1), ali NE zato
 što je ispravka pogrešna. Njen fake repozitorij definiše `upsert` kao običnu

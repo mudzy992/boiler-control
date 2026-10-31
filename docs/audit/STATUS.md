@@ -1899,6 +1899,19 @@ CSRF napad nije izveden; analiza je izvedena iz konfiguracije i specifikacije.
 `/auth/refresh` kroz stvarni HTTP s cookie-jem nije pozvan. Migracija nije
 primijenjena na stvarnu bazu.
 
+**CI ishod (VERIFICIRANO).** Run **`41218607380`** = `completed success` za
+commit `3193f3c`. Sva tri joba zelena: `frontend` (18 koraka), `test` (21),
+`mobile` (10). `frontend` job je stvarno izvršio `Type-check`, `Lint`,
+`Unit and component tests`, `Build`, `Bundle evaluates and renders` i
+`E2E smoke` — svi `success`. Provjereno preko `gh api …/actions/runs/{id}/jobs`.
+
+**Poređenje anotacija s prethodnim runom (`41212838864`, prije FE2-2): 13 prije,
+13 poslije — nula novih upozorenja.** Jedine dvije razlike su pomak broja linije
+(`AuthContext.tsx:20` → `:31`, jer je edit dodao linije iznad postojećeg
+`export const AuthContext`) i trajanje e2e testa (3.4 s → 3.2 s).
+`react-refresh/only-export-components` upozorenje na `AuthContext.tsx` je
+**pre-postojeće**, nije ga uveo FE2-2.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

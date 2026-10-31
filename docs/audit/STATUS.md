@@ -1666,6 +1666,122 @@ na nivou baze. Posljedica je 500 umjesto 400, ne tiho smeće.
 4. Odlučiti o čišćenju historije — **kozmetika**, ne zaštita; GitHub zadržava cache i
    forkove.
 
+### MO2-8 — Testna i lint infrastruktura za mobilnu aplikaciju (MO-012), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** `npm test` je vraćao **exit 127**
+(`jest: not found`), a `npm run lint` **exit 2**. U `mobile/` nije postojao
+nijedan test fajl.
+
+**Korekcija nalaza — uzroci su bili dublji nego „nedostaje paket".**
+
+1. `npm test` exit 127: `jest` nije bio u devDependencies **i** nijedan test
+   fajl nije postojao, pa čak i s instaliranim jest-om ne bi bilo šta pokrenuti.
+2. `npm run lint` exit 2 je imao **dva** nezavisna uzroka:
+   - `.eslintrc.js` je imao `extends: ['expo']`, ali `eslint-config-expo` nikad
+     nije bio u devDependencies;
+   - nakon instalacije paketa lint je **i dalje** padao s exit 2, jer ESLint 9
+     odbija `.eslintrc.*` format i traži flat config.
+
+Migracija na flat config (`mobile/eslint.config.js`) je dakle **nužna, ne
+stilistička**. Stari `.eslintrc.js` je obrisan, a njegova dva pravila
+(`@typescript-eslint/no-unused-vars`, `react-hooks/exhaustive-deps`) prenesena
+su 1:1. Cilj MO2-8 je uspostaviti lint koji radi, ne promijeniti stil usput.
+
+**Verzije (izmjereno 2026-10-31 preko npm registry).** `jest ^30.5.2`,
+`jest-expo ~58.0.13` (dist-tag `latest`; **`sdk-58` tag ne postoji**),
+`@testing-library/react-native ^14.1.0`, `react-server-dom-webpack 19.3.0`,
+`@react-native/jest-preset ^0.88.1`, `eslint ^9.39.5`, `eslint-config-expo
+~58.0.4`, `eslint-config-prettier ^10.1.8`, `@typescript-eslint/* ^8.59.0`,
+`@types/jest ^30.0.0`.
+
+`react-server-dom-webpack` je **pinovan na tačno `19.3.0`**, ne `~19.3.0`:
+caret razrješava na 19.3.1, koji traži `react ^19.3.1`, a projekt ima
+`react 19.3.0` (Expov `bundledNativeModules.json`) → `ERESOLVE`.
+
+`@typescript-eslint/*` je nadograđen s `^6` na `^8` jer `eslint-config-expo`
+58.0.4 vuče `^8.59.0` kao dependency.
+
+**Ključno mjerenje: prvo ikad izvršeno lint mjerenje.** Budući da lint nikad
+nije radio, ovo je prvi stvarni pregled koda. Rezultat: **71 error / 20
+warning u 15 fajlova**. Nijedan nije nastao sada — svi su bili tu, samo
+nevidljivi.
+
+| Pravilo | Broj | Porijeklo |
+|---|---|---|
+| `react-hooks/rules-of-hooks` | 28 | klasično — **stvarni crash bugovi** |
+| `react-hooks/static-components` | 21 | React Compiler v7 (novo) |
+| `react-hooks/refs` | 10 | React Compiler v7 (novo) |
+| `import/namespace` | 4 | klasično — lažno pozitivno |
+| `react-hooks/preserve-manual-memoization` | 2 | v7 |
+| `react-hooks/set-state-in-effect` | 2 | v7 |
+| `react-hooks/immutability` | 1 | v7 |
+| `react-hooks/purity` | 1 | v7 |
+| `react/display-name` | 1 | klasično |
+| `react/no-unescaped-entities` | 1 | klasično |
+
+**37 od 71** dolazi iz React Compiler ruleseta (`eslint-plugin-react-hooks`
+**7.1.1**) koji nije postojao kad je kod pisan — to su advisory pravila.
+
+**Baseline, dokumentovan u `mobile/eslint.config.js`.** Popraviti 71 prekršaja
+kroz 15 fajlova unutar zadatka koji glasi „dodaj test/lint infrastrukturu" bilo
+bi upravo ono što `MASTER-ROADMAP.md:259-260` zabranjuje: refactor naslepo, bez
+testova za te komponente. Zato pravila s postojećim prekršajima idu na `warn`,
+a **sva ostala ostaju na `error`** — CI pada na novoj grešci.
+
+**NOVI NALAZ — 28 `rules-of-hooks` prekršaja su stvarni crash bugovi, ne stil.**
+Primjer: `AlertsCard.tsx:136` definira `getAlertColors` koji zove
+`useColorModeValue` **12 puta**, a poziva se unutar `alerts.map(...)` na `:165`,
+gdje `alerts` ovisi o `dashboardData` (`:60-72`; komponentu renderuje
+`DashboardScreen.tsx:336`). Broj hook poziva dakle varira s podacima → React
+baca „Rendered more hooks than during the previous render" čim se broj alerta
+promijeni. Isti obrazac u `BoilerStatusCard.tsx:136,172,200-222`. **Namjerno
+nije popravljeno ovdje** — traži vlastiti zadatak s testovima.
+
+`import/namespace` (4) je lažno pozitivno: `Notifications.AndroidImportance`
+stvarno postoji u `expo-notifications`, ali pravilo ne čita TS enum kroz
+`eslint-import-resolver-typescript`.
+
+**Testovi: 34/34 prolaze.**
+
+| Suite | Testova | Šta pokriva |
+|---|---|---|
+| `src/config/__tests__/version.config.test.ts` | 17 | `compareVersions` (5), `getAppVersion` (4), `checkVersionGate` fail-open (8) |
+| `src/services/api/__tests__/error.handler.test.ts` | 17 | `parseApiError`: HTTP status → i18n ključ, 401 zaštita (MO2-5), timeout vs. mreža, ne-Axios ulaz |
+
+**Mutacijska provjera: 10/10 namjernih grešaka ruši suite.** Bez ovoga
+„prolazi" ne znači ništa — a upravo je to uhvatilo rupu u mom vlastitom testu:
+mutacija `case 404 → 'errors.badRequest'` je **preživjela** prvi prolaz, jer sam
+404 stavio samo u test gdje `data.message` postoji pa se mapiranje uopće ne
+izvršava. Dodavanjem 404 u `it.each` mutacija pada.
+
+**Pokrivenost (`collectCoverageFrom` = `src/services` + `src/components/gas`).**
+Prije dodavanja `error.handler.test.ts` bila je **0 %**, jer je jedini test bio
+u `src/config`, izvan opsega. Nakon: **5.5 % linija** (28/513), 11 % branch,
+`error.handler.ts` **65.1 % linija / 68.8 % branch**. Preostalih 9 od 11 fajlova
+u opsegu je na 0 % — prag u CI je namjerno izostavljen jer bi bio besmislen.
+
+**CI.** Novi job `mobile` u `.github/workflows/backend-audit.yml`: `npm ci` →
+`type-check` → `lint` → `test --ci --coverage`. Okidači su **samo**
+`on.push.branches: [arena/1bfee051-boiler-control]` + `workflow_dispatch`
+(pravilo 0a) — bez `pull_request` i bez `main`, što je provjereno čitanjem
+parsiranog YAML-a, ne pretpostavkom.
+
+`@types/jest ^30.0.0` je morao biti dodan **nakon** prvog prolaza: `type-check`
+je pao s **exit 2 i 102 greške** (66× TS2304 + 33× TS2582) jer TS nije poznavao
+`describe`/`it`/`expect`. Nakon instalacije: 0 grešaka.
+
+`coverage/` je dodan u korijenski `.gitignore` (linija 15) — generisani
+artefakt ne ide u repo.
+
+**Lokalno izmjereno prije pusha:** `npm ci` exit 0 (1593 paketa),
+`type-check` exit 0 (0 grešaka), `lint` exit 0 (0 errors, 92 warnings),
+`test --ci` exit 0 (34/34).
+
+**Šta NIJE verificirano.** Ponašanje CI joba `mobile` u stvarnom GitHub Actions
+okruženju; runtime ponašanje komponenti (nema emulatora); nijedan komponentni
+test nije napisan iako je `@testing-library/react-native` instaliran; EAS build
+nije pokrenut.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

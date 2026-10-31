@@ -11,6 +11,9 @@ build/
 dist-ssr/
 web-build/
 
+# Test coverage (MO2-8: generise `jest --coverage`, ne ide u repo)
+coverage/
+
 # Logs
 logs/
 *.log

@@ -228,3 +228,43 @@ jobs:
       # base, nijedan zahtjev ne ide na uklonjeni dev fallback.
       - name: E2E smoke (FE2-7)
         run: npm run test:e2e
+
+  # MO2-8: mobilna aplikacija do ovog koraka NIJE imala nijedan CI korak.
+  # `npm test` je vraćalo **exit 127** (jest nije bio instaliran), a
+  # `npm run lint` **exit 2**: `.eslintrc.js` je imao `extends: ['expo']`, ali
+  # `eslint-config-expo` nikad nije bio u devDependencies. Izmjereno
+  # 2026-10-31 prije ove promjene.
+  #
+  # Bez ovog joba regresije u `mobile/` ne ruše ništa. To je razlog što su
+  # nula testova i 71 lint prekršaja ostali nevidljivi.
+  #
+  # `pull_request` i `main` su namjerno IZOSTAVLJENI — workflow se okida samo
+  # na push u ovu granu i ručno (vidi `on:` na vrhu datoteke).
+  mobile:
+    if: github.ref == 'refs/heads/arena/1bfee051-boiler-control'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Type-check
+        run: npm run type-check
+      # MO2-8: baseline od 91 pre-postojećeg warninga je dokumentovan u
+      # `mobile/eslint.config.js`. Lint pada na NOVOJ grešci, jer su pravila
+      # bez postojećih prekršaja i dalje na `error`.
+      - name: Lint
+        run: npm run lint
+      # Pokrivenost se ispisuje ali NE ruši job: opseg je 5.5% linija
+      # (izmjereno 2026-10-31), pa bi prag bio besmislen dok se ne dodaju
+      # testovi za `client.ts`, `notificationService.ts` i `storage/*`.
+      - name: Unit tests
+        run: npm test -- --ci --coverage --coverageReporters=text-summary

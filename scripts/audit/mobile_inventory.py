@@ -48,17 +48,32 @@ def resolve(expr: str, consts: dict[str, str]) -> str:
     return consts.get(expr, expr)
 
 
-def ts_files(base: Path) -> list[Path]:
-    return sorted(p for p in base.rglob('*.ts*') if p.is_file()) if base.is_dir() else []
+def ts_files(base: Path, exclude_tests: bool = False) -> list[Path]:
+    """`.ts`/`.tsx` fajlovi ispod `base`.
+
+    MO2-8: `exclude_tests=True` preskače `__tests__` direktorije. Inventarske
+    liste (ekrani, komponente, navigatori, servisi) opisuju **produkcijske**
+    fajlove, pa test fajl nije inventarska stavka — bez ovoga bi svaki novi
+    test rušio skriptu i tražio ručno dodavanje reda u tabelu.
+
+    Korpus za detekciju nekorištenih metoda namjerno ostaje BEZ ove zastavice:
+    tamo želimo vidjeti svako pojavljivanje imena, uključujući u testovima.
+    """
+    if not base.is_dir():
+        return []
+    files = (p for p in base.rglob('*.ts*') if p.is_file())
+    if exclude_tests:
+        files = (p for p in files if '__tests__' not in p.parts)
+    return sorted(files)
 
 
 def collect() -> dict:
     inv = read(INVENTORY)
 
-    screens = sorted(p.name for p in ts_files(SRC / 'screens'))
-    components = sorted(p.name for p in ts_files(SRC / 'components'))
-    navigators = sorted(p.name for p in ts_files(SRC / 'navigation'))
-    services = sorted(p.name for p in ts_files(SRC / 'services'))
+    screens = sorted(p.name for p in ts_files(SRC / 'screens', exclude_tests=True))
+    components = sorted(p.name for p in ts_files(SRC / 'components', exclude_tests=True))
+    navigators = sorted(p.name for p in ts_files(SRC / 'navigation', exclude_tests=True))
+    services = sorted(p.name for p in ts_files(SRC / 'services', exclude_tests=True))
 
     consts = route_constants()
 

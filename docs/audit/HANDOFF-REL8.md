@@ -3,6 +3,59 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## Stanje na kraju sesije (2026-10-31, VERIFICIRANO)
+
+- Grana `arena/1bfee051-boiler-control`, HEAD **`817b264`**, stablo **čisto**
+- Zadnji CI run **`41236341153`** = `completed success` (3/3 joba)
+- **`origin/main` = `179d171`** (merge commit) i **već sadrži sav rad** do
+  `60b22c3` — vlasnik merge-uje ručno
+- Ispred maina je **samo 1 commit**: `817b264` (REL-8 dokumentacija, 5 fajlova,
+  110 insertions)
+- **Main je 3 commita ispred nas** (divergencija), uključujući izmjene
+  `docker-compose.yml` i `docker-compose.monitoring.yml` koje NIJE napravio
+  agent. Prije bilo kakvog daljnjeg rada treba `git fetch origin main` i
+  provjeriti šta se promijenilo.
+- **PR NIJE otvoren.** Vlasnik je odlučio da se PR ne otvara; merge-uje ručno.
+  Trajna uputa „nikad PR na ovoj grani" ostaje na snazi.
+- **Nova grana se NE smije napraviti** — Arena prati sesiju po grani, rad na
+  drugoj grani ne bi bio povezan sa sesijom.
+
+## Završeno u ovoj sesiji (sve CI zeleno)
+
+| Stavka | Commiti | CI run |
+|---|---|---|
+| FE2-2 (#32) auth migracija | `3193f3c` + `3978b66` | `41218607380`, `41218925886` |
+| REL-7 (#33) Tuya snapshot | `62977ab` + `83bd15a` + `e0b4e8b` | `41226811814`, `41227022427` |
+| TempSet /2 (nastavak REL-7) | `0e544bf` | `41231364645` |
+| REL-8 (#34) atomski upis programa | `799a011` + `30188de` + `48a3b41` | `41233788265`, `41233970069` |
+| REL-8 dokumentacija | `817b264` | `41236341153` |
+
+## Sljedeći korak: FEAT-6 (#35)
+
+**Nije započet.** Iz `backend/09-improvements-backlog.md:48` i
+`MASTER-ROADMAP.md:128` (stavka 35, backend, trud M):
+- Postojeće: dashboard export na `Dashboard/dashboard.controller.ts:59-61`
+- Traži se: filter po vlasniku, vremenska zona, mašinski čitljiv format, velik
+  izvoz asinhrono
+- Kriterij: tuđi profil odbijen, redovi i tz ispravni, opasne spreadsheet
+  ćelije sigurne
+- **Zavisnost `PRIV-1` NE POSTOJI** ni u jednom backlogu — riješiti prije nego
+  se FEAT-6 proglasi gotovim
+- **Stvarni kod NIJE pročitan** — backlog tvrdnja o `:59-61` nije verificirana
+- CSV injection je najosjetljiviji dio: ćelije koje počinju s `=`, `+`, `-`, `@`
+  moraju biti neutralizirane
+
+## Ostalo otvoreno
+
+- REL-8: **konkurentnost nije verificirana** (PostgreSQL nedostupan); **nema
+  jest testa**, verifikacija je samo `program_sync_atomic_probe.cjs`
+- `test/unit/tuya-adapter.spec.ts:67,189` koristi `TempSet: 44` ali **ne
+  assertuje apsolutnu ciljnu temperaturu**, pa ne štiti TempSet ispravku
+- FE2-2: CSRF defense-in-depth i datum uključivanja
+  `AUTH_COOKIE_REFRESH_ENABLED` čekaju odluku vlasnika
+- Talas D dalje: PERF-1, PERF-2, SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
+  MO2-20. Blokirani: MO2-7 (#29), FORM-1 (#31)
+
 ## Git stanje (VERIFICIRANO)
 
 - Grana: `arena/1bfee051-boiler-control`

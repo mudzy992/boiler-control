@@ -19,12 +19,15 @@ if (process.argv.includes('--help')) {
   process.exit(0);
 }
 
-const expectedRef = 'refs/heads/arena/1bfee051-boiler-control';
+const expectedRefs = [
+  'refs/heads/arena/1bfee051-boiler-control',
+  'refs/heads/arena/c9961f17-boiler-control',
+];
 if (
   process.argv.length !== 3 ||
   process.argv[2] !== '--ci' ||
   process.env.GITHUB_ACTIONS !== 'true' ||
-  process.env.GITHUB_REF !== expectedRef ||
+  !expectedRefs.includes(process.env.GITHUB_REF) ||
   process.env.AUDIT_DISPOSABLE_POSTGRES !== '1' ||
   process.env.DATABASE_HOST !== '127.0.0.1' ||
   process.env.DATABASE_NAME !== 'audit' ||

@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { TuyaProgramByDay, TuyaProgramInterval } from './program-sync.types';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DayType } from 'src/generated/prisma';
+import { DayType, PrismaPromise } from 'src/generated/prisma';
 
 /**
  * REL-8 (B-027): zastavica za atomski upis dana programa. Zadano UKLJUCENO -
@@ -144,7 +144,8 @@ export class ProgramSyncService {
     intervals: TuyaProgramInterval[],
     programHash: string,
   ): Promise<void> {
-    const operations = intervals.map((interval) =>
+    const operations: PrismaPromise<unknown>[] = intervals.map(
+      (interval) =>
       this.prisma.thermostatProgram.upsert({
         where: {
           deviceId_dayType_orderIndex: {

@@ -55,7 +55,7 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
         email: `feat6-owner-${suffix}@example.test`,
         username: `feat6-owner-${suffix}`,
         passwordHash: 'not-a-real-hash',
-        plan: 'FULL',
+        plan: 'ENTERPRISE',
       },
     });
     const other = await prisma.user.create({
@@ -63,7 +63,7 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
         email: `feat6-other-${suffix}@example.test`,
         username: `feat6-other-${suffix}`,
         passwordHash: 'not-a-real-hash',
-        plan: 'FULL',
+        plan: 'ENTERPRISE',
       },
     });
     ownerId = owner.id;

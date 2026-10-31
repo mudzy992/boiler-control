@@ -348,7 +348,8 @@ describe('DashboardService.exportAnalytics (FEAT-6)', () => {
     expect(csv.export.content).toBe(
       'label,avgTargetTemp,avgCurrentTemp,totalDurationMin,cycles',
     );
-    expect(csv.meta.sourceRows.total).toBe(0);
+    expect(csv.meta).toBeDefined();
+    expect(csv.meta?.sourceRows.total).toBe(0);
     const json = await service.exportAnalytics(1, {
       ...baseQuery,
       version: 2,
@@ -369,6 +370,7 @@ describe('DashboardService.exportAnalytics (FEAT-6)', () => {
       ...baseQuery,
       version: 2,
     } as any);
-    expect(result.meta.sourceRows.total).toBe(0);
+    expect(result.meta).toBeDefined();
+    expect(result.meta?.sourceRows.total).toBe(0);
   });
 });

@@ -181,7 +181,11 @@ export class ThermostatPollingService {
         });
         this.structuredLogger.warn(
           'Snapshot incomplete; heating state not changed',
-          { ...ctx, action: 'snapshot_incomplete', missingFields: missing.join(',') },
+          {
+            ...ctx,
+            action: 'snapshot_incomplete',
+            missingFields: missing.join(','),
+          },
         );
         // Metrika `poll_devices_incomplete` se već broji iz ishoda u pollAll,
         // pa je ovdje NE inkrementiramo (inače bi se brojalo duplo).
@@ -258,8 +262,16 @@ export class ThermostatPollingService {
         await this.handleHeatingEnd(device, lastEvent, ctx.runId);
       }
 
-      if (isHeating && lastEvent && lastEvent.roomTargetTemp !== targetTempValue) {
-        await this.handleTargetTempChange(lastEvent, targetTempValue, ctx.runId);
+      if (
+        isHeating &&
+        lastEvent &&
+        lastEvent.roomTargetTemp !== targetTempValue
+      ) {
+        await this.handleTargetTempChange(
+          lastEvent,
+          targetTempValue,
+          ctx.runId,
+        );
       }
 
       this.logger.debug(

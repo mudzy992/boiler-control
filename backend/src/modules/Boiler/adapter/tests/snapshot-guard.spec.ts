@@ -76,33 +76,67 @@ describe('snapshot-guard (REL-7 / B-026)', () => {
 
   describe('missingSnapshotFields', () => {
     it('prazan niz kad je snapshot kompletan', () => {
-      expect(missingSnapshotFields({ currentTemp: 20, targetTemp: 21, powerOn: true })).toEqual([]);
+      expect(
+        missingSnapshotFields({
+          currentTemp: 20,
+          targetTemp: 21,
+          powerOn: true,
+        }),
+      ).toEqual([]);
     });
 
     it('imenuje tacno polje koje nedostaje', () => {
-      expect(missingSnapshotFields({ currentTemp: null, targetTemp: 21, powerOn: true })).toEqual(['TempCurrent']);
-      expect(missingSnapshotFields({ currentTemp: 20, targetTemp: null, powerOn: true })).toEqual(['TempSet']);
-      expect(missingSnapshotFields({ currentTemp: 20, targetTemp: 21 })).toEqual(['Power']);
+      expect(
+        missingSnapshotFields({
+          currentTemp: null,
+          targetTemp: 21,
+          powerOn: true,
+        }),
+      ).toEqual(['TempCurrent']);
+      expect(
+        missingSnapshotFields({
+          currentTemp: 20,
+          targetTemp: null,
+          powerOn: true,
+        }),
+      ).toEqual(['TempSet']);
+      expect(
+        missingSnapshotFields({ currentTemp: 20, targetTemp: 21 }),
+      ).toEqual(['Power']);
     });
 
     it('navodi sva tri kad nista nije poslano', () => {
-      expect(missingSnapshotFields({ currentTemp: null, targetTemp: null })).toEqual([
-        'TempCurrent',
-        'TempSet',
-        'Power',
-      ]);
+      expect(
+        missingSnapshotFields({ currentTemp: null, targetTemp: null }),
+      ).toEqual(['TempCurrent', 'TempSet', 'Power']);
     });
 
     it('stvarne nule i false se NE broje kao nedostajuce', () => {
-      expect(missingSnapshotFields({ currentTemp: 0, targetTemp: 0, powerOn: false })).toEqual([]);
+      expect(
+        missingSnapshotFields({
+          currentTemp: 0,
+          targetTemp: 0,
+          powerOn: false,
+        }),
+      ).toEqual([]);
     });
   });
 
   describe('isSnapshotComplete', () => {
     it('kompletan samo kad sva tri polja imaju vrijednost', () => {
-      expect(isSnapshotComplete({ currentTemp: 0, targetTemp: 0, powerOn: false })).toBe(true);
-      expect(isSnapshotComplete({ currentTemp: null, targetTemp: 21, powerOn: true })).toBe(false);
-      expect(isSnapshotComplete({ currentTemp: 20, targetTemp: 21 })).toBe(false);
+      expect(
+        isSnapshotComplete({ currentTemp: 0, targetTemp: 0, powerOn: false }),
+      ).toBe(true);
+      expect(
+        isSnapshotComplete({
+          currentTemp: null,
+          targetTemp: 21,
+          powerOn: true,
+        }),
+      ).toBe(false);
+      expect(isSnapshotComplete({ currentTemp: 20, targetTemp: 21 })).toBe(
+        false,
+      );
     });
   });
 
@@ -116,8 +150,19 @@ describe('snapshot-guard (REL-7 / B-026)', () => {
     });
 
     it('iskljucuje se samo eksplicitnim off vrijednostima', () => {
-      for (const off of ['off', 'OFF', 'Off', 'false', 'FALSE', '0', 'no', ' off ']) {
-        expect(snapshotGuardEnabled({ [SNAPSHOT_GUARD_FLAG]: off })).toBe(false);
+      for (const off of [
+        'off',
+        'OFF',
+        'Off',
+        'false',
+        'FALSE',
+        '0',
+        'no',
+        ' off ',
+      ]) {
+        expect(snapshotGuardEnabled({ [SNAPSHOT_GUARD_FLAG]: off })).toBe(
+          false,
+        );
       }
     });
 

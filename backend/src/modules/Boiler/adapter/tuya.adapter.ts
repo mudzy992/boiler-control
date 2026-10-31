@@ -4,10 +4,7 @@ import * as crypto from 'crypto';
 import { TuyaAuthService } from '../../../modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ThermostatSnapshot } from './thermostat-adapter.interface';
-import {
-  toNullableBoolean,
-  toNullableNumber,
-} from './snapshot-guard';
+import { toNullableBoolean, toNullableNumber } from './snapshot-guard';
 import { TuyaProgramByDay } from './program-sync.types';
 import { ProgramSyncService } from './program.sync.service';
 import { StructuredLogger } from '../../../common/structured-logger';

@@ -38,7 +38,9 @@ const OFF_VALUES = new Set(['off', 'false', '0', 'no']);
  * Sve osim eksplicitnog "off" znači UKLJUČENO, uključujući prazan string i
  * nepostojanje varijable.
  */
-export function snapshotGuardEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+export function snapshotGuardEnabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
   const raw = (env[SNAPSHOT_GUARD_FLAG] ?? 'on').trim().toLowerCase();
   return !OFF_VALUES.has(raw);
 }

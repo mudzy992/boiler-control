@@ -1994,6 +1994,24 @@ dokazano da ih ovaj model uopće šalje. Prometheus alert na
 Prisma klijent (`binaries.prisma.sh` nedostupan); **potvrđeno da padaju
 identično na čistom HEAD-u `3978b66`**, dakle pre-postojeće, ne od ove izmjene.
 
+**CI ishod (VERIFICIRANO).** Prvi push (`62977ab`, run `41226514871`) je **pao**
+na backend `test` jobu, korak 12 „Lint without modifying files". Uzrok: taj korak
+pokreće eslint **bez** `--fix`, dok lokalni `npm run lint` ima `--fix` i automatski
+je ispravljao preduge linije u novom kodu — lokalno zeleno, u CI-ju errors.
+Popravljeno u `83bd15a` i verificirano **CI-jevom tačnom komandom**
+(`npx eslint 'src/**/*.ts' 'test/**/*.ts' --ignore-pattern 'src/generated/**'`):
+EXIT=0, **0 errors / 2 warnings** (oba pre-postojeća, `no-floating-promises` u
+`correlation-id.service.spec.ts` i `main.ts`). MD5 hashovi fajlova identični prije
+i poslije ponovnog pokretanja bez `--fix`, dakle eslint više ništa ne mijenja.
+
+Run **`41226811814`** = `completed success`. Sva tri joba zelena: `frontend`
+(18 koraka), `test` (21), `mobile` (10). Korak 12 „Lint without modifying files"
+sada `success`, uz `Type-check` i `Build` također `success`.
+
+**Pouka zabilježena:** „lokalni lint prolazi" ne znači „CI lint prolazi" kad se
+lokalna komanda razlikuje po `--fix`. Provjera mora koristiti CI-jevu tačnu
+komandu.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

@@ -32,7 +32,6 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'
     networks:
-      - web
       - monitoring
     labels:
       - "traefik.enable=true"
@@ -63,7 +62,6 @@ services:
     depends_on:
       - prometheus
     networks:
-      - web
       - monitoring
     labels:
       - "traefik.enable=true"

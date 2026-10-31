@@ -7,6 +7,11 @@ import { BoilerService } from '../Boiler/boiler.service';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { StructuredLogger, LogContext } from '../../common/structured-logger';
 import { MetricsService } from '../../common/metrics.service';
+import {
+  snapshotGuardEnabled,
+  isSnapshotComplete,
+  missingSnapshotFields,
+} from '../Boiler/adapter/snapshot-guard';
 import { NotificationType } from 'src/generated/prisma';
 
 /**
@@ -150,20 +155,54 @@ export class ThermostatPollingService {
       const snapshot = await this.adapter.fetchSnapshot(device.deviceId, runId);
       if (!snapshot) return 'no_snapshot';
       // INFO: temperature su u adapteru već normalizovane i konvertovane u celzijuse
-      const currentTemp =
-        snapshot.currentTemp !== undefined ? snapshot.currentTemp : null;
+      // REL-7 (B-026): `null`/`undefined` znači "uređaj nije poslao polje".
+      const currentTemp = snapshot.currentTemp ?? null;
       const targetTemp = snapshot.targetTemp ?? null;
-      // INFO: ovo je podataka da li je termostat uključen ili ne, a ne da li je grijanje trenutno aktivno ili ne
-      const powerOn = snapshot.powerOn ?? false;
+      // INFO: ovo je podatak da li je termostat uključen ili ne, a ne da li je
+      // grijanje trenutno aktivno ili ne.
+      const powerOn = snapshot.powerOn;
+
+      // REL-7 (B-026): guard MORA biti PRIJE upisa u bazu. Prije ove ispravke
+      // nepotpun snapshot se već bio upisao u roomCurrentTemp/roomTargetTemp
+      // (lažna 0 °C), pa je kvario historiju i prije nego što bi guard okinio.
+      //
+      // Princip: aplikacija NE upravlja termostatom (Tuya API je read-only, nema
+      // nijednog PUT/POST prema uređaju), pa ovdje ne postoji "sigurno stanje"
+      // koje bi se moglo postaviti. Jedino ispravno je NE bilježiti promjenu
+      // koju ne možemo posmatrati.
+      const snapshotView = { currentTemp, targetTemp, powerOn };
+      if (snapshotGuardEnabled() && !isSnapshotComplete(snapshotView)) {
+        const missing = missingSnapshotFields(snapshotView);
+        // Uređaj JE odgovorio, pa kontakt bilježimo — ali ne izmišljamo
+        // vrijednosti temperature.
+        await this.prisma.thermostatDevice.updateMany({
+          where: { id: device.id },
+          data: { lastSeen: new Date(), lastSnapshotAt: new Date() },
+        });
+        this.structuredLogger.warn(
+          'Snapshot incomplete; heating state not changed',
+          { ...ctx, action: 'snapshot_incomplete', missingFields: missing.join(',') },
+        );
+        // Metrika `poll_devices_incomplete` se već broji iz ishoda u pollAll,
+        // pa je ovdje NE inkrementiramo (inače bi se brojalo duplo).
+        return 'incomplete';
+      }
+
+      // Kad je guard isključen, nepoznato se vraća na staro 0/false da bi
+      // rollback odluke o ciklusu bio doslovan.
+      const currentTempValue = currentTemp ?? 0;
+      const targetTempValue = targetTemp ?? 0;
+      const powerOnValue = powerOn ?? false;
+
       const hasChanged =
-        device.roomTargetTemp !== targetTemp ||
-        device.roomCurrentTemp !== currentTemp;
+        device.roomTargetTemp !== targetTempValue ||
+        device.roomCurrentTemp !== currentTempValue;
       if (hasChanged) {
         await this.prisma.thermostatDevice.updateMany({
           where: { id: device.id },
           data: {
-            roomTargetTemp: targetTemp,
-            roomCurrentTemp: currentTemp,
+            roomTargetTemp: targetTempValue,
+            roomCurrentTemp: currentTempValue,
             lastSeen: new Date(),
             lastSnapshotAt: new Date(),
           },
@@ -178,8 +217,6 @@ export class ThermostatPollingService {
         });
       }
 
-      if (currentTemp === null || targetTemp === null) return 'incomplete';
-
       // 3️⃣ Izračun preporučene polazne temperature (PURE)
       const flowResult = await this.boilerService.calculateFlowTemp(
         device.userId,
@@ -188,13 +225,13 @@ export class ThermostatPollingService {
       // 4️⃣ Odluči da li grijanje treba biti ON
       let heatingShouldBeOn = false;
 
-      if (!powerOn) {
+      if (!powerOnValue) {
         heatingShouldBeOn = false;
       } else {
         heatingShouldBeOn = this.resolveHeatingState(
           isHeating,
-          currentTemp,
-          targetTemp,
+          currentTempValue,
+          targetTempValue,
         );
 
         if (lastEvent) {
@@ -210,8 +247,8 @@ export class ThermostatPollingService {
       if (!isHeating && heatingShouldBeOn) {
         await this.handleHeatingStart(
           device,
-          currentTemp,
-          targetTemp,
+          currentTempValue,
+          targetTempValue,
           flowResult.flowTemp,
           ctx.runId,
         );
@@ -221,12 +258,12 @@ export class ThermostatPollingService {
         await this.handleHeatingEnd(device, lastEvent, ctx.runId);
       }
 
-      if (isHeating && lastEvent && lastEvent.roomTargetTemp !== targetTemp) {
-        await this.handleTargetTempChange(lastEvent, targetTemp, ctx.runId);
+      if (isHeating && lastEvent && lastEvent.roomTargetTemp !== targetTempValue) {
+        await this.handleTargetTempChange(lastEvent, targetTempValue, ctx.runId);
       }
 
       this.logger.debug(
-        `Device=${device.deviceId} | Current=${currentTemp} | Target=${targetTemp} | Heating=${heatingShouldBeOn} | Flow=${flowResult.flowTemp}`,
+        `Device=${device.deviceId} | Current=${currentTempValue} | Target=${targetTempValue} | Heating=${heatingShouldBeOn} | Flow=${flowResult.flowTemp}`,
       );
 
       return 'success';

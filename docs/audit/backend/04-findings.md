@@ -243,10 +243,36 @@
 - Gdje: `backend/src/modules/Boiler/adapter/tuya.adapter.ts:240-297,319-338`; `backend/src/modules/ThermostatPoll/thermostat.polling.service.ts:96-128,135-173,373-379`.
 - Šta nije u redu i zašto: odsutan ili null `TempCurrent` izraz dijeli s 2 i u JavaScriptu postaje `0`; nedostajući cilj se zamjenjuje s `0`, a nedostajući `Power` postaje `false`. Poller takve vrijednosti ne razlikuje od stvarnog stanja i može upisati snapshot te izabrati početak/kraj eventa. Pogrešni eventi, notifikacije, historija ili učenje mogu uslijediti na stvarnom toku, ali njihov produkcijski obim nije izmjeren. Nije dokazano da Tuya za ovaj model šalje nepotpune statuse, niti da aplikacija izdaje fizičku komandu grijanju.
 - Dokaz: `node scripts/audit/tuya_missing_fields_repro.cjs` dva puta pokreće pravi Tuya `fetchSnapshot` i `pollDevice` sa sintetičkim statusom/fake DB: bez `TempCurrent` uz uključeni Power i cilj 21 nastaju temperatura 0 i poziv start handlera; bez Power uz 20/21 nastaju `powerOn=false` i poziv end handlera; bez cilja uz 20 i Power=true nastaju cilj 0 i poziv end handlera. Start/end handleri su brojači, pa nisu testirani stvarni upisi eventa/historije, notifikacije ni učenje. `fetchStatus` je stub; nema stvarnog Tuya odgovora, HTTP-a, PostgreSQL-a, schedulera, uređaja ili produkcije.
-- Preporuka: prvo potvrditi verzionirani provider ugovor, jedinice i validne rasponе; eksplicitno modelirati `unknown`/nedostajuće, finite i quality/timestamp, nikada ne svoditi odsutno na legitimnu nulu ili off. Poller ne smije donositi prijelaz stanja niti osvježiti status kao valjan pri nekompletnom neprovjerenom snapshotu; degradaciju/expiry odrediti sa stručnjakom. Za stvarni 0 °C zadržati ispravnu obradu. Izbjegavati bilo kakve nove komande uređaju.
+- Preporuka: prvo potvrditi verzionirani provider ugovor, jedinice i validne raspone; eksplicitno modelirati `unknown`/nedostajuće, finite i quality/timestamp, nikada ne svoditi odsutno na legitimnu nulu ili off. Poller ne smije donositi prijelaz stanja niti osvježiti status kao valjan pri nekompletnom neprovjerenom snapshotu; degradaciju/expiry odrediti sa stručnjakom. Za stvarni 0 °C zadržati ispravnu obradu. Izbjegavati bilo kakve nove komande uređaju.
 - Kako provjeriti: test-first za `undefined`, `null`, odsutna polja, 0, false, nevalidni string/NaN, djelimične statuse i program bez intervala; HTTP/provider fixture samo uz potvrđeno porijeklo, zatim prava poll putanja s fake providerom i izolovanim PostgreSQL-om provjerava da nema event/history/notification/learning side effecta za nevalidan snapshot, uz freshness alarm. `cd backend && npm test -- --runInBand` i `npm run test:integration`.
 - Trud: M/L — Zavisnosti: stvarni Tuya model/DP ugovor, semantika stale stanja, verzije klijenata i stručna provjera sigurnosti.
 
+
+- **RIJEŠENO (REL-7, 2026-10-31).** Nepoznato više nije nula: `snapshot-guard.ts`
+  uvodi `toNullableNumber`/`toNullableBoolean`, pa odsutno polje ostaje
+  `null`/`undefined`. Guard u `pollDevice` je **premješten prije upisa u bazu** —
+  ranije se lažna `0` već bila snimila u `roomCurrentTemp`/`roomTargetTemp` i
+  prije nego što bi mrtvi guard na `:181` okinio. Nepotpun snapshot sada vraća
+  `'incomplete'` bez lifecycle odluke i bez izmišljenih vrijednosti (bilježi se
+  samo kontakt s uređajem). Stvarne nule i `false` i dalje rade.
+- **Korekcija obima štete (potvrdio vlasnik 2026-10-31).** Gore navedena
+  neizvjesnost „nije dokazano da aplikacija izdaje fizičku komandu grijanju"
+  sada je **riješena: aplikacija ne može upravljati Tuya termostatom.** Tuya API
+  je read-only — `grep` za `.put(`, `.post(`, `method: 'PUT'`, `method: 'POST'`,
+  `commands`, `/status` kroz `src/modules/Tuya/**` i `tuya.adapter.ts` daje
+  **0 pogodaka**; `handleHeatingStart` radi isključivo Prisma upise i logovanje.
+  Termostat javlja stanje (grijanje ON/OFF) i programe. Dakle B-026 **nije**
+  bio rizik fizičke sigurnosti, nego rizik integriteta podataka: lažni eventi,
+  lažna historija i trajanja, lažne notifikacije i pokvaren ulaz za
+  preporuke/učenje. Zbog toga ispravka ne uvodi "fail-safe stanje" — ne postoji
+  stanje koje bi aplikacija mogla postaviti — nego princip *ne bilježiti
+  promjenu koju ne možemo posmatrati*.
+- **Dokaz.** `node scripts/audit/tuya_missing_fields_repro.cjs` (pretvoren iz
+  dokaza buga u regression guard, EXIT=0): bez `TempCurrent` → `currentTemp:null`,
+  `starts:0`, `ends:0`, `tempWrites:0`; bez `Power` → `powerOn:undefined`,
+  `ends:0`; bez `TempSet` → `targetTemp:null`, `ends:0`. Kontrola stvarnih
+  vrijednosti: `TempCurrent:0` → `starts:1`, `Power:false` → `ends:1`,
+  `TempSet:0` → `ends:1`. Mutacijski verificirano 4/4.
 
 ### [B-027] Prekinuta sinkronizacija programa može trajno ostaviti mješavinu intervala — Ozbiljnost: VISOKO potencijalno — Pouzdanost: VERIFIKOVANO (stvarni servis/fake DB), HIPOTEZA (produkcijski uticaj)
 - Gdje: `backend/src/modules/Boiler/adapter/program.sync.service.ts:19-33,39-71,109-154`, `backend/src/modules/Boiler/adapter/tuya.adapter.ts:253-267`.

@@ -40,14 +40,30 @@ async function run(status,isOpen){
   const service=new ThermostatPollingService(db,adapter,{calculateFlowTemp:async()=>({flowTemp:50})},{},{},{incrementCounter(){}});
   service.handleHeatingStart=async()=>{starts++;};service.handleHeatingEnd=async()=>{ends++;};service.handleTargetTempChange=async()=>{};
   await service.pollDevice({id:1,userId:1,deviceId:'synthetic',lastSnapshotAt:null,roomCurrentTemp:20,roomTargetTemp:21},'synthetic');
-  return {currentTemp:snapshot.currentTemp,targetTemp:snapshot.targetTemp,powerOn:snapshot.powerOn,starts,ends,snapshotWrites:writes.length};
+  const tempWrites=writes.filter(w=>'roomCurrentTemp' in w||'roomTargetTemp' in w).length;
+  return {currentTemp:snapshot.currentTemp,targetTemp:snapshot.targetTemp,powerOn:snapshot.powerOn,starts,ends,snapshotWrites:writes.length,tempWrites};
 }
 (async()=>{
+  // REL-7 (B-026): ova skripta je prvobitno DOKAZIVALA bug. Sada je regression
+  // guard — assertuje ispravljeno ponasanje. Aplikacija ne upravlja termostatom
+  // (Tuya API je read-only), pa je steta bila u podacima, ne u fizickoj kontroli.
   const missingCurrent=await run({Power:true,TempSet:21},false);
   const missingPower=await run({TempCurrent:40,TempSet:21},true);
   const missingTarget=await run({TempCurrent:40,Power:true},true);
-  assert.deepEqual(missingCurrent,{currentTemp:0,targetTemp:21,powerOn:true,starts:1,ends:0,snapshotWrites:1});
-  assert.deepEqual(missingPower,{currentTemp:20,targetTemp:21,powerOn:false,starts:0,ends:1,snapshotWrites:1});
-  assert.deepEqual(missingTarget,{currentTemp:20,targetTemp:0,powerOn:true,starts:0,ends:1,snapshotWrites:1});
-  console.log(JSON.stringify({scope:'actual Tuya snapshot normalization and pollDevice; fake status/database, start/end replaced with counters',missingCurrent,missingPower,missingTarget,realProviderSchedulerDatabaseOrPhysicalControlTested:false},null,2));
-})().catch(()=>{console.error('Reprodukcija nije uspjela; provjerite sintetički bootstrap i zavisnosti.');process.exitCode=1;});
+
+  // Nepotpuno -> nepoznato ostaje nepoznato, bez odluke i bez laznog upisa.
+  assert.deepEqual(missingCurrent,{currentTemp:null,targetTemp:21,powerOn:true,starts:0,ends:0,snapshotWrites:1,tempWrites:0});
+  assert.deepEqual(missingPower,{currentTemp:20,targetTemp:21,powerOn:undefined,starts:0,ends:0,snapshotWrites:1,tempWrites:0});
+  assert.deepEqual(missingTarget,{currentTemp:20,targetTemp:null,powerOn:true,starts:0,ends:0,snapshotWrites:1,tempWrites:0});
+
+  // Kontrola: STVARNE nule i false moraju i dalje raditi (inace bi ispravka
+  // pretvorila mjereno stanje u "nepoznato" i aplikacija bi oslijepila).
+  const realZeroTemp=await run({TempCurrent:0,Power:true,TempSet:21},false);
+  const realPowerOff=await run({TempCurrent:40,TempSet:21,Power:false},true);
+  const realZeroTarget=await run({TempCurrent:40,TempSet:0,Power:true},true);
+  assert.deepEqual(realZeroTemp,{currentTemp:0,targetTemp:21,powerOn:true,starts:1,ends:0,snapshotWrites:1,tempWrites:1});
+  assert.deepEqual(realPowerOff,{currentTemp:20,targetTemp:21,powerOn:false,starts:0,ends:1,snapshotWrites:1,tempWrites:0});
+  assert.deepEqual(realZeroTarget,{currentTemp:20,targetTemp:0,powerOn:true,starts:0,ends:1,snapshotWrites:1,tempWrites:1});
+
+  console.log(JSON.stringify({scope:'actual Tuya snapshot normalization and pollDevice; fake status/database, start/end replaced with counters',incompleteDataCausesNoLifecycleDecision:true,realZeroAndFalseStillProcessed:true,missingCurrent,missingPower,missingTarget,realZeroTemp,realPowerOff,realZeroTarget,realProviderSchedulerDatabaseOrPhysicalControlTested:false},null,2));
+})().catch(e=>{console.error('Regression guard pao:',e&&e.message);process.exitCode=1;});

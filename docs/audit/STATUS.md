@@ -1912,6 +1912,88 @@ commit `3193f3c`. Sva tri joba zelena: `frontend` (18 koraka), `test` (21),
 `react-refresh/only-export-components` upozorenje na `AuthContext.tsx` je
 **pre-postojeće**, nije ga uveo FE2-2.
 
+### REL-7 — Tuya snapshot: nepoznato nije nula (B-026), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** Tuya status je djelimičan, a stari kod je
+odsutna polja pretvarao u **stvarne** vrijednosti:
+
+| Mjesto | Kod | Kad polje nedostaje |
+|---|---|---|
+| `tuya.adapter.ts:321` | `(status['TempCurrent'] ?? null) / 2` | `null / 2` → **0 °C** |
+| `tuya.adapter.ts:322` | `status['Power'] === true` | **false** |
+| `tuya.adapter.ts:282` / `:296` | `… ?? 0` | cilj **0 °C** |
+
+`resolveHeatingState` (`polling.service.ts:435-436`) je na tome birao
+`0 < 21` → **start**, odnosno `20 <= 0-1` → **end**.
+
+**Dvije stvari koje nalaz nije istakao.** Prvo, **guard je već postojao ali je
+bio mrtav**: `:181` ima `if (currentTemp === null || targetTemp === null) return
+'incomplete';`, i ishodi `'incomplete'` + metrika `poll_devices_incomplete`
+(`:20`, `:27`) su već bili definisani i spojeni — autor je namjeravao ovo
+ponašanje, samo nikad nije proradilo jer je adapter uništio null. Drugo, **DB
+upis se dešavao PRIJE guarda** (`:161-179`), pa se lažna nula trajno snimila u
+`roomCurrentTemp`/`roomTargetTemp` i kad bi guard okinio.
+
+**Korekcija obima štete — potvrdio vlasnik.** Nalaz je ostavio otvoreno „nije
+dokazano da aplikacija izdaje fizičku komandu grijanju". Vlasnik je potvrdio da
+**aplikacija ne može upravljati Tuya termostatom**: Tuya API je read-only, daje
+statuse (grijanje ON/OFF) i programe. Provjereno i u kodu — `grep` za `.put(`,
+`.post(`, `method: 'PUT'`, `method: 'POST'`, `commands`, `/status` kroz
+`src/modules/Tuya/**` i `tuya.adapter.ts` daje **0 pogodaka**, a
+`handleHeatingStart` (`:246-275`) radi isključivo Prisma upise i logovanje.
+
+To je promijenilo prirodu zadatka. B-026 **nije** bio rizik fizičke sigurnosti
+nego rizik integriteta podataka: lažni eventi, lažna historija i trajanja, lažne
+notifikacije, pokvaren ulaz za preporuke/učenje. Zbog toga ispravka **ne uvodi
+„fail-safe stanje"** — aplikacija nema stanje koje bi mogla postaviti — nego
+princip: *ne bilježiti promjenu koju ne možemo posmatrati*.
+
+**Ispravka.** Novi `snapshot-guard.ts` (`toNullableNumber`,
+`toNullableBoolean`, `missingSnapshotFields`, `isSnapshotComplete`,
+`snapshotGuardEnabled`). `ThermostatSnapshot` sada tipizira polja kao nullable,
+pa je „nepoznato" uopće izrazivo. Guard je premješten **prije** upisa u bazu;
+nepotpun snapshot vraća `'incomplete'`, bilježi samo kontakt s uređajem
+(`lastSeen`/`lastSnapshotAt`) i ne dira lifecycle. Zastavica
+`INCOMPLETE_SNAPSHOT_GUARD_ENABLED`, **zadano UKLJUČENO** (staro ponašanje je
+bug u podacima, pa ga ne treba čuvati kao zadano).
+
+**Namjerno usko prihvaćene vrijednosti.** `toNullableBoolean` prihvata samo
+pravi boolean; `'true'`/`1` ostaju `undefined`. Tiho proširivanje bi stvarni
+kvar pretvorilo u tiho drugačije ponašanje. Isto tako `toNullableNumber`
+odbija `''`, boolean i `NaN`, jer bi `Number('') === 0` bila tiha greška.
+
+**Testovi: 18/18 novih** (`snapshot-guard.spec.ts`). `tuya_missing_fields_repro.cjs`
+je pretvoren **iz dokaza buga u regression guard** (EXIT=0, 6 asertcija):
+
+| Slučaj | `currentTemp` | `targetTemp` | `powerOn` | starts | ends | upis temp. |
+|---|---|---|---|---|---|---|
+| nedostaje `TempCurrent` | `null` | 21 | true | 0 | 0 | ne |
+| nedostaje `Power` | 20 | 21 | `undefined` | 0 | 0 | ne |
+| nedostaje `TempSet` | 20 | `null` | true | 0 | 0 | ne |
+| `TempCurrent=0` (stvarno) | `0` | 21 | true | 1 | 0 | da |
+| `Power=false` (stvarno) | 20 | 21 | `false` | 0 | 1 | — |
+| `TempSet=0` (stvarno) | 20 | `0` | true | 0 | 1 | da |
+
+Posljednja tri reda su ključna: **stvarne nule i `false` i dalje rade**, pa
+ispravka nije pretvorila mjereno stanje u „nepoznato" i time oslijepila
+aplikaciju.
+
+**Mutacijska provjera: 4/4.** Svaka od četiri namjerne greške (vraćanje `0` za
+odsutno, `false` za odsutno, guard uvijek isključen, Power se ne provjerava)
+ubijena je **i** od jest-a **i** od regression guarda; original vraćen identično.
+
+**Type-check.** U izmijenjenim fajlovima **nula grešaka izvan Prisma kaskade** i
+**nula grešaka null-dodjele** (TS2322/TS2345/TS18047/TS18048/TS2531/TS2532), što
+znači da promjena na nullable ne lomi nijednog potrošača.
+
+**Šta NIJE verificirano.** Stvarni Tuya odgovori s produkcije nisu uhvaćeni, pa
+**učestalost nepotpunih statusa nije izmjerena** — nalaz i dalje stoji da nije
+dokazano da ih ovaj model uopće šalje. Prometheus alert na
+`poll_devices_incomplete` nije dodan. `tuya-adapter.spec.ts` i
+`thermostat-polling-metrics.spec.ts` padaju lokalno jer nedostaje generisani
+Prisma klijent (`binaries.prisma.sh` nedostupan); **potvrđeno da padaju
+identično na čistom HEAD-u `3978b66`**, dakle pre-postojeće, ne od ove izmjene.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

@@ -1553,6 +1553,109 @@ usputno popravljanje mobilnih testova. Jest nije instaliran.
 - **Vlasnička odluka o Play obrascu** (pristup fajlovima) iz backloga nije
   riješena i ne može se riješiti iz koda.
 
+### MO2-6 — Settings prekidači bez efekta i bez perzistencije (MO-008), 2026-10-30
+
+Talas C, #28.
+
+**Nalaz je tačan, ali nepotpun.** Backlog kaže da tri prekidača „pozivaju
+deprecated no-op". Mjerenje pokazuje da je to tačno samo za jedan:
+
+| prekidač | stanje prije | šta je `onToggle` stvarno radio |
+|---|---|---|
+| `notificationsEnabled` (`:45`) | `useState(true)` | **ništa** — samo `setNotificationsEnabled(...)`, bez ijednog poziva |
+| `pushEnabled` (`:46`) | `useState(true)` | **ništa** — samo `setPushEnabled(...)` |
+| `dailyGasReminder` (`:47`) | `useState(true)` | zvao no-op (vidi ispod) |
+
+Dva od tri prekidača nisu zvala **čak ni** no-op — bila su čisti lokalni state.
+To je gore nego što nalaz opisuje: korisnik prebaci prekidač, vidi animaciju,
+izađe iz ekrana i sve se vrati na `true`.
+
+**No-op funkcije su bile potpuno prazne.** `scheduleDailyGasReadingReminder` i
+`cancelDailyGasReadingReminder` (`notificationService.ts:213-233`) imale su tijelo
+koje je sadržavalo **samo** `console.log` s napomenom da podsjetnike šalje backend.
+`SettingsScreen` ih je zvao na svako prebacivanje **i** na mount (`:67,69,76`), pa
+je prekidač djelovao funkcionalno.
+
+**Šta stvarno postoji na backendu.**
+
+- `GET /api/notifications/preferences` (`notifications.controller.ts:97-130`) —
+  vraća preferencije, a ako ih nema, kreira zadane za **šest** tipova.
+- `PATCH /api/notifications/preferences` (`:133-152`) — `upsert` po
+  `userId_type`.
+- Tipovi su Prisma enum `NotificationType` (`schema.prisma:319`):
+  `DAILY_RECOMMENDATION`, `FLOW_TEMP_CHANGED`, `HEATING_STARTED`,
+  `HEATING_ENDED`, `SYSTEM_ALERT`, `GAS_READING_REMINDER`.
+- **Backend nema „master" prekidač za obavijesti.** Zato `notificationsEnabled` i
+  `pushEnabled` nemaju parnjaka na koji bi se mogli vezati.
+
+**Korekcija nalaza B-010.** Backlog upozorava „ne slati nepostojeće tipove", što
+implicira da bi izmišljeni tip tiho napravio smeće u bazi. Mjerenje pokazuje
+drugačije: `@Body() body: { type: NotificationType; enabled: boolean }` je običan
+TS tip bez DTO klase i bez `class-validator` dekoratora, pa ga globalni
+`ValidationPipe` (`main.ts:36-42`) **preskače** — HTTP validacije stvarno nema.
+Ali kolona `type` je Prisma **enum**, ne `String`, pa izmišljena vrijednost pada
+na nivou baze. Posljedica je 500 umjesto 400, ne tiho smeće.
+
+**Izmjene.**
+
+1. `dailyGasReminder` → vezan na stvarni `PATCH` s tipom
+   `GAS_READING_REMINDER`. Optimistično postavi stanje, pri grešci ga **vrati** —
+   inače bi prekidač lagao da je promjena prošla. Stanje se na mount čita s
+   backenda; dok se ne učita, prekidač je onemogućen (`isLoadingGasReminder`).
+2. `notificationsEnabled` i `pushEnabled` → **uklonjeni kao prekidači.** Njihovo
+   jedino iskreno stanje je OS dozvola, pa jedan red sada prikazuje stvarni
+   `Notifications.getPermissionsAsync().status` i nudi `Linking.openSettings()`.
+   Aplikacija ne može sama sebi dodijeliti dozvolu, pa bi prekidač tu i dalje bio
+   laž.
+3. No-op funkcije **obrisane**. Jedini potrošač bio je `SettingsScreen`
+   (provjereno grep-om: 5 referenci, sve u tom fajlu).
+4. Pet novih i18n ključeva u **oba** bloka (`enUS` i `bsBS`), svaki potvrđen s
+   `grep -c = 2`.
+5. Tip `GAS_READING_REMINDER` je imenovana konstanta s komentarom o porijeklu, ne
+   string literal — upravo zato što HTTP sloj ne validira.
+
+**Verifikacija.**
+
+| Provjera | Rezultat |
+|---|---|
+| `npm run type-check` (`tsc --noEmit`) | **EXIT=0** |
+| Kriterij „nijedan prekidač bez efekta" | ostala **2** `<Switch>`, oba sa stvarnim handlerom: `toggleColorMode` (`:402`), `handleDailyGasReminderToggle` (`:464`) |
+| `useState(true)` prekidači | **0** (jedini preostali `useState(true)` je `isLoadingGasReminder`, loading flag) |
+| Zaostale reference na obrisani state | **0** — `setNotificationsEnabled`, `setPushEnabled` = 0 pogodaka; preostali pogoci su i18n ključevi i komentari |
+| Novi i18n ključevi | 5 ključeva × 2 bloka = `grep -c = 2` za svaki |
+| MO2-16 permisije netaknute | `expo config --type introspect` EXIT=0; `android.permissions` i dalje 3; `RECORD_AUDIO` i dalje `tools:node="remove"` |
+
+**Moja greška ovog koraka, ispravljena.**
+
+- **Lokalni pokazivač grane bio je resetovan na bazni commit `c0131ff`**, pa je
+  `git status` pokazivao **185 izmijenjenih fajlova** iz svih prethodnih zadataka,
+  a `git log` nije sadržavao nijedan MO2-16 commit. Izgledalo je kao da je sav rad
+  izgubljen. Dijagnoza: remote `origin/arena/1bfee051-boiler-control` je bio na
+  `3dcac21` i imao je **sve** commitove; resetovan je bio samo lokalni ref.
+  Riješeno s `git reset --mixed origin/arena/1bfee051-boiler-control` (ne dira
+  radno stablo), nakon čega je status pokazao tačno 3 MO2-6 fajla. Da sam
+  commitao prije te provjere, napravio bih commit nad pogrešnom bazom.
+
+**Šta je ostalo otvoreno.**
+
+- **Nijedan unit test nije izvršen.** `mobile/` nema test runnera (`npm test` →
+  `jest: not found`), a plan traži „prebacivanje poziva
+  `updateNotificationPreference` s tipom `GAS_READING_REMINDER`". MO2-8 je
+  preduslov; `MASTER-ROADMAP.md:259-260` zabranjuje usputno popravljanje.
+- **Runtime ponašanje nije viđeno** — nema emulatora. Nije potvrđeno da
+  `PATCH` stvarno prolazi ni da se stanje vraća nakon izlaska iz ekrana.
+- **Tri i18n ključa su sada mrtva**: `settings.pushNotifications`,
+  `settings.pushNotificationsDesc`, `settings.notificationsEnabledDesc` (svaki
+  0 referenci). Namjerno **nisu obrisani** — brisanje nije dio kriterija, a
+  dinamičke konstrukcije ključeva su provjerene (`thermostat.mode.*`,
+  `notifications.types.*`, `notifications.typeDescriptions.*` — nijedan ne dira
+  `settings.*`).
+- **Pre-postojeći i18n bug, nije moj i nije popravljen:** unutar `enUS > gas`
+  (linije 479-510) nalaze se **bosanski** stringovi, uključujući zalutali
+  `dailyGasReminderTime` ugurán u `units:` blok između `m3` i `m3h`. Zbog toga se
+  isti tekst javlja na tri mjesta, pa anchor za `bsBS` blok mora uključiti
+  susjedni red.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`

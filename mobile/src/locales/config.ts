@@ -595,7 +595,14 @@ const enUS = {
     notificationPreferencesDesc: 'Customize alert types',
     dailyGasReminder: 'Daily Gas Reading Reminder',
     dailyGasReminderDesc: 'Get reminded daily to record gas meter reading',
-    dailyGasReminderTime: '7:00 PM reminder for gas readings',
+      dailyGasReminderTime: '7:00 PM reminder for gas readings',
+      // MO2-6 (MO-008): poruke za stvarno spremanje preferencije i za stvarno
+      // stanje dozvole. Prije su prekidači bili useState(true) bez ijednog poziva.
+      preferenceSaved: 'Preference saved',
+      preferenceSaveFailed: 'Could not save preference',
+      openSystemSettingsFailed: 'Could not open system settings',
+      notificationPermissionGranted: 'Allowed — tap to change in system settings',
+      notificationPermissionDenied: 'Blocked — tap to enable in system settings',
     pushNotificationsEnabled: 'Push Notifications',
     manageHomes: 'Manage Homes',
     manageHomesDesc: 'Add or edit home profiles',
@@ -1204,8 +1211,15 @@ const bsBS = {
     pushNotificationsDesc: 'Primi push obavijesti na ovom uređaju',
     notificationsDesc: 'Pregled historije obavijesti',
     notificationPreferences: 'Postavke obavijesti',
-    notificationPreferencesDesc: 'Prilagodi tipove upozorenja',
-    dailyGasReminderTime: 'Podsjetnik u 19:00 za čitanje plina',
+      notificationPreferencesDesc: 'Prilagodi tipove upozorenja',
+      dailyGasReminderTime: 'Podsjetnik u 19:00 za čitanje plina',
+      // MO2-6 (MO-008): poruke za stvarno spremanje preferencije i za stvarno
+      // stanje dozvole. Prije su prekidači bili useState(true) bez ijednog poziva.
+      preferenceSaved: 'Postavka je spremljena',
+      preferenceSaveFailed: 'Postavku nije moguće spremiti',
+      openSystemSettingsFailed: 'Nije moguće otvoriti sistemske postavke',
+      notificationPermissionGranted: 'Dozvoljeno — dodirnite za promjenu u sistemskim postavkama',
+      notificationPermissionDenied: 'Blokirano — dodirnite da omogućite u sistemskim postavkama',
     manageHomes: 'Upravljanje domovima',
     manageHomesDesc: 'Dodaj ili uredi profile domova',
     heatingSchedules: 'Rasporedi grijanja',

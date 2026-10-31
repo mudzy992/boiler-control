@@ -98,6 +98,43 @@ test koji assertuje jedinice, i provjeriti da li `Mode === '0'` grana (koja
 čita cilj iz baze, `activeInterval.targetTemp`) već ima °C — miješanje jedinica
 između te dvije grane je isto moguće.
 
+## REL-8 (#34) — ZAPOČETO, NIJE VERIFICIRANO, NIJE COMMITOVANO
+
+**Stanje:** izmjena je u radnom stablu (`program.sync.service.ts`), **nije
+commitovana**. HEAD je i dalje `0e544bf`.
+
+**Šta je urađeno:**
+- Dodan `PROGRAM_SYNC_ATOMIC_FLAG` + `programSyncAtomicEnabled()` (zadano ON)
+- `syncDay` grana 3 je sada uslovna: atomski put ili stari put
+- Nova metoda `applyDayAtomically()` — upsert svih intervala + `deleteMany`
+  cleanup u jednom `this.prisma.$transaction(operations)`
+- Type-check: **nula novih grešaka**. Jedina greška u fajlu (`TS2538` na
+  `tuyaProgram[dayType]`) je **pre-postojeća** — verificirano na čistom HEAD-u
+  u worktreeu, gdje je na `:24` (pomaknuta na `:41` mojim umetnutim blokom).
+
+**ZAŠTO NIJE VERIFICIRANO — ključno za sljedeći turn:**
+
+`scripts/audit/program_sync_partial_repro.cjs` **pada** (EXIT=1), ali NE zato
+što je ispravka pogrešna. Njen fake repozitorij definiše `upsert` kao običnu
+`async` funkciju koja se **izvršava odmah pri pozivu**. Moj kod gradi niz
+operacija preko `.map()`, pa se u fake-u svi upserti izvrše **prije** nego što
+`$transaction` uopće bude pozvan — sintetički pad izbaci tokom izgradnje niza.
+
+Stvarni Prisma se ponaša drugačije: `prisma.thermostatProgram.upsert(...)`
+vraća `PrismaPromise` koji se **ne izvršava** dok se ne await-uje ili preda
+`$transaction`. Dakle kod je ispravan za stvarni Prisma, ali **fake harness ne
+modelira lazy PrismaPromise**, pa njime nije moguće dokazati all-or-nothing.
+
+**Idući korak:** proširiti fake da vraća lazy opise operacija i implementira
+`$transaction(ops)` koji izvršava redom i **poništava** na padu (rollback u
+memoriji). Tek tada se može assertovati da pad ostavlja bazu netaknutom.
+Alternativno: pravi integracijski test na PostgreSQL-u — ali PostgreSQL ovdje
+nije dostupan.
+
+**Konkurentnost NIJE riješena.** `$transaction` daje atomičnost, ne izolaciju
+protiv dva paralelna procesa. Kriterij prihvatanja traži „dva konkurentna synca
+potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
+
 ## Sljedeće po redoslijedu (Talas D)
 
 `docs/audit/MASTER-ROADMAP.md`. REL-7 (#33) gotov. Sljedeći:

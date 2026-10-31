@@ -78,7 +78,9 @@ Instalirani mobile `analytics.api.ts` i `AnalyticsScreen.handleExport` čitaju `
 - `python3 scripts/audit/analytics_export_mutations.py` — anchored mutation checks; svaki anchor mora biti jedinstven i svaka mutacija mora pasti.
 - `node scripts/audit/openapi_dashboard_fragment.cjs --write` — lokalni OpenAPI fragment iz stvarnih Dashboard dekoratora bez Prisma baze. Mjerodavna provjera je i dalje backend `npm run openapi:generate -- --check` u CI.
 
-Lokalno izvršeno: ciljani Jest 63/63, HTTP repro, contract OpenAPI test 26/26, eslint 0 errors/2 pre-existing warnings, frontend `openapi:check` i `type-check`, mutation checks 5/5 killed. Puni backend Jest lokalno pada na nedostajućem generisanom Prisma klijentu; CI generiše Prisma klijent prije testova.
+Lokalno izvršeno: ciljani Jest 75/75, HTTP repro, contract OpenAPI test 26/26, eslint 0 errors/2 pre-existing warnings, frontend `openapi:check`, `type-check`, `lint`, 84 Vitest testova i produkcijski build uz `VITE_API_URL`, mutation checks 5/5 killed. Puni backend Jest lokalno pada na nedostajućem generisanom Prisma klijentu; CI generiše Prisma klijent prije testova.
+
+CI run `41251815121` na `47ace4e`: backend `success` (eslint 0, tsc 0, build, OpenAPI sync, 39 suite/519 unit testova, 3 suite/52 integration testova, FEAT-6 HTTP repro), mobile `success`. Frontend je `failure` samo na pre-existing FE2-7 deploy checkeru (`traefik loadbalancer port mora biti 80, bilo undefined`); vlasnikove compose izmjene nisu vraćane niti je checker oslabljen.
 
 ## Otvoreno
 

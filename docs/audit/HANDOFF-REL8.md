@@ -5,8 +5,8 @@ Talas D završi.
 
 ## Stanje na kraju sesije (2026-10-31, VERIFICIRANO)
 
-- Arena sesijska grana `arena/c9961f17-boiler-control`; vlasnik i dalje ručno
-  pull/merge, **PR se ne otvara**.
+- Arena sesijska grana `arena/c9961f17-boiler-control`, HEAD **`47ace4e`**;
+  vlasnik i dalje ručno pull/merge, **PR se ne otvara**.
 - Referentna grana `origin/arena/1bfee051-boiler-control` je `9fe6c10`;
   `origin/main` je `179d171` i sadrži vlasnikove compose izmjene.
 - FEAT-6 (#35) je implementiran kao **bounded synchronous analytics export**:
@@ -16,9 +16,13 @@ Talas D završi.
   Compose i FE2-7 checker nisu mijenjani; pre-existing frontend deploy failure
   se bilježi iskreno.
 - Detalji: `backend/13-feat6-analytics-export.md`.
-- Zadnji poznati baseline CI `41245154390` na `3aa6835`: backend/mobile zeleni,
-  frontend crven samo na `Deploy config consistent (FE2-7)`. Novi FEAT-6 CI
-  ishod treba provjeriti nakon pusha.
+- FEAT-6 implementacija: `b4228da` + CI ispravka `47ace4e`.
+- CI run **`41251815121`** na `47ace4e`: backend **success** (eslint/tsc 0,
+  OpenAPI sync, 39 suite/519 unit testova, 3 suite/52 integration testova,
+  FEAT-6 HTTP repro), mobile **success**. Frontend je crven samo na
+  pre-existing `Deploy config consistent (FE2-7)`; lokalni checker daje isto
+  `traefik loadbalancer port mora biti 80, bilo undefined`. Compose nije
+  mijenjan.
 
 ## Završeno u ovoj sesiji (sve CI zeleno)
 

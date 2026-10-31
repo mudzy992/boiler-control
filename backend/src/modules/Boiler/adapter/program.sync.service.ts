@@ -144,8 +144,7 @@ export class ProgramSyncService {
     intervals: TuyaProgramInterval[],
     programHash: string,
   ): Promise<void> {
-    const operations: PrismaPromise<unknown>[] = intervals.map(
-      (interval) =>
+    const operations: PrismaPromise<unknown>[] = intervals.map((interval) =>
       this.prisma.thermostatProgram.upsert({
         where: {
           deviceId_dayType_orderIndex: {

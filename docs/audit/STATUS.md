@@ -465,7 +465,7 @@ Od sedam otvorenih pitanja, vlasnik je odgovorio na četiri koja blokiraju Talas
 | 4 | Auth migracija | **httpOnly cookie + rotirani refresh** | `SEC-4` + `FE2-2` idu u tom pravcu, uz dual-mode prelaz da postojeće Bearer sesije ne padnu odmah. |
 | 7 | CI grana | **Odobreno ažuriranje na aktivnu granu** | Izvršeno: `.github/workflows/backend-audit.yml` — obje reference (linija 5 `on.push.branches`, linija 14 `if:` guard) prebačene na `arena/1bfee051-boiler-control`; YAML validiran parserom (`on.push.branches`, `workflow_dispatch` i jedan job `test` potvrđeni). |
 
-**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E). — **riješenо u drugom krugu, v. ispod.**
+**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E). — **riješeno u drugom krugu, v. ispod.**
 
 ### Drugi krug odluka (2026-10-29)
 
@@ -1799,6 +1799,105 @@ display limit po nivou, ne propuštena provjera — autoritativan broj je lokaln
 nijedan komponentni test nije napisan iako je `@testing-library/react-native`
 instaliran; EAS build nije pokrenut; 28 `rules-of-hooks` prekršaja je
 dokumentovano, ali **nije popravljeno**.
+
+### FE2-2 — Auth migracija: access token iz `localStorage` u memoriju (S-004, FE-002), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** Access token je stajao u `localStorage`
+(`api.ts:63,91,98,154,158`, `AuthContext.tsx:25,39,41,61,84`,
+`GasReadingsPage.tsx:14`). Čita ga bilo koji ubačeni script, a traje 24 h bez
+revokacije — jedan XSS daje napadaču dan punog pristupa API-ju.
+
+**Korekcija nalaza — SEC-4 je već izgradio većinu onoga što je backlog
+pripisivao FE2-2.** Prije nego sam išta gradio, izmjerio sam šta postoji:
+
+| Već postojalo (SEC-4) | Stvarno nedostajalo |
+|---|---|
+| Rotirani refresh token + reuse detection | Access token čitljiv iz `localStorage` |
+| `auth-cookie.ts` (httpOnly/Secure/SameSite) | Download zaobilazio auth sloj |
+| `POST /auth/refresh`, `POST /auth/logout` | `ProtectedRoute` vjerovao postojanju stringa |
+| CORS `credentials` iza zastavice | Nijedan frontend test refresh toka |
+| `detectAuthMode`, `refreshSession`, 401→retry, `logout` s opozivom | — |
+
+Graditi cookie tok iznova bilo bi dupliranje SEC-4. Ono što je nedostajalo je
+samo da access token prestane biti čitljiv JavaScriptu.
+
+**Ključna odluka: token u memoriji SAMO kad je zastavica uključena.**
+`getToken()` vraća memoriju kad je `cookieAuthEnabled === true`, a
+`localStorage` kad je `false`. Razlog je rollback: da je memorija odmah postala
+jedini izvor, uključivanje **backend** zastavice bi postalo uslov da frontend
+radi, a vraćanje na `off` ne bi vratilo ponašanje. `setToken()` uz to aktivno
+briše zaostali token iz `localStorage` — inače bi korisnik prijavljen prije
+prelaska ostavio token čitljiv XSS-u iako se aplikacija više ne oslanja na njega.
+
+**Zašto je `ProtectedRoute` morao dobiti `isInitializing` (FE-002).** S tokenom u
+memoriji reload stranice znači da tokena pri prvom renderu nema, iako je httpOnly
+refresh cookie ispravan i `refreshSession()` upravo traje. Stari
+`if (!token) return <Navigate to="/login" />` bi izbacivao prijavljenog
+korisnika na svaki F5. Guard je namjerno `!token && isInitializing`: kad token
+postoji (`off` tok, gdje se čita odmah) sadržaj se prikazuje bez treperenja.
+
+**Usput ispravljena dokumentacijska greška koja je vodila u nesigurniju
+konfiguraciju.** `12-sec4-refresh-token.md:41` je tvrdio da za „cross-site deploy
+(frontend na drugom originu)" treba `AUTH_COOKIE_SAME_SITE=none`. Izmjereno iz
+commitovane deploy konfiguracije: frontend je `https://boiler-control.ba101.top`
+(`docker-compose.yml:35`), API `https://api.boiler-control.ba101.top/api`
+(`:66`) — različiti origin-i, ali **isti registrabilni domen** `ba101.top`.
+`SameSite` se računa po registrabilnom domenu, ne po originu, pa je zahtjev
+same-site i zadano `lax` šalje cookie. Postaviti `none` značilo bi naložiti
+browseru da cookie šalje i na cross-site zahtjeve — otvorilo bi refresh endpoint
+CSRF-u bez ikakve koristi. Ispravljeno na tri mjesta u tom dokumentu.
+
+**CSRF analiza** (vlasnik je tražio analizu prije prijedloga; dokument
+`docs/audit/frontend/08-fe22-auth-migration.md`):
+
+| Vektor | Ishod | Zašto |
+|---|---|---|
+| Cross-site → `/auth/refresh` | **BLOKIRANO** | `SameSite=lax` ne šalje cookie na cross-site POST |
+| Cross-site → bilo koji API endpoint | **BLOKIRANO** | traži `Authorization` header; preflight pada jer CORS `origin` nije refleksija |
+| Same-site (sibling `*.ba101.top`) → `/auth/refresh` | mogće, ali samo **ometanje** | cookie se šalje, ali CORS `origin` je fiksiran pa napadač ne može pročitati odgovor → ne može ukrasti novi access token |
+| Same-site → `/auth/logout` | mogće | prisilna odjava; neugodno, nije kompromitacija |
+
+Backend nema CSRF zaštitu nigdje (`grep -rniE "csrf|xsrf" src/` = 0 pogodaka),
+ali uz `lax` + fiksni CORS origin glavni vektor je zatvoren. Predložena je
+opciona provjera `Origin`/`Sec-Fetch-Site` kao defense-in-depth — **nije
+implementirana**, čeka odluku vlasnika.
+
+**Testovi: 84/84 (9 fajlova)**, od čega 15 novih. `npm run type-check` exit 0
+(0 grešaka), `npm run lint` exit 0 (0 errors / 13 warnings).
+
+**Mutacijska provjera: 6/6 namjernih grešaka ruši suite.** I ovdje je provjera
+uhvatila stvarnu grešku — prva verzija `ProtectedRoute` bila je
+`if (isInitializing)`, što je značilo treperenje za korisnike koji već imaju
+token i promjenu prijašnjeg ponašanja u `off` toku. Test „token uz
+inicijalizaciju i dalje prikazuje sadržaj" to nije hvatao dok ga nisam napisao,
+pa je implementacija ispravljena na `!token && isInitializing`.
+
+| Mutacija | Ishod |
+|---|---|
+| `setToken` ipak piše u `localStorage` kad je tok ON | 2 failed |
+| `getToken` pada na `localStorage` i kad je tok ON | 1 failed |
+| `clearToken` ne čisti memoriju | 1 failed |
+| `detectAuthMode`: nedostajuće polje = `true` | 1 failed |
+| `ProtectedRoute`: guard za inicijalizaciju uklonjen | 1 failed |
+| `ProtectedRoute`: guard ne gleda token | 1 failed |
+
+**Zastavica je i dalje `off`.** `AUTH_COOKIE_REFRESH_ENABLED` nije postavljen ni
+u jednoj deploy konfiguraciji u repu. Runbook za uključivanje je napisan
+(odjeljak 4 dokumenta), uključujući obavezan redoslijed deploya — stari frontend
+ne zna za `isInitializing`, pa bi prijavljeni korisnici bili izbacivani na svaki
+reload čim se zastavica uključi.
+
+**Kompatibilnost unazad.** Uz `off` ponašanje je doslovno prijašnje (testovi to
+eksplicitno pokrivaju). Mobilna aplikacija se ne dira: RN tok koristi
+`transport: 'body'` (`auth.controller.ts:64-67`) i čuva refresh token u Android
+Keystore, ne u cookie-ju.
+
+**Šta NIJE verificirano.** Ponašanje u stvarnom browseru — nema emulatora ni
+pravog browsera u ovom okruženju, pa postavljanje httpOnly cookie-ja i njegovo
+slanje sa `SameSite=lax` **nije isprobano**, samo mockano u testovima. Stvarni
+CSRF napad nije izveden; analiza je izvedena iz konfiguracije i specifikacije.
+`/auth/refresh` kroz stvarni HTTP s cookie-jem nije pozvan. Migracija nije
+primijenjena na stvarnu bazu.
 
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 

@@ -1498,9 +1498,10 @@ fajlova. Novi i18n ključevi dodani su u **oba** bloka (`enUS` 609-616, `bsBS`
 1218-1225); da su dodani samo u jedan, bosanski korisnik bi umjesto poruke dobio
 sirovi ključ.
 
-**„Export data" NIJE vezan na PRIV-1, jer PRIV-1 ne postoji.**
+**„Export data" je analytics izvoz. PRIV-1 postoji kao zasebna GDPR stavka, ali nije implementiran.**
 `backend/src/modules/Auth/auth.controller.ts` nema nijednu rutu za izvoz ili
-brisanje naloga, a `find` za `ExportAnalyticsDto` → 0. Umjesto izmišljanja
+brisanje naloga. `ExportAnalyticsDto` pripada dashboard analytics izvozu, ne
+GDPR izvozu naloga. Umjesto izmišljanja
 endpointa, dugme vodi na **postojeći, već implementiran** izvoz u Analitici
 (`analyticsApi.exportAnalytics` → `GET /api/dashboard/export`, vraća CSV;
 `AnalyticsScreen.tsx` `handleExport`). Kad PRIV-1 bude implementiran,
@@ -1545,7 +1546,7 @@ usputno popravljanje mobilnih testova. Jest nije instaliran.
   unutar APK-a.
 - **Runtime ponašanje čišćenja nije viđeno** — nema jest-a ni emulatora, pa
   `purgeDownloadsDirectory` nije izvršena nad stvarnim fajlovima.
-- **PRIV-1 i dalje ne postoji** — izvoz/brisanje naloga
+- **PRIV-1 postoji, ali i dalje nije implementiran** — izvoz/brisanje naloga
   (`backend/09-improvements-backlog.md:33`) nije implementiran; „Export data" je
   preusmjeravanje na postojeći izvoz, ne izvoz naloga.
 - **`SettingsScreen.tsx:446` („Help") i `:452` („Terms") su i dalje

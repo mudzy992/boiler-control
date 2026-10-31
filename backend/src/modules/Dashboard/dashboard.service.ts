@@ -1,6 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  PayloadTooLargeException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
+  ExportAnalyticsDto,
   GetHeatingEventsDto,
   GetHeatingSummaryDto,
   GetHeatingStatsDto,
@@ -10,6 +18,14 @@ import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.in
 import { BoilerService } from '../Boiler/boiler.service';
 import { WeatherService } from '../Weather/weather.service';
 import { bucketKey } from '../../common/dashboard-bucket';
+import { toCsv } from '../../common/csv';
+import {
+  aggregateAnalyticsExport,
+  analyticsExportMaxRows,
+  analyticsExportV2Enabled,
+  parseExportRange,
+  resolveExportTimeZone,
+} from './analytics-export';
 import {
   HEALTH_EVENT_SAMPLE,
   HEALTH_WEIGHTS,
@@ -516,35 +532,158 @@ export class DashboardService {
     };
   }
 
-  async exportAnalytics(userId: number, query: any) {
-    const { homeProfileId, from, to, bucket = 'day' } = query;
+  async exportAnalytics(userId: number, query: ExportAnalyticsDto) {
+    const {
+      homeProfileId,
+      from,
+      to,
+      bucket = 'day',
+      version = 1,
+      format,
+      timeZone,
+    } = query;
 
-    const [summary, stats, learning] = await Promise.all([
-      this.getHeatingSummary(userId, { homeProfileId, from, to, bucket }),
-      this.getHeatingStats(userId, { homeProfileId, from, to, bucket }),
-      this.getLearningTrends(userId, { homeProfileId, from, to }),
-    ]);
+    // FEAT-6: vlasnistvo se provjerava prije bilo kojeg analytics citanja i
+    // prije feature flag-a, tako da tudji i nepostojeci profil vracaju isti 404.
+    const profile = await this.prisma.homeProfile.findFirst({
+      where: { id: homeProfileId, userId },
+      select: { id: true },
+    });
+    if (!profile) {
+      throw new NotFoundException('Home profile not found');
+    }
 
-    const csvLines = [
-      'label,avgTargetTemp,avgCurrentTemp,totalDurationMin,cycles',
-      ...stats.buckets.map(
-        (b) =>
-          `${b.label},${b.avgTargetTemp},${b.avgCurrentTemp},${b.totalDurationMin},${b.cycles}`,
-      ),
+    if (version !== 2) {
+      if (format !== undefined || timeZone !== undefined) {
+        throw new BadRequestException('format and timeZone require version=2');
+      }
+      const [summary, stats, learning] = await Promise.all([
+        this.getHeatingSummary(userId, { homeProfileId, from, to, bucket }),
+        this.getHeatingStats(userId, { homeProfileId, from, to, bucket }),
+        this.getLearningTrends(userId, { homeProfileId, from, to }),
+      ]);
+
+      const header = [
+        'label',
+        'avgTargetTemp',
+        'avgCurrentTemp',
+        'totalDurationMin',
+        'cycles',
+      ];
+      // Legacy zadrzava LF i isti redoslijed kolona; toCsv samo neutralizira
+      // opasne tekstualne celije i pravilno citira zareze/navodnike/newline.
+      const csv = toCsv(
+        [header, ...stats.buckets.map((b) => Object.values(b))],
+        '\n',
+      );
+      const timestamp = new Date().toISOString().replace(/[:]/g, '-');
+      const filename = `analytics_${homeProfileId}_${timestamp}.csv`;
+
+      return {
+        summary,
+        stats,
+        learning,
+        export: {
+          format: 'csv' as const,
+          contentType: 'text/csv',
+          filename,
+          content: csv,
+        },
+      };
+    }
+
+    if (!analyticsExportV2Enabled()) {
+      throw new ServiceUnavailableException('Analytics export v2 is disabled');
+    }
+    const zone = resolveExportTimeZone(timeZone);
+    const range = parseExportRange(from, to);
+    const maxRows = analyticsExportMaxRows();
+
+    const events = await this.prisma.heatingEvent.findMany({
+      where: {
+        thermostat: { homeProfile: { userId, id: homeProfileId } },
+        timestampStart: { gte: range.from, lte: range.to },
+      },
+      select: {
+        timestampStart: true,
+        timestampEnd: true,
+        roomCurrentTemp: true,
+        roomTargetTemp: true,
+      },
+      orderBy: [{ timestampStart: 'asc' }, { id: 'asc' }],
+      take: maxRows + 1,
+    });
+    if (events.length > maxRows) {
+      throw new PayloadTooLargeException(
+        `Analytics export exceeds maxRows (${maxRows})`,
+      );
+    }
+    const remaining = maxRows - events.length;
+    const intervals = await this.prisma.heatingIntervalLearning.findMany({
+      where: {
+        homeProfileId,
+        homeProfile: { userId },
+        lastUpdated: { gte: range.from, lte: range.to },
+      },
+      select: { lastUpdated: true, confidence: true },
+      orderBy: [{ lastUpdated: 'asc' }, { id: 'asc' }],
+      take: remaining + 1,
+    });
+    if (intervals.length > remaining) {
+      throw new PayloadTooLargeException(
+        `Analytics export exceeds maxRows (${maxRows})`,
+      );
+    }
+
+    const { summary, stats, learning } = aggregateAnalyticsExport(
+      events,
+      intervals,
+      zone,
+      bucket,
+    );
+    const meta = {
+      version: 2 as const,
+      homeProfileId,
+      from: range.from.toISOString(),
+      to: range.to.toISOString(),
+      timeZone: zone,
+      bucket,
+      sourceRows: {
+        heatingEvents: events.length,
+        learningIntervals: intervals.length,
+        total: events.length + intervals.length,
+      },
+      maxRows,
+    };
+    const header = [
+      'label',
+      'avgTargetTemp',
+      'avgCurrentTemp',
+      'totalDurationMin',
+      'cycles',
     ];
-
-    const timestamp = new Date().toISOString().replace(/[:]/g, '-');
-    const filename = `analytics_${homeProfileId}_${timestamp}.csv`;
+    const rows = [header, ...stats.buckets.map((b) => Object.values(b))];
+    const wantsJson = format === 'json';
+    const content = wantsJson
+      ? JSON.stringify(
+          { schemaVersion: 2, meta, summary, stats, learning },
+          null,
+          2,
+        )
+      : toCsv(rows);
+    const extension = wantsJson ? 'json' : 'csv';
+    const filename = `analytics_${homeProfileId}_${range.from.toISOString().replace(/[:]/g, '-')}.${extension}`;
 
     return {
       summary,
       stats,
       learning,
+      meta,
       export: {
-        format: 'csv',
-        contentType: 'text/csv',
+        format: wantsJson ? ('json' as const) : ('csv' as const),
+        contentType: wantsJson ? 'application/json' : 'text/csv',
         filename,
-        content: csvLines.join('\n'),
+        content,
       },
     };
   }

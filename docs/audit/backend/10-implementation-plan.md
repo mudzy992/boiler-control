@@ -182,6 +182,8 @@
 - **Prihvat/trud/kompatibilnost/zavisnosti:** M/L; nema upozorenja na pogrešnu lokaciju ni izmišljene efikasnosti, CI zelen; prethodni response se ne uklanja bez verzioniranja. Zavisnosti: 1.1–1.2, R-002/R-005, stručna i produktna odluka.
 
 ### 5.4 Privatni export i audit događaji (FEAT-6 / PRIV-2)
+
+**FEAT-6 status 2026-10-31:** analytics export je implementiran kao bounded synchronous korak (owner 404, CSV zaštita, opt-in v2 JSON/zona, row/range limit). PRIV-1 i PRIV-2 nisu zatvoreni ovim korakom; asinhroni export ostaje otvoren do mjerenja. Detalji: `13-feat6-analytics-export.md`.
 - **Cilj/fajlovi:** Dashboard export i auth/notification osjetljive radnje, predloženi access-controlled audit store; minimalni actor/akcija/ishod bez tokena ili podataka o fakturi, kontrolisana retencija i CSV injection zaštita.
 - **Migracija/rollback, flag:** eventualna additive audit tabela i indeksi nakon odobrene retention politike; `AUDIT_LOG_ENABLED` i nova verzija exporta isključeni pri početku. Rollback zaustavi nove zapise/izvoz prema politici, zadrži stare zapise uz ograničen pristup; izvoz se ne smije otvoriti bez owner filtera.
 - **Testovi:** dva korisnika, tuđi podaci, zabranjeni simboli u CSV ćelijama, potpunost i redakcija audit loga za uspjeh/neuspjeh, prava čitanja, arhiva i restore; `cd backend && npm run test:integration` s izolovanom DB i zajednički CI. **Skripte:** planirani `scripts/test-all.sh --help` i `scripts/smoke.sh --help`.

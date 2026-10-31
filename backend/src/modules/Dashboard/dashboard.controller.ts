@@ -9,10 +9,15 @@ import {
   ExportAnalyticsDto,
 } from './dto/dashboard.dto';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiExtraModels,
+  ApiNotFoundResponse,
   ApiOkResponse,
+  ApiPayloadTooLargeResponse,
+  ApiServiceUnavailableResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   DashboardHeatingEventsResponseDto,
@@ -21,6 +26,7 @@ import {
   DashboardHeatingStatusDto,
   DashboardHeatingSummaryResponseDto,
   DashboardResponseDto,
+  DashboardAnalyticsExportResponseDto,
 } from './dto/dashboard-response.dto';
 import { DashboardHealthResponseDto } from './dto/dashboard-health-response.dto';
 
@@ -96,6 +102,22 @@ export class DashboardController {
   }
 
   @Get('export')
+  @ApiOkResponse({ type: DashboardAnalyticsExportResponseDto })
+  @ApiBadRequestResponse({
+    description: 'Neispravan upit, opseg ili IANA zona.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Nedostaje ili ne vrijedi Bearer token.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Profil ne postoji ili nije vlasnistvo korisnika.',
+  })
+  @ApiPayloadTooLargeResponse({
+    description: 'V2 izvoz prelazi ANALYTICS_EXPORT_MAX_ROWS.',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'ANALYTICS_EXPORT_V2_ENABLED je off.',
+  })
   exportAnalytics(@Req() req: any, @Query() query: ExportAnalyticsDto) {
     return this.dashboardService.exportAnalytics(req.user.userId, query);
   }

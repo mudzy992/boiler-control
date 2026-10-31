@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * ODGOVOR ŠEME za Dashboard.
@@ -491,4 +491,105 @@ export class DashboardHeatingSummaryResponseDto {
 
   @ApiProperty({ type: () => [DashboardHeatingBucketDto] })
   buckets!: DashboardHeatingBucketDto[];
+}
+
+/** FEAT-6: `getHeatingStats()` — isti redovi kao summary, ali legacy UTC dan. */
+export class DashboardHeatingStatsResponseDto {
+  @ApiProperty({ type: () => [DashboardHeatingBucketDto] })
+  buckets!: DashboardHeatingBucketDto[];
+}
+
+/** FEAT-6: `getLearningTrends()` — dnevne tacke, legacy UTC kljuc. */
+export class DashboardLearningPointDto {
+  @ApiProperty({
+    description: 'Legacy: UTC `YYYY-MM-DD`; v2: lokalni dan zone.',
+  })
+  date!: string;
+
+  @ApiProperty()
+  avgConfidence!: number;
+
+  @ApiProperty()
+  samples!: number;
+}
+
+export class DashboardLearningTrendsResponseDto {
+  @ApiProperty({ type: () => [DashboardLearningPointDto] })
+  points!: DashboardLearningPointDto[];
+}
+
+export class DashboardAnalyticsExportFileDto {
+  @ApiProperty({ enum: ['csv', 'json'] })
+  format!: 'csv' | 'json';
+
+  @ApiProperty({ enum: ['text/csv', 'application/json'] })
+  contentType!: 'text/csv' | 'application/json';
+
+  @ApiProperty()
+  filename!: string;
+
+  @ApiProperty({
+    description:
+      'CSV tekst ili JSON tekst. Postojeci mobile cita ovaj string i dijeli ga kao fajl.',
+  })
+  content!: string;
+}
+
+export class DashboardAnalyticsExportSourceRowsDto {
+  @ApiProperty()
+  heatingEvents!: number;
+
+  @ApiProperty()
+  learningIntervals!: number;
+
+  @ApiProperty()
+  total!: number;
+}
+
+export class DashboardAnalyticsExportMetaDto {
+  @ApiProperty({ enum: [2] })
+  version!: 2;
+
+  @ApiProperty()
+  homeProfileId!: number;
+
+  @ApiProperty(DATE_TIME)
+  from!: string;
+
+  @ApiProperty(DATE_TIME)
+  to!: string;
+
+  @ApiProperty({ description: 'Rijesena IANA zona, zadano UTC.' })
+  timeZone!: string;
+
+  @ApiProperty({ enum: ['hour', 'day'] })
+  bucket!: 'hour' | 'day';
+
+  @ApiProperty({ type: () => DashboardAnalyticsExportSourceRowsDto })
+  sourceRows!: DashboardAnalyticsExportSourceRowsDto;
+
+  @ApiProperty()
+  maxRows!: number;
+}
+
+/**
+ * FEAT-6: legacy omotnica ostaje `summary/stats/learning/export`.
+ * `meta` postoji samo za eksplicitni `version=2`; stari klijenti ga ne salju
+ * i ne dobijaju, pa njihov ugovor ostaje nepromijenjen.
+ */
+export class DashboardAnalyticsExportResponseDto {
+  @ApiProperty({ type: () => DashboardHeatingSummaryResponseDto })
+  summary!: DashboardHeatingSummaryResponseDto;
+
+  @ApiProperty({ type: () => DashboardHeatingStatsResponseDto })
+  stats!: DashboardHeatingStatsResponseDto;
+
+  @ApiProperty({ type: () => DashboardLearningTrendsResponseDto })
+  learning!: DashboardLearningTrendsResponseDto;
+
+  @ApiProperty({ type: () => DashboardAnalyticsExportFileDto })
+  export!: DashboardAnalyticsExportFileDto;
+
+  @ApiPropertyOptional({ type: () => DashboardAnalyticsExportMetaDto })
+  meta?: DashboardAnalyticsExportMetaDto;
 }

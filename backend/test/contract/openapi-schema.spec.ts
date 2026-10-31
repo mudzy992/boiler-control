@@ -408,16 +408,40 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
     });
 
     it('rute bez izvedenog shape-a ostaju netipizirane (iskreno, ne izmišljeno)', () => {
-      // Za heating-stats, learning-trends i export nisam izveo shape iz
-      // servisa. Anotacija bez izvora bi bila izmišljotina, pa ostaju prazne.
+      // Za heating-stats i learning-trends shape jos nije izveden.
+      // Export je tipiziran u FEAT-6 iz stvarnog response DTO-a.
       for (const p of [
         '/api/dashboard/heating-stats',
         '/api/dashboard/learning-trends',
-        '/api/dashboard/export',
       ]) {
         const content = doc.paths[p].get.responses?.['200']?.content;
         expect(content).toBeUndefined();
       }
+    });
+
+    it('FEAT-6 export ima tipiziran 200 i dokumentovane greske', () => {
+      const op = doc.paths['/api/dashboard/export'].get;
+      const schema = op.responses?.['200']?.content?.['application/json']
+        ?.schema as { $ref?: string };
+      expect(schema?.$ref).toBe(
+        '#/components/schemas/DashboardAnalyticsExportResponseDto',
+      );
+      for (const status of ['400', '401', '404', '413', '503']) {
+        expect(op.responses?.[status]).toBeDefined();
+      }
+      expect(propsOf('DashboardAnalyticsExportResponseDto').sort()).toEqual([
+        'export',
+        'learning',
+        'meta',
+        'stats',
+        'summary',
+      ]);
+      expect(propsOf('DashboardAnalyticsExportFileDto').sort()).toEqual([
+        'content',
+        'contentType',
+        'filename',
+        'format',
+      ]);
     });
   });
 
@@ -440,6 +464,7 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
         ['/api/dashboard/heating-events', 'get', '200'],
         ['/api/dashboard/heating-status', 'get', '200'],
         ['/api/dashboard/heating-summary', 'get', '200'],
+        ['/api/dashboard/export', 'get', '200'],
       ];
 
       const missing = typed

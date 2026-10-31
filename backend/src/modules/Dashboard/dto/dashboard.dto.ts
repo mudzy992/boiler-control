@@ -4,6 +4,8 @@ import {
   IsOptional,
   IsString,
   IsDateString,
+  IsIn,
+  MaxLength,
   Min,
   Max,
 } from 'class-validator';
@@ -125,21 +127,57 @@ export class GetLearningTrendsDto {
 }
 
 export class ExportAnalyticsDto {
-  @ApiProperty()
+  @ApiProperty({ minimum: 1 })
   @Type(() => Number)
   @IsInt()
+  @Min(1)
   homeProfileId: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description:
+      'V1 prihvata ISO datum; v2 zahtijeva eksplicitan Z ili UTC offset.',
+  })
   @IsDateString()
   from: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description:
+      'V1 prihvata ISO datum; v2 zahtijeva eksplicitan Z ili UTC offset.',
+  })
   @IsDateString()
   to: string;
 
-  @ApiPropertyOptional({ enum: ['hour', 'day'] })
+  @ApiPropertyOptional({ enum: ['hour', 'day'], default: 'day' })
   @IsOptional()
   @IsEnum(['hour', 'day'])
   bucket?: 'hour' | 'day';
+
+  @ApiPropertyOptional({
+    enum: [1, 2],
+    default: 1,
+    description: 'V2 je opt-in i traži ANALYTICS_EXPORT_V2_ENABLED=on.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsIn([1, 2])
+  version?: 1 | 2;
+
+  @ApiPropertyOptional({
+    enum: ['csv', 'json'],
+    default: 'csv',
+    description: 'Samo za version=2.',
+  })
+  @IsOptional()
+  @IsIn(['csv', 'json'])
+  format?: 'csv' | 'json';
+
+  @ApiPropertyOptional({
+    default: 'UTC',
+    description: 'IANA vremenska zona, samo za version=2.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  timeZone?: string;
 }

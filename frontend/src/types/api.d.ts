@@ -1005,6 +1005,42 @@ export interface components {
             mode: "MANUAL" | "PROGRAM" | "OFF";
             vendor: string;
         };
+        DashboardAnalyticsExportFileDto: {
+            /** @description CSV tekst ili JSON tekst. Postojeci mobile cita ovaj string i dijeli ga kao fajl. */
+            content: string;
+            /** @enum {string} */
+            contentType: "text/csv" | "application/json";
+            filename: string;
+            /** @enum {string} */
+            format: "csv" | "json";
+        };
+        DashboardAnalyticsExportMetaDto: {
+            /** @enum {string} */
+            bucket: "hour" | "day";
+            /** Format: date-time */
+            from: string;
+            homeProfileId: number;
+            maxRows: number;
+            sourceRows: components["schemas"]["DashboardAnalyticsExportSourceRowsDto"];
+            /** @description Rijesena IANA zona, zadano UTC. */
+            timeZone: string;
+            /** Format: date-time */
+            to: string;
+            /** @enum {number} */
+            version: 2;
+        };
+        DashboardAnalyticsExportResponseDto: {
+            export: components["schemas"]["DashboardAnalyticsExportFileDto"];
+            learning: components["schemas"]["DashboardLearningTrendsResponseDto"];
+            meta?: components["schemas"]["DashboardAnalyticsExportMetaDto"];
+            stats: components["schemas"]["DashboardHeatingStatsResponseDto"];
+            summary: components["schemas"]["DashboardHeatingSummaryResponseDto"];
+        };
+        DashboardAnalyticsExportSourceRowsDto: {
+            heatingEvents: number;
+            learningIntervals: number;
+            total: number;
+        };
         DashboardBoilerHistoryDto: {
             /** @description DB kolona `actualTemp`. */
             actualFlowTemp: Record<string, never> | null;
@@ -1086,6 +1122,9 @@ export interface components {
             data: components["schemas"]["DashboardHeatingEventDto"][];
             meta: components["schemas"]["DashboardHeatingEventsMetaDto"];
         };
+        DashboardHeatingStatsResponseDto: {
+            buckets: components["schemas"]["DashboardHeatingBucketDto"][];
+        };
         DashboardHeatingStatusDto: {
             deviceId: number;
             /** @description `lastEvent?.timestampEnd === null` (l.401). */
@@ -1120,6 +1159,15 @@ export interface components {
             lastUpdated: string;
             offset: number;
             samples: number;
+        };
+        DashboardLearningPointDto: {
+            avgConfidence: number;
+            /** @description Legacy: UTC `YYYY-MM-DD`; v2: lokalni dan zone. */
+            date: string;
+            samples: number;
+        };
+        DashboardLearningTrendsResponseDto: {
+            points: components["schemas"]["DashboardLearningPointDto"][];
         };
         DashboardLiveRecommendationDto: {
             /** @description Date.now() — epoch milisekunde, nije ISO datum. */
@@ -1714,9 +1762,17 @@ export interface operations {
         parameters: {
             query: {
                 homeProfileId: number;
+                /** @description V1 prihvata ISO datum; v2 zahtijeva eksplicitan Z ili UTC offset. */
                 from: string;
+                /** @description V1 prihvata ISO datum; v2 zahtijeva eksplicitan Z ili UTC offset. */
                 to: string;
                 bucket?: "hour" | "day";
+                /** @description V2 je opt-in i traži ANALYTICS_EXPORT_V2_ENABLED=on. */
+                version?: 1 | 2;
+                /** @description Samo za version=2. */
+                format?: "csv" | "json";
+                /** @description IANA vremenska zona, samo za version=2. */
+                timeZone?: string;
             };
             header?: never;
             path?: never;
@@ -1725,6 +1781,43 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardAnalyticsExportResponseDto"];
+                };
+            };
+            /** @description Neispravan upit, opseg ili IANA zona. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Nedostaje ili ne vrijedi Bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Profil ne postoji ili nije vlasnistvo korisnika. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description V2 izvoz prelazi ANALYTICS_EXPORT_MAX_ROWS. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ANALYTICS_EXPORT_V2_ENABLED je off. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -225,6 +225,132 @@
         ],
         "type": "object"
       },
+      "DashboardAnalyticsExportFileDto": {
+        "properties": {
+          "content": {
+            "description": "CSV tekst ili JSON tekst. Postojeci mobile cita ovaj string i dijeli ga kao fajl.",
+            "type": "string"
+          },
+          "contentType": {
+            "enum": [
+              "text/csv",
+              "application/json"
+            ],
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "csv",
+              "json"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "format",
+          "contentType",
+          "filename",
+          "content"
+        ],
+        "type": "object"
+      },
+      "DashboardAnalyticsExportMetaDto": {
+        "properties": {
+          "bucket": {
+            "enum": [
+              "hour",
+              "day"
+            ],
+            "type": "string"
+          },
+          "from": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "homeProfileId": {
+            "type": "number"
+          },
+          "maxRows": {
+            "type": "number"
+          },
+          "sourceRows": {
+            "$ref": "#/components/schemas/DashboardAnalyticsExportSourceRowsDto"
+          },
+          "timeZone": {
+            "description": "Rijesena IANA zona, zadano UTC.",
+            "type": "string"
+          },
+          "to": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "version": {
+            "enum": [
+              2
+            ],
+            "type": "number"
+          }
+        },
+        "required": [
+          "version",
+          "homeProfileId",
+          "from",
+          "to",
+          "timeZone",
+          "bucket",
+          "sourceRows",
+          "maxRows"
+        ],
+        "type": "object"
+      },
+      "DashboardAnalyticsExportResponseDto": {
+        "properties": {
+          "export": {
+            "$ref": "#/components/schemas/DashboardAnalyticsExportFileDto"
+          },
+          "learning": {
+            "$ref": "#/components/schemas/DashboardLearningTrendsResponseDto"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/DashboardAnalyticsExportMetaDto"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/DashboardHeatingStatsResponseDto"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/DashboardHeatingSummaryResponseDto"
+          }
+        },
+        "required": [
+          "summary",
+          "stats",
+          "learning",
+          "export"
+        ],
+        "type": "object"
+      },
+      "DashboardAnalyticsExportSourceRowsDto": {
+        "properties": {
+          "heatingEvents": {
+            "type": "number"
+          },
+          "learningIntervals": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "heatingEvents",
+          "learningIntervals",
+          "total"
+        ],
+        "type": "object"
+      },
       "DashboardBoilerHistoryDto": {
         "properties": {
           "actualFlowTemp": {
@@ -465,6 +591,20 @@
         ],
         "type": "object"
       },
+      "DashboardHeatingStatsResponseDto": {
+        "properties": {
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardHeatingBucketDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "buckets"
+        ],
+        "type": "object"
+      },
       "DashboardHeatingStatusDto": {
         "properties": {
           "deviceId": {
@@ -591,6 +731,40 @@
           "confidence",
           "samples",
           "lastUpdated"
+        ],
+        "type": "object"
+      },
+      "DashboardLearningPointDto": {
+        "properties": {
+          "avgConfidence": {
+            "type": "number"
+          },
+          "date": {
+            "description": "Legacy: UTC `YYYY-MM-DD`; v2: lokalni dan zone.",
+            "type": "string"
+          },
+          "samples": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "avgConfidence",
+          "samples"
+        ],
+        "type": "object"
+      },
+      "DashboardLearningTrendsResponseDto": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardLearningPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "points"
         ],
         "type": "object"
       },
@@ -1913,10 +2087,12 @@
             "name": "homeProfileId",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           },
           {
+            "description": "V1 prihvata ISO datum; v2 zahtijeva eksplicitan Z ili UTC offset.",
             "in": "query",
             "name": "from",
             "required": true,
@@ -1925,6 +2101,7 @@
             }
           },
           {
+            "description": "V1 prihvata ISO datum; v2 zahtijeva eksplicitan Z ili UTC offset.",
             "in": "query",
             "name": "to",
             "required": true,
@@ -1937,17 +2114,78 @@
             "name": "bucket",
             "required": false,
             "schema": {
+              "default": "day",
               "enum": [
                 "hour",
                 "day"
               ],
               "type": "string"
             }
+          },
+          {
+            "description": "V2 je opt-in i traži ANALYTICS_EXPORT_V2_ENABLED=on.",
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "enum": [
+                1,
+                2
+              ],
+              "type": "number"
+            }
+          },
+          {
+            "description": "Samo za version=2.",
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "csv",
+              "enum": [
+                "csv",
+                "json"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "IANA vremenska zona, samo za version=2.",
+            "in": "query",
+            "name": "timeZone",
+            "required": false,
+            "schema": {
+              "default": "UTC",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardAnalyticsExportResponseDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Neispravan upit, opseg ili IANA zona."
+          },
+          "401": {
+            "description": "Nedostaje ili ne vrijedi Bearer token."
+          },
+          "404": {
+            "description": "Profil ne postoji ili nije vlasnistvo korisnika."
+          },
+          "413": {
+            "description": "V2 izvoz prelazi ANALYTICS_EXPORT_MAX_ROWS."
+          },
+          "503": {
+            "description": "ANALYTICS_EXPORT_V2_ENABLED je off."
           }
         },
         "security": [

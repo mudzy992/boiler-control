@@ -85,6 +85,9 @@ jobs:
           AUDIT_DISPOSABLE_REDIS: '1'
           AUDIT_REDIS_CONTAINER: ${{ job.services.redis.id }}
         run: node ../scripts/audit/redis_lease_ci.cjs --ci
+      - name: FEAT-6 analytics export HTTP regression
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: node ../scripts/audit/analytics_export_repro.cjs
       - name: Lint without modifying files
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

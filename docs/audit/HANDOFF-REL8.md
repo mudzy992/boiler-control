@@ -5,20 +5,20 @@ Talas D završi.
 
 ## Stanje na kraju sesije (2026-10-31, VERIFICIRANO)
 
-- Grana `arena/1bfee051-boiler-control`, HEAD **`817b264`**, stablo **čisto**
-- Zadnji CI run **`41236341153`** = `completed success` (3/3 joba)
-- **`origin/main` = `179d171`** (merge commit) i **već sadrži sav rad** do
-  `60b22c3` — vlasnik merge-uje ručno
-- Ispred maina je **samo 1 commit**: `817b264` (REL-8 dokumentacija, 5 fajlova,
-  110 insertions)
-- **Main je 3 commita ispred nas** (divergencija), uključujući izmjene
-  `docker-compose.yml` i `docker-compose.monitoring.yml` koje NIJE napravio
-  agent. Prije bilo kakvog daljnjeg rada treba `git fetch origin main` i
-  provjeriti šta se promijenilo.
-- **PR NIJE otvoren.** Vlasnik je odlučio da se PR ne otvara; merge-uje ručno.
-  Trajna uputa „nikad PR na ovoj grani" ostaje na snazi.
-- **Nova grana se NE smije napraviti** — Arena prati sesiju po grani, rad na
-  drugoj grani ne bi bio povezan sa sesijom.
+- Arena sesijska grana `arena/c9961f17-boiler-control`; vlasnik i dalje ručno
+  pull/merge, **PR se ne otvara**.
+- Referentna grana `origin/arena/1bfee051-boiler-control` je `9fe6c10`;
+  `origin/main` je `179d171` i sadrži vlasnikove compose izmjene.
+- FEAT-6 (#35) je implementiran kao **bounded synchronous analytics export**:
+  owner 404, spreadsheet-safe CSV, opt-in v2 JSON/IANA zona/DST, row/range
+  limit. `PRIV-1` postoji i ostaje otvoren; asinhroni jobovi nisu rađeni.
+- Vlasnik je izabrao `analytics_only`, `bounded_sync`, `preserve_compose`.
+  Compose i FE2-7 checker nisu mijenjani; pre-existing frontend deploy failure
+  se bilježi iskreno.
+- Detalji: `backend/13-feat6-analytics-export.md`.
+- Zadnji poznati baseline CI `41245154390` na `3aa6835`: backend/mobile zeleni,
+  frontend crven samo na `Deploy config consistent (FE2-7)`. Novi FEAT-6 CI
+  ishod treba provjeriti nakon pusha.
 
 ## Završeno u ovoj sesiji (sve CI zeleno)
 
@@ -30,20 +30,31 @@ Talas D završi.
 | REL-8 (#34) atomski upis programa | `799a011` + `30188de` + `48a3b41` | `41233788265`, `41233970069` |
 | REL-8 dokumentacija | `817b264` | `41236341153` |
 
-## Sljedeći korak: FEAT-6 (#35)
+## FEAT-6 (#35) — implementirano
 
-**Nije započet.** Iz `backend/09-improvements-backlog.md:48` i
-`MASTER-ROADMAP.md:128` (stavka 35, backend, trud M):
-- Postojeće: dashboard export na `Dashboard/dashboard.controller.ts:59-61`
-- Traži se: filter po vlasniku, vremenska zona, mašinski čitljiv format, velik
-  izvoz asinhrono
-- Kriterij: tuđi profil odbijen, redovi i tz ispravni, opasne spreadsheet
-  ćelije sigurne
-- **Zavisnost `PRIV-1` NE POSTOJI** ni u jednom backlogu — riješiti prije nego
-  se FEAT-6 proglasi gotovim
-- **Stvarni kod NIJE pročitan** — backlog tvrdnja o `:59-61` nije verificirana
-- CSV injection je najosjetljiviji dio: ćelije koje počinju s `=`, `+`, `-`, `@`
-  moraju biti neutralizirane
+**Analytics only + bounded sync.** Iz `backend/09-improvements-backlog.md:48` i
+`MASTER-ROADMAP.md:128`, uz vlasnikove odluke:
+
+- Postojeći `GET /api/dashboard/export` sada provjerava vlasništvo prije
+  analytics čitanja; tuđi i nepostojeći profil imaju identičan 404.
+- CSV neutralizira `=`, `+`, `-`, `@` i vodeće praznine/kontrolne znakove,
+  pravilno citira zareze/navodnike/newline, a negativne brojeve ne pretvara u
+  tekst.
+- Legacy bez `version=2` zadržava omotnicu, kolone, LF i legacy bucket
+  semantiku. V2 je iza `ANALYTICS_EXPORT_V2_ENABLED=off` i donosi JSON,
+  eksplicitnu IANA zonu, DST-offset satne labele i `meta`.
+- Limit: 366 dana i `ANALYTICS_EXPORT_MAX_ROWS` default 10000, hard cap 50000.
+  Prekoračenje vraća 413, bez truncation-a.
+- **PRIV-1 postoji** (`backend/09-improvements-backlog.md:33`,
+  `MASTER-ROADMAP.md:149`) i ostaje otvoren. FEAT-6 nije GDPR export naloga.
+- Testovi: CSV/helper/servis/HTTP/PostgreSQL integration, mutation checks 5/5,
+  OpenAPI contract i frontend generisani tipovi.
+- Datoteke: `backend/src/common/csv.ts`,
+  `backend/src/modules/Dashboard/analytics-export.ts`, Dashboard DTO/servis/
+  kontroler, `contracts/openapi.json`, `frontend/src/types/api.d.ts`,
+  `scripts/audit/analytics_export_repro.cjs`,
+  `scripts/audit/analytics_export_mutations.py`,
+  `scripts/audit/openapi_dashboard_fragment.cjs`.
 
 ## Ostalo otvoreno
 

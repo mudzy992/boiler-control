@@ -49,6 +49,20 @@ export class ApiClient {
   private cookieAuthEnabled = false;
   /** Jedan refresh za sve konkurentne 401 (sprječava lavinu zahtjeva). */
   private refreshInFlight: Promise<boolean> | null = null;
+  /**
+   * FE2-2: access token u **memoriji**, ne u `localStorage`.
+   *
+   * Razlog je XSS: token u `localStorage` može pročitati bilo koji ubačeni
+   * script (`localStorage.getItem('token')`), i to traje koliko i token — 24 h
+   * bez revokacije (S-004). U memoriji ga JavaScript iz drugog konteksta ne
+   * može dohvatiti, a nestaje reloadom stranice, nakon čega se sesija tiho
+   * obnavlja iz httpOnly refresh cookie-ja.
+   *
+   * Ovo vrijedi SAMO kad je cookie tok uključen. Dok je zastavica `off`,
+   * `localStorage` ostaje izvor istine i ponašanje je doslovno prijašnje —
+   * radi, a rollback ne bi bio čist.
+   */
+  private accessToken: string | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -60,7 +74,9 @@ export class ApiClient {
 
     // Request interceptor to add token
     this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
+      // FE2-2: čita se preko `getToken()`, koji poštuje zastavicu — memorija
+      // kad je cookie tok uključen, `localStorage` kad nije.
+      const token = this.getToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -88,14 +104,19 @@ export class ApiClient {
               _sec4Retried?: boolean;
             };
             retry._sec4Retried = true;
-            const token = localStorage.getItem('token');
+            // FE2-2: novi access token je nakon rotacije u memoriji, pa se
+            // retry mora čitati preko `getToken()` — `localStorage` je u
+            // cookie toku namjerno prazan.
+            const token = this.getToken();
             if (token) retry.headers.Authorization = `Bearer ${token}`;
             return this.client.request(retry);
           }
         }
 
         if (status === 401) {
-          localStorage.removeItem('token');
+          // FE2-2: `clearToken()` čisti i memoriju i localStorage, pa odjava
+          // radi bez obzira na to koji je tok bio aktivan.
+          this.clearToken();
           window.location.href = '/login';
         }
         return Promise.reject(error);
@@ -150,11 +171,54 @@ export class ApiClient {
     return this.refreshInFlight;
   }
 
+  /**
+   * FE2-2: jedino mjesto koje odlučuje GDJE token živi.
+   *
+   * Kad je cookie tok uključen, čita se isključivo memorija — `localStorage`
+   * se namjerno ne čita čak ni kao fallback, jer bi inače stari token iz
+   * prethodne sesije ostao čitljiv XSS-u i nakon što je zastavica uključena.
+   *
+   * Kad je tok isključen, ponašanje je doslovno prijašnje (`localStorage`).
+   */
+  getToken(): string | null {
+    if (this.cookieAuthEnabled) {
+      return this.accessToken;
+    }
+    return localStorage.getItem('token');
+  }
+
+  /**
+   * FE2-2: preuzima zaštićenu datoteku preko **iste** axios instance kao i
+   * ostali pozivi.
+   *
+   * Zamjenjuje ručni `fetch(url, { headers: { Authorization: ... } })` u
+   * `GasReadingsPage.tsx:120-124`, koji je čitao token direktno iz
+   * `localStorage` i time zaobilazio cijeli auth sloj: bez `withCredentials`,
+   * bez refresh-a na 401, i s tokenom koji u cookie toku više ne postoji.
+   * Bez ove metode otvaranje fakture/slike brojila bi prestalo raditi čim se
+   * zastavica uključi.
+   */
+  async downloadProtectedFile(url: string): Promise<Blob> {
+    const response = await this.client.get(url, { responseType: 'blob' });
+    return response.data as Blob;
+  }
+
   setToken(token: string) {
+    this.accessToken = token;
+    if (this.cookieAuthEnabled) {
+      // FE2-2: token NE ide u localStorage. Ako tamo još stoji stari primjerak
+      // iz sesije prije uključivanja zastavice, briše se — inače bi XSS i
+      // dalje imao šta pročitati iako se aplikacija više ne oslanja na njega.
+      localStorage.removeItem('token');
+      return;
+    }
     localStorage.setItem('token', token);
   }
 
   clearToken() {
+    this.accessToken = null;
+    // Čisti se bezuslovno: odjava mora ukloniti token i kad se zastavica
+    // promijenila usred sesije.
     localStorage.removeItem('token');
   }
 
@@ -169,7 +233,7 @@ export class ApiClient {
 
   /**
    * SEC-4: opoziva refresh sesiju na serveru, pa čisti lokalni token.
-   * Greška s backend-a se namjerno gutа — lokalna odjava mora uspjeti i kad
+   * Greška s backend-a se namjerno guta — lokalna odjava mora uspjeti i kad
    * mreža padne, a token ionako ističe.
    */
   async logout() {

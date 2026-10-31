@@ -38,12 +38,41 @@ curenja dugotrajne tajne.
 | Varijabla | Zadano | Značenje |
 |---|---|---|
 | `AUTH_COOKIE_REFRESH_ENABLED` | `off` | Uključuje izdavanje cookie-ja, `/auth/refresh`, `/auth/logout` i CORS `credentials` |
-| `AUTH_COOKIE_SAME_SITE` | `lax` | `strict` \| `lax` \| `none`. Za cross-site deploy (frontend na drugom originu) treba `none` |
+| `AUTH_COOKIE_SAME_SITE` | `lax` | `strict` \| `lax` \| `none`. **Za stvarnu topologiju ovog projekta `lax` je dovoljan** — vidi ispravku ispod |
 | `AUTH_COOKIE_SECURE` | `true` | `Secure` atribut; `false` samo za lokalni razvoj bez HTTPS-a |
 | `AUTH_COOKIE_DOMAIN` | *(prazno)* | Opcioni `Domain` atribut |
 
 Napomena: `SameSite=None` bez `Secure` browser odbija, pa kod u tom slučaju
 pada na `lax` umjesto da pošalje cookie koji neće raditi.
+
+### Ispravka (FE2-2, 2026-10-31): `none` NIJE potreban za ovaj deploy
+
+Ovaj dokument je ranije tvrdio da „za cross-site deploy (frontend na drugom
+originu) treba `none`". **To je netačno i vodi u strože nesigurniju
+konfiguraciju.**
+
+Dokaz iz commitovane deploy konfiguracije (`docker-compose.yml`):
+
+| Šta | Vrijednost | Izvor |
+|---|---|---|
+| Frontend | `https://boiler-control.ba101.top` | `docker-compose.yml:35` (`FRONTEND_URL`) |
+| API | `https://api.boiler-control.ba101.top/api` | `docker-compose.yml:66` (`VITE_API_URL`) |
+
+Origin-i jesu različiti, ali `SameSite` se **ne računa po originu** nego po
+*registrabilnom domenu* (eTLD+1). Obje strane imaju eTLD+1 = `ba101.top`, pa je
+zahtjev frontend → API **same-site**. `SameSite=lax` stoga šalje refresh cookie
+na `POST /api/auth/refresh` bez ikakvog popuštanja.
+
+Zašto je `none` actively štetan: `SameSite=None` nalaže browseru da cookie šalje
+i na **cross-site** zahtjeve, čime se uklanja zaštita koju `lax` daje besplatno.
+Postaviti `none` ovdje značilo bi otvoriti refresh endpoint CSRF-u sa
+`evil.com`, bez ijedne koristi.
+
+`AUTH_COOKIE_SAME_SITE=none` ima smisla **samo** ako se frontend i API ikad
+postave na različite registrabilne domene (npr. frontend na `primjer.ba`, API na
+`ba101.top`). Tada treba `none` + `Secure` + `AUTH_COOKIE_DOMAIN`, i CSRF
+zaštita postaje obavezna, ne opciona. Dok je topologija ovakva kakva jeste,
+zadano `lax` je ispravno.
 
 **Zastavice nisu u `.env` / `.env.example`** jer su opcione i imaju zadane
 vrijednosti u kodu; dodavanje bi slomilo paritet koji provjerava
@@ -174,12 +203,18 @@ ponašanjem. Mobile `npm run lint` daje EXIT=2 i na HEAD-u jer
 - **Ne mijenja `JwtAuthGuard`** — i dalje čita samo `Authorization: Bearer`.
 - **Ne skraćuje život access tokena** — i dalje 24 h. Skraćivanje ima smisla
   tek kad je tok uključen u produkciji i izmjereno ponašanje.
-- **Ne uklanja token iz `localStorage`** na frontendu — access token je i dalje
-  tamo; zaštićen je samo dugotrajni refresh token.
+- ~~**Ne uklanja token iz `localStorage`** na frontendu — access token je i dalje
+  tamo; zaštićen je samo dugotrajni refresh token.~~ **Ažurirano (FE2-2,
+  2026-10-31):** ovo je bila tačna granica SEC-4, ali više ne stoji. FE2-2
+  premješta access token u memoriju (`api.ts`: `accessToken` polje), a
+  `setToken()` aktivno briše zaostali primjerak iz `localStorage` kad je tok
+  uključen. Pokriveno testovima u `frontend/src/services/__tests__/authTokenStorage.test.ts`.
 - **Nije isprobano na stvarnom uređaju ni u browseru.** Mobile tok ovisi o
   `expo-secure-store` na Android Keystore-u, a emulator nije dostupan u ovom
-  okruženju; `SameSite`/`Secure` za cross-site deploy traži
-  `AUTH_COOKIE_SAME_SITE=none` + HTTPS i također nije potvrđeno.
+  okruženju. **Ispravka (FE2-2):** `SameSite`/`Secure` za ovaj deploy **ne
+  traži** `AUTH_COOKIE_SAME_SITE=none` — frontend i API dijele registrabilni
+  domen `ba101.top`, pa je zahtjev same-site i zadano `lax` šalje cookie.
+  Detalji i dokaz: sekcija „Ispravka (FE2-2)" iznad.
 - Nova migracija **nije primijenjena ni na jednu stvarnu bazu** u ovom
   okruženju (nema lokalnog PostgreSQL-a); verificira je CI kroz
   `npx prisma migrate deploy` nad servisom `postgres:16`.

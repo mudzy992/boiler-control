@@ -4,13 +4,19 @@ import * as crypto from 'crypto';
 import { TuyaAuthService } from '../../../modules/Tuya/tuya.auth.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ThermostatSnapshot } from './thermostat-adapter.interface';
+import { toNullableBoolean, toNullableNumber } from './snapshot-guard';
 import { TuyaProgramByDay } from './program-sync.types';
 import { ProgramSyncService } from './program.sync.service';
 import { StructuredLogger } from '../../../common/structured-logger';
 import { DayType } from 'src/generated/prisma';
 
 interface TargetTempInfo {
-  targetTemp: number;
+  /**
+   * REL-7 (B-026): `null` znači "nije poznato" — ni iz programa ni iz
+   * `TempSet`. Prije je ovdje stajao `?? 0`, pa je nedostajući cilj postajao
+   * stvarnih 0 °C i poller je na tome gasio grijanje.
+   */
+  targetTemp: number | null;
   dayType?: DayType;
   interval?: {
     startMinute: number;
@@ -279,7 +285,7 @@ export class TuyaAdapter {
       }
 
       return {
-        targetTemp: activeInterval?.targetTemp ?? 0,
+        targetTemp: activeInterval?.targetTemp ?? null,
         dayType,
         interval: activeInterval
           ? {
@@ -292,8 +298,9 @@ export class TuyaAdapter {
     }
 
     // fallback
+    // REL-7 (B-026): `?? 0` je pretvaralo nedostajući TempSet u stvarnih 0 °C.
     return {
-      targetTemp: status['TempSet'] ?? 0,
+      targetTemp: toNullableNumber(status['TempSet']),
     };
   }
 
@@ -318,8 +325,15 @@ export class TuyaAdapter {
 
     const status = await this.fetchStatus(deviceId, runId); // <-- samo JEDAN GET
 
-    const currentTemp = (status['TempCurrent'] ?? null) / 2;
-    const powerOn = status['Power'] === true;
+    // REL-7 (B-026): nedostajuće polje je `null`/`undefined`, NE 0/false.
+    // Stari `(status['TempCurrent'] ?? null) / 2` je davao `null / 2 === 0`,
+    // pa je odsutna temperatura postajala stvarnih 0 °C i poller je na tome
+    // pokretao grijanje. Stvarna nula i dalje ostaje 0.
+    const rawCurrentTemp = toNullableNumber(status['TempCurrent']);
+    const currentTemp = rawCurrentTemp === null ? null : rawCurrentTemp / 2;
+    // Stari `=== true` je nedostajući Power čitao kao "korisnik je ugasio
+    // termostat" i gasio zabilježeni ciklus.
+    const powerOn = toNullableBoolean(status['Power']);
 
     const targetInfo = await this.getTargetFromStatus(deviceId, status);
 

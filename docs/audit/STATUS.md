@@ -465,7 +465,7 @@ Od sedam otvorenih pitanja, vlasnik je odgovorio na četiri koja blokiraju Talas
 | 4 | Auth migracija | **httpOnly cookie + rotirani refresh** | `SEC-4` + `FE2-2` idu u tom pravcu, uz dual-mode prelaz da postojeće Bearer sesije ne padnu odmah. |
 | 7 | CI grana | **Odobreno ažuriranje na aktivnu granu** | Izvršeno: `.github/workflows/backend-audit.yml` — obje reference (linija 5 `on.push.branches`, linija 14 `if:` guard) prebačene na `arena/1bfee051-boiler-control`; YAML validiran parserom (`on.push.branches`, `workflow_dispatch` i jedan job `test` potvrđeni). |
 
-**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E). — **riješenо u drugom krugu, v. ispod.**
+**Još otvoreno (ne blokira Talas A):** version gate (`MO2-2`), mjerodavna formula (`FORM-1`/`FEAT-7`), obim ciklusa (Talas E). — **riješeno u drugom krugu, v. ispod.**
 
 ### Drugi krug odluka (2026-10-29)
 
@@ -1553,6 +1553,109 @@ usputno popravljanje mobilnih testova. Jest nije instaliran.
 - **Vlasnička odluka o Play obrascu** (pristup fajlovima) iz backloga nije
   riješena i ne može se riješiti iz koda.
 
+### MO2-6 — Settings prekidači bez efekta i bez perzistencije (MO-008), 2026-10-30
+
+Talas C, #28.
+
+**Nalaz je tačan, ali nepotpun.** Backlog kaže da tri prekidača „pozivaju
+deprecated no-op". Mjerenje pokazuje da je to tačno samo za jedan:
+
+| prekidač | stanje prije | šta je `onToggle` stvarno radio |
+|---|---|---|
+| `notificationsEnabled` (`:45`) | `useState(true)` | **ništa** — samo `setNotificationsEnabled(...)`, bez ijednog poziva |
+| `pushEnabled` (`:46`) | `useState(true)` | **ništa** — samo `setPushEnabled(...)` |
+| `dailyGasReminder` (`:47`) | `useState(true)` | zvao no-op (vidi ispod) |
+
+Dva od tri prekidača nisu zvala **čak ni** no-op — bila su čisti lokalni state.
+To je gore nego što nalaz opisuje: korisnik prebaci prekidač, vidi animaciju,
+izađe iz ekrana i sve se vrati na `true`.
+
+**No-op funkcije su bile potpuno prazne.** `scheduleDailyGasReadingReminder` i
+`cancelDailyGasReadingReminder` (`notificationService.ts:213-233`) imale su tijelo
+koje je sadržavalo **samo** `console.log` s napomenom da podsjetnike šalje backend.
+`SettingsScreen` ih je zvao na svako prebacivanje **i** na mount (`:67,69,76`), pa
+je prekidač djelovao funkcionalno.
+
+**Šta stvarno postoji na backendu.**
+
+- `GET /api/notifications/preferences` (`notifications.controller.ts:97-130`) —
+  vraća preferencije, a ako ih nema, kreira zadane za **šest** tipova.
+- `PATCH /api/notifications/preferences` (`:133-152`) — `upsert` po
+  `userId_type`.
+- Tipovi su Prisma enum `NotificationType` (`schema.prisma:319`):
+  `DAILY_RECOMMENDATION`, `FLOW_TEMP_CHANGED`, `HEATING_STARTED`,
+  `HEATING_ENDED`, `SYSTEM_ALERT`, `GAS_READING_REMINDER`.
+- **Backend nema „master" prekidač za obavijesti.** Zato `notificationsEnabled` i
+  `pushEnabled` nemaju parnjaka na koji bi se mogli vezati.
+
+**Korekcija nalaza B-010.** Backlog upozorava „ne slati nepostojeće tipove", što
+implicira da bi izmišljeni tip tiho napravio smeće u bazi. Mjerenje pokazuje
+drugačije: `@Body() body: { type: NotificationType; enabled: boolean }` je običan
+TS tip bez DTO klase i bez `class-validator` dekoratora, pa ga globalni
+`ValidationPipe` (`main.ts:36-42`) **preskače** — HTTP validacije stvarno nema.
+Ali kolona `type` je Prisma **enum**, ne `String`, pa izmišljena vrijednost pada
+na nivou baze. Posljedica je 500 umjesto 400, ne tiho smeće.
+
+**Izmjene.**
+
+1. `dailyGasReminder` → vezan na stvarni `PATCH` s tipom
+   `GAS_READING_REMINDER`. Optimistično postavi stanje, pri grešci ga **vrati** —
+   inače bi prekidač lagao da je promjena prošla. Stanje se na mount čita s
+   backenda; dok se ne učita, prekidač je onemogućen (`isLoadingGasReminder`).
+2. `notificationsEnabled` i `pushEnabled` → **uklonjeni kao prekidači.** Njihovo
+   jedino iskreno stanje je OS dozvola, pa jedan red sada prikazuje stvarni
+   `Notifications.getPermissionsAsync().status` i nudi `Linking.openSettings()`.
+   Aplikacija ne može sama sebi dodijeliti dozvolu, pa bi prekidač tu i dalje bio
+   laž.
+3. No-op funkcije **obrisane**. Jedini potrošač bio je `SettingsScreen`
+   (provjereno grep-om: 5 referenci, sve u tom fajlu).
+4. Pet novih i18n ključeva u **oba** bloka (`enUS` i `bsBS`), svaki potvrđen s
+   `grep -c = 2`.
+5. Tip `GAS_READING_REMINDER` je imenovana konstanta s komentarom o porijeklu, ne
+   string literal — upravo zato što HTTP sloj ne validira.
+
+**Verifikacija.**
+
+| Provjera | Rezultat |
+|---|---|
+| `npm run type-check` (`tsc --noEmit`) | **EXIT=0** |
+| Kriterij „nijedan prekidač bez efekta" | ostala **2** `<Switch>`, oba sa stvarnim handlerom: `toggleColorMode` (`:402`), `handleDailyGasReminderToggle` (`:464`) |
+| `useState(true)` prekidači | **0** (jedini preostali `useState(true)` je `isLoadingGasReminder`, loading flag) |
+| Zaostale reference na obrisani state | **0** — `setNotificationsEnabled`, `setPushEnabled` = 0 pogodaka; preostali pogoci su i18n ključevi i komentari |
+| Novi i18n ključevi | 5 ključeva × 2 bloka = `grep -c = 2` za svaki |
+| MO2-16 permisije netaknute | `expo config --type introspect` EXIT=0; `android.permissions` i dalje 3; `RECORD_AUDIO` i dalje `tools:node="remove"` |
+
+**Moja greška ovog koraka, ispravljena.**
+
+- **Lokalni pokazivač grane bio je resetovan na bazni commit `c0131ff`**, pa je
+  `git status` pokazivao **185 izmijenjenih fajlova** iz svih prethodnih zadataka,
+  a `git log` nije sadržavao nijedan MO2-16 commit. Izgledalo je kao da je sav rad
+  izgubljen. Dijagnoza: remote `origin/arena/1bfee051-boiler-control` je bio na
+  `3dcac21` i imao je **sve** commitove; resetovan je bio samo lokalni ref.
+  Riješeno s `git reset --mixed origin/arena/1bfee051-boiler-control` (ne dira
+  radno stablo), nakon čega je status pokazao tačno 3 MO2-6 fajla. Da sam
+  commitao prije te provjere, napravio bih commit nad pogrešnom bazom.
+
+**Šta je ostalo otvoreno.**
+
+- **Nijedan unit test nije izvršen.** `mobile/` nema test runnera (`npm test` →
+  `jest: not found`), a plan traži „prebacivanje poziva
+  `updateNotificationPreference` s tipom `GAS_READING_REMINDER`". MO2-8 je
+  preduslov; `MASTER-ROADMAP.md:259-260` zabranjuje usputno popravljanje.
+- **Runtime ponašanje nije viđeno** — nema emulatora. Nije potvrđeno da
+  `PATCH` stvarno prolazi ni da se stanje vraća nakon izlaska iz ekrana.
+- **Tri i18n ključa su sada mrtva**: `settings.pushNotifications`,
+  `settings.pushNotificationsDesc`, `settings.notificationsEnabledDesc` (svaki
+  0 referenci). Namjerno **nisu obrisani** — brisanje nije dio kriterija, a
+  dinamičke konstrukcije ključeva su provjerene (`thermostat.mode.*`,
+  `notifications.types.*`, `notifications.typeDescriptions.*` — nijedan ne dira
+  `settings.*`).
+- **Pre-postojeći i18n bug, nije moj i nije popravljen:** unutar `enUS > gas`
+  (linije 479-510) nalaze se **bosanski** stringovi, uključujući zalutali
+  `dailyGasReminderTime` ugurán u `units:` blok između `m3` i `m3h`. Zbog toga se
+  isti tekst javlja na tri mjesta, pa anchor za `bsBS` blok mora uključiti
+  susjedni red.
+
 ### Šta bi vlasnik uradio da je rotacija odobrena
 
 1. **Rotirati** `JWT_SECRET`, `DATABASE_PASSWORD`, `TUYA_CLIENT_ID`/`TUYA_CLIENT_SECRET`
@@ -1562,6 +1665,352 @@ usputno popravljanje mobilnih testova. Jest nije instaliran.
 3. Nakon rotacije: `git rm --cached backend/.env` + tri praćena loga, pa canary.
 4. Odlučiti o čišćenju historije — **kozmetika**, ne zaštita; GitHub zadržava cache i
    forkove.
+
+### MO2-8 — Testna i lint infrastruktura za mobilnu aplikaciju (MO-012), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** `npm test` je vraćao **exit 127**
+(`jest: not found`), a `npm run lint` **exit 2**. U `mobile/` nije postojao
+nijedan test fajl.
+
+**Korekcija nalaza — uzroci su bili dublji nego „nedostaje paket".**
+
+1. `npm test` exit 127: `jest` nije bio u devDependencies **i** nijedan test
+   fajl nije postojao, pa čak i s instaliranim jest-om ne bi bilo šta pokrenuti.
+2. `npm run lint` exit 2 je imao **dva** nezavisna uzroka:
+   - `.eslintrc.js` je imao `extends: ['expo']`, ali `eslint-config-expo` nikad
+     nije bio u devDependencies;
+   - nakon instalacije paketa lint je **i dalje** padao s exit 2, jer ESLint 9
+     odbija `.eslintrc.*` format i traži flat config.
+
+Migracija na flat config (`mobile/eslint.config.js`) je dakle **nužna, ne
+stilistička**. Stari `.eslintrc.js` je obrisan, a njegova dva pravila
+(`@typescript-eslint/no-unused-vars`, `react-hooks/exhaustive-deps`) prenesena
+su 1:1. Cilj MO2-8 je uspostaviti lint koji radi, ne promijeniti stil usput.
+
+**Verzije (izmjereno 2026-10-31 preko npm registry).** `jest ^30.5.2`,
+`jest-expo ~58.0.13` (dist-tag `latest`; **`sdk-58` tag ne postoji**),
+`@testing-library/react-native ^14.1.0`, `react-server-dom-webpack 19.3.0`,
+`@react-native/jest-preset ^0.88.1`, `eslint ^9.39.5`, `eslint-config-expo
+~58.0.4`, `eslint-config-prettier ^10.1.8`, `@typescript-eslint/* ^8.59.0`,
+`@types/jest ^30.0.0`.
+
+`react-server-dom-webpack` je **pinovan na tačno `19.3.0`**, ne `~19.3.0`:
+caret razrješava na 19.3.1, koji traži `react ^19.3.1`, a projekt ima
+`react 19.3.0` (Expov `bundledNativeModules.json`) → `ERESOLVE`.
+
+`@typescript-eslint/*` je nadograđen s `^6` na `^8` jer `eslint-config-expo`
+58.0.4 vuče `^8.59.0` kao dependency.
+
+**Ključno mjerenje: prvo ikad izvršeno lint mjerenje.** Budući da lint nikad
+nije radio, ovo je prvi stvarni pregled koda. Rezultat: **71 error / 20
+warning u 15 fajlova**. Nijedan nije nastao sada — svi su bili tu, samo
+nevidljivi.
+
+| Pravilo | Broj | Porijeklo |
+|---|---|---|
+| `react-hooks/rules-of-hooks` | 28 | klasično — **stvarni crash bugovi** |
+| `react-hooks/static-components` | 21 | React Compiler v7 (novo) |
+| `react-hooks/refs` | 10 | React Compiler v7 (novo) |
+| `import/namespace` | 4 | klasično — lažno pozitivno |
+| `react-hooks/preserve-manual-memoization` | 2 | v7 |
+| `react-hooks/set-state-in-effect` | 2 | v7 |
+| `react-hooks/immutability` | 1 | v7 |
+| `react-hooks/purity` | 1 | v7 |
+| `react/display-name` | 1 | klasično |
+| `react/no-unescaped-entities` | 1 | klasično |
+
+**37 od 71** dolazi iz React Compiler ruleseta (`eslint-plugin-react-hooks`
+**7.1.1**) koji nije postojao kad je kod pisan — to su advisory pravila.
+
+**Baseline, dokumentovan u `mobile/eslint.config.js`.** Popraviti 71 prekršaja
+kroz 15 fajlova unutar zadatka koji glasi „dodaj test/lint infrastrukturu" bilo
+bi upravo ono što `MASTER-ROADMAP.md:259-260` zabranjuje: refactor naslepo, bez
+testova za te komponente. Zato pravila s postojećim prekršajima idu na `warn`,
+a **sva ostala ostaju na `error`** — CI pada na novoj grešci.
+
+**NOVI NALAZ — 28 `rules-of-hooks` prekršaja su stvarni crash bugovi, ne stil.**
+Primjer: `AlertsCard.tsx:136` definira `getAlertColors` koji zove
+`useColorModeValue` **12 puta**, a poziva se unutar `alerts.map(...)` na `:165`,
+gdje `alerts` ovisi o `dashboardData` (`:60-72`; komponentu renderuje
+`DashboardScreen.tsx:336`). Broj hook poziva dakle varira s podacima → React
+baca „Rendered more hooks than during the previous render" čim se broj alerta
+promijeni. Isti obrazac u `BoilerStatusCard.tsx:136,172,200-222`. **Namjerno
+nije popravljeno ovdje** — traži vlastiti zadatak s testovima.
+
+`import/namespace` (4) je lažno pozitivno: `Notifications.AndroidImportance`
+stvarno postoji u `expo-notifications`, ali pravilo ne čita TS enum kroz
+`eslint-import-resolver-typescript`.
+
+**Testovi: 34/34 prolaze.**
+
+| Suite | Testova | Šta pokriva |
+|---|---|---|
+| `src/config/__tests__/version.config.test.ts` | 17 | `compareVersions` (5), `getAppVersion` (4), `checkVersionGate` fail-open (8) |
+| `src/services/api/__tests__/error.handler.test.ts` | 17 | `parseApiError`: HTTP status → i18n ključ, 401 zaštita (MO2-5), timeout vs. mreža, ne-Axios ulaz |
+
+**Mutacijska provjera: 10/10 namjernih grešaka ruši suite.** Bez ovoga
+„prolazi" ne znači ništa — a upravo je to uhvatilo rupu u mom vlastitom testu:
+mutacija `case 404 → 'errors.badRequest'` je **preživjela** prvi prolaz, jer sam
+404 stavio samo u test gdje `data.message` postoji pa se mapiranje uopće ne
+izvršava. Dodavanjem 404 u `it.each` mutacija pada.
+
+**Pokrivenost (`collectCoverageFrom` = `src/services` + `src/components/gas`).**
+Prije dodavanja `error.handler.test.ts` bila je **0 %**, jer je jedini test bio
+u `src/config`, izvan opsega. Nakon: **5.5 % linija** (28/513), 11 % branch,
+`error.handler.ts` **65.1 % linija / 68.8 % branch**. Preostalih 9 od 11 fajlova
+u opsegu je na 0 % — prag u CI je namjerno izostavljen jer bi bio besmislen.
+
+**CI.** Novi job `mobile` u `.github/workflows/backend-audit.yml`: `npm ci` →
+`type-check` → `lint` → `test --ci --coverage`. Okidači su **samo**
+`on.push.branches: [arena/1bfee051-boiler-control]` + `workflow_dispatch`
+(pravilo 0a) — bez `pull_request` i bez `main`, što je provjereno čitanjem
+parsiranog YAML-a, ne pretpostavkom.
+
+`@types/jest ^30.0.0` je morao biti dodan **nakon** prvog prolaza: `type-check`
+je pao s **exit 2 i 102 greške** (66× TS2304 + 33× TS2582) jer TS nije poznavao
+`describe`/`it`/`expect`. Nakon instalacije: 0 grešaka.
+
+`coverage/` je dodan u korijenski `.gitignore` (linija 15) — generisani
+artefakt ne ide u repo.
+
+**Lokalno izmjereno prije pusha:** `npm ci` exit 0 (1593 paketa),
+`type-check` exit 0 (0 grešaka), `lint` exit 0 (0 errors, 92 warnings),
+`test --ci` exit 0 (34/34).
+
+**CI ishod (VERIFICIRANO).** Run **`41212573242`** = `completed success` za
+commit `fd07a7d`. Sva tri joba zelena: `test` (21 korak), `frontend` (18),
+`mobile` (10). Koraci `mobile` joba — `Install dependencies`, `Type-check`,
+`Lint`, `Unit tests` — svi `success`. Provjereno preko
+`gh api …/actions/runs/{id}/jobs`, jer `gh run watch --exit-status` vraća 0 i
+dok je run još `in_progress`.
+
+Anotacije `mobile` joba: 11 warning + 1 notice, **sve objašnjivo i nijedna nije
+nova greška**. Deset warninga su `react-hooks/rules-of-hooks` u
+`AlertsCard.tsx:140-155` — upravo dokumentovani baseline. Jedanaesti je
+GitHub-ovo upozorenje da `actions/checkout@v4`/`setup-node@v4` ciljaju Node 20.
+Notice je najava migracije `ubuntu-latest` na Ubuntu 26.
+
+**Napomena o broju anotacija.** ESLint lokalno broji **12** `rules-of-hooks` u
+`AlertsCard.tsx` (linije 140-157), a CI prikazuje **10**. Razlog je GitHub-ov
+display limit po nivou, ne propuštena provjera — autoritativan broj je lokalni
+`npx eslint . --format json` (28 ukupno).
+
+**Šta NIJE verificirano.** Runtime ponašanje komponenti (nema emulatora);
+nijedan komponentni test nije napisan iako je `@testing-library/react-native`
+instaliran; EAS build nije pokrenut; 28 `rules-of-hooks` prekršaja je
+dokumentovano, ali **nije popravljeno**.
+
+### FE2-2 — Auth migracija: access token iz `localStorage` u memoriju (S-004, FE-002), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** Access token je stajao u `localStorage`
+(`api.ts:63,91,98,154,158`, `AuthContext.tsx:25,39,41,61,84`,
+`GasReadingsPage.tsx:14`). Čita ga bilo koji ubačeni script, a traje 24 h bez
+revokacije — jedan XSS daje napadaču dan punog pristupa API-ju.
+
+**Korekcija nalaza — SEC-4 je već izgradio većinu onoga što je backlog
+pripisivao FE2-2.** Prije nego sam išta gradio, izmjerio sam šta postoji:
+
+| Već postojalo (SEC-4) | Stvarno nedostajalo |
+|---|---|
+| Rotirani refresh token + reuse detection | Access token čitljiv iz `localStorage` |
+| `auth-cookie.ts` (httpOnly/Secure/SameSite) | Download zaobilazio auth sloj |
+| `POST /auth/refresh`, `POST /auth/logout` | `ProtectedRoute` vjerovao postojanju stringa |
+| CORS `credentials` iza zastavice | Nijedan frontend test refresh toka |
+| `detectAuthMode`, `refreshSession`, 401→retry, `logout` s opozivom | — |
+
+Graditi cookie tok iznova bilo bi dupliranje SEC-4. Ono što je nedostajalo je
+samo da access token prestane biti čitljiv JavaScriptu.
+
+**Ključna odluka: token u memoriji SAMO kad je zastavica uključena.**
+`getToken()` vraća memoriju kad je `cookieAuthEnabled === true`, a
+`localStorage` kad je `false`. Razlog je rollback: da je memorija odmah postala
+jedini izvor, uključivanje **backend** zastavice bi postalo uslov da frontend
+radi, a vraćanje na `off` ne bi vratilo ponašanje. `setToken()` uz to aktivno
+briše zaostali token iz `localStorage` — inače bi korisnik prijavljen prije
+prelaska ostavio token čitljiv XSS-u iako se aplikacija više ne oslanja na njega.
+
+**Zašto je `ProtectedRoute` morao dobiti `isInitializing` (FE-002).** S tokenom u
+memoriji reload stranice znači da tokena pri prvom renderu nema, iako je httpOnly
+refresh cookie ispravan i `refreshSession()` upravo traje. Stari
+`if (!token) return <Navigate to="/login" />` bi izbacivao prijavljenog
+korisnika na svaki F5. Guard je namjerno `!token && isInitializing`: kad token
+postoji (`off` tok, gdje se čita odmah) sadržaj se prikazuje bez treperenja.
+
+**Usput ispravljena dokumentacijska greška koja je vodila u nesigurniju
+konfiguraciju.** `12-sec4-refresh-token.md:41` je tvrdio da za „cross-site deploy
+(frontend na drugom originu)" treba `AUTH_COOKIE_SAME_SITE=none`. Izmjereno iz
+commitovane deploy konfiguracije: frontend je `https://boiler-control.ba101.top`
+(`docker-compose.yml:35`), API `https://api.boiler-control.ba101.top/api`
+(`:66`) — različiti origin-i, ali **isti registrabilni domen** `ba101.top`.
+`SameSite` se računa po registrabilnom domenu, ne po originu, pa je zahtjev
+same-site i zadano `lax` šalje cookie. Postaviti `none` značilo bi naložiti
+browseru da cookie šalje i na cross-site zahtjeve — otvorilo bi refresh endpoint
+CSRF-u bez ikakve koristi. Ispravljeno na tri mjesta u tom dokumentu.
+
+**CSRF analiza** (vlasnik je tražio analizu prije prijedloga; dokument
+`docs/audit/frontend/08-fe22-auth-migration.md`):
+
+| Vektor | Ishod | Zašto |
+|---|---|---|
+| Cross-site → `/auth/refresh` | **BLOKIRANO** | `SameSite=lax` ne šalje cookie na cross-site POST |
+| Cross-site → bilo koji API endpoint | **BLOKIRANO** | traži `Authorization` header; preflight pada jer CORS `origin` nije refleksija |
+| Same-site (sibling `*.ba101.top`) → `/auth/refresh` | mogće, ali samo **ometanje** | cookie se šalje, ali CORS `origin` je fiksiran pa napadač ne može pročitati odgovor → ne može ukrasti novi access token |
+| Same-site → `/auth/logout` | mogće | prisilna odjava; neugodno, nije kompromitacija |
+
+Backend nema CSRF zaštitu nigdje (`grep -rniE "csrf|xsrf" src/` = 0 pogodaka),
+ali uz `lax` + fiksni CORS origin glavni vektor je zatvoren. Predložena je
+opciona provjera `Origin`/`Sec-Fetch-Site` kao defense-in-depth — **nije
+implementirana**, čeka odluku vlasnika.
+
+**Testovi: 84/84 (9 fajlova)**, od čega 15 novih. `npm run type-check` exit 0
+(0 grešaka), `npm run lint` exit 0 (0 errors / 13 warnings).
+
+**Mutacijska provjera: 6/6 namjernih grešaka ruši suite.** I ovdje je provjera
+uhvatila stvarnu grešku — prva verzija `ProtectedRoute` bila je
+`if (isInitializing)`, što je značilo treperenje za korisnike koji već imaju
+token i promjenu prijašnjeg ponašanja u `off` toku. Test „token uz
+inicijalizaciju i dalje prikazuje sadržaj" to nije hvatao dok ga nisam napisao,
+pa je implementacija ispravljena na `!token && isInitializing`.
+
+| Mutacija | Ishod |
+|---|---|
+| `setToken` ipak piše u `localStorage` kad je tok ON | 2 failed |
+| `getToken` pada na `localStorage` i kad je tok ON | 1 failed |
+| `clearToken` ne čisti memoriju | 1 failed |
+| `detectAuthMode`: nedostajuće polje = `true` | 1 failed |
+| `ProtectedRoute`: guard za inicijalizaciju uklonjen | 1 failed |
+| `ProtectedRoute`: guard ne gleda token | 1 failed |
+
+**Zastavica je i dalje `off`.** `AUTH_COOKIE_REFRESH_ENABLED` nije postavljen ni
+u jednoj deploy konfiguraciji u repu. Runbook za uključivanje je napisan
+(odjeljak 4 dokumenta), uključujući obavezan redoslijed deploya — stari frontend
+ne zna za `isInitializing`, pa bi prijavljeni korisnici bili izbacivani na svaki
+reload čim se zastavica uključi.
+
+**Kompatibilnost unazad.** Uz `off` ponašanje je doslovno prijašnje (testovi to
+eksplicitno pokrivaju). Mobilna aplikacija se ne dira: RN tok koristi
+`transport: 'body'` (`auth.controller.ts:64-67`) i čuva refresh token u Android
+Keystore, ne u cookie-ju.
+
+**Šta NIJE verificirano.** Ponašanje u stvarnom browseru — nema emulatora ni
+pravog browsera u ovom okruženju, pa postavljanje httpOnly cookie-ja i njegovo
+slanje sa `SameSite=lax` **nije isprobano**, samo mockano u testovima. Stvarni
+CSRF napad nije izveden; analiza je izvedena iz konfiguracije i specifikacije.
+`/auth/refresh` kroz stvarni HTTP s cookie-jem nije pozvan. Migracija nije
+primijenjena na stvarnu bazu.
+
+**CI ishod (VERIFICIRANO).** Run **`41218607380`** = `completed success` za
+commit `3193f3c`. Sva tri joba zelena: `frontend` (18 koraka), `test` (21),
+`mobile` (10). `frontend` job je stvarno izvršio `Type-check`, `Lint`,
+`Unit and component tests`, `Build`, `Bundle evaluates and renders` i
+`E2E smoke` — svi `success`. Provjereno preko `gh api …/actions/runs/{id}/jobs`.
+
+**Poređenje anotacija s prethodnim runom (`41212838864`, prije FE2-2): 13 prije,
+13 poslije — nula novih upozorenja.** Jedine dvije razlike su pomak broja linije
+(`AuthContext.tsx:20` → `:31`, jer je edit dodao linije iznad postojećeg
+`export const AuthContext`) i trajanje e2e testa (3.4 s → 3.2 s).
+`react-refresh/only-export-components` upozorenje na `AuthContext.tsx` je
+**pre-postojeće**, nije ga uveo FE2-2.
+
+### REL-7 — Tuya snapshot: nepoznato nije nula (B-026), 2026-10-31
+
+**Nalaz (verifikovan prije izmjene).** Tuya status je djelimičan, a stari kod je
+odsutna polja pretvarao u **stvarne** vrijednosti:
+
+| Mjesto | Kod | Kad polje nedostaje |
+|---|---|---|
+| `tuya.adapter.ts:321` | `(status['TempCurrent'] ?? null) / 2` | `null / 2` → **0 °C** |
+| `tuya.adapter.ts:322` | `status['Power'] === true` | **false** |
+| `tuya.adapter.ts:282` / `:296` | `… ?? 0` | cilj **0 °C** |
+
+`resolveHeatingState` (`polling.service.ts:435-436`) je na tome birao
+`0 < 21` → **start**, odnosno `20 <= 0-1` → **end**.
+
+**Dvije stvari koje nalaz nije istakao.** Prvo, **guard je već postojao ali je
+bio mrtav**: `:181` ima `if (currentTemp === null || targetTemp === null) return
+'incomplete';`, i ishodi `'incomplete'` + metrika `poll_devices_incomplete`
+(`:20`, `:27`) su već bili definisani i spojeni — autor je namjeravao ovo
+ponašanje, samo nikad nije proradilo jer je adapter uništio null. Drugo, **DB
+upis se dešavao PRIJE guarda** (`:161-179`), pa se lažna nula trajno snimila u
+`roomCurrentTemp`/`roomTargetTemp` i kad bi guard okinio.
+
+**Korekcija obima štete — potvrdio vlasnik.** Nalaz je ostavio otvoreno „nije
+dokazano da aplikacija izdaje fizičku komandu grijanju". Vlasnik je potvrdio da
+**aplikacija ne može upravljati Tuya termostatom**: Tuya API je read-only, daje
+statuse (grijanje ON/OFF) i programe. Provjereno i u kodu — `grep` za `.put(`,
+`.post(`, `method: 'PUT'`, `method: 'POST'`, `commands`, `/status` kroz
+`src/modules/Tuya/**` i `tuya.adapter.ts` daje **0 pogodaka**, a
+`handleHeatingStart` (`:246-275`) radi isključivo Prisma upise i logovanje.
+
+To je promijenilo prirodu zadatka. B-026 **nije** bio rizik fizičke sigurnosti
+nego rizik integriteta podataka: lažni eventi, lažna historija i trajanja, lažne
+notifikacije, pokvaren ulaz za preporuke/učenje. Zbog toga ispravka **ne uvodi
+„fail-safe stanje"** — aplikacija nema stanje koje bi mogla postaviti — nego
+princip: *ne bilježiti promjenu koju ne možemo posmatrati*.
+
+**Ispravka.** Novi `snapshot-guard.ts` (`toNullableNumber`,
+`toNullableBoolean`, `missingSnapshotFields`, `isSnapshotComplete`,
+`snapshotGuardEnabled`). `ThermostatSnapshot` sada tipizira polja kao nullable,
+pa je „nepoznato" uopće izrazivo. Guard je premješten **prije** upisa u bazu;
+nepotpun snapshot vraća `'incomplete'`, bilježi samo kontakt s uređajem
+(`lastSeen`/`lastSnapshotAt`) i ne dira lifecycle. Zastavica
+`INCOMPLETE_SNAPSHOT_GUARD_ENABLED`, **zadano UKLJUČENO** (staro ponašanje je
+bug u podacima, pa ga ne treba čuvati kao zadano).
+
+**Namjerno usko prihvaćene vrijednosti.** `toNullableBoolean` prihvata samo
+pravi boolean; `'true'`/`1` ostaju `undefined`. Tiho proširivanje bi stvarni
+kvar pretvorilo u tiho drugačije ponašanje. Isto tako `toNullableNumber`
+odbija `''`, boolean i `NaN`, jer bi `Number('') === 0` bila tiha greška.
+
+**Testovi: 18/18 novih** (`snapshot-guard.spec.ts`). `tuya_missing_fields_repro.cjs`
+je pretvoren **iz dokaza buga u regression guard** (EXIT=0, 6 asertcija):
+
+| Slučaj | `currentTemp` | `targetTemp` | `powerOn` | starts | ends | upis temp. |
+|---|---|---|---|---|---|---|
+| nedostaje `TempCurrent` | `null` | 21 | true | 0 | 0 | ne |
+| nedostaje `Power` | 20 | 21 | `undefined` | 0 | 0 | ne |
+| nedostaje `TempSet` | 20 | `null` | true | 0 | 0 | ne |
+| `TempCurrent=0` (stvarno) | `0` | 21 | true | 1 | 0 | da |
+| `Power=false` (stvarno) | 20 | 21 | `false` | 0 | 1 | — |
+| `TempSet=0` (stvarno) | 20 | `0` | true | 0 | 1 | da |
+
+Posljednja tri reda su ključna: **stvarne nule i `false` i dalje rade**, pa
+ispravka nije pretvorila mjereno stanje u „nepoznato" i time oslijepila
+aplikaciju.
+
+**Mutacijska provjera: 4/4.** Svaka od četiri namjerne greške (vraćanje `0` za
+odsutno, `false` za odsutno, guard uvijek isključen, Power se ne provjerava)
+ubijena je **i** od jest-a **i** od regression guarda; original vraćen identično.
+
+**Type-check.** U izmijenjenim fajlovima **nula grešaka izvan Prisma kaskade** i
+**nula grešaka null-dodjele** (TS2322/TS2345/TS18047/TS18048/TS2531/TS2532), što
+znači da promjena na nullable ne lomi nijednog potrošača.
+
+**Šta NIJE verificirano.** Stvarni Tuya odgovori s produkcije nisu uhvaćeni, pa
+**učestalost nepotpunih statusa nije izmjerena** — nalaz i dalje stoji da nije
+dokazano da ih ovaj model uopće šalje. Prometheus alert na
+`poll_devices_incomplete` nije dodan. `tuya-adapter.spec.ts` i
+`thermostat-polling-metrics.spec.ts` padaju lokalno jer nedostaje generisani
+Prisma klijent (`binaries.prisma.sh` nedostupan); **potvrđeno da padaju
+identično na čistom HEAD-u `3978b66`**, dakle pre-postojeće, ne od ove izmjene.
+
+**CI ishod (VERIFICIRANO).** Prvi push (`62977ab`, run `41226514871`) je **pao**
+na backend `test` jobu, korak 12 „Lint without modifying files". Uzrok: taj korak
+pokreće eslint **bez** `--fix`, dok lokalni `npm run lint` ima `--fix` i automatski
+je ispravljao preduge linije u novom kodu — lokalno zeleno, u CI-ju errors.
+Popravljeno u `83bd15a` i verificirano **CI-jevom tačnom komandom**
+(`npx eslint 'src/**/*.ts' 'test/**/*.ts' --ignore-pattern 'src/generated/**'`):
+EXIT=0, **0 errors / 2 warnings** (oba pre-postojeća, `no-floating-promises` u
+`correlation-id.service.spec.ts` i `main.ts`). MD5 hashovi fajlova identični prije
+i poslije ponovnog pokretanja bez `--fix`, dakle eslint više ništa ne mijenja.
+
+Run **`41226811814`** = `completed success`. Sva tri joba zelena: `frontend`
+(18 koraka), `test` (21), `mobile` (10). Korak 12 „Lint without modifying files"
+sada `success`, uz `Type-check` i `Build` također `success`.
+
+**Pouka zabilježena:** „lokalni lint prolazi" ne znači „CI lint prolazi" kad se
+lokalna komanda razlikuje po `--fix`. Provjera mora koristiti CI-jevu tačnu
+komandu.
 
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 

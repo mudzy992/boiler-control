@@ -29,12 +29,28 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { FormInput } from '../../components/FormInput';
-import {
-  scheduleDailyGasReadingReminder,
-  cancelDailyGasReadingReminder,
-} from '../../services/notifications/notificationService';
+// MO2-6 (MO-008): umjesto deprecated no-op funkcija koristi se stvarni API.
+// `scheduleDailyGasReadingReminder` / `cancelDailyGasReadingReminder` su samo
+// logovali poruku i ništa nisu radili, pa su obrisani iz notificationService.
+import * as Notifications from 'expo-notifications';
+import { Linking } from 'react-native';
 import { AppStorage } from '../../services/storage/AppStorage';
 import { apiClient } from '../../services/api/client';
+
+/**
+ * MO2-6 (MO-008): tip preferencije za dnevni podsjetnik o plinu.
+ *
+ * Vrijednost NIJE izmišljena — kopija je člana Prisma enuma `NotificationType`
+ * (`backend/prisma/schema.prisma:319`) i iste liste kojom backend puni zadane
+ * preferencije (`notifications.controller.ts:106-113`).
+ *
+ * Zašto je ovo bitno: `PATCH /api/notifications/preferences` prima običan TS tip
+ * bez DTO-a i bez `class-validator` dekoratora, pa globalni `ValidationPipe`
+ * preskače validaciju (B-010). Jedina zaštita je Prisma enum na nivou baze —
+ * izmišljeni tip bi prošao HTTP sloj i tek tamo pao. Zato se tip drži kao
+ * imenovana konstanta, a ne kao string literal rasut po ekranu.
+ */
+const GAS_READING_REMINDER_TYPE = 'GAS_READING_REMINDER';
 
 export const SettingsScreen = () => {
   const { user, logout } = useAuth();
@@ -42,9 +58,20 @@ export const SettingsScreen = () => {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const toast = useToast();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [dailyGasReminder, setDailyGasReminder] = useState(true);
+  /**
+   * MO2-6 (MO-008): ova tri stanja su prije bila `useState(true)` — prekidači su
+   * izgledali kao da rade, ali nisu perzistirali ništa i nisu zvali backend.
+   *
+   * Sada:
+   *  - `dailyGasReminder` je vezan na stvarnu preferencu `GAS_READING_REMINDER`
+   *    (postoji u Prisma enumu `NotificationType`, `schema.prisma:319`).
+   *  - stanje dozvole za obavijesti čita se iz OS-a (`getPermissionsAsync`), jer
+   *    aplikacija ne može sama sebi dodijeliti dozvolu — jedino iskreno stanje
+   *    je ono koje kaže sistem.
+   */
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
+  const [dailyGasReminder, setDailyGasReminder] = useState(false);
+  const [isLoadingGasReminder, setIsLoadingGasReminder] = useState(true);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -61,20 +88,92 @@ export const SettingsScreen = () => {
     setShowLanguageModal(false);
   };
 
+  /**
+   * MO2-6 (MO-008): prije je ovo zvalo `scheduleDailyGasReadingReminder`,
+   * deprecated no-op koji je samo ispisao `console.log`. Prekidač je izgledao
+   * funkcionalno, a nije radio ništa i ništa nije perzistirao.
+   *
+   * Sada ide na stvarni `PATCH /api/notifications/preferences`. Optimistično
+   * postavimo stanje, a pri grešci ga vratimo — inače bi prekidač lagao da je
+   * promjena prošla.
+   */
   const handleDailyGasReminderToggle = async (enabled: boolean) => {
+    const previous = dailyGasReminder;
     setDailyGasReminder(enabled);
-    if (enabled) {
-      await scheduleDailyGasReadingReminder(19, 0);
-    } else {
-      await cancelDailyGasReadingReminder();
+    try {
+      await apiClient.updateNotificationPreference(GAS_READING_REMINDER_TYPE, enabled);
+      toast.show({
+        description: t('settings.preferenceSaved'),
+        placement: 'top',
+      });
+    } catch {
+      setDailyGasReminder(previous);
+      toast.show({
+        description: t('settings.preferenceSaveFailed'),
+        placement: 'top',
+      });
+    }
+  };
+
+  /**
+   * MO2-6 (MO-008): dozvolu čitamo iz OS-a, a ne držimo izmišljeno `true`.
+   * `Linking.openSettings()` je jedini način da korisnik promijeni dozvolu —
+   * aplikacija to ne može uraditi umjesto njega.
+   */
+  const handleOpenNotificationSettings = async () => {
+    try {
+      await Linking.openSettings();
+    } catch {
+      toast.show({
+        description: t('settings.openSystemSettingsFailed'),
+        placement: 'top',
+      });
     }
   };
 
   useEffect(() => {
-    // On mount, schedule the reminder if enabled
-    if (dailyGasReminder) {
-      scheduleDailyGasReadingReminder(19, 0);
-    }
+    let cancelled = false;
+
+    const load = async () => {
+      // Stvarno stanje dozvole iz sistema.
+      try {
+        const permission = await Notifications.getPermissionsAsync();
+        if (!cancelled) {
+          setPermissionStatus(permission.status);
+        }
+      } catch {
+        if (!cancelled) {
+          setPermissionStatus(null);
+        }
+      }
+
+      // Stvarno stanje preferencije s backenda — ne pretpostavljamo `true`.
+      try {
+        const preferences = await apiClient.getNotificationPreferences();
+        if (cancelled) {
+          return;
+        }
+        const gas = Array.isArray(preferences)
+          ? preferences.find(
+              (p: { type?: string; enabled?: boolean }) =>
+                p?.type === GAS_READING_REMINDER_TYPE
+            )
+          : undefined;
+        setDailyGasReminder(Boolean(gas?.enabled));
+      } catch {
+        // Bez backenda ostajemo na `false`: prikazati „uključeno" kad nije
+        // bilo bi isto laganje koje je ovaj nalaz i opisao.
+      } finally {
+        if (!cancelled) {
+          setIsLoadingGasReminder(false);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const resetPasswordFields = () => {
@@ -321,60 +420,57 @@ export const SettingsScreen = () => {
                   {t('settings.notificationsSection')}
                 </Text>
               </Box>
-              <SettingItem
-                icon="notifications-outline"
-                title={t('settings.notificationsEnabled')}
-                subtitle={t('settings.notificationsEnabledDesc')}
-                rightElement={
-                  <Switch
-                    isChecked={notificationsEnabled}
-                    onToggle={() => setNotificationsEnabled(!notificationsEnabled)}
-                    size="sm"
-                  />
-                }
-              />
-              <Divider />
-              <SettingItem
-                icon="phone-portrait-outline"
-                title={t('settings.pushNotifications')}
-                subtitle={t('settings.pushNotificationsDesc')}
-                rightElement={
-                  <Switch
-                    isChecked={pushEnabled}
-                    onToggle={() => setPushEnabled(!pushEnabled)}
-                    size="sm"
-                    isDisabled={!notificationsEnabled}
-                  />
-                }
-              />
-              <Divider />
-              <SettingItem
-                icon="list-outline"
-                title={t('settings.notifications')}
-                subtitle={t('settings.notificationsDesc')}
-                onPress={() => (navigation as any).navigate('Notifications')}
-              />
-              <Divider />
-              <SettingItem
-                icon="settings-outline"
-                title={t('settings.notificationPreferences')}
-                subtitle={t('settings.notificationPreferencesDesc')}
-                onPress={() => (navigation as any).navigate('NotificationPreferences')}
-              />
-              <Divider />
-              <SettingItem
-                icon="time-outline"
-                title={t('settings.dailyGasReminder')}
-                subtitle={t('settings.dailyGasReminderTime')}
-                rightElement={
-                  <Switch
-                    isChecked={dailyGasReminder}
-                    onToggle={handleDailyGasReminderToggle}
-                    size="sm"
-                    isDisabled={!notificationsEnabled}
-                  />
-                }
-              />
+                {/**
+                  * MO2-6 (MO-008): ovdje su prije bila DVA prekidača
+                  * (`notificationsEnabled` i `pushEnabled`) koja su bila čisti
+                  * `useState(true)` — nisu zvala backend, nisu perzistirala i
+                  * nisu se mogla vratiti u isto stanje nakon izlaska iz ekrana.
+                  *
+                  * Nijedan od njih nema parnjaka na backendu: `NotificationType`
+                  * enum nema „master" prekidač, a dozvolu za obavijesti dodjeljuje
+                  * OS, ne aplikacija. Zato se umjesto lažnog prekidača prikazuje
+                  * STVARNO stanje dozvole i nudi put do sistemskih postavki.
+                  */}
+                <SettingItem
+                  icon="notifications-outline"
+                  title={t('settings.notificationsEnabled')}
+                  subtitle={
+                    permissionStatus === 'granted'
+                      ? t('settings.notificationPermissionGranted')
+                      : t('settings.notificationPermissionDenied')
+                  }
+                  onPress={handleOpenNotificationSettings}
+                />
+                <Divider />
+                <SettingItem
+                  icon="list-outline"
+                  title={t('settings.notifications')}
+                  subtitle={t('settings.notificationsDesc')}
+                  onPress={() => (navigation as any).navigate('Notifications')}
+                />
+                <Divider />
+                <SettingItem
+                  icon="settings-outline"
+                  title={t('settings.notificationPreferences')}
+                  subtitle={t('settings.notificationPreferencesDesc')}
+                  onPress={() => (navigation as any).navigate('NotificationPreferences')}
+                />
+                <Divider />
+                <SettingItem
+                  icon="time-outline"
+                  title={t('settings.dailyGasReminder')}
+                  subtitle={t('settings.dailyGasReminderTime')}
+                  rightElement={
+                    <Switch
+                      isChecked={dailyGasReminder}
+                      onToggle={handleDailyGasReminderToggle}
+                      size="sm"
+                      // Dok se stanje s backenda ne učita, prekidač je onemogućen:
+                      // prikazati bilo koju vrijednost prije toga bilo bi pogađanje.
+                      isDisabled={isLoadingGasReminder}
+                    />
+                  }
+                />
             </VStack>
           </Box>
 

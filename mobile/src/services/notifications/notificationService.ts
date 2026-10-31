@@ -202,33 +202,21 @@ export const listenForNotifications = (
 
   return () => {
     notificationListener.remove();
-    responseListener.remove();
+      responseListener.remove();
+    };
   };
-};
 
 /**
- * Schedule daily gas reading reminder notification (deprecated - now handled by backend)
- * Kept for backward compatibility with existing code
+ * MO2-6 (MO-008): ovdje su bile `scheduleDailyGasReadingReminder` i
+ * `cancelDailyGasReadingReminder`.
+ *
+ * Obrisane su jer nisu radile ništa — tijelo im je bio samo `console.log` s
+ * napomenom da podsjetnike šalje backend. `SettingsScreen` ih je ipak zvao na
+ * svako prebacivanje prekidača i na mount, pa je prekidač djelovao funkcionalno
+ * dok nije perzistirao ništa. Jedini potrošač bio je `SettingsScreen` (provjereno
+ * grep-om 2026-10-30: 5 referenci, sve u tom fajlu), pa brisanje ne lomi ništa.
+ *
+ * Stvarna kontrola je `PATCH /api/notifications/preferences` s tipom
+ * `GAS_READING_REMINDER`.
  */
-export const scheduleDailyGasReadingReminder = async (_hour: number = 11, _minute: number = 30) => {
-  try {
-    console.log('Note: Gas reminders are now sent from backend at 6:30 AM UTC');
-    // This function is deprecated in favor of backend scheduling
-    // Kept for backward compatibility
-  } catch (error) {
-    console.error('Failed to schedule daily gas reminder:', error);
-  }
-};
 
-/**
- * Cancel all scheduled gas reading reminder notifications (deprecated)
- */
-export const cancelDailyGasReadingReminder = async () => {
-  try {
-    console.log('Note: Gas reminders are now managed by backend');
-    // This function is deprecated in favor of backend scheduling
-    // Kept for backward compatibility
-  } catch (error) {
-    console.error('Failed to cancel gas reminders:', error);
-  }
-};

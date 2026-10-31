@@ -25,7 +25,7 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 <!-- mob:screens:15 -->
 <!-- mob:components:12 -->
 <!-- mob:navigators:4 -->
-<!-- mob:services:8 -->
+<!-- mob:services:9 -->
 
 ### Ekrani (15/15)
 
@@ -73,7 +73,7 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 | `components/gas/GasForm.tsx` | 415 | unos očitanja + slika | klijentska provjera duplog dana (`toDateString`) duplicira backend B-018 |
 | `components/gas/GasReadingCard.tsx` | 339 | kartica očitanja + akcije | — |
 
-### Servisi, storage, notifikacije (8/8)
+### Servisi, storage, notifikacije (9/9)
 
 | Fajl | Linija | Namjena | Bilješka |
 |---|---|---|---|
@@ -85,6 +85,7 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 | `services/notifications/notificationService.ts` | 202 | push registracija, kanali, deep link obrada | cilja nepostojeći ekran; nema `getLastNotificationResponseAsync` (MO-002); 2 deprecated no-op funkcije (181-202) |
 | `services/storage/SecureStorage.ts` | 61 | token u `expo-secure-store` | na web pada na **nešifrirani AsyncStorage** (13, 21); `Platform` je jedini kriterij, ne stvarna dostupnost |
 | `services/storage/AppStorage.ts` | 63 | AsyncStorage wrapper | koristi se samo za `app.language` |
+| `services/storage/downloadCache.ts` | 74 | `getDownloadsDirectory`, `purgeDownloadsDirectory` — jedan izvor istine za putanju preuzetih dokumenata | dodato u MO2-16 (`13d3e17`); koriste ga `GasReadingsScreen` i `SettingsScreen`; čišćenje pri mountu, ne odmah nakon otvaranja jer `startActivityAsync` vraća prije nego preglednik pročita fajl |
 
 ### Ostali `src` fajlovi (7)
 

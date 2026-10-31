@@ -11,7 +11,9 @@ export const GasReadingsPage: React.FC = () => {
   const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const queryClient = useQueryClient();
-  const token = localStorage.getItem('token');
+  // FE2-2: `const token = localStorage.getItem('token')` je uklonjeno. Auth
+  // sloj je sada u `apiClient` (token u memoriji kad je cookie tok uključen),
+  // pa stranica više ne čita token direktno — vidi `openProtectedFile` ispod.
 
   // Fetch readings
   const { data: readings = [], isLoading, error } = useQuery({
@@ -113,19 +115,17 @@ export const GasReadingsPage: React.FC = () => {
   });
 
   const openProtectedFile = async (url: string, fileName: string) => {
-    if (!token) {
-      message.error(t('gas.authMissing'));
-      return;
-    }
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(t('gas.loadError'));
-    }
-    const blob = await response.blob();
+    /**
+     * FE2-2: preuzimanje ide kroz `apiClient.downloadProtectedFile`, ne kroz
+     * ručni `fetch` s `Authorization: Bearer ${localStorage.getItem('token')}`.
+     *
+     * Stari kod je zaobilazio cijeli auth sloj: bez `withCredentials` (pa
+     * httpOnly cookie ne bi bio poslan), bez refresh-a na 401 (pa bi istekao
+     * access token značio trajni neuspjeh), i s tokenom koji u cookie toku
+     * više ne postoji u `localStorage` — otvaranje fakture i slike brojila bi
+     * prestalo raditi čim se zastavica uključi.
+     */
+    const blob = await apiClient.downloadProtectedFile(url);
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = blobUrl;

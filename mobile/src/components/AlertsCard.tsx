@@ -16,7 +16,7 @@ interface AlertsCardProps {
  * MO2-12: alerts are rendered from `GET /api/dashboard/health`.
  * The client no longer recomputes flow/thermostat/confidence thresholds.
  */
-export const AlertsCard: React.FC<AlertsCardProps> = ({ warnings = [] }) => {
+export const AlertsCard = React.memo(function AlertsCard({ warnings = [] }: AlertsCardProps) {
   const { t } = useTranslation();
 
   // Hooks must be unconditional and stable across renders. The previous
@@ -98,4 +98,4 @@ export const AlertsCard: React.FC<AlertsCardProps> = ({ warnings = [] }) => {
       })}
     </VStack>
   );
-};
+});

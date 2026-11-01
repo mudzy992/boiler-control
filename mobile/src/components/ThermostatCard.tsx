@@ -9,7 +9,7 @@ interface ThermostatCardProps {
   currentTemp?: number;
 }
 
-export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, currentTemp }) => {
+export const ThermostatCard = React.memo(function ThermostatCard({ thermostat, currentTemp }: ThermostatCardProps) {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -139,4 +139,4 @@ export const ThermostatCard: React.FC<ThermostatCardProps> = ({ thermostat, curr
       </VStack>
     </Box>
   );
-};
+});

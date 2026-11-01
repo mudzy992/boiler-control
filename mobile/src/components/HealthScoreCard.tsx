@@ -7,7 +7,7 @@ interface HealthScoreCardProps {
   confidence: number; // 0-100
 }
 
-export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confidence }) => {
+export const HealthScoreCard = React.memo(function HealthScoreCard({ score, confidence }: HealthScoreCardProps) {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -129,4 +129,4 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({ score, confide
       </VStack>
     </Box>
   );
-};
+});

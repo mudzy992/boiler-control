@@ -40,7 +40,7 @@ interface GasReadingCardProps {
   isMutating?: boolean;
 }
 
-export const GasReadingCard: React.FC<GasReadingCardProps> = ({
+export const GasReadingCard = React.memo(function GasReadingCard({
   reading,
   previousReading,
   onDelete,
@@ -52,7 +52,7 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
   onOpenInvoice,
   isDeleting,
   isMutating,
-}) => {
+}: GasReadingCardProps) {
   const { t } = useTranslation();
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -336,4 +336,4 @@ export const GasReadingCard: React.FC<GasReadingCardProps> = ({
       </VStack>
     </Box>
   );
-};
+});

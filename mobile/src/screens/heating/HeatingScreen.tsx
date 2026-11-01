@@ -20,6 +20,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useAppState } from '../../hooks/useAppState';
+import { dashboardRefetchInterval } from '../../services/query/polling';
+import { DASHBOARD_QUERY_KEY } from '../../services/query/keys';
 
 interface Thermostat {
   id: number;
@@ -55,6 +58,7 @@ export const HeatingScreen = () => {
   const { showError } = useErrorHandler();
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
+  const appState = useAppState();
 
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -74,10 +78,11 @@ export const HeatingScreen = () => {
     refetch,
     error: queryError,
   } = useQuery({
-    queryKey: ['dashboard-heating'],
+    queryKey: DASHBOARD_QUERY_KEY,
     queryFn: () => apiClient.getDashboard() as Promise<DashboardData>,
     staleTime: 1000 * 60 * 2, // Stale after 2 minutes
-    refetchInterval: 1000 * 60 * 1, // Auto-refresh every 1 minute
+    // MO2-13: one dashboard cache entry; no polling while backgrounded.
+    refetchInterval: dashboardRefetchInterval(appState),
   });
 
   // Fetch heating events

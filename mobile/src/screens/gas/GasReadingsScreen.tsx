@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { Alert, RefreshControl, Platform } from 'react-native';
+import { Alert, FlatList, RefreshControl, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
@@ -592,6 +592,30 @@ export const GasReadingsScreen: React.FC = () => {
 
   const periodConsumption = calculatePeriodConsumption();
 
+  // MO2-13: virtualized list item renderer with stable keys.
+  const renderReadingItem = ({ item, index }: { item: GasReading; index: number }) => (
+    <GasReadingCard
+      reading={item}
+      previousReading={index > 0 ? filteredReadings[index - 1] : undefined}
+      onDelete={() => deleteMutation.mutate(item.id)}
+      onToggleReference={(reading, isReference) =>
+        referenceMutation.mutate({ id: reading.id, isReference })
+      }
+      onUploadMeterImage={handleUploadMeterImage}
+      onUploadInvoice={handleUploadInvoice}
+      onDeleteInvoice={(reading) => invoiceDeleteMutation.mutate(reading.id)}
+      onOpenMeterImage={handleOpenMeterImage}
+      onOpenInvoice={handleOpenInvoice}
+      isDeleting={deleteMutation.isPending && deleteMutation.variables === item.id}
+      isMutating={
+        referenceMutation.isPending ||
+        meterImageUploadMutation.isPending ||
+        invoiceUploadMutation.isPending ||
+        invoiceDeleteMutation.isPending
+      }
+    />
+  );
+
   if (isLoading) {
     return (
       <Box flex={1} bg={bgColor} safeArea>
@@ -609,12 +633,14 @@ export const GasReadingsScreen: React.FC = () => {
 
   return (
     <Box flex={1} bg={bgColor} safeArea>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing || isFetching} onRefresh={handleRefresh} />
-        }
-      >
-        <VStack px={5} py={5} space={4} pb={8}>
+      <FlatList
+        style={{ flex: 1 }}
+        data={filteredReadings}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderReadingItem}
+        ListHeaderComponent={
+          <VStack space={4} mb={4}>
+
           {/* Header */}
           <VStack space={1}>
             <Heading size="2xl" color={textColor} fontWeight="700">
@@ -789,54 +815,34 @@ export const GasReadingsScreen: React.FC = () => {
               </HStack>
             </Box>
           </VStack>
-
-          {/* Readings List */}
-          {filteredReadings.length === 0 ? (
-            <Box
-              bg={cardBg}
-              rounded="xl"
-              borderWidth={1}
-              borderColor={borderColor}
-              p={8}
-              alignItems="center"
-            >
-              <Icon as={Ionicons} name="document-outline" size={16} color={subtextColor} mb={4} />
-              <Text color={subtextColor} textAlign="center" fontSize="md" fontWeight="500" mb={1}>
-                {t('gas.noReadingsInPeriod') || 'No readings in this period'}
-              </Text>
-              <Text color={subtextColor} textAlign="center" fontSize="sm">
-                {t('gas.tryOtherPeriod') || 'Try a different time period or add a new reading'}
-              </Text>
-            </Box>
-          ) : (
-            <VStack space={3}>
-              {filteredReadings.map((reading, idx) => (
-                <GasReadingCard
-                  key={reading.id}
-                  reading={reading}
-                  previousReading={idx > 0 ? filteredReadings[idx - 1] : undefined}
-                  onDelete={() => deleteMutation.mutate(reading.id)}
-                  onToggleReference={(item, isReference) =>
-                    referenceMutation.mutate({ id: item.id, isReference })
-                  }
-                  onUploadMeterImage={handleUploadMeterImage}
-                  onUploadInvoice={handleUploadInvoice}
-                  onDeleteInvoice={(item) => invoiceDeleteMutation.mutate(item.id)}
-                  onOpenMeterImage={handleOpenMeterImage}
-                  onOpenInvoice={handleOpenInvoice}
-                  isDeleting={deleteMutation.isPending && deleteMutation.variables === reading.id}
-                  isMutating={
-                    referenceMutation.isPending ||
-                    meterImageUploadMutation.isPending ||
-                    invoiceUploadMutation.isPending ||
-                    invoiceDeleteMutation.isPending
-                  }
-                />
-              ))}
-            </VStack>
-          )}
-        </VStack>
-      </ScrollView>
+          </VStack>
+        }
+        ListEmptyComponent={
+          <Box
+            bg={cardBg}
+            rounded="xl"
+            borderWidth={1}
+            borderColor={borderColor}
+            p={8}
+            alignItems="center"
+          >
+            <Icon as={Ionicons} name="document-outline" size={16} color={subtextColor} mb={4} />
+            <Text color={subtextColor} textAlign="center" fontSize="md" fontWeight="500" mb={1}>
+              {t('gas.noReadingsInPeriod') || 'No readings in this period'}
+            </Text>
+            <Text color={subtextColor} textAlign="center" fontSize="sm">
+              {t('gas.tryOtherPeriod') || 'Try a different time period or add a new reading'}
+            </Text>
+          </Box>
+        }
+        refreshControl={
+          <RefreshControl refreshing={refreshing || isFetching} onRefresh={handleRefresh} />
+        }
+        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 20, paddingBottom: 32 }}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+      />
 
       {/* Floating Action Button */}
       <Pressable

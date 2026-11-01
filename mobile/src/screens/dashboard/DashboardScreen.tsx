@@ -28,6 +28,10 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
 import { FormInput } from '../../components/FormInput';
+import {
+  DASHBOARD_QUERY_KEY,
+  DASHBOARD_HEALTH_QUERY_KEY,
+} from '../../services/query/keys';
 
 const MIN_CURRENT_FLOW_TEMP = 48;
 const MAX_CURRENT_FLOW_TEMP = 55;
@@ -55,7 +59,7 @@ export const DashboardScreen = () => {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ['dashboard'],
+    queryKey: DASHBOARD_QUERY_KEY,
     queryFn: getDashboard,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache
@@ -63,7 +67,7 @@ export const DashboardScreen = () => {
 
   // MO2-12: health score and alerts are computed by the backend, not here.
   const healthQuery = useQuery({
-    queryKey: ['dashboard-health'],
+    queryKey: DASHBOARD_HEALTH_QUERY_KEY,
     queryFn: () => apiClient.getDashboardHealth(),
     staleTime: 1000 * 60,
   });
@@ -87,8 +91,8 @@ export const DashboardScreen = () => {
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard-health'] }),
+        queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: DASHBOARD_HEALTH_QUERY_KEY }),
         queryClient.invalidateQueries({ queryKey: ['gas-analysis'] }),
       ]);
       setShowSetTempSheet(false);

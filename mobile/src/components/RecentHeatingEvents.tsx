@@ -8,7 +8,7 @@ interface RecentHeatingEventsProps {
   events: RecentHeatingEvent[];
 }
 
-export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events }) => {
+export const RecentHeatingEvents = React.memo(function RecentHeatingEvents({ events }: RecentHeatingEventsProps) {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -148,4 +148,4 @@ export const RecentHeatingEvents: React.FC<RecentHeatingEventsProps> = ({ events
       </VStack>
     </Box>
   );
-};
+});

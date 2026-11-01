@@ -1,29 +1,28 @@
-# HANDOFF — stanje na kraju turna (2026-10-31)
+# HANDOFF — stanje na kraju turna (2026-11-01)
 
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Stanje na kraju sesije (2026-10-31, VERIFICIRANO)
+## Stanje na kraju sesije (2026-11-01, VERIFICIRANO)
 
-- Arena sesijska grana `arena/c9961f17-boiler-control`; implementacija
-  **`47ace4e`**, CI dokumentacija **`388b1e8`**. Vlasnik i dalje ručno
-  pull/merge, **PR se ne otvara**.
-- Referentna grana `origin/arena/1bfee051-boiler-control` je `9fe6c10`;
-  `origin/main` je `179d171` i sadrži vlasnikove compose izmjene.
-- FEAT-6 (#35) je implementiran kao **bounded synchronous analytics export**:
+- Arena sesijska grana `arena/c9961f17-boiler-control`. Vlasnik i dalje ručno
+  pull/merge, **PR se ne otvara**. `origin/main` je zadnji provjeren na
+  `05a2c7d` (FEAT-6 merged); compose nije mijenjan.
+- **PERF-2 (#39) je završen**: bounded keyset thermostat polling,
+  `POLL_PAGINATION_ENABLED` zadano **on** (vlasnik `default_on`),
+  `POLL_BATCH_SIZE=100` (1..500), select samo potrebna polja, legacy rollback
+  `off`. Implementacija **`763df53`** + CI ispravka **`1b1330e`**.
+- CI run **`41256176723`** na `1b1330e`: backend **success** (eslint/tsc 0,
+  OpenAPI sync, PERF-2 repro, 42 suite/529 testova, 4 integration suite/53
+  testa), mobile **success**. Frontend je crven samo na pre-existing
+  `Deploy config consistent (FE2-7)`. Detalji:
+  `backend/14-perf2-polling-pagination.md`.
+- FEAT-6 (#35) ostaje završen: bounded synchronous analytics export,
   owner 404, spreadsheet-safe CSV, opt-in v2 JSON/IANA zona/DST, row/range
   limit. `PRIV-1` postoji i ostaje otvoren; asinhroni jobovi nisu rađeni.
-- Vlasnik je izabrao `analytics_only`, `bounded_sync`, `preserve_compose`.
-  Compose i FE2-7 checker nisu mijenjani; pre-existing frontend deploy failure
-  se bilježi iskreno.
-- Detalji: `backend/13-feat6-analytics-export.md`.
-- FEAT-6 implementacija: `b4228da` + CI ispravka `47ace4e`.
-- CI run **`41251815121`** na `47ace4e` (potvrđen i docs run **`41252034489`** na `388b1e8`): backend **success** (eslint/tsc 0,
-  OpenAPI sync, 39 suite/519 unit testova, 3 suite/52 integration testova,
-  FEAT-6 HTTP repro), mobile **success**. Frontend je crven samo na
-  pre-existing `Deploy config consistent (FE2-7)`; lokalni checker daje isto
-  `traefik loadbalancer port mora biti 80, bilo undefined`. Compose nije
-  mijenjan.
+  Detalji: `backend/13-feat6-analytics-export.md`.
+- Vlasnikove odluke: `analytics_only`, `bounded_sync`, `preserve_compose`,
+  `perf2`, `default_on`. Compose i FE2-7 checker nisu mijenjani.
 
 ## Završeno u ovoj sesiji (sve CI zeleno)
 
@@ -69,30 +68,32 @@ Talas D završi.
   assertuje apsolutnu ciljnu temperaturu**, pa ne štiti TempSet ispravku
 - FE2-2: CSRF defense-in-depth i datum uključivanja
   `AUTH_COOKIE_REFRESH_ENABLED` čekaju odluku vlasnika
-- Talas D dalje: PERF-1, PERF-2, SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
+- Talas D dalje: PERF-1, SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
   MO2-20. Blokirani: MO2-7 (#29), FORM-1 (#31)
 
 ## Git stanje (VERIFICIRANO)
 
-- Grana: `arena/1bfee051-boiler-control`
-- HEAD: **`e0b4e8b`** — `docs(audit): REL-7 - zabiljezen CI ishod run 41226811814`
-- Radno stablo: **čisto (0 ne-commitovanih)**
-- Zadnji CI run: **`41227022427`** = `completed success`, sva tri joba
-  (`test` 21 koraka, `frontend` 18, `mobile` 10)
+- Grana: `arena/c9961f17-boiler-control`
+- Implementacijski HEAD: **`1b1330e`** — PERF-2 + CI ispravka integration
+  fixturea. Dokumentacijski commit ovog turna je iznad njega.
+- `origin/main` je zadnji provjeren na `05a2c7d`; stara referentna grana
+  `origin/arena/1bfee051-boiler-control` više ne postoji na originu.
+- Zadnji CI run: **`41256176723`** na `1b1330e`: `test` i `mobile` success,
+  `frontend` failure samo na pre-existing FE2-7 deploy config koraku.
 
 **UPOZORENJE — lokalni git ref se vraća na base `c0131ff` između turnova.**
 Desilo se **5 puta**. Prvo u svakom turnu:
 
 ```
-git rev-parse HEAD          # mora biti e0b4e8b ili novije
+git rev-parse HEAD          # mora biti 1b1330e ili novije
 git status --short | wc -l  # mora biti 0
 ```
 
 Ako HEAD pokaže `c0131ff` i status ~199 fajlova, oporavak je:
 
 ```
-git fetch origin arena/1bfee051-boiler-control
-git reset --mixed origin/arena/1bfee051-boiler-control   # NE --hard
+git fetch origin arena/c9961f17-boiler-control
+git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard
 ```
 
 `--mixed` ne dira radno stablo, pa ne-commitovani rad preživi.
@@ -230,12 +231,15 @@ potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
 
 ## Sljedeće po redoslijedu (Talas D)
 
-`docs/audit/MASTER-ROADMAP.md`. REL-7 (#33) gotov. Sljedeći:
+`docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35) i PERF-2 (#39) su gotovi.
+Sljedeći kandidati iz reda u `docs/audit/backend/09-improvements-backlog.md`:
 
-**REL-8 (#34)** — red u `docs/audit/backend/09-improvements-backlog.md`.
+**PERF-1** — ciljeni indeksi tek nakon `EXPLAIN (ANALYZE, BUFFERS)` i p95
+mjerenja; ili **SEC-6** — zaštita metrics endpointa ako vlasnik želi
+sigurnosni korak prije daljih performansi.
 
-Ostatak Talasa D: FEAT-6, PERF-1, PERF-2, SEC-6, FE2-10, FE2-3, MO2-12,
-MO2-13, MO2-15, MO2-20. (REL-4, MAINT-2, MAINT-4 već gotovi.)
+Ostatak Talasa D: PERF-1, SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
+MO2-20. (REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2 već gotovi.)
 
 Blokirani: MO2-7 (#29), FORM-1 (#31 — vlasnik traži referentne senzorske
 uzorke).

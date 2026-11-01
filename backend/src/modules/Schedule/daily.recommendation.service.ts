@@ -5,6 +5,7 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
+import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
 import { NotificationsService } from '../Notification/notifications.service';
 import { NotificationType } from 'src/generated/prisma';
 
@@ -70,6 +71,12 @@ export class DailyRecommendationService {
         };
 
         const flowResult = FlowTemperatureEngine.calculate(input);
+        const breakdown = buildRecommendationBreakdown(flowResult, {
+          mode: input.mode,
+          intervalKey,
+          samples: intervalLearning?.samples ?? null,
+          expectedHeatTimeMin: 0,
+        });
 
         // --- spremanje preporuke u bazu ---
         await this.prisma.recommendation.create({
@@ -79,6 +86,7 @@ export class DailyRecommendationService {
             recommendedFlowTemp: flowResult.finalTemp,
             expectedHeatTimeMin: 0, // po potrebi može se dodati logika
             confidenceScore: flowResult.confidence,
+            breakdown,
           },
         });
 

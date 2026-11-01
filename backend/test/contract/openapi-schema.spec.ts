@@ -419,6 +419,51 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       }
     });
 
+    it('FE2-10 recommendations ima tipiziran breakdown snapshot', () => {
+      const op = doc.paths['/api/recommendations'].get;
+      const schema = op.responses?.['200']?.content?.['application/json']
+        ?.schema as { type?: string; items?: { $ref?: string } };
+      expect(schema.type).toBe('array');
+      expect(schema.items?.$ref).toBe(
+        '#/components/schemas/RecommendationResponseDto',
+      );
+      expect(propsOf('RecommendationResponseDto').sort()).toEqual([
+        'breakdown',
+        'confidenceScore',
+        'createdAt',
+        'date',
+        'expectedHeatTimeMin',
+        'id',
+        'recommendedFlowTemp',
+        'userId',
+      ]);
+      expect(schemas['RecommendationResponseDto'].required ?? []).not.toContain(
+        'breakdown',
+      );
+      expect(propsOf('RecommendationBreakdownDto').sort()).toEqual([
+        'appliedOffsets',
+        'baseCurveTemp',
+        'confidence',
+        'expectedHeatTimeMin',
+        'finalTemp',
+        'intervalKey',
+        'mode',
+        'samples',
+        'version',
+        'weightedExternalTemp',
+      ]);
+      expect(propsOf('RecommendationAppliedOffsetsDto').sort()).toEqual([
+        'events',
+        'home',
+        'interval',
+      ]);
+      const stored = schemas['DashboardStoredRecommendationDto'];
+      expect(propsOf('DashboardStoredRecommendationDto')).toContain(
+        'breakdown',
+      );
+      expect(stored.required ?? []).not.toContain('breakdown');
+    });
+
     it('FEAT-6 export ima tipiziran 200 i dokumentovane greske', () => {
       const op = doc.paths['/api/dashboard/export'].get;
       const schema = op.responses?.['200']?.content?.['application/json']

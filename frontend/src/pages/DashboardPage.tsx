@@ -3,6 +3,8 @@ import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge,
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '../services/api';
 import { StatCard } from '../components/StatCard';
+import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
+import type { RecommendationBreakdownData } from '../components/RecommendationBreakdown';
 import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
@@ -63,8 +65,9 @@ interface Boiler {
 
 interface Recommendation {
   recommendedFlowTemp: number;
-  expectedHeatTimeMin: number;
-  confidenceScore: number;
+  expectedHeatTimeMin?: number;
+  confidenceScore?: number;
+  breakdown?: RecommendationBreakdownData | null;
 }
 
 interface ThermostatProgram {
@@ -123,6 +126,7 @@ interface ProcessedDashboard {
   boiler: Boiler;
   weather: Weather;
   thermostatPrograms: ThermostatProgram[];
+  recommendation: Recommendation | null;
 }
 
 interface HeatingEventsResponse {
@@ -411,6 +415,7 @@ export const DashboardPage: React.FC = () => {
       boiler: raw.system.boiler,
       weather: raw.system.weather,
       thermostatPrograms,
+      recommendation: raw.system.recommendation ?? null,
     };
   };
 
@@ -714,6 +719,8 @@ export const DashboardPage: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      <RecommendationBreakdown breakdown={data.recommendation?.breakdown} />
 
       {/* ALERTS AND WARNINGS */}
       {alerts.length > 0 && (

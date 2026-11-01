@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { RecommendationBreakdownDto } from '../../HeatingRecommendation/dto/recommendation-response.dto';
 
 /**
  * ODGOVOR ŠEME za Dashboard.
@@ -119,6 +120,14 @@ export class DashboardStoredRecommendationDto {
 
   @ApiProperty(DATE_TIME)
   date!: Date;
+
+  @ApiPropertyOptional({
+    type: () => RecommendationBreakdownDto,
+    nullable: true,
+    description:
+      'FE2-10 explanation snapshot for new recommendations; null for older rows.',
+  })
+  breakdown?: RecommendationBreakdownDto | null;
 }
 
 /**

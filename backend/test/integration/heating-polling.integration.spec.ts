@@ -179,6 +179,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
   describe('Recommendations Endpoints', () => {
     let authToken: string;
+    let userId: number;
 
     beforeAll(async () => {
       const email = `rec_test_${Date.now()}@example.com`;
@@ -193,6 +194,7 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
 
       expect(registerResponse.status).toBe(201);
       authToken = registerResponse.body.token;
+      userId = registerResponse.body.user.id;
     });
 
     describe('GET /api/recommendations (retrieve recommendations)', () => {
@@ -223,6 +225,73 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
         );
 
         expect(response.status).toBe(401);
+      });
+
+      it('FE2-10 returns additive breakdown snapshot and null for old rows', async () => {
+        const breakdown = {
+          version: 1,
+          mode: 'FULL',
+          intervalKey: 'weekday_morning',
+          baseCurveTemp: 51.2,
+          weightedExternalTemp: -2.5,
+          appliedOffsets: { home: 0.25, interval: -0.5, events: 0.125 },
+          finalTemp: 51.1,
+          confidence: 0.72,
+          samples: 8,
+          expectedHeatTimeMin: 27.5,
+        };
+        let withBreakdownId: number | null = null;
+        let legacyId: number | null = null;
+        try {
+          const withBreakdown = await prisma.recommendation.create({
+            data: {
+              userId,
+              date: new Date('2026-11-01T06:00:00.000Z'),
+              recommendedFlowTemp: breakdown.finalTemp,
+              expectedHeatTimeMin: breakdown.expectedHeatTimeMin,
+              confidenceScore: breakdown.confidence,
+              breakdown,
+            },
+          });
+          withBreakdownId = withBreakdown.id;
+          const legacy = await prisma.recommendation.create({
+            data: {
+              userId,
+              date: new Date('2026-10-31T06:00:00.000Z'),
+              recommendedFlowTemp: 50,
+              expectedHeatTimeMin: 30,
+              confidenceScore: 0.5,
+            },
+          });
+          legacyId = legacy.id;
+
+          const response = await request(app.getHttpServer())
+            .get('/api/recommendations')
+            .set('Authorization', `Bearer ${authToken}`);
+
+          expect(response.status).toBe(200);
+          expect(Array.isArray(response.body)).toBe(true);
+          const snapshotRow = response.body.find(
+            (row: { id: number }) => row.id === withBreakdownId,
+          );
+          const legacyRow = response.body.find(
+            (row: { id: number }) => row.id === legacyId,
+          );
+          expect(snapshotRow).toBeDefined();
+          expect(snapshotRow.breakdown).toEqual(breakdown);
+          expect(legacyRow).toBeDefined();
+          expect(legacyRow.breakdown).toBeNull();
+        } finally {
+          await prisma.recommendation.deleteMany({
+            where: {
+              id: {
+                in: [withBreakdownId, legacyId].filter(
+                  (id): id is number => id !== null,
+                ),
+              },
+            },
+          });
+        }
       });
     });
 

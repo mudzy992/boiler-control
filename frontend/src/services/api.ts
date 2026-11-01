@@ -440,7 +440,7 @@ export class ApiClient {
   }
 
   // Reports endpoints
-  async getReports() {
+  async getReports(): Promise<components['schemas']['RecommendationResponseDto'][]> {
     const response = await this.client.get('/recommendations');
     return response.data;
   }

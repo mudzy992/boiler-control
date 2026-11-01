@@ -1215,6 +1215,8 @@ export interface components {
             system: components["schemas"]["DashboardSystemDto"];
         };
         DashboardStoredRecommendationDto: {
+            /** @description FE2-10 explanation snapshot for new recommendations; null for older rows. */
+            breakdown?: components["schemas"]["RecommendationBreakdownDto"] | null;
             confidenceScore: number;
             /** Format: date-time */
             createdAt: string;
@@ -1421,6 +1423,54 @@ export interface components {
         MessageResponseDto: {
             /** @example Password updated successfully */
             message: string;
+        };
+        RecommendationAppliedOffsetsDto: {
+            /** @description Recent heating-event offset, in °C. */
+            events: number;
+            /** @description Home-profile learning offset, in °C. */
+            home: number;
+            /** @description Interval learning offset, in °C. */
+            interval: number;
+        };
+        RecommendationBreakdownDto: {
+            appliedOffsets: components["schemas"]["RecommendationAppliedOffsetsDto"];
+            /** @description Base heating-curve temperature, in °C. */
+            baseCurveTemp: number;
+            /** @description Engine confidence, 0..1. */
+            confidence: number;
+            /** @description Expected heat time in minutes, if available. */
+            expectedHeatTimeMin: number | null;
+            /** @description Final recommended flow temperature, in °C. */
+            finalTemp: number;
+            /** @description Interval key used by the engine, if available. */
+            intervalKey: string | null;
+            /**
+             * @description Engine mode used for the recommendation.
+             * @enum {string}
+             */
+            mode: "FULL" | "PROFILE_ONLY" | "ANONYMOUS";
+            /** @description Learning sample count, if available. */
+            samples: number | null;
+            /**
+             * @description Snapshot schema version.
+             * @example 1
+             */
+            version: number;
+            /** @description Weighted external temperature used by the curve, in °C. */
+            weightedExternalTemp: number;
+        };
+        RecommendationResponseDto: {
+            /** @description Additive FE2-10 explanation snapshot. Null for recommendations created before the snapshot column existed. */
+            breakdown?: components["schemas"]["RecommendationBreakdownDto"] | null;
+            confidenceScore: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            date: string;
+            expectedHeatTimeMin: number;
+            id: number;
+            recommendedFlowTemp: number;
+            userId: number;
         };
         RefreshDto: {
             refreshToken?: string;
@@ -2729,7 +2779,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecommendationResponseDto"][];
+                };
             };
         };
     };

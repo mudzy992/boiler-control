@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { FlowTempInput, FlowCalcMode } from '../Heating/engine/types';
+import { buildRecommendationBreakdown } from './recommendation-breakdown';
 
 export interface HeatingEventData {
   userId: number;
@@ -124,6 +125,12 @@ export class HeatingRecommendationService {
     };
 
     const flowResult = FlowTemperatureEngine.calculate(input);
+    const breakdown = buildRecommendationBreakdown(flowResult, {
+      mode,
+      intervalKey,
+      samples: intervalLearning.samples ?? null,
+      expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? null,
+    });
 
     // 5️⃣ Upsert recommendation za danas
     const today = new Date();
@@ -141,6 +148,7 @@ export class HeatingRecommendationService {
           recommendedFlowTemp: flowResult.finalTemp,
           expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? 0,
           confidenceScore: flowResult.confidence,
+          breakdown,
         },
       });
     } else {
@@ -150,6 +158,7 @@ export class HeatingRecommendationService {
           recommendedFlowTemp: flowResult.finalTemp,
           expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? 0,
           confidenceScore: flowResult.confidence,
+          breakdown,
           date: today,
         },
       });

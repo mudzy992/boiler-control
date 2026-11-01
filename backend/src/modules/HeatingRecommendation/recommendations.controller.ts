@@ -1,7 +1,8 @@
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
 import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { RecommendationResponseDto } from './dto/recommendation-response.dto';
 import { HeatingRecommendationService } from './heating.recommendation.service';
 
 /**
@@ -19,6 +20,7 @@ export class RecommendationsController {
    * Get all recommendations for the authenticated user
    */
   @Get()
+  @ApiOkResponse({ type: [RecommendationResponseDto] })
   async getRecommendations(@Req() req) {
     return this.recommendationService.getRecommendations(req.user.userId);
   }

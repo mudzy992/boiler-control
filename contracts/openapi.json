@@ -930,6 +930,16 @@
       },
       "DashboardStoredRecommendationDto": {
         "properties": {
+          "breakdown": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationBreakdownDto"
+              }
+            ],
+            "description": "FE2-10 explanation snapshot for new recommendations; null for older rows.",
+            "nullable": true,
+            "type": "object"
+          },
           "confidenceScore": {
             "type": "number"
           },
@@ -1550,6 +1560,140 @@
         },
         "required": [
           "message"
+        ],
+        "type": "object"
+      },
+      "RecommendationAppliedOffsetsDto": {
+        "properties": {
+          "events": {
+            "description": "Recent heating-event offset, in °C.",
+            "type": "number"
+          },
+          "home": {
+            "description": "Home-profile learning offset, in °C.",
+            "type": "number"
+          },
+          "interval": {
+            "description": "Interval learning offset, in °C.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "home",
+          "interval",
+          "events"
+        ],
+        "type": "object"
+      },
+      "RecommendationBreakdownDto": {
+        "properties": {
+          "appliedOffsets": {
+            "$ref": "#/components/schemas/RecommendationAppliedOffsetsDto"
+          },
+          "baseCurveTemp": {
+            "description": "Base heating-curve temperature, in °C.",
+            "type": "number"
+          },
+          "confidence": {
+            "description": "Engine confidence, 0..1.",
+            "type": "number"
+          },
+          "expectedHeatTimeMin": {
+            "description": "Expected heat time in minutes, if available.",
+            "nullable": true,
+            "type": "number"
+          },
+          "finalTemp": {
+            "description": "Final recommended flow temperature, in °C.",
+            "type": "number"
+          },
+          "intervalKey": {
+            "description": "Interval key used by the engine, if available.",
+            "nullable": true,
+            "type": "string"
+          },
+          "mode": {
+            "description": "Engine mode used for the recommendation.",
+            "enum": [
+              "FULL",
+              "PROFILE_ONLY",
+              "ANONYMOUS"
+            ],
+            "type": "string"
+          },
+          "samples": {
+            "description": "Learning sample count, if available.",
+            "nullable": true,
+            "type": "number"
+          },
+          "version": {
+            "description": "Snapshot schema version.",
+            "example": 1,
+            "type": "number"
+          },
+          "weightedExternalTemp": {
+            "description": "Weighted external temperature used by the curve, in °C.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "version",
+          "mode",
+          "intervalKey",
+          "baseCurveTemp",
+          "weightedExternalTemp",
+          "appliedOffsets",
+          "finalTemp",
+          "confidence",
+          "samples",
+          "expectedHeatTimeMin"
+        ],
+        "type": "object"
+      },
+      "RecommendationResponseDto": {
+        "properties": {
+          "breakdown": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationBreakdownDto"
+              }
+            ],
+            "description": "Additive FE2-10 explanation snapshot. Null for recommendations created before the snapshot column existed.",
+            "nullable": true,
+            "type": "object"
+          },
+          "confidenceScore": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "date": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expectedHeatTimeMin": {
+            "type": "number"
+          },
+          "id": {
+            "type": "number"
+          },
+          "recommendedFlowTemp": {
+            "type": "number"
+          },
+          "userId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "recommendedFlowTemp",
+          "expectedHeatTimeMin",
+          "confidenceScore",
+          "createdAt",
+          "date"
         ],
         "type": "object"
       },
@@ -3493,6 +3637,16 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendationResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": ""
           }
         },

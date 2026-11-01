@@ -139,6 +139,7 @@ model Recommendation {
   recommendedFlowTemp Float
   expectedHeatTimeMin Float
   confidenceScore     Float
+  breakdown           Json?
   createdAt           DateTime @default(now())
   date                DateTime
   user                User     @relation(fields: [userId], references: [id])

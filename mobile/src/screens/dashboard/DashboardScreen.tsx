@@ -61,12 +61,25 @@ export const DashboardScreen = () => {
     gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 
+  // MO2-12: health score and alerts are computed by the backend, not here.
+  const healthQuery = useQuery({
+    queryKey: ['dashboard-health'],
+    queryFn: () => apiClient.getDashboardHealth(),
+    staleTime: 1000 * 60,
+  });
+
   // Handle query errors outside the query config to maintain hook order
   React.useEffect(() => {
     if (error) {
       showError(error, t('dashboard.loadError'));
     }
   }, [error, showError, t]);
+
+  React.useEffect(() => {
+    if (healthQuery.error) {
+      showError(healthQuery.error, t('dashboard.loadError'));
+    }
+  }, [healthQuery.error, showError, t]);
 
   const setCurrentTempMutation = useMutation({
     mutationFn: async (temp: number) => {
@@ -75,6 +88,7 @@ export const DashboardScreen = () => {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-health'] }),
         queryClient.invalidateQueries({ queryKey: ['gas-analysis'] }),
       ]);
       setShowSetTempSheet(false);
@@ -148,78 +162,6 @@ export const DashboardScreen = () => {
     setCurrentTempMutation.mutate(rounded);
   }, [currentTempInput, setCurrentTempMutation, t, toast]);
 
-  const clamp = (value: number, min = 0, max = 100) =>
-    Math.max(min, Math.min(max, value));
-
-  const calculateSystemHealthMetrics = () => {
-    const primaryHome = dashboardData?.homes?.[0];
-    if (!primaryHome) {
-      return { score: 50, confidence: 0 };
-    }
-
-    const components: Array<{ score: number; weight: number }> = [];
-
-    const learningIntervals = primaryHome.learningIntervals || [];
-    let learningConfidencePercent = 0;
-    if (learningIntervals.length > 0) {
-      const avgLearningConfidence =
-        learningIntervals.reduce((sum, interval) => sum + interval.confidence, 0) /
-        learningIntervals.length;
-      learningConfidencePercent = clamp(avgLearningConfidence * 100);
-      components.push({ score: learningConfidencePercent, weight: 35 });
-    }
-
-    const boiler = dashboardData?.system?.boiler;
-    if (
-      boiler &&
-      typeof boiler.actualFlowTemp === 'number' &&
-      typeof boiler.suggestedFlowTemp === 'number'
-    ) {
-      const flowDelta = Math.abs(boiler.actualFlowTemp - boiler.suggestedFlowTemp);
-      const flowScore = clamp(100 - flowDelta * 12.5);
-      components.push({ score: flowScore, weight: 25 });
-    }
-
-    const thermostats = primaryHome.thermostats || [];
-    if (thermostats.length > 0) {
-      const now = Date.now();
-      const freshCount = thermostats.filter((t) => {
-        if (!t.lastSeen) return false;
-        const lastSeenTime = new Date(t.lastSeen).getTime();
-        if (Number.isNaN(lastSeenTime)) return false;
-        const ageMinutes = (now - lastSeenTime) / 60000;
-        return ageMinutes <= 10;
-      }).length;
-      const freshnessScore = clamp((freshCount / thermostats.length) * 100);
-      components.push({ score: freshnessScore, weight: 25 });
-    }
-
-    const recentEvents = primaryHome.recentHeatingEvents || [];
-    if (recentEvents.length > 0) {
-      const anomalyCount = recentEvents.filter((e) => !!e.isAnomaly).length;
-      const anomalyRatio = anomalyCount / recentEvents.length;
-      const anomalyScore = clamp(100 - anomalyRatio * 100);
-      components.push({ score: anomalyScore, weight: 15 });
-    }
-
-    if (components.length === 0) {
-      return { score: 50, confidence: learningConfidencePercent };
-    }
-
-    const weightedScoreSum = components.reduce(
-      (sum, component) => sum + component.score * component.weight,
-      0,
-    );
-    const totalWeight = components.reduce(
-      (sum, component) => sum + component.weight,
-      0,
-    );
-
-    return {
-      score: clamp(weightedScoreSum / totalWeight),
-      confidence: learningConfidencePercent,
-    };
-  };
 
   if (isLoading) {
     return (
@@ -262,8 +204,8 @@ export const DashboardScreen = () => {
   }
 
   const primaryHome = dashboardData?.homes?.[0];
-  const { score: healthScore, confidence: learningConfidencePercent } =
-    calculateSystemHealthMetrics();
+  const healthScore = healthQuery.data?.score ?? 0;
+  const learningConfidencePercent = healthQuery.data?.learningConfidence ?? 0;
   const isHeating =
     dashboardData?.system?.boiler?.heatingStart && !dashboardData?.system?.boiler?.heatingEnd;
 
@@ -278,6 +220,7 @@ export const DashboardScreen = () => {
             // Rezultat se namjerno odbacuje.
             onRefresh={() => {
               void refetch();
+              void healthQuery.refetch();
             }}
             tintColor="brand.400"
           />
@@ -317,7 +260,10 @@ export const DashboardScreen = () => {
                 <Icon as={Ionicons} name="bar-chart-outline" size={5} color="brand.400" />
               </Pressable>
               <Pressable
-                onPress={() => refetch()}
+                onPress={() => {
+                  void refetch();
+                  void healthQuery.refetch();
+                }}
                 opacity={isFetching ? 0.5 : 1}
                 bg={headerBtnBg}
                 rounded="full"
@@ -333,10 +279,10 @@ export const DashboardScreen = () => {
           </HStack>
 
           {/* Alerts Section */}
-          <AlertsCard dashboardData={dashboardData} />
+          <AlertsCard warnings={healthQuery.data?.warnings ?? []} />
 
           {/* Health Score */}
-          {primaryHome && (
+          {primaryHome && healthQuery.data && (
             <HealthScoreCard
               score={healthScore}
               confidence={learningConfidencePercent}

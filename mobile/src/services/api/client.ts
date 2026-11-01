@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { SecureStorage } from '../storage/SecureStorage';
 import { API_CONFIG } from '../../config/api.config';
+import type { DashboardHealthResponse } from '../../types/Dashboard';
 
 /**
  * API Client for making HTTP requests to the backend.
@@ -191,6 +192,12 @@ class ApiClientService {
   // Dashboard endpoints
   async getDashboard() {
     const response = await this.client.get('/dashboard');
+    return response.data;
+  }
+
+  // MO2-12: single source of truth for health score and alerts.
+  async getDashboardHealth(): Promise<DashboardHealthResponse> {
+    const response = await this.client.get('/dashboard/health');
     return response.data;
   }
 

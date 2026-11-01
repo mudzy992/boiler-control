@@ -104,3 +104,39 @@ export interface HeatingStatsBucket {
   totalDurationMin: number;
   cycles: number;
 }
+
+// MO2-12: health score and warnings come from GET /api/dashboard/health.
+export type HealthComponentKey =
+  | 'learningConfidence'
+  | 'flowDelta'
+  | 'thermostatFreshness'
+  | 'anomalyRate';
+
+export interface HealthComponent {
+  key: HealthComponentKey;
+  score: number;
+  weight: number;
+}
+
+export type HealthWarningType =
+  | 'shortCycles'
+  | 'longCycles'
+  | 'targetShortfall'
+  | 'targetOvershoot'
+  | 'anomalies';
+
+export type HealthWarningLevel = 'info' | 'warning' | 'error';
+
+export interface HealthWarning {
+  type: HealthWarningType;
+  level: HealthWarningLevel;
+  message: string;
+}
+
+export interface DashboardHealthResponse {
+  score: number;
+  learningConfidence: number;
+  components: HealthComponent[];
+  warnings: HealthWarning[];
+  computedAt: string;
+}

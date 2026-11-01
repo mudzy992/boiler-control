@@ -328,6 +328,13 @@ const enUS = {
       off: 'Off',
     },
   },
+  healthWarnings: {
+    shortCycles: 'Short heating cycles',
+    longCycles: 'Long heating cycles',
+    targetShortfall: 'Target temperature not reached',
+    targetOvershoot: 'Possible target overshoot',
+    anomalies: 'Heating anomalies',
+  },
   alerts: {
     flowTempCriticalTitle: 'Flow Temperature Critical',
     flowTempCriticalMessage:
@@ -972,6 +979,13 @@ const bsBS = {
       manual: 'Ručni',
       off: 'Isključen',
     },
+  },
+  healthWarnings: {
+    shortCycles: 'Kratki ciklusi grijanja',
+    longCycles: 'Dugi ciklusi grijanja',
+    targetShortfall: 'Ciljna temperatura se ne dostiže',
+    targetOvershoot: 'Moguće pregašenje cilja',
+    anomalies: 'Anomalije grijanja',
   },
   alerts: {
     flowTempCriticalTitle: 'Kritična temperatura polazne vode',

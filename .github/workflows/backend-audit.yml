@@ -91,6 +91,21 @@ jobs:
       - name: PERF-2 bounded polling regression
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: node ../scripts/audit/poll_pagination_repro.cjs
+      - name: PERF-1 synthetic index benchmark
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        env:
+          AUDIT_DISPOSABLE_POSTGRES: '1'
+        run: |
+          node ../scripts/audit/perf1_index_benchmark.cjs --self-test
+          node ../scripts/audit/perf1_index_benchmark.cjs --ci
+      - name: Upload PERF-1 benchmark report
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf1-index-benchmark
+          path: ${{ runner.temp }}/perf1-index-benchmark.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Lint without modifying files
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Card, Table, Tag, Spin, message } from 'antd';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
+import { queryKeys } from '../lib/queryKeys';
 
 interface HeatingEvent {
   id: number;
@@ -14,23 +16,18 @@ interface HeatingEvent {
 }
 
 export const HeatingPage: React.FC = () => {
-  const [events, setEvents] = useState<HeatingEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  // FE2-3: React Query instead of manual useEffect fetch.
+  const { data: events = [], isLoading: loading, error } = useQuery({
+    queryKey: queryKeys.heatingEvents,
+    queryFn: async (): Promise<HeatingEvent[]> => {
+      const data = await apiClient.getHeatingEvents();
+      return Array.isArray(data) ? data : data?.events ?? [];
+    },
+  });
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await apiClient.getHeatingEvents();
-        setEvents(Array.isArray(data) ? data : data?.events ?? []);
-      } catch (error) {
-        message.error('Failed to load heating events');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
+    if (error) message.error('Failed to load heating events');
+  }, [error]);
 
   const columns = [
     {

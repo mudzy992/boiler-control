@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
+import { useGasReadingsQuery } from '../hooks/useGasQueries';
+import { queryKeys } from '../lib/queryKeys';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { GasForm } from '../components/GasForm';
 import { Button, message } from 'antd';
@@ -15,15 +17,8 @@ export const GasReadingsPage: React.FC = () => {
   // sloj je sada u `apiClient` (token u memoriji kad je cookie tok uključen),
   // pa stranica više ne čita token direktno — vidi `openProtectedFile` ispod.
 
-  // Fetch readings
-  const { data: readings = [], isLoading, error } = useQuery({
-    queryKey: ['gas-readings'],
-    queryFn: async () => {
-      const response = await apiClient.getGasReadings();
-      return Array.isArray(response) ? response : [];
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+  // FE2-3: shared gas readings cache with GasAnalyticsPage.
+  const { data: readings = [], isLoading, error } = useGasReadingsQuery();
 
   // Add reading mutation
   const addMutation = useMutation({
@@ -35,8 +30,8 @@ export const GasReadingsPage: React.FC = () => {
       return apiClient.addGasReadingWithUpload(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
       setShowAddModal(false);
     },
     // FE2-12: mutacija je ranije tiho padala — korisnik nije dobijao nikakvu
@@ -52,8 +47,8 @@ export const GasReadingsPage: React.FC = () => {
       return apiClient.deleteGasReading(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
     onError: () => {
       message.error(t('gas.deleteError'));
@@ -64,8 +59,8 @@ export const GasReadingsPage: React.FC = () => {
     mutationFn: async (payload: { id: number; isReference: boolean }) =>
       apiClient.updateGasReference(payload.id, payload.isReference),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
     onError: () => {
       message.error(t('gas.referenceError'));
@@ -76,7 +71,7 @@ export const GasReadingsPage: React.FC = () => {
     mutationFn: async (payload: { id: number; meterImage: File }) =>
       apiClient.uploadGasMeterImage(payload.id, payload.meterImage),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
     },
     onError: () => {
       message.error(t('gas.meterImageUploadError'));
@@ -95,8 +90,8 @@ export const GasReadingsPage: React.FC = () => {
         payload.invoiceGasPriceExVat,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
     onError: () => {
       message.error(t('gas.invoiceUploadError'));
@@ -106,8 +101,8 @@ export const GasReadingsPage: React.FC = () => {
   const invoiceDeleteMutation = useMutation({
     mutationFn: async (id: number) => apiClient.deleteGasInvoice(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
     onError: () => {
       message.error(t('gas.invoiceDeleteError'));

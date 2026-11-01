@@ -7,36 +7,12 @@ import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
 import type { RecommendationBreakdownData } from '../components/RecommendationBreakdown';
 import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../lib/queryKeys';
+import { useNotificationsQuery, useNotificationPreferencesQuery } from '../hooks/useNotifications';
+import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
 
 const { Text } = Typography;
-
-// Notification types
-interface Notification {
-  id: number;
-  userId: number;
-  type: string;
-  title: string;
-  message: string;
-  data?: any;
-  sentAt: string;
-  isRead: boolean;
-  sourceRef?: string;
-  createdAt: string;
-}
-
-interface NotificationPreference {
-  // FE2-1: dopunjeno da odgovara onome što backend stvarno vrati.
-  // Prisma model NotificationPreference (backend/prisma/schema.prisma:285-295)
-  // ima id/createdAt/updatedAt, a GET /notifications/preferences vraća sirove
-  // Prisma objekte bez `select`, pa sva tri polja dolaze u odgovoru.
-  id: number;
-  userId: number;
-  type: string;
-  enabled: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
 
 // Type definitions matching actual backend response
 interface Weather {
@@ -129,15 +105,6 @@ interface ProcessedDashboard {
   recommendation: Recommendation | null;
 }
 
-interface HeatingEventsResponse {
-  data: HeatingEvent[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-}
-
 interface HeatingSummaryResponse {
   summary: {
     totalCycles: number;
@@ -150,21 +117,6 @@ interface HeatingSummaryResponse {
     totalDurationMin: number;
     cycles: number;
   }>;
-}
-
-interface HeatingStatusResponse {
-  isHeatingNow: boolean;
-  lastEvent: {
-    id: number;
-    deviceId: number;
-    timestampStart: string;
-    timestampEnd: string | null;
-    roomCurrentTemp: number;
-    roomTargetTemp: number;
-    hvacAction: string;
-    source: string;
-    isAnomaly: boolean;
-  } | null;
 }
 
 type ChartDatum = {
@@ -191,31 +143,92 @@ type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
 };
 
+function processDashboardData(raw: DashboardResponse): ProcessedDashboard {
+  const home = raw.homes[0];
+  const thermostat = home?.thermostats[0];
+  const recentEvents = home?.recentHeatingEvents || [];
+  const thermostatPrograms = thermostat?.program ?? [];
+
+  // FE2-14 (FE-010): health score se vise NE racuna ovdje — dolazi iz
+  // `GET /api/dashboard/health` (jedan izvor za web i mobile).
+  const anomalies = recentEvents.filter(e => e.isAnomaly).length;
+
+  const anomalyRate = recentEvents.length > 0
+    ? Math.round((anomalies / recentEvents.length) * 100)
+    : 0;
+
+  return {
+    anomalyCount: anomalies,
+    anomalyRate: anomalyRate,
+    currentTemp: thermostat?.currentTemp || 0,
+    targetTemp: thermostat?.targetTemp || 0,
+    lastUpdate: new Date().toISOString(),
+    recentEvents: recentEvents,
+    boiler: raw.system.boiler,
+    weather: raw.system.weather,
+    thermostatPrograms,
+    recommendation: raw.system.recommendation ?? null,
+  };
+}
+
 export const DashboardPage: React.FC = () => {
-  const [data, setData] = useState<ProcessedDashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [rangeLoading, setRangeLoading] = useState(true);
-  const [events, setEvents] = useState<HeatingEvent[]>([]);
-  const [summary, setSummary] = useState<HeatingSummaryResponse | null>(null);
-  const [isHeatingNow, setIsHeatingNow] = useState(false);
+  const queryClient = useQueryClient();
   const [activeBucket, setActiveBucket] = useState<string | null>(null);
   const [range, setRange] = useState<[Dayjs, Dayjs]>([
     dayjs().startOf('day'), // 00:00:00 today
     dayjs(), // current time
   ]);
-
-  // Notification states
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference[]>([]);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [setTempModalOpen, setSetTempModalOpen] = useState(false);
   const [setTempValue, setSetTempValue] = useState<number | null>(null);
   const [setTempSubmitting, setSetTempSubmitting] = useState(false);
 
+  // FE2-3: dashboard payload is a React Query cache entry, not local state.
+  const dashboardQuery = useQuery({
+    queryKey: queryKeys.dashboard,
+    queryFn: () => apiClient.getDashboard() as Promise<DashboardResponse>,
+  });
+  const data = useMemo(
+    () => (dashboardQuery.data ? processDashboardData(dashboardQuery.data) : null),
+    [dashboardQuery.data],
+  );
+  const loading = dashboardQuery.isLoading;
+  const refetchDashboard = dashboardQuery.refetch;
+
+  useEffect(() => {
+    if (dashboardQuery.error) {
+      console.error('Dashboard error:', dashboardQuery.error);
+      message.error('Failed to load dashboard data');
+    }
+  }, [dashboardQuery.error]);
+
+  // FE2-3: shared notification cache with NotificationsPage.
+  const notificationsQuery = useNotificationsQuery();
+  const notificationPreferencesQuery = useNotificationPreferencesQuery();
+  const notifications = useMemo(
+    () => notificationsQuery.data ?? [],
+    [notificationsQuery.data],
+  );
+  const notificationPreferences = useMemo(
+    () => notificationPreferencesQuery.data ?? [],
+    [notificationPreferencesQuery.data],
+  );
+  const notificationsLoading =
+    notificationsQuery.isLoading || notificationPreferencesQuery.isLoading;
+
+  useEffect(() => {
+    if (notificationsQuery.error || notificationPreferencesQuery.error) {
+      console.error(
+        'Failed to load notifications:',
+        notificationsQuery.error ?? notificationPreferencesQuery.error,
+      );
+      message.error('Error loading notifications');
+    }
+  }, [notificationsQuery.error, notificationPreferencesQuery.error]);
+
   const { data: homeProfile } = useQuery({
-    queryKey: ['home-profile'],
+    queryKey: queryKeys.homeProfile,
     queryFn: () => apiClient.getHomeProfile(),
     staleTime: 1000 * 60 * 5,
   });
@@ -226,7 +239,7 @@ export const DashboardPage: React.FC = () => {
     data: currentWeather,
     isLoading: weatherLoading,
   } = useQuery({
-    queryKey: ['weather-current', homeProfileId],
+    queryKey: queryKeys.weatherCurrent(homeProfileId),
     // FE2-1: `homeProfileId` je `number | undefined`, ali `enabled: !!homeProfileId`
     // garantuje da se queryFn ne poziva dok je undefined.
     queryFn: () => apiClient.getCurrentWeather(homeProfileId!),
@@ -262,23 +275,6 @@ export const DashboardPage: React.FC = () => {
     return null;
   }, [currentWeather, data?.weather]);
 
-  const loadNotifications = useCallback(async () => {
-    try {
-      setNotificationsLoading(true);
-      const [notifs, prefs] = await Promise.all([
-        apiClient.getNotifications(),
-        apiClient.getNotificationPreferences(),
-      ]);
-      setNotifications(notifs);
-      setNotificationPreferences(prefs);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-      message.error('Error loading notifications');
-    } finally {
-      setNotificationsLoading(false);
-    }
-  }, []);
-
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.isRead),
     [notifications]
@@ -288,34 +284,15 @@ export const DashboardPage: React.FC = () => {
     async (notificationId: number) => {
       try {
         await apiClient.markNotificationAsRead(notificationId);
-        await loadNotifications();
+        await queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
       } catch (error) {
         console.error('Failed to mark notification as read:', error);
         message.error('Failed to mark notification as read');
       }
     },
-    [loadNotifications]
+    [queryClient]
   );
-
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const result = await apiClient.getDashboard() as DashboardResponse;
-
-        // Process the raw data to extract what we need
-        const processed = processDashboardData(result);
-        setData(processed);
-      } catch (error) {
-        console.error('Dashboard error:', error);
-        message.error('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-    loadNotifications();
-  }, [loadNotifications]);
 
   const openSetTempModal = useCallback(() => {
     const boiler = data?.boiler;
@@ -343,9 +320,7 @@ export const DashboardPage: React.FC = () => {
     try {
       setSetTempSubmitting(true);
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
-
-      const result = (await apiClient.getDashboard()) as DashboardResponse;
-      setData(processDashboardData(result));
+      await refetchDashboard();
 
       message.success('Current boiler temperature updated');
       setSetTempModalOpen(false);
@@ -355,69 +330,27 @@ export const DashboardPage: React.FC = () => {
     } finally {
       setSetTempSubmitting(false);
     }
-  }, [setTempValue]);
+  }, [refetchDashboard, setTempValue]);
 
-  const loadHeatingRange = useCallback(async () => {
-    if (!range?.[0] || !range?.[1]) return;
-
-    const from = range[0].toISOString();
-    const to = range[1].toISOString();
-    const bucket = range[0].isSame(range[1], 'day') ? 'hour' : 'day';
-
-    try {
-      setRangeLoading(true);
-      const [eventsResponse, summaryResponse, statusResponse] = await Promise.all([
-        apiClient.getDashboardHeatingEvents({ from, to, limit: 500 }),
-        apiClient.getDashboardHeatingSummary({ from, to, bucket }),
-        apiClient.getDashboardHeatingStatus(),
-      ]);
-
-      const eventsData = (eventsResponse as HeatingEventsResponse)?.data ?? [];
-      setEvents(eventsData);
-      setSummary(summaryResponse as HeatingSummaryResponse);
-      setIsHeatingNow((statusResponse as HeatingStatusResponse)?.isHeatingNow ?? false);
-    } catch (error) {
-      console.error('Heating range error:', error);
-      message.error('Failed to load heating activity');
-    } finally {
-      setRangeLoading(false);
-    }
-  }, [range]);
+  // FE2-3: React Query interval replaces window.setInterval. The interval is
+  // paused while the tab is hidden (`refetchIntervalInBackground: false`).
+  const heatingRangeParams = {
+    from: range[0].toISOString(),
+    to: range[1].toISOString(),
+    bucket: (range[0].isSame(range[1], 'day') ? 'hour' : 'day') as 'hour' | 'day',
+  };
+  const heatingRangeQuery = useDashboardHeatingRange(heatingRangeParams);
+  const events = (heatingRangeQuery.data?.events ?? []) as unknown as HeatingEvent[];
+  const summary = (heatingRangeQuery.data?.summary ?? null) as HeatingSummaryResponse | null;
+  const isHeatingNow = heatingRangeQuery.data?.isHeatingNow ?? false;
+  const rangeLoading = heatingRangeQuery.isLoading || heatingRangeQuery.isFetching;
 
   useEffect(() => {
-    loadHeatingRange();
-    const intervalId = window.setInterval(loadHeatingRange, 60000);
-    return () => window.clearInterval(intervalId);
-  }, [range, loadHeatingRange]);
-
-  const processDashboardData = (raw: DashboardResponse): ProcessedDashboard => {
-    const home = raw.homes[0];
-    const thermostat = home?.thermostats[0];
-    const recentEvents = home?.recentHeatingEvents || [];
-    const thermostatPrograms = thermostat?.program ?? [];
-
-    // FE2-14 (FE-010): health score se vise NE racuna ovdje — dolazi iz
-    // `GET /api/dashboard/health` (jedan izvor za web i mobile).
-    const anomalies = recentEvents.filter(e => e.isAnomaly).length;
-
-    // Calculate anomaly rate
-    const anomalyRate = recentEvents.length > 0
-      ? Math.round((anomalies / recentEvents.length) * 100)
-      : 0;
-
-    return {
-      anomalyCount: anomalies,
-      anomalyRate: anomalyRate,
-      currentTemp: thermostat?.currentTemp || 0,
-      targetTemp: thermostat?.targetTemp || 0,
-      lastUpdate: new Date().toISOString(),
-      recentEvents: recentEvents,
-      boiler: raw.system.boiler,
-      weather: raw.system.weather,
-      thermostatPrograms,
-      recommendation: raw.system.recommendation ?? null,
-    };
-  };
+    if (heatingRangeQuery.error) {
+      console.error('Heating range error:', heatingRangeQuery.error);
+      message.error('Failed to load heating activity');
+    }
+  }, [heatingRangeQuery.error]);
 
   const bucketType: 'hour' | 'day' = range[0].isSame(range[1], 'day')
     ? 'hour'
@@ -501,7 +434,7 @@ export const DashboardPage: React.FC = () => {
    * rezultate. Sada oba klijenta čitaju `GET /api/dashboard/health`.
    */
   const healthQuery = useQuery({
-    queryKey: ['dashboard-health'],
+    queryKey: queryKeys.dashboardHealth,
     queryFn: () => apiClient.getDashboardHealth(),
     staleTime: 1000 * 60,
   });
@@ -1075,7 +1008,9 @@ export const DashboardPage: React.FC = () => {
                         try {
                           await apiClient.updateNotificationPreference(pref.type, checked);
                           message.success(`Postavke za "${getLabel(pref.type)}" ažurirane`);
-                          await loadNotifications();
+                          await queryClient.invalidateQueries({
+                            queryKey: queryKeys.notificationPreferences,
+                          });
                         } catch (error) {
                           console.error('Failed to update preference:', error);
                           message.error('Greška pri ažuriranju postavki');

@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
+import { useNotificationsQuery } from '../hooks/useNotifications';
+import { queryKeys } from '../lib/queryKeys';
 import { BellOutlined, CheckCircleOutlined, AlertOutlined, InfoOutlined } from '@ant-design/icons';
 import { Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -11,23 +13,16 @@ export const NotificationsPage: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch all notifications
-  const { data: allNotifications = [], isLoading, error } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: async () => {
-      const response = await apiClient.getNotifications();
-      console.log('Notifications API Response:', response);
-      return Array.isArray(response) ? response : [];
-    },
-    staleTime: 1000 * 60 * 1, // 1 minute
-  });
+  // FE2-3: shared notifications cache with the dashboard drawer.
+  const { data: allNotifications = [], isLoading, error } = useNotificationsQuery();
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId: number) => apiClient.markNotificationAsRead(notificationId),
     onSuccess: () => {
       // Invalidate and refetch notifications
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     },
     onError: (error) => {
       console.error('Failed to mark notification as read:', error);
@@ -38,8 +33,8 @@ export const NotificationsPage: React.FC = () => {
   const markAllReadMutation = useMutation({
     mutationFn: () => apiClient.markAllNotificationsRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     },
     onError: (error) => {
       console.error('Failed to mark all notifications as read:', error);

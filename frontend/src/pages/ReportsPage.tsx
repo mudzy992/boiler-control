@@ -1,29 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Card, Table, Spin, message } from 'antd';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
+import { queryKeys } from '../lib/queryKeys';
 import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
 import type { components } from '../types/api';
 
 type Recommendation = components['schemas']['RecommendationResponseDto'];
 
 export const ReportsPage: React.FC = () => {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [loading, setLoading] = useState(true);
+  // FE2-3: React Query instead of manual useEffect fetch.
+  const { data: recommendations = [], isLoading: loading, error } = useQuery({
+    queryKey: queryKeys.reports,
+    queryFn: async (): Promise<Recommendation[]> => {
+      const data = await apiClient.getReports();
+      return Array.isArray(data) ? data : [];
+    },
+  });
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await apiClient.getReports();
-        setRecommendations(Array.isArray(data) ? data : []);
-      } catch (error) {
-        message.error('Failed to load recommendations');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
+    if (error) message.error('Failed to load recommendations');
+  }, [error]);
 
   const columns = [
     {

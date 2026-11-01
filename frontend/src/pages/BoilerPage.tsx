@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Table, Tag, Spin, message, Modal, Button, InputNumber, Space, Typography } from 'antd';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
+import { queryKeys } from '../lib/queryKeys';
 // FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u DashboardPage.tsx.
 // Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
 import {
@@ -20,27 +22,26 @@ interface BoilerEvent {
 }
 
 export const BoilerPage: React.FC = () => {
-  const [events, setEvents] = useState<BoilerEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [setTempModalOpen, setSetTempModalOpen] = useState(false);
   const [setTempValue, setSetTempValue] = useState<number | null>(null);
   const [setTempSubmitting, setSetTempSubmitting] = useState(false);
 
-  const loadEvents = useCallback(async () => {
-    try {
+  // FE2-3: React Query instead of manual useEffect fetch.
+  const { data: events = [], isLoading: loading, error } = useQuery({
+    queryKey: queryKeys.boilerEvents,
+    queryFn: async (): Promise<BoilerEvent[]> => {
       const data = await apiClient.getBoilerEvents();
-      setEvents(Array.isArray(data) ? data : data?.events ?? []);
-    } catch (error) {
-      console.error('Error loading boiler events:', error);
-      message.error('Failed to load boiler history!');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return Array.isArray(data) ? data : data?.events ?? [];
+    },
+  });
 
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    if (error) {
+      console.error('Error loading boiler events:', error);
+      message.error('Failed to load boiler history!');
+    }
+  }, [error]);
 
   const openSetTempModal = useCallback(() => {
     const latest = events[0];
@@ -70,14 +71,14 @@ export const BoilerPage: React.FC = () => {
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
       message.success('Current boiler temperature updated');
       setSetTempModalOpen(false);
-      await loadEvents();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.boilerEvents });
     } catch (error) {
       console.error('Failed to set boiler current temp:', error);
       message.error('Failed to update current boiler temperature');
     } finally {
       setSetTempSubmitting(false);
     }
-  }, [loadEvents, setTempValue]);
+  }, [queryClient, setTempValue]);
 
   const columns = [
     {

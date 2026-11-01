@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
+import { useGasAnalysisQuery, useGasReadingsQuery } from '../hooks/useGasQueries';
 import { StatCard } from '../components/StatCard';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -21,35 +20,13 @@ export const GasAnalyticsPage: React.FC = () => {
     };
   }, [periodDays]);
 
-  const { data: analysisData = {}, isLoading, error } = useQuery({
-    queryKey: [
-      'gas-analysis',
-      useDefaultReferenceRange ? 'default-range' : `${dateRange.from}-${dateRange.to}`,
-    ],
-    queryFn: async () => {
-      try {
-        const result = useDefaultReferenceRange
-          ? await apiClient.getGasAnalysis()
-          : await apiClient.getGasAnalysis(dateRange.from, dateRange.to);
-        console.log('Gas Analysis API Response:', result);
-        return result;
-      } catch (err) {
-        console.error('Error fetching gas analysis:', err);
-        return {};
-      }
-    },
-    staleTime: 1000 * 60 * 5,
+  // FE2-3: shared gas queries; readings are deduplicated with GasReadingsPage.
+  const { data: analysisData = {}, isLoading, error } = useGasAnalysisQuery({
+    useDefaultReferenceRange,
+    from: dateRange.from,
+    to: dateRange.to,
   });
-
-  // Also fetch all readings for the "Recent Readings" section
-  const { data: readings = [] } = useQuery({
-    queryKey: ['gas-readings'],
-    queryFn: async () => {
-      const response = await apiClient.getGasReadings();
-      return Array.isArray(response) ? response : [];
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: readings = [] } = useGasReadingsQuery();
 
   const periodStart = analysisData?.period?.startDate ?? analysisData?.period?.from;
   const periodEnd = analysisData?.period?.endDate ?? analysisData?.period?.to;

@@ -67,10 +67,32 @@ export interface BoilerData {
   heatingEnd: string | null;
 }
 
+// MO2-15: additive backend snapshot from FE2-10. Older rows may omit it or
+// send null; the client must not reconstruct the formula.
+export interface RecommendationAppliedOffsets {
+  home: number;
+  interval: number;
+  events: number;
+}
+
+export interface RecommendationBreakdown {
+  version: number;
+  mode: 'FULL' | 'PROFILE_ONLY' | 'ANONYMOUS';
+  intervalKey: string | null;
+  baseCurveTemp: number;
+  weightedExternalTemp: number;
+  appliedOffsets: RecommendationAppliedOffsets;
+  finalTemp: number;
+  confidence: number;
+  samples: number | null;
+  expectedHeatTimeMin: number | null;
+}
+
 export interface Recommendation {
   date: string;
   recommendedFlowTemp: number;
   confidenceScore: number;
+  breakdown?: RecommendationBreakdown | null;
 }
 
 export interface SystemDashboard {

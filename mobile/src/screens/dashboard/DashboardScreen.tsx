@@ -24,6 +24,7 @@ import { WeatherCard } from '../../components/WeatherCard';
 import { BoilerStatusCard } from '../../components/BoilerStatusCard';
 import { ThermostatCard } from '../../components/ThermostatCard';
 import { AlertsCard } from '../../components/AlertsCard';
+import { RecommendationBreakdown } from '../../components/RecommendationBreakdown';
 import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
@@ -32,9 +33,11 @@ import {
   DASHBOARD_QUERY_KEY,
   DASHBOARD_HEALTH_QUERY_KEY,
 } from '../../services/query/keys';
-
-const MIN_CURRENT_FLOW_TEMP = 48;
-const MAX_CURRENT_FLOW_TEMP = 55;
+import {
+  MIN_CURRENT_FLOW_TEMP,
+  MAX_CURRENT_FLOW_TEMP,
+  isWithinCurrentFlowTempRange,
+} from '../../constants/boilerLimits';
 
 export const DashboardScreen = () => {
   const { t, i18n } = useTranslation();
@@ -145,7 +148,7 @@ export const DashboardScreen = () => {
     }
 
     const rounded = Math.round(parsed * 10) / 10;
-    if (rounded < MIN_CURRENT_FLOW_TEMP || rounded > MAX_CURRENT_FLOW_TEMP) {
+    if (!isWithinCurrentFlowTempRange(rounded)) {
       toast.show({
         render: () => (
           <Box bg="red.500" px={3} py={2} rounded="md" mb={2}>
@@ -298,6 +301,11 @@ export const DashboardScreen = () => {
             boiler={dashboardData?.system?.boiler}
             onSetCurrentTempPress={openSetCurrentTempSheet}
             setCurrentTempLoading={setCurrentTempMutation.isPending}
+          />
+
+          {/* MO2-15: recommendation reason, only when backend sent a breakdown */}
+          <RecommendationBreakdown
+            breakdown={dashboardData?.system?.recommendation?.breakdown}
           />
 
           {/* Weather */}

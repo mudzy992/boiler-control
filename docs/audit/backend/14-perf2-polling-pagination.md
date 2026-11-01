@@ -19,8 +19,8 @@ produkcijske tvrdnje o p95 bez stvarnog mjerenja.
 - Adaptive skip, snapshot guard, state machine grijanja i izolacija grešaka
   po uređaju ostaju nepromijenjeni.
 - Nema DB migracije, nema compose izmjena, nema promjene OpenAPI ugovora.
-  PERF-1 kompozitni indeksi su svjesno odgođeni dok se ne izmjeri
-  `EXPLAIN (ANALYZE, BUFFERS)` na reprezentativnom datasetu.
+  PERF-1 je naknadno riješen za `HeatingEvent(deviceId, timestampStart DESC)`
+  nakon sintetičkog CI mjerenja; weather kompozitni indeks je odgođen.
 
 ## Zastavice
 
@@ -101,6 +101,6 @@ mjerodavan bez generisanog Prisma klijenta; CI type-check je autoritativan.
 Instalirani mobile i frontend ne zovu polling direktno i ne vide promjenu
 HTTP ugovora. Nema novog mobilnog builda potrebnog za ovaj korak.
 
-Ostaje otvoreno: produkcijski p95/memorijski benchmark, PERF-1 indeksi nakon
-mjerenja, te REL-2 preklapanje cron ciklusa / više replika. Ovaj korak ne
-tvrdi da je riješio exactly-once obradu između procesa.
+Ostaje otvoreno: produkcijski p95/memorijski benchmark, weather indeks nakon
+stvarnog mjerenja, te REL-2 preklapanje cron ciklusa / više replika. Ovaj
+korak ne tvrdi da je riješio exactly-once obradu između procesa.

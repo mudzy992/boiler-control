@@ -101,11 +101,12 @@ Plan je serija **malih commitova na aktivnoj grani** (`arena/1bfee051-boiler-con
 
 ## Talas 3 — performanse, kvalitet, privatnost
 
-### 3.1 Liste, memoizacija i polling (MO2-13 / MO-023, MO-027)
-- **Cilj/fajlovi:** `GasReadingsScreen.tsx` (lista → `FlatList` s `keyExtractor`), `RecentHeatingEvents.tsx`, `HomeManagementScreen.tsx`, `AnalyticsScreen.tsx:600-630`, `React.memo` na `BoilerStatusCard`/`ThermostatCard`/`AlertsCard`, `HeatingScreen.tsx:76-92` (jedan ključ `['dashboard']`, `refetchInterval` kao funkcija s `AppState`), `src/config/api.config.ts:44` (ukloniti nekorišteni `RETRY_ATTEMPTS`).
-- **Migracija/rollback, flag:** bez flaga; rollback = revert po fajlu.
-- **Testovi:** benchmark s 500 sintetičkih očitanja (vrijeme prvog rendera + FPS) zabilježen **prije i poslije**; unit: `AppState` → `background` zaustavlja refetch; unit: oba ekrana dijele jedan dohvat po `staleTime` prozoru; snapshot testovi bez vizuelnih regresija. **Skripte:** `scripts/test-all.sh --help`, planirani `scripts/mobile-perf.sh --help` (mjerenje, bez tajni).
-- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = izmjereno poboljšanje + zeleni snapshoti; M; zavisno od 1.3.
+### 3.1 Liste, memoizacija i polling (MO2-13 / MO-023, MO-027) — RIJEŠENO 2026-11-01
+- **Status:** implementirano u `07acc30`, CI `41351779085`. Detalji: `09-mo2-13-lists-polling.md`.
+- **Cilj/fajlovi:** `GasReadingsScreen.tsx` (`FlatList`), `HeatingScreen.tsx` (shared dashboard key + AppState), `useAppState.ts`, `services/query/keys.ts`, `services/query/polling.ts`, memo kartice, `api.config.ts`, Jest testovi i sintetički benchmark.
+- **Migracija/rollback, flag:** bez DB/API promjene, bez flaga; rollback = revert `07acc30`.
+- **Testovi:** 6 suite / 49 testova, type-check, lint 0 grešaka; benchmark 500 sintetičkih očitanja: legacy 500 redova, FlatList 10 inicijalnih redova. FPS na uređaju nije mjeren.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = virtualizacija + background pauza + shared key; M; instalirani klijenti nisu pogođeni dok se ne ažuriraju.
 
 ### 3.2 Migracija s NativeBase (MO2-14 / MO-011)
 - **Cilj/fajlovi:** cijeli `mobile/src` (NativeBase komponente → odabrani sistem), `mobile/App.tsx:5,36-42` (ukloniti `NativeBaseProvider` i `LogBox.ignoreLogs` stavke), `RootNavigator.tsx:18-20` + `MainTabNavigator.tsx:13-15` (ukloniti `BackHandler` polyfill), `babel.config.js` (NativeWind odluka), `package.json`.

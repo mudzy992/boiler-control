@@ -7,7 +7,7 @@ import type { FlowCalcMode, FlowTempResult } from '../Heating/engine/types';
  * values already produced by FlowTemperatureEngine so clients can explain the
  * recommendation without reconstructing the formula.
  */
-export interface RecommendationBreakdownSnapshot {
+export type RecommendationBreakdownSnapshot = {
   version: 1;
   mode: FlowCalcMode;
   intervalKey: string | null;
@@ -22,7 +22,7 @@ export interface RecommendationBreakdownSnapshot {
   confidence: number;
   samples: number | null;
   expectedHeatTimeMin: number | null;
-}
+};
 
 export interface RecommendationBreakdownMeta {
   mode: FlowCalcMode;

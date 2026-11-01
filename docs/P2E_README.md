@@ -54,17 +54,10 @@ npm run test:smoke         # Smoke tests (if deployed)
 
 ### Local Monitoring Stack
 
-```bash
-# Start Prometheus + Grafana
-docker-compose -f docker-compose.monitoring.yml up -d
-
-# Access
-# - Prometheus: http://localhost:9090
-# - Grafana: http://localhost:3000 (admin/admin)
-
-# Stop
-docker-compose -f docker-compose.monitoring.yml down
-```
+Prometheus/Grafana lokalni stack artefakti uklonjeni su iz repoa (SEC-6).
+Backend `/metrics*` endpointi ostaju iza dedicated `METRICS_AUTH_TOKEN`
+Bearer tokena. Ako koristite vanjski monitoring, konfigurirajte ga izvan
+repoa i čuvajte tajnu izvan Git-a.
 
 ---
 
@@ -75,7 +68,7 @@ docker-compose -f docker-compose.monitoring.yml down
 - **[Correlation ID Service Tests](./backend/src/common/tests/correlation-id.service.spec.ts)** - 25 comprehensive tests with examples
 
 ### For DevOps/Operations
-- **[Monitoring Setup Guide](./docs/internal/monitoring/MONITORING_SETUP.md)** - Prometheus/Grafana configuration
+- **SEC-6 metrics auth** - `docs/audit/backend/16-sec6-metrics-auth.md`
 - **[Production Deployment Guide](./docs/internal/pipeline/P2E_DEPLOYMENT_GUIDE.md)** - Step-by-step deployment procedures
 - **[Rollback Plan](./docs/internal/pipeline/P2E_ROLLBACK_PLAN.md)** - Emergency rollback procedures
 
@@ -298,7 +291,7 @@ docs/internal/
 ├── deploy.yml                             (Main deployment workflow)
 └── backend-smoke-tests.yml                (Post-deployment smoke tests)
 
-docker-compose.monitoring.yml              (Local monitoring stack)
+# docker-compose.monitoring.yml            (uklonjeno u SEC-6)
 ```
 
 ---
@@ -348,7 +341,7 @@ docker-compose.monitoring.yml              (Local monitoring stack)
 
 **Questions?** Check the documentation:
 1. [P2E_DEPLOYMENT_GUIDE.md](./docs/internal/pipeline/P2E_DEPLOYMENT_GUIDE.md) - Deployment questions
-2. [MONITORING_SETUP.md](./docs/internal/monitoring/MONITORING_SETUP.md) - Monitoring questions
+2. `docs/audit/backend/16-sec6-metrics-auth.md` - SEC-6 metrics auth
 3. [correlation-als-migration.md](./docs/internal/pipeline/correlation-als-migration.md) - Technical questions
 
 **Production Issues?** Follow the runbook:

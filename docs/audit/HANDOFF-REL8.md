@@ -7,7 +7,13 @@ Talas D završi.
 
 - Arena sesijska grana `arena/c9961f17-boiler-control`. Vlasnik i dalje ručno
   pull/merge, **PR se ne otvara**. `origin/main` je zadnji provjeren na
-  `b031ec6` (PERF-2 merged); compose nije mijenjan.
+  `8735c6c` (PERF-1 merged); compose nije mijenjan.
+- **SEC-6 je završen**: svih četiri `/metrics*` rute štiti dedicated
+  `METRICS_AUTH_TOKEN` Bearer guard (fail-closed), reporting izvoz koristi
+  worst-case agregate bez ID labela, reporting logovi/alert tekst su minimizirani,
+  a Prometheus/Grafana stack artefakti obrisani su iz repoa. Implementacija
+  **`6845060`**; CI run **`41323254765`**: backend/mobile success, frontend samo
+  pre-existing FE2-7. Detalji: `backend/16-sec6-metrics-auth.md`.
 - **PERF-1 (#38) je završen za prihvaćeni indeks**: sintetički CI benchmark
   prije migracije, standardna migracija `HeatingEvent(deviceId, timestampStart DESC)`,
   legacy `deviceId` indeks zadržan, weather `(city, fetchedAt DESC)` odgođen.
@@ -26,8 +32,9 @@ Talas D završi.
   limit. `PRIV-1` postoji i ostaje otvoren; asinhroni jobovi nisu rađeni.
   Detalji: `backend/13-feat6-analytics-export.md`.
 - Vlasnikove odluke: `analytics_only`, `bounded_sync`, `preserve_compose`,
-  `perf2`, `default_on`, `synthetic_ci`, `standard`. Compose i FE2-7 checker
-  nisu mijenjani.
+  `perf2`, `default_on`, `synthetic_ci`, `standard`, `token_fail_closed`,
+  `aggregate_worst`, `minimize_reporting`, `keep_metrics_remove_stack`.
+  Root/app compose i FE2-7 checker nisu mijenjani.
 
 ## Završeno u ovoj sesiji (sve CI zeleno)
 
@@ -79,26 +86,27 @@ Talas D završi.
 ## Git stanje (VERIFICIRANO)
 
 - Grana: `arena/c9961f17-boiler-control`
-- Implementacijski HEAD: **`d9831c9`** — PERF-1 benchmark, migracija i
-  rollback regresija. Dokumentacijski commit ovog turna je iznad njega.
-- `origin/main` je zadnji provjeren na `b031ec6` (PERF-2 merged); compose
+- Implementacijski HEAD: **`6845060`** — SEC-6 metrics token, aggregate reporting,
+  minimizirani logovi i uklanjanje monitoring stack artefakata. Dokumentacijski
+  commit ovog turna je iznad njega.
+- `origin/main` je zadnji provjeren na `8735c6c` (PERF-1 merged); compose
   nije mijenjan.
-- Zadnji CI run: **`41303090502`** na `d9831c9`: `test` i `mobile` success,
+- Zadnji CI run: **`41323254765`** na `6845060`: `test` i `mobile` success,
   `frontend` failure samo na pre-existing FE2-7 deploy config koraku.
 
-**UPOZORENJE — lokalni git ref se vraća na base `c0131ff` između turnova.**
-Desilo se **5 puta**. Prvo u svakom turnu:
+**UPOZORENJE — lokalni git ref se vraća na base `179d171` između turnova.**
+Desilo se **6 puta**. Prvo u svakom turnu:
 
 ```
-git rev-parse HEAD          # mora biti d9831c9 ili novije
+git rev-parse HEAD          # mora biti 6845060 ili novije
 git status --short | wc -l  # mora biti 0
 ```
 
-Ako HEAD pokaže `c0131ff` i status ~199 fajlova, oporavak je:
+Ako HEAD pokaže `179d171` i status ~44 fajlova, oporavak je:
 
 ```
 git fetch origin arena/c9961f17-boiler-control
-git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard
+git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: 6845060
 ```
 
 `--mixed` ne dira radno stablo, pa ne-commitovani rad preživi.
@@ -236,15 +244,15 @@ potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
 
 ## Sljedeće po redoslijedu (Talas D)
 
-`docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35), PERF-2 (#39) i PERF-1 (#38)
-su gotovi. Sljedeći kandidati iz reda u
-`docs/audit/backend/09-improvements-backlog.md`:
+`docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35), PERF-2 (#39), PERF-1 (#38) i
+SEC-6 su gotovi. Sljedeći kandidati iz reda u
+`docs/audit/backend/09-improvements-backlog.md` i frontend backlogu:
 
-**SEC-6** — zaštita metrics endpointa; ili **FE2-10 / FE2-3** ako vlasnik
-želi frontend/mobile korak prije daljeg backend očvršćavanja.
+**FE2-10 / FE2-3** — prikaz razloga preporuke i React Query ujedinjenje.
 
-Ostatak Talasa D: SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
-MO2-20. (REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1 već gotovi.)
+Ostatak Talasa D: FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
+MO2-20. (REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1,
+SEC-6 već gotovi.)
 
 Blokirani: MO2-7 (#29), FORM-1 (#31 — vlasnik traži referentne senzorske
 uzorke).

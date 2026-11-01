@@ -28,6 +28,7 @@ Detaljni nalazi i test-first koraci su u [04-findings.md](04-findings.md) B-006 
 - Preporuka: potvrditi da li endpoint mrežno dostupan, odvojiti privatni scrape port/mrežu, autentifikovati scraper i ukloniti osjetljive/high-cardinality labele; ne prekinuti postojeći monitoring bez plana i dogovora.
 - Kako provjeriti: izolovani HTTP test iz nedozvoljene/dozvoljene mrežne perspektive, authentication i pregled sadržaja bez ispisivanja ličnih podataka; u deployment testu potvrditi da Prometheus i dalje radi.
 - Trud: M — Zavisnosti: monitoring konfiguracija, infrastrukturna topologija i kompatibilnost scrape-a.
+- **Stanje nakon SEC-6 (2026-11-01, `6845060`):** svih četiri `/metrics*` rute štiti `MetricsAuthGuard` s dedicated `METRICS_AUTH_TOKEN` Bearer tokenom, ne korisničkim JWT-om. Bez/kratka tajna → 503, pogrešan token → 401, validan token → 200, `Cache-Control: no-store`. Reporting Prometheus izvoz više nema `deviceId`/`userId` labele; koristi najniži health score i najviše anomaly/fallback stope. Reporting logovi i alert tekst ne sadrže sirove ID-eve. Prometheus/Grafana stack artefakti obrisani su iz repoa. CI `41323254765`: backend/mobile success, frontend samo FE2-7. **Ostaje otvoreno:** produkcijska mrežna/proxy izolacija i stvarni scraper tok na serveru.
 
 ### [S-002] Interface nije runtime DTO validacija — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (tip u izvoru), HIPOTEZA (konkretan HTTP uticaj)
 - Gdje: `backend/src/modules/Notification/notifications.controller.ts:18-24,45-49`, `backend/src/main.ts:28-38`.

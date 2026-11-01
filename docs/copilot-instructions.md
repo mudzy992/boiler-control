@@ -172,8 +172,8 @@ npm run db:reset:seed       # Always re-seed before integration tests
 - **Gas Daily Limit**: Backend enforces one reading per day; mobile UI checks before submit
 
 ## Monitoring & Observability
-- **Prometheus**: Metrics on port 9090 (start via `docker-compose -f docker-compose.monitoring.yml up`)
-- **Grafana**: Dashboards on port 3000 (admin/admin)
+- **Metrics**: `/metrics*` requires `METRICS_AUTH_TOKEN` Bearer token (SEC-6); Prometheus/Grafana stack artifacts removed from repo
+- **Grafana**: not bundled; external scraper must use the dedicated metrics token
 - **Swagger Docs**: `http://localhost:3020/api` when backend is running
 - **Prisma Studio**: `npx prisma studio` from `backend/` to browse database visually
 

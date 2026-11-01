@@ -5,7 +5,7 @@
 - Čišćenje nije završeno; pedeset šest izvještaja je uklonjeno. Ovo nije konačni log brisanja.
 - Inventar u `cleanup-candidates.tsv` je samo lista za ručni pregled, a ne dokaz zastarjelosti ili dozvola za automatsko brisanje.
 - Korisnik je odobrio usku iznimku za ispravljanje ili uklanjanje linkova u zadržanim dokumentima, uključujući README i `.github/copilot-instructions.md`. Ostali sadržaj tih fajlova ne treba mijenjati; reference još treba pregledati.
-- Otvoreno: `docs/internal/monitoring/` uključuje i konfiguracijske `.json` i `.yml` datoteke, ne samo dokumentaciju. Treba utvrditi koriste li se kao predlošci pri deployu; ne tretirati ih automatski kao dokumente za brisanje.
+- **Riješeno u SEC-6 (2026-11-01):** vlasnik je odobrio uklanjanje Prometheus/Grafana stack artefakata; `docker-compose.monitoring.yml` i `docs/internal/monitoring/` su obrisani. Backend `/metrics*` ostaje iza dedicated tokena. Root/app compose nisu mijenjani; već pokrenuti produkcijski kontejneri se ne gase iz repoa.
 - Otvoreno: postojeći spisak zasnovan na obrascima ne otkriva sve implementirane ili odbačene planove; potrebno je pojedinačno poređenje s kodom.
 
 ## Obrisane putanje

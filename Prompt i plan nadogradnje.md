@@ -50,7 +50,7 @@ Vlasnik projekta potvrdio je da su zastarjeli dokumenti uredno arhivirani i da i
 - **Monorepo:** `backend/` (NestJS 11, Prisma 7, PostgreSQL, `@nestjs/schedule`, throttler, swagger, Expo push), `frontend/` (React 19, Vite, Ant Design 5, Tailwind, React Query, JWT u localStorage), `mobile/` (Expo 54, RN 0.81, NativeBase + NativeWind, React Query, i18next en/bs, SecureStore).
 - **Backend moduli:** Auth, User, HomeProfile, ThermostatDevice, ThermostatPoll, Tuya, Boiler, Heating (engine + strategije), HeatingRecommendation, HeatingAnomalyChecker, Dashboard, Weather, Gas (očitanja, fakture, cijene), Notification, ExpoPush, Schedule (cron servisi), Common (adapteri, circuit breaker, metrike, anomaly detection, reporting, fallback, correlation ID).
 - **Pravilo iz `GEMINI.md`:** poslovna logika u frontendu i mobile mora ostati u paritetu. Ocijeni da li je to stvarno ispunjeno.
-- **Infrastruktura:** `docker-compose.yml` ima samo backend i frontend (vanjska mreža `db_net`), `docker-compose.monitoring.yml` postoji. **Redis ne postoji** nigdje u produkcijskom kodu (spominje se samo u komentarima/dokumentima).
+- **Infrastruktura:** `docker-compose.yml` ima samo backend i frontend (vanjska mreža `db_net`); `docker-compose.monitoring.yml` je uklonjen u SEC-6. **Redis ne postoji** nigdje u produkcijskom kodu (spominje se samo u komentarima/dokumentima).
 - **Svi cron poslovi rade unutar API procesa:** polling termostata (svaku minutu, sekvencijalno kroz sve uređaje), 2 anomaly joba (\*/5 min), dnevna preporuka (00:00), gas reminder. Cache/fallback/metrike/throttler su u memoriji procesa.
 
 ## 2. Protokol faza (OBAVEZNO)

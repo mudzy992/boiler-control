@@ -197,14 +197,12 @@ TZ=Europe/Sarajevo
 
 ## 📊 Monitoring
 
-### Prometheus + Grafana
+### Metrics endpoints
 
-```bash
-docker-compose -f docker-compose.monitoring.yml up -d
-```
-
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (admin/admin)
+Backend `/metrics*` endpointi zaštićeni su dedicated `METRICS_AUTH_TOKEN`
+Bearer tokenom (SEC-6). Prometheus/Grafana stack artefakti uklonjeni su iz
+repoa; vanjski scraper mora slati validan token. Detalji:
+`docs/audit/backend/16-sec6-metrics-auth.md`.
 
 ### API Documentation
 

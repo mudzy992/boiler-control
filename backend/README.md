@@ -273,18 +273,16 @@ npm run db:reset:seed
 
 ## 📈 Monitoring
 
-### Prometheus Metrics
+### Metrics endpoints
 
-Metrics exposed on `/metrics` endpoint.
+`/metrics`, `/metrics/json`, `/metrics/reporting` i `/metrics/reporting/json`
+zaštićeni su dedicated scraper tokenom `METRICS_AUTH_TOKEN` (SEC-6).
+Bez konfiguracije vraćaju 503, s pogrešnim tokenom 401, s validnim Bearer
+tokenom 200. Reporting izvoz je aggregate bez ID labela.
 
-Start monitoring stack:
-
-```bash
-docker-compose -f docker-compose.monitoring.yml up -d
-```
-
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (admin/admin)
+Prometheus/Grafana stack artefakti uklonjeni su iz repoa. Ako koristite vanjski
+scraper, postavite `Authorization: Bearer <METRICS_AUTH_TOKEN>` i čuvajte tajnu
+izvan Git-a. Detalji: `docs/audit/backend/16-sec6-metrics-auth.md`.
 
 ## 🛠 Development
 

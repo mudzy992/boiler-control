@@ -106,12 +106,12 @@ Test database with seeded data is automatically created and populated when backe
 
 ## Monitoring
 
-Backend includes complete monitoring setup:
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000
+Backend includes health and protected metrics endpoints:
 - **Health Check**: http://localhost:3020/health
+- **Metrics**: `/metrics*` requires `METRICS_AUTH_TOKEN` Bearer token (SEC-6)
 
-See [docs/internal/monitoring/](docs/internal/monitoring/) for monitoring setup.
+Prometheus/Grafana stack artefakti uklonjeni su iz repoa. See
+`docs/audit/backend/16-sec6-metrics-auth.md` for metrics auth details.
 
 ## Testing
 

@@ -118,6 +118,8 @@ function summarizePlan(explainJson) {
   let sortCount = 0;
   let sharedHitBlocks = 0;
   let sharedReadBlocks = 0;
+  let localHitBlocks = 0;
+  let localReadBlocks = 0;
   walkPlan(root, (node) => {
     if (typeof node['Node Type'] === 'string') {
       nodeTypes.push(node['Node Type']);
@@ -134,6 +136,14 @@ function summarizePlan(explainJson) {
       sharedReadBlocks,
       Number(node['Shared Read Blocks'] || 0),
     );
+    localHitBlocks = Math.max(
+      localHitBlocks,
+      Number(node['Local Hit Blocks'] || 0),
+    );
+    localReadBlocks = Math.max(
+      localReadBlocks,
+      Number(node['Local Read Blocks'] || 0),
+    );
   });
   return {
     nodeTypes,
@@ -141,7 +151,10 @@ function summarizePlan(explainJson) {
     sortCount,
     sharedHitBlocks,
     sharedReadBlocks,
-    bufferBlocks: sharedHitBlocks + sharedReadBlocks,
+    localHitBlocks,
+    localReadBlocks,
+    bufferBlocks:
+      sharedHitBlocks + sharedReadBlocks + localHitBlocks + localReadBlocks,
     planningTimeMs: Number(entry['Planning Time'] || 0),
     executionTimeMs: Number(entry['Execution Time'] || 0),
     rootActualTotalTimeMs: Number(root['Actual Total Time'] || 0),
@@ -720,6 +733,8 @@ function selfTest() {
         'Node Type': 'Limit',
         'Shared Hit Blocks': 5,
         'Shared Read Blocks': 2,
+        'Local Hit Blocks': 3,
+        'Local Read Blocks': 1,
         Plans: [
           {
             'Node Type': 'Sort',
@@ -739,7 +754,9 @@ function selfTest() {
   ]);
   assert.equal(plan.sortCount, 1);
   assert.ok(plan.indexNames.includes('candidate_idx'));
-  assert.equal(plan.bufferBlocks, 7);
+  assert.equal(plan.bufferBlocks, 11);
+  assert.equal(plan.localHitBlocks, 3);
+  assert.equal(plan.localReadBlocks, 1);
   const good = evaluateCandidate({
     beforeReadP95Ms: 10,
     afterReadP95Ms: 5,

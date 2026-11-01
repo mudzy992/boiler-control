@@ -130,6 +130,7 @@ model HeatingEvent {
   thermostat       ThermostatDevice @relation(fields: [deviceId], references: [id])
 
   @@index([deviceId])
+  @@index([deviceId, timestampStart(sort: Desc)])
 }
 
 model Recommendation {

@@ -148,11 +148,12 @@ Plan je serija **malih commitova na aktivnoj grani** (`arena/1bfee051-boiler-con
 - **Testovi:** contract test s fixtureom iz `scripts/audit/fixtures/`; unit: WMO kod → ikona/tekst u bs i en; e2e: podaci stariji od dogovorenog praga → oznaka; ekran/kartica ne puca na `weather: null`. **Skripte:** `node scripts/audit/openmeteo_fixture_replay.cjs --help` (Faza 1), `node scripts/audit/weather_repro.cjs --help`.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = tačna ikona i vidljiva starost; L; zavisno od backend FEAT-1/W-001–W-003, 1.2, 1.3.
 
-### 4.4 Čist ugovor za profile domova (MO2-20 / MO-026)
-- **Cilj/fajlovi:** backend `src/modules/HomeProfile/home.profile.service.ts:14-66` (DTO/serializer bez `// Mobile app expected fields`, `location: null`, side effect iz `findAll` premješten u `PATCH :id/activate`), `mobile/src/screens/home/HomeManagementScreen.tsx:364-386` (`??` umjesto `||`), `mobile/src/services/api/homeProfile.api.ts` (tipovi iz generisanog ugovora).
-- **Migracija/rollback, flag:** flag `HOME_PROFILE_DTO_V2` default off; stari oblik odgovora ostaje dok web i mobile ne pređu; rollback = flag off.
-- **Testovi:** backend contract test: `GET /api/home-profiles` **ne mijenja** `user.activeHomeProfileId` (assert prije/poslije); test: profil s `location: null` → mobilna forma prikazuje prazno polje; test: `numberOfResidents: 0` i `hasFloorHeating: false` ostaju svoje vrijednosti pri uređivanju (ne postaju default). **Skripte:** `scripts/test-all.sh --help`, `python3 scripts/audit/mobile_inventory.py --help`.
-- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = GET bez side effecta i bez placeholder teksta; M; zavisno od 1.2 (gate), FE-017 (web forma), MO2-8.
+### 4.4 Čist ugovor za profile domova (MO2-20 / MO-026) — RIJEŠENO 2026-11-01
+- **Status:** implementirano u `0b0c25d`, CI `41356375190`. Detalji: `11-mo2-20-home-profile-contract.md`.
+- **Cilj/fajlovi:** backend `src/modules/HomeProfile/home.profile.service.ts` (`findAll` bez `prisma.user.update`, `name`/`location` kroz `??` bez placeholdera), novi `backend/src/modules/HomeProfile/tests/home-profile-read.spec.ts`, `backend/test/integration/heating-polling.integration.spec.ts` (MO2-20 blok), novi `mobile/src/screens/home/homeProfileForm.ts`, `HomeManagementScreen.tsx` i `__tests__/homeProfileForm.test.ts`.
+- **Migracija/rollback, flag:** nema DB migracije; planirani `HOME_PROFILE_DTO_V2` nije uveden; rollback = revert `0b0c25d`.
+- **Testovi:** backend unit 3 testa (`user.update` se ne zove, `isActive` iz perzistiranog ID-ja, `homeLocation` fallback), PostgreSQL integration (`activeHomeProfileId` `null` prije i poslije GET; `PATCH :id/activate` upisuje), mobile 5 testova za `??` mapiranje; backend 48 suite / 566 testova + 4 integration suite / 56 testova, mobile 9 suite / 65 testova.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = GET bez side effecta i bez placeholder teksta; M; legacy alias `name`/`isActive`/`thermostats` zadržan, pa instalirani klijenti rade. Duplikat `name`/`homeName` i generisani tipovi za `homeProfile.api.ts` ostaju otvoreni.
 
 ## Sljedivost svih backlog stavki prema planu
 

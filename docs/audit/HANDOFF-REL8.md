@@ -43,6 +43,12 @@ Talas D završi.
   Implementacija **`d21a8a4`**; CI run **`41353900211`**: backend/mobile
   success, frontend samo pre-existing FE2-7. Detalji:
   `mobile/10-mo2-15-recommendation-breakdown.md`.
+- **MO2-20 je završen**: `GET /api/home-profiles` više ne upisuje
+  `user.activeHomeProfileId`, `name`/`location` vraćaju `null` umjesto
+  placeholder teksta, a mobilna forma čuva `0`, `false` i `''` kroz `??`.
+  Implementacija **`0b0c25d`**; CI run **`41356375190`**: backend/mobile
+  success, frontend samo pre-existing FE2-7. Detalji:
+  `mobile/11-mo2-20-home-profile-contract.md`.
 - **PERF-1 (#38) je završen za prihvaćeni indeks**: sintetički CI benchmark
   prije migracije, standardna migracija `HeatingEvent(deviceId, timestampStart DESC)`,
   legacy `deviceId` indeks zadržan, weather `(city, fetchedAt DESC)` odgođen.
@@ -109,24 +115,26 @@ Talas D završi.
   assertuje apsolutnu ciljnu temperaturu**, pa ne štiti TempSet ispravku
 - FE2-2: CSRF defense-in-depth i datum uključivanja
   `AUTH_COOKIE_REFRESH_ENABLED` čekaju odluku vlasnika
-- Talas D dalje: MO2-20.
-  Blokirani: MO2-7 (#29), FORM-1 (#31)
+- Talas D: svi traženi koraci su gotovi (SEC-6, FE2-10, FE2-3, MO2-12,
+  MO2-13, MO2-15, MO2-20). Blokirani: MO2-7 (#29), FORM-1 (#31)
+- MO2-20: duplikat `name`/`homeName` namjerno zadržan radi instaliranih
+  klijenata; generisani tipovi za `homeProfile.api.ts` ostaju otvoreni
 
 ## Git stanje (VERIFICIRANO)
 
 - Grana: `arena/c9961f17-boiler-control`
-- Implementacijski HEAD: **`d21a8a4`** — MO2-15 mobilni recommendation
-  breakdown. Dokumentacijski commit ovog turna je iznad njega.
+- Implementacijski HEAD: **`0b0c25d`** — MO2-20 home-profile read ugovor.
+  Dokumentacijski commit ovog turna je iznad njega.
 - `origin/main` je zadnji provjeren na `8735c6c` (PERF-1 merged); compose
   nije mijenjan.
-- Zadnji CI run: **`41353900211`** na `d21a8a4`: `test` i `mobile` success,
+- Zadnji CI run: **`41356375190`** na `0b0c25d`: `test` i `mobile` success,
   `frontend` failure samo na pre-existing FE2-7 deploy config koraku.
 
 **UPOZORENJE — lokalni git ref se vraća na base `179d171` između turnova.**
 Desilo se **6 puta**. Prvo u svakom turnu:
 
 ```
-git rev-parse HEAD          # mora biti d21a8a4 ili novije
+git rev-parse HEAD          # mora biti 0b0c25d ili novije
 git status --short | wc -l  # mora biti 0
 ```
 
@@ -134,7 +142,7 @@ Ako HEAD pokaže `179d171` i status ~44 fajlova, oporavak je:
 
 ```
 git fetch origin arena/c9961f17-boiler-control
-git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: d21a8a4
+git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: 0b0c25d
 ```
 
 `--mixed` ne dira radno stablo, pa ne-commitovani rad preživi.
@@ -272,16 +280,16 @@ potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
 
 ## Sljedeće po redoslijedu (Talas D)
 
-`docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35), PERF-2 (#39), PERF-1 (#38),
-SEC-6, FE2-10, FE2-3, MO2-12, MO2-13 i MO2-15 su gotovi. Sljedeći kandidat iz
-reda u `docs/audit/mobile/06-improvements-backlog.md`:
+`docs/audit/MASTER-ROADMAP.md`. Traženi redoslijed ovog turna je zatvoren:
+SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15 i MO2-20 su gotovi i
+CI-verificirani.
 
-**MO2-20** — čist home-profile ugovor: GET bez side effecta i bez placeholder
-teksta, mobilna forma čuva 0/false vrijednosti.
+Gotovo: REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1, SEC-6,
+FE2-10, FE2-3, MO2-12, MO2-13, MO2-15, MO2-20.
 
-Ostatak Talasa D: MO2-20.
-(REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1, SEC-6,
-FE2-10, FE2-3, MO2-12, MO2-13, MO2-15 već gotovi.)
+Sljedeći kandidati iz reda u `docs/audit/mobile/06-improvements-backlog.md`
+i `docs/audit/backend/09-improvements-backlog.md` traže novu vlasničku odluku
+(npr. MO2-14 NativeBase migracija, MO2-17 weather v2, PRIV-1).
 
 Blokirani: MO2-7 (#29), FORM-1 (#31 — vlasnik traži referentne senzorske
 uzorke).

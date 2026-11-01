@@ -116,6 +116,7 @@ Svi nalazi koriste format iz sekcije 7 prompta. Pouzdanost: `VERIFIKOVANO` = pro
 - **Preporuka:** (1) Uvesti eksplicitan DTO/serializer umjesto ad-hoc mapiranja i ukloniti duplikat `name`/`homeName`; (2) `location` vratiti kao `null` umjesto placeholder teksta; (3) side effect premjestiti u `PATCH /api/home-profiles/:id/activate` ili u migraciju; (4) u mobilnoj formi koristiti `?? ` umjesto `||`.
 - **Kako provjeriti da je riješeno:** Contract test: `GET /api/home-profiles` ne mijenja `user.activeHomeProfileId` (assert prije/poslije); test: profil s `location: null` → forma prikazuje prazno polje, a ne „No location set".
 - **Trud:** M — **Zavisnosti:** backend plan (Faza 1), FE-017 (web forma), MO-012.
+- **Status 2026-11-01 (MO2-20, `0b0c25d`, CI `41356375190`):** GET side effect i placeholder tekstovi su uklonjeni, a mobilna forma koristi `??` kroz `homeProfileToForm()`. Duplikat `name`/`homeName` je **namjerno zadržan** radi instaliranih klijenata, pa taj dio preporuke ostaje otvoren. Detalji: `11-mo2-20-home-profile-contract.md`.
 
 ---
 

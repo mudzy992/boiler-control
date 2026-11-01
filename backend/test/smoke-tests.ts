@@ -8,6 +8,14 @@ import axios, { AxiosError } from 'axios';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3020';
 const ENVIRONMENT = process.env.ENVIRONMENT || 'development';
+const METRICS_AUTH_TOKEN = process.env.METRICS_AUTH_TOKEN;
+
+function metricsHeaders(): Record<string, string> {
+  if (!METRICS_AUTH_TOKEN) {
+    throw new Error('METRICS_AUTH_TOKEN is required for metrics smoke checks');
+  }
+  return { Authorization: `Bearer ${METRICS_AUTH_TOKEN}` };
+}
 
 interface TestResult {
   name: string;
@@ -50,7 +58,9 @@ async function testHealthEndpoint(): Promise<void> {
 }
 
 async function testMetricsEndpoint(): Promise<void> {
-  const response = await axios.get(`${BACKEND_URL}/metrics`);
+  const response = await axios.get(`${BACKEND_URL}/metrics`, {
+    headers: metricsHeaders(),
+  });
   if (response.status !== 200) {
     throw new Error(`Expected 200, got ${response.status}`);
   }
@@ -64,7 +74,9 @@ async function testMetricsEndpoint(): Promise<void> {
 }
 
 async function testMetricsJSON(): Promise<void> {
-  const response = await axios.get(`${BACKEND_URL}/metrics/json`);
+  const response = await axios.get(`${BACKEND_URL}/metrics/json`, {
+    headers: metricsHeaders(),
+  });
   if (response.status !== 200) {
     throw new Error(`Expected 200, got ${response.status}`);
   }
@@ -74,7 +86,9 @@ async function testMetricsJSON(): Promise<void> {
 }
 
 async function testReportingMetrics(): Promise<void> {
-  const response = await axios.get(`${BACKEND_URL}/metrics/reporting`);
+  const response = await axios.get(`${BACKEND_URL}/metrics/reporting`, {
+    headers: metricsHeaders(),
+  });
   if (response.status !== 200) {
     throw new Error(`Expected 200, got ${response.status}`);
   }
@@ -82,7 +96,9 @@ async function testReportingMetrics(): Promise<void> {
 }
 
 async function testReportingMetricsJSON(): Promise<void> {
-  const response = await axios.get(`${BACKEND_URL}/metrics/reporting/json`);
+  const response = await axios.get(`${BACKEND_URL}/metrics/reporting/json`, {
+    headers: metricsHeaders(),
+  });
   if (response.status !== 200) {
     throw new Error(`Expected 200, got ${response.status}`);
   }

@@ -177,6 +177,10 @@ describe('MAINT-2: aplikacija u NE-testnom okruženju', () => {
   });
 
   it('stvarni ThrottlerGuard odbija 101. zahtjev u NE-testnom modulu', async () => {
+    const { randomBytes } = req('node:crypto') as typeof import('node:crypto');
+    const metricsToken = randomBytes(32).toString('hex');
+    const previousMetricsToken = process.env.METRICS_AUTH_TOKEN;
+    process.env.METRICS_AUTH_TOKEN = metricsToken;
     const { Test } = req('@nestjs/testing');
     const { ValidationPipe } = req('@nestjs/common');
     const request = req('supertest');
@@ -197,15 +201,21 @@ describe('MAINT-2: aplikacija u NE-testnom okruženju', () => {
     );
     await app.init();
 
-    // /metrics nije zaštićen JWT-om, pa mjeri isključivo throttler.
+    // SEC-6: /metrics koristi dedicated token, ne korisnički JWT. Šaljemo
+    // validan token da bi test i dalje mjerio globalni throttler.
     let ok = 0;
     let throttled = 0;
     for (let i = 0; i < 105; i += 1) {
-      const res = await request(app.getHttpServer()).get('/metrics');
+      const res = await request(app.getHttpServer())
+        .get('/metrics')
+        .set('Authorization', `Bearer ${metricsToken}`);
       if (res.status === 200) ok += 1;
       else if (res.status === 429) throttled += 1;
     }
     await app.close();
+    if (previousMetricsToken === undefined)
+      delete process.env.METRICS_AUTH_TOKEN;
+    else process.env.METRICS_AUTH_TOKEN = previousMetricsToken;
 
     expect(ok).toBe(100);
     expect(throttled).toBe(5);

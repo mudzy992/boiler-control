@@ -111,6 +111,9 @@ jobs:
         env:
           AUDIT_DISPOSABLE_POSTGRES: '1'
         run: node ../scripts/audit/perf1_index_migration_repro.cjs --ci
+      - name: SEC-6 metrics auth HTTP regression
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: node ../scripts/audit/metrics_auth_repro.cjs
       - name: Lint without modifying files
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

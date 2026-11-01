@@ -1719,6 +1719,12 @@
         "bearerFormat": "JWT",
         "scheme": "bearer",
         "type": "http"
+      },
+      "metrics-token": {
+        "bearerFormat": "opaque",
+        "description": "SEC-6: dedicated metrics scraper token (METRICS_AUTH_TOKEN), not a user JWT.",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -3633,8 +3639,19 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "401": {
+            "description": "Missing or invalid metrics token"
+          },
+          "503": {
+            "description": "Metrics authentication is not configured"
           }
         },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
         "tags": [
           "Metrics"
         ]
@@ -3647,8 +3664,19 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "401": {
+            "description": "Missing or invalid metrics token"
+          },
+          "503": {
+            "description": "Metrics authentication is not configured"
           }
         },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
         "tags": [
           "Metrics"
         ]
@@ -3661,8 +3689,19 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "401": {
+            "description": "Missing or invalid metrics token"
+          },
+          "503": {
+            "description": "Metrics authentication is not configured"
           }
         },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
         "tags": [
           "Metrics"
         ]
@@ -3675,8 +3714,19 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "401": {
+            "description": "Missing or invalid metrics token"
+          },
+          "503": {
+            "description": "Metrics authentication is not configured"
           }
         },
+        "security": [
+          {
+            "metrics-token": []
+          }
+        ],
         "tags": [
           "Metrics"
         ]

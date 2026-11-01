@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 import { MetricsController } from './metrics.controller';
+import { MetricsAuthGuard } from './metrics-auth.guard';
 import { HealthController } from './health.controller';
 import { AppConfigController } from './app-config.controller';
 import { AppConfigService } from './app-config.service';
@@ -14,6 +15,7 @@ import { RedisHealthService } from './redis-health.service';
 @Module({
   controllers: [MetricsController, HealthController, AppConfigController],
   providers: [
+    MetricsAuthGuard,
     MetricsService,
     AnomalyDetectionService,
     FallbackStrategyService,

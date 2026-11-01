@@ -25,6 +25,16 @@ export function buildOpenApiConfig() {
     .setDescription(OPENAPI_DESCRIPTION)
     .setVersion(OPENAPI_VERSION)
     .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'opaque',
+        description:
+          'SEC-6: dedicated metrics scraper token (METRICS_AUTH_TOKEN), not a user JWT.',
+      },
+      'metrics-token',
+    )
     .build();
 }
 

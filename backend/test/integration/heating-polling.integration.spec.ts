@@ -3,6 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import request from 'supertest';
+import { randomBytes } from 'node:crypto';
+import { METRICS_AUTH_TOKEN_ENV } from '../../src/common/metrics-auth.guard';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
@@ -19,8 +21,12 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 describe('Integration Tests: Heating & Polling (P2a)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  const metricsToken = randomBytes(32).toString('hex');
+  const metricsAuth = { Authorization: `Bearer ${metricsToken}` };
+  const originalMetricsToken = process.env[METRICS_AUTH_TOKEN_ENV];
 
   beforeAll(async () => {
+    process.env[METRICS_AUTH_TOKEN_ENV] = metricsToken;
     const builder = Test.createTestingModule({
       imports: [AppModule],
       providers: [
@@ -61,6 +67,9 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
     await app.close();
     // Ensure Prisma releases DB connections between Jest suites
     await prisma.$disconnect();
+    if (originalMetricsToken === undefined)
+      delete process.env[METRICS_AUTH_TOKEN_ENV];
+    else process.env[METRICS_AUTH_TOKEN_ENV] = originalMetricsToken;
   });
 
   describe('Heating Events Endpoints', () => {
@@ -522,9 +531,9 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
   describe('Metrics Tracking Verification (P1d)', () => {
     it('should track metrics after successful operations', async () => {
       // Get current metrics
-      const metricsResponse = await request(app.getHttpServer()).get(
-        '/metrics/json',
-      );
+      const metricsResponse = await request(app.getHttpServer())
+        .get('/metrics/json')
+        .set(metricsAuth);
 
       expect(metricsResponse.status).toBe(200);
       expect(metricsResponse.body).toHaveProperty('poll_runs_total');

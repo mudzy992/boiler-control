@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
+import { randomBytes } from 'node:crypto';
 import { AppModule } from '../../src/app.module';
+import { METRICS_AUTH_TOKEN_ENV } from '../../src/common/metrics-auth.guard';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 /**
@@ -15,8 +17,12 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 describe('Integration Tests: Backend API (P2a)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  const metricsToken = randomBytes(32).toString('hex');
+  const metricsAuth = { Authorization: `Bearer ${metricsToken}` };
+  const originalMetricsToken = process.env[METRICS_AUTH_TOKEN_ENV];
 
   beforeAll(async () => {
+    process.env[METRICS_AUTH_TOKEN_ENV] = metricsToken;
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -51,6 +57,9 @@ describe('Integration Tests: Backend API (P2a)', () => {
     await app.close();
     // Ensure Prisma releases DB connections between Jest suites
     await prisma.$disconnect();
+    if (originalMetricsToken === undefined)
+      delete process.env[METRICS_AUTH_TOKEN_ENV];
+    else process.env[METRICS_AUTH_TOKEN_ENV] = originalMetricsToken;
   });
 
   describe('Auth Endpoints', () => {
@@ -268,7 +277,9 @@ describe('Integration Tests: Backend API (P2a)', () => {
   describe('Metrics Endpoints', () => {
     describe('GET /metrics', () => {
       it('should return Prometheus metrics in text format', async () => {
-        const response = await request(app.getHttpServer()).get('/metrics');
+        const response = await request(app.getHttpServer())
+          .get('/metrics')
+          .set(metricsAuth);
 
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toContain('text/plain');
@@ -282,7 +293,9 @@ describe('Integration Tests: Backend API (P2a)', () => {
       });
 
       it('should contain all expected metrics', async () => {
-        const response = await request(app.getHttpServer()).get('/metrics');
+        const response = await request(app.getHttpServer())
+          .get('/metrics')
+          .set(metricsAuth);
 
         const expectedMetrics = [
           'poll_runs_total',
@@ -305,9 +318,9 @@ describe('Integration Tests: Backend API (P2a)', () => {
 
     describe('GET /metrics/json', () => {
       it('should return metrics in JSON format', async () => {
-        const response = await request(app.getHttpServer()).get(
-          '/metrics/json',
-        );
+        const response = await request(app.getHttpServer())
+          .get('/metrics/json')
+          .set(metricsAuth);
 
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toContain('application/json');
@@ -315,9 +328,9 @@ describe('Integration Tests: Backend API (P2a)', () => {
       });
 
       it('should contain all expected metric counters', async () => {
-        const response = await request(app.getHttpServer()).get(
-          '/metrics/json',
-        );
+        const response = await request(app.getHttpServer())
+          .get('/metrics/json')
+          .set(metricsAuth);
 
         const expectedMetrics = [
           'poll_runs_total',

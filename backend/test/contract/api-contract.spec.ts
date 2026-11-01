@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
+import { randomBytes } from 'node:crypto';
 import { AppModule } from '../../src/app.module';
+import { METRICS_AUTH_TOKEN_ENV } from '../../src/common/metrics-auth.guard';
 
 /**
  * MAINT-4 / B-025 — ugovorni testovi nad API-jem.
@@ -30,12 +32,16 @@ describe('API Contract Tests (MAINT-4)', () => {
   let app: INestApplication;
   let token: string;
   let auth: { Authorization: string };
+  const metricsToken = randomBytes(32).toString('hex');
+  const metricsAuth = { Authorization: `Bearer ${metricsToken}` };
+  const originalMetricsToken = process.env[METRICS_AUTH_TOKEN_ENV];
   const stamp = Date.now();
   const email = `contract_${stamp}@example.com`;
   const username = `contract_${stamp}`;
   const password = 'Test123!';
 
   beforeAll(async () => {
+    process.env[METRICS_AUTH_TOKEN_ENV] = metricsToken;
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -64,6 +70,9 @@ describe('API Contract Tests (MAINT-4)', () => {
 
   afterAll(async () => {
     await app.close();
+    if (originalMetricsToken === undefined)
+      delete process.env[METRICS_AUTH_TOKEN_ENV];
+    else process.env[METRICS_AUTH_TOKEN_ENV] = originalMetricsToken;
   });
 
   describe('Auth', () => {
@@ -265,14 +274,18 @@ describe('API Contract Tests (MAINT-4)', () => {
 
   describe('Ops', () => {
     it('GET /metrics vraća Prometheus tekst', async () => {
-      const response = await request(app.getHttpServer()).get('/metrics');
+      const response = await request(app.getHttpServer())
+        .get('/metrics')
+        .set(metricsAuth);
 
       expect(response.status).toBe(200);
       expect(response.text).toBeTruthy();
     });
 
     it('GET /metrics/json vraća brojače pollanja', async () => {
-      const response = await request(app.getHttpServer()).get('/metrics/json');
+      const response = await request(app.getHttpServer())
+        .get('/metrics/json')
+        .set(metricsAuth);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('poll_runs_total');

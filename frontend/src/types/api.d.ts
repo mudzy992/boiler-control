@@ -2856,6 +2856,20 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Missing or invalid metrics token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics authentication is not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     MetricsController_getMetricsJson: {
@@ -2868,6 +2882,20 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid metrics token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics authentication is not configured */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2890,6 +2918,20 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Missing or invalid metrics token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics authentication is not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     MetricsController_getReportingMetricsJson: {
@@ -2902,6 +2944,20 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid metrics token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics authentication is not configured */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

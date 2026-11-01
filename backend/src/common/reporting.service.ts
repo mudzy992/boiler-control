@@ -84,9 +84,6 @@ export class ReportingService {
     confidence: number,
   ): void {
     this.structuredLogger.log('Anomaly recorded for reporting', {
-      deviceId,
-      userId,
-      homeProfileId,
       module: 'reporting',
       action: 'anomaly_recorded',
       anomalyType,
@@ -105,9 +102,6 @@ export class ReportingService {
     trigger: string,
   ): void {
     this.structuredLogger.log('Fallback recorded for reporting', {
-      deviceId,
-      userId,
-      homeProfileId,
       module: 'reporting',
       action: 'fallback_recorded',
       fallbackType,
@@ -139,7 +133,7 @@ export class ReportingService {
         deviceId,
         userId,
         title: 'High Anomaly Rate Detected',
-        message: `Device ${deviceId} has ${metrics.anomaliesPerHour.toFixed(1)} anomalies/hour. Possible thermostat malfunction.`,
+        message: `Anomaly rate is ${metrics.anomaliesPerHour.toFixed(1)} per hour. Possible thermostat malfunction.`,
         timestamp: new Date(),
         metrics: { anomaliesPerHour: metrics.anomaliesPerHour },
         actionRequired: true,
@@ -153,7 +147,7 @@ export class ReportingService {
         deviceId,
         userId,
         title: 'High Fallback Rate',
-        message: `Device ${deviceId} is using fallbacks ${metrics.fallbacksPerHour.toFixed(1)} times/hour. Sensors may be unreliable.`,
+        message: `Fallback usage is ${metrics.fallbacksPerHour.toFixed(1)} times/hour. Sensors may be unreliable.`,
         timestamp: new Date(),
         metrics: { fallbacksPerHour: metrics.fallbacksPerHour },
         actionRequired: true,
@@ -167,7 +161,7 @@ export class ReportingService {
         deviceId,
         userId,
         title: 'Repeated Adapter Timeouts',
-        message: `Device ${deviceId} experienced ${metrics.recentTimeouts} adapter timeouts. Network connectivity may be degraded.`,
+        message: `${metrics.recentTimeouts} adapter timeouts occurred. Network connectivity may be degraded.`,
         timestamp: new Date(),
         metrics: { recentTimeouts: metrics.recentTimeouts },
         actionRequired: false,
@@ -181,7 +175,7 @@ export class ReportingService {
         deviceId,
         userId,
         title: 'Circuit Breaker Activated Multiple Times',
-        message: `Device ${deviceId} circuit breaker has been activated ${metrics.circuitBreakerTrips} times. Repeated failure pattern detected.`,
+        message: `Circuit breaker has been activated ${metrics.circuitBreakerTrips} times. Repeated failure pattern detected.`,
         timestamp: new Date(),
         metrics: { circuitBreakerTrips: metrics.circuitBreakerTrips },
         actionRequired: true,
@@ -191,8 +185,6 @@ export class ReportingService {
     if (alerts.length > 0) {
       this.alerts.push(...alerts);
       this.structuredLogger.log('Alerts generated from metrics', {
-        deviceId,
-        userId,
         module: 'reporting',
         action: 'alerts_generated',
         alertCount: alerts.length,
@@ -280,9 +272,6 @@ export class ReportingService {
     this.homeMetrics.set(deviceId, report);
 
     this.structuredLogger.log('Daily report generated', {
-      deviceId,
-      userId,
-      homeProfileId,
       module: 'reporting',
       action: 'daily_report_generated',
       anomalyRate: anomalyRate.toFixed(2),
@@ -382,8 +371,6 @@ export class ReportingService {
     };
 
     this.structuredLogger.log('Weekly report generated', {
-      userId,
-      homeProfileId,
       module: 'reporting',
       action: 'weekly_report_generated',
       deviceCount: dailyReports.length,
@@ -446,32 +433,35 @@ export class ReportingService {
   }
 
   /**
-   * Export metrics for Prometheus/dashboard
+   * Export aggregate metrics for Prometheus/dashboard.
+   *
+   * SEC-6: no device/user/home ID labels. Worst-case aggregates preserve the
+   * existing alert thresholds: lowest health score, highest anomaly/fallback
+   * rate. Active alerts remain counts by severity.
    */
   exportMetrics(): string {
+    const reports = Array.from(this.homeMetrics.values());
     let output = '# Reporting Service Metrics\n';
-    output +=
-      '# HELP reporting_home_health_score Health score for each home (0-100)\n';
-    output += '# TYPE reporting_home_health_score gauge\n';
 
-    for (const [deviceId, report] of this.homeMetrics.entries()) {
-      output += `reporting_home_health_score{deviceId="${deviceId}",userId="${report.userId}"} ${report.healthScore}\n`;
-    }
+    if (reports.length > 0) {
+      const minHealthScore = Math.min(...reports.map((r) => r.healthScore));
+      const maxAnomalyRate = Math.max(...reports.map((r) => r.anomalies.rate));
+      const maxFallbackRate = Math.max(...reports.map((r) => r.fallbacks.rate));
 
-    output +=
-      '# HELP reporting_anomaly_rate_per_hour Anomalies detected per hour\n';
-    output += '# TYPE reporting_anomaly_rate_per_hour gauge\n';
+      output +=
+        '# HELP reporting_home_health_score Lowest health score across homes (0-100)\n';
+      output += '# TYPE reporting_home_health_score gauge\n';
+      output += `reporting_home_health_score ${minHealthScore}\n`;
 
-    for (const [deviceId, report] of this.homeMetrics.entries()) {
-      output += `reporting_anomaly_rate_per_hour{deviceId="${deviceId}"} ${report.anomalies.rate.toFixed(2)}\n`;
-    }
+      output +=
+        '# HELP reporting_anomaly_rate_per_hour Highest anomaly rate across homes per hour\n';
+      output += '# TYPE reporting_anomaly_rate_per_hour gauge\n';
+      output += `reporting_anomaly_rate_per_hour ${maxAnomalyRate.toFixed(2)}\n`;
 
-    output +=
-      '# HELP reporting_fallback_rate_per_hour Fallbacks used per hour\n';
-    output += '# TYPE reporting_fallback_rate_per_hour gauge\n';
-
-    for (const [deviceId, report] of this.homeMetrics.entries()) {
-      output += `reporting_fallback_rate_per_hour{deviceId="${deviceId}"} ${report.fallbacks.rate.toFixed(2)}\n`;
+      output +=
+        '# HELP reporting_fallback_rate_per_hour Highest fallback rate across homes per hour\n';
+      output += '# TYPE reporting_fallback_rate_per_hour gauge\n';
+      output += `reporting_fallback_rate_per_hour ${maxFallbackRate.toFixed(2)}\n`;
     }
 
     output += '# HELP reporting_active_alerts Current active alerts\n';

@@ -1,15 +1,28 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { MetricsService } from './metrics.service';
 import { ReportingService } from './reporting.service';
-import { Public } from '../modules/Auth/public.decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { MetricsAuthGuard } from './metrics-auth.guard';
+import {
+  ApiBearerAuth,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 /**
- * Metrics endpoint for Prometheus scraping.
+ * Metrics endpoint for Prometheus-compatible scraping.
  * Lightweight and read-only, no external API calls.
+ *
+ * SEC-6: protected by a dedicated scraper token, not a user JWT.
  */
 @ApiTags('Metrics')
+@ApiBearerAuth('metrics-token')
+@ApiUnauthorizedResponse({ description: 'Missing or invalid metrics token' })
+@ApiServiceUnavailableResponse({
+  description: 'Metrics authentication is not configured',
+})
+@UseGuards(MetricsAuthGuard)
 @Controller('metrics')
 export class MetricsController {
   constructor(
@@ -21,7 +34,6 @@ export class MetricsController {
    * GET /metrics
    * Returns metrics in Prometheus text format (application/plain-text)
    */
-  @Public()
   @Get()
   getMetrics(@Res() res: Response) {
     const metrics = this.metricsService.exportPrometheus();
@@ -33,7 +45,6 @@ export class MetricsController {
    * GET /metrics/json
    * Returns metrics as JSON
    */
-  @Public()
   @Get('json')
   getMetricsJson() {
     return this.metricsService.getMetrics();
@@ -41,10 +52,9 @@ export class MetricsController {
 
   /**
    * GET /metrics/reporting
-   * Returns reporting metrics (anomalies, fallbacks, health scores, alerts)
-   * Exported in Prometheus format for external monitoring
+   * Returns aggregate reporting metrics (health, anomaly/fallback rates, alerts)
+   * Exported in Prometheus format for external monitoring. No ID labels.
    */
-  @Public()
   @Get('reporting')
   getReportingMetrics(@Res() res: Response) {
     const metrics = this.reportingService.exportMetrics();
@@ -54,9 +64,8 @@ export class MetricsController {
 
   /**
    * GET /metrics/reporting/json
-   * Returns reporting metrics as JSON
+   * Returns aggregate reporting health summary as JSON
    */
-  @Public()
   @Get('reporting/json')
   getReportingMetricsJson() {
     return this.reportingService.getHealthSummary();

@@ -73,11 +73,12 @@
 
 ## Talas 3 — arhitektura i UX
 
-### 3.1 React Query ujedinjenje (FE2-3)
-- **Cilj/fajlovi:** `frontend/src/main.tsx` (QueryClient defaultOptions), `DashboardPage.tsx` (replace `setInterval` → `refetchInterval` + visibility), `HeatingPage.tsx`, `BoilerPage.tsx`, `ReportsPage.tsx`, `NotificationsPage.tsx` (shared key s dashboard drawer).
-- **Migracija/rollback, flag:** query key-ovi ostaju stabilni; rollback = revert; bez flaga.
-- **Testovi:** unit: drawer i stranica dijele key (fake fetch); e2e: tab u pozadini bez poziva (mock interceptor), fokus vraća refetch; gas stranice bez dupliranih poziva. **Skripte:** planirani `scripts/test-all.sh --help`.
-- **Prihvat/trud/kompatibilnost/zavisnosti:** M; zavisno od 1.2 (tipovi), 0.3.
+### 3.1 React Query ujedinjenje (FE2-3) — RIJEŠENO 2026-11-01
+- **Status:** implementirano u `29ce3c7`, CI `41343423105`. Detalji: `10-fe2-3-react-query.md`.
+- **Cilj/fajlovi:** `frontend/src/lib/queryClient.ts`, `frontend/src/lib/queryKeys.ts`, shared hooks (`useNotifications`, `useGasQueries`, `useDashboardHeatingRange`), `DashboardPage.tsx`, `HeatingPage.tsx`, `BoilerPage.tsx`, `ReportsPage.tsx`, `NotificationsPage.tsx`, gas stranice.
+- **Migracija/rollback, flag:** nema DB migracije, nema API promjene, nema novog flaga; rollback = revert `29ce3c7`.
+- **Testovi:** `fe23-query.test.tsx` pokriva QueryClient defaulte, shared notification key, gas deduplikaciju i visibility pauzu pollinga; lokalno 11 suite / 92 testa, type-check, lint, openapi:check, build i chunk-graph prolaze.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M; drawer i stranica dijele notifications, gas stranice ne dupliciraju pozive, skriveni tab ne polla; instalirani mobile klijenti nisu pogođeni.
 
 ### 3.2 Code-splitting i mjerena performansa (FE2-4)
 - **Cilj/fajlovi:** `frontend/src/App.tsx` (lazy rute), `frontend/vite.config.ts` (`manualChunks`), novi build izvještaj.

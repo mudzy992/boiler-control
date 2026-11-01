@@ -21,6 +21,11 @@ Talas D završi.
   **`ab08519`** + CI ispravka **`c9fe88c`**; CI run **`41339126329`**:
   backend/mobile success, frontend samo pre-existing FE2-7. Detalji:
   `frontend/09-fe2-10-recommendation-breakdown.md`.
+- **FE2-3 je završen**: shared `QueryClient` i query key-ovi, notification/gas
+  cache se dijele, ručni `setInterval` polling zamijenjen je React Query
+  intervalom koji pauzira u skrivenom tabu. Implementacija **`29ce3c7`**;
+  CI run **`41343423105`**: backend/mobile success, frontend samo pre-existing
+  FE2-7. Detalji: `frontend/10-fe2-3-react-query.md`.
 - **PERF-1 (#38) je završen za prihvaćeni indeks**: sintetički CI benchmark
   prije migracije, standardna migracija `HeatingEvent(deviceId, timestampStart DESC)`,
   legacy `deviceId` indeks zadržan, weather `(city, fetchedAt DESC)` odgođen.
@@ -87,25 +92,24 @@ Talas D završi.
   assertuje apsolutnu ciljnu temperaturu**, pa ne štiti TempSet ispravku
 - FE2-2: CSRF defense-in-depth i datum uključivanja
   `AUTH_COOKIE_REFRESH_ENABLED` čekaju odluku vlasnika
-- Talas D dalje: FE2-3, MO2-12, MO2-13, MO2-15, MO2-20.
+- Talas D dalje: MO2-12, MO2-13, MO2-15, MO2-20.
   Blokirani: MO2-7 (#29), FORM-1 (#31)
 
 ## Git stanje (VERIFICIRANO)
 
 - Grana: `arena/c9961f17-boiler-control`
-- Implementacijski HEAD: **`c9fe88c`** — FE2-10 recommendation breakdown snapshot
-  i read-only UI, uz CI ispravku Prisma JSON dodjeljivosti. Dokumentacijski
-  commit ovog turna je iznad njega.
+- Implementacijski HEAD: **`29ce3c7`** — FE2-3 React Query ujedinjenje i
+  visibility pauza pollinga. Dokumentacijski commit ovog turna je iznad njega.
 - `origin/main` je zadnji provjeren na `8735c6c` (PERF-1 merged); compose
   nije mijenjan.
-- Zadnji CI run: **`41339126329`** na `c9fe88c`: `test` i `mobile` success,
+- Zadnji CI run: **`41343423105`** na `29ce3c7`: `test` i `mobile` success,
   `frontend` failure samo na pre-existing FE2-7 deploy config koraku.
 
 **UPOZORENJE — lokalni git ref se vraća na base `179d171` između turnova.**
 Desilo se **6 puta**. Prvo u svakom turnu:
 
 ```
-git rev-parse HEAD          # mora biti c9fe88c ili novije
+git rev-parse HEAD          # mora biti 29ce3c7 ili novije
 git status --short | wc -l  # mora biti 0
 ```
 
@@ -113,7 +117,7 @@ Ako HEAD pokaže `179d171` i status ~44 fajlova, oporavak je:
 
 ```
 git fetch origin arena/c9961f17-boiler-control
-git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: c9fe88c
+git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: 29ce3c7
 ```
 
 `--mixed` ne dira radno stablo, pa ne-commitovani rad preživi.
@@ -252,15 +256,15 @@ potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
 ## Sljedeće po redoslijedu (Talas D)
 
 `docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35), PERF-2 (#39), PERF-1 (#38),
-SEC-6 i FE2-10 su gotovi. Sljedeći kandidati iz reda u
-`docs/audit/backend/09-improvements-backlog.md` i frontend backlogu:
+SEC-6, FE2-10 i FE2-3 su gotovi. Sljedeći kandidati iz reda u
+`docs/audit/mobile/06-improvements-backlog.md`:
 
-**FE2-3** — React Query ujedinjenje, shared notification/gas key-ovi i
-visibility pauza pollinga.
+**MO2-12 / MO2-13 / MO2-15 / MO2-20** — mobile health/alerts iz backenda,
+liste/polling performanse, preporuka i breakdown, čist home-profile ugovor.
 
-Ostatak Talasa D: FE2-3, MO2-12, MO2-13, MO2-15, MO2-20.
+Ostatak Talasa D: MO2-12, MO2-13, MO2-15, MO2-20.
 (REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1, SEC-6,
-FE2-10 već gotovi.)
+FE2-10, FE2-3 već gotovi.)
 
 Blokirani: MO2-7 (#29), FORM-1 (#31 — vlasnik traži referentne senzorske
 uzorke).

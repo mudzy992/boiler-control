@@ -127,11 +127,12 @@ Plan je serija **malih commitova na aktivnoj grani** (`arena/1bfee051-boiler-con
 
 ## Talas 4 — funkcionalnosti (usklađeno s backend planom)
 
-### 4.1 Health score i alerti iz backenda (MO2-12 / MO-015)
-- **Cilj/fajlovi:** backend `Dashboard` (nova polja `health`, `alerts`), `mobile/src/screens/dashboard/DashboardScreen.tsx:151-222`, `components/AlertsCard.tsx`, `components/BoilerStatusCard.tsx:88`, `components/HealthScoreCard.tsx`; paralelno web FE2-14.
-- **Migracija/rollback, flag:** `CLIENT_RULES_ENABLED` default **on** (stara logika) dok backend ne servira polja; rollback = flag on.
-- **Testovi:** property/golden test: 20 fiksiranih dashboard fixturea → web i mobile daju identičan score i skup alert ID-eva; e2e: isključen flag → klijent ne sadrži pragove (`grep` za `12.5`, `> 5`, `< 0.3` → 0); contract test za nova polja. **Skripte:** `node scripts/audit/dashboard_repro.cjs --help` (Faza 1), `scripts/test-all.sh --help`.
-- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = jedan izvor istine; M; zavisno od backend FEAT-8 i 1.3.
+### 4.1 Health score i alerti iz backenda (MO2-12 / MO-015) — RIJEŠENO 2026-11-01
+- **Status:** implementirano u `5914c9f`, CI `41347741131`. Detalji: `08-mo2-12-health-alerts.md`.
+- **Cilj/fajlovi:** `mobile/src/services/api/client.ts`, `mobile/src/types/Dashboard.ts`, `DashboardScreen.tsx`, `AlertsCard.tsx`, `services/dashboard/healthAlerts.ts`, locales i Jest testovi. Backend endpoint `GET /api/dashboard/health` već postoji od FE2-14.
+- **Migracija/rollback, flag:** nema DB migracije, nema backend promjene, nema novog flaga; rollback = revert `5914c9f`.
+- **Testovi:** 20 fixturea za mapiranje backend upozorenja, statička regresija bez lokalnih pragova, type-check, lint, 4 suite / 40 testova.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = jedan izvor istine; M; stari instalirani klijenti nisu pogođeni dok se ne ažuriraju.
 
 ### 4.2 Preporuka i „zašto ova temperatura" (MO2-15)
 - **Cilj/fajlovi:** nova `mobile/src/components/RecommendationBreakdown.tsx`, mount u `DashboardScreen.tsx`/`BoilerStatusCard.tsx`, poziv `apiClient.getRecommendations` (trenutno mrtav), granice unosa iz odgovora umjesto `DashboardScreen.tsx:32-33`.

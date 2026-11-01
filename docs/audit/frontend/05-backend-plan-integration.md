@@ -24,6 +24,7 @@
 
 ### 2. Prikaz formule "zašto ova temperatura" (backend koraci 2.1-2.2, FORM-1)
 
+- **Status 2026-11-01:** FE2-10 je riješen (`ab08519` + `c9fe88c`, CI `41339126329`) aditivnim backend breakdown snapshotom i read-only web prikazom. Formula nije mijenjana; FORM-1 stručna validacija ostaje otvorena. Detalji: `09-fe2-10-recommendation-breakdown.md`.
 - **Trenutno (VERIFIKOVANO):** `DashboardPage.tsx:696-703` prikazuje `Suggested Flow Temp` i `Actual Flow Temp` (s delta bojom na BoilerPage:118-125); `ReportsPage.tsx:44-56` prikazuje `recommendedFlowTemp`, `expectedHeatTimeMin`, `confidenceScore` (0-1 → %) — bez objašnjenja komponenti (ext temp, korekcije, confidence smisao, learning offset).
 - **Ciljni dizajn:** kartica "Razlog preporuke" koja renderira struktuirani breakdown (nova backend polja iz shadow moda: baza krivulje, korekcije po komponenti s jedinicama, confidence + broj uzoraka), uz disclaimer da je to savjetodavni prikaz (stručna potvrda ograničenja iz Faze 1). Prikazati samo ono što backend eksplicitno vrati (nema klijentskih rekonstrukcija — FE-010).
 - **Testni plan:** snapshot/component testovi po breakdown varijanti; e2e sa shadow odgovorima; a11y (tabella/tekst umjesto samo grafikon).

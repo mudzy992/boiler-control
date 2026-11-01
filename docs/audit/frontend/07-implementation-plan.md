@@ -111,11 +111,12 @@
 - **Testovi:** e2e: novi korisnik → prazno stanje → kreira profil s lokacijom → weather se pojavi; stale > dogovorenog → oznaka; WMO mapiranje bs/en; contract test za novi DTO (fixture iz `scripts/audit/fixtures/`). **Skripte:** `node scripts/audit/weather_repro.cjs --help` (stara reprodukcija; prilagoditi nakon backend popravke), `scripts/test-all.sh --help`.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** L; zavisno od backend 1.1/1.2, 1.2 (tipovi), 3.3 (tekstovi), 3.5 (testovi).
 
-### 4.2 "Razlog preporuke" (FE2-10)
-- **Cilj/fajlovi:** nova komponenta `components/RecommendationBreakdown.tsx`, `DashboardPage.tsx`/`ReportsPage.tsx` (mount), generated tipovi, backend 2.1/2.2 (shadow breakdown polja).
-- **Migracija/rollback, flag:** `RECOMMENDATION_BREAKDOWN_ENABLED` default off; rollback = isključi karticu.
-- **Testovi:** component testovi po varijanti breakdowna (mock), e2e: breakdown prati mock backend odgovor (bez klijentske rekonstrukcije), a11y (tekst/tablica), disclaimer prisutan. **Skripte:** `node scripts/audit/formula_table.cjs --help` (kontekst formule), `scripts/test-all.sh --help`.
-- **Prihvat/trud/kompatibilnost/zavisnosti:** M; zavisno od backend 2.x, 1.2, 3.5.
+### 4.2 "Razlog preporuke" (FE2-10) — RIJEŠENO 2026-11-01
+- **Status:** implementirano u `ab08519` + `c9fe88c`, CI `41339126329`; vlasnička odluka `backend_breakdown`. Detalji: `09-fe2-10-recommendation-breakdown.md`.
+- **Cilj/fajlovi:** nova komponenta `components/RecommendationBreakdown.tsx`, `DashboardPage.tsx`/`ReportsPage.tsx` (mount), generated tipovi, backend `Recommendation.breakdown` snapshot i `RecommendationResponseDto`.
+- **Migracija/rollback, flag:** aditivna migracija `20261101130000_fe210_recommendation_breakdown`; rollback = `DROP COLUMN IF EXISTS "breakdown"` i revert mount-a. Nema novog env flaga; komponenta ne renderuje ništa bez breakdowna.
+- **Testovi:** backend snapshot/write-site/contract/integration testovi; frontend component testovi po varijanti breakdowna (mock), bez klijentske rekonstrukcije, a11y tabela i disclaimer. **Skripte:** `node scripts/audit/openapi_recommendation_fragment.cjs --write` (lokalni fragment), CI `npm run openapi:generate -- --check`.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** M; formula nije mijenjana, stari redovi su `null`, instalirani mobile klijenti nisu pogođeni. FORM-1 ostaje otvoren.
 
 ### 4.3 Poslovna logika na jednom mjestu (FE2-14)
 - **Cilj/fajlovi:** `DashboardPage.tsx:376-403,480-526,176-177`, `BoilerPage.tsx:16-17` → backend endpoint (health/alerts) ili shared modul; uskladiti granice 48/55 vs 46/55; ispraviti overshoot semantiku.

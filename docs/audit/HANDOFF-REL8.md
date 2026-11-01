@@ -14,6 +14,13 @@ Talas D završi.
   a Prometheus/Grafana stack artefakti obrisani su iz repoa. Implementacija
   **`6845060`**; CI run **`41323254765`**: backend/mobile success, frontend samo
   pre-existing FE2-7. Detalji: `backend/16-sec6-metrics-auth.md`.
+- **FE2-10 je završen**: aditivni `Recommendation.breakdown` JSONB snapshot,
+  tipiziran `GET /api/recommendations` odgovor i read-only „Razlog preporuke“
+  prikaz na Dashboard/Reports ekranima. Formula i vrijednost preporuke nisu
+  mijenjani; stari redovi imaju `breakdown: null`. Implementacija
+  **`ab08519`** + CI ispravka **`c9fe88c`**; CI run **`41339126329`**:
+  backend/mobile success, frontend samo pre-existing FE2-7. Detalji:
+  `frontend/09-fe2-10-recommendation-breakdown.md`.
 - **PERF-1 (#38) je završen za prihvaćeni indeks**: sintetički CI benchmark
   prije migracije, standardna migracija `HeatingEvent(deviceId, timestampStart DESC)`,
   legacy `deviceId` indeks zadržan, weather `(city, fetchedAt DESC)` odgođen.
@@ -33,8 +40,8 @@ Talas D završi.
   Detalji: `backend/13-feat6-analytics-export.md`.
 - Vlasnikove odluke: `analytics_only`, `bounded_sync`, `preserve_compose`,
   `perf2`, `default_on`, `synthetic_ci`, `standard`, `token_fail_closed`,
-  `aggregate_worst`, `minimize_reporting`, `keep_metrics_remove_stack`.
-  Root/app compose i FE2-7 checker nisu mijenjani.
+  `aggregate_worst`, `minimize_reporting`, `keep_metrics_remove_stack`,
+  `backend_breakdown`. Root/app compose i FE2-7 checker nisu mijenjani.
 
 ## Završeno u ovoj sesiji (sve CI zeleno)
 
@@ -80,25 +87,25 @@ Talas D završi.
   assertuje apsolutnu ciljnu temperaturu**, pa ne štiti TempSet ispravku
 - FE2-2: CSRF defense-in-depth i datum uključivanja
   `AUTH_COOKIE_REFRESH_ENABLED` čekaju odluku vlasnika
-- Talas D dalje: SEC-6, FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
-  MO2-20. Blokirani: MO2-7 (#29), FORM-1 (#31)
+- Talas D dalje: FE2-3, MO2-12, MO2-13, MO2-15, MO2-20.
+  Blokirani: MO2-7 (#29), FORM-1 (#31)
 
 ## Git stanje (VERIFICIRANO)
 
 - Grana: `arena/c9961f17-boiler-control`
-- Implementacijski HEAD: **`6845060`** — SEC-6 metrics token, aggregate reporting,
-  minimizirani logovi i uklanjanje monitoring stack artefakata. Dokumentacijski
+- Implementacijski HEAD: **`c9fe88c`** — FE2-10 recommendation breakdown snapshot
+  i read-only UI, uz CI ispravku Prisma JSON dodjeljivosti. Dokumentacijski
   commit ovog turna je iznad njega.
 - `origin/main` je zadnji provjeren na `8735c6c` (PERF-1 merged); compose
   nije mijenjan.
-- Zadnji CI run: **`41323254765`** na `6845060`: `test` i `mobile` success,
+- Zadnji CI run: **`41339126329`** na `c9fe88c`: `test` i `mobile` success,
   `frontend` failure samo na pre-existing FE2-7 deploy config koraku.
 
 **UPOZORENJE — lokalni git ref se vraća na base `179d171` između turnova.**
 Desilo se **6 puta**. Prvo u svakom turnu:
 
 ```
-git rev-parse HEAD          # mora biti 6845060 ili novije
+git rev-parse HEAD          # mora biti c9fe88c ili novije
 git status --short | wc -l  # mora biti 0
 ```
 
@@ -106,7 +113,7 @@ Ako HEAD pokaže `179d171` i status ~44 fajlova, oporavak je:
 
 ```
 git fetch origin arena/c9961f17-boiler-control
-git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: 6845060
+git reset --mixed origin/arena/c9961f17-boiler-control   # NE --hard; oporavak SHA: c9fe88c
 ```
 
 `--mixed` ne dira radno stablo, pa ne-commitovani rad preživi.
@@ -244,15 +251,16 @@ potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
 
 ## Sljedeće po redoslijedu (Talas D)
 
-`docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35), PERF-2 (#39), PERF-1 (#38) i
-SEC-6 su gotovi. Sljedeći kandidati iz reda u
+`docs/audit/MASTER-ROADMAP.md`. FEAT-6 (#35), PERF-2 (#39), PERF-1 (#38),
+SEC-6 i FE2-10 su gotovi. Sljedeći kandidati iz reda u
 `docs/audit/backend/09-improvements-backlog.md` i frontend backlogu:
 
-**FE2-10 / FE2-3** — prikaz razloga preporuke i React Query ujedinjenje.
+**FE2-3** — React Query ujedinjenje, shared notification/gas key-ovi i
+visibility pauza pollinga.
 
-Ostatak Talasa D: FE2-10, FE2-3, MO2-12, MO2-13, MO2-15,
-MO2-20. (REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1,
-SEC-6 već gotovi.)
+Ostatak Talasa D: FE2-3, MO2-12, MO2-13, MO2-15, MO2-20.
+(REL-4, MAINT-2, MAINT-4, REL-7, REL-8, FEAT-6, PERF-2, PERF-1, SEC-6,
+FE2-10 već gotovi.)
 
 Blokirani: MO2-7 (#29), FORM-1 (#31 — vlasnik traži referentne senzorske
 uzorke).

@@ -25,15 +25,10 @@ export class HomeProfileService {
       orderBy: { createdAt: 'asc' },
     });
 
-    // Map to include computed fields with actual data
-    let activeId = user?.activeHomeProfileId ?? null;
-    if (!activeId && profiles[0]) {
-      activeId = profiles[0].id;
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { activeHomeProfileId: activeId },
-      });
-    }
+    // MO2-20: GET is read-only. Keep the legacy "first profile is active"
+    // view for older clients, but do not persist activeHomeProfileId here.
+    // Persisting an active profile belongs to create/activate.
+    const activeId = user?.activeHomeProfileId ?? profiles[0]?.id ?? null;
 
     return profiles.map((profile) => ({
       id: profile.id,
@@ -58,11 +53,12 @@ export class HomeProfileService {
       seasonMode: profile.seasonMode,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
-      // Mobile app expected fields
+      // Legacy mobile aliases are kept for installed clients. MO2-20 removes
+      // invented placeholder text; missing location is null, not a string.
       isActive: profile.id === activeId,
       thermostats: profile.thermostatDevices.length,
-      name: profile.homeName || 'Unnamed Home',
-      location: profile.location || user?.homeLocation || 'No location set',
+      name: profile.homeName ?? null,
+      location: profile.location ?? user?.homeLocation ?? null,
       thermostatDevices: profile.thermostatDevices,
     }));
   }
@@ -94,8 +90,8 @@ export class HomeProfileService {
       ...profile,
       isActive: true,
       thermostats: profile.thermostatDevices.length,
-      name: profile.homeName || 'Unnamed Home',
-      location: profile.location || user?.homeLocation || 'No location set',
+      name: profile.homeName ?? null,
+      location: profile.location ?? user?.homeLocation ?? null,
     };
   }
 
@@ -236,8 +232,8 @@ export class HomeProfileService {
       ...profile,
       isActive: true,
       thermostats: profile.thermostatDevices.length,
-      name: profile.homeName || 'Unnamed Home',
-      location: profile.location || 'No location set',
+      name: profile.homeName ?? null,
+      location: profile.location ?? null,
     };
   }
 }

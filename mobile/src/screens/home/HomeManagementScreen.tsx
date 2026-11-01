@@ -35,11 +35,12 @@ import {
   SEASON_MODE_OPTIONS,
 } from '../../constants/homeProfileEnums';
 import { AxiosError } from 'axios';
+import { homeProfileToForm } from './homeProfileForm';
 
 interface HomeProfile {
   id: number;
-  name: string;
-  location: string;
+  name?: string | null;
+  location?: string | null;
   isActive: boolean;
   thermostats: number;
   createdAt: string;
@@ -364,24 +365,8 @@ export const HomeManagementScreen = () => {
 
   const openEditModal = (home: any) => {
     setSelectedHome(home);
-    setFormData({
-      homeName: home.homeName || home.name || '',
-      location: home.location || '',
-      floorArea: home.floorArea || 100,
-      ceilingHeight: home.ceilingHeight || 2.6,
-      insulationType: home.insulationType || InsulationType.STANDARD,
-      insulationThickness: home.insulationThickness || 12,
-      windowType: home.windowType || WindowType.DOUBLE_GLAZED,
-      heatingType: home.heatingType || HeatingType.RADIATOR,
-      constructionYear: home.constructionYear || new Date().getFullYear(),
-      hasFloorHeating: home.hasFloorHeating || false,
-      targetMorningTemp: home.targetMorningTemp || 22,
-      targetDayTemp: home.targetDayTemp || 20,
-      targetNightTemp: home.targetNightTemp || 18,
-      numberOfResidents: home.numberOfResidents || 2,
-      boilerModel: home.boilerModel || '',
-      seasonMode: home.seasonMode || SeasonMode.WINTER,
-    });
+    // MO2-20: preserve 0/false/empty-string values; only null/undefined use defaults.
+    setFormData(homeProfileToForm(home));
     setShowEditModal(true);
   };
 
@@ -406,7 +391,7 @@ export const HomeManagementScreen = () => {
           <VStack flex={1} space={1}>
             <HStack alignItems="center" space={2}>
               <Heading size="md" color={textColor}>
-                {home.name}
+                {home.name ?? ''}
               </Heading>
               {home.isActive && (
                 <Badge colorScheme="success" variant="solid">
@@ -417,7 +402,7 @@ export const HomeManagementScreen = () => {
             <HStack alignItems="center" space={1}>
               <Icon as={Ionicons} name="location-outline" size={4} color={subtextColor} />
               <Text fontSize="sm" color={subtextColor}>
-                {home.location}
+                {home.location ?? ''}
               </Text>
             </HStack>
             <HStack alignItems="center" space={1} mt={1}>

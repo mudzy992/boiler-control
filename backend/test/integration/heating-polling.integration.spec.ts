@@ -709,4 +709,92 @@ describe('Integration Tests: Heating & Polling (P2a)', () => {
       expect(response.status).toBe(401);
     });
   });
+
+  describe('MO2-20 home-profile read contract', () => {
+    let authToken: string;
+    let userId: number;
+    let homeProfileId: number;
+
+    beforeAll(async () => {
+      const email = `mo220_${Date.now()}@example.com`;
+      const registerResponse = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email,
+          username: email.split('@')[0],
+          password: 'TestPassword123!',
+          name: 'MO2-20 Test User',
+        });
+
+      expect(registerResponse.status).toBe(201);
+      authToken = registerResponse.body.token;
+      userId = registerResponse.body.user.id;
+
+      const homeProfile = await prisma.homeProfile.create({
+        data: {
+          userId,
+          homeName: null,
+          location: null,
+          floorArea: 150,
+          ceilingHeight: 2.6,
+          insulationType: 'EPS',
+          insulationThickness: 10,
+          windowType: 'DOUBLE_GLAZED',
+          heatingType: 'RADIATOR',
+          constructionYear: 2020,
+          numberOfResidents: 0,
+          hasFloorHeating: false,
+        },
+      });
+      homeProfileId = homeProfile.id;
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { activeHomeProfileId: null },
+      });
+    });
+
+    it('GET /api/home-profiles does not persist activeHomeProfileId and keeps null/0/false', async () => {
+      const before = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { activeHomeProfileId: true },
+      });
+      expect(before?.activeHomeProfileId).toBeNull();
+
+      const response = await request(app.getHttpServer())
+        .get('/api/home-profiles')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      const row = response.body.find(
+        (item: { id: number }) => item.id === homeProfileId,
+      );
+      expect(row).toBeDefined();
+      expect(row.location).toBeNull();
+      expect(row.name).toBeNull();
+      expect(row.numberOfResidents).toBe(0);
+      expect(row.hasFloorHeating).toBe(false);
+
+      const after = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { activeHomeProfileId: true },
+      });
+      expect(after?.activeHomeProfileId).toBeNull();
+    });
+
+    it('PATCH /api/home-profiles/:id/activate persists the active profile', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/home-profiles/${homeProfileId}/activate`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { activeHomeProfileId: true },
+      });
+      expect(user?.activeHomeProfileId).toBe(homeProfileId);
+    });
+  });
 });

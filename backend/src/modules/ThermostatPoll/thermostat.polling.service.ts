@@ -13,6 +13,11 @@ import {
   missingSnapshotFields,
 } from '../Boiler/adapter/snapshot-guard';
 import { NotificationType } from 'src/generated/prisma';
+import {
+  POLL_DEVICE_SELECT,
+  pollBatchSize,
+  pollPaginationEnabled,
+} from './polling-pagination';
 
 /**
  * OBS-1 / B-023: eksplicitan ishod obrade JEDNOG uređaja.
@@ -64,45 +69,25 @@ export class ThermostatPollingService {
     const runId = `poll_${Date.now()}`;
     this.metricsService.incrementCounter('poll_runs_total');
 
-    try {
-      const devices = await this.prisma.thermostatDevice.findMany({
-        include: {
-          user: true,
-          homeProfile: { include: { intervalLearnings: true } },
-        },
-      });
-
-      const ctx: LogContext = { runId, module: 'thermostat_polling' };
-      this.structuredLogger.debug(
-        `Starting poll cycle with ${devices.length} devices`,
-        ctx,
-      );
-
-      const outcomes: Record<PollDeviceOutcome, number> = {
-        success: 0,
-        failed: 0,
-        skipped: 0,
-        no_snapshot: 0,
-        incomplete: 0,
-      };
-
-      // Izolacija grešaka među uređajima ostaje: jedan neuspjeh ne prekida ostale.
-      for (const device of devices) {
-        const outcome = await this.pollDevice(device, runId);
-        outcomes[outcome] += 1;
-      }
-
-      this.metricsService.incrementCounter(
-        'poll_devices_total',
-        devices.length,
-      );
+    const outcomes: Record<PollDeviceOutcome, number> = {
+      success: 0,
+      failed: 0,
+      skipped: 0,
+      no_snapshot: 0,
+      incomplete: 0,
+    };
+    let processed = 0;
+    let deviceMetricsFlushed = false;
+    const flushDeviceMetrics = () => {
+      if (deviceMetricsFlushed || processed === 0) return;
+      deviceMetricsFlushed = true;
+      this.metricsService.incrementCounter('poll_devices_total', processed);
       for (const outcome of Object.keys(outcomes) as PollDeviceOutcome[]) {
         this.metricsService.incrementCounter(
           OUTCOME_METRIC[outcome] as any,
           outcomes[outcome],
         );
       }
-
       // Svježina se pomjera SAMO kad je barem jedan uređaj stvarno obrađen.
       if (outcomes.success > 0) {
         this.metricsService.setGauge(
@@ -110,13 +95,66 @@ export class ThermostatPollingService {
           Math.floor(Date.now() / 1000),
         );
       }
+    };
 
+    try {
+      const ctx: LogContext = { runId, module: 'thermostat_polling' };
+
+      if (!pollPaginationEnabled()) {
+        // Legacy rollback put: jedan listing sa starim include relacijama.
+        const devices = await this.prisma.thermostatDevice.findMany({
+          include: {
+            user: true,
+            homeProfile: { include: { intervalLearnings: true } },
+          },
+        });
+        this.structuredLogger.debug(
+          `Starting poll cycle with ${devices.length} devices`,
+          ctx,
+        );
+        for (const device of devices) {
+          const outcome = await this.pollDevice(device, runId);
+          outcomes[outcome] += 1;
+          processed += 1;
+        }
+      } else {
+        // PERF-2: keyset po stabilnom PK, bez skip paginga. Novi uređaji s
+        // većim id mogu ući u tekući ciklus; obrisani se prirodno preskoče.
+        const batchSize = pollBatchSize();
+        let cursor = 0;
+        this.structuredLogger.debug(
+          `Starting paginated poll cycle with batch size ${batchSize}`,
+          ctx,
+        );
+        for (;;) {
+          const devices = await this.prisma.thermostatDevice.findMany({
+            where: { id: { gt: cursor } },
+            orderBy: { id: 'asc' },
+            take: batchSize,
+            select: POLL_DEVICE_SELECT,
+          });
+          if (devices.length === 0) break;
+          for (const device of devices) {
+            // Izolacija grešaka među uređajima ostaje: jedan neuspjeh ne prekida ostale.
+            const outcome = await this.pollDevice(device, runId);
+            outcomes[outcome] += 1;
+            processed += 1;
+          }
+          cursor = devices[devices.length - 1].id;
+          if (devices.length < batchSize) break;
+        }
+      }
+
+      flushDeviceMetrics();
       // `poll_runs_success` i dalje znači "ciklus je završio bez greške" —
       // naziv i značenje su zadržani jer ih Grafana panel koristi. Za stvarnu
       // uspješnost obrade gledati `poll_devices_*`.
       this.metricsService.incrementCounter('poll_runs_success');
     } catch (err) {
       this.metricsService.incrementCounter('poll_runs_failed');
+      // Ako je listing pukao usred ciklusa, već obrađeni uređaji ostaju
+      // iskreno zabilježeni; sam ciklus NIJE uspjeh.
+      flushDeviceMetrics();
       const ctx: LogContext = { runId, module: 'thermostat_polling' };
       this.structuredLogger.error('Poll cycle failed', err, ctx);
     }

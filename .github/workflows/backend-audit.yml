@@ -88,6 +88,9 @@ jobs:
       - name: FEAT-6 analytics export HTTP regression
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: node ../scripts/audit/analytics_export_repro.cjs
+      - name: PERF-2 bounded polling regression
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: node ../scripts/audit/poll_pagination_repro.cjs
       - name: Lint without modifying files
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

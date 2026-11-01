@@ -135,11 +135,12 @@ Plan je serija **malih commitova na aktivnoj grani** (`arena/1bfee051-boiler-con
 - **Testovi:** 20 fixturea za mapiranje backend upozorenja, statička regresija bez lokalnih pragova, type-check, lint, 4 suite / 40 testova.
 - **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = jedan izvor istine; M; stari instalirani klijenti nisu pogođeni dok se ne ažuriraju.
 
-### 4.2 Preporuka i „zašto ova temperatura" (MO2-15)
-- **Cilj/fajlovi:** nova `mobile/src/components/RecommendationBreakdown.tsx`, mount u `DashboardScreen.tsx`/`BoilerStatusCard.tsx`, poziv `apiClient.getRecommendations` (trenutno mrtav), granice unosa iz odgovora umjesto `DashboardScreen.tsx:32-33`.
-- **Migracija/rollback, flag:** `RECOMMENDATION_BREAKDOWN_ENABLED` default off; rollback = flag off.
-- **Testovi:** komponentni test po varijanti breakdowna (mock odgovor); e2e: prikaz prati backend odgovor bez klijentske rekonstrukcije; disclaimer prisutan; granice 47.9/48/55/55.1 testirane. **Skripte:** `node scripts/audit/formula_table.cjs --help` (Faza 1), `scripts/test-all.sh --help`.
-- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = korisnik vidi razlog, a ne samo broj; M; zavisno od backend FORM-1/2.x i 1.2 (stare verzije).
+### 4.2 Preporuka i „zašto ova temperatura" (MO2-15) — RIJEŠENO 2026-11-01
+- **Status:** implementirano u `d21a8a4`, CI `41353900211`. Detalji: `10-mo2-15-recommendation-breakdown.md`.
+- **Cilj/fajlovi:** `mobile/src/components/RecommendationBreakdown.tsx`, `DashboardScreen.tsx`, `types/Dashboard.ts`, `constants/boilerLimits.ts`, locales i Jest testovi. Kartica koristi `system.recommendation.breakdown` iz postojećeg dashboard odgovora.
+- **Migracija/rollback, flag:** nema DB/API promjene, nema novog flaga; rollback = revert `d21a8a4`.
+- **Testovi:** component test za puni breakdown, null optional polja, izostanak breakdowna i promjenu odgovora; test granica 47.9/48/55/55.1; 8 suite / 60 testova.
+- **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = korisnik vidi razlog iz backend snapshota; M; instalirani klijenti nisu pogođeni dok se ne ažuriraju. FORM-1 i API izlaganje granica unosa ostaju otvoreni.
 
 ### 4.3 Weather v2 (MO2-17)
 - **Cilj/fajlovi:** `mobile/src/components/WeatherCard.tsx` (WMO mapiranje, starost), novi dijeljeni modul `weatherCodes.ts` (isti za web i mobile), `types/Weather.ts` (generisan iz OpenAPI), opciono novi ekran iza `DashboardStackNavigator`.

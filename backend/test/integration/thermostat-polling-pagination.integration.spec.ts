@@ -36,8 +36,7 @@ describe('Thermostat polling pagination (PERF-2, PostgreSQL)', () => {
         email: `${prefix}@example.invalid`,
         username: `${prefix}`,
         passwordHash: 'synthetic-not-a-real-hash',
-        firstName: 'Perf',
-        lastName: 'Two',
+        name: 'Perf Two',
         plan: 'ENTERPRISE',
       },
     });

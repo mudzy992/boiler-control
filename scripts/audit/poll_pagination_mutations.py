@@ -96,7 +96,7 @@ def main() -> int:
     for name, path, old, _new in MUTATIONS:
         count = originals[path].count(old)
         if count != 1:
-            print(f"[mutations] anchor nije jedinstven за {name}: {count}", file=sys.stderr)
+            print(f"[mutations] anchor nije jedinstven za {name}: {count}", file=sys.stderr)
             return 2
     killed = 0
     try:

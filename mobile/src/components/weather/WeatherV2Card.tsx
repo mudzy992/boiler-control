@@ -309,7 +309,7 @@ interface ForecastContentProps {
   accentColor: string;
 }
 
-function ForecastContent({
+const ForecastContent = React.memo(function ForecastContent({
   forecast,
   locale,
   textColor,
@@ -480,7 +480,7 @@ function ForecastContent({
       </VStack>
     </VStack>
   );
-}
+});
 
 function WeatherMetric({
   label,

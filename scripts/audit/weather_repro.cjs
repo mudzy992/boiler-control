@@ -29,7 +29,7 @@ const series = [values(0), values(100), values(10), values(1000), values(40), va
 const variable = (array) => ({ valuesArray: () => array });
 const response = {
   utcOffsetSeconds: () => 3600,
-  current: () => ({ variables: (i) => ({ value: () => [5, 60, 1, 1][i] }) }),
+  current: () => ({ time: () => BigInt(frozenNow / 1000), variables: (i) => ({ value: () => [5, 60, 1, 1][i] }) }),
   hourly: () => ({ time: () => BigInt(start), timeEnd: () => BigInt(start + 24 * 3600), interval: () => 3600, variables: (i) => variable(series[i]) }),
   daily: () => ({ variables: (i) => ({ valuesArray: () => Float32Array.from([i === 0 ? 10 : -2]), valuesInt64: () => BigInt(i === 2 ? sunrise : sunrise + 9 * 3600) }) }),
 };
@@ -39,7 +39,7 @@ Module._load = function(request, parent, isMain) {
   if (parent?.filename.endsWith(path.join('Weather', 'weather.service.ts'))) {
     if (request === '../../prisma/prisma.service') return { PrismaService: class PrismaService {} };
     if (request === './weather-http.adapter') return { WeatherHttpAdapter: class WeatherHttpAdapter {} };
-    if (request === 'openmeteo') return { fetchWeatherApi: async () => {
+    if (request === './openmeteo-flatbuffers') return { fetchOpenMeteoFlatbuffers: async () => {
       if (forecastFails) throw new Error('synthetic provider failure');
       return [response];
     } };
@@ -57,6 +57,7 @@ async function run() {
     findFirst: async () => record ?? null,
     delete: async () => { calls.push('delete'); record = undefined; },
     create: async ({ data }) => { calls.push('create'); record = { ...data, id: 1 }; return record; },
+    update: async ({ data }) => { calls.push('update'); record = { ...record, ...data }; return record; },
   };
   const service = new WeatherService({ weatherCache: cache }, adapter);
   const mapped = await service.getTodayWeather('Synthetic City');
@@ -64,21 +65,22 @@ async function run() {
   const expectedApparent = series[1][currentIndex];
   const expectedWind = series[5][currentIndex];
   const actualSunrise = new RealDate(sunrise * 1000).toISOString();
+  const actualSunset = new RealDate((sunrise + 9 * 3600) * 1000).toISOString();
   assert.equal(currentIndex, 13);
-  assert.equal(mapped.feelslike, 112);
-  assert.equal(expectedApparent, 113);
-  assert.equal(mapped.wind_kph, 223);
-  assert.equal(expectedWind, 213);
-  assert.equal(mapped.sunrise, '2026-01-16T07:00:00.000Z');
-  assert.equal(actualSunrise, '2026-01-16T06:00:00.000Z');
+  assert.equal(mapped.feelslike, expectedApparent);
+  assert.equal(mapped.wind_kph, expectedWind);
+  assert.equal(mapped.gust_kph, series[6][currentIndex]);
+  assert.equal(mapped.pressure_mb, series[3][currentIndex]);
+  assert.equal(mapped.cloud, series[2][currentIndex]);
+  assert.equal(mapped.temp_avg, 10.5);
+  assert.equal(mapped.sunrise, actualSunrise);
+  assert.equal(mapped.sunset, actualSunset);
   record = { id: 2, city: 'Synthetic City', fetchedAt: new RealDate(frozenNow - 11 * 60 * 1000), temperature: 5 };
   calls.length = 0;
   forecastFails = true;
-  let threw = false;
-  try { await service.getTodayWeather('Synthetic City'); } catch { threw = true; }
-  assert.equal(threw, true);
-  assert.deepEqual(calls, ['delete']);
-  assert.equal(record, undefined);
-  console.log(JSON.stringify({ fixture: 'synthetic SDK instants, 24 hourly samples, UTC server, offset +01:00', currentIndex, apparent: { actual: mapped.feelslike, expectedByInstant: expectedApparent }, wind: { actual: mapped.wind_kph, expectedByInstant: expectedWind }, sunrise: { stored: mapped.sunrise, fixtureInstant: actualSunrise }, failedRefresh: { threw, dbOperations: calls, retainedStale: !!record } }, null, 2));
+  const fallback = await service.getTodayWeather('Synthetic City');
+  assert.equal(fallback, record);
+  assert.deepEqual(calls, []);
+  console.log(JSON.stringify({ fixture: 'synthetic SDK instants, 24 hourly samples, UTC server, offset +01:00', currentIndex, apparent: { actual: mapped.feelslike, expectedByInstant: expectedApparent }, wind: { actual: mapped.wind_kph, expectedByInstant: expectedWind }, average: { actual: mapped.temp_avg, expected: 10.5 }, sunrise: { stored: mapped.sunrise, fixtureInstant: actualSunrise }, failedRefresh: { dbOperations: calls, retainedStale: fallback === record } }, null, 2));
 }
 run().catch((error) => { console.error('Reprodukcija nije uspjela:', error.message); process.exitCode = 1; });

@@ -3,6 +3,22 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { fetchOpenMeteoFlatbuffers } from './openmeteo-flatbuffers';
 import { WeatherHttpAdapter } from './weather-http.adapter';
 
+const MISSING_UNIX_TIMESTAMP = 9223372036854775807n;
+
+function unixTimestampIso(value: bigint | null | undefined): string | null {
+  if (
+    value === null ||
+    value === undefined ||
+    value === MISSING_UNIX_TIMESTAMP
+  ) {
+    return null;
+  }
+  const seconds = Number(value);
+  if (!Number.isSafeInteger(seconds) || seconds <= 0) return null;
+  const date = new Date(seconds * 1000);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 /**
  * P2b change: wrap external HTTP calls (geocoding + forecast) with
  * `WeatherHttpAdapter.executeWithCircuitBreaker` so requests gain timeout,
@@ -167,22 +183,31 @@ export class WeatherService {
       /* =======================
          3) Hourly time array
       ======================= */
-      const times = Array.from(
+      const hourlyStart = Number(hourly.time());
+      const interval = hourly.interval();
+      const hourlyTimes = Array.from(
         {
-          length:
-            (Number(hourly.timeEnd()) - Number(hourly.time())) /
-            hourly.interval(),
+          length: (Number(hourly.timeEnd()) - hourlyStart) / interval,
         },
-        (_, i) =>
-          new Date(
-            (Number(hourly.time()) + i * hourly.interval() + utcOffset) * 1000,
-          ),
+        (_, i) => hourlyStart + i * interval,
       );
+      const currentIndex = Math.floor(
+        (Number(current.time()) - hourlyStart) / interval,
+      );
+      const hasCurrentSample =
+        Number.isInteger(currentIndex) &&
+        currentIndex >= 0 &&
+        currentIndex < hourlyTimes.length;
+      const hCurrent = (idx: number) =>
+        hasCurrentSample ? hVar(idx)[currentIndex] : undefined;
 
       const temps = hVar(0);
 
-      const avgTemps = times
-        .map((t, i) => ({ hour: t.getHours(), temp: temps[i] }))
+      const avgTemps = hourlyTimes
+        .map((time, i) => ({
+          hour: new Date((time + utcOffset) * 1000).getUTCHours(),
+          temp: temps[i],
+        }))
         .filter((x) => x.temp !== undefined)
         .filter((x) => x.hour >= 6 && x.hour <= 15)
         .map((x) => x.temp);
@@ -197,24 +222,19 @@ export class WeatherService {
       ======================= */
       return {
         temperature: current.variables(0)?.value() ?? 0,
-        feelslike:
-          hVar(1)[
-            times.findIndex((t) => t.getHours() === new Date().getHours())
-          ] ??
-          current.variables(0)?.value() ??
-          0,
+        feelslike: hCurrent(1) ?? current.variables(0)?.value() ?? 0,
 
         temp_min: dVar(1)[0] ?? 0,
         temp_max: dVar(0)[0] ?? 0,
         temp_avg,
 
-        wind_kph: hVar(5).at(-1) ?? 0,
-        gust_kph: hVar(6).at(-1) ?? 0,
-        wind_dir: `${hVar(7).at(-1) ?? 0}°`,
+        wind_kph: hCurrent(5) ?? 0,
+        gust_kph: hCurrent(6) ?? 0,
+        wind_dir: `${hCurrent(7) ?? 0}°`,
 
-        pressure_mb: hVar(3).at(-1) ?? 0,
+        pressure_mb: hCurrent(3) ?? 0,
         humidity: current.variables(1)?.value() ?? 0,
-        cloud: hVar(2).at(-1) ?? 0,
+        cloud: hCurrent(2) ?? 0,
 
         uv_index: Math.max(...toArray(hVar(8)), 0),
         precipitation_mm: toArray(hVar(9)).reduce((a, b) => a + b, 0),
@@ -222,13 +242,8 @@ export class WeatherService {
 
         condition_text: `WMO_${current.variables(2)?.value() ?? 0}`,
 
-        sunrise: new Date(
-          (Number(daily.variables(2)?.valuesInt64(0) ?? 0) + utcOffset) * 1000,
-        ).toISOString(),
-
-        sunset: new Date(
-          (Number(daily.variables(3)?.valuesInt64(0) ?? 0) + utcOffset) * 1000,
-        ).toISOString(),
+        sunrise: unixTimestampIso(daily.variables(2)?.valuesInt64(0)),
+        sunset: unixTimestampIso(daily.variables(3)?.valuesInt64(0)),
 
         moonrise: '',
         moonset: '',

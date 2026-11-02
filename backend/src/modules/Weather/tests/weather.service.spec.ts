@@ -5,6 +5,7 @@ jest.mock('../../../prisma/prisma.service', () => ({
 import { Logger } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import * as openMeteoTransport from '../openmeteo-flatbuffers';
 import { WeatherService } from '../weather.service';
 
 const repoRoot = path.resolve(__dirname, '../../../../..');
@@ -67,6 +68,67 @@ function mockGeocodeAndForecast(forecast: Response) {
 
 function validForecast() {
   return new Response(new Uint8Array(fixtureBytes), { status: 200 });
+}
+
+const frozenNow = Date.parse('2026-01-16T12:00:00.000Z');
+
+function timelineResponse(
+  sunrise = BigInt(Date.parse('2026-01-16T06:00:00.000Z') / 1000),
+) {
+  const start = BigInt(Date.parse('2026-01-15T23:00:00.000Z') / 1000);
+  const sunset = BigInt(Date.parse('2026-01-16T15:00:00.000Z') / 1000);
+  const values = (base: number) =>
+    Float32Array.from({ length: 24 }, (_, index) => base + index);
+  const series = [
+    values(0),
+    values(100),
+    values(10),
+    values(1000),
+    values(40),
+    values(200),
+    values(300),
+    values(20),
+    values(1),
+    values(0),
+    values(0),
+  ];
+  const variable = (array: Float32Array) => ({ valuesArray: () => array });
+
+  return {
+    utcOffsetSeconds: () => 3600,
+    current: () => ({
+      time: () => BigInt(frozenNow / 1000),
+      variables: (index: number) => ({
+        value: () => [5, 60, 1, 1][index],
+      }),
+    }),
+    hourly: () => ({
+      time: () => start,
+      timeEnd: () => start + 24n * 3600n,
+      interval: () => 3600,
+      variables: (index: number) => variable(series[index]),
+    }),
+    daily: () => ({
+      variables: (index: number) => ({
+        valuesArray: () => Float32Array.from([index === 0 ? 10 : -2]),
+        valuesInt64: () => (index === 2 ? sunrise : sunset),
+      }),
+    }),
+  };
+}
+
+function mockTimelineResponse(response: ReturnType<typeof timelineResponse>) {
+  jest
+    .spyOn(global, 'fetch')
+    .mockResolvedValue(
+      new Response(
+        JSON.stringify({ results: [{ latitude: 43.99, longitude: 18.18 }] }),
+        { status: 200 },
+      ),
+    );
+  jest
+    .spyOn(openMeteoTransport, 'fetchOpenMeteoFlatbuffers')
+    .mockResolvedValue([response]);
 }
 
 afterEach(() => {
@@ -191,5 +253,56 @@ describe('WeatherService legacy Open-Meteo transport and cache', () => {
       'Failed to fetch Open-Meteo data for Visoko',
     );
     expect(prisma.weatherCache.delete).not.toHaveBeenCalled();
+  });
+});
+
+describe('WeatherService legacy timeline mapping', () => {
+  it('maps current instants and the local 06-15 average', async () => {
+    jest.useFakeTimers().setSystemTime(new Date(frozenNow));
+    const { service } = makeService(null);
+    mockTimelineResponse(timelineResponse());
+
+    const result = await service.getTodayWeather('Visoko');
+
+    expect(result).toMatchObject({
+      feelslike: 113,
+      temp_avg: 10.5,
+      wind_kph: 213,
+      gust_kph: 313,
+      wind_dir: '33°',
+      pressure_mb: 1013,
+      cloud: 23,
+      sunrise: '2026-01-16T06:00:00.000Z',
+      sunset: '2026-01-16T15:00:00.000Z',
+    });
+  });
+
+  it('uses the provider current instant instead of the server wall clock', async () => {
+    jest.useFakeTimers().setSystemTime(new Date(frozenNow + 2 * 3600 * 1000));
+    const { service } = makeService(null);
+    mockTimelineResponse(timelineResponse());
+
+    const result = await service.getTodayWeather('Visoko');
+
+    expect(result).toMatchObject({
+      feelslike: 113,
+      wind_kph: 213,
+      pressure_mb: 1013,
+      cloud: 23,
+    });
+  });
+
+  it('maps the missing sunrise sentinel to null without losing the rest of the forecast', async () => {
+    jest.useFakeTimers().setSystemTime(new Date(frozenNow));
+    const { service } = makeService(null);
+    mockTimelineResponse(timelineResponse(9223372036854775807n));
+
+    const result = await service.getTodayWeather('Visoko');
+
+    expect(result).toMatchObject({
+      feelslike: 113,
+      sunrise: null,
+      sunset: '2026-01-16T15:00:00.000Z',
+    });
   });
 });

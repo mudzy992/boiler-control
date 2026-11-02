@@ -986,10 +986,37 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         AccountExportCollectionsDto: {
-            homeProfiles: {
+            boilerHistories: {
+                [key: string]: unknown;
+            }[];
+            devices: {
+                [key: string]: unknown;
+            }[];
+            gasPriceHistory: {
+                [key: string]: unknown;
+            }[];
+            gasReadings: {
+                [key: string]: unknown;
+            }[];
+            heatingEvents: {
                 [key: string]: unknown;
             }[];
             heatingIntervalLearnings: {
+                [key: string]: unknown;
+            }[];
+            homeProfiles: {
+                [key: string]: unknown;
+            }[];
+            notificationPreferences: {
+                [key: string]: unknown;
+            }[];
+            notifications: {
+                [key: string]: unknown;
+            }[];
+            recommendations: {
+                [key: string]: unknown;
+            }[];
+            sessions: {
                 [key: string]: unknown;
             }[];
             thermostatDevices: {
@@ -998,46 +1025,19 @@ export interface components {
             thermostatPrograms: {
                 [key: string]: unknown;
             }[];
-            heatingEvents: {
-                [key: string]: unknown;
-            }[];
-            recommendations: {
-                [key: string]: unknown;
-            }[];
-            boilerHistories: {
-                [key: string]: unknown;
-            }[];
-            gasReadings: {
-                [key: string]: unknown;
-            }[];
-            gasPriceHistory: {
-                [key: string]: unknown;
-            }[];
-            notifications: {
-                [key: string]: unknown;
-            }[];
-            notificationPreferences: {
-                [key: string]: unknown;
-            }[];
-            devices: {
-                [key: string]: unknown;
-            }[];
-            sessions: {
-                [key: string]: unknown;
-            }[];
         };
         AccountExportResponseDto: {
-            /** @enum {string} */
-            format: "boiler-control.account-export";
-            /** @enum {number} */
-            version: 1;
-            /** Format: date-time */
-            generatedAt: string;
             /** @description Explicitly selected account fields; passwordHash is excluded. */
             account: {
                 [key: string]: unknown;
             };
             collections: components["schemas"]["AccountExportCollectionsDto"];
+            /** @enum {string} */
+            format: "boiler-control.account-export";
+            /** Format: date-time */
+            generatedAt: string;
+            /** @enum {number} */
+            version: 1;
         };
         AuthUserDto: {
             avatarUrl: string | null;

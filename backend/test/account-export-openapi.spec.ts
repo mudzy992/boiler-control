@@ -19,7 +19,10 @@ import { RefreshTokenService } from '../src/modules/Auth/refresh-token.service';
 import { AccountExportService } from '../src/modules/Auth/account-export.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { JwtAuthGuard } from '../src/modules/Auth/jwt-auth.guard';
-import { createOpenApiDocument } from '../src/openapi.config';
+import {
+  createOpenApiDocument,
+  serializeOpenApiDocument,
+} from '../src/openapi.config';
 
 const exportPayload = {
   format: 'boiler-control.account-export',
@@ -118,9 +121,11 @@ describe('PRIV-1A account export HTTP and OpenAPI contract', () => {
   });
 
   it('matches the committed additive Auth export fragment', () => {
-    const committed = JSON.parse(
-      readFileSync(join(__dirname, '../../contracts/openapi.json'), 'utf8'),
-    ) as {
+    const committedText = readFileSync(
+      join(__dirname, '../../contracts/openapi.json'),
+      'utf8',
+    );
+    const committed = JSON.parse(committedText) as {
       paths: Record<string, unknown>;
       components: { schemas: Record<string, unknown> };
     };
@@ -135,5 +140,8 @@ describe('PRIV-1A account export HTTP and OpenAPI contract', () => {
         document.components?.schemas?.[name],
       );
     }
+    expect(committedText).toBe(
+      serializeOpenApiDocument(JSON.parse(committedText)),
+    );
   });
 });

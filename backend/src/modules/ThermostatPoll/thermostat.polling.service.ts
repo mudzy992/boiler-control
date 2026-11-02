@@ -7,6 +7,7 @@ import { BoilerService } from '../Boiler/boiler.service';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { StructuredLogger, LogContext } from '../../common/structured-logger';
 import { MetricsService } from '../../common/metrics.service';
+import { PollingWeatherService } from '../Weather/polling-weather.service';
 import {
   snapshotGuardEnabled,
   isSnapshotComplete,
@@ -54,6 +55,7 @@ export class ThermostatPollingService {
     private notifications: NotificationsService,
     private recommendationService: HeatingRecommendationService,
     private metricsService: MetricsService,
+    private readonly pollingWeather: PollingWeatherService,
   ) {}
 
   // ----------------------------------
@@ -365,6 +367,12 @@ export class ThermostatPollingService {
 
     this.structuredLogger.log('Starting heating start transaction', ctx);
 
+    const v2Temperature = device.homeProfileId
+      ? await this.pollingWeather.getV2CurrentTemperature(
+          device.userId,
+          device.homeProfileId,
+        )
+      : null;
     const [lastBoilerHistory, userState, lastWeatherTemp] = await Promise.all([
       this.prisma.boilerHistory.findFirst({
         where: { userId: device.userId },
@@ -374,10 +382,12 @@ export class ThermostatPollingService {
         where: { id: device.userId },
         select: { currentBoilerFlowTemp: true },
       }),
-      this.prisma.weatherCache.findFirst({
-        where: { city: device.user?.homeLocation ?? 'Visoko' },
-        orderBy: { fetchedAt: 'desc' },
-      }),
+      v2Temperature === null
+        ? this.prisma.weatherCache.findFirst({
+            where: { city: device.user?.homeLocation ?? 'Visoko' },
+            orderBy: { fetchedAt: 'desc' },
+          })
+        : Promise.resolve(null),
     ]);
 
     // Wrap multi-step DB operations in transaction for atomicity
@@ -395,7 +405,7 @@ export class ThermostatPollingService {
       this.prisma.boilerHistory.create({
         data: {
           userId: device.userId,
-          externalTemp: lastWeatherTemp?.temperature || 0,
+          externalTemp: v2Temperature ?? (lastWeatherTemp?.temperature || 0),
           suggestedFlowTemp: flowTemp,
           actualFlowTemp:
             userState?.currentBoilerFlowTemp ??

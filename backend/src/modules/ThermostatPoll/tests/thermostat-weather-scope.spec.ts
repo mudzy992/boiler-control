@@ -18,11 +18,16 @@ import {
 
 type WeatherRow = { city: string; temperature: number };
 
-function makeHarness(rows: WeatherRow[], pagination: 'on' | 'off') {
+function makeHarness(
+  rows: WeatherRow[],
+  pagination: 'on' | 'off',
+  v2Temperature: number | null = null,
+) {
   process.env[POLL_PAGINATION_FLAG] = pagination;
   const device = {
     id: 1,
     userId: 7,
+    homeProfileId: 10,
     deviceId: 'dev-1',
     lastSnapshotAt: null,
     roomCurrentTemp: 20,
@@ -77,26 +82,30 @@ function makeHarness(rows: WeatherRow[], pagination: 'on' | 'off') {
       Promise.all(operations),
     ),
   };
-  const service = new ThermostatPollingService(
-    prisma as any,
+  const pollingWeather = {
+    getV2CurrentTemperature: jest.fn().mockResolvedValue(v2Temperature),
+  };
+  const service = Reflect.construct(ThermostatPollingService, [
+    prisma,
     {
       fetchSnapshot: jest.fn().mockResolvedValue({
         currentTemp: 20,
         targetTemp: 22,
         powerOn: true,
       }),
-    } as any,
+    },
     {
       calculateFlowTemp: jest.fn().mockResolvedValue({ flowTemp: 45 }),
-    } as any,
-    { notifyUser: jest.fn().mockResolvedValue(undefined) } as any,
-    { processHeatingEvent: jest.fn().mockResolvedValue(undefined) } as any,
+    },
+    { notifyUser: jest.fn().mockResolvedValue(undefined) },
+    { processHeatingEvent: jest.fn().mockResolvedValue(undefined) },
     {
       incrementCounter: jest.fn(),
       setGauge: jest.fn(),
-    } as any,
-  );
-  return { service, weatherCache, boilerHistory };
+    },
+    pollingWeather,
+  ]) as ThermostatPollingService;
+  return { service, weatherCache, boilerHistory, pollingWeather };
 }
 
 describe('ThermostatPollingService weather cache location', () => {
@@ -152,4 +161,38 @@ describe('ThermostatPollingService weather cache location', () => {
       data: expect.objectContaining({ externalTemp: -4 }),
     });
   });
+
+  it('preserves a v2 true zero instead of using the legacy temperature', async () => {
+    const { service, weatherCache, boilerHistory } = makeHarness(
+      [{ city: 'Visoko', temperature: 9 }],
+      'on',
+      0,
+    );
+
+    await service.pollAll();
+
+    expect(boilerHistory.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ externalTemp: 0 }),
+    });
+    expect(weatherCache.findFirst).not.toHaveBeenCalled();
+  });
+
+  it.each(['on', 'off'] as const)(
+    'stores the confirmed device-profile v2 current temperature with pagination=%s',
+    async (pagination) => {
+      const { service, weatherCache, boilerHistory, pollingWeather } =
+        makeHarness([{ city: 'Visoko', temperature: 9 }], pagination, -7);
+
+      await service.pollAll();
+
+      expect(pollingWeather.getV2CurrentTemperature).toHaveBeenCalledWith(
+        7,
+        10,
+      );
+      expect(boilerHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ externalTemp: -7 }),
+      });
+      expect(weatherCache.findFirst).not.toHaveBeenCalled();
+    },
+  );
 });

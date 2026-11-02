@@ -85,6 +85,7 @@ function makeHarness(options: {
     {} as any,
     {} as any,
     metrics,
+    { getV2CurrentTemperature: () => Promise.resolve(null) } as any,
   );
 
   return { service, metrics, snapshotCalls };

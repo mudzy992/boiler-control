@@ -9,6 +9,7 @@ import { OpenMeteoV2Provider } from './openmeteo-v2.provider';
 import { CommonModule } from '../../common/common.module';
 import { RecommendationWeatherService } from './recommendation-weather.service';
 import { BoilerWeatherService } from './boiler-weather.service';
+import { PollingWeatherService } from './polling-weather.service';
 
 @Module({
   imports: [PrismaModule, CommonModule],
@@ -20,12 +21,14 @@ import { BoilerWeatherService } from './boiler-weather.service';
     WeatherHttpAdapter,
     RecommendationWeatherService,
     BoilerWeatherService,
+    PollingWeatherService,
   ],
   exports: [
     WeatherService,
     WeatherHttpAdapter,
     RecommendationWeatherService,
     BoilerWeatherService,
+    PollingWeatherService,
   ],
 })
 export class WeatherModule {}

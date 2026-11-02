@@ -89,6 +89,7 @@ describe('Thermostat polling pagination (PERF-2, PostgreSQL)', () => {
       {} as any,
       {} as any,
       new MetricsService(),
+      { getV2CurrentTemperature: () => Promise.resolve(null) } as any,
     );
     originalFindMany = prisma.thermostatDevice.findMany.bind(
       prisma.thermostatDevice,

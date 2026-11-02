@@ -8,6 +8,7 @@ describe('weather v2 configuration', () => {
       swrEnabled: false,
       recommendationEnabled: false,
       boilerEnabled: false,
+      pollEnabled: false,
       staleAfterMs: 15 * 60 * 1000,
       hideCurrentAfterMs: 60 * 60 * 1000,
     });
@@ -19,6 +20,7 @@ describe('weather v2 configuration', () => {
         WEATHER_LOCATION_V2: 'on',
         WEATHER_RECOMMENDATION_V2: 'on',
         WEATHER_BOILER_V2: 'on',
+        WEATHER_POLL_V2: 'on',
         WEATHER_SWR_ENABLED: 'true',
         WEATHER_STALE_AFTER_MINUTES: '5',
         WEATHER_CURRENT_HIDDEN_AFTER_MINUTES: '30',
@@ -28,6 +30,7 @@ describe('weather v2 configuration', () => {
       swrEnabled: true,
       recommendationEnabled: true,
       boilerEnabled: true,
+      pollEnabled: true,
       staleAfterMs: 5 * 60 * 1000,
       hideCurrentAfterMs: 30 * 60 * 1000,
     });

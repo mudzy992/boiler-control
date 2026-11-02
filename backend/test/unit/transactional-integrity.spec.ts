@@ -5,6 +5,7 @@ import { BoilerService } from '../../src/modules/Boiler/boiler.service';
 import { NotificationsService } from '../../src/modules/Notification/notifications.service';
 import { HeatingRecommendationService } from '../../src/modules/HeatingRecommendation/heating.recommendation.service';
 import { MetricsService } from '../../src/common/metrics.service';
+import { PollingWeatherService } from '../../src/modules/Weather/polling-weather.service';
 
 /**
  * Tests for P1c: Transactional Integrity + Idempotency
@@ -67,6 +68,12 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
           useValue: { processHeatingEvent: jest.fn() },
         },
         MetricsService,
+        {
+          provide: PollingWeatherService,
+          useValue: {
+            getV2CurrentTemperature: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
     }).compile();
 

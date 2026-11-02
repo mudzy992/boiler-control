@@ -45,14 +45,16 @@ export function pollBatchSize(): number {
 }
 
 /**
- * Sam polling koristi ova polja. Učitava se samo korisnikovo `homeLocation`
- * za location-scoped weather cache; `homeProfile` i `intervalLearnings` se ne
- * učitavaju, a ostale podatke po korisniku dobavlja `calculateFlowTemp()`.
+ * Sam polling koristi ova polja. Skalarni `homeProfileId` služi opt-in v2
+ * čitanju, a korisnikovo `homeLocation` legacy fallbacku; `homeProfile` i
+ * `intervalLearnings` relacije se ne učitavaju, a ostale podatke po korisniku
+ * dobavlja `calculateFlowTemp()`.
  */
 export const POLL_DEVICE_SELECT = {
   id: true,
   userId: true,
   deviceId: true,
+  homeProfileId: true,
   roomCurrentTemp: true,
   roomTargetTemp: true,
   lastSnapshotAt: true,

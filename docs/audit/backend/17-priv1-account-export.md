@@ -2,7 +2,7 @@
 
 **Datum:** 2026-11-02
 **Implementacija:** `5627eb0`
-**Status:** implementirano u kodu; CI i PostgreSQL integration dokaz se upisuju nakon završenog runa. Brisanje naloga nije implementirano.
+**Status:** implementirano u kodu. U CI runu `41431564721` prolaze TypeScript, Build, 56 suiteova / 608 testova i 5 integration suiteova / 60 testova, uključujući dvokorisnički PRIV PostgreSQL test. Taj run i dalje ima OpenAPI i mobile failure; deep-sort ispravka i mobile dijagnostika su u `ab040ab` i čekaju novi run. Brisanje naloga nije implementirano.
 
 ## Obim i vlasničke odluke
 
@@ -97,6 +97,8 @@ Rezultat: 2 suitea / 11 testova. Pokriveno je flag-off bez DB poziva, svih 13 ko
 Objedinjeni weather/PRIV/statički ugovorni prolaz je 10 suiteova / 84 testa. CI-ekvivalentni ESLint ima 0 errors i 2 postojeća warnings. `frontend/src/types/api.d.ts` je regenerisan iz ugovora i `npm run openapi:check` prolazi.
 
 `test/integration/account-export.integration.spec.ts` koristi stvarni AppModule, JWT guard i PostgreSQL. Sija dva kompletna korisnička skupa, globalni Tuya token i oba weather cache zapisa s jedinstvenim markerima. Provjerava 401/404, kompletnost, dvokorisničku izolaciju, tajne i storage markere, no-store te row/byte 413. Taj rezultat se ne proglašava lokalnim jer baza ovdje nije dostupna.
+
+**CI dokaz:** run `41431564721` prijavljuje `tsc: 0`, `eslint: 0`, prolazni Build, 56 suiteova / 608 testova i zasebno 5 integration suiteova / 60 testova. PRIV integration prolazi i u coverage i u integration dijelu. OpenAPI sync je pao zbog nepotpuno sortirane serijalizacije novog fragmenta; `ab040ab` primjenjuje isti deep-sort kao stvarni generator i dodaje byte-stabilnu regresiju. Semantička jednakost prije/poslije sortiranja je lokalno dokazana, a puni CI sync se ponovo provjerava.
 
 ## Rollback i preostali rad
 

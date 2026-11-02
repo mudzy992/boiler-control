@@ -11,6 +11,9 @@ Talas D završi.
 - **Lokalni dokazi nakon ispravki:** backend ciljani weather/PRIV/contract prolaz 10 suiteova / 84 testa; zasebni PRIV prolaz 2 suitea / 11 testova; točna CI ESLint komanda 0 errors / 2 postojeća warnings. Mobile identična CI komanda prolazi 23 suiteova / 123 testa / 32 snapshota. Frontend OpenAPI check, type-check, e2e type-check, lint i 11 suiteova / 92 testa prolaze. PostgreSQL PRIV integration je dodan, ali njegov rezultat čeka CI.
 - **Detalji:** `backend/05-weather.md`, `backend/17-priv1-account-export.md`, `mobile/07-implementation-plan.md`. Puni current+hourly+daily SDK/DST fixture, produkcijski rollout, distribuirani SWR i fizički QA nisu dokazani.
 - **Sljedeće:** pushati code/docs commit, pollati novi run do completed, pročitati jobs i annotations, zatim upisati konačne rezultate. Ne počinjati brisanje naloga bez vlasničke backup-retention i eventualne legal-retention politike.
+- **CI `41431564721`:** backend TypeScript/lint/Build prolaze, uz 56 suiteova / 608 testova i 5 integration suiteova / 60 testova; PRIV dvokorisnički PostgreSQL test prolazi. Backend je crven samo na OpenAPI sync, frontend samo na FE2-7, a mobile ponovo na Unit tests bez detalja.
+- **Ispravka `ab040ab`:** OpenAPI je semantički nepromijenjen, ali je deep-sortiran istim algoritmom kao puni generator i dobiven je byte-stabilni test. Mobile CI sada koristi postojeći sigurni `jest_report.cjs` uz očuvan originalnog exit koda; lokalno prolazi 23 suiteova / 123 testa / 32 snapshota i ispravno objavljuje Jest summary.
+- **Neposredni sljedeći korak:** pushati `ab040ab` i docs, pa iz novog runa pročitati OpenAPI rezultat i konkretni mobile failing test. Ne mijenjati mobile test paralelizam niti preskočiti test dok uzrok nije poznat.
 
 ## Stanje na kraju sesije (2026-11-01, VERIFICIRANO)
 

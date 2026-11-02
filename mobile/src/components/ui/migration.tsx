@@ -29,6 +29,8 @@ export type UiImplementation = 'legacy' | 'nativewind';
  */
 const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
   'Login',
+  'NotificationPreferences',
+  'Notifications',
   'Register',
   'UpdateRequired',
 ]);

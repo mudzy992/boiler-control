@@ -185,6 +185,7 @@ export function Switch(props: UiProps) {
   return (
     <RNSwitch
       {...nativeProps(rest, ['isChecked', 'isDisabled', 'onToggle', 'onTrackColor', 'colorScheme', 'size'])}
+      accessibilityRole="switch"
       value={isChecked}
       disabled={disabled ?? isDisabled}
       onValueChange={onValueChange ?? onToggle}

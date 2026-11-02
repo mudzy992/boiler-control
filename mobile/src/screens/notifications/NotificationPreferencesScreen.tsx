@@ -10,12 +10,13 @@ import {
   Icon,
   Divider,
   ScrollView,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
 import { useTranslation } from '../../hooks/useTranslation';
+import { withUiImplementation } from '../../components/ui/migration';
 
 interface NotificationPreference {
   id: number;
@@ -32,7 +33,7 @@ const getTypeLabel = (type: string, t: (key: string) => string) =>
 const getTypeDescription = (type: string, t: (key: string) => string) =>
   t(`notifications.typeDescriptions.${type}`) || t('notifications.preferencesDefaultDesc');
 
-export const NotificationPreferencesScreen: React.FC = () => {
+const NotificationPreferencesScreenContent: React.FC = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -130,3 +131,8 @@ export const NotificationPreferencesScreen: React.FC = () => {
     </Box>
   );
 };
+
+export const NotificationPreferencesScreen = withUiImplementation(
+  'NotificationPreferences',
+  NotificationPreferencesScreenContent,
+);

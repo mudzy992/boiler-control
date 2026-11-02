@@ -11,12 +11,13 @@ import {
   Icon,
   Badge,
   Divider,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { apiClient } from '../../services/api/client';
 import { useTranslation } from '../../hooks/useTranslation';
+import { withUiImplementation } from '../../components/ui/migration';
 
 interface NotificationItem {
   id: number;
@@ -59,7 +60,7 @@ const getTypeIcon = (type: string) => {
   return icons[type] || 'notifications-outline';
 };
 
-export const NotificationsScreen: React.FC = () => {
+const NotificationsScreenContent: React.FC = () => {
   const queryClient = useQueryClient();
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
@@ -258,3 +259,8 @@ export const NotificationsScreen: React.FC = () => {
     </Box>
   );
 };
+
+export const NotificationsScreen = withUiImplementation(
+  'Notifications',
+  NotificationsScreenContent,
+);

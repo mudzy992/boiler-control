@@ -7,6 +7,7 @@ import {
   IntervalLearningInput,
 } from '../Heating/engine/types';
 import { WeatherService } from '../Weather/weather.service';
+import { BoilerWeatherService } from '../Weather/boiler-weather.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { MetricsService } from '../../common/metrics.service';
 
@@ -37,6 +38,7 @@ export class BoilerService {
     private prisma: PrismaService,
     private weatherService: WeatherService,
     private metricsService: MetricsService,
+    private readonly boilerWeather: BoilerWeatherService,
   ) {}
 
   /**
@@ -55,16 +57,28 @@ export class BoilerService {
     // -----------------------------
     let tempMin = 0;
     let tempMax = 0;
+    // The same first profile drives the existing calculation and opt-in v2 weather.
+    const profile = userId
+      ? await this.prisma.homeProfile.findFirst({ where: { userId } })
+      : null;
 
     if (userId) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
-      const weather = await this.weatherService.getTodayWeather(
-        user?.homeLocation ?? this.DEFAULT_ANON_CITY,
-      );
-      tempMin = weather.temp_min!;
-      tempMax = weather.temp_max!;
+      const v2Weather = profile
+        ? await this.boilerWeather.getV2WeatherInput(userId, profile.id)
+        : null;
+      if (v2Weather) {
+        tempMin = v2Weather.tempMin;
+        tempMax = v2Weather.tempMax;
+      } else {
+        const user = await this.prisma.user.findUnique({
+          where: { id: userId },
+        });
+        const weather = await this.weatherService.getTodayWeather(
+          user?.homeLocation ?? this.DEFAULT_ANON_CITY,
+        );
+        tempMin = weather.temp_min!;
+        tempMax = weather.temp_max!;
+      }
     } else {
       const weather = await this.weatherService.getTodayWeather(
         this.DEFAULT_ANON_CITY,
@@ -85,33 +99,27 @@ export class BoilerService {
 
     let homeProfileId: number | null = null;
 
-    if (userId) {
-      const profile = await this.prisma.homeProfile.findFirst({
-        where: { userId },
-      });
+    if (profile) {
+      homeProfileId = profile.id;
+      homeProfileInput = {
+        floorArea: profile.floorArea,
+        learningOffset: profile.learningOffset,
+        insulationFactor: 1,
+        confidence: profile.learningConfidence,
+      };
+      mode = 'PROFILE_ONLY';
 
-      if (profile) {
-        homeProfileId = profile.id;
-        homeProfileInput = {
-          floorArea: profile.floorArea,
-          learningOffset: profile.learningOffset,
-          insulationFactor: 1,
-          confidence: profile.learningConfidence,
-        };
-        mode = 'PROFILE_ONLY';
-
-        // --- SEASONALITY CHECK ---
-        const { seasonMode } = profile;
-        if (seasonMode === 'SUMMER') {
+      // --- SEASONALITY CHECK ---
+      const { seasonMode } = profile;
+      if (seasonMode === 'SUMMER') {
+        return this.createOffResult(intervalKey, mode);
+      }
+      if (seasonMode === 'AUTO') {
+        // Simple auto logic: if average of min/max > 15°C -> SUMMER
+        const avgTemp = (tempMin + tempMax) / 2;
+        if (avgTemp > 16) {
+          // 16°C cut-off
           return this.createOffResult(intervalKey, mode);
-        }
-        if (seasonMode === 'AUTO') {
-          // Simple auto logic: if average of min/max > 15°C -> SUMMER
-          const avgTemp = (tempMin + tempMax) / 2;
-          if (avgTemp > 16) {
-            // 16°C cut-off
-            return this.createOffResult(intervalKey, mode);
-          }
         }
       }
     }

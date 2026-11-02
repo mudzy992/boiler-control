@@ -156,7 +156,7 @@ Nakon legacy ispravke, ista SDK klasa greške potvrđena je i na `OpenMeteoV2Pro
 
 V2 forecast sada koristi isti `fetchOpenMeteoFlatbuffers` kao legacy servis. Zadržani su stvarni `AbortSignal`, postojeći `WeatherHttpAdapter`, 72 sata/7 dana, UTC/DST mapiranje i svi postojeći flagovi. Nema migracije, API promjene ni uključivanja v2 u produkciji.
 
-**Dokazi:** v2 fixture suite sada prolazi 5/5; provider+fixture+legacy suiteovi prolaze 3 suitea / 18 testova, a svi Weather testovi 6 suiteova / 35 testova. Generator ostaje `in_sync`, Prettier prolazi, a tačna CI ESLint naredba ima 0 errors i dva postojeća warnings. Kompletan type-check/build/test i dalje se potvrđuje kroz CI.
+**Dokazi:** v2 fixture suite sada prolazi 5/5; provider+fixture+legacy suiteovi prolaze 3 suitea / 18 testova, a svi Weather testovi 6 suiteova / 35 testova. Generator ostaje `in_sync`, Prettier prolazi, a tačna CI ESLint naredba ima 0 errors i dva postojeća warnings. CI run `41457554020` na `34b0024` je potpuno zelen: backend `tsc: 0`, `eslint: 0`, Build/OpenAPI success, 58 suiteova / 621 test i 5 integration suiteova / 60 testova; mobile i frontend su success, bez failure annotations.
 
 **Granica dokaza:** 503 i validni FlatBuffers odgovori su stubovani/generated ulazi. Ovo ne predstavlja live provider capture, produkcijski rollout ni dokaz da Open-Meteo trenutno vraća određeni status.
 

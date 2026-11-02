@@ -16,6 +16,10 @@ const engineResult: FlowTempResult = {
   finalTemp: 50.998456,
   confidence: 0.72,
 };
+const engineCalculate = Reflect.get(
+  FlowTemperatureEngine,
+  'calculate',
+) as jest.Mock;
 
 function makeService(prisma: unknown): HeatingRecommendationService {
   return Reflect.construct(HeatingRecommendationService, [prisma]);
@@ -50,6 +54,7 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
         findUnique: jest.fn().mockResolvedValue({
           id: 10,
           homeProfile: {
+            location: 'Visoko',
             floorArea: 150,
             learningOffset: 0.25,
             learningConfidence: 0.72,
@@ -77,6 +82,9 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
       boilerFlowTemp: 50,
     });
 
+    expect(engineCalculate).toHaveBeenCalledWith(
+      expect.objectContaining({ weather: { tempMin: -5, tempMax: 0 } }),
+    );
     expect(prisma.recommendation.create).toHaveBeenCalledTimes(1);
     const data = prisma.recommendation.create.mock.calls[0][0].data;
     expect(data.recommendedFlowTemp).toBe(engineResult.finalTemp);
@@ -133,5 +141,54 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
     expect(data.breakdown.version).toBe(1);
     expect(data.breakdown.samples).toBe(0);
     expect(data.breakdown.expectedHeatTimeMin).toBe(0);
+  });
+
+  it('does not use another city weather cache for the device profile', async () => {
+    const weatherCache = {
+      findFirst: jest.fn((args: any) => {
+        const city = args?.where?.city;
+        return Promise.resolve(
+          city ? null : { city: 'Mostar', temp_min: 8, temp_max: 12 },
+        );
+      }),
+    };
+    const prisma = {
+      thermostatDevice: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 10,
+          homeProfile: {
+            location: 'Visoko',
+            floorArea: 150,
+            learningOffset: 0,
+            learningConfidence: 0.5,
+            intervalLearnings: [],
+          },
+        }),
+      },
+      weatherCache,
+      heatingIntervalLearning: { updateMany: jest.fn() },
+      recommendation: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: 1 }),
+        update: jest.fn(),
+      },
+    };
+
+    await makeService(prisma).processHeatingEvent({
+      userId: 1,
+      deviceId: 10,
+      timestampStart: new Date('2026-11-01T06:00:00.000Z'),
+      roomCurrentTemp: 20,
+      roomTargetTemp: 22,
+      boilerFlowTemp: 50,
+    });
+
+    expect(engineCalculate).toHaveBeenCalledWith(
+      expect.objectContaining({ weather: { tempMin: 0, tempMax: 0 } }),
+    );
+    expect(weatherCache.findFirst).toHaveBeenCalledWith({
+      where: { city: 'Visoko' },
+      orderBy: { fetchedAt: 'desc' },
+    });
   });
 });

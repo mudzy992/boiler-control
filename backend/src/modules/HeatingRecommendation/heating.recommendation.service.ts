@@ -96,9 +96,13 @@ export class HeatingRecommendationService {
 
     let tempMin = 0;
     let tempMax = 0;
-    const weather = await this.prisma.weatherCache.findFirst({
-      orderBy: { fetchedAt: 'desc' },
-    });
+    const city = device.homeProfile.location;
+    const weather = city
+      ? await this.prisma.weatherCache.findFirst({
+          where: { city },
+          orderBy: { fetchedAt: 'desc' },
+        })
+      : null;
     if (weather) {
       tempMin = weather.temp_min!;
       tempMax = weather.temp_max!;

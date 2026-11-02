@@ -45,9 +45,9 @@ export function pollBatchSize(): number {
 }
 
 /**
- * Sam polling koristi ova polja. `user`, `homeProfile` i `intervalLearnings`
- * se ne učitavaju u listu uredjaja; potrebne podatke po korisniku već dobavlja
- * `calculateFlowTemp()` / state machine po potrebi.
+ * Sam polling koristi ova polja. Učitava se samo korisnikovo `homeLocation`
+ * za location-scoped weather cache; `homeProfile` i `intervalLearnings` se ne
+ * učitavaju, a ostale podatke po korisniku dobavlja `calculateFlowTemp()`.
  */
 export const POLL_DEVICE_SELECT = {
   id: true,
@@ -56,4 +56,5 @@ export const POLL_DEVICE_SELECT = {
   roomCurrentTemp: true,
   roomTargetTemp: true,
   lastSnapshotAt: true,
+  user: { select: { homeLocation: true } },
 } as const;

@@ -375,6 +375,7 @@ export class ThermostatPollingService {
         select: { currentBoilerFlowTemp: true },
       }),
       this.prisma.weatherCache.findFirst({
+        where: { city: device.user?.homeLocation ?? 'Visoko' },
         orderBy: { fetchedAt: 'desc' },
       }),
     ]);

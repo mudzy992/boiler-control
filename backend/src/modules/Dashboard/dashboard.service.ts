@@ -725,6 +725,7 @@ export class DashboardService {
     } catch {
       // Fallback to cache if fetch fails
       const cached = await this.prisma.weatherCache.findFirst({
+        where: { city: this.DEFAULT_CITY },
         orderBy: { fetchedAt: 'desc' },
       });
       return cached ? this.transformWeather(cached) : null;

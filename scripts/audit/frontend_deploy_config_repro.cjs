@@ -9,23 +9,19 @@ if (process.argv.includes('--help')) {
   console.log(
     'Upotreba: node scripts/audit/frontend_deploy_config_repro.cjs\n' +
       '\n' +
-      'Provjerava FE2-7 (FE-009) bez dockera, mreze i baze:\n' +
+      'Provjerava FE2-7 (FE-009) bez dockera, mreze i baze. Traefik labele upravlja\n' +
+      'Coolify izvan repozitorija i ova skripta ih ne cita:\n' +
       '  1. `frontend/docker-compose.yml` NE postoji (obrisana varijanta);\n' +
-      '  2. frontend port u korijenskom compose == `listen` u `frontend/nginx.conf`\n' +
-      '     (obrisana varijanta je imala 3021, nginx slusa 80 -> Traefik ne bi dosao\n' +
-      '     do kontejnera);\n' +
-      '  3. Traefik `loadbalancer.server.port` == isti port;\n' +
-      '  4. build arg `VITE_API_URL` == dogovoreni produkcijski API base;\n' +
-      '  5. `api.ts` nema `localhost:3020` fallback;\n' +
-      '  6. backend servis NEMA stripprefix (backend nema setGlobalPrefix, kontroleri\n' +
-      '     nose `api/...`, pa bi skidanje prefiksa dalo 404 na svim rutama);\n' +
-      '  7. backend `FRONTEND_URL` == origin iz frontend Traefik rule-a (backend ga\n' +
-      '     koristi kao CORS origin i baca gresku ako nedostaje);\n' +
-      '  8. ako postoji `frontend/dist`: ugradjen API base prisutan, `localhost:3020`\n' +
+      '  2. frontend port u korijenskom compose == `listen` u `frontend/nginx.conf`;\n' +
+      '  3. build arg `VITE_API_URL` == dogovoreni produkcijski API base;\n' +
+      '  4. `api.ts` nema `localhost:3020` fallback;\n' +
+      '  5. backend `FRONTEND_URL` == dogovoreni CORS origin (backend ga koristi kao\n' +
+      '     CORS origin i baca gresku ako nedostaje);\n' +
+      '  6. ako postoji `frontend/dist`: ugradjen API base prisutan, `localhost:3020`\n' +
       '     odsutan.\n' +
       '\n' +
       'Za `docker compose config` i build slike treba docker - ovdje nije instaliran,\n' +
-      'pa ih pokriva CI korak "Deploy config and build args (FE2-7)".\n' +
+      'pa ih pokriva CI korak "Deploy config consistent (FE2-7)".\n' +
       'Trazi js-yaml u backend/node_modules ili frontend/node_modules (npm ci).'
   );
   process.exit(0);
@@ -53,7 +49,6 @@ function loadYaml() {
 
 const EXPECTED_API_BASE = 'https://api.boiler-control.ba101.top/api';
 const EXPECTED_FRONTEND_HOST = 'boiler-control.ba101.top';
-const EXPECTED_API_HOST = 'api.boiler-control.ba101.top';
 
 /**
  * Uklanja komentare iz TS/JS izvora, ali NE dira sadrzaj stringova.
@@ -98,18 +93,12 @@ function stripComments(source) {
   return out;
 }
 
-function labelsOf(service) {
-  return service.labels || [];
-}
-
-function labelValue(labels, key) {
-  const hit = labels.find((l) => String(l).startsWith(`${key}=`));
-  return hit === undefined ? undefined : String(hit).slice(key.length + 1);
-}
-
 async function main() {
   const yaml = loadYaml();
-  const report = { scope: 'offline; bez dockera/mreze/baze' };
+  const report = {
+    scope: 'offline; bez dockera/mreze/baze',
+    traefikLabels: 'ne provjeravaju se; upravlja ih Coolify',
+  };
 
   // 1. obrisana varijanta ne smije postojati
   assert.equal(
@@ -146,21 +135,7 @@ async function main() {
   report.nginxListenPort = Number(nginxPort);
   report.frontendExpose = exposed;
 
-  // 3. traefik loadbalancer port == isti port
-  const feLabels = labelsOf(frontend);
-  const lbPort = labelValue(feLabels, 'traefik.http.services.boiler-frontend.loadbalancer.server.port');
-  assert.equal(lbPort, nginxPort, `traefik loadbalancer port mora biti ${nginxPort}, bilo ${lbPort}`);
-  report.traefikLoadbalancerPort = Number(lbPort);
-
-  const feHost = labelValue(feLabels, 'traefik.http.routers.boiler-frontend.rule');
-  assert.ok(feHost, 'frontend mora imati traefik rule');
-  assert.ok(
-    feHost.includes(EXPECTED_FRONTEND_HOST),
-    `frontend rule mora sadrzavati ${EXPECTED_FRONTEND_HOST}, bilo: ${feHost}`
-  );
-  report.frontendHost = EXPECTED_FRONTEND_HOST;
-
-  // 4. build arg VITE_API_URL
+  // 3. build arg VITE_API_URL
   const buildArg = frontend.build && frontend.build.args && frontend.build.args.VITE_API_URL;
   assert.equal(
     buildArg,
@@ -169,15 +144,7 @@ async function main() {
   );
   report.viteApiUrl = buildArg;
 
-  const beHost = labelValue(labelsOf(backend), 'traefik.http.routers.boiler-backend.rule');
-  assert.ok(beHost, 'backend mora imati traefik rule');
-  assert.ok(
-    beHost.includes(EXPECTED_API_HOST),
-    `backend rule mora sadrzavati ${EXPECTED_API_HOST}, bilo: ${beHost}`
-  );
-  report.apiHost = EXPECTED_API_HOST;
-
-  // 5. api.ts bez localhost fallbacka
+  // 4. api.ts bez localhost fallbacka
   //
   // Provjeravamo SAMO kod (komentari skinuti): JSDoc iznad namjerno dokumentuje
   // uklonjeni fallback i spominje `http://localhost:3020/api`, pa bi naivna
@@ -202,17 +169,7 @@ async function main() {
   report.apiTsFallback = 'nema';
   report.apiTsKomentaraSkinutoZnakova = apiText.length - apiCode.length;
 
-  // 6. backend bez stripprefix
-  const beLabels = labelsOf(backend);
-  const stripLabels = beLabels.filter((l) => String(l).includes('stripprefix'));
-  assert.deepEqual(
-    stripLabels,
-    [],
-    `backend ne smije imati stripprefix (nema setGlobalPrefix), bilo ${JSON.stringify(stripLabels)}`
-  );
-  report.backendStripprefix = 'nema';
-
-  // 7. FRONTEND_URL == origin frontend-a (CORS)
+  // 5. FRONTEND_URL == dogovoreni CORS origin
   const env = backend.environment || [];
   const frontendUrlEntry = env
     .map(String)
@@ -226,7 +183,7 @@ async function main() {
   );
   report.corsOrigin = frontendUrl;
 
-  // 8. dist provjera (samo ako je build vec pokrenut)
+  // 6. dist provjera (samo ako je build vec pokrenut)
   if (exists('frontend/dist')) {
     const assetsDir = path.join(ROOT, 'frontend/dist/assets');
     const files = fs.existsSync(assetsDir)

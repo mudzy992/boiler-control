@@ -221,7 +221,8 @@ jobs:
       # FE2-7: mjerodavna deploy konfiguracija. `frontend/docker-compose.yml`
       # je obrisan jer je bio proturjecan korijenskom setu (port 3021 vs nginx
       # `listen 80`, drugaciji API host). Bez ove provjere takav raskid bi se
-      # mogao vratiti a da CI ostane zelen.
+      # mogao vratiti a da CI ostane zelen. Traefik labele namjerno upravlja
+      # Coolify izvan repozitorija, pa ovaj korak ne cita service.labels.
       - name: Deploy config consistent (FE2-7)
         working-directory: .
         run: |

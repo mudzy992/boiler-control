@@ -132,7 +132,7 @@
 
 `backend/src/modules/Weather/tests/openmeteo-v2.fixture.spec.ts` čita komitovane bajtove, provjerava hash i byte-identičnost s generatorom, zatim ih kroz stubovani `fetch` prosljeđuje stvarnom `openmeteo` 1.2.3 / `@openmeteo/sdk` 1.28.0 parseru i stvarnom `OpenMeteoV2Provider` mapiranju. Proljetni scenario dokazuje preskok 02:00 → 03:00, a jesenji zadržava oba 01:00 s EDT/EST ofsetom. Oba pokrivaju 72 sata/7 dana, prave nule, `NaN` → `null`, sunrise/sunset kroz `valuesInt64` i `INT64_MAX` kao `null`.
 
-**Dokazi:** novi suite 4/4; zajedno s postojećim provider suiteom 2 suitea / 9 testova; svi Weather suiteovi 5/26. Generator prijavljuje `in_sync`, a tri mutacije sa jedinstvenim sidrima potvrđuju da promjena vremena ruši byte-sync, pomjeren sunrise ruši replay, a pomjeren hourly UTC instant ruši DST asserte. CI-ekvivalentni backend ESLint ima 0 errors i dva postojeća warnings. Prettier check prolazi.
+**Dokazi:** novi suite 4/4; zajedno s postojećim provider suiteom 2 suitea / 9 testova; svi Weather suiteovi 5/26. Generator prijavljuje `in_sync`, a tri mutacije sa jedinstvenim sidrima potvrđuju da promjena vremena ruši byte-sync, pomjeren sunrise ruši replay, a pomjeren hourly UTC instant ruši DST asserte. CI-ekvivalentni backend ESLint ima 0 errors i dva postojeća warnings. Prettier check prolazi. CI run `41449372725` na `223193d` je potpuno zelen: backend `tsc: 0`, `eslint: 0`, 57 suiteova / 612 testova i 5 integration suiteova / 60 testova; mobile i frontend su success, bez failure annotations.
 
 **Granica dokaza:** ovo zatvara generisani schema/parser/application replay, ali ne i stvarni provider capture. Ne dokazuje da Open-Meteo u produkciji šalje iste vrijednosti, niti zamjenjuje odobren snimak stvarnog current+hourly+daily odgovora.
 

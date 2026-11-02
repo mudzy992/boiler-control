@@ -2215,6 +2215,16 @@ dokaz. Stari fajlovi nisu retroaktivno validirani; download/ownership/retention,
 filesystem/symlink i produkcijski deploy nisu mijenjani niti verificirani.
 Preostali SEC-5 opseg ostaje otvoren.
 
+### SEC-5 — owner-only Gas fajlovi verificirani stvarnim HTTP tokom
+
+**STATUS: OWNER-ONLY DOKAZ ZAVRŠEN (`08391fc`); PREOSTALI OPSEG OTVOREN.** Izvor je već imao `findFirst({ id, userId })` za pregledani Gas download/upload/delete, pa ovaj slice ne mijenja produkcijski kod. Novi `backend/test/integration/gas-files.integration.spec.ts` pokreće stvarni `AppModule`, `JwtAuthGuard`, Prisma/PostgreSQL i privremeni `UPLOAD_ROOT_PATH` s dva korisnika.
+
+- **Pet scenarija:** anonymous 401; owner PDF/JPEG download s tačnim bajtovima i headerima; identičan foreign/missing 404 za obje download rute; foreign upload/invoice delete/reading delete bez file/DB side effecta; owner upload/download kroz puni HTTP tok.
+- **Lokalno:** postojeći **4 suitea / 47 testova**, helper, OpenAPI bez diffa i tačan ESLint **0 errors / 2 postojeća warnings**. Integration spec je pronađen; lokalna baza nije pokretana.
+- **CI `41536884218`:** backend **73/724 + 7/68 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**; sva tri joba success, nula failure annotations. Spec je obuhvaćen objema relevantnim Jest brojkama.
+- **Bez scope širenja:** nema production code, migracije/backfilla, API/DTO/OpenAPI, storage-schema, compose/deployment, flag ili installed-mobile promjene. Rollback je revert test/docs slicea.
+- **Preostalo:** puni parser/antivirus/polyglot, stari fajlovi, retention/restore, filesystem/symlink/deploy i dokumentovani TOCTOU/reconciliation. Brisanje po odobrenoj retention politici i produkcijska infrastruktura nisu dokazani ovim testom.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

@@ -3,9 +3,19 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-02 — SEC-5 upload content-signature
+## Nastavak 2026-11-02 — SEC-5 owner-only Gas fajlovi
 
-- **Verificirani code HEAD:** `5d14a8b`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `8123b3c`, nakon vlasnikovog mergea SEC-7B. Vlasnik ručno radi merge, PR se ne otvara.
+- **Verificirani test HEAD:** `08391fc`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `d83cdfe`, nakon vlasnikovog mergea prvog SEC-5 slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **SEC-5 owner-only verifikacija (`08391fc`):** izvor je već imao `findFirst({ id, userId })` za Gas download/upload/delete, pa nije bilo produkcijske ispravke. Novi integration spec koristi stvarni `AppModule`, `JwtAuthGuard`, PostgreSQL i privremeni storage s dva korisnika.
+  - Pet scenarija dokazuje: anonimno 401; owner 200 s tačnim PDF/JPEG bajtovima i postojećim headerima; identičan foreign/missing 404 za obje download rute; foreign upload/invoice delete/reading delete bez file ili DB side effecta; te owner upload/download kroz puni HTTP tok.
+  - Lokalne kontrole: postojeći **4 suitea / 47 testova**, helper, OpenAPI bez diffa i tačan ESLint **0 errors / 2 postojeća warnings**. Novi spec je potvrđen u integration discovery; lokalna baza nije pokretana.
+  - CI `41536884218`: backend **73/724 + 7/68 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations. Novi spec je uključen u obje relevantne Jest brojke.
+  - Nema production code, migracije/backfilla, API/DTO/OpenAPI, storage-schema, compose/deployment, flag ili installed-mobile promjene. Rollback je revert test/docs slicea.
+  - **Preostalo:** puni parser/antivirus/polyglot, stari fajlovi, retention/restore, filesystem/symlink/deploy i već dokumentovani TOCTOU/reconciliation. Ovaj test ne dokazuje produkcijsku infrastrukturu niti brisanje po odobrenoj retention politici.
+
+## Raniji nastavak 2026-11-02 — SEC-5 upload content-signature
+
+- **Tadašnji SEC-5 signature code HEAD:** `5d14a8b`; udaljena sesijska grana je bila istog SHA-a prije završnog docs upisa. `origin/main` je tada posljednji put provjeren na `8123b3c`, nakon vlasnikovog mergea SEC-7B. Vlasnik ručno radi merge, PR se ne otvara.
 - **SEC-5 prvi dio (`5d14a8b`):** zajednički `FileStorageService.storeFile` sada prije kreiranja odredišnog direktorija i upisa provjerava osnovni potpis PDF, JPEG, PNG i WebP sadržaja. Za lažni/mismatched sadržaj i sadržaj kraći od potpisa servis vraća 400; postojeće MIME allowliste i metadata size limit ostaju ispred novih provjera, a random storage naziv i sanitizacija originalnog naziva su nepromijenjeni.
   - Na čistom HEAD-u helper je reproducirao `nonPdfWithPdfMimeStored: true`. Prvih deset testova je test-first dalo **4 očekivana pada / 6 kontrola**; nakon dopune truncated PDF/PNG slučajeva, mutation guard bez `validateContent` daje **6 očekivanih padova / 6 kontrola**, a vraćeni kod prolazi **12/12**.
   - Lokalni završni relevantni skup je **22 suitea / 292 testa + 8 skip**, uključujući postojeći multipart controller/`FileInterceptor` HTTP test. Helper sada potvrđuje validan PDF, sanitizovan naziv i 400 za lažni PDF, nedozvoljen MIME, preveliku metadata veličinu i parent traversal. Tačan ESLint ima **0 errors / 2 postojeća warnings**, a OpenAPI check nema diff.

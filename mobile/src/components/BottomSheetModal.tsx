@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
-import { Box, useColorModeValue } from 'native-base';
+import { Box, useColorModeValue } from './ui/compat';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';

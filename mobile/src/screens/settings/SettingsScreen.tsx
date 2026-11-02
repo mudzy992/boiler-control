@@ -14,7 +14,7 @@ import {
   ScrollView,
   Icon,
   useToast,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { getAppVersion } from '../../config/version.config';
 import { useAuth } from '../../hooks/useAuth';
@@ -36,6 +36,7 @@ import * as Notifications from 'expo-notifications';
 import { Linking } from 'react-native';
 import { AppStorage } from '../../services/storage/AppStorage';
 import { apiClient } from '../../services/api/client';
+import { withUiImplementation } from '../../components/ui/migration';
 
 /**
  * MO2-6 (MO-008): tip preferencije za dnevni podsjetnik o plinu.
@@ -52,7 +53,7 @@ import { apiClient } from '../../services/api/client';
  */
 const GAS_READING_REMINDER_TYPE = 'GAS_READING_REMINDER';
 
-export const SettingsScreen = () => {
+const SettingsScreenContent = () => {
   const { user, logout } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const navigation = useNavigation();
@@ -675,3 +676,5 @@ export const SettingsScreen = () => {
     </Box>
   );
 };
+
+export const SettingsScreen = withUiImplementation('Settings', SettingsScreenContent);

@@ -13,14 +13,15 @@ import {
   useToast,
   Spinner,
   ScrollView,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { useAuth } from '../../hooks/useAuth';
 import { FormInput } from '../../components/FormInput';
 import { apiClient } from '../../services/api/client';
+import { withUiImplementation } from '../../components/ui/migration';
 
 const VAT_RATE = 0.17;
 
-export const ProfileScreen = () => {
+const ProfileScreenContent = () => {
   const { user, logout, setUser } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const toast = useToast();
@@ -260,3 +261,5 @@ export const ProfileScreen = () => {
     </Box>
   );
 };
+
+export const ProfileScreen = withUiImplementation('Profile', ProfileScreenContent);

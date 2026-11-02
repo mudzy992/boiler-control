@@ -31,6 +31,7 @@ const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
   'Login',
   'NotificationPreferences',
   'Notifications',
+  'Profile',
   'Register',
   'UpdateRequired',
 ]);

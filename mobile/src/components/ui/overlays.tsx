@@ -220,6 +220,7 @@ const ToastContext = createContext<ToastController>({
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const { colorMode } = useAppColorMode();
   const [toasts, setToasts] = useState<(ToastOptions & { id: number })[]>([]);
+  const toastsRef = useRef(toasts);
   const nextId = useRef(1);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
@@ -227,12 +228,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const timer = timers.current.get(id);
     if (timer) clearTimeout(timer);
     timers.current.delete(id);
-    setToasts((current) => current.filter((toast) => toast.id !== id));
+    toastsRef.current = toastsRef.current.filter((toast) => toast.id !== id);
+    setToasts(toastsRef.current);
   }, []);
 
   const closeAll = useCallback(() => {
     for (const timer of timers.current.values()) clearTimeout(timer);
     timers.current.clear();
+    toastsRef.current = [];
     setToasts([]);
   }, []);
 
@@ -249,7 +252,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       const id = options.id ?? nextId.current++;
       const existing = timers.current.get(id);
       if (existing) clearTimeout(existing);
-      setToasts((current) => [...current.filter((toast) => toast.id !== id), { ...options, id }]);
+      const nextToasts = [
+        ...toastsRef.current.filter((toast) => toast.id !== id),
+        { ...options, id },
+      ];
+      toastsRef.current = nextToasts;
+      setToasts(nextToasts);
       if (options.duration !== null) {
         const timer = setTimeout(() => close(id), options.duration ?? 4000);
         timers.current.set(id, timer);
@@ -264,9 +272,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       show,
       close,
       closeAll,
-      isActive: (id) => toasts.some((toast) => toast.id === id),
+      isActive: (id) => toastsRef.current.some((toast) => toast.id === id),
     }),
-    [close, closeAll, show, toasts],
+    [close, closeAll, show],
   );
 
   const top = toasts.filter((toast) => toast.placement !== 'bottom');

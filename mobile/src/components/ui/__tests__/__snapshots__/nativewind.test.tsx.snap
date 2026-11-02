@@ -1,0 +1,411 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`MO2-14 NativeWind primitives renders the core kit in dark mode 1`] = `
+<>
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "additive",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#0b0f1a",
+        "padding": 16,
+      }
+    }
+  >
+    <View
+      className="flex flex-col"
+      style={
+        {
+          "gap": 12,
+        }
+      }
+    >
+      <View
+        className="flex flex-row"
+        style={
+          {
+            "alignItems": "center",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignSelf": "flex-start",
+              "backgroundColor": "#14532d",
+              "borderColor": "transparent",
+              "borderRadius": 6,
+              "borderWidth": 0,
+              "color": "#86efac",
+              "paddingBottom": 4,
+              "paddingLeft": 8,
+              "paddingRight": 8,
+              "paddingTop": 4,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#86efac",
+                "fontSize": 12,
+                "fontWeight": "600",
+              }
+            }
+          >
+            Ready
+          </Text>
+        </View>
+        <Text
+          style={
+            {
+              "color": "#f3f4f6",
+            }
+          }
+        >
+          Boiler
+        </Text>
+      </View>
+      <View
+        accessibilityRole="progressbar"
+        accessibilityValue={
+          {
+            "max": 100,
+            "min": 0,
+            "now": 62.5,
+          }
+        }
+        style={
+          {
+            "backgroundColor": "#374151",
+            "borderRadius": 9999,
+            "height": 8,
+            "overflow": "hidden",
+            "width": "100%",
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "backgroundColor": "#22c55e",
+              "borderRadius": 9999,
+              "height": "100%",
+              "width": "62.5%",
+            }
+          }
+        />
+      </View>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "backgroundColor": "#e85223",
+              "borderColor": "#e85223",
+              "borderRadius": 6,
+              "borderWidth": 1,
+              "color": "#ffffff",
+              "justifyContent": "center",
+              "paddingBottom": 10,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 10,
+            },
+            undefined,
+          ]
+        }
+      >
+        <View
+          className="flex flex-row"
+          style={
+            {
+              "alignItems": "center",
+              "gap": 8,
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#ffffff",
+                "fontSize": 16,
+                "fontWeight": "600",
+              }
+            }
+          >
+            Save
+          </Text>
+        </View>
+      </View>
+    </View>
+  </RNCSafeAreaView>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</>
+`;
+
+exports[`MO2-14 NativeWind primitives renders the core kit in light mode 1`] = `
+<>
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "additive",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#f9fafb",
+        "padding": 16,
+      }
+    }
+  >
+    <View
+      className="flex flex-col"
+      style={
+        {
+          "gap": 12,
+        }
+      }
+    >
+      <View
+        className="flex flex-row"
+        style={
+          {
+            "alignItems": "center",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignSelf": "flex-start",
+              "backgroundColor": "#dcfce7",
+              "borderColor": "transparent",
+              "borderRadius": 6,
+              "borderWidth": 0,
+              "color": "#15803d",
+              "paddingBottom": 4,
+              "paddingLeft": 8,
+              "paddingRight": 8,
+              "paddingTop": 4,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#15803d",
+                "fontSize": 12,
+                "fontWeight": "600",
+              }
+            }
+          >
+            Ready
+          </Text>
+        </View>
+        <Text
+          style={
+            {
+              "color": "#1f2937",
+            }
+          }
+        >
+          Boiler
+        </Text>
+      </View>
+      <View
+        accessibilityRole="progressbar"
+        accessibilityValue={
+          {
+            "max": 100,
+            "min": 0,
+            "now": 62.5,
+          }
+        }
+        style={
+          {
+            "backgroundColor": "#e5e7eb",
+            "borderRadius": 9999,
+            "height": 8,
+            "overflow": "hidden",
+            "width": "100%",
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "backgroundColor": "#22c55e",
+              "borderRadius": 9999,
+              "height": "100%",
+              "width": "62.5%",
+            }
+          }
+        />
+      </View>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "backgroundColor": "#e85223",
+              "borderColor": "#e85223",
+              "borderRadius": 6,
+              "borderWidth": 1,
+              "color": "#ffffff",
+              "justifyContent": "center",
+              "paddingBottom": 10,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 10,
+            },
+            undefined,
+          ]
+        }
+      >
+        <View
+          className="flex flex-row"
+          style={
+            {
+              "alignItems": "center",
+              "gap": 8,
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#ffffff",
+                "fontSize": 16,
+                "fontWeight": "600",
+              }
+            }
+          >
+            Save
+          </Text>
+        </View>
+      </View>
+    </View>
+  </RNCSafeAreaView>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</>
+`;

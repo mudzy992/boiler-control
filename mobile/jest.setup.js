@@ -1,3 +1,5 @@
+/* global jest */
+
 /**
  * MO2-8 (MO-012): jest setup koji se izvršava PRIJE učitavanja test modula.
  *
@@ -14,3 +16,10 @@
  */
 
 process.env.EXPO_PUBLIC_API_URL = 'https://test.invalid/api';
+
+// Native modules are unavailable in Jest. Use the package-maintained mock so
+// theme persistence and existing auth/storage tests share the same behavior.
+jest.mock(
+  '@react-native-async-storage/async-storage',
+  () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);

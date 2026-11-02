@@ -14,6 +14,12 @@ export const IMAGE_MIME_TYPES = new Set([
 ]);
 export const PDF_MIME_TYPES = new Set(['application/pdf']);
 
+const PDF_SIGNATURE = Buffer.from('%PDF-', 'ascii');
+const JPEG_SIGNATURE = Buffer.from([0xff, 0xd8, 0xff]);
+const PNG_SIGNATURE = Buffer.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+]);
+
 type UploadedFileInput = {
   buffer: Buffer;
   mimetype: string;
@@ -109,6 +115,8 @@ export class FileStorageService {
       throw new BadRequestException('File size exceeds upload limit');
     }
 
+    this.validateContent(file);
+
     const safeDir = this.sanitizeRelativeDir(relativeDir);
     await this.ensureDir(safeDir);
 
@@ -124,6 +132,41 @@ export class FileStorageService {
       mimeType: file.mimetype,
       originalName: this.sanitizeOriginalName(file.originalname),
     };
+  }
+
+  /**
+   * SEC-5: potpis sadržaja je minimalna kontrola, ne parser ili malware scan.
+   * Validacija je prije ensureDir/write pa odbijeni upload ne ostavlja fajl.
+   */
+  private validateContent(file: UploadedFileInput): void {
+    const { buffer, mimetype } = file;
+    let valid = false;
+
+    if (mimetype === 'application/pdf') {
+      valid = this.hasSignature(buffer, PDF_SIGNATURE);
+    } else if (mimetype === 'image/jpeg') {
+      valid = this.hasSignature(buffer, JPEG_SIGNATURE);
+    } else if (mimetype === 'image/png') {
+      valid = this.hasSignature(buffer, PNG_SIGNATURE);
+    } else if (mimetype === 'image/webp') {
+      valid =
+        buffer.length >= 12 &&
+        buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+        buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+    }
+
+    if (!valid) {
+      throw new BadRequestException(
+        'File content does not match declared file type',
+      );
+    }
+  }
+
+  private hasSignature(buffer: Buffer, signature: Buffer): boolean {
+    return (
+      buffer.length >= signature.length &&
+      buffer.subarray(0, signature.length).equals(signature)
+    );
   }
 
   private sanitizeRelativeDir(dir: string): string {

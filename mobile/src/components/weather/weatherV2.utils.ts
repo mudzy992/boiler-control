@@ -52,11 +52,30 @@ function validDate(value: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+const FORMATTER_CACHE_LIMIT = 32;
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+
+function cachedFormatter(
+  cacheKey: string,
+  locale: string,
+  options: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormat {
+  const cached = formatterCache.get(cacheKey);
+  if (cached) return cached;
+  const formatter = new Intl.DateTimeFormat(locale, options);
+  if (formatterCache.size >= FORMATTER_CACHE_LIMIT) {
+    const oldestKey = formatterCache.keys().next().value;
+    if (oldestKey !== undefined) formatterCache.delete(oldestKey);
+  }
+  formatterCache.set(cacheKey, formatter);
+  return formatter;
+}
+
 export function formatWeatherDateTime(value: string, locale: string, timeZone: string): string {
   const date = validDate(value);
   if (!date) return value;
   try {
-    return new Intl.DateTimeFormat(locale, {
+    return cachedFormatter(`datetime|${locale}|${timeZone}`, locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -74,7 +93,7 @@ export function formatWeatherHour(value: string, locale: string, timeZone: strin
   const date = validDate(value);
   if (!date) return value;
   try {
-    return new Intl.DateTimeFormat(locale, {
+    return cachedFormatter(`hour|${locale}|${timeZone}`, locale, {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
@@ -90,7 +109,7 @@ export function formatWeatherDay(value: string | null, locale: string): string {
   if (!value) return '—';
   const date = validDate(`${value}T12:00:00.000Z`);
   if (!date) return value;
-  return new Intl.DateTimeFormat(locale, {
+  return cachedFormatter(`day|${locale}`, locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',

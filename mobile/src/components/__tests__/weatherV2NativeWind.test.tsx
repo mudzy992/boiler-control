@@ -126,13 +126,11 @@ async function renderCard() {
       <AppThemeProvider>
         <WeatherV2Card homeProfileId={7} />
       </AppThemeProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 }
 
 beforeEach(() => {
-  jest.useFakeTimers();
-  jest.setSystemTime(new Date('2026-11-02T12:00:00.000Z'));
   jest.clearAllMocks();
   jest.mocked(weatherApi.getCurrent).mockResolvedValue(forecast);
   jest.mocked(weatherApi.getLocationCandidates).mockResolvedValue({
@@ -149,7 +147,6 @@ afterEach(() => {
   queryClient?.clear();
   queryClient = undefined;
   jest.clearAllMocks();
-  jest.useRealTimers();
 });
 
 describe('MO2-17 WeatherV2Card', () => {
@@ -205,7 +202,7 @@ describe('MO2-17 WeatherV2Card', () => {
 
     await fireEvent.press(screen.getByLabelText(`weather.confirmCandidate:${candidateB.label}`));
     await waitFor(() =>
-      expect(weatherApi.confirmLocation).toHaveBeenCalledWith(7, 'Springfield', 'b')
+      expect(weatherApi.confirmLocation).toHaveBeenCalledWith(7, 'Springfield', 'b'),
     );
     expect(weatherApi.confirmLocation).toHaveBeenCalledTimes(1);
   });

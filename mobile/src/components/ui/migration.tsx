@@ -3,8 +3,8 @@ import React, { createContext, useContext } from 'react';
 export const UI_SCREENS = [
   'Analytics',
   'Dashboard',
+  'Gas',
   'GasAnalysis',
-  'GasForm',
   'GasReadings',
   'Heating',
   'HomeManagement',
@@ -28,6 +28,9 @@ export type UiImplementation = 'legacy' | 'nativewind';
  * mechanism is removed when MO2-14 removes the legacy implementation.
  */
 const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
+  'Gas',
+  'GasAnalysis',
+  'GasReadings',
   'Heating',
   'Login',
   'NotificationPreferences',

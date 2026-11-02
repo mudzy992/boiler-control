@@ -1,13 +1,14 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorModeValue } from 'native-base';
+import { useColorModeValue } from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../../hooks/useTranslation';
+import { withUiImplementation } from '../../components/ui/migration';
 import { GasReadingsScreen } from './GasReadingsScreen';
 import { GasAnalysisScreen } from './GasAnalysisScreen';
 
 const Tab = createBottomTabNavigator();
 
-export const GasScreen = () => {
+const GasScreenContent = () => {
   const { t } = useTranslation();
   const headerBg = useColorModeValue('#ffffff', '#1a202c');
   const headerTint = useColorModeValue('#000000', '#ffffff');
@@ -58,3 +59,5 @@ export const GasScreen = () => {
     </Tab.Navigator>
   );
 };
+
+export const GasScreen = withUiImplementation('Gas', GasScreenContent);

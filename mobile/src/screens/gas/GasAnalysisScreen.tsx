@@ -9,13 +9,14 @@ import {
   Spinner,
   ScrollView,
   Icon,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
+import { withUiImplementation } from '../../components/ui/migration';
 
 let LineChart: any = null;
 try {
@@ -162,7 +163,7 @@ const calculateDailyConsumptionStats = (readings: GasReading[]): DailyConsumptio
   };
 };
 
-export const GasAnalysisScreen: React.FC = () => {
+const GasAnalysisScreenContent: React.FC = () => {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -692,3 +693,5 @@ export const GasAnalysisScreen: React.FC = () => {
     </Box>
   );
 };
+
+export const GasAnalysisScreen = withUiImplementation('GasAnalysis', GasAnalysisScreenContent);

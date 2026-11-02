@@ -12,7 +12,7 @@ import {
   Spinner,
   Switch,
   useToast,
-} from 'native-base';
+} from '../ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';

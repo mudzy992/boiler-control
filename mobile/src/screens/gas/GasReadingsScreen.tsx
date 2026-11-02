@@ -20,7 +20,7 @@ import {
   Pressable,
   useToast,
   Center,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
@@ -29,6 +29,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
+import { withUiImplementation } from '../../components/ui/migration';
 import { SecureStorage } from '../../services/storage/SecureStorage';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
 // postavke i ovaj ekran čiste ISTU putanju.
@@ -51,7 +52,7 @@ interface GasReading {
   invoiceGasPriceExVat?: number | null;
 }
 
-export const GasReadingsScreen: React.FC = () => {
+const GasReadingsScreenContent: React.FC = () => {
   const route = useRoute<RouteProp<any, 'GasReadings'>>();
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -1090,3 +1091,5 @@ export const GasReadingsScreen: React.FC = () => {
     </Box>
   );
 };
+
+export const GasReadingsScreen = withUiImplementation('GasReadings', GasReadingsScreenContent);

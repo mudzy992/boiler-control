@@ -2174,6 +2174,17 @@ tooling lancu. Container image scan, produkcijski deploy/proxy uvjeti i
 stvarni provider pozivi nisu izvedeni; overridee treba ponovo procijeniti
 kada ih Nest nativno učini nepotrebnim.
 
+SEC-7B commit `cc39769` zatim uklanja critical/high iz development grafa bez
+`package.json` ili source promjene. Svih 97 verzijskih promjena je dev-only;
+production direct verzije/overridei i production audit nula ostaju isti.
+Konačni full audit ima **34 zapisa** (0 critical, 0 high, 31 moderate, 3 low),
+s korijenima `deepmerge`, `glob` i `minimatch`. Preostali npm fix traži
+`@nestjs/cli@12.0.11` preko `--force`, pa major nije primijenjen. `npm ci`,
+ciljani **8/64 + 1 skip**, OpenAPI check i ESLint **0 errors / 2 warnings**
+prolaze. CI `41528411640` potvrđuje backend **71/707 + 6/63**, mobile
+**24/136**, frontend **4/4** i nula failure annotations. Rollback je revert
+`cc39769`; image scan i produkcijski deploy/audit ostaju otvoreni.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

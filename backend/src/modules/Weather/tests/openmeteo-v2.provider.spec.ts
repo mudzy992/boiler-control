@@ -1,6 +1,8 @@
-jest.mock('openmeteo', () => ({ fetchWeatherApi: jest.fn() }));
+jest.mock('../openmeteo-flatbuffers', () => ({
+  fetchOpenMeteoFlatbuffers: jest.fn(),
+}));
 
-import { fetchWeatherApi } from 'openmeteo';
+import { fetchOpenMeteoFlatbuffers } from '../openmeteo-flatbuffers';
 import { OpenMeteoV2Provider } from '../openmeteo-v2.provider';
 import type { ConfirmedWeatherLocation } from '../weather-v2.types';
 
@@ -114,7 +116,9 @@ afterEach(() => {
 
 describe('OpenMeteoV2Provider forecast mapping', () => {
   it('maps UTC instants, true zeroes and exactly 72 hours/7 days', async () => {
-    jest.mocked(fetchWeatherApi).mockResolvedValue([forecastResponse()] as any);
+    jest
+      .mocked(fetchOpenMeteoFlatbuffers)
+      .mockResolvedValue([forecastResponse()] as any);
     const { provider, adapter } = makeProvider();
 
     const result = await provider.fetchForecast(location);
@@ -149,8 +153,8 @@ describe('OpenMeteoV2Provider forecast mapping', () => {
       conditionKey: 'unknown',
     });
 
-    const [url, params, retries, , , options] =
-      jest.mocked(fetchWeatherApi).mock.calls[0];
+    const [url, params, options] = jest.mocked(fetchOpenMeteoFlatbuffers).mock
+      .calls[0];
     expect(url).toContain('open-meteo.com');
     expect(params).toMatchObject({
       latitude: location.latitude,
@@ -158,7 +162,6 @@ describe('OpenMeteoV2Provider forecast mapping', () => {
       timezone: 'America/New_York',
       forecast_days: 7,
     });
-    expect(retries).toBe(0);
     expect(options?.signal).toBeInstanceOf(AbortSignal);
     expect(adapter.executeWithCircuitBreaker).toHaveBeenCalledTimes(1);
   });
@@ -173,7 +176,7 @@ describe('OpenMeteoV2Provider forecast mapping', () => {
         [0, 50, -1, 0, 1, 0, 0, 180, 1013, 0],
         [],
       );
-    jest.mocked(fetchWeatherApi).mockResolvedValue([response] as any);
+    jest.mocked(fetchOpenMeteoFlatbuffers).mockResolvedValue([response] as any);
     const { provider } = makeProvider();
 
     const result = await provider.fetchForecast(location);

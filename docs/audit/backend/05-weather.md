@@ -150,4 +150,14 @@ Cache se više ne briše prije fetcha. Neuspješan refresh može vratiti postoje
 
 **Granica dokaza:** ovo je offline regresija za legacy transport i cache, ne dokaz da je produkcijski Open-Meteo za Visoko ponovo dostupan. V2 provider nije mijenjan, a stvarni provider status/tijelo i dalje treba potvrditi kroz naredne produkcijske logove nakon rollouta.
 
+### V2 transport usklađivanje — 2026-11-02
+
+Nakon legacy ispravke, ista SDK klasa greške potvrđena je i na `OpenMeteoV2Provider`: stubovani 503 JSON na neizmijenjenom kodu završavao je kao `Open-Meteo response is missing forecast blocks`. Nova regresija je zato prvo pala na očekivanom HTTP assertu, dok su postojeća četiri fixture/DST testa prolazila.
+
+V2 forecast sada koristi isti `fetchOpenMeteoFlatbuffers` kao legacy servis. Zadržani su stvarni `AbortSignal`, postojeći `WeatherHttpAdapter`, 72 sata/7 dana, UTC/DST mapiranje i svi postojeći flagovi. Nema migracije, API promjene ni uključivanja v2 u produkciji.
+
+**Dokazi:** v2 fixture suite sada prolazi 5/5; provider+fixture+legacy suiteovi prolaze 3 suitea / 18 testova, a svi Weather testovi 6 suiteova / 35 testova. Generator ostaje `in_sync`, Prettier prolazi, a tačna CI ESLint naredba ima 0 errors i dva postojeća warnings. Kompletan type-check/build/test i dalje se potvrđuje kroz CI.
+
+**Granica dokaza:** 503 i validni FlatBuffers odgovori su stubovani/generated ulazi. Ovo ne predstavlja live provider capture, produkcijski rollout ni dokaz da Open-Meteo trenutno vraća određeni status.
+
 **I dalje otvoreno:** stvarno snimljeni/anonimizirani provider fixture s current+hourly+daily i sunrise/sunset, stvarna DST potvrda nad takvim fixtureom, produkcijska migracija/obnova, višeprocesni SWR, provider licence/kvote i fizički mobile vizuelni QA. Postojeći hourly-only upstream fixture i novi generisani combined fixture nisu dokaz tih stavki.

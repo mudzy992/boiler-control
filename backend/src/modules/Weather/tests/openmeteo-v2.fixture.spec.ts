@@ -160,6 +160,19 @@ describe('OpenMeteoV2Provider generated FlatBuffers fixtures', () => {
     },
   );
 
+  it('rejects an upstream HTTP error instead of reporting missing forecast blocks', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ reason: 'synthetic v2 outage' }), {
+        status: 503,
+      }),
+    );
+    const provider = makeProvider();
+
+    await expect(provider.fetchForecast(locationFor('spring'))).rejects.toThrow(
+      'Open-Meteo HTTP 503: synthetic v2 outage',
+    );
+  });
+
   it('decodes current+hourly+daily through the real SDK and skips the spring DST hour', async () => {
     const result = await replay('spring');
     expectCombinedMapping(result, 'spring');

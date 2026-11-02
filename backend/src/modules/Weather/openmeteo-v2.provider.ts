@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { fetchWeatherApi } from 'openmeteo';
+import { fetchOpenMeteoFlatbuffers } from './openmeteo-flatbuffers';
 import { WeatherHttpAdapter } from './weather-http.adapter';
 import { mapWmoWeatherCode } from './wmo';
 import {
@@ -171,7 +171,7 @@ export class OpenMeteoV2Provider {
   ): Promise<WeatherForecastPayloadV2> {
     const responses = await this.weatherAdapter.executeWithCircuitBreaker(() =>
       this.abortable((signal) =>
-        fetchWeatherApi(
+        fetchOpenMeteoFlatbuffers(
           FORECAST_URL,
           {
             latitude: location.latitude,
@@ -213,9 +213,6 @@ export class OpenMeteoV2Provider {
               'uv_index_max',
             ],
           },
-          0,
-          0,
-          0,
           { signal },
         ),
       ),

@@ -2083,13 +2083,39 @@ prolazak nije prazan.
 
 Nakon obje ispravke CI je pozelenio.
 
-**Šta NIJE verificirano.** **Konkurentnost.** `$transaction` daje atomičnost,
+**Tada otvoreno (2026-10-31).** **Konkurentnost.** `$transaction` daje atomičnost,
 ne i izolaciju protiv dva paralelna procesa. Kriterij prihvatanja traži „dva
 konkurentna synca potvrđena na izolovanom PostgreSQL-u", a PostgreSQL u ovom
 okruženju nije dostupan — za to treba row lock ili optimistička verzija.
 **Nema jest testa**: verifikacija je samo preko probe skripte. Postojeća
 miješana stanja u bazi se ne popravljaju automatski — sljedeći sync s
 drugačijim hashom ih prepisuje.
+
+### REL-8 — konkurentnost završena (2026-11-02)
+
+Test-only commit `e76bd07` dodao je pravi PostgreSQL integration spec s dva
+odvojena Prisma klijenta. Privremeni trigger usporava samo INSERT sintetičkog
+uređaja kako bi oba čitanja vidjela prazan dan. Na neizmijenjenom produkcijskom
+kodu CI `41503819683` reproducirao je **P2002** u oba izvršavanja speca; lint,
+type-check, build, OpenAPI, mobile i frontend su prošli.
+
+`cc8622c` uvodi `pg_advisory_xact_lock` po `deviceId + dayType`, ponovno
+čitanje/hash odluku i create/upsert/cleanup u istoj interaktivnoj transakciji.
+Prvi pokušaj je u CI `41504828757` dao **P2010** jer je `$queryRaw` čitao
+PostgreSQL `void` rezultat lock funkcije. `d91cced` zadržava isti parametrizovani
+bigint upit, ali ga izvršava preko `$executeRaw` bez result decodinga.
+
+Završni test dokazuje da oba paralelna poziva završe i da redovi odgovaraju
+cjelovitom programu A ili B s jednim hashom. Atomic probe i dalje prolazi
+rollback/retry/legacy kontrole, ciljani Tuya unit prolazi **1 suite / 8 testova**, a tačan
+ESLint ima **0 errors / 2 postojeća warnings**. Konačni CI `41505358553` za
+`d91cced`: backend **69/696 + 6/61 integration**, `tsc: 0`, `eslint: 0`; mobile
+**24/136**, frontend **4/4**, nula failure annotations.
+
+Nema migracije, backfilla, API/DTO/OpenAPI/mobile/frontend/compose promjene ni
+rollouta. Rollback je i dalje `PROGRAM_SYNC_ATOMIC_ENABLED=off`. Stara miješana
+stanja se ne popravljaju automatski, a stvarni provider/production uticaj nije
+dokazan ovim sintetičkim testom.
 
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 

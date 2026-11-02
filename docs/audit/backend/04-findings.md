@@ -295,9 +295,14 @@
   rollback: pad na drugom upsertu ostavlja bazu netaknutu, retry završava posao
   i briše uklonjeni interval, a kontrola sa zastavicom `off` i dalje ostavlja
   miješano stanje.
-- **OSTAJE OTVORENO:** konkurentnost nije verificirana — `$transaction` daje
-  atomičnost, ne izolaciju protiv dva paralelna procesa, a izolovani PostgreSQL
-  nije dostupan u ovom okruženju. Nema jest testa.
+- **KONKURENTNOST RIJEŠENA (2026-11-02).** Test-only clean-HEAD CI `41503819683`
+  reproducirao je P2002 na dva paralelna početna upisa istog dana. Atomska grana
+  sada koristi transaction-scoped `pg_advisory_xact_lock` po uređaju/danu,
+  ponovno čitanje/hash odluku i sve upise u istoj interaktivnoj transakciji
+  (`cc8622c` + raw izvršenje `d91cced`). Oba poziva završe, a konačno stanje je
+  cjelovit program A ili B. Konačni CI `41505358553`: 69/696 + 6/61 integration.
+  Rollback ostaje `PROGRAM_SYNC_ATOMIC_ENABLED=off`. Stara miješana stanja se ne
+  backfillaju automatski, a provider/production uticaj nije dokazan.
 
 ### [B-028] Produkcijski image radi kao root i uključuje development zavisnosti — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO (Dockerfile)
 - Gdje: `backend/Dockerfile:31-48` (production stage).

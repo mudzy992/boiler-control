@@ -5,7 +5,7 @@ Talas D završi.
 
 ## Nastavak 2026-11-02 — MO2-14, weather v2, PRIV-1A/B i FE2-7
 
-- **Verificirani code HEAD:** `c407764`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `c41c2fb`. Vlasnik ručno radi merge, PR se ne otvara.
+- **Verificirani code HEAD:** `d91cced`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `eb219ce`. Vlasnik ručno radi merge, PR se ne otvara.
 - **MO2-14:** NativeWind migracija završena je kroz `6d540e8`; nema `native-base`, NativeBaseProvider, NativeBase LogBox suppression ni BackHandler polyfilla. CI `41425004414`: backend/mobile success. Fizički vizuelni QA na tri veličine ekrana ostaje otvoren.
 - **Weather v2:** osnovna implementacija i ispravke su `aa921fe`, `5627eb0`, `ab040ab`, `309d95e`. Nakon cold-start timeouta u runovima `41438917708` i `41439567029`, `344f6e4` memoizira forecast, a `efd20c9` mountuje location modal tek na zahtjev; timeout, asserti i paralelizam nisu mijenjani. Finalni code CI `41442409308`: backend i mobile success. Backend ima 56 suiteova / 608 testova i 5 integration suiteova / 60 testova; mobile ima 24 suitea / 136 testova.
 - **Weather combined SDK/DST replay:** `223193d` dodaje deterministic generator, proljetni/jesenji FlatBuffers fixture i stvarni SDK/provider replay bez mreže. Pokriveni su current, 72 sata/7 dana, sunrise/sunset `valuesInt64`, `INT64_MAX`, prave nule, `NaN` → `null`, preskok i ponavljanje DST sata. To su generisani SDK ulazi, ne live provider capture. CI `41449372725`: sva tri joba success; backend 57 suiteova / 612 testova + 5/60 integration, mobile 24/136, frontend 4/4 E2E.
@@ -28,6 +28,9 @@ Talas D završi.
   - Test-first polazak: **3 očekivana delegation/wiring fail / 3 legacy i anonymous kontrole pass**. Konačno lokalno: fokusirani **8/57**, širi Weather/Boiler/recommendation/Dashboard/ThermostatPoll **28/216**, production-mode `AppModule` compile, oba offline weather helpera, Prettier i diff-check prolaze; tačan ESLint **0 errors / 2 postojeća warnings**.
   - Prvi CI `41497907891` pao je samo na zasebnom FEAT-6 repro koraku jer standalone Nest harness nije imao novi resolver; lint/type/OpenAPI/unit/integration, mobile i frontend su prošli. `c407764` dodaje fake resolver u `analytics_export_repro.cjs` i usklađuje `dashboard_repro.cjs`, bez production izmjene; oba helpera zatim prolaze lokalno. Konačni code CI `41498631507`: backend **68/695 + 5/60**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, nula failure annotations.
   - Nema migracije/backfilla, API/DTO/OpenAPI/mobile/frontend/compose promjene, provider refresh/upserta, flag enablementa ni rollouta. Recommendation, Boiler i Poll flagovi ostaju neovisni. Rollback je `WEATHER_DASHBOARD_V2=off`.
+- **REL-8 konkurentnost (`e76bd07` repro + `cc8622c` + `d91cced`):** test-only clean-HEAD CI `41503819683` deterministički je reproducirao **P2002** kada dva nezavisna Prisma klijenta istovremeno upisuju prazan `deviceId + dayType`. Atomska grana sada u istoj interaktivnoj transakciji uzima `pg_advisory_xact_lock` po uređaju/danu, ponovo čita redove/hash i tek zatim radi create/upsert/cleanup. Oba poziva završavaju, a rezultat je cjelovit program A ili B. Postojeći `PROGRAM_SYNC_ATOMIC_ENABLED=off` ostaje rollback na legacy granu.
+  - Privremeni `pg_sleep` trigger u integration specu vrijedi samo za sintetički testni uređaj i ne ulazi u migracije. Prvi lock pokušaj `41504828757` dao je **P2010** jer `$queryRaw` čita `void` rezultat; `d91cced` koristi `$executeRaw` za isti parametrizovani upit. Atomic probe i dalje dokazuje rollback/retry/legacy kontrolu, ciljani Tuya unit je **1 suite / 8 testova**, a tačan ESLint ima **0 errors / 2 postojeća warnings**.
+  - Konačni code CI `41505358553`: backend **69/696 + 6/61 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, nula failure annotations. Nema migracije/backfilla, API/DTO/OpenAPI/mobile/frontend/compose promjene ni rollouta. Stara miješana stanja se ne popravljaju automatski; stvarni provider/production uticaj nije tvrdnja ovog testa.
 - **PRIV-1A:** `5627eb0` dodaje samo read-only `GET /api/auth/export`, zadano `ACCOUNT_EXPORT_ENABLED=off`, nalog i 13 eksplicitno selektovanih vlasničkih kolekcija, no-store, row/byte 413 i verzionirani JSON. Dvokorisnički PostgreSQL test, redakcija i obje granice prolaze u CI. Hashovi, globalni Tuya token, weather cache i privatni storage pathovi su isključeni; gas originali ostaju na owner-only download rutama. Nema migracije ni brisanja.
 - **PRIV-1B / MO2-16:** `3fc4e1d` povezuje Settings sa stvarnim backend JSON exportom, ne s Analytics. Mobile validira format/verziju i svih 13 kolekcija, zapisuje `.download` pa atomski preimenuje u `.json` u postojećem dijeljenom downloads cacheu i otvara `expo-sharing`. Dvostruki tap je blokiran; 404, 413, neispravan odgovor i ostale greške imaju različite poštene poruke bez logovanja sadržaja. Clear cache pokriva istu datoteku. Nema novog mobile flaga, backend/DB promjene ni produkcijskog uključivanja.
 - **CI dijagnostika koja ostaje korisna:** OpenAPI artefakt koristi rekurzivno sortiranu serializaciju i byte-stabilnu regresiju. Mobile CI koristi postojeći sigurni `jest_report.cjs` uz očuvan originalnog exit koda. Weather async testovi koriste real timers, a 72h/7d formatteri bounded cache.
@@ -249,13 +252,13 @@ test koji assertuje jedinice, i provjeriti da li `Mode === '0'` grana (koja
 čita cilj iz baze, `activeInterval.targetTemp`) već ima °C — miješanje jedinica
 između te dvije grane je isto moguće.
 
-## REL-8 (#34) — KOD GOTOV I CI ZELEN; dokumentacija NIJE ažurirana
+## REL-8 (#34) — historijski zapis atomskog dijela
 
 **Stanje:** commitovano i pushano. Commiti `799a011` (implementacija) +
 `30188de` (TS2345 fix) + `48a3b41` (Prettier fix). CI run **`41233788265`** =
 `completed success`, sva tri joba (`test` 21, `frontend` 18, `mobile` 10).
 
-**ŠTA NEDOSTAJE — sljedeći turn mora dovršiti:**
+**Tada je nedostajalo (historijski zapis):**
 - `docs/audit/STATUS.md`: nema REL-8 sekciju
 - `docs/audit/backend/09-improvements-backlog.md`: REL-8 red (linija 54, 6
   ćelija) NIJE označen kao riješen
@@ -306,9 +309,10 @@ memoriji). Tek tada se može assertovati da pad ostavlja bazu netaknutom.
 Alternativno: pravi integracijski test na PostgreSQL-u — ali PostgreSQL ovdje
 nije dostupan.
 
-**Konkurentnost NIJE riješena.** `$transaction` daje atomičnost, ne izolaciju
-protiv dva paralelna procesa. Kriterij prihvatanja traži „dva konkurentna synca
-potvrđena na izolovanom PostgreSQL-u" — to ostaje **nije verificirano**.
+**Tada konkurentnost NIJE bila riješena.** `$transaction` daje atomičnost, ne
+izolaciju protiv dva paralelna procesa. Kriterij je kasnije zatvoren stvarnim
+PostgreSQL testom i advisory lockom; aktualni rezultat i commiti su u vrhu
+dokumenta pod „REL-8 konkurentnost".
 
 ## Sljedeće po redoslijedu (Talas D)
 

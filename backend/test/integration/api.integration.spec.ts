@@ -425,13 +425,14 @@ describe('Integration Tests: Backend API (P2a)', () => {
     it('should report not ready without internal details on database failure', async () => {
       const queryRaw = jest
         .spyOn(prisma, '$queryRaw')
-        .mockRejectedValueOnce(new Error('synthetic database outage'));
+        .mockRejectedValue(new Error('synthetic database outage'));
 
       try {
         const response = await request(app.getHttpServer()).get(
           '/health/ready',
         );
 
+        expect(queryRaw).toHaveBeenCalled();
         expect(response.status).toBe(503);
         expect(response.body.status).toBe('error');
         expect(response.text).not.toContain('synthetic database outage');

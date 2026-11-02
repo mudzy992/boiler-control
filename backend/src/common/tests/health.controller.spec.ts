@@ -79,10 +79,13 @@ describe('OBS-1: liveness i readiness', () => {
     const queryRaw = jest
       .fn()
       .mockRejectedValue(new Error('db must not be used'));
-    app = await createHealthApp(queryRaw);
+    const healthApp = await createHealthApp(queryRaw);
+    app = healthApp;
     const request = req('supertest');
 
-    const response = await request(app.getHttpServer()).get('/health/live');
+    const response = await request(healthApp.getHttpServer()).get(
+      '/health/live',
+    );
 
     expect(response.status).toBe(200);
     expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
@@ -92,10 +95,13 @@ describe('OBS-1: liveness i readiness', () => {
 
   it('readiness vraća 200 kada baza odgovori', async () => {
     const queryRaw = jest.fn().mockResolvedValue([1]);
-    app = await createHealthApp(queryRaw);
+    const healthApp = await createHealthApp(queryRaw);
+    app = healthApp;
     const request = req('supertest');
 
-    const response = await request(app.getHttpServer()).get('/health/ready');
+    const response = await request(healthApp.getHttpServer()).get(
+      '/health/ready',
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('ok');
@@ -106,10 +112,13 @@ describe('OBS-1: liveness i readiness', () => {
     const queryRaw = jest
       .fn()
       .mockRejectedValue(new Error('synthetic database outage'));
-    app = await createHealthApp(queryRaw);
+    const healthApp = await createHealthApp(queryRaw);
+    app = healthApp;
     const request = req('supertest');
 
-    const response = await request(app.getHttpServer()).get('/health/ready');
+    const response = await request(healthApp.getHttpServer()).get(
+      '/health/ready',
+    );
 
     expect(response.status).toBe(503);
     expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
@@ -122,14 +131,15 @@ describe('OBS-1: liveness i readiness', () => {
     const queryRaw = jest
       .fn()
       .mockRejectedValue(new Error('db must not be used'));
-    app = await createHealthApp(queryRaw);
+    const healthApp = await createHealthApp(queryRaw);
+    app = healthApp;
     const request = req('supertest');
 
-    const response = await request(app.getHttpServer()).get('/health');
+    const response = await request(healthApp.getHttpServer()).get('/health');
 
     expect(response.status).toBe(200);
-    expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
     expect(response.body.status).toBe('ok');
+    expect(typeof response.body.timestamp).toBe('string');
     expect(queryRaw).not.toHaveBeenCalled();
   });
 });

@@ -193,109 +193,112 @@ export function WeatherV2Card({ homeProfileId }: WeatherV2CardProps) {
         </VStack>
       </Box>
 
-      <Modal isOpen={locationModalOpen} onClose={() => setLocationModalOpen(false)}>
-        <Modal.Content>
-          <Modal.CloseButton />
-          <Modal.Header>{t('weather.chooseLocation')}</Modal.Header>
-          <Modal.Body px={0} py={0}>
-            <ScrollView style={{ maxHeight: 520 }}>
-              <VStack px={5} py={4} space={4}>
-                <Text fontSize="sm" color={mutedColor}>
-                  {t('weather.locationExplanation')}
-                </Text>
-                <FormInput
-                  accessibilityLabel={t('weather.locationQuery')}
-                  placeholder={t('weather.locationPlaceholder')}
-                  value={locationQuery}
-                  autoCapitalize="words"
-                  isDisabled={searchMutation.isPending || confirmMutation.isPending}
-                  onChangeText={(value) => {
-                    setLocationQuery(value);
-                    setQueryValidationError(false);
-                    searchMutation.reset();
-                  }}
-                  onSubmitEditing={searchLocations}
-                />
-                {queryValidationError && (
-                  <Text fontSize="sm" color="red.500">
-                    {t('weather.locationQueryError')}
-                  </Text>
-                )}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('weather.searchLocation')}
-                  onPress={searchLocations}
-                  isDisabled={searchMutation.isPending || confirmMutation.isPending}
-                  opacity={searchMutation.isPending ? 0.6 : 1}
-                  bg="brand.500"
-                  rounded="md"
-                  px={4}
-                  py={3}
-                  alignItems="center"
-                >
-                  <Text color="white" fontWeight="600">
-                    {searchMutation.isPending
-                      ? t('weather.searchingLocation')
-                      : t('weather.searchLocation')}
-                  </Text>
-                </Pressable>
-
-                {searchMutation.isError && (
-                  <Text fontSize="sm" color="red.500">
-                    {t('weather.locationSearchError')}
-                  </Text>
-                )}
-                {searchMutation.isSuccess && candidates.length === 0 && (
+      {/* Zatvoreni dijalog ne opterećuje inicijalni forecast render. */}
+      {locationModalOpen && (
+        <Modal isOpen={locationModalOpen} onClose={() => setLocationModalOpen(false)}>
+          <Modal.Content>
+            <Modal.CloseButton />
+            <Modal.Header>{t('weather.chooseLocation')}</Modal.Header>
+            <Modal.Body px={0} py={0}>
+              <ScrollView style={{ maxHeight: 520 }}>
+                <VStack px={5} py={4} space={4}>
                   <Text fontSize="sm" color={mutedColor}>
-                    {t('weather.noLocations')}
+                    {t('weather.locationExplanation')}
                   </Text>
-                )}
-
-                <VStack space={2}>
-                  {candidates.map((candidate) => (
-                    <Pressable
-                      key={candidate.providerId}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('weather.confirmCandidate', {
-                        location: candidate.label,
-                      })}
-                      onPress={() => confirmCandidate(candidate)}
-                      isDisabled={confirmMutation.isPending}
-                      borderWidth={1}
-                      borderColor={borderColor}
-                      bg={subtleBg}
-                      rounded="md"
-                      p={3}
-                    >
-                      <VStack space={1}>
-                        <Text fontSize="sm" fontWeight="600" color={textColor}>
-                          {candidate.label}
-                        </Text>
-                        <Text fontSize="xs" color={mutedColor}>
-                          {candidate.timezone}
-                        </Text>
-                      </VStack>
-                    </Pressable>
-                  ))}
-                </VStack>
-                {confirmMutation.isPending && (
-                  <HStack space={2} alignItems="center">
-                    <Spinner color={accentColor} />
-                    <Text fontSize="sm" color={mutedColor}>
-                      {t('weather.confirmingLocation')}
+                  <FormInput
+                    accessibilityLabel={t('weather.locationQuery')}
+                    placeholder={t('weather.locationPlaceholder')}
+                    value={locationQuery}
+                    autoCapitalize="words"
+                    isDisabled={searchMutation.isPending || confirmMutation.isPending}
+                    onChangeText={(value) => {
+                      setLocationQuery(value);
+                      setQueryValidationError(false);
+                      searchMutation.reset();
+                    }}
+                    onSubmitEditing={searchLocations}
+                  />
+                  {queryValidationError && (
+                    <Text fontSize="sm" color="red.500">
+                      {t('weather.locationQueryError')}
                     </Text>
-                  </HStack>
-                )}
-                {confirmMutation.isError && (
-                  <Text fontSize="sm" color="red.500">
-                    {t('weather.locationConfirmError')}
-                  </Text>
-                )}
-              </VStack>
-            </ScrollView>
-          </Modal.Body>
-        </Modal.Content>
-      </Modal>
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('weather.searchLocation')}
+                    onPress={searchLocations}
+                    isDisabled={searchMutation.isPending || confirmMutation.isPending}
+                    opacity={searchMutation.isPending ? 0.6 : 1}
+                    bg="brand.500"
+                    rounded="md"
+                    px={4}
+                    py={3}
+                    alignItems="center"
+                  >
+                    <Text color="white" fontWeight="600">
+                      {searchMutation.isPending
+                        ? t('weather.searchingLocation')
+                        : t('weather.searchLocation')}
+                    </Text>
+                  </Pressable>
+
+                  {searchMutation.isError && (
+                    <Text fontSize="sm" color="red.500">
+                      {t('weather.locationSearchError')}
+                    </Text>
+                  )}
+                  {searchMutation.isSuccess && candidates.length === 0 && (
+                    <Text fontSize="sm" color={mutedColor}>
+                      {t('weather.noLocations')}
+                    </Text>
+                  )}
+
+                  <VStack space={2}>
+                    {candidates.map((candidate) => (
+                      <Pressable
+                        key={candidate.providerId}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('weather.confirmCandidate', {
+                          location: candidate.label,
+                        })}
+                        onPress={() => confirmCandidate(candidate)}
+                        isDisabled={confirmMutation.isPending}
+                        borderWidth={1}
+                        borderColor={borderColor}
+                        bg={subtleBg}
+                        rounded="md"
+                        p={3}
+                      >
+                        <VStack space={1}>
+                          <Text fontSize="sm" fontWeight="600" color={textColor}>
+                            {candidate.label}
+                          </Text>
+                          <Text fontSize="xs" color={mutedColor}>
+                            {candidate.timezone}
+                          </Text>
+                        </VStack>
+                      </Pressable>
+                    ))}
+                  </VStack>
+                  {confirmMutation.isPending && (
+                    <HStack space={2} alignItems="center">
+                      <Spinner color={accentColor} />
+                      <Text fontSize="sm" color={mutedColor}>
+                        {t('weather.confirmingLocation')}
+                      </Text>
+                    </HStack>
+                  )}
+                  {confirmMutation.isError && (
+                    <Text fontSize="sm" color="red.500">
+                      {t('weather.locationConfirmError')}
+                    </Text>
+                  )}
+                </VStack>
+              </ScrollView>
+            </Modal.Body>
+          </Modal.Content>
+        </Modal>
+      )}
     </>
   );
 }

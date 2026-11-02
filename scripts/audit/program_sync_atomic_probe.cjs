@@ -78,7 +78,7 @@ function makeDb(failOnOrderIndex) {
       const snapshot = rows.map(r => ({ ...r }));
       const tx = {
         thermostatProgram: db.thermostatProgram,
-        $queryRaw: async () => [],
+        $executeRaw: async () => 1,
       };
       try { return await callback(tx); }
       catch (e) { rows.length = 0; rows.push(...snapshot); throw e; }

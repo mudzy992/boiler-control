@@ -147,7 +147,7 @@ export class ProgramSyncService {
     programHash: string,
   ): Promise<'inserted' | 'updated' | 'unchanged'> {
     return this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(${this.calculateLockKey(deviceId, dayType)}::bigint)`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${this.calculateLockKey(deviceId, dayType)}::bigint)`;
 
       const existing = await tx.thermostatProgram.findMany({
         where: { deviceId, dayType },

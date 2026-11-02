@@ -13,6 +13,7 @@ import { HeatingController } from '../../modules/Heating/heating.controller';
 import { HeatingService } from '../../modules/Heating/heating.service';
 import { WeatherController } from '../../modules/Weather/weather.controller';
 import { WeatherService } from '../../modules/Weather/weather.service';
+import { WeatherV2Service } from '../../modules/Weather/weather-v2.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RecommendationsController } from '../../modules/HeatingRecommendation/recommendations.controller';
 import { HeatingRecommendationService } from '../../modules/HeatingRecommendation/heating.recommendation.service';
@@ -145,6 +146,7 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
           useValue: { getHeatingEvents: () => Promise.resolve([]) },
         },
         { provide: WeatherService, useValue: {} },
+        { provide: WeatherV2Service, useValue: {} },
         { provide: PrismaService, useValue: {} },
         {
           provide: HeatingRecommendationService,

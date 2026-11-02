@@ -2,6 +2,11 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { SecureStorage } from '../storage/SecureStorage';
 import { API_CONFIG } from '../../config/api.config';
 import type { DashboardHealthResponse } from '../../types/Dashboard';
+import type {
+  ConfirmWeatherLocationResponse,
+  WeatherLocationCandidatesResponse,
+  WeatherV2Response,
+} from '../../types/WeatherV2';
 
 /**
  * API Client for making HTTP requests to the backend.
@@ -55,7 +60,7 @@ class ApiClientService {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor: Handle 401 errors
@@ -66,8 +71,7 @@ class ApiClientService {
         const url = error.config?.url ?? '';
         const alreadyRetried = (error.config as { _sec4Retried?: boolean } | undefined)
           ?._sec4Retried;
-        const isAuthRoute =
-          url.includes('/auth/refresh') || url.includes('/auth/login');
+        const isAuthRoute = url.includes('/auth/refresh') || url.includes('/auth/login');
 
         // SEC-4: jedan pokušaj osvježavanja, pa tek onda brisanje tokena.
         if (status === 401 && this.refreshEnabled && !alreadyRetried && !isAuthRoute) {
@@ -90,7 +94,7 @@ class ApiClientService {
           // Note: Navigation to login should be handled by AuthContext
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -161,12 +165,7 @@ class ApiClientService {
     return response.data;
   }
 
-  async register(
-    email: string,
-    password: string,
-    name: string,
-    username: string,
-  ) {
+  async register(email: string, password: string, name: string, username: string) {
     const response = await this.client.post('/auth/register', {
       email,
       password,
@@ -198,6 +197,33 @@ class ApiClientService {
   // MO2-12: single source of truth for health score and alerts.
   async getDashboardHealth(): Promise<DashboardHealthResponse> {
     const response = await this.client.get('/dashboard/health');
+    return response.data;
+  }
+
+  async getWeatherV2(homeProfileId: number): Promise<WeatherV2Response> {
+    const response = await this.client.get(`/weather/v2/current/${homeProfileId}`);
+    return response.data;
+  }
+
+  async getWeatherLocationCandidates(
+    homeProfileId: number,
+    query: string,
+  ): Promise<WeatherLocationCandidatesResponse> {
+    const response = await this.client.get(`/weather/v2/locations/${homeProfileId}`, {
+      params: { query },
+    });
+    return response.data;
+  }
+
+  async confirmWeatherLocation(
+    homeProfileId: number,
+    query: string,
+    candidateId: string,
+  ): Promise<ConfirmWeatherLocationResponse> {
+    const response = await this.client.post(`/weather/v2/locations/${homeProfileId}/confirm`, {
+      query,
+      candidateId,
+    });
     return response.data;
   }
 
@@ -281,10 +307,7 @@ class ApiClientService {
     return response.data;
   }
 
-  async uploadGasMeterImage(
-    id: number,
-    meterImage: { uri: string; name?: string; type?: string },
-  ) {
+  async uploadGasMeterImage(id: number, meterImage: { uri: string; name?: string; type?: string }) {
     const formData = new FormData();
     formData.append('meterImage', {
       uri: meterImage.uri,
@@ -424,10 +447,7 @@ class ApiClientService {
   }
 
   // Heating events
-  async getHeatingEvents(
-    paramsOrStartDate?: Record<string, any> | string,
-    endDate?: string,
-  ) {
+  async getHeatingEvents(paramsOrStartDate?: Record<string, any> | string, endDate?: string) {
     const params =
       typeof paramsOrStartDate === 'string' || endDate !== undefined
         ? { startDate: paramsOrStartDate, endDate }

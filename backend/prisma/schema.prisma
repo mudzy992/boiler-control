@@ -67,6 +67,17 @@ model HomeProfile {
   targetMorningTemp                          Float?
   targetNightTemp                            Float?
   location                                   String?
+  weatherLatitude                            Float?
+  weatherLongitude                           Float?
+  weatherTimezone                            String?
+  weatherLocationProvider                    String?
+  weatherLocationProviderId                  String?
+  weatherLocationLabel                       String?
+  weatherLocationName                        String?
+  weatherLocationAdmin1                      String?
+  weatherLocationCountry                     String?
+  weatherLocationCountryCode                 String?
+  weatherLocationConfirmedAt                 DateTime?
   intervalLearnings                          HeatingIntervalLearning[]
   user                                       User                       @relation(fields: [userId], references: [id])
   thermostatDevices                          ThermostatDevice[]
@@ -172,6 +183,18 @@ model WeatherCache {
   uv_index          Float?
   wind_dir          String?
   wind_kph          Float?
+}
+
+model WeatherV2Cache {
+  id        Int      @id @default(autoincrement())
+  cacheKey  String   @unique
+  provider  String
+  payload   Json
+  fetchedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fetchedAt])
 }
 
 model BoilerHistory {

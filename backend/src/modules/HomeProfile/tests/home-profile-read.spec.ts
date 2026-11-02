@@ -114,4 +114,51 @@ describe('MO2-20 HomeProfileService read contract', () => {
     expect(result[0].location).toBe('Sarajevo');
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
+
+  it('location text edits clear weather v2 confirmation without auto-backfill', async () => {
+    const prisma = {
+      homeProfile: {
+        findFirst: jest.fn().mockResolvedValue(profileRow()),
+        update: jest.fn().mockResolvedValue(profileRow()),
+      },
+    };
+
+    await makeService(prisma).update(1, 10, { location: 'Springfield' });
+
+    expect(prisma.homeProfile.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: expect.objectContaining({
+        location: 'Springfield',
+        weatherLatitude: null,
+        weatherLongitude: null,
+        weatherTimezone: null,
+        weatherLocationProviderId: null,
+        weatherLocationConfirmedAt: null,
+      }),
+    });
+  });
+
+  it('keeps weather confirmation when an update carries unchanged location text', async () => {
+    const prisma = {
+      homeProfile: {
+        findFirst: jest
+          .fn()
+          .mockResolvedValue(profileRow({ location: 'Springfield' })),
+        update: jest.fn().mockResolvedValue(profileRow()),
+      },
+    };
+
+    await makeService(prisma).update(1, 10, {
+      location: 'Springfield',
+      targetDayTemp: 21,
+    });
+
+    const updateData = prisma.homeProfile.update.mock.calls[0][0].data;
+    expect(updateData).toMatchObject({
+      location: 'Springfield',
+      targetDayTemp: 21,
+    });
+    expect(updateData).not.toHaveProperty('weatherLatitude');
+    expect(updateData).not.toHaveProperty('weatherLocationConfirmedAt');
+  });
 });

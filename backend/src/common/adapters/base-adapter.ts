@@ -4,7 +4,11 @@
  */
 
 import { Logger } from '@nestjs/common';
-import { CircuitBreaker, CircuitBreakerState } from './circuit-breaker';
+import {
+  CircuitBreaker,
+  CircuitBreakerState,
+  type CircuitBreakerMetrics,
+} from './circuit-breaker';
 import { MetricsService } from '../metrics.service';
 import { StructuredLogger } from '../structured-logger';
 
@@ -67,7 +71,11 @@ export abstract class BaseAdapter {
     // NOTE: We wrap the circuit breaker's metrics getter to emit adapter-level
     // metrics when the state transitions to OPEN. This is non-invasive for
     // existing consumers but provides visibility for P2b.
-    this.circuitBreaker.getMetrics = this.createMetricsGetter();
+    const getCircuitMetrics = this.circuitBreaker.getMetrics.bind(
+      this.circuitBreaker,
+    );
+    this.circuitBreaker.getMetrics =
+      this.createMetricsGetter(getCircuitMetrics);
   }
 
   /**
@@ -213,10 +221,10 @@ export abstract class BaseAdapter {
   /**
    * Create metrics getter wrapper to track state changes
    */
-  private createMetricsGetter() {
+  private createMetricsGetter(getCircuitMetrics: () => CircuitBreakerMetrics) {
     let lastState: CircuitBreakerState | null = null;
     return () => {
-      const metrics = this.circuitBreaker.getMetrics();
+      const metrics = getCircuitMetrics();
 
       // Track state transitions
       if (lastState !== metrics.state && this.metricsService) {

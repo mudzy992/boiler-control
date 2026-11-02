@@ -54,6 +54,11 @@ JWT_SECRET=<JWT_SECRET: vrijednost iz secret managera>
 JWT_EXPIRES_IN="3600s"
 
 WEATHER_API_KEY=<WEATHER_API_KEY: vrijednost iz secret managera>
+# Weather v2 rollout je zadano isključen. Stale i current-cutoff su u minutama.
+WEATHER_LOCATION_V2=off
+WEATHER_SWR_ENABLED=off
+WEATHER_STALE_AFTER_MINUTES=15
+WEATHER_CURRENT_HIDDEN_AFTER_MINUTES=60
 
 TUYA_CLIENT_ID=<TUYA_CLIENT_ID: vrijednost iz secret managera>
 TUYA_CLIENT_SECRET=<TUYA_CLIENT_SECRET: vrijednost iz secret managera>

@@ -171,6 +171,102 @@
         "properties": {},
         "type": "object"
       },
+      "ConfirmWeatherLocationDto": {
+        "properties": {
+          "candidateId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "query": {
+            "maxLength": 100,
+            "minLength": 2,
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "candidateId"
+        ],
+        "type": "object"
+      },
+      "ConfirmWeatherLocationResponseDto": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/ConfirmedWeatherLocationDto"
+          },
+          "status": {
+            "enum": [
+              "location_confirmed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "location"
+        ],
+        "type": "object"
+      },
+      "ConfirmedWeatherLocationDto": {
+        "properties": {
+          "admin1": {
+            "nullable": true,
+            "type": "string"
+          },
+          "confirmedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "country": {
+            "nullable": true,
+            "type": "string"
+          },
+          "countryCode": {
+            "nullable": true,
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "enum": [
+              "open-meteo"
+            ],
+            "type": "string"
+          },
+          "providerId": {
+            "type": "string"
+          },
+          "timezone": {
+            "description": "IANA timezone returned by the geocoder.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "providerId",
+          "label",
+          "name",
+          "admin1",
+          "country",
+          "countryCode",
+          "latitude",
+          "longitude",
+          "timezone",
+          "confirmedAt"
+        ],
+        "type": "object"
+      },
       "CreateGasReadingDto": {
         "properties": {
           "counterValue": {
@@ -1855,6 +1951,351 @@
       },
       "UploadInvoiceDto": {
         "properties": {},
+        "type": "object"
+      },
+      "WeatherCurrentV2Dto": {
+        "properties": {
+          "apparentTemperatureC": {
+            "nullable": true,
+            "type": "number"
+          },
+          "cloudPercent": {
+            "nullable": true,
+            "type": "number"
+          },
+          "conditionCode": {
+            "nullable": true,
+            "type": "number"
+          },
+          "conditionI18nKey": {
+            "type": "string"
+          },
+          "conditionKey": {
+            "type": "string"
+          },
+          "gustKph": {
+            "nullable": true,
+            "type": "number"
+          },
+          "humidityPercent": {
+            "nullable": true,
+            "type": "number"
+          },
+          "isDay": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "pressureHpa": {
+            "nullable": true,
+            "type": "number"
+          },
+          "temperatureC": {
+            "nullable": true,
+            "type": "number"
+          },
+          "windDirectionDegrees": {
+            "nullable": true,
+            "type": "number"
+          },
+          "windKph": {
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "temperatureC",
+          "apparentTemperatureC",
+          "humidityPercent",
+          "windKph",
+          "gustKph",
+          "windDirectionDegrees",
+          "pressureHpa",
+          "cloudPercent",
+          "conditionCode",
+          "conditionKey",
+          "conditionI18nKey",
+          "isDay"
+        ],
+        "type": "object"
+      },
+      "WeatherDayV2Dto": {
+        "properties": {
+          "conditionCode": {
+            "nullable": true,
+            "type": "number"
+          },
+          "conditionI18nKey": {
+            "type": "string"
+          },
+          "conditionKey": {
+            "type": "string"
+          },
+          "date": {
+            "example": "2026-11-02",
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
+          "precipitationMm": {
+            "nullable": true,
+            "type": "number"
+          },
+          "precipitationProbabilityPercent": {
+            "nullable": true,
+            "type": "number"
+          },
+          "sunrise": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "sunset": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "temperatureMaxC": {
+            "nullable": true,
+            "type": "number"
+          },
+          "temperatureMinC": {
+            "nullable": true,
+            "type": "number"
+          },
+          "uvIndex": {
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "temperatureMinC",
+          "temperatureMaxC",
+          "precipitationMm",
+          "precipitationProbabilityPercent",
+          "uvIndex",
+          "sunrise",
+          "sunset",
+          "conditionCode",
+          "conditionKey",
+          "conditionI18nKey"
+        ],
+        "type": "object"
+      },
+      "WeatherHourV2Dto": {
+        "properties": {
+          "apparentTemperatureC": {
+            "nullable": true,
+            "type": "number"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "conditionCode": {
+            "nullable": true,
+            "type": "number"
+          },
+          "conditionI18nKey": {
+            "type": "string"
+          },
+          "conditionKey": {
+            "type": "string"
+          },
+          "gustKph": {
+            "nullable": true,
+            "type": "number"
+          },
+          "humidityPercent": {
+            "nullable": true,
+            "type": "number"
+          },
+          "isDay": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "precipitationMm": {
+            "nullable": true,
+            "type": "number"
+          },
+          "precipitationProbabilityPercent": {
+            "nullable": true,
+            "type": "number"
+          },
+          "temperatureC": {
+            "nullable": true,
+            "type": "number"
+          },
+          "windDirectionDegrees": {
+            "nullable": true,
+            "type": "number"
+          },
+          "windKph": {
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "at",
+          "temperatureC",
+          "apparentTemperatureC",
+          "humidityPercent",
+          "precipitationProbabilityPercent",
+          "precipitationMm",
+          "windKph",
+          "gustKph",
+          "windDirectionDegrees",
+          "conditionCode",
+          "conditionKey",
+          "conditionI18nKey",
+          "isDay"
+        ],
+        "type": "object"
+      },
+      "WeatherLocationCandidateDto": {
+        "properties": {
+          "admin1": {
+            "nullable": true,
+            "type": "string"
+          },
+          "country": {
+            "nullable": true,
+            "type": "string"
+          },
+          "countryCode": {
+            "nullable": true,
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "enum": [
+              "open-meteo"
+            ],
+            "type": "string"
+          },
+          "providerId": {
+            "type": "string"
+          },
+          "timezone": {
+            "description": "IANA timezone returned by the geocoder.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "providerId",
+          "label",
+          "name",
+          "admin1",
+          "country",
+          "countryCode",
+          "latitude",
+          "longitude",
+          "timezone"
+        ],
+        "type": "object"
+      },
+      "WeatherLocationCandidatesResponseDto": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/WeatherLocationCandidateDto"
+            },
+            "type": "array"
+          },
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "candidates"
+        ],
+        "type": "object"
+      },
+      "WeatherV2ResponseDto": {
+        "properties": {
+          "ageSeconds": {
+            "type": "number"
+          },
+          "current": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WeatherCurrentV2Dto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
+          },
+          "currentHidden": {
+            "type": "boolean"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/WeatherDayV2Dto"
+            },
+            "type": "array"
+          },
+          "fetchedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "freshness": {
+            "enum": [
+              "fresh",
+              "stale"
+            ],
+            "type": "string"
+          },
+          "hourly": {
+            "items": {
+              "$ref": "#/components/schemas/WeatherHourV2Dto"
+            },
+            "type": "array"
+          },
+          "location": {
+            "$ref": "#/components/schemas/ConfirmedWeatherLocationDto"
+          },
+          "observedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "open-meteo"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "location_confirmation_required"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "enum": [
+              2
+            ],
+            "type": "number"
+          }
+        },
+        "required": [
+          "version",
+          "status"
+        ],
         "type": "object"
       }
     },
@@ -3759,6 +4200,132 @@
         ],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Weather"
+        ]
+      }
+    },
+    "/api/weather/v2/current/{homeProfileId}": {
+      "get": {
+        "operationId": "WeatherController_getCurrentWeatherV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "homeProfileId",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherV2ResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "description": "No forecast or last-good data is available."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Weather"
+        ]
+      }
+    },
+    "/api/weather/v2/locations/{homeProfileId}": {
+      "get": {
+        "operationId": "WeatherController_getWeatherLocationCandidates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "homeProfileId",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherLocationCandidatesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Weather"
+        ]
+      }
+    },
+    "/api/weather/v2/locations/{homeProfileId}/confirm": {
+      "post": {
+        "operationId": "WeatherController_confirmWeatherLocation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "homeProfileId",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmWeatherLocationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmWeatherLocationResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },

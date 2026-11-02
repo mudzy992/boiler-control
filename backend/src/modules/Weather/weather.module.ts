@@ -4,12 +4,19 @@ import { WeatherService } from './weather.service';
 import { WeatherController } from './weather.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { WeatherHttpAdapter } from './weather-http.adapter';
+import { WeatherV2Service } from './weather-v2.service';
+import { OpenMeteoV2Provider } from './openmeteo-v2.provider';
 import { CommonModule } from '../../common/common.module';
 
 @Module({
   imports: [PrismaModule, CommonModule],
   controllers: [WeatherController],
-  providers: [WeatherService, WeatherHttpAdapter],
+  providers: [
+    WeatherService,
+    WeatherV2Service,
+    OpenMeteoV2Provider,
+    WeatherHttpAdapter,
+  ],
   exports: [WeatherService, WeatherHttpAdapter],
 })
 export class WeatherModule {}

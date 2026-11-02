@@ -150,12 +150,31 @@ export class HomeProfileService {
   }
 
   async update(userId: number, id: number, dto: UpdateHomeProfileDto) {
-    await this.findOne(userId, id);
+    const existing = await this.findOne(userId, id);
 
     const updateData: any = {};
 
     if (dto.homeName !== undefined) updateData.homeName = dto.homeName ?? null;
-    if (dto.location !== undefined) updateData.location = dto.location ?? null;
+    if (dto.location !== undefined) {
+      const nextLocation = dto.location ?? null;
+      updateData.location = nextLocation;
+      // A changed text value is only a search hint, never a confirmed coordinate.
+      if (nextLocation !== existing.location) {
+        Object.assign(updateData, {
+          weatherLatitude: null,
+          weatherLongitude: null,
+          weatherTimezone: null,
+          weatherLocationProvider: null,
+          weatherLocationProviderId: null,
+          weatherLocationLabel: null,
+          weatherLocationName: null,
+          weatherLocationAdmin1: null,
+          weatherLocationCountry: null,
+          weatherLocationCountryCode: null,
+          weatherLocationConfirmedAt: null,
+        });
+      }
+    }
     if (dto.floorArea !== undefined) updateData.floorArea = dto.floorArea;
     if (dto.ceilingHeight !== undefined)
       updateData.ceilingHeight = dto.ceilingHeight;

@@ -30,30 +30,21 @@ export class WeatherHttpAdapter extends HttpAdapter {
     );
   }
 
-  /**
-   * Override to record Weather-specific metrics
-   */
-  async get<T = any>(endpoint: string, config?: any): Promise<T> {
-    if (this.metricsService) {
-      this.metricsService.incrementCounter('weather_requests_total');
-    }
-
+  /** Count every logical geocoder/forecast call, including direct SDK calls. */
+  async executeWithCircuitBreaker<T>(
+    requestFn: () => Promise<T>,
+    context?: { runId?: string; endpoint?: string },
+  ): Promise<T> {
+    this.metricsService?.incrementCounter('weather_requests_total');
     try {
-      const result = await super.get<T>(endpoint, config);
-      if (this.metricsService) {
-        this.metricsService.incrementCounter('weather_requests_success');
-      }
+      const result = await super.executeWithCircuitBreaker(requestFn, context);
+      this.metricsService?.incrementCounter('weather_requests_success');
       return result;
-    } catch (error: any) {
-      if (this.metricsService) {
-        this.metricsService.incrementCounter('weather_requests_failed');
-
-        // Track timeout errors separately
-        if (error.message?.includes('timeout')) {
-          this.metricsService.incrementCounter('weather_timeout_errors');
-        }
+    } catch (error) {
+      this.metricsService?.incrementCounter('weather_requests_failed');
+      if (error instanceof Error && error.message.includes('timeout')) {
+        this.metricsService?.incrementCounter('weather_timeout_errors');
       }
-
       throw error;
     }
   }

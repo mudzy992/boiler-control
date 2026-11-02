@@ -143,6 +143,7 @@ Plan je serija **malih commitova na aktivnoj grani** (`arena/1bfee051-boiler-con
 - **Prihvat/trud/kompatibilnost/zavisnosti:** prihvat = korisnik vidi razlog iz backend snapshota; M; instalirani klijenti nisu pogođeni dok se ne ažuriraju. FORM-1 i API izlaganje granica unosa ostaju otvoreni.
 
 ### 4.3 Weather v2 (MO2-17)
+- **Status 2026-11-02:** implementiran je additive mobile v2 iza `EXPO_PUBLIC_WEATHER_UI_V2=off`, uz backend ugovor i migraciju opisane u `../backend/05-weather.md`. Lokalno prolazi 23 suiteova / 123 testa / 32 snapshotova; puni current+hourly+daily SDK fixture, CI i fizički vizuelni QA ostaju otvoreni dok se ne dokažu.
 - **Cilj/fajlovi:** `mobile/src/components/WeatherCard.tsx` (WMO mapiranje, starost), novi dijeljeni modul `weatherCodes.ts` (isti za web i mobile), `types/Weather.ts` (generisan iz OpenAPI), opciono novi ekran iza `DashboardStackNavigator`.
 - **Migracija/rollback, flag:** `WEATHER_UI_V2` default off (isti flag kao FE2-9); legacy oblik ostaje dok backend tranzicija ne završi.
 - **Testovi:** contract test s fixtureom iz `scripts/audit/fixtures/`; unit: WMO kod → ikona/tekst u bs i en; e2e: podaci stariji od dogovorenog praga → oznaka; ekran/kartica ne puca na `weather: null`. **Skripte:** `node scripts/audit/openmeteo_fixture_replay.cjs --help` (Faza 1), `node scripts/audit/weather_repro.cjs --help`.

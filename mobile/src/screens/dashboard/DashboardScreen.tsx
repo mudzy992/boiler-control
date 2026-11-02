@@ -21,6 +21,8 @@ import { getDashboard } from '../../api/dashboard.api';
 import { useErrorHandler } from '../../services/api/error.handler';
 import { HealthScoreCard } from '../../components/HealthScoreCard';
 import { WeatherCard } from '../../components/WeatherCard';
+import { WeatherV2Card } from '../../components/weather/WeatherV2Card';
+import { WEATHER_UI_V2 } from '../../config/weather.config';
 import { BoilerStatusCard } from '../../components/BoilerStatusCard';
 import { ThermostatCard } from '../../components/ThermostatCard';
 import { AlertsCard } from '../../components/AlertsCard';
@@ -29,10 +31,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
 import { FormInput } from '../../components/FormInput';
-import {
-  DASHBOARD_QUERY_KEY,
-  DASHBOARD_HEALTH_QUERY_KEY,
-} from '../../services/query/keys';
+import { DASHBOARD_QUERY_KEY, DASHBOARD_HEALTH_QUERY_KEY } from '../../services/query/keys';
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
@@ -169,7 +168,6 @@ const DashboardScreenContent = () => {
     setCurrentTempMutation.mutate(rounded);
   }, [currentTempInput, setCurrentTempMutation, t, toast]);
 
-
   if (isLoading) {
     return (
       <Box flex={1} bg={bgColor} safeArea>
@@ -228,6 +226,7 @@ const DashboardScreenContent = () => {
             onRefresh={() => {
               void refetch();
               void healthQuery.refetch();
+              void queryClient.invalidateQueries({ queryKey: ['weather-v2'] });
             }}
             tintColor="brand.400"
           />
@@ -270,6 +269,7 @@ const DashboardScreenContent = () => {
                 onPress={() => {
                   void refetch();
                   void healthQuery.refetch();
+                  void queryClient.invalidateQueries({ queryKey: ['weather-v2'] });
                 }}
                 opacity={isFetching ? 0.5 : 1}
                 bg={headerBtnBg}
@@ -290,10 +290,7 @@ const DashboardScreenContent = () => {
 
           {/* Health Score */}
           {primaryHome && healthQuery.data && (
-            <HealthScoreCard
-              score={healthScore}
-              confidence={learningConfidencePercent}
-            />
+            <HealthScoreCard score={healthScore} confidence={learningConfidencePercent} />
           )}
 
           {/* Boiler Status */}
@@ -304,12 +301,14 @@ const DashboardScreenContent = () => {
           />
 
           {/* MO2-15: recommendation reason, only when backend sent a breakdown */}
-          <RecommendationBreakdown
-            breakdown={dashboardData?.system?.recommendation?.breakdown}
-          />
+          <RecommendationBreakdown breakdown={dashboardData?.system?.recommendation?.breakdown} />
 
           {/* Weather */}
-          {dashboardData?.system?.weather && <WeatherCard weather={dashboardData.system.weather} />}
+          {WEATHER_UI_V2 && primaryHome?.profile?.id ? (
+            <WeatherV2Card homeProfileId={primaryHome.profile.id} />
+          ) : (
+            dashboardData?.system?.weather && <WeatherCard weather={dashboardData.system.weather} />
+          )}
 
           {/* Thermostats */}
           {primaryHome?.thermostats && primaryHome.thermostats.length > 0 && (
@@ -320,7 +319,7 @@ const DashboardScreenContent = () => {
               {primaryHome.thermostats.map((thermostat) => {
                 // Find matching recent event for current temp
                 const recentEvent = primaryHome.recentHeatingEvents?.find(
-                  (event) => event.deviceId === thermostat.id
+                  (event) => event.deviceId === thermostat.id,
                 );
                 return (
                   <ThermostatCard
@@ -376,12 +375,7 @@ const DashboardScreenContent = () => {
               _pressed={{ opacity: 0.7 }}
               disabled={setCurrentTempMutation.isPending}
             >
-              <Box
-                bg={sheetCancelBg}
-                rounded="lg"
-                py={3}
-                alignItems="center"
-              >
+              <Box bg={sheetCancelBg} rounded="lg" py={3} alignItems="center">
                 <Text fontWeight="600" color={textColor}>
                   {t('common.cancel')}
                 </Text>

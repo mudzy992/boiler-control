@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AxiosError } from 'axios';
-import { useToast } from 'native-base';
+import { useToast } from '../../components/ui/compat';
 import i18n from '../../locales/config';
 
 /**
@@ -9,7 +9,7 @@ import i18n from '../../locales/config';
  *
  * MO2-5: `showError` je prije samo radio `console.error`, pa korisnik NIJE vidio
  * nijednu grešku — a poziva se 15 puta na 3 ekrana (GasReadingsScreen 12,
- * DashboardScreen 2, HeatingScreen 1). Sada prikazuje NativeBase toast.
+ * DashboardScreen 2, HeatingScreen 1). Sada prikazuje toast kroz zajednički UI sloj.
  */
 
 export interface ApiErrorResponse {

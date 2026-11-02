@@ -15,7 +15,7 @@ import {
   Spinner,
   useToast,
   Divider,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
@@ -23,6 +23,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useAppState } from '../../hooks/useAppState';
 import { dashboardRefetchInterval } from '../../services/query/polling';
 import { DASHBOARD_QUERY_KEY } from '../../services/query/keys';
+import { withUiImplementation } from '../../components/ui/migration';
 
 interface Thermostat {
   id: number;
@@ -53,7 +54,7 @@ interface HeatingEvent {
   isAnomaly: boolean;
 }
 
-export const HeatingScreen = () => {
+const HeatingScreenContent = () => {
   const toast = useToast();
   const { showError } = useErrorHandler();
   const { t } = useTranslation();
@@ -511,3 +512,5 @@ export const HeatingScreen = () => {
     </Box>
   );
 };
+
+export const HeatingScreen = withUiImplementation('Heating', HeatingScreenContent);

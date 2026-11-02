@@ -200,6 +200,12 @@ export interface ToastOptions {
   duration?: number | null;
   placement?: 'top' | 'bottom';
   bg?: string;
+  rounded?: number | string;
+  px?: number | string;
+  py?: number | string;
+  _description?: UiProps;
+  accessibilityAnnouncement?: string;
+  accessibilityLiveRegion?: 'none' | 'polite' | 'assertive';
   status?: 'success' | 'warning' | 'error' | 'info';
 }
 
@@ -303,11 +309,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <Box
         key={toast.id}
         bg={toast.bg ?? scheme}
-        rounded="lg"
+        rounded={toast.rounded ?? 'lg'}
         p={4}
+        px={toast.px}
+        py={toast.py}
         mb={2}
         shadow={3}
-        accessibilityLiveRegion="polite"
+        accessibilityLiveRegion={toast.accessibilityLiveRegion ?? 'polite'}
       >
         <HStack space={3} alignItems="flex-start">
           <Box flex={1}>
@@ -316,7 +324,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 {toast.title}
               </Text>
             )}
-            {toast.description !== undefined && <Text color="white">{toast.description}</Text>}
+            {toast.description !== undefined && (
+              <Text color="white" {...toast._description}>
+                {toast.description}
+              </Text>
+            )}
           </Box>
           <Pressable accessibilityLabel="Dismiss notification" onPress={() => close(toast.id)} p={1}>
             <Icon as={Ionicons} name="close" size={4} color="white" />

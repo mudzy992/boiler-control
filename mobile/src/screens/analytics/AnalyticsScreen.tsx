@@ -22,12 +22,13 @@ import {
   Skeleton,
   Spinner,
   useToast,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { analyticsApi } from '../../services/api/analytics.api';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
 import { apiClient } from '../../services/api/client';
 import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
+import { withUiImplementation } from '../../components/ui/migration';
 
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
@@ -57,7 +58,7 @@ const getDateRange = (
   };
 };
 
-export const AnalyticsScreen = () => {
+const AnalyticsScreenContent = () => {
   const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const [exporting, setExporting] = useState(false);
@@ -375,7 +376,7 @@ export const AnalyticsScreen = () => {
                 bg: 'brand.100',
                 endIcon: <CheckIcon size="5" />,
               }}
-              onValueChange={(value) => setTimeRange(value as TimeRange)}
+              onValueChange={(value: TimeRange) => setTimeRange(value)}
             >
               <Select.Item label={t('analytics.today')} value="day" />
               <Select.Item label={t('analytics.thisWeek')} value="week" />
@@ -745,3 +746,5 @@ export const AnalyticsScreen = () => {
     </Box>
   );
 };
+
+export const AnalyticsScreen = withUiImplementation('Analytics', AnalyticsScreenContent);

@@ -28,6 +28,7 @@ export type UiImplementation = 'legacy' | 'nativewind';
  * mechanism is removed when MO2-14 removes the legacy implementation.
  */
 const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
+  'Analytics',
   'Gas',
   'GasAnalysis',
   'GasReadings',

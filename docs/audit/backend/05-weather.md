@@ -89,7 +89,7 @@
 
 | Test | Ulaz / očekivanje | Pokretanje / status |
 |---|---|---|
-| Sintetička reprodukcija postojećih grešaka | Lažni SDK i baza, poznati UTC instant, zadnji sat, pad osvježavanja. | `node scripts/audit/weather_repro.cjs --help` i `node scripts/audit/weather_repro.cjs`; pokrenuto lokalno, izlaz 0. Bez mreže i upisa. |
+| Legacy timeline regression guard | Sintetički SDK i baza, poznati UTC instant, lokalni 06–15 prosjek, sunrise/sunset i bounded stale fallback. | `node scripts/audit/weather_repro.cjs --help` i `node scripts/audit/weather_repro.cjs`; nakon ispravke izlaz 0, uz actual=expected i zadržan stale red. Bez mreže i stvarnog upisa. |
 | Stvarni snimljeni provider fixture | Anonimiziran FlatBuffers odgovor za UTC i DST, posebno `valuesInt64` sunrise/sunset, dogovorene jedinice. | **NIJE URAĐENO**: budući `scripts/record-weather-fixtures.ts --help` mora ukloniti tajne i identifikatore, imati offline replay i eksplicitno odobrenje mrežnog snimanja. |
 | Jedinice/konverzija | C, hPa, km/h, mm/cm; 0 kao vrijednost, null kao odsustvo; različite dužine satnih nizova, unknown WMO. | Budući Jest spec; `cd backend && npm test -- --runInBand`. |
 | Timezone/DST i geokodiranje | UTC, Sarajevo, zona van regije, DST prijelazi, dvosmisleni nazivi i korisnikova potvrda. | Budući deterministic Jest + provider fixtures; ista komanda. |
@@ -159,5 +159,17 @@ V2 forecast sada koristi isti `fetchOpenMeteoFlatbuffers` kao legacy servis. Zad
 **Dokazi:** v2 fixture suite sada prolazi 5/5; provider+fixture+legacy suiteovi prolaze 3 suitea / 18 testova, a svi Weather testovi 6 suiteova / 35 testova. Generator ostaje `in_sync`, Prettier prolazi, a tačna CI ESLint naredba ima 0 errors i dva postojeća warnings. CI run `41457554020` na `34b0024` je potpuno zelen: backend `tsc: 0`, `eslint: 0`, Build/OpenAPI success, 58 suiteova / 621 test i 5 integration suiteova / 60 testova; mobile i frontend su success, bez failure annotations.
 
 **Granica dokaza:** 503 i validni FlatBuffers odgovori su stubovani/generated ulazi. Ovo ne predstavlja live provider capture, produkcijski rollout ni dokaz da Open-Meteo trenutno vraća određeni status.
+
+### Legacy WeatherService vremensko mapiranje — 2026-11-02
+
+**Reprodukcija prije ispravke:** synthetic SDK odgovor s 24 sata, offsetom +01:00 i poznatim `current.time()` pokrenut je kroz stvarni legacy servis u zasebnim server `TZ` procesima. Na neizmijenjenom production kodu početni regression suite davao je 8 prolaza / 2 očekivana pada u svakoj zoni. Pod UTC je `feelslike` bio 112 umjesto 113, vjetar 223 umjesto 213, a sunrise 07:00Z umjesto 06:00Z. `temp_avg` je za isti ulaz bio 10.5 pod UTC, 9.5 pod `Europe/Sarajevo` i 15.5 pod `America/New_York`, čime je potvrđena zavisnost od serverske zone. `INT64_MAX` sunrise je obarao cijeli refresh umjesto da postane odsutna vrijednost.
+
+**Ispravka:** `2444a7b` bira hourly uzorak iz providerovog `current.time()` i UTC starta/intervala, bez serverskog `new Date().getHours()` i bez `.at(-1)`. Lokalni 06–15 prosjek koristi eksplicitni offset i `getUTCHours()`. Sunrise/sunset Unix sekunde više se ne pomiču za offset; `INT64_MAX`, `null` i nevažeći timestamp postaju `null`, u skladu s nullable `WeatherCache` poljima i postojećim v2 ponašanjem. Striktni transport, adapter, bounded 60-min fallback i update postojećeg reda ostaju nepromijenjeni. Nema migracije, flag/API/compose/mobile promjene ni produkcijskog uključivanja.
+
+**Dokazi nakon ispravke:** legacy suite prolazi 11/11 u svakom od tri stvarna `TZ` procesa, a svi Weather testovi prolaze 6 suiteova / 38 testova. `weather_repro.cjs` je ažuriran sa zastarjelog SDK/cache stub-a na regression guard: actual=expected za current uzorke, prosjek i sunrise/sunset, uz `retainedStale=true` i nula DB operacija na neuspjelom refreshu. Combined fixture generator ostaje `in_sync`, Prettier prolazi, a tačna CI ESLint naredba ima 0 errors i dva postojeća warnings.
+
+Prvi CI run `41461115757` na `2444a7b` zaustavljen je samo na test-only `TS2740` za djelimični synthetic SDK response; `1747bc0` ispravlja taj test double bez production izmjene. Finalni CI run `41461729530` je potpuno zelen: backend `tsc: 0`, `eslint: 0`, Build/OpenAPI success, 58 suiteova / 624 testa i 5 integration suiteova / 60 testova; mobile 24 suitea / 136 testova, frontend 4/4 E2E, a sva tri joba imaju nula failure annotations.
+
+**Granica dokaza:** ovo su synthetic SDK i server-timezone dokazi, ne live provider capture. Produkcijski rollout, stvarni provider sunrise/sunset odgovor i stvarna DST provjera i dalje nisu dokazani.
 
 **I dalje otvoreno:** stvarno snimljeni/anonimizirani provider fixture s current+hourly+daily i sunrise/sunset, stvarna DST potvrda nad takvim fixtureom, produkcijska migracija/obnova, višeprocesni SWR, provider licence/kvote i fizički mobile vizuelni QA. Postojeći hourly-only upstream fixture i novi generisani combined fixture nisu dokaz tih stavki.

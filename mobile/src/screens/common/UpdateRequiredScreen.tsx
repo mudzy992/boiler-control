@@ -1,5 +1,13 @@
 import React from 'react';
-import { Box, VStack, Heading, Text, Button, useColorModeValue } from 'native-base';
+import {
+  Box,
+  VStack,
+  Heading,
+  Text,
+  Button,
+  useColorModeValue,
+} from '../../components/ui/compat';
+import { withUiImplementation } from '../../components/ui/migration';
 import { Linking } from 'react-native';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,7 +35,7 @@ type UpdateRequiredScreenProps = {
   minSupportedVersion: string | null;
 };
 
-export const UpdateRequiredScreen: React.FC<UpdateRequiredScreenProps> = ({
+const UpdateRequiredScreenContent: React.FC<UpdateRequiredScreenProps> = ({
   currentVersion,
   minSupportedVersion,
 }) => {
@@ -97,3 +105,8 @@ export const UpdateRequiredScreen: React.FC<UpdateRequiredScreenProps> = ({
     </Box>
   );
 };
+
+export const UpdateRequiredScreen = withUiImplementation(
+  'UpdateRequired',
+  UpdateRequiredScreenContent,
+);

@@ -1,8 +1,9 @@
+import './global.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NativeBaseProvider } from 'native-base';
+import { NativeBaseProvider, useColorMode as useNativeBaseColorMode } from 'native-base';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NavigationContainerRef } from '@react-navigation/native';
 import { AuthProvider } from './src/context/AuthContext';
@@ -16,6 +17,8 @@ import {
 } from './src/services/notifications/notificationService';
 import i18n from './src/locales/config';
 import { AppStorage } from './src/services/storage/AppStorage';
+import { AppThemeProvider } from './src/theme/AppTheme';
+import { ToastProvider } from './src/components/ui/nativewind';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -28,6 +31,18 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function AppProviders({ children }: { children: React.ReactNode }) {
+  const { colorMode, toggleColorMode } = useNativeBaseColorMode();
+  return (
+    <AppThemeProvider
+      colorMode={colorMode === 'dark' ? 'dark' : 'light'}
+      toggleColorMode={toggleColorMode}
+    >
+      <ToastProvider>{children}</ToastProvider>
+    </AppThemeProvider>
+  );
+}
 
 export default function App() {
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
@@ -77,14 +92,16 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <NativeBaseProvider theme={theme} colorModeManager={colorModeManager}>
-          <AuthProvider>
-            <StatusBar style="auto" />
-            <RootNavigator ref={navigationRef} />
-            <AnimatedSplash
-              visible={showAnimatedSplash}
-              onFinished={() => setShowAnimatedSplash(false)}
-            />
-          </AuthProvider>
+          <AppProviders>
+            <AuthProvider>
+              <StatusBar style="auto" />
+              <RootNavigator ref={navigationRef} />
+              <AnimatedSplash
+                visible={showAnimatedSplash}
+                onFinished={() => setShowAnimatedSplash(false)}
+              />
+            </AuthProvider>
+          </AppProviders>
         </NativeBaseProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

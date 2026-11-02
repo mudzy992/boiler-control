@@ -1,0 +1,5901 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Login before/after NativeWind legacy matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      dataSet={{}}
+      style={
+        {
+          "backgroundColor": "#0b0f1a",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            dataSet={{}}
+            style={
+              {
+                "alignItems": "center",
+              }
+            }
+          >
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "alignItems": "center",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 4,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.23,
+                    "shadowRadius": 2.62,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#f4f4f5",
+                    "fontFamily": undefined,
+                    "fontSize": 30,
+                    "fontStyle": "normal",
+                    "fontWeight": "700",
+                    "letterSpacing": 0,
+                    "lineHeight": 37.5,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#71717a",
+                    "fontFamily": undefined,
+                    "fontSize": 16,
+                    "fontStyle": "normal",
+                    "fontWeight": "400",
+                    "letterSpacing": 0,
+                    "lineHeight": 24,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.smartHeating
+              </Text>
+            </View>
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "height": 32,
+                }
+              }
+            />
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": "#0f172a",
+                  "borderRadius": 12,
+                  "elevation": 3,
+                  "maxWidth": 400,
+                  "paddingBottom": 24,
+                  "paddingLeft": 24,
+                  "paddingRight": 24,
+                  "paddingTop": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 1,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.22,
+                  "shadowRadius": 2.22,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={{}}
+              >
+                <Text
+                  dataSet={{}}
+                  style={
+                    {
+                      "backgroundColor": undefined,
+                      "color": "#f4f4f5",
+                      "fontFamily": undefined,
+                      "fontSize": 24,
+                      "fontStyle": "normal",
+                      "fontWeight": "700",
+                      "letterSpacing": 0,
+                      "lineHeight": 30,
+                      "marginBottom": 8,
+                      "textDecorationLine": undefined,
+                    }
+                  }
+                >
+                  auth.signIn
+                </Text>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.emailOrUsername
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.emailOrUsernamePlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  colorScheme="brand"
+                  dataSet={{}}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#c1411c",
+                      "borderRadius": 4,
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 8,
+                      "paddingBottom": 12,
+                      "paddingLeft": 12,
+                      "paddingRight": 12,
+                      "paddingTop": 12,
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                      }
+                    }
+                    test={true}
+                  >
+                    <View
+                      dataSet={{}}
+                      style={{}}
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#fafafa",
+                            "fontFamily": undefined,
+                            "fontSize": 16,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 24,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        auth.signIn
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#71717a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.dontHaveAccount
+                     
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    dataSet={{}}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={{}}
+                  >
+                    <Text
+                      dataSet={{}}
+                      style={
+                        {
+                          "backgroundColor": undefined,
+                          "color": "#ff6b3d",
+                          "fontFamily": undefined,
+                          "fontSize": 14,
+                          "fontStyle": "normal",
+                          "fontWeight": "600",
+                          "letterSpacing": 0,
+                          "lineHeight": 21,
+                          "textDecorationLine": undefined,
+                        }
+                      }
+                    >
+                      auth.signUp
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Login before/after NativeWind legacy matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      dataSet={{}}
+      style={
+        {
+          "backgroundColor": "#fafafa",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            dataSet={{}}
+            style={
+              {
+                "alignItems": "center",
+              }
+            }
+          >
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "alignItems": "center",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 4,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.23,
+                    "shadowRadius": 2.62,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#27272a",
+                    "fontFamily": undefined,
+                    "fontSize": 30,
+                    "fontStyle": "normal",
+                    "fontWeight": "700",
+                    "letterSpacing": 0,
+                    "lineHeight": 37.5,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#71717a",
+                    "fontFamily": undefined,
+                    "fontSize": 16,
+                    "fontStyle": "normal",
+                    "fontWeight": "400",
+                    "letterSpacing": 0,
+                    "lineHeight": 24,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.smartHeating
+              </Text>
+            </View>
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "height": 32,
+                }
+              }
+            />
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 12,
+                  "elevation": 3,
+                  "maxWidth": 400,
+                  "paddingBottom": 24,
+                  "paddingLeft": 24,
+                  "paddingRight": 24,
+                  "paddingTop": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 1,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.22,
+                  "shadowRadius": 2.22,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={{}}
+              >
+                <Text
+                  dataSet={{}}
+                  style={
+                    {
+                      "backgroundColor": undefined,
+                      "color": "#27272a",
+                      "fontFamily": undefined,
+                      "fontSize": 24,
+                      "fontStyle": "normal",
+                      "fontWeight": "700",
+                      "letterSpacing": 0,
+                      "lineHeight": 30,
+                      "marginBottom": 8,
+                      "textDecorationLine": undefined,
+                    }
+                  }
+                >
+                  auth.signIn
+                </Text>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.emailOrUsername
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.emailOrUsernamePlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  colorScheme="brand"
+                  dataSet={{}}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#c1411c",
+                      "borderRadius": 4,
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 8,
+                      "paddingBottom": 12,
+                      "paddingLeft": 12,
+                      "paddingRight": 12,
+                      "paddingTop": 12,
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                      }
+                    }
+                    test={true}
+                  >
+                    <View
+                      dataSet={{}}
+                      style={{}}
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#fafafa",
+                            "fontFamily": undefined,
+                            "fontSize": 16,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 24,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        auth.signIn
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#71717a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.dontHaveAccount
+                     
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    dataSet={{}}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={{}}
+                  >
+                    <Text
+                      dataSet={{}}
+                      style={
+                        {
+                          "backgroundColor": undefined,
+                          "color": "#ff6b3d",
+                          "fontFamily": undefined,
+                          "fontSize": 14,
+                          "fontStyle": "normal",
+                          "fontWeight": "600",
+                          "letterSpacing": 0,
+                          "lineHeight": 21,
+                          "textDecorationLine": undefined,
+                        }
+                      }
+                    >
+                      auth.signUp
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Login before/after NativeWind nativewind matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      style={
+        {
+          "backgroundColor": "#0b0f1a",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "alignItems": "center",
+                "gap": 32,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "alignItems": "center",
+                  "gap": 12,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 3,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.16999999999999998,
+                    "shadowRadius": 4.5,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <Text
+                accessibilityRole="header"
+                style={
+                  {
+                    "color": "#f3f4f6",
+                    "fontSize": 32,
+                    "fontWeight": "700",
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <Text
+                style={
+                  {
+                    "color": "#6b7280",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                auth.smartHeating
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "backgroundColor": "#0f172a",
+                  "borderRadius": 12,
+                  "elevation": 0,
+                  "maxWidth": 400,
+                  "padding": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 2,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.14,
+                  "shadowRadius": 3,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 16,
+                  }
+                }
+              >
+                <Text
+                  accessibilityRole="header"
+                  style={
+                    {
+                      "color": "#f3f4f6",
+                      "fontSize": 28,
+                      "fontWeight": "700",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  auth.signIn
+                </Text>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.emailOrUsername
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.emailOrUsernamePlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": false,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "backgroundColor": "#e85223",
+                        "borderColor": "#e85223",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "color": "#ffffff",
+                        "justifyContent": "center",
+                        "marginTop": 8,
+                        "paddingBottom": 12,
+                        "paddingLeft": 20,
+                        "paddingRight": 20,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "gap": 8,
+                        "justifyContent": "center",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ffffff",
+                          "fontSize": 18,
+                          "fontWeight": "600",
+                        }
+                      }
+                    >
+                      auth.signIn
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#6b7280",
+                        "fontSize": 14,
+                      }
+                    }
+                  >
+                    auth.dontHaveAccount
+                     
+                  </Text>
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {},
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ff6b3d",
+                          "fontSize": 14,
+                          "fontWeight": "semibold",
+                        }
+                      }
+                    >
+                      auth.signUp
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Login before/after NativeWind nativewind matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      style={
+        {
+          "backgroundColor": "#f9fafb",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "alignItems": "center",
+                "gap": 32,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "alignItems": "center",
+                  "gap": 12,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 3,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.16999999999999998,
+                    "shadowRadius": 4.5,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <Text
+                accessibilityRole="header"
+                style={
+                  {
+                    "color": "#1f2937",
+                    "fontSize": 32,
+                    "fontWeight": "700",
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <Text
+                style={
+                  {
+                    "color": "#6b7280",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                auth.smartHeating
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderRadius": 12,
+                  "elevation": 0,
+                  "maxWidth": 400,
+                  "padding": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 2,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.14,
+                  "shadowRadius": 3,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 16,
+                  }
+                }
+              >
+                <Text
+                  accessibilityRole="header"
+                  style={
+                    {
+                      "color": "#1f2937",
+                      "fontSize": 28,
+                      "fontWeight": "700",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  auth.signIn
+                </Text>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.emailOrUsername
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.emailOrUsernamePlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": false,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "backgroundColor": "#e85223",
+                        "borderColor": "#e85223",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "color": "#ffffff",
+                        "justifyContent": "center",
+                        "marginTop": 8,
+                        "paddingBottom": 12,
+                        "paddingLeft": 20,
+                        "paddingRight": 20,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "gap": 8,
+                        "justifyContent": "center",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ffffff",
+                          "fontSize": 18,
+                          "fontWeight": "600",
+                        }
+                      }
+                    >
+                      auth.signIn
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#6b7280",
+                        "fontSize": 14,
+                      }
+                    }
+                  >
+                    auth.dontHaveAccount
+                     
+                  </Text>
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {},
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ff6b3d",
+                          "fontSize": 14,
+                          "fontWeight": "semibold",
+                        }
+                      }
+                    >
+                      auth.signUp
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Register before/after NativeWind legacy matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      dataSet={{}}
+      style={
+        {
+          "backgroundColor": "#0b0f1a",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            dataSet={{}}
+            style={
+              {
+                "alignItems": "center",
+              }
+            }
+          >
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "alignItems": "center",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 4,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.23,
+                    "shadowRadius": 2.62,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#f4f4f5",
+                    "fontFamily": undefined,
+                    "fontSize": 30,
+                    "fontStyle": "normal",
+                    "fontWeight": "700",
+                    "letterSpacing": 0,
+                    "lineHeight": 37.5,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#71717a",
+                    "fontFamily": undefined,
+                    "fontSize": 16,
+                    "fontStyle": "normal",
+                    "fontWeight": "400",
+                    "letterSpacing": 0,
+                    "lineHeight": 24,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.createAccount
+              </Text>
+            </View>
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "height": 32,
+                }
+              }
+            />
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": "#0f172a",
+                  "borderRadius": 12,
+                  "elevation": 3,
+                  "maxWidth": 400,
+                  "paddingBottom": 24,
+                  "paddingLeft": 24,
+                  "paddingRight": 24,
+                  "paddingTop": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 1,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.22,
+                  "shadowRadius": 2.22,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={{}}
+              >
+                <Text
+                  dataSet={{}}
+                  style={
+                    {
+                      "backgroundColor": undefined,
+                      "color": "#f4f4f5",
+                      "fontFamily": undefined,
+                      "fontSize": 24,
+                      "fontStyle": "normal",
+                      "fontWeight": "700",
+                      "letterSpacing": 0,
+                      "lineHeight": 30,
+                      "marginBottom": 8,
+                      "textDecorationLine": undefined,
+                    }
+                  }
+                >
+                  auth.signUp
+                </Text>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.name
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.namePlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.email
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      keyboardType="email-address"
+                      onChangeText={[Function]}
+                      placeholder="auth.emailPlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.username
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.usernamePlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#f4f4f5",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.confirmPassword
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  colorScheme="brand"
+                  dataSet={{}}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#c1411c",
+                      "borderRadius": 4,
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 8,
+                      "paddingBottom": 12,
+                      "paddingLeft": 12,
+                      "paddingRight": 12,
+                      "paddingTop": 12,
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                      }
+                    }
+                    test={true}
+                  >
+                    <View
+                      dataSet={{}}
+                      style={{}}
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#fafafa",
+                            "fontFamily": undefined,
+                            "fontSize": 16,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 24,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        auth.signUp
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#71717a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.alreadyHaveAccount
+                     
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    dataSet={{}}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={{}}
+                  >
+                    <Text
+                      dataSet={{}}
+                      style={
+                        {
+                          "backgroundColor": undefined,
+                          "color": "#ff6b3d",
+                          "fontFamily": undefined,
+                          "fontSize": 14,
+                          "fontStyle": "normal",
+                          "fontWeight": "600",
+                          "letterSpacing": 0,
+                          "lineHeight": 21,
+                          "textDecorationLine": undefined,
+                        }
+                      }
+                    >
+                      auth.signIn
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Register before/after NativeWind legacy matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      dataSet={{}}
+      style={
+        {
+          "backgroundColor": "#fafafa",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            dataSet={{}}
+            style={
+              {
+                "alignItems": "center",
+              }
+            }
+          >
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "alignItems": "center",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 4,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.23,
+                    "shadowRadius": 2.62,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#27272a",
+                    "fontFamily": undefined,
+                    "fontSize": 30,
+                    "fontStyle": "normal",
+                    "fontWeight": "700",
+                    "letterSpacing": 0,
+                    "lineHeight": 37.5,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "height": 12,
+                  }
+                }
+              />
+              <Text
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": undefined,
+                    "color": "#71717a",
+                    "fontFamily": undefined,
+                    "fontSize": 16,
+                    "fontStyle": "normal",
+                    "fontWeight": "400",
+                    "letterSpacing": 0,
+                    "lineHeight": 24,
+                    "textDecorationLine": undefined,
+                  }
+                }
+              >
+                auth.createAccount
+              </Text>
+            </View>
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "height": 32,
+                }
+              }
+            />
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 12,
+                  "elevation": 3,
+                  "maxWidth": 400,
+                  "paddingBottom": 24,
+                  "paddingLeft": 24,
+                  "paddingRight": 24,
+                  "paddingTop": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 1,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.22,
+                  "shadowRadius": 2.22,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={{}}
+              >
+                <Text
+                  dataSet={{}}
+                  style={
+                    {
+                      "backgroundColor": undefined,
+                      "color": "#27272a",
+                      "fontFamily": undefined,
+                      "fontSize": 24,
+                      "fontStyle": "normal",
+                      "fontWeight": "700",
+                      "letterSpacing": 0,
+                      "lineHeight": 30,
+                      "marginBottom": 8,
+                      "textDecorationLine": undefined,
+                    }
+                  }
+                >
+                  auth.signUp
+                </Text>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.name
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.namePlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.email
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      keyboardType="email-address"
+                      onChangeText={[Function]}
+                      placeholder="auth.emailPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.username
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.usernamePlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#27272a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "500",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.confirmPassword
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "height": 8,
+                      }
+                    }
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  colorScheme="brand"
+                  dataSet={{}}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#c1411c",
+                      "borderRadius": 4,
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 8,
+                      "paddingBottom": 12,
+                      "paddingLeft": 12,
+                      "paddingRight": 12,
+                      "paddingTop": 12,
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                      }
+                    }
+                    test={true}
+                  >
+                    <View
+                      dataSet={{}}
+                      style={{}}
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#fafafa",
+                            "fontFamily": undefined,
+                            "fontSize": 16,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 24,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        auth.signUp
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "height": 16,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#71717a",
+                        "fontFamily": undefined,
+                        "fontSize": 14,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "letterSpacing": 0,
+                        "lineHeight": 21,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    auth.alreadyHaveAccount
+                     
+                  </Text>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    dataSet={{}}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={{}}
+                  >
+                    <Text
+                      dataSet={{}}
+                      style={
+                        {
+                          "backgroundColor": undefined,
+                          "color": "#ff6b3d",
+                          "fontFamily": undefined,
+                          "fontSize": 14,
+                          "fontStyle": "normal",
+                          "fontWeight": "600",
+                          "letterSpacing": 0,
+                          "lineHeight": 21,
+                          "textDecorationLine": undefined,
+                        }
+                      }
+                    >
+                      auth.signIn
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Register before/after NativeWind nativewind matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      style={
+        {
+          "backgroundColor": "#0b0f1a",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "alignItems": "center",
+                "gap": 32,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "alignItems": "center",
+                  "gap": 12,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 3,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.16999999999999998,
+                    "shadowRadius": 4.5,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <Text
+                accessibilityRole="header"
+                style={
+                  {
+                    "color": "#f3f4f6",
+                    "fontSize": 32,
+                    "fontWeight": "700",
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <Text
+                style={
+                  {
+                    "color": "#6b7280",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                auth.createAccount
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "backgroundColor": "#0f172a",
+                  "borderRadius": 12,
+                  "elevation": 0,
+                  "maxWidth": 400,
+                  "padding": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 2,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.14,
+                  "shadowRadius": 3,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 16,
+                  }
+                }
+              >
+                <Text
+                  accessibilityRole="header"
+                  style={
+                    {
+                      "color": "#f3f4f6",
+                      "fontSize": 28,
+                      "fontWeight": "700",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  auth.signUp
+                </Text>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.name
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.namePlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.email
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      keyboardType="email-address"
+                      onChangeText={[Function]}
+                      placeholder="auth.emailPlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.username
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.usernamePlaceholder"
+                      placeholderTextColor="#64748b"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.confirmPassword
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#0f172a",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#f1f5f9",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": false,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "backgroundColor": "#e85223",
+                        "borderColor": "#e85223",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "color": "#ffffff",
+                        "justifyContent": "center",
+                        "marginTop": 8,
+                        "paddingBottom": 12,
+                        "paddingLeft": 20,
+                        "paddingRight": 20,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "gap": 8,
+                        "justifyContent": "center",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ffffff",
+                          "fontSize": 18,
+                          "fontWeight": "600",
+                        }
+                      }
+                    >
+                      auth.signUp
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#6b7280",
+                        "fontSize": 14,
+                      }
+                    }
+                  >
+                    auth.alreadyHaveAccount
+                     
+                  </Text>
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {},
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ff6b3d",
+                          "fontSize": 14,
+                          "fontWeight": "semibold",
+                        }
+                      }
+                    >
+                      auth.signIn
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`Register before/after NativeWind nativewind matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      style={
+        {
+          "backgroundColor": "#f9fafb",
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "paddingBottom": 32,
+              "paddingLeft": 24,
+              "paddingRight": 24,
+              "paddingTop": 32,
+            }
+          }
+        >
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "alignItems": "center",
+                "gap": 32,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "alignItems": "center",
+                  "gap": 12,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ff6b3d",
+                    "borderRadius": 9999,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 3,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.16999999999999998,
+                    "shadowRadius": 4.5,
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="fire"
+                >
+                  fire
+                </Text>
+              </View>
+              <Text
+                accessibilityRole="header"
+                style={
+                  {
+                    "color": "#1f2937",
+                    "fontSize": 32,
+                    "fontWeight": "700",
+                  }
+                }
+              >
+                auth.appTitle
+              </Text>
+              <Text
+                style={
+                  {
+                    "color": "#6b7280",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                auth.createAccount
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderRadius": 12,
+                  "elevation": 0,
+                  "maxWidth": 400,
+                  "padding": 24,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 2,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.14,
+                  "shadowRadius": 3,
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 16,
+                  }
+                }
+              >
+                <Text
+                  accessibilityRole="header"
+                  style={
+                    {
+                      "color": "#1f2937",
+                      "fontSize": 28,
+                      "fontWeight": "700",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  auth.signUp
+                </Text>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.name
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.namePlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.email
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      keyboardType="email-address"
+                      onChangeText={[Function]}
+                      placeholder="auth.emailPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.username
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.usernamePlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.password
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "medium",
+                      }
+                    }
+                  >
+                    auth.confirmPassword
+                  </Text>
+                  <View
+                    style={
+                      {
+                        "backgroundColor": "#ffffff",
+                        "borderColor": "#e2e8f0",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "opacity": 1,
+                        "paddingBottom": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                      }
+                    }
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      onChangeText={[Function]}
+                      onSubmitEditing={[Function]}
+                      placeholder="auth.passwordPlaceholder"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={true}
+                      style={
+                        [
+                          {
+                            "fontSize": 16,
+                            "paddingVertical": 2,
+                          },
+                          {
+                            "color": "#1f2937",
+                          },
+                          undefined,
+                        ]
+                      }
+                      value=""
+                    />
+                  </View>
+                </View>
+                <View
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": false,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "backgroundColor": "#e85223",
+                        "borderColor": "#e85223",
+                        "borderRadius": 6,
+                        "borderWidth": 1,
+                        "color": "#ffffff",
+                        "justifyContent": "center",
+                        "marginTop": 8,
+                        "paddingBottom": 12,
+                        "paddingLeft": 20,
+                        "paddingRight": 20,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "gap": 8,
+                        "justifyContent": "center",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ffffff",
+                          "fontSize": 18,
+                          "fontWeight": "600",
+                        }
+                      }
+                    >
+                      auth.signUp
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "justifyContent": "center",
+                      "marginTop": 16,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#6b7280",
+                        "fontSize": 14,
+                      }
+                    }
+                  >
+                    auth.alreadyHaveAccount
+                     
+                  </Text>
+                  <View
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {},
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#ff6b3d",
+                          "fontSize": 14,
+                          "fontWeight": "semibold",
+                        }
+                      }
+                    >
+                      auth.signIn
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`UpdateRequired before/after NativeWind legacy matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    style={
+      {
+        "backgroundColor": "#0b0f1a",
+        "flex": 1,
+        "justifyContent": "center",
+        "paddingBottom": 40,
+        "paddingLeft": 24,
+        "paddingRight": 24,
+        "paddingTop": 40,
+      }
+    }
+  >
+    <View
+      dataSet={{}}
+      style={
+        {
+          "alignItems": "center",
+        }
+      }
+    >
+      <Text
+        accessibilityLabel="update"
+      >
+        update
+      </Text>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <Text
+        dataSet={{}}
+        style={
+          {
+            "backgroundColor": undefined,
+            "color": "#f4f4f5",
+            "fontFamily": undefined,
+            "fontSize": 20,
+            "fontStyle": "normal",
+            "fontWeight": "700",
+            "letterSpacing": 0,
+            "lineHeight": 25,
+            "textAlign": "center",
+            "textDecorationLine": undefined,
+          }
+        }
+      >
+        update.title
+      </Text>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <Text
+        dataSet={{}}
+        style={
+          {
+            "backgroundColor": undefined,
+            "color": "#a1a1aa",
+            "fontFamily": undefined,
+            "fontSize": 14,
+            "fontStyle": "normal",
+            "fontWeight": "400",
+            "letterSpacing": 0,
+            "lineHeight": 21,
+            "textAlign": "center",
+            "textDecorationLine": undefined,
+          }
+        }
+      >
+        update.body
+      </Text>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <View
+        dataSet={{}}
+        style={
+          {
+            "backgroundColor": "#0f172a",
+            "borderRadius": 6,
+            "paddingBottom": 12,
+            "paddingLeft": 16,
+            "paddingRight": 16,
+            "paddingTop": 12,
+            "width": "100%",
+          }
+        }
+      >
+        <Text
+          dataSet={{}}
+          style={
+            {
+              "backgroundColor": undefined,
+              "color": "#a1a1aa",
+              "fontFamily": undefined,
+              "fontSize": 12,
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "letterSpacing": 0,
+              "lineHeight": 18,
+              "textDecorationLine": undefined,
+            }
+          }
+        >
+          update.currentVersion
+          : 
+          2.0.0
+        </Text>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "height": 4,
+            }
+          }
+        />
+        <Text
+          dataSet={{}}
+          style={
+            {
+              "backgroundColor": undefined,
+              "color": "#a1a1aa",
+              "fontFamily": undefined,
+              "fontSize": 12,
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "letterSpacing": 0,
+              "lineHeight": 18,
+              "textDecorationLine": undefined,
+            }
+          }
+        >
+          update.requiredVersion
+          : 
+          2.1.0
+        </Text>
+      </View>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <View
+        accessibilityLabel="update.updateButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        colorScheme="brand"
+        dataSet={{}}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#ff6b3d",
+            "borderRadius": 4,
+            "flexDirection": "row",
+            "justifyContent": "center",
+            "paddingBottom": 10,
+            "paddingLeft": 12,
+            "paddingRight": 12,
+            "paddingTop": 10,
+          }
+        }
+      >
+        <View
+          dataSet={{}}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+            }
+          }
+          test={true}
+        >
+          <View
+            dataSet={{}}
+            style={{}}
+          >
+            <Text
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": undefined,
+                  "color": "#fafafa",
+                  "fontFamily": undefined,
+                  "fontSize": 14,
+                  "fontStyle": "normal",
+                  "fontWeight": "400",
+                  "letterSpacing": 0,
+                  "lineHeight": 21,
+                  "textDecorationLine": undefined,
+                }
+              }
+            >
+              update.updateButton
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`UpdateRequired before/after NativeWind legacy matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    style={
+      {
+        "backgroundColor": "#fafafa",
+        "flex": 1,
+        "justifyContent": "center",
+        "paddingBottom": 40,
+        "paddingLeft": 24,
+        "paddingRight": 24,
+        "paddingTop": 40,
+      }
+    }
+  >
+    <View
+      dataSet={{}}
+      style={
+        {
+          "alignItems": "center",
+        }
+      }
+    >
+      <Text
+        accessibilityLabel="update"
+      >
+        update
+      </Text>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <Text
+        dataSet={{}}
+        style={
+          {
+            "backgroundColor": undefined,
+            "color": "#27272a",
+            "fontFamily": undefined,
+            "fontSize": 20,
+            "fontStyle": "normal",
+            "fontWeight": "700",
+            "letterSpacing": 0,
+            "lineHeight": 25,
+            "textAlign": "center",
+            "textDecorationLine": undefined,
+          }
+        }
+      >
+        update.title
+      </Text>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <Text
+        dataSet={{}}
+        style={
+          {
+            "backgroundColor": undefined,
+            "color": "#52525b",
+            "fontFamily": undefined,
+            "fontSize": 14,
+            "fontStyle": "normal",
+            "fontWeight": "400",
+            "letterSpacing": 0,
+            "lineHeight": 21,
+            "textAlign": "center",
+            "textDecorationLine": undefined,
+          }
+        }
+      >
+        update.body
+      </Text>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <View
+        dataSet={{}}
+        style={
+          {
+            "backgroundColor": "#FFFFFF",
+            "borderRadius": 6,
+            "paddingBottom": 12,
+            "paddingLeft": 16,
+            "paddingRight": 16,
+            "paddingTop": 12,
+            "width": "100%",
+          }
+        }
+      >
+        <Text
+          dataSet={{}}
+          style={
+            {
+              "backgroundColor": undefined,
+              "color": "#52525b",
+              "fontFamily": undefined,
+              "fontSize": 12,
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "letterSpacing": 0,
+              "lineHeight": 18,
+              "textDecorationLine": undefined,
+            }
+          }
+        >
+          update.currentVersion
+          : 
+          2.0.0
+        </Text>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "height": 4,
+            }
+          }
+        />
+        <Text
+          dataSet={{}}
+          style={
+            {
+              "backgroundColor": undefined,
+              "color": "#52525b",
+              "fontFamily": undefined,
+              "fontSize": 12,
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "letterSpacing": 0,
+              "lineHeight": 18,
+              "textDecorationLine": undefined,
+            }
+          }
+        >
+          update.requiredVersion
+          : 
+          2.1.0
+        </Text>
+      </View>
+      <View
+        dataSet={{}}
+        style={
+          {
+            "height": 20,
+          }
+        }
+      />
+      <View
+        accessibilityLabel="update.updateButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        colorScheme="brand"
+        dataSet={{}}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#ff6b3d",
+            "borderRadius": 4,
+            "flexDirection": "row",
+            "justifyContent": "center",
+            "paddingBottom": 10,
+            "paddingLeft": 12,
+            "paddingRight": 12,
+            "paddingTop": 10,
+          }
+        }
+      >
+        <View
+          dataSet={{}}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+            }
+          }
+          test={true}
+        >
+          <View
+            dataSet={{}}
+            style={{}}
+          >
+            <Text
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": undefined,
+                  "color": "#fafafa",
+                  "fontFamily": undefined,
+                  "fontSize": 14,
+                  "fontStyle": "normal",
+                  "fontWeight": "400",
+                  "letterSpacing": 0,
+                  "lineHeight": 21,
+                  "textDecorationLine": undefined,
+                }
+              }
+            >
+              update.updateButton
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`UpdateRequired before/after NativeWind nativewind matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "backgroundColor": "#0b0f1a",
+        "flex": 1,
+        "justifyContent": "center",
+        "paddingBottom": 40,
+        "paddingLeft": 24,
+        "paddingRight": 24,
+        "paddingTop": 40,
+      }
+    }
+  >
+    <View
+      className="flex flex-col"
+      style={
+        {
+          "alignItems": "center",
+          "gap": 20,
+        }
+      }
+    >
+      <Text
+        accessibilityLabel="update"
+      >
+        update
+      </Text>
+      <Text
+        accessibilityRole="header"
+        style={
+          {
+            "color": "#f3f4f6",
+            "fontSize": 24,
+            "fontWeight": "700",
+            "textAlign": "center",
+          }
+        }
+      >
+        update.title
+      </Text>
+      <Text
+        style={
+          {
+            "color": "#9ca3af",
+            "fontSize": 14,
+            "textAlign": "center",
+          }
+        }
+      >
+        update.body
+      </Text>
+      <View
+        className="flex flex-col"
+        style={
+          {
+            "backgroundColor": "#0f172a",
+            "borderRadius": 6,
+            "gap": 4,
+            "paddingBottom": 12,
+            "paddingLeft": 16,
+            "paddingRight": 16,
+            "paddingTop": 12,
+            "width": "100%",
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#9ca3af",
+              "fontSize": 12,
+            }
+          }
+        >
+          update.currentVersion
+          : 
+          2.0.0
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#9ca3af",
+              "fontSize": 12,
+            }
+          }
+        >
+          update.requiredVersion
+          : 
+          2.1.0
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="update.updateButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "backgroundColor": "#ff6b3d",
+              "borderColor": "#e85223",
+              "borderRadius": 6,
+              "borderWidth": 1,
+              "color": "#ffffff",
+              "justifyContent": "center",
+              "paddingBottom": 10,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 10,
+            },
+            undefined,
+          ]
+        }
+      >
+        <View
+          className="flex flex-row"
+          style={
+            {
+              "alignItems": "center",
+              "gap": 8,
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#ffffff",
+                "fontSize": 16,
+                "fontWeight": "600",
+              }
+            }
+          >
+            update.updateButton
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`UpdateRequired before/after NativeWind nativewind matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "backgroundColor": "#f9fafb",
+        "flex": 1,
+        "justifyContent": "center",
+        "paddingBottom": 40,
+        "paddingLeft": 24,
+        "paddingRight": 24,
+        "paddingTop": 40,
+      }
+    }
+  >
+    <View
+      className="flex flex-col"
+      style={
+        {
+          "alignItems": "center",
+          "gap": 20,
+        }
+      }
+    >
+      <Text
+        accessibilityLabel="update"
+      >
+        update
+      </Text>
+      <Text
+        accessibilityRole="header"
+        style={
+          {
+            "color": "#1f2937",
+            "fontSize": 24,
+            "fontWeight": "700",
+            "textAlign": "center",
+          }
+        }
+      >
+        update.title
+      </Text>
+      <Text
+        style={
+          {
+            "color": "#4b5563",
+            "fontSize": 14,
+            "textAlign": "center",
+          }
+        }
+      >
+        update.body
+      </Text>
+      <View
+        className="flex flex-col"
+        style={
+          {
+            "backgroundColor": "#ffffff",
+            "borderRadius": 6,
+            "gap": 4,
+            "paddingBottom": 12,
+            "paddingLeft": 16,
+            "paddingRight": 16,
+            "paddingTop": 12,
+            "width": "100%",
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#4b5563",
+              "fontSize": 12,
+            }
+          }
+        >
+          update.currentVersion
+          : 
+          2.0.0
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#4b5563",
+              "fontSize": 12,
+            }
+          }
+        >
+          update.requiredVersion
+          : 
+          2.1.0
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="update.updateButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "backgroundColor": "#ff6b3d",
+              "borderColor": "#e85223",
+              "borderRadius": 6,
+              "borderWidth": 1,
+              "color": "#ffffff",
+              "justifyContent": "center",
+              "paddingBottom": 10,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 10,
+            },
+            undefined,
+          ]
+        }
+      >
+        <View
+          className="flex flex-row"
+          style={
+            {
+              "alignItems": "center",
+              "gap": 8,
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#ffffff",
+                "fontSize": 16,
+                "fontWeight": "600",
+              }
+            }
+          >
+            update.updateButton
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;

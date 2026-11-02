@@ -27,7 +27,11 @@ export type UiImplementation = 'legacy' | 'nativewind';
  * defaults below: `all`, `none`, or comma-separated screen IDs. The entire
  * mechanism is removed when MO2-14 removes the legacy implementation.
  */
-const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([]);
+const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
+  'Login',
+  'Register',
+  'UpdateRequired',
+]);
 
 function nativeWindEnabled(screen: UiScreen): boolean {
   const override = process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS?.trim();

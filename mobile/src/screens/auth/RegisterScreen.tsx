@@ -11,14 +11,15 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Pressable,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Platform } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormInput } from '../../components/FormInput';
+import { withUiImplementation } from '../../components/ui/migration';
 
-export const RegisterScreen = ({ navigation }: any) => {
+const RegisterScreenContent = ({ navigation }: any) => {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -194,3 +195,5 @@ export const RegisterScreen = ({ navigation }: any) => {
     </KeyboardAvoidingView>
   );
 };
+
+export const RegisterScreen = withUiImplementation('Register', RegisterScreenContent);

@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorMode } from 'native-base';
+import { useColorMode } from '../components/ui/compat';
 import { BackHandler } from 'react-native';
 import { useTranslation } from '../hooks/useTranslation';
 import { DashboardStackNavigator } from './DashboardStackNavigator';

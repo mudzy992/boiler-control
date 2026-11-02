@@ -36,6 +36,7 @@ const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
   'Heating',
   'HomeManagement',
   'Login',
+  'Navigation',
   'NotificationPreferences',
   'Notifications',
   'Profile',

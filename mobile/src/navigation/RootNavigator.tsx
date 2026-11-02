@@ -7,7 +7,8 @@ import {
   NavigationContainerRef,
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useColorMode, Spinner, Center } from 'native-base';
+import { useColorMode, Spinner, Center } from '../components/ui/compat';
+import { UiImplementationProvider } from '../components/ui/migration';
 import { BackHandler } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -75,7 +76,7 @@ type RootNavigatorProps = {
   onReady?: () => void;
 };
 
-export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, RootNavigatorProps>(
+const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootNavigatorProps>(
   ({ onReady }, ref) => {
     const { isAuthenticated, isLoading, restoreSession } = useAuth();
     const { colorMode } = useColorMode();
@@ -166,3 +167,14 @@ export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, RootN
     );
   },
 );
+
+RootNavigatorContent.displayName = 'RootNavigatorContent';
+
+export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, RootNavigatorProps>(
+  (props, ref) => (
+    <UiImplementationProvider screen="Navigation">
+      <RootNavigatorContent {...props} ref={ref} />
+    </UiImplementationProvider>
+  ),
+);
+RootNavigator.displayName = 'RootNavigator';

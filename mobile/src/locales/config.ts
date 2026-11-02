@@ -688,18 +688,19 @@ const enUS = {
     heatingSchedules: 'Heating Schedules',
     heatingSchedulesDesc: 'Configure heating programs',
     exportData: 'Export Data',
-    exportDataDesc: 'Download your heating data',
+    exportDataDesc: 'Download a JSON export of your account',
+    exportPreparing: 'Preparing account export…',
+    exportReady: 'Account export completed',
+    exportSaved: 'JSON export was saved; sharing is unavailable',
+    exportUnavailable: 'Account export is currently unavailable',
+    exportTooLarge: 'Account export exceeds the current server limit',
+    exportError: 'Could not export account data',
     clearCache: 'Clear Cache',
     clearCacheDesc: 'Free up storage space',
     // MO2-16: poruke za stvarno čišćenje keša (prije je bio console.log).
     clearCacheSuccess: 'Cache cleared',
     clearCacheEmpty: 'Cache was already empty',
     clearCacheError: 'Failed to clear cache',
-    // PRIV-1 (izvoz/brisanje naloga) NE postoji na backendu — provjereno
-    // 2026-10-30: auth.controller.ts nema nijednu rutu za izvoz ili brisanje
-    // naloga. Zato se ne izmišlja endpoint; korisnik se vodi na postojeći,
-    // radni izvoz u Analitici.
-    exportRedirect: 'Opening Analytics export…',
     version: 'Version',
     helpSupport: 'Help & Support',
     termsPrivacy: 'Terms & Privacy',
@@ -1383,18 +1384,19 @@ const bsBS = {
     heatingSchedules: 'Rasporedi grijanja',
     heatingSchedulesDesc: 'Podesi programe grijanja',
     exportData: 'Izvoz podataka',
-    exportDataDesc: 'Preuzmi svoje podatke grijanja',
+    exportDataDesc: 'Preuzmi JSON izvoz svog naloga',
+    exportPreparing: 'Pripremam izvoz naloga…',
+    exportReady: 'Izvoz naloga je završen',
+    exportSaved: 'JSON izvoz je sačuvan; dijeljenje nije dostupno',
+    exportUnavailable: 'Izvoz naloga trenutno nije dostupan',
+    exportTooLarge: 'Izvoz prelazi trenutno ograničenje servera',
+    exportError: 'Izvoz podataka naloga nije uspio',
     clearCache: 'Očisti keš',
     clearCacheDesc: 'Oslobodi prostor za pohranu',
     // MO2-16: poruke za stvarno čišćenje keša (prije je bio console.log).
     clearCacheSuccess: 'Keš je očišćen',
     clearCacheEmpty: 'Keš je već bio prazan',
     clearCacheError: 'Čišćenje keša nije uspjelo',
-    // PRIV-1 (izvoz/brisanje naloga) NE postoji na backendu — provjereno
-    // 2026-10-30: auth.controller.ts nema nijednu rutu za izvoz ili brisanje
-    // naloga. Zato se ne izmišlja endpoint; korisnik se vodi na postojeći,
-    // radni izvoz u Analitici.
-    exportRedirect: 'Otvaram izvoz u Analitici…',
     version: 'Verzija',
     helpSupport: 'Pomoć i podrška',
     termsPrivacy: 'Uslovi i privatnost',

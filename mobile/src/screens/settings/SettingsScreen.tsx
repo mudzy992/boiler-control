@@ -21,11 +21,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 // MO2-16 (MO-020): stvarno čišćenje keša umjesto console.log.
 import { purgeDownloadsDirectory } from '../../services/storage/downloadCache';
-import {
-  DASHBOARD_STACK_SCREENS,
-  MAIN_TAB_SCREENS,
-  ROOT_SCREENS,
-} from '../../constants/routes';
+import { createAccountExportFile } from '../../services/storage/accountExport';
+import * as Sharing from 'expo-sharing';
 import { useNavigation } from '@react-navigation/native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { FormInput } from '../../components/FormInput';
@@ -78,6 +75,7 @@ const SettingsScreenContent = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExportingAccount, setIsExportingAccount] = useState(false);
 
   const languageLabel =
     i18n.language === 'bs-BS' ? t('settings.languageBosnian') : t('settings.languageEnglish');
@@ -211,39 +209,60 @@ const SettingsScreenContent = () => {
     }
   };
 
-  /**
-   * MO2-16 (MO-019): „Export data" je bio `console.log('Export data')` — inertno
-   * dugme koje nije radilo ništa.
-   *
-   * PRIV-1 (backend izvoz/brisanje podataka naloga) NE postoji: provjereno
-   * 2026-10-30, `backend/src/modules/Auth/auth.controller.ts` nema nijednu rutu
-   * za izvoz ili brisanje naloga. Zato se ovdje NE izmišlja endpoint.
-   *
-   * Umjesto toga korisnik se vodi na postojeći, već implementiran izvoz u
-   * Analitici (`analyticsApi.exportAnalytics` → `GET /api/dashboard/export`,
-   * vraća CSV — `AnalyticsScreen.tsx` `handleExport`). Kad PRIV-1 bude
-   * implementiran, ovaj handler se preusmjerava na njega.
-   */
+  /** PRIV-1B: preuzmi vlasnički JSON i podijeli ga bez logovanja sadržaja. */
+  const exportInFlight = React.useRef(false);
   const handleExportData = () => {
-    toast.show({
-      description: t('settings.exportRedirect'),
-      placement: 'top',
-    });
-    // `useNavigation()` bez generika vraća prazan `ReactNavigation.RootParamList`,
-    // pa TypeScript ne može razriješiti overload za UGNIJEŽĐENU navigaciju
-    // (tab → stack → ekran) i prijavljuje TS2345. To je isti razlog zašto
-    // `notificationService.ts:25` drži `NavigationContainerRef<any>`.
-    //
-    // Cast je namjerno uzak i lokaliziran na ovaj poziv — potpis ispod opisuje
-    // stvarni oblik ugniježdenog navigate-a, a ne `any`.
-    const navigateNested = navigation.navigate as (
-      name: string,
-      params?: Record<string, unknown>
-    ) => void;
-    navigateNested(ROOT_SCREENS.Main, {
-      screen: MAIN_TAB_SCREENS.Dashboard,
-      params: { screen: DASHBOARD_STACK_SCREENS.Analytics },
-    });
+    if (exportInFlight.current) return;
+    exportInFlight.current = true;
+    setIsExportingAccount(true);
+    void (async () => {
+      try {
+        const fileUri = await createAccountExportFile();
+        try {
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(fileUri, {
+              mimeType: 'application/json',
+              dialogTitle: t('settings.exportData'),
+              UTI: 'public.json',
+            });
+          } else {
+            toast.show({
+              description: t('settings.exportSaved'),
+              placement: 'top',
+            });
+            return;
+          }
+        } catch {
+          // Datoteka je već potpuno zapisana; share greška ne mijenja taj ishod.
+          toast.show({
+            description: t('settings.exportSaved'),
+            placement: 'top',
+          });
+          return;
+        }
+        toast.show({
+          description: t('settings.exportReady'),
+          placement: 'top',
+        });
+      } catch (error) {
+        const status =
+          typeof error === 'object' && error !== null && 'response' in error
+            ? (error as { response?: { status?: unknown } }).response?.status
+            : undefined;
+        toast.show({
+          description:
+            status === 404
+              ? t('settings.exportUnavailable')
+              : status === 413
+                ? t('settings.exportTooLarge')
+                : t('settings.exportError'),
+          placement: 'top',
+        });
+      } finally {
+        exportInFlight.current = false;
+        setIsExportingAccount(false);
+      }
+    })();
   };
 
   const handleChangePassword = async () => {
@@ -509,8 +528,12 @@ const SettingsScreenContent = () => {
               <SettingItem
                 icon="download-outline"
                 title={t('settings.exportData')}
-                subtitle={t('settings.exportDataDesc')}
-                onPress={handleExportData}
+                subtitle={
+                  isExportingAccount
+                    ? t('settings.exportPreparing')
+                    : t('settings.exportDataDesc')
+                }
+                onPress={isExportingAccount ? undefined : handleExportData}
               />
               <Divider />
               <SettingItem

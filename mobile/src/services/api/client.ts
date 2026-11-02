@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { SecureStorage } from '../storage/SecureStorage';
 import { API_CONFIG } from '../../config/api.config';
 import type { DashboardHealthResponse } from '../../types/Dashboard';
+import type { AccountExportResponse } from '../../types/AccountExport';
 import type {
   ConfirmWeatherLocationResponse,
   WeatherLocationCandidatesResponse,
@@ -185,6 +186,11 @@ class ApiClientService {
       currentPassword,
       newPassword,
     });
+    return response.data;
+  }
+
+  async getAccountExport(): Promise<AccountExportResponse> {
+    const response = await this.client.get('/auth/export');
     return response.data;
   }
 

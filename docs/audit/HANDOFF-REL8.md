@@ -10,6 +10,7 @@ Talas D završi.
   - Pet scenarija dokazuje: anonimno 401; owner 200 s tačnim PDF/JPEG bajtovima i postojećim headerima; identičan foreign/missing 404 za obje download rute; foreign upload/invoice delete/reading delete bez file ili DB side effecta; te owner upload/download kroz puni HTTP tok.
   - Lokalne kontrole: postojeći **4 suitea / 47 testova**, helper, OpenAPI bez diffa i tačan ESLint **0 errors / 2 postojeća warnings**. Novi spec je potvrđen u integration discovery; lokalna baza nije pokretana.
   - CI `41536884218`: backend **73/724 + 7/68 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations. Novi spec je uključen u obje relevantne Jest brojke.
+  - Prvi docs-only run `41537509573`: backend i frontend su prošli; mobile je zabilježio samo poznati `weatherV2NativeWind` timeout (**135/136**). Timeout, asserti i paralelizam nisu mijenjani; svježi puni run pokreće se dodatnim docs pushom bez code/test promjene.
   - Nema production code, migracije/backfilla, API/DTO/OpenAPI, storage-schema, compose/deployment, flag ili installed-mobile promjene. Rollback je revert test/docs slicea.
   - **Preostalo:** puni parser/antivirus/polyglot, stari fajlovi, retention/restore, filesystem/symlink/deploy i već dokumentovani TOCTOU/reconciliation. Ovaj test ne dokazuje produkcijsku infrastrukturu niti brisanje po odobrenoj retention politici.
 

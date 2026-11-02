@@ -53,6 +53,11 @@ DATABASE_CONNECT_TIMEOUT_MS=5000
 JWT_SECRET=<JWT_SECRET: vrijednost iz secret managera>
 JWT_EXPIRES_IN="3600s"
 
+# PRIV-1A export je zadano off. Granice su po kolekciji / UTF-8 bajtovi.
+ACCOUNT_EXPORT_ENABLED=off
+ACCOUNT_EXPORT_MAX_ROWS_PER_COLLECTION=1000
+ACCOUNT_EXPORT_MAX_BYTES=5242880
+
 WEATHER_API_KEY=<WEATHER_API_KEY: vrijednost iz secret managera>
 # Weather v2 rollout je zadano isključen. Stale i current-cutoff su u minutama.
 WEATHER_LOCATION_V2=off

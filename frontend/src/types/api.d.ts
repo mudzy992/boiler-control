@@ -69,6 +69,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthController_exportAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -837,6 +853,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/weather/v2/current/{homeProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WeatherController_getCurrentWeatherV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather/v2/locations/{homeProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WeatherController_getWeatherLocationCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather/v2/locations/{homeProfileId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WeatherController_confirmWeatherLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -921,6 +985,60 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountExportCollectionsDto: {
+            homeProfiles: {
+                [key: string]: unknown;
+            }[];
+            heatingIntervalLearnings: {
+                [key: string]: unknown;
+            }[];
+            thermostatDevices: {
+                [key: string]: unknown;
+            }[];
+            thermostatPrograms: {
+                [key: string]: unknown;
+            }[];
+            heatingEvents: {
+                [key: string]: unknown;
+            }[];
+            recommendations: {
+                [key: string]: unknown;
+            }[];
+            boilerHistories: {
+                [key: string]: unknown;
+            }[];
+            gasReadings: {
+                [key: string]: unknown;
+            }[];
+            gasPriceHistory: {
+                [key: string]: unknown;
+            }[];
+            notifications: {
+                [key: string]: unknown;
+            }[];
+            notificationPreferences: {
+                [key: string]: unknown;
+            }[];
+            devices: {
+                [key: string]: unknown;
+            }[];
+            sessions: {
+                [key: string]: unknown;
+            }[];
+        };
+        AccountExportResponseDto: {
+            /** @enum {string} */
+            format: "boiler-control.account-export";
+            /** @enum {number} */
+            version: 1;
+            /** Format: date-time */
+            generatedAt: string;
+            /** @description Explicitly selected account fields; passwordHash is excluded. */
+            account: {
+                [key: string]: unknown;
+            };
+            collections: components["schemas"]["AccountExportCollectionsDto"];
+        };
         AuthUserDto: {
             avatarUrl: string | null;
             /** @example korisnik@example.ba */
@@ -984,6 +1102,31 @@ export interface components {
             username: string | null;
         };
         ChangePasswordDto: Record<string, never>;
+        ConfirmWeatherLocationDto: {
+            candidateId: string;
+            query: string;
+        };
+        ConfirmWeatherLocationResponseDto: {
+            location: components["schemas"]["ConfirmedWeatherLocationDto"];
+            /** @enum {string} */
+            status: "location_confirmed";
+        };
+        ConfirmedWeatherLocationDto: {
+            admin1: string | null;
+            /** Format: date-time */
+            confirmedAt: string;
+            country: string | null;
+            countryCode: string | null;
+            label: string;
+            latitude: number;
+            longitude: number;
+            name: string;
+            /** @enum {string} */
+            provider: "open-meteo";
+            providerId: string;
+            /** @description IANA timezone returned by the geocoder. */
+            timezone: string;
+        };
         CreateGasReadingDto: {
             /**
              * @description Stanje brojila u m3
@@ -1532,6 +1675,93 @@ export interface components {
             username?: string;
         };
         UploadInvoiceDto: Record<string, never>;
+        WeatherCurrentV2Dto: {
+            apparentTemperatureC: number | null;
+            cloudPercent: number | null;
+            conditionCode: number | null;
+            conditionI18nKey: string;
+            conditionKey: string;
+            gustKph: number | null;
+            humidityPercent: number | null;
+            isDay: boolean | null;
+            pressureHpa: number | null;
+            temperatureC: number | null;
+            windDirectionDegrees: number | null;
+            windKph: number | null;
+        };
+        WeatherDayV2Dto: {
+            conditionCode: number | null;
+            conditionI18nKey: string;
+            conditionKey: string;
+            /**
+             * Format: date
+             * @example 2026-11-02
+             */
+            date: string | null;
+            precipitationMm: number | null;
+            precipitationProbabilityPercent: number | null;
+            /** Format: date-time */
+            sunrise: string | null;
+            /** Format: date-time */
+            sunset: string | null;
+            temperatureMaxC: number | null;
+            temperatureMinC: number | null;
+            uvIndex: number | null;
+        };
+        WeatherHourV2Dto: {
+            apparentTemperatureC: number | null;
+            /** Format: date-time */
+            at: string;
+            conditionCode: number | null;
+            conditionI18nKey: string;
+            conditionKey: string;
+            gustKph: number | null;
+            humidityPercent: number | null;
+            isDay: boolean | null;
+            precipitationMm: number | null;
+            precipitationProbabilityPercent: number | null;
+            temperatureC: number | null;
+            windDirectionDegrees: number | null;
+            windKph: number | null;
+        };
+        WeatherLocationCandidateDto: {
+            admin1: string | null;
+            country: string | null;
+            countryCode: string | null;
+            label: string;
+            latitude: number;
+            longitude: number;
+            name: string;
+            /** @enum {string} */
+            provider: "open-meteo";
+            providerId: string;
+            /** @description IANA timezone returned by the geocoder. */
+            timezone: string;
+        };
+        WeatherLocationCandidatesResponseDto: {
+            candidates: components["schemas"]["WeatherLocationCandidateDto"][];
+            query: string;
+        };
+        WeatherV2ResponseDto: {
+            ageSeconds?: number;
+            current?: components["schemas"]["WeatherCurrentV2Dto"] | null;
+            currentHidden?: boolean;
+            daily?: components["schemas"]["WeatherDayV2Dto"][];
+            /** Format: date-time */
+            fetchedAt?: string;
+            /** @enum {string} */
+            freshness?: "fresh" | "stale";
+            hourly?: components["schemas"]["WeatherHourV2Dto"][];
+            location?: components["schemas"]["ConfirmedWeatherLocationDto"];
+            /** Format: date-time */
+            observedAt?: string | null;
+            /** @enum {string} */
+            source?: "open-meteo";
+            /** @enum {string} */
+            status: "ok" | "location_confirmation_required";
+            /** @enum {number} */
+            version: 2;
+        };
     };
     responses: never;
     parameters: never;
@@ -1620,6 +1850,32 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MessageResponseDto"];
                 };
+            };
+        };
+    };
+    AuthController_exportAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountExportResponseDto"];
+                };
+            };
+            /** @description Configured row or byte bound exceeded. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2873,6 +3129,82 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    WeatherController_getCurrentWeatherV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeatherV2ResponseDto"];
+                };
+            };
+            /** @description No forecast or last-good data is available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WeatherController_getWeatherLocationCandidates: {
+        parameters: {
+            query: {
+                query: string;
+            };
+            header?: never;
+            path: {
+                homeProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeatherLocationCandidatesResponseDto"];
+                };
+            };
+        };
+    };
+    WeatherController_confirmWeatherLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmWeatherLocationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfirmWeatherLocationResponseDto"];
+                };
             };
         };
     };

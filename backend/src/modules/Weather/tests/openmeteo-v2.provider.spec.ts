@@ -159,7 +159,7 @@ describe('OpenMeteoV2Provider forecast mapping', () => {
       forecast_days: 7,
     });
     expect(retries).toBe(0);
-    expect(options.signal).toBeInstanceOf(AbortSignal);
+    expect(options?.signal).toBeInstanceOf(AbortSignal);
     expect(adapter.executeWithCircuitBreaker).toHaveBeenCalledTimes(1);
   });
 
@@ -185,10 +185,9 @@ describe('OpenMeteoV2Provider forecast mapping', () => {
 
 describe('OpenMeteoV2Provider geocoding and timeout', () => {
   it('returns candidates without auto-selecting and skips invalid coordinates/timezones', async () => {
-    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
           results: [
             {
               id: 101,
@@ -218,7 +217,9 @@ describe('OpenMeteoV2Provider geocoding and timeout', () => {
             },
           ],
         }),
-    });
+        { status: 200 },
+      ),
+    );
     const { provider } = makeProvider();
 
     const result = await provider.geocode('  Springfield  ');
@@ -233,10 +234,9 @@ describe('OpenMeteoV2Provider geocoding and timeout', () => {
   });
 
   it('bounds candidates even if the upstream returns more than requested', async () => {
-    jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
           results: Array.from({ length: 7 }, (_, index) => ({
             id: index + 1,
             name: `Place ${index + 1}`,
@@ -245,7 +245,9 @@ describe('OpenMeteoV2Provider geocoding and timeout', () => {
             timezone: 'America/New_York',
           })),
         }),
-    });
+        { status: 200 },
+      ),
+    );
     const { provider } = makeProvider();
 
     const result = await provider.geocode('Place');

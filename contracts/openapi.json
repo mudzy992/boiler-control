@@ -1,6 +1,153 @@
 {
   "components": {
     "schemas": {
+      "AccountExportCollectionsDto": {
+        "type": "object",
+        "properties": {
+          "homeProfiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "heatingIntervalLearnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "thermostatDevices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "thermostatPrograms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "heatingEvents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "boilerHistories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "gasReadings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "gasPriceHistory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "notifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "notificationPreferences": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "homeProfiles",
+          "heatingIntervalLearnings",
+          "thermostatDevices",
+          "thermostatPrograms",
+          "heatingEvents",
+          "recommendations",
+          "boilerHistories",
+          "gasReadings",
+          "gasPriceHistory",
+          "notifications",
+          "notificationPreferences",
+          "devices",
+          "sessions"
+        ]
+      },
+      "AccountExportResponseDto": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "boiler-control.account-export"
+            ]
+          },
+          "version": {
+            "type": "number",
+            "enum": [
+              1
+            ]
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "account": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Explicitly selected account fields; passwordHash is excluded."
+          },
+          "collections": {
+            "$ref": "#/components/schemas/AccountExportCollectionsDto"
+          }
+        },
+        "required": [
+          "format",
+          "version",
+          "generatedAt",
+          "account",
+          "collections"
+        ]
+      },
       "AuthUserDto": {
         "properties": {
           "avatarUrl": {
@@ -2424,6 +2571,30 @@
               }
             },
             "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/export": {
+      "get": {
+        "operationId": "AuthController_exportAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountExportResponseDto"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Configured row or byte bound exceeded."
           }
         },
         "tags": [

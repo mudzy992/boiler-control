@@ -120,7 +120,14 @@ export class OpenMeteoV2Provider {
       }),
     );
 
-    if (!Array.isArray(result?.results)) return [];
+    if (
+      typeof result !== 'object' ||
+      result === null ||
+      !('results' in result) ||
+      !Array.isArray(result.results)
+    ) {
+      return [];
+    }
     return result.results
       .flatMap((item: any) => {
         if (

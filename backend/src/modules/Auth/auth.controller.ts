@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Post,
   Req,
   Res,
@@ -14,6 +15,7 @@ import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RefreshTokenService } from './refresh-token.service';
+import { AccountExportService } from './account-export.service';
 import { RefreshDto } from './dto/refresh.dto';
 import {
   authCookieEnabled,
@@ -25,13 +27,19 @@ import {
 import { RegisterDto } from '../User/dto/register.dto';
 import { LoginDto } from '../User/dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   AuthUserWithTimestampsDto,
   LoginResponseDto,
   MessageResponseDto,
   RegisterResponseDto,
 } from './dto/auth-response.dto';
+import { AccountExportResponseDto } from './dto/account-export-response.dto';
 
 interface JwtRequest extends Request {
   user: {
@@ -45,6 +53,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly refreshTokenService: RefreshTokenService,
+    private readonly accountExportService: AccountExportService,
   ) {}
 
   /**
@@ -163,6 +172,22 @@ export class AuthController {
     }
     clearRefreshCookie(res as never);
     return { message: 'Logged out' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('export')
+  @Header('Cache-Control', 'no-store')
+  @Header(
+    'Content-Disposition',
+    'attachment; filename="account-export-v1.json"',
+  )
+  @ApiOkResponse({ type: AccountExportResponseDto })
+  @ApiResponse({
+    status: 413,
+    description: 'Configured row or byte bound exceeded.',
+  })
+  exportAccount(@Req() req: JwtRequest) {
+    return this.accountExportService.exportAccount(req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

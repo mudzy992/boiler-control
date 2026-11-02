@@ -15,6 +15,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { RefreshTokenService } from '../refresh-token.service';
+import { AccountExportService } from '../account-export.service';
 import { REFRESH_COOKIE_NAME } from '../auth-cookie';
 
 function fakeRes() {
@@ -81,6 +82,7 @@ describe('SEC-4: auth cookie rute', () => {
           },
         },
         { provide: RefreshTokenService, useValue: refreshTokenService },
+        { provide: AccountExportService, useValue: {} },
         // JwtAuthGuard je dekorator na `me`/`change-password`, pa ga Nest mora
         // moći instancirati iako ga ovi testovi ne koriste.
         {

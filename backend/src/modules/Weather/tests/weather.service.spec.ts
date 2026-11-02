@@ -128,7 +128,7 @@ function mockTimelineResponse(response: ReturnType<typeof timelineResponse>) {
     );
   jest
     .spyOn(openMeteoTransport, 'fetchOpenMeteoFlatbuffers')
-    .mockResolvedValue([response]);
+    .mockResolvedValue([response] as any);
 }
 
 afterEach(() => {

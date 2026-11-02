@@ -3,6 +3,15 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## Nastavak 2026-11-02 — MO2-14, weather v2 i PRIV-1A
+
+- **MO2-14:** NativeWind migracija završena je kroz `6d540e8`; nema `native-base`, NativeBaseProvider, NativeBase LogBox suppression ni BackHandler polyfilla. CI `41425004414`: backend/mobile success, poznati frontend FE2-7 compose problem nije zaobiđen. Fizički vizuelni QA na tri veličine ekrana ostaje otvoren.
+- **Weather v2:** implementacija je `aa921fe`. CI `41428012580` je completed/failure: backend Type-check/Build imaju pet navedenih TypeScript grešaka, frontend je stao na OpenAPI types sync, a mobile Unit tests nemaju uzrok u annotations. Backend Jest je ipak prošao 53 suitea / 593 testa. Ispravke provider tipova, fetch testova i frontend tipova su u `5627eb0`; novi CI se mora pročitati prije prihvata.
+- **PRIV-1A:** `5627eb0` dodaje samo read-only `GET /api/auth/export`, zadano `ACCOUNT_EXPORT_ENABLED=off`, nalog i 13 eksplicitno selektovanih vlasničkih kolekcija, no-store, row/byte 413 i verzionirani JSON. Hashovi, globalni Tuya token, weather cache i privatni storage pathovi su isključeni; gas originali ostaju na postojećim owner-only download rutama. Nema migracije ni brisanja.
+- **Lokalni dokazi nakon ispravki:** backend ciljani weather/PRIV/contract prolaz 10 suiteova / 84 testa; zasebni PRIV prolaz 2 suitea / 11 testova; točna CI ESLint komanda 0 errors / 2 postojeća warnings. Mobile identična CI komanda prolazi 23 suiteova / 123 testa / 32 snapshota. Frontend OpenAPI check, type-check, e2e type-check, lint i 11 suiteova / 92 testa prolaze. PostgreSQL PRIV integration je dodan, ali njegov rezultat čeka CI.
+- **Detalji:** `backend/05-weather.md`, `backend/17-priv1-account-export.md`, `mobile/07-implementation-plan.md`. Puni current+hourly+daily SDK/DST fixture, produkcijski rollout, distribuirani SWR i fizički QA nisu dokazani.
+- **Sljedeće:** pushati code/docs commit, pollati novi run do completed, pročitati jobs i annotations, zatim upisati konačne rezultate. Ne počinjati brisanje naloga bez vlasničke backup-retention i eventualne legal-retention politike.
+
 ## Stanje na kraju sesije (2026-11-01, VERIFICIRANO)
 
 - Arena sesijska grana `arena/c9961f17-boiler-control`. Vlasnik i dalje ručno

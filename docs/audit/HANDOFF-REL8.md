@@ -3,9 +3,13 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-02 — OBS-1/MAINT-3 health probes i raniji završeni koraci
+## Nastavak 2026-11-02 — SEC-7 dependencies, OBS-1/MAINT-3 i raniji koraci
 
-- **Verificirani code HEAD:** `5f0247e`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `8e10088`. Vlasnik ručno radi merge, PR se ne otvara.
+- **Verificirani code HEAD:** `b6b4fed`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `6c1904a`. Vlasnik ručno radi merge, PR se ne otvara.
+- **SEC-7 production dependencies (`b6b4fed`):** ne-force npm fix i dva ciljana same-major overridea zatvaraju tadašnjih 14 produkcijskih audit zapisa. Axios je 1.21.0, platform-express 11.2.8, Prisma CLI/client/adapter 7.10.1; `multer@2.5.0` je ograničen na platform-express, a `js-yaml@5.5.0` samo na Swagger. Direktni Nest/Prisma/axios major nije mijenjan. `npm ci` je reproducibilan, a `npm audit --omit=dev` vraća exit 0 i nula označenih paketa.
+  - Novi stvarni controller/`FileInterceptor` HTTP test dokazuje multipart DTO/file predaju i postojeći 413 file-size limit; prolazio je 2/2 i prije overridea na multer 2.4.0 i poslije na 2.5.0. OpenAPI check prolazi bez diffa, a tačan ESLint ima 0 errors / 2 postojeća warnings.
+  - Konačni CI `41525320585`: backend **71/707 + 6/63 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations. Nema migracije, API/OpenAPI/mobile promjene ni flaga; rollback je revert `b6b4fed` i `npm ci` na starom locku.
+  - Puni/dev audit i dalje ima **37 označenih paketa** (1 critical, 2 high, 33 moderate, 1 low), uglavnom tooling lanac; nije obuhvaćen production kriterijem. Container image scan, stvarni provider pozivi i produkcijski deploy/audit nisu izvedeni.
 - **OBS-1/MAINT-3 health probes (`95789ab` + `6da831e` + `5f0247e`):** dodani su javni `GET /health/live` i `GET /health/ready`. Liveness ne čita bazu ni Redis; readiness izvodi samo `SELECT 1` kroz isti Prisma pool, ograničava čekanje odgovora na 1000 ms i pri grešci/timeoutu vraća generički 503 `{status:'error',timestamp}` bez SQL-a, connection stringa ili interne poruke. Postojeći `/health` i `/dashboard/health` nisu mijenjani, a opciono Redis polje ostaje kompatibilno s `REDIS_URL` i bez njega.
   - Test-first je na neizmijenjenom kodu dao očekivana 3 nova 404 i 2 prošle legacy kontrole. Lokalno: fokusirano **2 suitea / 8 testova + 1 Redis skip**, širi common skup **18/245 + 8 skip**, frontend **11/92**. Integracija u CI dokazuje stvarni PostgreSQL ready 200; kontrolisani 503 koristi `DatabaseHealthService` granicu, ne stvarni PostgreSQL outage.
   - Konačni CI `41512728985` za `5f0247e`: backend **70/705 + 6/63 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations. OpenAPI i frontend tipovi su regenerisani; postojeće operacije su nepromijenjene, pa instalirani mobilni klijenti ne dobijaju obaveznu promjenu.

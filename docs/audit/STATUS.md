@@ -2147,6 +2147,33 @@ rollouta. Rollback je prestati koristiti nove rute ili revertovati aditivni
 slice. Per-instance metrike, queue-lag alarmi, Dockerfile/image smoke i stvarni
 produkcijski DB outage ostaju otvoreni.
 
+### SEC-7 — produkcijske backend zavisnosti (2026-11-02)
+
+Polazni `npm audit --omit=dev` prijavljivao je 14 paketa (1 critical, 10 high,
+3 moderate). Commit `b6b4fed` primjenjuje ne-force lockfile refresh bez
+promjene direktnog Nest/Prisma/axios majora: axios 1.21.0,
+platform-express 11.2.8 i poravnati Prisma CLI/client/adapter 7.10.1.
+Uski overridei postavljaju `multer@2.5.0` samo pod platform-express i
+`js-yaml@5.5.0` samo pod Swagger; drugi js-yaml potrošači nisu prebačeni na
+novi major.
+
+`npm ci` je reproducibilan, `npm ls` potvrđuje stablo, a ponovni production
+audit vraća **exit 0 i nula označenih paketa**. Novi multipart HTTP test
+stvarnog controller/`FileInterceptor` puta prolazi 2/2 i prije overridea na
+multer 2.4.0 i poslije na 2.5.0, uključujući postojeći 413 file-size limit.
+OpenAPI check nema diff, a tačan ESLint ima 0 errors / 2 postojeća warnings.
+
+Konačni CI `41525320585`: backend **71/707 + 6/63 integration**, `tsc: 0`,
+`eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula
+failure annotations. Nema migracije, API/OpenAPI/mobile promjene ni flaga.
+Rollback je revert `b6b4fed` i `npm ci` na prethodnom locku.
+
+Production-nula nije tvrdnja za čitav development graph: puni audit i dalje
+ima **37 paketa** (1 critical, 2 high, 33 moderate, 1 low), prvenstveno u
+tooling lancu. Container image scan, produkcijski deploy/proxy uvjeti i
+stvarni provider pozivi nisu izvedeni; overridee treba ponovo procijeniti
+kada ih Nest nativno učini nepotrebnim.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

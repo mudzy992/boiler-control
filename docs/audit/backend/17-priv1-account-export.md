@@ -1,8 +1,8 @@
-# PRIV-1A — ograničeni self-service export naloga
+# PRIV-1A/B — ograničeni self-service export naloga
 
 **Datum:** 2026-11-02
-**Implementacija:** `5627eb0`
-**Status:** PRIV-1A je implementiran i CI-verificiran na code commitu `309d95e`, run `41432499480`. Backend job je success uz TypeScript, lint, Build, OpenAPI, 56 suiteova / 608 testova i 5 integration suiteova / 60 testova. Frontend job je crven samo na vlasnikovom FE2-7 compose koraku, ne na exportu. Brisanje naloga nije implementirano.
+**Implementacija:** backend `5627eb0`; mobile `3fc4e1d`
+**Status:** PRIV-1A backend i PRIV-1B mobile download su implementirani. Finalni code run `41442409308` na `efd20c9` ima backend success uz 56 suiteova / 608 testova i 5 integration suiteova / 60 testova, te mobile success uz 24 suitea / 136 testova. Frontend job je crven samo na vlasnikovom FE2-7 compose koraku, ne na exportu. Brisanje naloga nije implementirano, a `ACCOUNT_EXPORT_ENABLED=off` ostaje zadano stanje.
 
 ## Obim i vlasničke odluke
 
@@ -100,11 +100,21 @@ Objedinjeni weather/PRIV/statički ugovorni prolaz je 10 suiteova / 84 testa. CI
 
 **CI dokaz:** run `41432499480` na `309d95e` prijavljuje `tsc: 0`, `eslint: 0`, prolazne Build i OpenAPI sync korake, 56 suiteova / 608 testova i zasebno 5 integration suiteova / 60 testova. PRIV integration prolazi i u coverage i u integration dijelu, uključujući dvokorisničku izolaciju, redakciju i obje granice. Prethodna OpenAPI serializacija ispravljena je u `ab040ab` istim deep-sort algoritmom kao stvarni generator i byte-stabilnom regresijom.
 
+## PRIV-1B — mobile Settings download
+
+`mobile/src/types/AccountExport.ts` dijeli isti format, verziju i stabilnih 13 naziva kolekcija. `apiClient.getAccountExport()` koristi postojeći JWT axios klijent i `GET /auth/export`; ne dodaje se novi backend poziv niti mobilni flag.
+
+`mobile/src/services/storage/accountExport.ts` odbija neispravan format, verziju, account/generatedAt ili nedostajuću/ne-nizovnu kolekciju prije pisanja. Potpuni JSON se prvo piše kao `.download`, zatim se u istom direktoriju atomski premješta u `.json`; neuspjeli pokušaj čisti obje putanje. Uspješna datoteka ostaje u postojećem downloads cacheu da je native share sheet može pročitati i da je postojeća Clear cache akcija može ukloniti. Sadržaj exporta se ne loguje.
+
+Settings blokira ponovni tap dok je operacija u toku i koristi već instalirani `expo-sharing`. Backend 404 prikazuje nedostupnost, 413 prekoračenje granice, a neispravan odgovor i ostale greške generičku poruku bez backend payloada. Ako dijeljenje nije moguće, poruka razlikuje sačuvanu datoteku od potpuno neuspjelog exporta. Analytics CSV tok nije mijenjan.
+
+Ciljani mobile rezultat je 2 suitea / 17 testova: format i svih 13 kolekcija, kreiranje direktorija, atomski zapis, čišćenje djelimičnih fajlova, native share, dvostruki tap, 404/413/generic i share fallback. Finalni CI `41442409308` potvrđuje 24 suitea / 136 testova, TypeScript i lint bez greške.
+
 ## Rollback i preostali rad
 
 - Trenutni rollback: `ACCOUNT_EXPORT_ENABLED=off`; postojeće rute i podaci se ne mijenjaju.
-- Code rollback: revert `5627eb0`; nema migracije ni backfill-a za poništiti.
+- Code rollback: mobile `3fc4e1d` i backend `5627eb0` mogu se nezavisno revertovati; nema migracije ni backfill-a za poništiti. Stari instalirani klijent zadržava prethodno ponašanje; novi klijent uz flag off dobiva 404 i poruku da je export nedostupan.
 - Produkcijsko uključivanje nije odobreno ovim dokumentom; potrebno je posebno provjeriti kapacitet i operativni rollout.
-- Mobile Settings dugme i MO2-16 download tok nisu povezani s novom rutom.
+- Fizički native share/Clear cache QA na uređaju nije izveden; Jest ne dokazuje stvarni OS share sheet niti EAS manifest.
 - Brisanje naloga ostaje neodobreno dok vlasnik ne da backup-retention i eventualnu legal-retention politiku.
 - Asinhroni export, arhiviranje, checksum manifest i download s istekom nisu dio PRIV-1A.

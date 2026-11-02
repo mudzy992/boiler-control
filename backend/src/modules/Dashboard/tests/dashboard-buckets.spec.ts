@@ -35,7 +35,13 @@ function makeService(events: FakeEvent[]) {
     },
     $transaction: async (operations: any) => Promise.all(operations),
   };
-  return new DashboardService(db as any, {} as any, {} as any, {} as any);
+  return new DashboardService(
+    db as any,
+    {} as any,
+    {} as any,
+    {} as any,
+    {} as any,
+  );
 }
 
 function ev(id: number, iso: string): FakeEvent {

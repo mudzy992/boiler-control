@@ -17,6 +17,7 @@ import {
 import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.interface';
 import { BoilerService } from '../Boiler/boiler.service';
 import { WeatherService } from '../Weather/weather.service';
+import { DashboardWeatherService } from '../Weather/dashboard-weather.service';
 import { bucketKey } from '../../common/dashboard-bucket';
 import { toCsv } from '../../common/csv';
 import {
@@ -47,6 +48,7 @@ export class DashboardService {
     private readonly boilerService: BoilerService,
     private readonly weatherService: WeatherService,
     @Inject('IThermostatAdapter') private adapter: IThermostatAdapter,
+    private readonly dashboardWeather: DashboardWeatherService,
   ) {}
 
   // ======================================================
@@ -58,7 +60,7 @@ export class DashboardService {
     // ANONYMOUS
     // =====================
 
-    const weather = await this.getLatestWeather();
+    const weather = userId ? null : await this.getLatestWeather();
     const flowTemp = await this.boilerService.calculateFlowTemp(userId);
 
     if (!userId) {
@@ -96,7 +98,7 @@ export class DashboardService {
 
     const [latestWeather, latestBoilerHistory, recommendations] =
       await Promise.all([
-        this.getLatestWeather(),
+        this.getLatestWeather(userId, homeProfiles[0]?.id),
         hasThermostat ? this.getLatestBoilerHistory(userId) : null,
         this.getRecentRecommendations(userId),
       ]);
@@ -716,7 +718,15 @@ export class DashboardService {
     });
   }
 
-  private async getLatestWeather() {
+  private async getLatestWeather(userId?: number, homeProfileId?: number) {
+    if (userId && homeProfileId) {
+      const v2Weather = await this.dashboardWeather.getV2DashboardWeather(
+        userId,
+        homeProfileId,
+      );
+      if (v2Weather) return v2Weather;
+    }
+
     try {
       const weatherData = await this.weatherService.getTodayWeather(
         this.DEFAULT_CITY,

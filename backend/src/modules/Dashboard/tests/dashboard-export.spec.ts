@@ -197,6 +197,7 @@ describe('DashboardService.exportAnalytics (FEAT-6)', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
     );
     return { service, ...fake };
   }

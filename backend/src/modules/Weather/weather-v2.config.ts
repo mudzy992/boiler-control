@@ -6,6 +6,7 @@ export interface WeatherV2Config {
   recommendationEnabled: boolean;
   boilerEnabled: boolean;
   pollEnabled: boolean;
+  dashboardEnabled: boolean;
   staleAfterMs: number;
   hideCurrentAfterMs: number;
 }
@@ -43,6 +44,7 @@ export function getWeatherV2Config(
     recommendationEnabled: enabled(env.WEATHER_RECOMMENDATION_V2),
     boilerEnabled: enabled(env.WEATHER_BOILER_V2),
     pollEnabled: enabled(env.WEATHER_POLL_V2),
+    dashboardEnabled: enabled(env.WEATHER_DASHBOARD_V2),
     staleAfterMs: staleAfterMinutes * 60 * 1000,
     hideCurrentAfterMs:
       Math.max(staleAfterMinutes, hideCurrentAfterMinutes) * 60 * 1000,

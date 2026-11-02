@@ -1,4 +1,4 @@
-import type { WeatherV2Response } from './weather-v2.types';
+import type { WeatherDayV2, WeatherV2Response } from './weather-v2.types';
 
 export interface DailyWeatherInput {
   tempMin: number;
@@ -27,13 +27,20 @@ function localDateKey(now: Date, timeZone: string): string | null {
   }
 }
 
+export function weatherDayFromV2(
+  response: WeatherV2Response | null,
+  now: Date,
+): WeatherDayV2 | null {
+  if (!response || response.status !== 'ok') return null;
+  const date = localDateKey(now, response.location.timezone);
+  return response.daily.find((candidate) => candidate.date === date) ?? null;
+}
+
 export function dailyWeatherInputFromV2(
   response: WeatherV2Response | null,
   now: Date,
 ): DailyWeatherInput | null {
-  if (!response || response.status !== 'ok') return null;
-  const date = localDateKey(now, response.location.timezone);
-  const daily = response.daily.find((candidate) => candidate.date === date);
+  const daily = weatherDayFromV2(response, now);
   if (
     !daily ||
     typeof daily.temperatureMinC !== 'number' ||

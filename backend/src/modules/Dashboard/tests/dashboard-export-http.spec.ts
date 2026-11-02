@@ -17,6 +17,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { JwtAuthGuard } from '../../Auth/jwt-auth.guard';
 import { BoilerService } from '../../Boiler/boiler.service';
 import { WeatherService } from '../../Weather/weather.service';
+import { DashboardWeatherService } from '../../Weather/dashboard-weather.service';
 import { DashboardController } from '../dashboard.controller';
 import { DashboardService } from '../dashboard.service';
 import {
@@ -136,6 +137,7 @@ describe('GET /api/dashboard/export HTTP (FEAT-6)', () => {
         { provide: PrismaService, useValue: db },
         { provide: BoilerService, useValue: {} },
         { provide: WeatherService, useValue: {} },
+        { provide: DashboardWeatherService, useValue: {} },
         { provide: 'IThermostatAdapter', useValue: {} },
       ],
     }).compile();

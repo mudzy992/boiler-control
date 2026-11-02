@@ -10,6 +10,7 @@ import { CommonModule } from '../../common/common.module';
 import { RecommendationWeatherService } from './recommendation-weather.service';
 import { BoilerWeatherService } from './boiler-weather.service';
 import { PollingWeatherService } from './polling-weather.service';
+import { DashboardWeatherService } from './dashboard-weather.service';
 
 @Module({
   imports: [PrismaModule, CommonModule],
@@ -22,6 +23,7 @@ import { PollingWeatherService } from './polling-weather.service';
     RecommendationWeatherService,
     BoilerWeatherService,
     PollingWeatherService,
+    DashboardWeatherService,
   ],
   exports: [
     WeatherService,
@@ -29,6 +31,7 @@ import { PollingWeatherService } from './polling-weather.service';
     RecommendationWeatherService,
     BoilerWeatherService,
     PollingWeatherService,
+    DashboardWeatherService,
   ],
 })
 export class WeatherModule {}

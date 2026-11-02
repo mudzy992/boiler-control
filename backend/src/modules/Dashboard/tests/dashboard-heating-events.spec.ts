@@ -76,6 +76,7 @@ function makeFakeDb(devices: FakeDevice[], events: FakeEvent[]) {
     {} as any,
     {} as any,
     {} as any,
+    {} as any,
   );
 
   const deviceLookups = () =>

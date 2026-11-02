@@ -22,7 +22,13 @@ const engineCalculate = Reflect.get(
 ) as jest.Mock;
 
 function makeService(prisma: unknown): HeatingRecommendationService {
-  return Reflect.construct(HeatingRecommendationService, [prisma]);
+  const recommendationWeather = {
+    getV2WeatherInput: jest.fn().mockResolvedValue(null),
+  };
+  return Reflect.construct(HeatingRecommendationService, [
+    prisma,
+    recommendationWeather,
+  ]);
 }
 
 describe('FE2-10 HeatingRecommendationService write sites', () => {

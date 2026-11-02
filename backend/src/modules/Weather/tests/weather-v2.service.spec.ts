@@ -13,6 +13,7 @@ import type {
 const NOW = new Date('2026-11-02T12:00:00.000Z');
 const ENV_KEYS = [
   'WEATHER_LOCATION_V2',
+  'WEATHER_RECOMMENDATION_V2',
   'WEATHER_SWR_ENABLED',
   'WEATHER_STALE_AFTER_MINUTES',
   'WEATHER_CURRENT_HIDDEN_AFTER_MINUTES',
@@ -143,6 +144,7 @@ beforeEach(() => {
   jest.useFakeTimers();
   jest.setSystemTime(NOW);
   process.env.WEATHER_LOCATION_V2 = 'on';
+  delete process.env.WEATHER_RECOMMENDATION_V2;
   delete process.env.WEATHER_SWR_ENABLED;
   delete process.env.WEATHER_STALE_AFTER_MINUTES;
   delete process.env.WEATHER_CURRENT_HIDDEN_AFTER_MINUTES;
@@ -230,6 +232,25 @@ describe('WeatherV2Service freshness and last-good behavior', () => {
       currentHidden: false,
       current: { temperatureC: 5 },
     });
+  });
+
+  it('serves consumer cache reads without provider refresh or cache writes', async () => {
+    process.env.WEATHER_SWR_ENABLED = 'on';
+    const { service, prisma, provider } = makeService({ cached: cached(20) });
+
+    const result = await service.getCachedWeather(1, 10);
+
+    expect(result).toMatchObject({ status: 'ok', freshness: 'stale' });
+    expect(provider.fetchForecast).not.toHaveBeenCalled();
+    expect(prisma.weatherV2Cache.upsert).not.toHaveBeenCalled();
+  });
+
+  it('returns null on a cold consumer read without fetching provider data', async () => {
+    const { service, prisma, provider } = makeService({ cached: null });
+
+    await expect(service.getCachedWeather(1, 10)).resolves.toBeNull();
+    expect(provider.fetchForecast).not.toHaveBeenCalled();
+    expect(prisma.weatherV2Cache.upsert).not.toHaveBeenCalled();
   });
 
   it('separates caches for same-name locations with different coordinates', async () => {

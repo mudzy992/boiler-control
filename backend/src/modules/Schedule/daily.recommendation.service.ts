@@ -8,6 +8,7 @@ import type { FlowTempInput } from '../Heating/engine/types';
 import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
 import { NotificationsService } from '../Notification/notifications.service';
 import { NotificationType } from 'src/generated/prisma';
+import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 
 @Injectable()
 export class DailyRecommendationService {
@@ -16,6 +17,7 @@ export class DailyRecommendationService {
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationsService,
+    private readonly recommendationWeather: RecommendationWeatherService,
   ) {}
 
   // svaki dan u 6:00
@@ -67,7 +69,11 @@ export class DailyRecommendationService {
               }
             : undefined,
           recentEvents: [], // za jutarnju preporuku trenutno nema recent events
-          weather: await this.getWeatherInput(user.homeLocation),
+          weather:
+            (await this.recommendationWeather.getV2WeatherInput(
+              user.id,
+              home.id,
+            )) ?? (await this.getWeatherInput(user.homeLocation)),
         };
 
         const flowResult = FlowTemperatureEngine.calculate(input);

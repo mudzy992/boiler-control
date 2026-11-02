@@ -201,6 +201,35 @@ export class WeatherV2Service {
     return createHash('sha256').update(identity).digest('hex');
   }
 
+  /**
+   * Read-only consumer path: never refreshes the provider or writes cache.
+   * Null means that this confirmed location has no cached forecast yet.
+   */
+  async getCachedWeather(
+    userId: number,
+    homeProfileId: number,
+  ): Promise<WeatherV2Response | null> {
+    this.assertEnabled();
+    const profile = await this.ownedProfile(userId, homeProfileId);
+    const location = this.confirmedLocation(profile);
+    if (!location) {
+      return { version: 2, status: 'location_confirmation_required' };
+    }
+
+    const cached = (await this.prisma.weatherV2Cache.findUnique({
+      where: { cacheKey: this.cacheKey(location) },
+    })) as WeatherCacheRecord | null;
+    if (!cached) return null;
+
+    const config = getWeatherV2Config();
+    return this.toResponse(
+      location,
+      cached,
+      config.staleAfterMs,
+      config.hideCurrentAfterMs,
+    );
+  }
+
   async getWeather(
     userId: number,
     homeProfileId: number,

@@ -11,6 +11,7 @@ import { TuyaHttpAdapter } from '../Tuya/tuya-http.adapter';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { CommonModule } from '../../common/common.module';
 import { GasReminderService } from './gas.reminder.service';
+import { WeatherModule } from '../Weather/weather.module';
 
 const IS_TEST = process.env.NODE_ENV === 'test';
 
@@ -19,6 +20,7 @@ const IS_TEST = process.env.NODE_ENV === 'test';
     ScheduleModule.forRoot(),
     NotificationsModule,
     BoilerModule,
+    WeatherModule,
     CommonModule,
   ],
   providers: IS_TEST

@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { FlowTempInput, FlowCalcMode } from '../Heating/engine/types';
 import { buildRecommendationBreakdown } from './recommendation-breakdown';
+import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 
 export interface HeatingEventData {
   userId: number;
@@ -18,7 +19,10 @@ export interface HeatingEventData {
 export class HeatingRecommendationService {
   private readonly logger = new Logger(HeatingRecommendationService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly recommendationWeather: RecommendationWeatherService,
+  ) {}
 
   /** Process heating event (start or end) */
   async processHeatingEvent(event: HeatingEventData) {
@@ -96,16 +100,25 @@ export class HeatingRecommendationService {
 
     let tempMin = 0;
     let tempMax = 0;
-    const city = device.homeProfile.location;
-    const weather = city
-      ? await this.prisma.weatherCache.findFirst({
-          where: { city },
-          orderBy: { fetchedAt: 'desc' },
-        })
-      : null;
-    if (weather) {
-      tempMin = weather.temp_min!;
-      tempMax = weather.temp_max!;
+    const v2Weather = await this.recommendationWeather.getV2WeatherInput(
+      event.userId,
+      device.homeProfile.id,
+    );
+    if (v2Weather) {
+      tempMin = v2Weather.tempMin;
+      tempMax = v2Weather.tempMax;
+    } else {
+      const city = device.homeProfile.location;
+      const weather = city
+        ? await this.prisma.weatherCache.findFirst({
+            where: { city },
+            orderBy: { fetchedAt: 'desc' },
+          })
+        : null;
+      if (weather) {
+        tempMin = weather.temp_min!;
+        tempMax = weather.temp_max!;
+      }
     }
 
     // 4️⃣ Compute recommended flow temperature

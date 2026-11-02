@@ -4524,6 +4524,37 @@
         ]
       }
     },
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_getLiveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_getReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Database readiness check passed"
+          },
+          "503": {
+            "description": "Database readiness check failed"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
     "/metrics": {
       "get": {
         "operationId": "MetricsController_getMetrics",

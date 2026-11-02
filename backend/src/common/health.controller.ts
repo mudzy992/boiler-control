@@ -1,6 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { Public } from '../modules/Auth/public.decorator';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { PrismaService } from '../prisma/prisma.service';
+import { databaseIsReady } from './database-health';
 import { RedisHealthService, RedisHealthStatus } from './redis-health.service';
 
 /**
@@ -9,7 +15,10 @@ import { RedisHealthService, RedisHealthStatus } from './redis-health.service';
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly redisHealth: RedisHealthService) {}
+  constructor(
+    private readonly redisHealth: RedisHealthService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * GET /health
@@ -52,5 +61,32 @@ export class HealthController {
         error: status.error,
       },
     };
+  }
+
+  /** Liveness ne zavisi od baze ni opcione infrastrukture. */
+  @Public()
+  @Get('live')
+  getLiveness(): { status: string; timestamp: string } {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /** Readiness provjerava samo obaveznu bazu, uz ograničeno čekanje. */
+  @Public()
+  @Get('ready')
+  @ApiOkResponse({ description: 'Database readiness check passed' })
+  @ApiServiceUnavailableResponse({
+    description: 'Database readiness check failed',
+  })
+  async getReadiness(): Promise<{ status: string; timestamp: string }> {
+    const base = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
+
+    if (await databaseIsReady(this.prisma)) return base;
+    throw new ServiceUnavailableException({ ...base, status: 'error' });
   }
 }

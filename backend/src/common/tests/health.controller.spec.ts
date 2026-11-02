@@ -13,22 +13,26 @@
  * infrastruktura, aplikacija radi ispravno bez njega, pa njegovo gašenje ne
  * smije označiti aplikaciju nezdravom.
  *
- * Bootuje se SAMO HealthController + RedisHealthService, ne cijeli AppModule,
- * pa test ne treba bazu.
+ * Bootuje se SAMO HealthController + RedisHealthService uz mockovanu Prisma
+ * granicu, ne cijeli AppModule, pa test ne treba bazu.
  */
 import { createRequire } from 'node:module';
 
 const req = createRequire(__filename);
 
 /** Nest app nad HealthController-om, svjež po testu (servis pamti env stanje). */
-async function createHealthApp() {
+async function createHealthApp(queryRaw = jest.fn().mockResolvedValue([1])) {
   const { Test } = req('@nestjs/testing');
   const { HealthController } = req('../health.controller');
   const { RedisHealthService } = req('../redis-health.service');
+  const { PrismaService } = req('../../prisma/prisma.service');
 
   const moduleRef = await Test.createTestingModule({
     controllers: [HealthController],
-    providers: [RedisHealthService],
+    providers: [
+      RedisHealthService,
+      { provide: PrismaService, useValue: { $queryRaw: queryRaw } },
+    ],
   }).compile();
 
   const app = moduleRef.createNestApplication({ logger: false });
@@ -60,6 +64,73 @@ describe('MAINT-2: GET /health bez REDIS_URL (kompatibilnost unazad)', () => {
     expect(response.body).not.toHaveProperty('redis');
     expect(response.body.status).toBe('ok');
     expect(typeof response.body.timestamp).toBe('string');
+  });
+});
+
+describe('OBS-1: liveness i readiness', () => {
+  let app: { getHttpServer(): unknown; close(): Promise<void> } | null = null;
+
+  afterEach(async () => {
+    if (app) await app.close();
+    app = null;
+  });
+
+  it('liveness ne poziva bazu', async () => {
+    const queryRaw = jest
+      .fn()
+      .mockRejectedValue(new Error('db must not be used'));
+    app = await createHealthApp(queryRaw);
+    const request = req('supertest');
+
+    const response = await request(app.getHttpServer()).get('/health/live');
+
+    expect(response.status).toBe(200);
+    expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
+    expect(response.body.status).toBe('ok');
+    expect(queryRaw).not.toHaveBeenCalled();
+  });
+
+  it('readiness vraća 200 kada baza odgovori', async () => {
+    const queryRaw = jest.fn().mockResolvedValue([1]);
+    app = await createHealthApp(queryRaw);
+    const request = req('supertest');
+
+    const response = await request(app.getHttpServer()).get('/health/ready');
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('ok');
+    expect(queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it('readiness vraća 503 bez internih detalja kada baza padne', async () => {
+    const queryRaw = jest
+      .fn()
+      .mockRejectedValue(new Error('synthetic database outage'));
+    app = await createHealthApp(queryRaw);
+    const request = req('supertest');
+
+    const response = await request(app.getHttpServer()).get('/health/ready');
+
+    expect(response.status).toBe(503);
+    expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
+    expect(response.body.status).toBe('error');
+    expect(response.text).not.toContain('synthetic database outage');
+    expect(queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it('postojeći /health ostaje nezavisan od baze', async () => {
+    const queryRaw = jest
+      .fn()
+      .mockRejectedValue(new Error('db must not be used'));
+    app = await createHealthApp(queryRaw);
+    const request = req('supertest');
+
+    const response = await request(app.getHttpServer()).get('/health');
+
+    expect(response.status).toBe(200);
+    expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
+    expect(response.body.status).toBe('ok');
+    expect(queryRaw).not.toHaveBeenCalled();
   });
 });
 

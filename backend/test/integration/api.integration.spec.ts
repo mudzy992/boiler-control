@@ -414,6 +414,31 @@ describe('Integration Tests: Backend API (P2a)', () => {
         expect([200, 204]).toContain(response.status);
       });
     });
+
+    it('should report ready with a real database query', async () => {
+      const response = await request(app.getHttpServer()).get('/health/ready');
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe('ok');
+    });
+
+    it('should report not ready without internal details on database failure', async () => {
+      const queryRaw = jest
+        .spyOn(prisma, '$queryRaw')
+        .mockRejectedValueOnce(new Error('synthetic database outage'));
+
+      try {
+        const response = await request(app.getHttpServer()).get(
+          '/health/ready',
+        );
+
+        expect(response.status).toBe(503);
+        expect(response.body.status).toBe('error');
+        expect(response.text).not.toContain('synthetic database outage');
+      } finally {
+        queryRaw.mockRestore();
+      }
+    });
   });
 
   describe('Error Handling', () => {

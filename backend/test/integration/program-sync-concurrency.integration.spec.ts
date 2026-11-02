@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { DayType } from '../../src/generated/prisma';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { ProgramSyncService } from '../../src/modules/Boiler/adapter/program.sync.service';
+import {
+  PROGRAM_SYNC_ATOMIC_FLAG,
+  ProgramSyncService,
+} from '../../src/modules/Boiler/adapter/program.sync.service';
 import {
   TuyaProgramByDay,
   TuyaProgramInterval,
@@ -18,6 +21,7 @@ describe('ProgramSyncService concurrency (REL-8, PostgreSQL)', () => {
   const prefix = `rel8-${suffix}-`;
   const functionName = `rel8_delay_${suffix}`;
   const triggerName = `rel8_delay_trigger_${suffix}`;
+  const originalAtomicFlag = process.env[PROGRAM_SYNC_ATOMIC_FLAG];
   let userId = 0;
   let homeProfileId = 0;
   let deviceId = 0;
@@ -51,6 +55,7 @@ describe('ProgramSyncService concurrency (REL-8, PostgreSQL)', () => {
   });
 
   beforeAll(async () => {
+    process.env[PROGRAM_SYNC_ATOMIC_FLAG] = 'on';
     await Promise.all([first.$connect(), second.$connect()]);
     const user = await first.user.create({
       data: {
@@ -122,6 +127,11 @@ describe('ProgramSyncService concurrency (REL-8, PostgreSQL)', () => {
       await first.homeProfile.deleteMany({ where: { id: homeProfileId } });
     }
     if (userId) await first.user.deleteMany({ where: { id: userId } });
+    if (originalAtomicFlag === undefined) {
+      delete process.env[PROGRAM_SYNC_ATOMIC_FLAG];
+    } else {
+      process.env[PROGRAM_SYNC_ATOMIC_FLAG] = originalAtomicFlag;
+    }
     await Promise.all([first.$disconnect(), second.$disconnect()]);
   });
 

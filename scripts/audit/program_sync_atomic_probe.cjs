@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // REL-8 (B-027) verifikacija: stvarni ProgramSyncService s fake repozitorijem
-// koji MODELIRA lazy PrismaPromise i $transaction s rollbackom.
+// koji MODELIRA lazy PrismaPromise i interaktivni $transaction s rollbackom.
 //
 // Zasto ovo postoji: postojeci `program_sync_partial_repro.cjs` definise upsert
 // kao obicnu async funkciju koja se izvrsava ODMAH pri pozivu. Stvarni Prisma
@@ -11,7 +11,7 @@ const path = require('node:path');
 const Module = require('node:module');
 const assert = require('node:assert/strict');
 if (process.argv.includes('--help')) {
-  console.log('Upotreba: node scripts/audit/program_sync_atomic_probe.cjs\nStvarni ProgramSyncService s fake bazom koja modelira lazy PrismaPromise i $transaction s rollbackom. Ne poziva provider ni stvarnu bazu.');
+  console.log('Upotreba: node scripts/audit/program_sync_atomic_probe.cjs\nStvarni ProgramSyncService s fake bazom koja modelira lazy PrismaPromise i interaktivni $transaction s rollbackom. Ne poziva provider ni stvarnu bazu.');
   process.exit(0);
 }
 if (process.argv.length !== 2) { console.error('Nepoznat argument; koristite --help'); process.exit(2); }
@@ -73,10 +73,14 @@ function makeDb(failOnOrderIndex) {
       upsert: (a) => lazy({ __op: 'upsert', ...a }),
       deleteMany: (a) => lazy({ __op: 'deleteMany', ...a }),
     },
-    // all-or-nothing: snapshot pa rollback na padu
-    $transaction: async (ops) => {
+    // all-or-nothing: snapshot pa rollback na padu interaktivnog callbacka
+    $transaction: async (callback) => {
       const snapshot = rows.map(r => ({ ...r }));
-      try { for (const o of ops) executeOp(o.__op); }
+      const tx = {
+        thermostatProgram: db.thermostatProgram,
+        $queryRaw: async () => [],
+      };
+      try { return await callback(tx); }
       catch (e) { rows.length = 0; rows.push(...snapshot); throw e; }
     },
   };
@@ -133,7 +137,7 @@ const summarize = (db) => db.rows.map(r => `${r.orderIndex}:${r.startMinute}/${r
     'KONTROLA: stari put mora ostaviti mijesano stanje (dokaz da test nesto hvata): ' + mixed);
 
   console.log(JSON.stringify({
-    scope: 'stvarni ProgramSyncService; fake baza modelira lazy PrismaPromise i $transaction rollback',
+    scope: 'stvarni ProgramSyncService; fake baza modelira lazy PrismaPromise i interaktivni $transaction rollback',
     atomicFailureLeavesDbUntouched: true,
     atomicRetryCompletesWork: true,
     legacyPathStillMixesState: true,

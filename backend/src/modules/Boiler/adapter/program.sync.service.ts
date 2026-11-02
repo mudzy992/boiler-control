@@ -3,10 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { TuyaProgramByDay, TuyaProgramInterval } from './program-sync.types';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DayType, PrismaPromise } from 'src/generated/prisma';
+import { DayType } from 'src/generated/prisma';
 
 /**
- * REL-8 (B-027): zastavica za atomski upis dana programa. Zadano UKLJUCENO -
+ * REL-8 (B-027): zastavica za atomski, serijalizovan upis dana programa. Zadano UKLJUCENO -
  * staro ponasanje ostavlja trajno mijesano stanje, pa ga ne treba cuvati kao
  * zadano. Zastavica postoji samo za rollback bez deploya.
  */
@@ -60,12 +60,26 @@ export class ProgramSyncService {
   ): Promise<void> {
     const programHash = this.calculateHash(intervals);
 
+    if (programSyncAtomicEnabled()) {
+      const outcome = await this.applyDayAtomically(
+        deviceId,
+        dayType,
+        intervals,
+        programHash,
+      );
+      if (outcome === 'unchanged') return;
+      this.logger.log(
+        `${outcome === 'inserted' ? 'Inserted' : 'Updated'} program for ${String(dayType)}, deviceId=${deviceId}`,
+      );
+      return;
+    }
+
+    // Rollback grana namjerno zadrzava prethodno legacy ponasanje.
     const existing = await this.prisma.thermostatProgram.findMany({
       where: { deviceId, dayType },
       orderBy: { orderIndex: 'asc' },
     });
 
-    // 1️⃣ Ako nema ničega u bazi → INSERT ALL
     if (existing.length === 0) {
       await this.insertAll(deviceId, dayType, intervals, programHash);
       this.logger.log(
@@ -74,27 +88,16 @@ export class ProgramSyncService {
       return;
     }
 
-    // 2️⃣ Ako hash isti → NO-OP
     if (existing[0].programHash === programHash) {
       return;
     }
 
-    // 3️⃣ Inače → UPSERT + CLEANUP
-    if (programSyncAtomicEnabled()) {
-      // REL-8 (B-027): cijeli dan u jednoj transakciji. Prije ove ispravke svaki
-      // upsert je bio zaseban poziv i svaki je pisao hash CIJELOG programa, pa je
-      // pad drugog upserta ostavljao prvi red s novim hashom. Retry bi tada na
-      // `existing[0].programHash === programHash` zakljucio da je dan azuriran i
-      // preskocio preostale upise i cleanup - trajno mijesano stanje.
-      await this.applyDayAtomically(deviceId, dayType, intervals, programHash);
-    } else {
-      await this.upsertAll(deviceId, dayType, intervals, programHash);
-      await this.cleanupRemovedIntervals(
-        deviceId,
-        dayType,
-        intervals.map((i) => i.orderIndex),
-      );
-    }
+    await this.upsertAll(deviceId, dayType, intervals, programHash);
+    await this.cleanupRemovedIntervals(
+      deviceId,
+      dayType,
+      intervals.map((i) => i.orderIndex),
+    );
 
     this.logger.log(
       `Updated program for ${String(dayType)}, deviceId=${deviceId}`,
@@ -133,53 +136,83 @@ export class ProgramSyncService {
   }
 
   /**
-   * REL-8 (B-027): upsert svih intervala + cleanup u JEDNOJ transakciji.
-   *
-   * Hash se zapisuje samo kao dio commita cijelog dana, pa djelomicno stanje
-   * nikad ne dobija novi hash i retry stvarno ponovi posao.
+   * REL-8 (B-027): lock, procjena postojeceg stanja i svi upisi su u istoj
+   * transakciji. Advisory lock je po uređaju/danu i automatski nestaje na
+   * commit/rollback, pa drugi proces ponovo cita stanje prije hash odluke.
    */
-  private async applyDayAtomically(
+  private applyDayAtomically(
     deviceId: number,
     dayType: DayType,
     intervals: TuyaProgramInterval[],
     programHash: string,
-  ): Promise<void> {
-    const operations: PrismaPromise<unknown>[] = intervals.map((interval) =>
-      this.prisma.thermostatProgram.upsert({
-        where: {
-          deviceId_dayType_orderIndex: {
+  ): Promise<'inserted' | 'updated' | 'unchanged'> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(${this.calculateLockKey(deviceId, dayType)}::bigint)`;
+
+      const existing = await tx.thermostatProgram.findMany({
+        where: { deviceId, dayType },
+        orderBy: { orderIndex: 'asc' },
+      });
+
+      if (existing.length === 0) {
+        await tx.thermostatProgram.createMany({
+          data: intervals.map((interval) => ({
             deviceId,
             dayType,
+            startMinute: interval.startMinute,
+            targetTemp: interval.targetTemp,
             orderIndex: interval.orderIndex,
-          },
-        },
-        update: {
-          startMinute: interval.startMinute,
-          targetTemp: interval.targetTemp,
-          programHash,
-        },
-        create: {
-          deviceId,
-          dayType,
-          startMinute: interval.startMinute,
-          targetTemp: interval.targetTemp,
-          orderIndex: interval.orderIndex,
-          programHash,
-        },
-      }),
-    );
+            programHash,
+          })),
+        });
+        return 'inserted' as const;
+      }
 
-    operations.push(
-      this.prisma.thermostatProgram.deleteMany({
+      if (existing[0].programHash === programHash) {
+        return 'unchanged' as const;
+      }
+
+      for (const interval of intervals) {
+        await tx.thermostatProgram.upsert({
+          where: {
+            deviceId_dayType_orderIndex: {
+              deviceId,
+              dayType,
+              orderIndex: interval.orderIndex,
+            },
+          },
+          update: {
+            startMinute: interval.startMinute,
+            targetTemp: interval.targetTemp,
+            programHash,
+          },
+          create: {
+            deviceId,
+            dayType,
+            startMinute: interval.startMinute,
+            targetTemp: interval.targetTemp,
+            orderIndex: interval.orderIndex,
+            programHash,
+          },
+        });
+      }
+
+      await tx.thermostatProgram.deleteMany({
         where: {
           deviceId,
           dayType,
           orderIndex: { notIn: intervals.map((i) => i.orderIndex) },
         },
-      }),
-    );
+      });
+      return 'updated' as const;
+    });
+  }
 
-    await this.prisma.$transaction(operations);
+  private calculateLockKey(deviceId: number, dayType: DayType): bigint {
+    const digest = createHash('sha256')
+      .update(`rel8:thermostat-program:${deviceId}:${String(dayType)}`)
+      .digest();
+    return digest.readBigInt64BE(0);
   }
 
   private async upsertAll(

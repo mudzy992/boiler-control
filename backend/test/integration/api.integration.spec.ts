@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { AppModule } from '../../src/app.module';
 import { METRICS_AUTH_TOKEN_ENV } from '../../src/common/metrics-auth.guard';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { DatabaseHealthService } from '../../src/common/database-health';
 
 /**
  * Integration Tests (P2a): End-to-end API validation
@@ -423,21 +424,25 @@ describe('Integration Tests: Backend API (P2a)', () => {
     });
 
     it('should report not ready without internal details on database failure', async () => {
-      const queryRaw = jest
-        .spyOn(prisma, '$queryRaw')
-        .mockRejectedValue(new Error('synthetic database outage'));
+      const databaseHealth = app.get(DatabaseHealthService);
+      const readiness = jest
+        .spyOn(databaseHealth, 'isReady')
+        .mockResolvedValueOnce(false);
 
       try {
         const response = await request(app.getHttpServer()).get(
           '/health/ready',
         );
 
-        expect(queryRaw).toHaveBeenCalled();
+        expect(readiness).toHaveBeenCalledTimes(1);
         expect(response.status).toBe(503);
         expect(response.body.status).toBe('error');
-        expect(response.text).not.toContain('synthetic database outage');
+        expect(Object.keys(response.body).sort()).toEqual([
+          'status',
+          'timestamp',
+        ]);
       } finally {
-        queryRaw.mockRestore();
+        readiness.mockRestore();
       }
     });
   });

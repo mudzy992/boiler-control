@@ -5,8 +5,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { PrismaService } from '../prisma/prisma.service';
-import { databaseIsReady } from './database-health';
+import { DatabaseHealthService } from './database-health';
 import { RedisHealthService, RedisHealthStatus } from './redis-health.service';
 
 /**
@@ -17,7 +16,7 @@ import { RedisHealthService, RedisHealthStatus } from './redis-health.service';
 export class HealthController {
   constructor(
     private readonly redisHealth: RedisHealthService,
-    private readonly prisma: PrismaService,
+    private readonly databaseHealth: DatabaseHealthService,
   ) {}
 
   /**
@@ -86,7 +85,7 @@ export class HealthController {
       timestamp: new Date().toISOString(),
     };
 
-    if (await databaseIsReady(this.prisma)) return base;
+    if (await this.databaseHealth.isReady()) return base;
     throw new ServiceUnavailableException({ ...base, status: 'error' });
   }
 }

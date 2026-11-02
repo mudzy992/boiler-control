@@ -11,6 +11,7 @@ import { ReportingService } from './reporting.service';
 import { CorrelationIdService } from './correlation-id.service';
 import { FileStorageService } from './file-storage.service';
 import { RedisHealthService } from './redis-health.service';
+import { DatabaseHealthService } from './database-health';
 
 @Module({
   controllers: [MetricsController, HealthController, AppConfigController],
@@ -24,6 +25,7 @@ import { RedisHealthService } from './redis-health.service';
     FileStorageService,
     AppConfigService,
     RedisHealthService,
+    DatabaseHealthService,
   ],
   exports: [
     MetricsService,

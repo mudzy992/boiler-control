@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export const DATABASE_READINESS_TIMEOUT_MS = 1000;
@@ -28,5 +29,14 @@ export async function databaseIsReady(
     return false;
   } finally {
     if (timer) clearTimeout(timer);
+  }
+}
+
+@Injectable()
+export class DatabaseHealthService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  isReady(): Promise<boolean> {
+    return databaseIsReady(this.prisma);
   }
 }

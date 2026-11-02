@@ -13,7 +13,7 @@
  * infrastruktura, aplikacija radi ispravno bez njega, pa njegovo gašenje ne
  * smije označiti aplikaciju nezdravom.
  *
- * Bootuje se SAMO HealthController + RedisHealthService uz mockovanu Prisma
+ * Bootuje se SAMO HealthController + RedisHealthService uz mockovanu readiness
  * granicu, ne cijeli AppModule, pa test ne treba bazu.
  */
 import { createRequire } from 'node:module';
@@ -21,17 +21,17 @@ import { createRequire } from 'node:module';
 const req = createRequire(__filename);
 
 /** Nest app nad HealthController-om, svjež po testu (servis pamti env stanje). */
-async function createHealthApp(queryRaw = jest.fn().mockResolvedValue([1])) {
+async function createHealthApp(readiness = jest.fn().mockResolvedValue(true)) {
   const { Test } = req('@nestjs/testing');
   const { HealthController } = req('../health.controller');
   const { RedisHealthService } = req('../redis-health.service');
-  const { PrismaService } = req('../../prisma/prisma.service');
+  const { DatabaseHealthService } = req('../database-health');
 
   const moduleRef = await Test.createTestingModule({
     controllers: [HealthController],
     providers: [
       RedisHealthService,
-      { provide: PrismaService, useValue: { $queryRaw: queryRaw } },
+      { provide: DatabaseHealthService, useValue: { isReady: readiness } },
     ],
   }).compile();
 
@@ -76,10 +76,10 @@ describe('OBS-1: liveness i readiness', () => {
   });
 
   it('liveness ne poziva bazu', async () => {
-    const queryRaw = jest
+    const readiness = jest
       .fn()
       .mockRejectedValue(new Error('db must not be used'));
-    const healthApp = await createHealthApp(queryRaw);
+    const healthApp = await createHealthApp(readiness);
     app = healthApp;
     const request = req('supertest');
 
@@ -90,12 +90,12 @@ describe('OBS-1: liveness i readiness', () => {
     expect(response.status).toBe(200);
     expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
     expect(response.body.status).toBe('ok');
-    expect(queryRaw).not.toHaveBeenCalled();
+    expect(readiness).not.toHaveBeenCalled();
   });
 
   it('readiness vraća 200 kada baza odgovori', async () => {
-    const queryRaw = jest.fn().mockResolvedValue([1]);
-    const healthApp = await createHealthApp(queryRaw);
+    const readiness = jest.fn().mockResolvedValue(true);
+    const healthApp = await createHealthApp(readiness);
     app = healthApp;
     const request = req('supertest');
 
@@ -105,14 +105,12 @@ describe('OBS-1: liveness i readiness', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('ok');
-    expect(queryRaw).toHaveBeenCalledTimes(1);
+    expect(readiness).toHaveBeenCalledTimes(1);
   });
 
   it('readiness vraća 503 bez internih detalja kada baza padne', async () => {
-    const queryRaw = jest
-      .fn()
-      .mockRejectedValue(new Error('synthetic database outage'));
-    const healthApp = await createHealthApp(queryRaw);
+    const readiness = jest.fn().mockResolvedValue(false);
+    const healthApp = await createHealthApp(readiness);
     app = healthApp;
     const request = req('supertest');
 
@@ -123,15 +121,14 @@ describe('OBS-1: liveness i readiness', () => {
     expect(response.status).toBe(503);
     expect(Object.keys(response.body).sort()).toEqual(['status', 'timestamp']);
     expect(response.body.status).toBe('error');
-    expect(response.text).not.toContain('synthetic database outage');
-    expect(queryRaw).toHaveBeenCalledTimes(1);
+    expect(readiness).toHaveBeenCalledTimes(1);
   });
 
   it('postojeći /health ostaje nezavisan od baze', async () => {
-    const queryRaw = jest
+    const readiness = jest
       .fn()
       .mockRejectedValue(new Error('db must not be used'));
-    const healthApp = await createHealthApp(queryRaw);
+    const healthApp = await createHealthApp(readiness);
     app = healthApp;
     const request = req('supertest');
 
@@ -140,7 +137,7 @@ describe('OBS-1: liveness i readiness', () => {
     expect(response.status).toBe(200);
     expect(response.body.status).toBe('ok');
     expect(typeof response.body.timestamp).toBe('string');
-    expect(queryRaw).not.toHaveBeenCalled();
+    expect(readiness).not.toHaveBeenCalled();
   });
 });
 

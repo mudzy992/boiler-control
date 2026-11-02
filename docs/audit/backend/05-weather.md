@@ -126,4 +126,14 @@
 
 **Finalni code CI `41442409308` (`efd20c9`):** nakon cold-start timeouta u runovima `41438917708` i `41439567029`, `344f6e4` memoizira `ForecastContent`, a `efd20c9` mountuje location modal tek kad je otvoren. Nisu mijenjani timeout, asserti, real timers ni paralelizam. Backend i mobile su success; backend zadržava 56 suiteova / 608 testova i 5 integration suiteova / 60 testova, a mobile sada ima 24 suitea / 136 testova zbog zasebnog PRIV-1B toka. Frontend i dalje pada samo na FE2-7.
 
-**I dalje otvoreno:** anonimizirani SDK fixture koji istovremeno sadrži current+hourly+daily i sunrise/sunset, stvarna DST potvrda nad takvim fixtureom, produkcijska migracija/obnova, višeprocesni SWR, provider licence/kvote i fizički mobile vizuelni QA. Postojeći hourly-only fixture nije dokaz tih stavki.
+### Generisani combined SDK/DST replay — 2026-11-02
+
+**VERIFIKOVANO OFFLINE:** `scripts/audit/openmeteo_combined_fixture.cjs` deterministic gradi dva mala FlatBuffers fixturea s current+hourly+daily blokovima. Bajtovi su u `scripts/audit/fixtures/`, uz SHA-256 i provenance u tamošnjem README-u. To su **sintetički SDK ulazi**, ne snimci živog providera; generator i test ne rade mrežne pozive.
+
+`backend/src/modules/Weather/tests/openmeteo-v2.fixture.spec.ts` čita komitovane bajtove, provjerava hash i byte-identičnost s generatorom, zatim ih kroz stubovani `fetch` prosljeđuje stvarnom `openmeteo` 1.2.3 / `@openmeteo/sdk` 1.28.0 parseru i stvarnom `OpenMeteoV2Provider` mapiranju. Proljetni scenario dokazuje preskok 02:00 → 03:00, a jesenji zadržava oba 01:00 s EDT/EST ofsetom. Oba pokrivaju 72 sata/7 dana, prave nule, `NaN` → `null`, sunrise/sunset kroz `valuesInt64` i `INT64_MAX` kao `null`.
+
+**Dokazi:** novi suite 4/4; zajedno s postojećim provider suiteom 2 suitea / 9 testova; svi Weather suiteovi 5/26. Generator prijavljuje `in_sync`, a tri mutacije sa jedinstvenim sidrima potvrđuju da promjena vremena ruši byte-sync, pomjeren sunrise ruši replay, a pomjeren hourly UTC instant ruši DST asserte. CI-ekvivalentni backend ESLint ima 0 errors i dva postojeća warnings. Prettier check prolazi.
+
+**Granica dokaza:** ovo zatvara generisani schema/parser/application replay, ali ne i stvarni provider capture. Ne dokazuje da Open-Meteo u produkciji šalje iste vrijednosti, niti zamjenjuje odobren snimak stvarnog current+hourly+daily odgovora.
+
+**I dalje otvoreno:** stvarno snimljeni/anonimizirani provider fixture s current+hourly+daily i sunrise/sunset, stvarna DST potvrda nad takvim fixtureom, produkcijska migracija/obnova, višeprocesni SWR, provider licence/kvote i fizički mobile vizuelni QA. Postojeći hourly-only upstream fixture i novi generisani combined fixture nisu dokaz tih stavki.

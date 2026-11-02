@@ -12,10 +12,11 @@ import {
   Spinner,
   Center,
   Select,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { thermostatApi } from '../../services/api/thermostat.api';
+import { withUiImplementation } from '../../components/ui/migration';
 
 /**
  * SCHEDULE MANAGEMENT SCREEN (VIEW-ONLY)
@@ -198,7 +199,7 @@ const DayGroupSection = ({
   );
 };
 
-export const ScheduleManagementScreen = () => {
+const ScheduleManagementScreenContent = () => {
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
 
   // ALL HOOKS CALLED AT TOP LEVEL UNCONDITIONALLY
@@ -339,7 +340,7 @@ export const ScheduleManagementScreen = () => {
                 accessibilityLabel="Choose Thermostat"
                 placeholder="Choose Thermostat"
                 bg={cardBg}
-                onValueChange={(itemValue) => setSelectedDeviceId(parseInt(itemValue))}
+                onValueChange={(itemValue: string) => setSelectedDeviceId(parseInt(itemValue))}
               >
                 {devices.map((device) => (
                   <Select.Item
@@ -483,3 +484,8 @@ export const ScheduleManagementScreen = () => {
     </Box>
   );
 };
+
+export const ScheduleManagementScreen = withUiImplementation(
+  'Schedule',
+  ScheduleManagementScreenContent,
+);

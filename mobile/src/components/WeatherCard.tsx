@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
+import { Box, VStack, HStack, Text, useColorModeValue } from './ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import type { TodayWeather } from '../types/Weather';
 import { useTranslation } from '../hooks/useTranslation';

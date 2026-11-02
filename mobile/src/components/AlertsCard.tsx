@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, VStack, HStack, Text, useColorModeValue } from 'native-base';
+import { Box, VStack, HStack, Text, useColorModeValue } from './ui/compat';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { HealthWarning } from '../types/Dashboard';
 import { useTranslation } from '../hooks/useTranslation';

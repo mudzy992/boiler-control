@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, VStack, HStack, Text, Progress, useColorModeValue, Circle } from 'native-base';
+import { Box, VStack, HStack, Text, Progress, useColorModeValue, Circle } from './ui/compat';
 import { useTranslation } from '../hooks/useTranslation';
 
 interface HealthScoreCardProps {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useColorModeValue } from 'native-base';
+import { useColorModeValue } from './ui/compat';
 import { useTranslation } from '../hooks/useTranslation';
 import type { RecommendationBreakdown as RecommendationBreakdownData } from '../types/Dashboard';
 

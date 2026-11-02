@@ -29,6 +29,7 @@ export type UiImplementation = 'legacy' | 'nativewind';
  */
 const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
   'Analytics',
+  'Dashboard',
   'Gas',
   'GasAnalysis',
   'GasReadings',

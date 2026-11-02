@@ -13,7 +13,7 @@ import {
   Pressable,
   Icon,
   useToast,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +29,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
 import { FormInput } from '../../components/FormInput';
+import { withUiImplementation } from '../../components/ui/migration';
 import {
   DASHBOARD_QUERY_KEY,
   DASHBOARD_HEALTH_QUERY_KEY,
@@ -39,7 +40,7 @@ import {
   isWithinCurrentFlowTempRange,
 } from '../../constants/boilerLimits';
 
-export const DashboardScreen = () => {
+const DashboardScreenContent = () => {
   const { t, i18n } = useTranslation();
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const textColor = useColorModeValue('gray.800', 'gray.100');
@@ -408,3 +409,5 @@ export const DashboardScreen = () => {
     </Box>
   );
 };
+
+export const DashboardScreen = withUiImplementation('Dashboard', DashboardScreenContent);

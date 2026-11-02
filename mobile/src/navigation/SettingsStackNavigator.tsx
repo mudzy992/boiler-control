@@ -1,5 +1,5 @@
 import { createStackNavigator } from '@react-navigation/stack';
-import { useColorModeValue } from '../components/ui/compat';
+import { useColorModeValue } from '../components/ui/nativewind';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeManagementScreen } from '../screens/home/HomeManagementScreen';

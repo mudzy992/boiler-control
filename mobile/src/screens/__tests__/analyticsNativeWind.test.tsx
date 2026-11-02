@@ -1,17 +1,14 @@
 import mockReact from 'react';
 import {
-  BackHandler,
   Share,
   Text as mockNativeText,
   View as mockNativeView,
 } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { NativeBaseProvider } from 'native-base';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as FileSystem from 'expo-file-system/legacy';
 import { ToastProvider } from '../../components/ui/nativewind';
 import { AppThemeProvider } from '../../theme/AppTheme';
-import { theme } from '../../theme/theme';
 import { analyticsApi } from '../../services/api/analytics.api';
 import { homeProfileApi, type HomeProfile } from '../../services/api/homeProfile.api';
 import { apiClient } from '../../services/api/client';
@@ -30,13 +27,6 @@ jest.mock('react-native/Libraries/Modal/Modal', () => ({
   __esModule: true,
   default: ({ visible, children }: { visible: boolean; children: mockReact.ReactNode }) =>
     visible ? mockReact.createElement(mockNativeView, null, children) : null,
-}));
-
-jest.mock('@react-native-aria/overlays', () => ({
-  ...jest.requireActual('@react-native-aria/overlays'),
-  // NativeBase keeps the closed Select overlay mounted on iOS. It is not
-  // visible UI; NativeWind option interaction is covered through RN Modal.
-  OverlayContainer: () => null,
 }));
 
 jest.mock('react-i18next', () => ({
@@ -75,7 +65,6 @@ jest.mock('../../services/api/client', () => ({
 }));
 
 type Mode = 'light' | 'dark';
-type Implementation = 'legacy' | 'nativewind';
 
 const activeHome = { id: 7 } as HomeProfile;
 const summary = {
@@ -90,11 +79,6 @@ const summary = {
 const stats = { buckets: [] };
 const learning = { points: [] };
 
-beforeAll(() => {
-  // Legacy-only parity with RootNavigator; removed with the before snapshots.
-  (BackHandler as any).addEventListener = jest.fn(() => ({ remove: jest.fn() }));
-  (BackHandler as any).removeEventListener = jest.fn();
-});
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -118,15 +102,12 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS;
   jest.clearAllTimers();
   jest.useRealTimers();
 });
 
 
-async function screenTree(mode: Mode, implementation: Implementation) {
-  process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS =
-    implementation === 'nativewind' ? 'all' : 'none';
+async function screenTree(mode: Mode) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
@@ -138,25 +119,13 @@ async function screenTree(mode: Mode, implementation: Implementation) {
   queryClient.setQueryData(['analytics-stats', 7, 'week'], stats);
   queryClient.setQueryData(['analytics-learning', 7, 'week'], learning);
   queryClient.setQueryData(['gas-readings'], []);
-  const testTheme = {
-    ...theme,
-    config: { ...theme.config, initialColorMode: mode },
-  };
   const result = await render(
     <QueryClientProvider client={queryClient}>
-      <NativeBaseProvider
-        theme={testTheme}
-        initialWindowMetrics={{
-          frame: { x: 0, y: 0, width: 390, height: 844 },
-          insets: { top: 0, right: 0, bottom: 0, left: 0 },
-        }}
-      >
         <AppThemeProvider colorMode={mode}>
           <ToastProvider>
             <AnalyticsScreen />
           </ToastProvider>
         </AppThemeProvider>
-      </NativeBaseProvider>
     </QueryClientProvider>,
   );
   await result.findByText('21.5');
@@ -166,9 +135,9 @@ async function screenTree(mode: Mode, implementation: Implementation) {
   return { result, queryClient };
 }
 
-describe.each(['legacy', 'nativewind'] as const)('Analytics %s', (implementation) => {
+describe('Analytics nativewind', () => {
   it.each(['light', 'dark'] as const)('matches the %s snapshot', async (mode) => {
-    const { result, queryClient } = await screenTree(mode, implementation);
+    const { result, queryClient } = await screenTree(mode);
     expect(result.toJSON()).toMatchSnapshot();
     await result.unmount();
     queryClient.clear();
@@ -176,7 +145,7 @@ describe.each(['legacy', 'nativewind'] as const)('Analytics %s', (implementation
 });
 
 it('changes the NativeWind time range and refetches analytics', async () => {
-  const { result, queryClient } = await screenTree('dark', 'nativewind');
+  const { result, queryClient } = await screenTree('dark');
   await fireEvent.press(result.getByRole('combobox'));
   await fireEvent.press(result.getByText('analytics.thisMonth'));
 
@@ -193,7 +162,7 @@ it('writes and shares the NativeWind CSV export', async () => {
   const share = jest
     .spyOn(Share, 'share')
     .mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
-  const { result, queryClient } = await screenTree('light', 'nativewind');
+  const { result, queryClient } = await screenTree('light');
 
   await fireEvent.press(result.getByText('analytics.exportData'));
 

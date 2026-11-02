@@ -9,14 +9,13 @@ import {
   Spinner,
   ScrollView,
   Icon,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
-import { withUiImplementation } from '../../components/ui/migration';
 
 let LineChart: any = null;
 try {
@@ -694,4 +693,4 @@ const GasAnalysisScreenContent: React.FC = () => {
   );
 };
 
-export const GasAnalysisScreen = withUiImplementation('GasAnalysis', GasAnalysisScreenContent);
+export const GasAnalysisScreen = GasAnalysisScreenContent;

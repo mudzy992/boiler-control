@@ -6,8 +6,7 @@ import {
   Text,
   Button,
   useColorModeValue,
-} from '../../components/ui/compat';
-import { withUiImplementation } from '../../components/ui/migration';
+} from '../../components/ui/nativewind';
 import { Linking } from 'react-native';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -106,7 +105,4 @@ const UpdateRequiredScreenContent: React.FC<UpdateRequiredScreenProps> = ({
   );
 };
 
-export const UpdateRequiredScreen = withUiImplementation(
-  'UpdateRequired',
-  UpdateRequiredScreenContent,
-);
+export const UpdateRequiredScreen = UpdateRequiredScreenContent;

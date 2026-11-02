@@ -22,13 +22,6 @@ jest.mock('../../../locales/config', () => ({
   default: { t: (key: string) => `i18n:${key}` },
 }));
 
-// `error.handler.ts:3` importuje `useToast` na vrhu modula. Sam `parseApiError`
-// ga ne koristi, ali bez mocka bi se cijeli native-base povukao u test.
-jest.mock('native-base', () => ({
-  __esModule: true,
-  useToast: jest.fn(),
-}));
-
 import { parseApiError, ApiError } from '../error.handler';
 
 /** Pravi AxiosError s odgovorom zadatog statusa i tijela. */

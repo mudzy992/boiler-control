@@ -25,7 +25,7 @@ const AppColorModeContext = createContext<AppColorModeContextValue>({
 
 interface AppThemeProviderProps {
   children: React.ReactNode;
-  /** Controlled values are used only by the temporary NativeBase bridge. */
+  /** Controlled values keep app/theme tests deterministic. */
   colorMode?: ColorMode;
   toggleColorMode?: () => void;
 }

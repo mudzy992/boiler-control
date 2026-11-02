@@ -11,13 +11,12 @@ import {
   Icon,
   Badge,
   Divider,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { apiClient } from '../../services/api/client';
 import { useTranslation } from '../../hooks/useTranslation';
-import { withUiImplementation } from '../../components/ui/migration';
 
 interface NotificationItem {
   id: number;
@@ -260,7 +259,4 @@ const NotificationsScreenContent: React.FC = () => {
   );
 };
 
-export const NotificationsScreen = withUiImplementation(
-  'Notifications',
-  NotificationsScreenContent,
-);
+export const NotificationsScreen = NotificationsScreenContent;

@@ -19,7 +19,7 @@ import {
   CheckIcon,
   Checkbox,
   Slider,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
@@ -36,7 +36,6 @@ import {
 } from '../../constants/homeProfileEnums';
 import { AxiosError } from 'axios';
 import { homeProfileToForm } from './homeProfileForm';
-import { withUiImplementation } from '../../components/ui/migration';
 
 interface HomeProfile {
   id: number;
@@ -1071,7 +1070,4 @@ const HomeManagementScreenContent = () => {
   );
 };
 
-export const HomeManagementScreen = withUiImplementation(
-  'HomeManagement',
-  HomeManagementScreenContent,
-);
+export const HomeManagementScreen = HomeManagementScreenContent;

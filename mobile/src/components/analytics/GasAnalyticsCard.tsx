@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, VStack, HStack, Text, Icon, useColorModeValue, Skeleton } from '../ui/compat';
+import { Box, VStack, HStack, Text, Icon, useColorModeValue, Skeleton } from '../ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { useTranslation } from '../../hooks/useTranslation';

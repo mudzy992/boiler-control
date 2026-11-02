@@ -1,11 +1,9 @@
 import mockReact from 'react';
-import { BackHandler, Text as mockNativeText, View as mockNativeView } from 'react-native';
+import { Text as mockNativeText, View as mockNativeView } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { NativeBaseProvider } from 'native-base';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../../components/ui/nativewind';
 import { AppThemeProvider } from '../../theme/AppTheme';
-import { theme } from '../../theme/theme';
 import {
   homeProfileApi,
   type HomeProfile,
@@ -33,12 +31,6 @@ jest.mock('react-native/Libraries/Modal/Modal', () => ({
     visible ? mockReact.createElement(mockNativeView, null, children) : null,
 }));
 
-jest.mock('@react-native-aria/overlays', () => ({
-  ...jest.requireActual('@react-native-aria/overlays'),
-  // Closed NativeBase modal content is not visible UI in these snapshots.
-  OverlayContainer: () => null,
-}));
-
 jest.mock('../../services/api/homeProfile.api', () => ({
   homeProfileApi: {
     getAllHomeProfiles: jest.fn(),
@@ -50,7 +42,6 @@ jest.mock('../../services/api/homeProfile.api', () => ({
 }));
 
 type Mode = 'light' | 'dark';
-type Implementation = 'legacy' | 'nativewind';
 
 const activeHome: HomeProfile = {
   id: 1,
@@ -95,11 +86,6 @@ const createdHome: HomeProfile = {
   thermostats: 0,
 };
 
-beforeAll(() => {
-  // Legacy-only parity with RootNavigator; removed with the before snapshots.
-  (BackHandler as any).addEventListener = jest.fn(() => ({ remove: jest.fn() }));
-  (BackHandler as any).removeEventListener = jest.fn();
-});
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -113,39 +99,24 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS;
   jest.clearAllTimers();
   jest.useRealTimers();
 });
 
-async function screenTree(mode: Mode, implementation: Implementation) {
-  process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS =
-    implementation === 'nativewind' ? 'all' : 'none';
+async function screenTree(mode: Mode) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
       mutations: { retry: false, gcTime: 0 },
     },
   });
-  const testTheme = {
-    ...theme,
-    config: { ...theme.config, initialColorMode: mode },
-  };
   const result = await render(
     <QueryClientProvider client={queryClient}>
-      <NativeBaseProvider
-        theme={testTheme}
-        initialWindowMetrics={{
-          frame: { x: 0, y: 0, width: 390, height: 844 },
-          insets: { top: 0, right: 0, bottom: 0, left: 0 },
-        }}
-      >
         <AppThemeProvider colorMode={mode}>
           <ToastProvider>
             <HomeManagementScreen />
           </ToastProvider>
         </AppThemeProvider>
-      </NativeBaseProvider>
     </QueryClientProvider>,
   );
   await result.findByText('Main House');
@@ -153,9 +124,9 @@ async function screenTree(mode: Mode, implementation: Implementation) {
   return { result, queryClient };
 }
 
-describe.each(['legacy', 'nativewind'] as const)('HomeManagement %s', (implementation) => {
+describe('HomeManagement nativewind', () => {
   it.each(['light', 'dark'] as const)('matches the %s snapshot', async (mode) => {
-    const { result, queryClient } = await screenTree(mode, implementation);
+    const { result, queryClient } = await screenTree(mode);
     expect(result.toJSON()).toMatchSnapshot();
     await result.unmount();
     queryClient.clear();
@@ -163,7 +134,7 @@ describe.each(['legacy', 'nativewind'] as const)('HomeManagement %s', (implement
 });
 
 it('uses NativeWind select, checkbox and slider values when creating a home', async () => {
-  const { result, queryClient } = await screenTree('dark', 'nativewind');
+  const { result, queryClient } = await screenTree('dark');
 
   await fireEvent.press(result.getByText('Add Home'));
   expect(await result.findByText('Add New Home')).toBeTruthy();

@@ -1,2395 +1,786 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`MainTabNavigator legacy matches the dark snapshot 1`] = `
-<RNCSafeAreaProvider
-  onInsetsChange={[Function]}
-  style={
-    [
-      {
-        "flex": 1,
-      },
-      undefined,
-    ]
-  }
->
-  <View
-    onLayout={[Function]}
-    style={
-      [
-        {
-          "flex": 1,
-        },
-        {
-          "flexDirection": "column",
-        },
-      ]
-    }
-  >
-    <RNSScreenNavigationContainer
-      style={
-        {
-          "flex": 1,
-          "overflow": "hidden",
-        }
-      }
-    >
-      <RNSScreen
-        activityState={2}
-        androidResetScreenShadowStateOnOrientationChangeEnabled={true}
-        collapsable={false}
-        fullScreenSwipeEnabled="undefined"
-        gestureResponseDistance={
-          {
-            "bottom": -1,
-            "end": -1,
-            "start": -1,
-            "top": -1,
-          }
-        }
-        iosOrientationInheritanceFixEnabled={true}
-        onGestureCancel={[Function]}
-        sheetAllowedDetents={
-          [
-            1,
-          ]
-        }
-        sheetCornerRadius={-1}
-        sheetDefaultResizeAnimationEnabled={true}
-        sheetElevation={24}
-        sheetExpandsWhenScrolledToEdge={true}
-        sheetGrabberVisible={false}
-        sheetInitialDetent={0}
-        sheetLargestUndimmedDetent={-1}
-        sheetShouldOverflowTopInset={false}
-        style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-            "zIndex": undefined,
-          }
-        }
-        synchronousShadowStateUpdatesEnabled={true}
-      >
-        <View
-          aria-hidden={false}
-          collapsable={false}
-          style={
-            {
-              "backgroundColor": "rgb(242, 242, 242)",
-              "flex": 1,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flex": 1,
-              }
-            }
-          >
-            <Text>
-              Dashboard screen
-            </Text>
-          </View>
-        </View>
-      </RNSScreen>
-    </RNSScreenNavigationContainer>
-    <View
-      collapsable={false}
-      onLayout={[Function]}
-      pointerEvents="auto"
-      style={
-        {
-          "backgroundColor": "#1e293b",
-          "borderColor": "rgb(216, 216, 216)",
-          "borderTopColor": "#334155",
-          "borderTopWidth": 0.5,
-          "bottom": 0,
-          "elevation": 8,
-          "end": 0,
-          "height": 49,
-          "paddingBottom": 0,
-          "paddingHorizontal": 0,
-          "paddingTop": 0,
-          "position": undefined,
-          "start": 0,
-          "transform": [
-            {
-              "translateY": 0,
-            },
-          ],
-        }
-      }
-    >
-      <View
-        pointerEvents="none"
-        style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-          }
-        }
-      />
-      <View
-        role="tablist"
-        style={
-          {
-            "flex": 1,
-            "flexDirection": "row",
-          }
-        }
-      >
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.dashboard, tab, 1 of 4"
-            accessibilityLargeContentTitle="navigation.dashboard"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": true,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Dashboard"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#ff6b3d",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.dashboard
-            </Text>
-          </View>
-        </View>
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.heating, tab, 2 of 4"
-            accessibilityLargeContentTitle="navigation.heating"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Heating"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#94a3b8",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.heating
-            </Text>
-          </View>
-        </View>
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.gas, tab, 3 of 4"
-            accessibilityLargeContentTitle="navigation.gas"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Gas"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#94a3b8",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.gas
-            </Text>
-          </View>
-        </View>
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.settings, tab, 4 of 4"
-            accessibilityLargeContentTitle="navigation.settings"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Settings"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#94a3b8",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.settings
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  </View>
-</RNCSafeAreaProvider>
-`;
-
-exports[`MainTabNavigator legacy matches the light snapshot 1`] = `
-<RNCSafeAreaProvider
-  onInsetsChange={[Function]}
-  style={
-    [
-      {
-        "flex": 1,
-      },
-      undefined,
-    ]
-  }
->
-  <View
-    onLayout={[Function]}
-    style={
-      [
-        {
-          "flex": 1,
-        },
-        {
-          "flexDirection": "column",
-        },
-      ]
-    }
-  >
-    <RNSScreenNavigationContainer
-      style={
-        {
-          "flex": 1,
-          "overflow": "hidden",
-        }
-      }
-    >
-      <RNSScreen
-        activityState={2}
-        androidResetScreenShadowStateOnOrientationChangeEnabled={true}
-        collapsable={false}
-        fullScreenSwipeEnabled="undefined"
-        gestureResponseDistance={
-          {
-            "bottom": -1,
-            "end": -1,
-            "start": -1,
-            "top": -1,
-          }
-        }
-        iosOrientationInheritanceFixEnabled={true}
-        onGestureCancel={[Function]}
-        sheetAllowedDetents={
-          [
-            1,
-          ]
-        }
-        sheetCornerRadius={-1}
-        sheetDefaultResizeAnimationEnabled={true}
-        sheetElevation={24}
-        sheetExpandsWhenScrolledToEdge={true}
-        sheetGrabberVisible={false}
-        sheetInitialDetent={0}
-        sheetLargestUndimmedDetent={-1}
-        sheetShouldOverflowTopInset={false}
-        style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-            "zIndex": undefined,
-          }
-        }
-        synchronousShadowStateUpdatesEnabled={true}
-      >
-        <View
-          aria-hidden={false}
-          collapsable={false}
-          style={
-            {
-              "backgroundColor": "rgb(242, 242, 242)",
-              "flex": 1,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flex": 1,
-              }
-            }
-          >
-            <Text>
-              Dashboard screen
-            </Text>
-          </View>
-        </View>
-      </RNSScreen>
-    </RNSScreenNavigationContainer>
-    <View
-      collapsable={false}
-      onLayout={[Function]}
-      pointerEvents="auto"
-      style={
-        {
-          "backgroundColor": "#ffffff",
-          "borderColor": "rgb(216, 216, 216)",
-          "borderTopColor": "#e5e7eb",
-          "borderTopWidth": 0.5,
-          "bottom": 0,
-          "elevation": 8,
-          "end": 0,
-          "height": 49,
-          "paddingBottom": 0,
-          "paddingHorizontal": 0,
-          "paddingTop": 0,
-          "position": undefined,
-          "start": 0,
-          "transform": [
-            {
-              "translateY": 0,
-            },
-          ],
-        }
-      }
-    >
-      <View
-        pointerEvents="none"
-        style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-          }
-        }
-      />
-      <View
-        role="tablist"
-        style={
-          {
-            "flex": 1,
-            "flexDirection": "row",
-          }
-        }
-      >
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.dashboard, tab, 1 of 4"
-            accessibilityLargeContentTitle="navigation.dashboard"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": true,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Dashboard"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#ff6b3d",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.dashboard
-            </Text>
-          </View>
-        </View>
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.heating, tab, 2 of 4"
-            accessibilityLargeContentTitle="navigation.heating"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Heating"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#6b7280",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.heating
-            </Text>
-          </View>
-        </View>
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.gas, tab, 3 of 4"
-            accessibilityLargeContentTitle="navigation.gas"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Gas"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#6b7280",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.gas
-            </Text>
-          </View>
-        </View>
-        <View
-          style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
-          }
-        >
-          <View
-            accessibilityLabel="navigation.settings, tab, 4 of 4"
-            accessibilityLargeContentTitle="navigation.settings"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Settings"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
-            }
-          >
-            <View
-              style={
-                [
-                  {
-                    "height": 28,
-                    "width": 31,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
-            </View>
-            <Text
-              numberOfLines={1}
-              style={
-                [
-                  {
-                    "color": "rgb(28, 28, 30)",
-                  },
-                  {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
-                  },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#6b7280",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
-                ]
-              }
-            >
-              navigation.settings
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  </View>
-</RNCSafeAreaProvider>
-`;
-
 exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
 <RNCSafeAreaProvider
   onInsetsChange={[Function]}
+  onLayout={[Function]}
   style={
     [
       {
         "flex": 1,
       },
-      undefined,
+      {
+        "flexDirection": "column",
+      },
     ]
   }
 >
-  <View
-    onLayout={[Function]}
+  <RNSScreenNavigationContainer
     style={
-      [
-        {
-          "flex": 1,
-        },
-        {
-          "flexDirection": "column",
-        },
-      ]
+      {
+        "flex": 1,
+        "overflow": "hidden",
+      }
     }
   >
-    <RNSScreenNavigationContainer
-      style={
+    <RNSScreen
+      activityState={2}
+      androidResetScreenShadowStateOnOrientationChangeEnabled={true}
+      collapsable={false}
+      fullScreenSwipeEnabled="undefined"
+      gestureResponseDistance={
         {
-          "flex": 1,
-          "overflow": "hidden",
+          "bottom": -1,
+          "end": -1,
+          "start": -1,
+          "top": -1,
         }
       }
+      iosOrientationInheritanceFixEnabled={true}
+      onGestureCancel={[Function]}
+      sheetAllowedDetents={
+        [
+          1,
+        ]
+      }
+      sheetCornerRadius={-1}
+      sheetDefaultResizeAnimationEnabled={true}
+      sheetElevation={24}
+      sheetExpandsWhenScrolledToEdge={true}
+      sheetGrabberVisible={false}
+      sheetInitialDetent={0}
+      sheetLargestUndimmedDetent={-1}
+      sheetShouldOverflowTopInset={false}
+      style={
+        {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+          "zIndex": undefined,
+        }
+      }
+      synchronousShadowStateUpdatesEnabled={true}
     >
-      <RNSScreen
-        activityState={2}
-        androidResetScreenShadowStateOnOrientationChangeEnabled={true}
+      <View
+        aria-hidden={false}
         collapsable={false}
-        fullScreenSwipeEnabled="undefined"
-        gestureResponseDistance={
-          {
-            "bottom": -1,
-            "end": -1,
-            "start": -1,
-            "top": -1,
-          }
-        }
-        iosOrientationInheritanceFixEnabled={true}
-        onGestureCancel={[Function]}
-        sheetAllowedDetents={
-          [
-            1,
-          ]
-        }
-        sheetCornerRadius={-1}
-        sheetDefaultResizeAnimationEnabled={true}
-        sheetElevation={24}
-        sheetExpandsWhenScrolledToEdge={true}
-        sheetGrabberVisible={false}
-        sheetInitialDetent={0}
-        sheetLargestUndimmedDetent={-1}
-        sheetShouldOverflowTopInset={false}
         style={
           {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-            "zIndex": undefined,
+            "backgroundColor": "rgb(242, 242, 242)",
+            "flex": 1,
           }
         }
-        synchronousShadowStateUpdatesEnabled={true}
       >
         <View
-          aria-hidden={false}
-          collapsable={false}
           style={
             {
-              "backgroundColor": "rgb(242, 242, 242)",
               "flex": 1,
             }
           }
         >
-          <View
-            style={
-              {
-                "flex": 1,
-              }
-            }
-          >
-            <Text>
-              Dashboard screen
-            </Text>
-          </View>
+          <Text>
+            Dashboard screen
+          </Text>
         </View>
-      </RNSScreen>
-    </RNSScreenNavigationContainer>
+      </View>
+    </RNSScreen>
+  </RNSScreenNavigationContainer>
+  <View
+    collapsable={false}
+    onLayout={[Function]}
+    pointerEvents="auto"
+    style={
+      {
+        "backgroundColor": "#1e293b",
+        "borderColor": "rgb(216, 216, 216)",
+        "borderTopColor": "#334155",
+        "borderTopWidth": 0.5,
+        "bottom": 0,
+        "elevation": 8,
+        "end": 0,
+        "height": 49,
+        "paddingBottom": 0,
+        "paddingHorizontal": 0,
+        "paddingTop": 0,
+        "position": undefined,
+        "start": 0,
+        "transform": [
+          {
+            "translateY": 0,
+          },
+        ],
+      }
+    }
+  >
     <View
-      collapsable={false}
-      onLayout={[Function]}
-      pointerEvents="auto"
+      pointerEvents="none"
       style={
         {
-          "backgroundColor": "#1e293b",
-          "borderColor": "rgb(216, 216, 216)",
-          "borderTopColor": "#334155",
-          "borderTopWidth": 0.5,
           "bottom": 0,
-          "elevation": 8,
-          "end": 0,
-          "height": 49,
-          "paddingBottom": 0,
-          "paddingHorizontal": 0,
-          "paddingTop": 0,
-          "position": undefined,
-          "start": 0,
-          "transform": [
-            {
-              "translateY": 0,
-            },
-          ],
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        }
+      }
+    />
+    <View
+      role="tablist"
+      style={
+        {
+          "flex": 1,
+          "flexDirection": "row",
         }
       }
     >
       <View
-        pointerEvents="none"
         style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-          }
-        }
-      />
-      <View
-        role="tablist"
-        style={
-          {
-            "flex": 1,
-            "flexDirection": "row",
-          }
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
+            [
+              {
+                "flex": 1,
+              },
+              undefined,
+            ],
+          ]
         }
       >
         <View
+          accessibilityLabel="navigation.dashboard, tab, 1 of 4"
+          accessibilityLargeContentTitle="navigation.dashboard"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": true,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Dashboard"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
           style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.dashboard, tab, 1 of 4"
-            accessibilityLargeContentTitle="navigation.dashboard"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": true,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Dashboard"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 1,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 1,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="speedometer-outline"
               >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
+                speedometer-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 0,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#ff6b3d",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.dashboard
-            </Text>
+              <Text
+                accessibilityLabel="speedometer-outline"
+              >
+                speedometer-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#ff6b3d",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.dashboard
+          </Text>
         </View>
-        <View
-          style={
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
             [
               {
-                "borderRadius": 0,
-                "overflow": "visible",
+                "flex": 1,
               },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+              undefined,
+            ],
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="navigation.heating, tab, 2 of 4"
+          accessibilityLargeContentTitle="navigation.heating"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": false,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Heating"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.heating, tab, 2 of 4"
-            accessibilityLargeContentTitle="navigation.heating"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Heating"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 0,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="flame-outline"
               >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
+                flame-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 1,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#94a3b8",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.heating
-            </Text>
+              <Text
+                accessibilityLabel="flame-outline"
+              >
+                flame-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#94a3b8",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.heating
+          </Text>
         </View>
-        <View
-          style={
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
             [
               {
-                "borderRadius": 0,
-                "overflow": "visible",
+                "flex": 1,
               },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+              undefined,
+            ],
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="navigation.gas, tab, 3 of 4"
+          accessibilityLargeContentTitle="navigation.gas"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": false,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Gas"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.gas, tab, 3 of 4"
-            accessibilityLargeContentTitle="navigation.gas"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Gas"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 0,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="speedometer-outline"
               >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
+                speedometer-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 1,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#94a3b8",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.gas
-            </Text>
+              <Text
+                accessibilityLabel="speedometer-outline"
+              >
+                speedometer-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#94a3b8",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.gas
+          </Text>
         </View>
-        <View
-          style={
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
             [
               {
-                "borderRadius": 0,
-                "overflow": "visible",
+                "flex": 1,
               },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+              undefined,
+            ],
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="navigation.settings, tab, 4 of 4"
+          accessibilityLargeContentTitle="navigation.settings"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": false,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Settings"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.settings, tab, 4 of 4"
-            accessibilityLargeContentTitle="navigation.settings"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Settings"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 0,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="settings-outline"
               >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
+                settings-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 1,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#94a3b8",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.settings
-            </Text>
+              <Text
+                accessibilityLabel="settings-outline"
+              >
+                settings-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#94a3b8",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.settings
+          </Text>
         </View>
       </View>
     </View>
@@ -2400,795 +791,784 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
 exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
 <RNCSafeAreaProvider
   onInsetsChange={[Function]}
+  onLayout={[Function]}
   style={
     [
       {
         "flex": 1,
       },
-      undefined,
+      {
+        "flexDirection": "column",
+      },
     ]
   }
 >
-  <View
-    onLayout={[Function]}
+  <RNSScreenNavigationContainer
     style={
-      [
-        {
-          "flex": 1,
-        },
-        {
-          "flexDirection": "column",
-        },
-      ]
+      {
+        "flex": 1,
+        "overflow": "hidden",
+      }
     }
   >
-    <RNSScreenNavigationContainer
-      style={
+    <RNSScreen
+      activityState={2}
+      androidResetScreenShadowStateOnOrientationChangeEnabled={true}
+      collapsable={false}
+      fullScreenSwipeEnabled="undefined"
+      gestureResponseDistance={
         {
-          "flex": 1,
-          "overflow": "hidden",
+          "bottom": -1,
+          "end": -1,
+          "start": -1,
+          "top": -1,
         }
       }
+      iosOrientationInheritanceFixEnabled={true}
+      onGestureCancel={[Function]}
+      sheetAllowedDetents={
+        [
+          1,
+        ]
+      }
+      sheetCornerRadius={-1}
+      sheetDefaultResizeAnimationEnabled={true}
+      sheetElevation={24}
+      sheetExpandsWhenScrolledToEdge={true}
+      sheetGrabberVisible={false}
+      sheetInitialDetent={0}
+      sheetLargestUndimmedDetent={-1}
+      sheetShouldOverflowTopInset={false}
+      style={
+        {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+          "zIndex": undefined,
+        }
+      }
+      synchronousShadowStateUpdatesEnabled={true}
     >
-      <RNSScreen
-        activityState={2}
-        androidResetScreenShadowStateOnOrientationChangeEnabled={true}
+      <View
+        aria-hidden={false}
         collapsable={false}
-        fullScreenSwipeEnabled="undefined"
-        gestureResponseDistance={
-          {
-            "bottom": -1,
-            "end": -1,
-            "start": -1,
-            "top": -1,
-          }
-        }
-        iosOrientationInheritanceFixEnabled={true}
-        onGestureCancel={[Function]}
-        sheetAllowedDetents={
-          [
-            1,
-          ]
-        }
-        sheetCornerRadius={-1}
-        sheetDefaultResizeAnimationEnabled={true}
-        sheetElevation={24}
-        sheetExpandsWhenScrolledToEdge={true}
-        sheetGrabberVisible={false}
-        sheetInitialDetent={0}
-        sheetLargestUndimmedDetent={-1}
-        sheetShouldOverflowTopInset={false}
         style={
           {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-            "zIndex": undefined,
+            "backgroundColor": "rgb(242, 242, 242)",
+            "flex": 1,
           }
         }
-        synchronousShadowStateUpdatesEnabled={true}
       >
         <View
-          aria-hidden={false}
-          collapsable={false}
           style={
             {
-              "backgroundColor": "rgb(242, 242, 242)",
               "flex": 1,
             }
           }
         >
-          <View
-            style={
-              {
-                "flex": 1,
-              }
-            }
-          >
-            <Text>
-              Dashboard screen
-            </Text>
-          </View>
+          <Text>
+            Dashboard screen
+          </Text>
         </View>
-      </RNSScreen>
-    </RNSScreenNavigationContainer>
+      </View>
+    </RNSScreen>
+  </RNSScreenNavigationContainer>
+  <View
+    collapsable={false}
+    onLayout={[Function]}
+    pointerEvents="auto"
+    style={
+      {
+        "backgroundColor": "#ffffff",
+        "borderColor": "rgb(216, 216, 216)",
+        "borderTopColor": "#e5e7eb",
+        "borderTopWidth": 0.5,
+        "bottom": 0,
+        "elevation": 8,
+        "end": 0,
+        "height": 49,
+        "paddingBottom": 0,
+        "paddingHorizontal": 0,
+        "paddingTop": 0,
+        "position": undefined,
+        "start": 0,
+        "transform": [
+          {
+            "translateY": 0,
+          },
+        ],
+      }
+    }
+  >
     <View
-      collapsable={false}
-      onLayout={[Function]}
-      pointerEvents="auto"
+      pointerEvents="none"
       style={
         {
-          "backgroundColor": "#ffffff",
-          "borderColor": "rgb(216, 216, 216)",
-          "borderTopColor": "#e5e7eb",
-          "borderTopWidth": 0.5,
           "bottom": 0,
-          "elevation": 8,
-          "end": 0,
-          "height": 49,
-          "paddingBottom": 0,
-          "paddingHorizontal": 0,
-          "paddingTop": 0,
-          "position": undefined,
-          "start": 0,
-          "transform": [
-            {
-              "translateY": 0,
-            },
-          ],
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        }
+      }
+    />
+    <View
+      role="tablist"
+      style={
+        {
+          "flex": 1,
+          "flexDirection": "row",
         }
       }
     >
       <View
-        pointerEvents="none"
         style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-          }
-        }
-      />
-      <View
-        role="tablist"
-        style={
-          {
-            "flex": 1,
-            "flexDirection": "row",
-          }
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
+            [
+              {
+                "flex": 1,
+              },
+              undefined,
+            ],
+          ]
         }
       >
         <View
+          accessibilityLabel="navigation.dashboard, tab, 1 of 4"
+          accessibilityLargeContentTitle="navigation.dashboard"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": true,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Dashboard"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
           style={
-            [
-              {
-                "borderRadius": 0,
-                "overflow": "visible",
-              },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.dashboard, tab, 1 of 4"
-            accessibilityLargeContentTitle="navigation.dashboard"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": true,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Dashboard"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 1,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 1,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="speedometer-outline"
               >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 0,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
+                speedometer-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 0,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#ff6b3d",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.dashboard
-            </Text>
+              <Text
+                accessibilityLabel="speedometer-outline"
+              >
+                speedometer-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#ff6b3d",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.dashboard
+          </Text>
         </View>
-        <View
-          style={
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
             [
               {
-                "borderRadius": 0,
-                "overflow": "visible",
+                "flex": 1,
               },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+              undefined,
+            ],
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="navigation.heating, tab, 2 of 4"
+          accessibilityLargeContentTitle="navigation.heating"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": false,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Heating"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.heating, tab, 2 of 4"
-            accessibilityLargeContentTitle="navigation.heating"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Heating"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 0,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="flame-outline"
               >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="flame-outline"
-                >
-                  flame-outline
-                </Text>
-              </View>
+                flame-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 1,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#6b7280",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.heating
-            </Text>
+              <Text
+                accessibilityLabel="flame-outline"
+              >
+                flame-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#6b7280",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.heating
+          </Text>
         </View>
-        <View
-          style={
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
             [
               {
-                "borderRadius": 0,
-                "overflow": "visible",
+                "flex": 1,
               },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+              undefined,
+            ],
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="navigation.gas, tab, 3 of 4"
+          accessibilityLargeContentTitle="navigation.gas"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": false,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Gas"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.gas, tab, 3 of 4"
-            accessibilityLargeContentTitle="navigation.gas"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Gas"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 0,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="speedometer-outline"
               >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="speedometer-outline"
-                >
-                  speedometer-outline
-                </Text>
-              </View>
+                speedometer-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 1,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#6b7280",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.gas
-            </Text>
+              <Text
+                accessibilityLabel="speedometer-outline"
+              >
+                speedometer-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#6b7280",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.gas
+          </Text>
         </View>
-        <View
-          style={
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 0,
+              "overflow": "visible",
+            },
             [
               {
-                "borderRadius": 0,
-                "overflow": "visible",
+                "flex": 1,
               },
-              [
-                {
-                  "flex": 1,
-                },
-                undefined,
-              ],
-            ]
+              undefined,
+            ],
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="navigation.settings, tab, 4 of 4"
+          accessibilityLargeContentTitle="navigation.settings"
+          accessibilityShowsLargeContentViewer={true}
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": false,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          href="/Settings"
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          role="button"
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "transparent",
+              "borderCurve": "continuous",
+              "borderRadius": 0,
+              "cursor": "pointer",
+              "flex": 1,
+              "flexDirection": "column",
+              "justifyContent": "flex-start",
+              "opacity": 1,
+              "padding": 5,
+            }
           }
         >
           <View
-            accessibilityLabel="navigation.settings, tab, 4 of 4"
-            accessibilityLargeContentTitle="navigation.settings"
-            accessibilityShowsLargeContentViewer={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": false,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            href="/Settings"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            role="button"
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "transparent",
-                "borderCurve": "continuous",
-                "borderRadius": 0,
-                "cursor": "pointer",
-                "flex": 1,
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "opacity": 1,
-                "padding": 5,
-              }
+              [
+                {
+                  "height": 28,
+                  "width": 31,
+                },
+                undefined,
+              ]
             }
           >
             <View
               style={
                 [
                   {
-                    "height": 28,
-                    "width": 31,
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
-                  undefined,
+                  {
+                    "minWidth": 25,
+                    "opacity": 0,
+                  },
                 ]
               }
             >
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "minWidth": 25,
-                      "opacity": 0,
-                    },
-                  ]
-                }
+              <Text
+                accessibilityLabel="settings-outline"
               >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
-              <View
-                style={
-                  [
-                    {
-                      "alignItems": "center",
-                      "alignSelf": "center",
-                      "height": "100%",
-                      "justifyContent": "center",
-                      "position": "absolute",
-                      "width": "100%",
-                    },
-                    {
-                      "opacity": 1,
-                    },
-                  ]
-                }
-              >
-                <Text
-                  accessibilityLabel="settings-outline"
-                >
-                  settings-outline
-                </Text>
-              </View>
+                settings-outline
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
+            <View
               style={
                 [
                   {
-                    "color": "rgb(28, 28, 30)",
+                    "alignItems": "center",
+                    "alignSelf": "center",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "width": "100%",
                   },
                   {
-                    "fontFamily": "System",
-                    "fontWeight": "400",
+                    "opacity": 1,
                   },
-                  [
-                    {
-                      "backgroundColor": "transparent",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#6b7280",
-                    },
-                    [
-                      {
-                        "fontSize": 10,
-                      },
-                      {
-                        "fontFamily": "System",
-                        "fontWeight": "500",
-                      },
-                      undefined,
-                    ],
-                  ],
                 ]
               }
             >
-              navigation.settings
-            </Text>
+              <Text
+                accessibilityLabel="settings-outline"
+              >
+                settings-outline
+              </Text>
+            </View>
           </View>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "rgb(28, 28, 30)",
+                },
+                {
+                  "fontFamily": "System",
+                  "fontWeight": "400",
+                },
+                [
+                  {
+                    "backgroundColor": "transparent",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#6b7280",
+                  },
+                  [
+                    {
+                      "fontSize": 10,
+                    },
+                    {
+                      "fontFamily": "System",
+                      "fontWeight": "500",
+                    },
+                    undefined,
+                  ],
+                ],
+              ]
+            }
+          >
+            navigation.settings
+          </Text>
         </View>
       </View>
     </View>

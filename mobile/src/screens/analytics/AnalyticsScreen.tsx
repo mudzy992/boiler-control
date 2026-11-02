@@ -22,13 +22,12 @@ import {
   Skeleton,
   Spinner,
   useToast,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { analyticsApi } from '../../services/api/analytics.api';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
 import { apiClient } from '../../services/api/client';
 import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
-import { withUiImplementation } from '../../components/ui/migration';
 
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
@@ -747,4 +746,4 @@ const AnalyticsScreenContent = () => {
   );
 };
 
-export const AnalyticsScreen = withUiImplementation('Analytics', AnalyticsScreenContent);
+export const AnalyticsScreen = AnalyticsScreenContent;

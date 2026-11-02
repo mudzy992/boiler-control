@@ -1,11 +1,9 @@
 import mockReact from 'react';
 import { Text as mockNativeText } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { NativeBaseProvider } from 'native-base';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../../components/ui/nativewind';
 import { AppThemeProvider } from '../../theme/AppTheme';
-import { theme } from '../../theme/theme';
 import { apiClient } from '../../services/api/client';
 import { NotificationsScreen } from '../notifications/NotificationsScreen';
 import { NotificationPreferencesScreen } from '../notifications/NotificationPreferencesScreen';
@@ -34,7 +32,6 @@ jest.mock('../../services/api/client', () => ({
 }));
 
 type Mode = 'light' | 'dark';
-type Implementation = 'legacy' | 'nativewind';
 
 const notifications = [
   {
@@ -79,40 +76,21 @@ beforeEach(() => {
   jest.mocked(apiClient.updateNotificationPreference).mockResolvedValue(undefined);
 });
 
-afterEach(() => {
-  delete process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS;
-});
-
 async function screenTree(
   children: React.ReactNode,
   mode: Mode,
-  implementation: Implementation,
 ) {
-  process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS =
-    implementation === 'nativewind' ? 'all' : 'none';
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
       mutations: { retry: false, gcTime: 0 },
     },
   });
-  const testTheme = {
-    ...theme,
-    config: { ...theme.config, initialColorMode: mode },
-  };
   const result = await render(
     <QueryClientProvider client={queryClient}>
-      <NativeBaseProvider
-        theme={testTheme}
-        initialWindowMetrics={{
-          frame: { x: 0, y: 0, width: 390, height: 844 },
-          insets: { top: 0, right: 0, bottom: 0, left: 0 },
-        }}
-      >
         <AppThemeProvider colorMode={mode}>
           <ToastProvider>{children}</ToastProvider>
         </AppThemeProvider>
-      </NativeBaseProvider>
     </QueryClientProvider>,
   );
   return { result, queryClient };
@@ -128,9 +106,9 @@ const screens = [
 ] as const;
 
 describe.each(screens)('%s before/after NativeWind', (_name, screen, readyText) => {
-  describe.each(['legacy', 'nativewind'] as const)('%s', (implementation) => {
+  describe('nativewind', () => {
     it.each(['light', 'dark'] as const)('matches the %s snapshot', async (mode) => {
-      const { result, queryClient } = await screenTree(screen, mode, implementation);
+      const { result, queryClient } = await screenTree(screen, mode);
       await result.findByText(readyText);
       expect(result.toJSON()).toMatchSnapshot();
       await result.unmount();
@@ -144,7 +122,6 @@ describe('Notifications NativeWind interactions', () => {
     const { result, queryClient } = await screenTree(
       <NotificationsScreen />,
       'dark',
-      'nativewind',
     );
     await fireEvent.press(await result.findByText('Test notification'));
     await waitFor(() => expect(apiClient.markNotificationAsRead).toHaveBeenCalledWith(1));
@@ -157,7 +134,6 @@ describe('Notifications NativeWind interactions', () => {
     const { result, queryClient } = await screenTree(
       <NotificationPreferencesScreen />,
       'light',
-      'nativewind',
     );
     const control = await result.findByRole('switch');
     await fireEvent(control, 'valueChange', false);

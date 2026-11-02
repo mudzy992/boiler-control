@@ -1,17 +1,11 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorMode } from '../components/ui/compat';
-import { BackHandler } from 'react-native';
+import { useColorMode } from '../components/ui/nativewind';
 import { useTranslation } from '../hooks/useTranslation';
 import { DashboardStackNavigator } from './DashboardStackNavigator';
 import { HeatingScreen } from '../screens/heating/HeatingScreen';
 import { GasScreen } from '../screens/gas/GasScreen';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
-
-// Polyfill for BackHandler compatibility with React Navigation 7.x and RN 0.81.5
-if (typeof (BackHandler as any).removeEventListener !== 'function') {
-  (BackHandler as any).removeEventListener = () => {};
-}
 
 const Tab = createBottomTabNavigator();
 

@@ -11,7 +11,6 @@ import React, {
 import { Modal as RNModal, Pressable as RNPressable, View } from 'react-native';
 import { useAppColorMode } from '../../theme/AppTheme';
 import { resolveColor } from '../../theme/palette';
-import { UiImplementationContext } from './migration';
 import { Box, HStack, Icon, Pressable, Text } from './primitives';
 import type { UiProps } from './styles';
 
@@ -288,11 +287,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const renderToast = (toast: ToastOptions & { id: number }) => {
     if (toast.render) {
-      return (
-        <UiImplementationContext.Provider key={toast.id} value="nativewind">
-          {toast.render({ id: toast.id })}
-        </UiImplementationContext.Provider>
-      );
+      return <React.Fragment key={toast.id}>{toast.render({ id: toast.id })}</React.Fragment>;
     }
     const scheme = toast.status === 'success'
       ? 'green.600'

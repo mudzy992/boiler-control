@@ -11,13 +11,12 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Pressable,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Platform } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormInput } from '../../components/FormInput';
-import { withUiImplementation } from '../../components/ui/migration';
 
 const LoginScreenContent = ({ navigation }: any) => {
   const [identifier, setIdentifier] = useState('');
@@ -135,4 +134,4 @@ const LoginScreenContent = ({ navigation }: any) => {
   );
 };
 
-export const LoginScreen = withUiImplementation('Login', LoginScreenContent);
+export const LoginScreen = LoginScreenContent;

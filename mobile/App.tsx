@@ -1,15 +1,11 @@
 import './global.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NativeBaseProvider, useColorMode as useNativeBaseColorMode } from 'native-base';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NavigationContainerRef } from '@react-navigation/native';
 import { AuthProvider } from './src/context/AuthContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { theme } from './src/theme/theme';
-import { colorModeManager } from './src/theme/colorModeManager';
 import { AnimatedSplash } from './src/components/AnimatedSplash';
 import {
   configureNotificationHandler,
@@ -32,29 +28,9 @@ const queryClient = new QueryClient({
   },
 });
 
-function AppProviders({ children }: { children: React.ReactNode }) {
-  const { colorMode, toggleColorMode } = useNativeBaseColorMode();
-  return (
-    <AppThemeProvider
-      colorMode={colorMode === 'dark' ? 'dark' : 'light'}
-      toggleColorMode={toggleColorMode}
-    >
-      <ToastProvider>{children}</ToastProvider>
-    </AppThemeProvider>
-  );
-}
-
 export default function App() {
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
-
-  useEffect(() => {
-    // Known third-party warnings (NativeBase/react-native-aria on current RN/React versions).
-    LogBox.ignoreLogs([
-      'SafeAreaView has been deprecated and will be removed in a future release',
-      'In React 18, SSRProvider is not necessary and is a noop.',
-    ]);
-  }, []);
 
   useEffect(() => {
     configureNotificationHandler();
@@ -91,8 +67,8 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <NativeBaseProvider theme={theme} colorModeManager={colorModeManager}>
-          <AppProviders>
+        <AppThemeProvider>
+          <ToastProvider>
             <AuthProvider>
               <StatusBar style="auto" />
               <RootNavigator ref={navigationRef} />
@@ -101,8 +77,8 @@ export default function App() {
                 onFinished={() => setShowAnimatedSplash(false)}
               />
             </AuthProvider>
-          </AppProviders>
-        </NativeBaseProvider>
+          </ToastProvider>
+        </AppThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

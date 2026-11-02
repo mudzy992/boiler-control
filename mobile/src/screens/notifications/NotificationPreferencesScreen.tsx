@@ -10,13 +10,12 @@ import {
   Icon,
   Divider,
   ScrollView,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
 import { useTranslation } from '../../hooks/useTranslation';
-import { withUiImplementation } from '../../components/ui/migration';
 
 interface NotificationPreference {
   id: number;
@@ -132,7 +131,4 @@ const NotificationPreferencesScreenContent: React.FC = () => {
   );
 };
 
-export const NotificationPreferencesScreen = withUiImplementation(
-  'NotificationPreferences',
-  NotificationPreferencesScreenContent,
-);
+export const NotificationPreferencesScreen = NotificationPreferencesScreenContent;

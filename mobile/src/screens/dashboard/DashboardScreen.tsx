@@ -13,7 +13,7 @@ import {
   Pressable,
   Icon,
   useToast,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -29,7 +29,6 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
 import { FormInput } from '../../components/FormInput';
-import { withUiImplementation } from '../../components/ui/migration';
 import {
   DASHBOARD_QUERY_KEY,
   DASHBOARD_HEALTH_QUERY_KEY,
@@ -410,4 +409,4 @@ const DashboardScreenContent = () => {
   );
 };
 
-export const DashboardScreen = withUiImplementation('Dashboard', DashboardScreenContent);
+export const DashboardScreen = DashboardScreenContent;

@@ -14,7 +14,7 @@ import {
   ScrollView,
   Icon,
   useToast,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { getAppVersion } from '../../config/version.config';
 import { useAuth } from '../../hooks/useAuth';
@@ -36,7 +36,6 @@ import * as Notifications from 'expo-notifications';
 import { Linking } from 'react-native';
 import { AppStorage } from '../../services/storage/AppStorage';
 import { apiClient } from '../../services/api/client';
-import { withUiImplementation } from '../../components/ui/migration';
 
 /**
  * MO2-6 (MO-008): tip preferencije za dnevni podsjetnik o plinu.
@@ -677,4 +676,4 @@ const SettingsScreenContent = () => {
   );
 };
 
-export const SettingsScreen = withUiImplementation('Settings', SettingsScreenContent);
+export const SettingsScreen = SettingsScreenContent;

@@ -33,7 +33,7 @@ module.exports = {
   // jest-expo donosi vlastiti transformIgnorePatterns; ovo je Expo preporuka za
   // SDK 54+ jer većina ESM paketa u node_modules mora proći kroz babel.
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|react-native-svg)',
   ],
 
   clearMocks: true,

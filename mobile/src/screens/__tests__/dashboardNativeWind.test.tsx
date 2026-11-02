@@ -1,11 +1,9 @@
 import mockReact from 'react';
 import { Text as mockNativeText, View as mockNativeView } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { NativeBaseProvider } from 'native-base';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../../components/ui/nativewind';
 import { AppThemeProvider } from '../../theme/AppTheme';
-import { theme } from '../../theme/theme';
 import { getDashboard } from '../../api/dashboard.api';
 import { apiClient } from '../../services/api/client';
 import type { DashboardResponse } from '../../types/Dashboard';
@@ -48,7 +46,6 @@ jest.mock('../../services/api/client', () => ({
 }));
 
 type Mode = 'light' | 'dark';
-type Implementation = 'legacy' | 'nativewind';
 
 const at = (hour: number, minute = 0) => new Date(2026, 10, 2, hour, minute).toISOString();
 const dashboard: DashboardResponse = {
@@ -147,39 +144,24 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS;
   jest.clearAllTimers();
   jest.useRealTimers();
 });
 
-async function screenTree(mode: Mode, implementation: Implementation) {
-  process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS =
-    implementation === 'nativewind' ? 'all' : 'none';
+async function screenTree(mode: Mode) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
       mutations: { retry: false, gcTime: 0 },
     },
   });
-  const testTheme = {
-    ...theme,
-    config: { ...theme.config, initialColorMode: mode },
-  };
   const result = await render(
     <QueryClientProvider client={queryClient}>
-      <NativeBaseProvider
-        theme={testTheme}
-        initialWindowMetrics={{
-          frame: { x: 0, y: 0, width: 390, height: 844 },
-          insets: { top: 0, right: 0, bottom: 0, left: 0 },
-        }}
-      >
         <AppThemeProvider colorMode={mode}>
           <ToastProvider>
             <DashboardScreen />
           </ToastProvider>
         </AppThemeProvider>
-      </NativeBaseProvider>
     </QueryClientProvider>,
   );
   await result.findByText('Living Room');
@@ -188,9 +170,9 @@ async function screenTree(mode: Mode, implementation: Implementation) {
   return { result, queryClient };
 }
 
-describe.each(['legacy', 'nativewind'] as const)('Dashboard %s', (implementation) => {
+describe('Dashboard nativewind', () => {
   it.each(['light', 'dark'] as const)('matches the %s snapshot', async (mode) => {
-    const { result, queryClient } = await screenTree(mode, implementation);
+    const { result, queryClient } = await screenTree(mode);
     expect(result.toJSON()).toMatchSnapshot();
     await result.unmount();
     queryClient.clear();
@@ -198,7 +180,7 @@ describe.each(['legacy', 'nativewind'] as const)('Dashboard %s', (implementation
 });
 
 it('submits a valid NativeWind current temperature and refreshes dashboard data', async () => {
-  const { result, queryClient } = await screenTree('dark', 'nativewind');
+  const { result, queryClient } = await screenTree('dark');
 
   await fireEvent.press(result.getByText('boiler.setCurrentTemp'));
   const input = await result.findByPlaceholderText('48 - 55');

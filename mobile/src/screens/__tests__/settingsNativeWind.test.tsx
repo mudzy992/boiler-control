@@ -1,12 +1,10 @@
 import mockReact from 'react';
 import { Text as mockNativeText } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
-import { NativeBaseProvider } from 'native-base';
 import * as Notifications from 'expo-notifications';
 import { PermissionStatus } from 'expo';
 import { ToastProvider } from '../../components/ui/nativewind';
 import { AppThemeProvider } from '../../theme/AppTheme';
-import { theme } from '../../theme/theme';
 import { apiClient } from '../../services/api/client';
 import { SettingsScreen } from '../settings/SettingsScreen';
 
@@ -62,7 +60,6 @@ jest.mock('../../services/api/client', () => ({
 }));
 
 type Mode = 'light' | 'dark';
-type Implementation = 'legacy' | 'nativewind';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -78,35 +75,16 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
-  delete process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS;
-});
-
 async function screenTree(
   mode: Mode,
-  implementation: Implementation,
   toggleColorMode?: () => void,
 ) {
-  process.env.EXPO_PUBLIC_NATIVEWIND_SCREENS =
-    implementation === 'nativewind' ? 'all' : 'none';
-  const testTheme = {
-    ...theme,
-    config: { ...theme.config, initialColorMode: mode },
-  };
   const result = await render(
-    <NativeBaseProvider
-      theme={testTheme}
-      initialWindowMetrics={{
-        frame: { x: 0, y: 0, width: 390, height: 844 },
-        insets: { top: 0, right: 0, bottom: 0, left: 0 },
-      }}
-    >
       <AppThemeProvider colorMode={mode} toggleColorMode={toggleColorMode}>
         <ToastProvider>
           <SettingsScreen />
         </ToastProvider>
       </AppThemeProvider>
-    </NativeBaseProvider>,
   );
   await result.findByText('settings.notificationPermissionGranted');
   await waitFor(() => expect(apiClient.getNotificationPreferences).toHaveBeenCalledTimes(1));
@@ -116,9 +94,9 @@ async function screenTree(
   return result;
 }
 
-describe.each(['legacy', 'nativewind'] as const)('Settings %s', (implementation) => {
+describe('Settings nativewind', () => {
   it.each(['light', 'dark'] as const)('matches the %s snapshot', async (mode) => {
-    const result = await screenTree(mode, implementation);
+    const result = await screenTree(mode);
     expect(result.toJSON()).toMatchSnapshot();
     await result.unmount();
   });
@@ -127,14 +105,14 @@ describe.each(['legacy', 'nativewind'] as const)('Settings %s', (implementation)
 describe('Settings NativeWind interactions', () => {
   it('uses the shared color-mode toggle', async () => {
     const toggleColorMode = jest.fn();
-    const result = await screenTree('light', 'nativewind', toggleColorMode);
+    const result = await screenTree('light', toggleColorMode);
     await fireEvent(result.getAllByRole('switch')[0], 'valueChange', true);
     expect(toggleColorMode).toHaveBeenCalledTimes(1);
     await result.unmount();
   });
 
   it('persists the gas reminder preference and shows the existing toast', async () => {
-    const result = await screenTree('dark', 'nativewind');
+    const result = await screenTree('dark');
     await fireEvent(result.getAllByRole('switch')[1], 'valueChange', false);
     await waitFor(() =>
       expect(apiClient.updateNotificationPreference).toHaveBeenCalledWith(

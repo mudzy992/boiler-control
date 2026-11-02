@@ -13,11 +13,10 @@ import {
   useToast,
   Spinner,
   ScrollView,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { useAuth } from '../../hooks/useAuth';
 import { FormInput } from '../../components/FormInput';
 import { apiClient } from '../../services/api/client';
-import { withUiImplementation } from '../../components/ui/migration';
 
 const VAT_RATE = 0.17;
 
@@ -262,4 +261,4 @@ const ProfileScreenContent = () => {
   );
 };
 
-export const ProfileScreen = withUiImplementation('Profile', ProfileScreenContent);
+export const ProfileScreen = ProfileScreenContent;

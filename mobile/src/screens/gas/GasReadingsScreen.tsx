@@ -20,7 +20,7 @@ import {
   Pressable,
   useToast,
   Center,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
@@ -29,7 +29,6 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
-import { withUiImplementation } from '../../components/ui/migration';
 import { SecureStorage } from '../../services/storage/SecureStorage';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
 // postavke i ovaj ekran čiste ISTU putanju.
@@ -1092,4 +1091,4 @@ const GasReadingsScreenContent: React.FC = () => {
   );
 };
 
-export const GasReadingsScreen = withUiImplementation('GasReadings', GasReadingsScreenContent);
+export const GasReadingsScreen = GasReadingsScreenContent;

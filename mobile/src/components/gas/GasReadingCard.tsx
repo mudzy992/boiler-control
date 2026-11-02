@@ -8,7 +8,7 @@ import {
   Pressable,
   Actionsheet,
   useColorModeValue,
-} from '../ui/compat';
+} from '../ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { useTranslation } from '../../hooks/useTranslation';

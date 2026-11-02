@@ -7,9 +7,7 @@ import {
   NavigationContainerRef,
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useColorMode, Spinner, Center } from '../components/ui/compat';
-import { UiImplementationProvider } from '../components/ui/migration';
-import { BackHandler } from 'react-native';
+import { useColorMode, Spinner, Center } from '../components/ui/nativewind';
 import { useAuth } from '../hooks/useAuth';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
@@ -24,11 +22,6 @@ import { handleColdStartNotification } from '../services/notifications/notificat
 import { UpdateRequiredScreen } from '../screens/common/UpdateRequiredScreen';
 import { checkVersionGate } from '../config/version.config';
 import type { VersionGateResult } from '../config/version.config';
-
-// Polyfill for BackHandler compatibility with React Navigation 7.x and RN 0.81.5
-if (typeof (BackHandler as any).removeEventListener !== 'function') {
-  (BackHandler as any).removeEventListener = () => {};
-}
 
 const Stack = createStackNavigator();
 
@@ -168,13 +161,6 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
   },
 );
 
-RootNavigatorContent.displayName = 'RootNavigatorContent';
+RootNavigatorContent.displayName = 'RootNavigator';
 
-export const RootNavigator = React.forwardRef<NavigationContainerRef<any>, RootNavigatorProps>(
-  (props, ref) => (
-    <UiImplementationProvider screen="Navigation">
-      <RootNavigatorContent {...props} ref={ref} />
-    </UiImplementationProvider>
-  ),
-);
-RootNavigator.displayName = 'RootNavigator';
+export const RootNavigator = RootNavigatorContent;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextInput, StyleSheet, TextInputProps } from 'react-native';
-import { Box, useColorModeValue } from './ui/compat';
+import { Box, useColorModeValue } from './ui/nativewind';
 
 export type FormInputProps = TextInputProps & {
   isDisabled?: boolean;

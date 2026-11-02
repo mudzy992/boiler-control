@@ -6,10 +6,6 @@ jest.mock('../../hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-jest.mock('native-base', () => ({
-  useColorModeValue: (light: string) => light,
-}));
-
 const fullBreakdown: BreakdownData = {
   version: 1,
   mode: 'FULL',

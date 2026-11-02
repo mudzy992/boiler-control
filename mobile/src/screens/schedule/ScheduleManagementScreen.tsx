@@ -12,11 +12,10 @@ import {
   Spinner,
   Center,
   Select,
-} from '../../components/ui/compat';
+} from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { thermostatApi } from '../../services/api/thermostat.api';
-import { withUiImplementation } from '../../components/ui/migration';
 
 /**
  * SCHEDULE MANAGEMENT SCREEN (VIEW-ONLY)
@@ -485,7 +484,4 @@ const ScheduleManagementScreenContent = () => {
   );
 };
 
-export const ScheduleManagementScreen = withUiImplementation(
-  'Schedule',
-  ScheduleManagementScreenContent,
-);
+export const ScheduleManagementScreen = ScheduleManagementScreenContent;

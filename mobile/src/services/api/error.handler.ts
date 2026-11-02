@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AxiosError } from 'axios';
-import { useToast } from '../../components/ui/compat';
+import { useToast } from '../../components/ui/nativewind';
 import i18n from '../../locales/config';
 
 /**
@@ -143,10 +143,8 @@ export function useErrorHandler() {
       });
     }
 
-    // `IToastProps` (native-base) NEMA `status` ni `isClosable`; stil ide preko
-    // Box propova jer InterfaceToastProps proširuje InterfaceBoxProps. Ovdje se
-    // ne može koristiti `render` obrazac iz DashboardScreen.tsx jer je ovo .ts
-    // fajl bez JSX-a.
+    // Stil ide preko zajedničkih Box propova. Ovdje se ne može koristiti
+    // `render` obrazac iz DashboardScreen.tsx jer je ovo .ts fajl bez JSX-a.
     toastRef.current.show({
       description: finalMessage,
       duration: 4000,

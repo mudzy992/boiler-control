@@ -19,7 +19,7 @@ import {
   CheckIcon,
   Checkbox,
   Slider,
-} from 'native-base';
+} from '../../components/ui/compat';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
@@ -36,6 +36,7 @@ import {
 } from '../../constants/homeProfileEnums';
 import { AxiosError } from 'axios';
 import { homeProfileToForm } from './homeProfileForm';
+import { withUiImplementation } from '../../components/ui/migration';
 
 interface HomeProfile {
   id: number;
@@ -76,7 +77,7 @@ const useHomeManagementScreen = () => {
   };
 };
 
-export const HomeManagementScreen = () => {
+const HomeManagementScreenContent = () => {
   const {
     showAddModal,
     setShowAddModal,
@@ -592,7 +593,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Insulation Type</FormControl.Label>
                   <Select
                     selectedValue={formData.insulationType}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, insulationType: value as InsulationType })
                     }
                     _selectedItem={{
@@ -610,7 +611,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Insulation Thickness (cm)</FormControl.Label>
                   <Select
                     selectedValue={String(formData.insulationThickness)}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, insulationThickness: parseInt(value) })
                     }
                     _selectedItem={{
@@ -629,7 +630,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Window Type</FormControl.Label>
                   <Select
                     selectedValue={formData.windowType}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, windowType: value as WindowType })
                     }
                     _selectedItem={{
@@ -647,7 +648,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Season Mode</FormControl.Label>
                   <Select
                     selectedValue={formData.seasonMode}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, seasonMode: value as SeasonMode })
                     }
                     _selectedItem={{
@@ -670,7 +671,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Heating Type</FormControl.Label>
                   <Select
                     selectedValue={formData.heatingType}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, heatingType: value as HeatingType })
                     }
                     _selectedItem={{
@@ -688,7 +689,7 @@ export const HomeManagementScreen = () => {
                   <Checkbox
                     value="hasFloorHeating"
                     isChecked={formData.hasFloorHeating}
-                    onChange={(value) => setFormData({ ...formData, hasFloorHeating: value })}
+                    onChange={(value: boolean) => setFormData({ ...formData, hasFloorHeating: value })}
                   >
                     Has underfloor heating zones
                   </Checkbox>
@@ -717,7 +718,7 @@ export const HomeManagementScreen = () => {
                     minValue={5}
                     maxValue={30}
                     step={0.5}
-                    onChange={(value) => setFormData({ ...formData, targetMorningTemp: value })}
+                    onChange={(value: number) => setFormData({ ...formData, targetMorningTemp: value })}
                   >
                     <Slider.Track>
                       <Slider.FilledTrack />
@@ -735,7 +736,7 @@ export const HomeManagementScreen = () => {
                     minValue={5}
                     maxValue={30}
                     step={0.5}
-                    onChange={(value) => setFormData({ ...formData, targetDayTemp: value })}
+                    onChange={(value: number) => setFormData({ ...formData, targetDayTemp: value })}
                   >
                     <Slider.Track>
                       <Slider.FilledTrack />
@@ -753,7 +754,7 @@ export const HomeManagementScreen = () => {
                     minValue={5}
                     maxValue={30}
                     step={0.5}
-                    onChange={(value) => setFormData({ ...formData, targetNightTemp: value })}
+                    onChange={(value: number) => setFormData({ ...formData, targetNightTemp: value })}
                   >
                     <Slider.Track>
                       <Slider.FilledTrack />
@@ -871,7 +872,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Insulation Type</FormControl.Label>
                   <Select
                     selectedValue={formData.insulationType}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, insulationType: value as InsulationType })
                     }
                     _selectedItem={{
@@ -889,7 +890,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Insulation Thickness (cm)</FormControl.Label>
                   <Select
                     selectedValue={String(formData.insulationThickness)}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, insulationThickness: parseInt(value) })
                     }
                     _selectedItem={{
@@ -908,7 +909,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Window Type</FormControl.Label>
                   <Select
                     selectedValue={formData.windowType}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, windowType: value as WindowType })
                     }
                     _selectedItem={{
@@ -926,7 +927,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Season Mode</FormControl.Label>
                   <Select
                     selectedValue={formData.seasonMode}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, seasonMode: value as SeasonMode })
                     }
                     _selectedItem={{
@@ -949,7 +950,7 @@ export const HomeManagementScreen = () => {
                   <FormControl.Label>Heating Type</FormControl.Label>
                   <Select
                     selectedValue={formData.heatingType}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, heatingType: value as HeatingType })
                     }
                     _selectedItem={{
@@ -967,7 +968,7 @@ export const HomeManagementScreen = () => {
                   <Checkbox
                     value="hasFloorHeating"
                     isChecked={formData.hasFloorHeating}
-                    onChange={(value) => setFormData({ ...formData, hasFloorHeating: value })}
+                    onChange={(value: boolean) => setFormData({ ...formData, hasFloorHeating: value })}
                   >
                     Has underfloor heating zones
                   </Checkbox>
@@ -996,7 +997,7 @@ export const HomeManagementScreen = () => {
                     minValue={5}
                     maxValue={30}
                     step={0.5}
-                    onChange={(value) => setFormData({ ...formData, targetMorningTemp: value })}
+                    onChange={(value: number) => setFormData({ ...formData, targetMorningTemp: value })}
                   >
                     <Slider.Track>
                       <Slider.FilledTrack />
@@ -1014,7 +1015,7 @@ export const HomeManagementScreen = () => {
                     minValue={5}
                     maxValue={30}
                     step={0.5}
-                    onChange={(value) => setFormData({ ...formData, targetDayTemp: value })}
+                    onChange={(value: number) => setFormData({ ...formData, targetDayTemp: value })}
                   >
                     <Slider.Track>
                       <Slider.FilledTrack />
@@ -1032,7 +1033,7 @@ export const HomeManagementScreen = () => {
                     minValue={5}
                     maxValue={30}
                     step={0.5}
-                    onChange={(value) => setFormData({ ...formData, targetNightTemp: value })}
+                    onChange={(value: number) => setFormData({ ...formData, targetNightTemp: value })}
                   >
                     <Slider.Track>
                       <Slider.FilledTrack />
@@ -1069,3 +1070,8 @@ export const HomeManagementScreen = () => {
     </Box>
   );
 };
+
+export const HomeManagementScreen = withUiImplementation(
+  'HomeManagement',
+  HomeManagementScreenContent,
+);

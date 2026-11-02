@@ -1,0 +1,3111 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`HomeManagement legacy matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    style={
+      {
+        "backgroundColor": "#18181b",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {},
+          {
+            "dataSet": {},
+          },
+          {},
+        ]
+      }
+      dataSet={{}}
+      refreshControl={
+        <RefreshControlMock
+          onRefresh={[Function]}
+          refreshing={false}
+        />
+      }
+      style={{}}
+    >
+      <RCTRefreshControl />
+      <View>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "paddingBottom": 24,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 24,
+            }
+          }
+        >
+          <View
+            dataSet={{}}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              }
+            }
+          >
+            <Text
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": undefined,
+                  "color": "#f4f4f5",
+                  "fontFamily": undefined,
+                  "fontSize": 30,
+                  "fontStyle": "normal",
+                  "fontWeight": "700",
+                  "letterSpacing": 0,
+                  "lineHeight": 37.5,
+                  "textDecorationLine": undefined,
+                }
+              }
+            >
+              My Homes
+            </Text>
+            <View
+              dataSet={{}}
+              style={{}}
+            />
+            <View
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              colorScheme="brand"
+              dataSet={{}}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#c1411c",
+                  "borderRadius": 4,
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                  "paddingBottom": 8,
+                  "paddingLeft": 12,
+                  "paddingRight": 12,
+                  "paddingTop": 8,
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                  }
+                }
+                test={true}
+              >
+                <Text
+                  accessibilityLabel="add-circle-outline"
+                >
+                  add-circle-outline
+                </Text>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "width": 6,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#fafafa",
+                        "fontFamily": undefined,
+                        "fontSize": 12,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "letterSpacing": 0,
+                        "lineHeight": 18,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    Add Home
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            dataSet={{}}
+            style={
+              {
+                "height": 16,
+              }
+            }
+          />
+          <Text
+            dataSet={{}}
+            style={
+              {
+                "backgroundColor": undefined,
+                "color": "#a1a1aa",
+                "fontFamily": undefined,
+                "fontSize": 14,
+                "fontStyle": "normal",
+                "fontWeight": "400",
+                "letterSpacing": 0,
+                "lineHeight": 21,
+                "textDecorationLine": undefined,
+              }
+            }
+          >
+            Manage your home profiles. Tap a home to make it active.
+          </Text>
+          <View
+            dataSet={{}}
+            style={
+              {
+                "height": 16,
+              }
+            }
+          />
+          <View
+            dataSet={{}}
+            style={{}}
+          >
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              dataSet={{}}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={{}}
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#27272a",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 2,
+                    "elevation": 3,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 1,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.22,
+                    "shadowRadius": 2.22,
+                  }
+                }
+              >
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flex": 1,
+                      }
+                    }
+                  >
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#f4f4f5",
+                            "fontFamily": undefined,
+                            "fontSize": 20,
+                            "fontStyle": "normal",
+                            "fontWeight": "700",
+                            "letterSpacing": 0,
+                            "lineHeight": 25,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Main House
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 8,
+                          }
+                        }
+                      />
+                      <View
+                        colorScheme="success"
+                        dataSet={{}}
+                        style={
+                          {
+                            "alignItems": "center",
+                            "backgroundColor": "#16a34a",
+                            "borderColor": "transparent",
+                            "borderRadius": 2,
+                            "borderWidth": 1,
+                            "flexDirection": "row",
+                            "justifyContent": "center",
+                            "paddingBottom": 2,
+                            "paddingLeft": 8,
+                            "paddingRight": 8,
+                            "paddingTop": 2,
+                          }
+                        }
+                      >
+                        <View
+                          dataSet={{}}
+                          style={{}}
+                        >
+                          <Text
+                            dataSet={{}}
+                            style={
+                              {
+                                "backgroundColor": undefined,
+                                "color": "#fafafa",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "fontStyle": "normal",
+                                "fontWeight": "500",
+                                "letterSpacing": 0,
+                                "lineHeight": 18,
+                                "textDecorationLine": undefined,
+                              }
+                            }
+                          >
+                            Active
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#a1a1aa",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Sarajevo
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#a1a1aa",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        2
+                         thermostat
+                        s
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flexDirection": "row",
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      dataSet={{}}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={{}}
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "height": 12,
+                }
+              }
+            />
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              dataSet={{}}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={{}}
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#27272a",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 0,
+                    "elevation": 3,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 1,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.22,
+                    "shadowRadius": 2.22,
+                  }
+                }
+              >
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flex": 1,
+                      }
+                    }
+                  >
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#f4f4f5",
+                            "fontFamily": undefined,
+                            "fontSize": 20,
+                            "fontStyle": "normal",
+                            "fontWeight": "700",
+                            "letterSpacing": 0,
+                            "lineHeight": 25,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Weekend House
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#a1a1aa",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Bjelašnica
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#a1a1aa",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        1
+                         thermostat
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flexDirection": "row",
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      dataSet={{}}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={{}}
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "width": 8,
+                        }
+                      }
+                    />
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": false,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      dataSet={{}}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={{}}
+                    >
+                      <Text
+                        accessibilityLabel="trash-outline"
+                      >
+                        trash-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`HomeManagement legacy matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    dataSet={{}}
+    style={
+      {
+        "backgroundColor": "#fafafa",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {},
+          {
+            "dataSet": {},
+          },
+          {},
+        ]
+      }
+      dataSet={{}}
+      refreshControl={
+        <RefreshControlMock
+          onRefresh={[Function]}
+          refreshing={false}
+        />
+      }
+      style={{}}
+    >
+      <RCTRefreshControl />
+      <View>
+        <View
+          dataSet={{}}
+          style={
+            {
+              "paddingBottom": 24,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 24,
+            }
+          }
+        >
+          <View
+            dataSet={{}}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              }
+            }
+          >
+            <Text
+              dataSet={{}}
+              style={
+                {
+                  "backgroundColor": undefined,
+                  "color": "#27272a",
+                  "fontFamily": undefined,
+                  "fontSize": 30,
+                  "fontStyle": "normal",
+                  "fontWeight": "700",
+                  "letterSpacing": 0,
+                  "lineHeight": 37.5,
+                  "textDecorationLine": undefined,
+                }
+              }
+            >
+              My Homes
+            </Text>
+            <View
+              dataSet={{}}
+              style={{}}
+            />
+            <View
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              colorScheme="brand"
+              dataSet={{}}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#c1411c",
+                  "borderRadius": 4,
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                  "paddingBottom": 8,
+                  "paddingLeft": 12,
+                  "paddingRight": 12,
+                  "paddingTop": 8,
+                }
+              }
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                  }
+                }
+                test={true}
+              >
+                <Text
+                  accessibilityLabel="add-circle-outline"
+                >
+                  add-circle-outline
+                </Text>
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "width": 6,
+                    }
+                  }
+                />
+                <View
+                  dataSet={{}}
+                  style={{}}
+                >
+                  <Text
+                    dataSet={{}}
+                    style={
+                      {
+                        "backgroundColor": undefined,
+                        "color": "#fafafa",
+                        "fontFamily": undefined,
+                        "fontSize": 12,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "letterSpacing": 0,
+                        "lineHeight": 18,
+                        "textDecorationLine": undefined,
+                      }
+                    }
+                  >
+                    Add Home
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            dataSet={{}}
+            style={
+              {
+                "height": 16,
+              }
+            }
+          />
+          <Text
+            dataSet={{}}
+            style={
+              {
+                "backgroundColor": undefined,
+                "color": "#52525b",
+                "fontFamily": undefined,
+                "fontSize": 14,
+                "fontStyle": "normal",
+                "fontWeight": "400",
+                "letterSpacing": 0,
+                "lineHeight": 21,
+                "textDecorationLine": undefined,
+              }
+            }
+          >
+            Manage your home profiles. Tap a home to make it active.
+          </Text>
+          <View
+            dataSet={{}}
+            style={
+              {
+                "height": 16,
+              }
+            }
+          />
+          <View
+            dataSet={{}}
+            style={{}}
+          >
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              dataSet={{}}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={{}}
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 2,
+                    "elevation": 3,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 1,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.22,
+                    "shadowRadius": 2.22,
+                  }
+                }
+              >
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flex": 1,
+                      }
+                    }
+                  >
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#27272a",
+                            "fontFamily": undefined,
+                            "fontSize": 20,
+                            "fontStyle": "normal",
+                            "fontWeight": "700",
+                            "letterSpacing": 0,
+                            "lineHeight": 25,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Main House
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 8,
+                          }
+                        }
+                      />
+                      <View
+                        colorScheme="success"
+                        dataSet={{}}
+                        style={
+                          {
+                            "alignItems": "center",
+                            "backgroundColor": "#16a34a",
+                            "borderColor": "transparent",
+                            "borderRadius": 2,
+                            "borderWidth": 1,
+                            "flexDirection": "row",
+                            "justifyContent": "center",
+                            "paddingBottom": 2,
+                            "paddingLeft": 8,
+                            "paddingRight": 8,
+                            "paddingTop": 2,
+                          }
+                        }
+                      >
+                        <View
+                          dataSet={{}}
+                          style={{}}
+                        >
+                          <Text
+                            dataSet={{}}
+                            style={
+                              {
+                                "backgroundColor": undefined,
+                                "color": "#fafafa",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "fontStyle": "normal",
+                                "fontWeight": "500",
+                                "letterSpacing": 0,
+                                "lineHeight": 18,
+                                "textDecorationLine": undefined,
+                              }
+                            }
+                          >
+                            Active
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#52525b",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Sarajevo
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#52525b",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        2
+                         thermostat
+                        s
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flexDirection": "row",
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      dataSet={{}}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={{}}
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              dataSet={{}}
+              style={
+                {
+                  "height": 12,
+                }
+              }
+            />
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              dataSet={{}}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={{}}
+            >
+              <View
+                dataSet={{}}
+                style={
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 0,
+                    "elevation": 3,
+                    "paddingBottom": 16,
+                    "paddingLeft": 16,
+                    "paddingRight": 16,
+                    "paddingTop": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 1,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.22,
+                    "shadowRadius": 2.22,
+                  }
+                }
+              >
+                <View
+                  dataSet={{}}
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flex": 1,
+                      }
+                    }
+                  >
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#27272a",
+                            "fontFamily": undefined,
+                            "fontSize": 20,
+                            "fontStyle": "normal",
+                            "fontWeight": "700",
+                            "letterSpacing": 0,
+                            "lineHeight": 25,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Weekend House
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#52525b",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        Bjelašnica
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "height": 4,
+                        }
+                      }
+                    />
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <View
+                        dataSet={{}}
+                        style={
+                          {
+                            "width": 4,
+                          }
+                        }
+                      />
+                      <Text
+                        dataSet={{}}
+                        style={
+                          {
+                            "backgroundColor": undefined,
+                            "color": "#52525b",
+                            "fontFamily": undefined,
+                            "fontSize": 14,
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "letterSpacing": 0,
+                            "lineHeight": 21,
+                            "textDecorationLine": undefined,
+                          }
+                        }
+                      >
+                        1
+                         thermostat
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    dataSet={{}}
+                    style={{}}
+                  />
+                  <View
+                    dataSet={{}}
+                    style={
+                      {
+                        "flexDirection": "row",
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      dataSet={{}}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={{}}
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                    <View
+                      dataSet={{}}
+                      style={
+                        {
+                          "width": 8,
+                        }
+                      }
+                    />
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": false,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      dataSet={{}}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={{}}
+                    >
+                      <Text
+                        accessibilityLabel="trash-outline"
+                      >
+                        trash-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "additive",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#111827",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      refreshControl={
+        <RefreshControlMock
+          onRefresh={[Function]}
+          refreshing={false}
+        />
+      }
+      style={{}}
+    >
+      <RCTRefreshControl />
+      <View>
+        <View
+          className="flex flex-col"
+          style={
+            {
+              "gap": 16,
+              "paddingBottom": 24,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 24,
+            }
+          }
+        >
+          <View
+            className="flex flex-row"
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "space-between",
+              }
+            }
+          >
+            <Text
+              accessibilityRole="header"
+              style={
+                {
+                  "color": "#f3f4f6",
+                  "fontSize": 32,
+                  "fontWeight": "700",
+                }
+              }
+            >
+              My Homes
+            </Text>
+            <View
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#e85223",
+                    "borderColor": "#e85223",
+                    "borderRadius": 6,
+                    "borderWidth": 1,
+                    "color": "#ffffff",
+                    "justifyContent": "center",
+                    "paddingBottom": 6,
+                    "paddingLeft": 12,
+                    "paddingRight": 12,
+                    "paddingTop": 6,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                className="flex flex-row"
+                style={
+                  {
+                    "alignItems": "center",
+                    "gap": 8,
+                    "justifyContent": "center",
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="add-circle-outline"
+                >
+                  add-circle-outline
+                </Text>
+                <Text
+                  style={
+                    {
+                      "color": "#ffffff",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Add Home
+                </Text>
+              </View>
+            </View>
+          </View>
+          <Text
+            style={
+              {
+                "color": "#9ca3af",
+                "fontSize": 14,
+              }
+            }
+          >
+            Manage your home profiles. Tap a home to make it active.
+          </Text>
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "gap": 12,
+              }
+            }
+          >
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {},
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#1f2937",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 2,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.14,
+                    "shadowRadius": 3,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    className="flex flex-col"
+                    style={
+                      {
+                        "flex": 1,
+                        "gap": 4,
+                      }
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityRole="header"
+                        style={
+                          {
+                            "color": "#f3f4f6",
+                            "fontSize": 24,
+                            "fontWeight": "700",
+                          }
+                        }
+                      >
+                        Main House
+                      </Text>
+                      <View
+                        style={
+                          {
+                            "alignSelf": "flex-start",
+                            "backgroundColor": "#22c55e",
+                            "borderColor": "#22c55e",
+                            "borderRadius": 6,
+                            "borderWidth": 1,
+                            "color": "#ffffff",
+                            "paddingBottom": 4,
+                            "paddingLeft": 8,
+                            "paddingRight": 8,
+                            "paddingTop": 4,
+                          }
+                        }
+                      >
+                        <Text
+                          style={
+                            {
+                              "color": "#ffffff",
+                              "fontSize": 12,
+                              "fontWeight": "600",
+                            }
+                          }
+                        >
+                          Active
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#9ca3af",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        Sarajevo
+                      </Text>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#9ca3af",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        2
+                         thermostat
+                        s
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {},
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {},
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#1f2937",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 0,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.14,
+                    "shadowRadius": 3,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    className="flex flex-col"
+                    style={
+                      {
+                        "flex": 1,
+                        "gap": 4,
+                      }
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityRole="header"
+                        style={
+                          {
+                            "color": "#f3f4f6",
+                            "fontSize": 24,
+                            "fontWeight": "700",
+                          }
+                        }
+                      >
+                        Weekend House
+                      </Text>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#9ca3af",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        Bjelašnica
+                      </Text>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#9ca3af",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        1
+                         thermostat
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {},
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": false,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {},
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="trash-outline"
+                      >
+                        trash-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;
+
+exports[`HomeManagement nativewind matches the light snapshot 1`] = `
+<RNCSafeAreaProvider
+  onInsetsChange={[Function]}
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "additive",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#f9fafb",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      refreshControl={
+        <RefreshControlMock
+          onRefresh={[Function]}
+          refreshing={false}
+        />
+      }
+      style={{}}
+    >
+      <RCTRefreshControl />
+      <View>
+        <View
+          className="flex flex-col"
+          style={
+            {
+              "gap": 16,
+              "paddingBottom": 24,
+              "paddingLeft": 16,
+              "paddingRight": 16,
+              "paddingTop": 24,
+            }
+          }
+        >
+          <View
+            className="flex flex-row"
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "space-between",
+              }
+            }
+          >
+            <Text
+              accessibilityRole="header"
+              style={
+                {
+                  "color": "#1f2937",
+                  "fontSize": 32,
+                  "fontWeight": "700",
+                }
+              }
+            >
+              My Homes
+            </Text>
+            <View
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#e85223",
+                    "borderColor": "#e85223",
+                    "borderRadius": 6,
+                    "borderWidth": 1,
+                    "color": "#ffffff",
+                    "justifyContent": "center",
+                    "paddingBottom": 6,
+                    "paddingLeft": 12,
+                    "paddingRight": 12,
+                    "paddingTop": 6,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                className="flex flex-row"
+                style={
+                  {
+                    "alignItems": "center",
+                    "gap": 8,
+                    "justifyContent": "center",
+                  }
+                }
+              >
+                <Text
+                  accessibilityLabel="add-circle-outline"
+                >
+                  add-circle-outline
+                </Text>
+                <Text
+                  style={
+                    {
+                      "color": "#ffffff",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Add Home
+                </Text>
+              </View>
+            </View>
+          </View>
+          <Text
+            style={
+              {
+                "color": "#4b5563",
+                "fontSize": 14,
+              }
+            }
+          >
+            Manage your home profiles. Tap a home to make it active.
+          </Text>
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "gap": 12,
+              }
+            }
+          >
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {},
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 2,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.14,
+                    "shadowRadius": 3,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    className="flex flex-col"
+                    style={
+                      {
+                        "flex": 1,
+                        "gap": 4,
+                      }
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityRole="header"
+                        style={
+                          {
+                            "color": "#1f2937",
+                            "fontSize": 24,
+                            "fontWeight": "700",
+                          }
+                        }
+                      >
+                        Main House
+                      </Text>
+                      <View
+                        style={
+                          {
+                            "alignSelf": "flex-start",
+                            "backgroundColor": "#22c55e",
+                            "borderColor": "#22c55e",
+                            "borderRadius": 6,
+                            "borderWidth": 1,
+                            "color": "#ffffff",
+                            "paddingBottom": 4,
+                            "paddingLeft": 8,
+                            "paddingRight": 8,
+                            "paddingTop": 4,
+                          }
+                        }
+                      >
+                        <Text
+                          style={
+                            {
+                              "color": "#ffffff",
+                              "fontSize": 12,
+                              "fontWeight": "600",
+                            }
+                          }
+                        >
+                          Active
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#4b5563",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        Sarajevo
+                      </Text>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#4b5563",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        2
+                         thermostat
+                        s
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {},
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {},
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#3b82f6",
+                    "borderRadius": 12,
+                    "borderWidth": 0,
+                    "elevation": 0,
+                    "padding": 16,
+                    "shadowColor": "#000000",
+                    "shadowOffset": {
+                      "height": 2,
+                      "width": 0,
+                    },
+                    "shadowOpacity": 0.14,
+                    "shadowRadius": 3,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "flex-start",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <View
+                    className="flex flex-col"
+                    style={
+                      {
+                        "flex": 1,
+                        "gap": 4,
+                      }
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityRole="header"
+                        style={
+                          {
+                            "color": "#1f2937",
+                            "fontSize": 24,
+                            "fontWeight": "700",
+                          }
+                        }
+                      >
+                        Weekend House
+                      </Text>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="location-outline"
+                      >
+                        location-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#4b5563",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        Bjelašnica
+                      </Text>
+                    </View>
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 4,
+                          "marginTop": 4,
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="thermometer-outline"
+                      >
+                        thermometer-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#4b5563",
+                            "fontSize": 14,
+                          }
+                        }
+                      >
+                        1
+                         thermostat
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {},
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="create-outline"
+                      >
+                        create-outline
+                      </Text>
+                    </View>
+                    <View
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": false,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {},
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="trash-outline"
+                      >
+                        trash-outline
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "top": 48,
+        "zIndex": 9999,
+      }
+    }
+  />
+  <View
+    pointerEvents="box-none"
+    style={
+      {
+        "bottom": 24,
+        "left": 16,
+        "position": "absolute",
+        "right": 16,
+        "zIndex": 9999,
+      }
+    }
+  />
+</RNCSafeAreaProvider>
+`;

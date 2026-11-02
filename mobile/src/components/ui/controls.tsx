@@ -392,6 +392,7 @@ function SliderBase(props: UiProps) {
       {...rest}
       h="32px"
       justifyContent="center"
+      accessible
       accessibilityRole="adjustable"
       accessibilityValue={{ min, max, now: current }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}

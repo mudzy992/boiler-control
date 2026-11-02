@@ -34,6 +34,7 @@ const DEFAULT_NATIVEWIND_SCREENS = new Set<UiScreen>([
   'GasAnalysis',
   'GasReadings',
   'Heating',
+  'HomeManagement',
   'Login',
   'NotificationPreferences',
   'Notifications',

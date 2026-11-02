@@ -6,9 +6,10 @@ import { HeatingAnomalyController } from './heating.anomaly.checker.controller';
 import { HeatingAnomalyCheckerService } from './heating.anomayl.checker.service';
 import { ExpoPushModule } from '../ExpoPush/expo.push.notification.module';
 import { CommonModule } from '../../common/common.module';
+import { WeatherModule } from '../Weather/weather.module';
 
 @Module({
-  imports: [ExpoPushModule, CommonModule],
+  imports: [ExpoPushModule, CommonModule, WeatherModule],
   providers: [
     HeatingAnomalyCheckerService,
     NotificationsService,

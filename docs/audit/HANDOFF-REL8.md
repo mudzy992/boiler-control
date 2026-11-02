@@ -1,19 +1,18 @@
-# HANDOFF — stanje na kraju turna (2026-11-01)
+# HANDOFF — stanje na kraju turna (2026-11-02)
 
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
 ## Nastavak 2026-11-02 — MO2-14, weather v2 i PRIV-1A
 
-- **MO2-14:** NativeWind migracija završena je kroz `6d540e8`; nema `native-base`, NativeBaseProvider, NativeBase LogBox suppression ni BackHandler polyfilla. CI `41425004414`: backend/mobile success, poznati frontend FE2-7 compose problem nije zaobiđen. Fizički vizuelni QA na tri veličine ekrana ostaje otvoren.
-- **Weather v2:** implementacija je `aa921fe`. CI `41428012580` je completed/failure: backend Type-check/Build imaju pet navedenih TypeScript grešaka, frontend je stao na OpenAPI types sync, a mobile Unit tests nemaju uzrok u annotations. Backend Jest je ipak prošao 53 suitea / 593 testa. Ispravke provider tipova, fetch testova i frontend tipova su u `5627eb0`; novi CI se mora pročitati prije prihvata.
-- **PRIV-1A:** `5627eb0` dodaje samo read-only `GET /api/auth/export`, zadano `ACCOUNT_EXPORT_ENABLED=off`, nalog i 13 eksplicitno selektovanih vlasničkih kolekcija, no-store, row/byte 413 i verzionirani JSON. Hashovi, globalni Tuya token, weather cache i privatni storage pathovi su isključeni; gas originali ostaju na postojećim owner-only download rutama. Nema migracije ni brisanja.
-- **Lokalni dokazi nakon ispravki:** backend ciljani weather/PRIV/contract prolaz 10 suiteova / 84 testa; zasebni PRIV prolaz 2 suitea / 11 testova; točna CI ESLint komanda 0 errors / 2 postojeća warnings. Mobile identična CI komanda prolazi 23 suiteova / 123 testa / 32 snapshota. Frontend OpenAPI check, type-check, e2e type-check, lint i 11 suiteova / 92 testa prolaze. PostgreSQL PRIV integration je dodan, ali njegov rezultat čeka CI.
-- **Detalji:** `backend/05-weather.md`, `backend/17-priv1-account-export.md`, `mobile/07-implementation-plan.md`. Puni current+hourly+daily SDK/DST fixture, produkcijski rollout, distribuirani SWR i fizički QA nisu dokazani.
-- **Sljedeće:** pushati code/docs commit, pollati novi run do completed, pročitati jobs i annotations, zatim upisati konačne rezultate. Ne počinjati brisanje naloga bez vlasničke backup-retention i eventualne legal-retention politike.
-- **CI `41431564721`:** backend TypeScript/lint/Build prolaze, uz 56 suiteova / 608 testova i 5 integration suiteova / 60 testova; PRIV dvokorisnički PostgreSQL test prolazi. Backend je crven samo na OpenAPI sync, frontend samo na FE2-7, a mobile ponovo na Unit tests bez detalja.
-- **Ispravka `ab040ab`:** OpenAPI je semantički nepromijenjen, ali je deep-sortiran istim algoritmom kao puni generator i dobiven je byte-stabilni test. Mobile CI sada koristi postojeći sigurni `jest_report.cjs` uz očuvan originalnog exit koda; lokalno prolazi 23 suiteova / 123 testa / 32 snapshota i ispravno objavljuje Jest summary.
-- **Neposredni sljedeći korak:** pushati `ab040ab` i docs, pa iz novog runa pročitati OpenAPI rezultat i konkretni mobile failing test. Ne mijenjati mobile test paralelizam niti preskočiti test dok uzrok nije poznat.
+- **Verificirani code HEAD:** `309d95e`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `62fe727`. Vlasnik ručno radi merge, PR se ne otvara.
+- **MO2-14:** NativeWind migracija završena je kroz `6d540e8`; nema `native-base`, NativeBaseProvider, NativeBase LogBox suppression ni BackHandler polyfilla. CI `41425004414`: backend/mobile success. Fizički vizuelni QA na tri veličine ekrana ostaje otvoren.
+- **Weather v2:** implementacija i CI ispravke su `aa921fe`, `5627eb0`, `ab040ab`, `309d95e`. Finalni code CI `41432499480`: backend i mobile success. Backend ima `tsc: 0`, `eslint: 0`, Build/OpenAPI success, 56 suiteova / 608 testova i 5 integration suiteova / 60 testova. Mobile ima 23 suitea / 123 testa / 32 snapshota.
+- **PRIV-1A:** `5627eb0` dodaje samo read-only `GET /api/auth/export`, zadano `ACCOUNT_EXPORT_ENABLED=off`, nalog i 13 eksplicitno selektovanih vlasničkih kolekcija, no-store, row/byte 413 i verzionirani JSON. Dvokorisnički PostgreSQL test, redakcija i obje granice prolaze u finalnom CI runu. Hashovi, globalni Tuya token, weather cache i privatni storage pathovi su isključeni; gas originali ostaju na owner-only download rutama. Nema migracije ni brisanja.
+- **CI dijagnostika koja ostaje korisna:** OpenAPI artefakt koristi rekurzivno sortiranu serializaciju i byte-stabilnu regresiju. Mobile CI koristi postojeći sigurni `jest_report.cjs` uz očuvan originalnog exit koda. Weather async testovi koriste real timers, a 72h/7d formatteri bounded cache.
+- **Frontend:** u finalnom code runu OpenAPI types, oba type-checka, lint i svi frontend testovi prolaze. Jedini failure je vlasnikovom odlukom očekivani `Deploy config consistent (FE2-7)` compose korak; compose i checker nisu mijenjani niti oslabljeni.
+- **Detalji:** `backend/05-weather.md`, `backend/17-priv1-account-export.md`, `mobile/07-implementation-plan.md`. Puni current+hourly+daily SDK/DST fixture, produkcijski rollout/migracija, distribuirani SWR i fizički QA nisu dokazani. Mobile Settings download tok ostaje otvoren.
+- **Sljedeće vlasničke odluke:** ručni merge i eventualno uključivanje flagova nakon rollout provjere. Ne počinjati brisanje naloga bez backup-retention i eventualne legal-retention politike.
 
 ## Stanje na kraju sesije (2026-11-01, VERIFICIRANO)
 

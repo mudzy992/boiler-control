@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { fetchWeatherApi } from 'openmeteo';
+import { fetchOpenMeteoFlatbuffers } from './openmeteo-flatbuffers';
 import { WeatherHttpAdapter } from './weather-http.adapter';
 
 /**
@@ -14,6 +14,7 @@ import { WeatherHttpAdapter } from './weather-http.adapter';
 export class WeatherService {
   private readonly logger = new Logger(WeatherService.name);
   private readonly CACHE_MIN = 10;
+  private readonly STALE_FALLBACK_MIN = 60;
 
   constructor(
     private prisma: PrismaService,
@@ -35,26 +36,33 @@ export class WeatherService {
       return cached;
     }
 
-    // If cache exists but is stale, delete it. If no cache, continue.
-    if (cached) {
-      await this.prisma.weatherCache.delete({
-        where: { id: cached.id },
-      });
-    }
-
     const weather = await this.fetchOpenMeteo(city);
 
     if (!weather) {
+      const cacheAgeMs = cached
+        ? now.getTime() - cached.fetchedAt.getTime()
+        : Number.POSITIVE_INFINITY;
+      if (cached && cacheAgeMs <= this.STALE_FALLBACK_MIN * 60 * 1000) {
+        this.logger.warn(
+          `Open-Meteo refresh failed; using cached weather for ${city}`,
+        );
+        return cached;
+      }
       throw new Error(`Failed to fetch Open-Meteo data for ${city}`);
     }
 
-    return this.prisma.weatherCache.create({
-      data: {
-        city,
-        ...weather,
-        fetchedAt: new Date(),
-      },
-    });
+    const data = {
+      city,
+      ...weather,
+      fetchedAt: new Date(),
+    };
+    if (cached) {
+      return this.prisma.weatherCache.update({
+        where: { id: cached.id },
+        data,
+      });
+    }
+    return this.prisma.weatherCache.create({ data });
   }
 
   /**
@@ -90,7 +98,7 @@ export class WeatherService {
       // the execution is subject to adapter-level policies.
       const responses = await this.weatherAdapter.executeWithCircuitBreaker(
         () =>
-          fetchWeatherApi('https://api.open-meteo.com/v1/forecast', {
+          fetchOpenMeteoFlatbuffers('https://api.open-meteo.com/v1/forecast', {
             latitude,
             longitude,
             timezone: 'Europe/Sarajevo',
@@ -127,6 +135,10 @@ export class WeatherService {
       );
 
       const response = responses[0];
+      if (!response) {
+        this.logger.error('Open-Meteo response is empty');
+        return null;
+      }
       const utcOffset = response.utcOffsetSeconds();
 
       const current = response.current();
@@ -134,7 +146,11 @@ export class WeatherService {
       const daily = response.daily();
 
       if (!current || !hourly || !daily) {
-        this.logger.error('Open-Meteo response missing required blocks');
+        this.logger.error(
+          `Open-Meteo response missing required blocks: current=${Boolean(
+            current,
+          )}, hourly=${Boolean(hourly)}, daily=${Boolean(daily)}`,
+        );
         return null;
       }
 

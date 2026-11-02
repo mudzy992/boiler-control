@@ -136,4 +136,18 @@
 
 **Granica dokaza:** ovo zatvara generisani schema/parser/application replay, ali ne i stvarni provider capture. Ne dokazuje da Open-Meteo u produkciji šalje iste vrijednosti, niti zamjenjuje odobren snimak stvarnog current+hourly+daily odgovora.
 
+### Legacy WeatherService transport i cache — 2026-11-02
+
+**Prijavljeni produkcijski simptom:** za Visoko legacy `WeatherService` prijavljuje `Open-Meteo response missing required blocks`, nakon čega boiler polling pada. Stack potvrđuje da taj poziv ide kroz stari `WeatherService`, ne kroz `OpenMeteoV2Provider`.
+
+**Reproducirana klasa uzroka:** instalirani `openmeteo` 1.2.3 posebno obrađuje 400/429 i retry za 500/502/504, ali ostale neuspješne statuse može proslijediti FlatBuffers parseru. Lokalni stub sa JSON tijelom na 200/401/403/404/503 vratio je objekat bez sva tri forecast bloka, dakle isti generički simptom. Ovo ne utvrđuje koji je stvarni status ili tijelo stiglo u produkciji; live provider odgovor nije snimljen.
+
+**Ispravka:** legacy forecast transport sada provjerava HTTP status i size-prefix okvire prije čitanja kroz stvarni `@openmeteo/sdk` reader. HTTP greška prijavljuje status i ograničeni provider `reason`, a nevažeće tijelo se razlikuje od stvarno nepotpunih blokova. Postojeći `WeatherHttpAdapter` ostaje jedina retry/circuit-breaker kontrola. Ako blokovi i dalje nedostaju, log sada navodi prisutnost current/hourly/daily bloka.
+
+Cache se više ne briše prije fetcha. Neuspješan refresh može vratiti postojeći red samo do ukupne starosti od 60 minuta; stariji red ostaje u bazi, ali ne služi za novi boiler proračun. Bez prihvatljivog cachea greška se i dalje propagira. Uspješan refresh ažurira postojeći red umjesto `delete` pa `create`; nema migracije, novog flaga ni promjene API ugovora.
+
+**Dokazi:** na neizmijenjenom kodu novi suite je dao 2 prolaza / 6 očekivanih padova za HTTP/JSON dijagnostiku i cache ponašanje. Nakon ispravke suite prolazi 8/8, a svi Weather testovi prolaze 6 suiteova / 34 testa. Validni generated fixture prolazi kroz stvarni SDK reader, generator ostaje `in_sync`, Prettier prolazi, a tačna CI ESLint naredba ima 0 errors i dva postojeća warnings. Potpuni lokalni Jest ne može učitati generisani Prisma klijent za 16 suiteova, pa kompletan type-check/build/test ostaje CI obaveza.
+
+**Granica dokaza:** ovo je offline regresija za legacy transport i cache, ne dokaz da je produkcijski Open-Meteo za Visoko ponovo dostupan. V2 provider nije mijenjan, a stvarni provider status/tijelo i dalje treba potvrditi kroz naredne produkcijske logove nakon rollouta.
+
 **I dalje otvoreno:** stvarno snimljeni/anonimizirani provider fixture s current+hourly+daily i sunrise/sunset, stvarna DST potvrda nad takvim fixtureom, produkcijska migracija/obnova, višeprocesni SWR, provider licence/kvote i fizički mobile vizuelni QA. Postojeći hourly-only upstream fixture i novi generisani combined fixture nisu dokaz tih stavki.

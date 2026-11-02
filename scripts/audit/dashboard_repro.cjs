@@ -114,7 +114,7 @@ async function main() {
   delete process.env.DASHBOARD_BUCKET_V2_ENABLED;
 
   const run1 = makeDb(EVENTS);
-  const service = new DashboardService(run1.db, {}, {}, {});
+  const service = new DashboardService(run1.db, {}, {}, {}, {});
   const listed = await service.getHeatingEvents(1, query);
 
   const byDevice = new Map(listed.data.map((d) => [d.deviceId, d]));
@@ -135,7 +135,7 @@ async function main() {
   // Prazna stranica: prije FEAT-8 `if (thermostatDeviceIds)` je bio true i za
   // prazan niz, pa je išao upit s `id: undefined`.
   const run2 = makeDb([]);
-  const emptyRes = await new DashboardService(run2.db, {}, {}, {}).getHeatingEvents(1, query);
+  const emptyRes = await new DashboardService(run2.db, {}, {}, {}, {}).getHeatingEvents(1, query);
   assert.equal(emptyRes.data.length, 0);
   assert.equal(
     run2.lookups.filter((l) => l.op !== 'count').length,
@@ -144,8 +144,8 @@ async function main() {
   out.emptyPageDeviceQueries = 0;
 
   // ---------- B-020: v1 (zadano) — legacy semantika ostaje ----------
-  const stats = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}).getHeatingStats(1, query);
-  const summary = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}).getHeatingSummary(1, query);
+  const stats = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}, {}).getHeatingStats(1, query);
+  const summary = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}, {}).getHeatingSummary(1, query);
   assert.equal(stats.buckets.length, 1);
   assert.equal(stats.buckets[0].cycles, 2);
   assert.equal(summary.buckets.length, 1);
@@ -159,8 +159,8 @@ async function main() {
 
   // ---------- B-020: v2 — hronološki ključevi ----------
   process.env.DASHBOARD_BUCKET_V2_ENABLED = 'on';
-  const statsV2 = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}).getHeatingStats(1, query);
-  const summaryV2 = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}).getHeatingSummary(1, query);
+  const statsV2 = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}, {}).getHeatingStats(1, query);
+  const summaryV2 = await new DashboardService(makeDb(EVENTS).db, {}, {}, {}, {}).getHeatingSummary(1, query);
   assert.equal(statsV2.buckets.length, 2);
   assert.equal(summaryV2.buckets.length, 2);
   assert.deepEqual(

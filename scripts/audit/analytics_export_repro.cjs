@@ -26,6 +26,7 @@ process.env.TS_NODE_PROJECT = path.join(root, 'backend/tsconfig.json');
 class FakePrismaService {}
 class FakeBoilerService {}
 class FakeWeatherService {}
+class FakeDashboardWeatherService {}
 const original = Module._load;
 Module._load = function (request, parent, isMain) {
   const from = parent?.filename || '';
@@ -37,6 +38,9 @@ Module._load = function (request, parent, isMain) {
   }
   if (from.endsWith(path.join('Dashboard', 'dashboard.service.ts')) && request === '../Weather/weather.service') {
     return { WeatherService: FakeWeatherService };
+  }
+  if (from.endsWith(path.join('Dashboard', 'dashboard.service.ts')) && request === '../Weather/dashboard-weather.service') {
+    return { DashboardWeatherService: FakeDashboardWeatherService };
   }
   return original.call(this, request, parent, isMain);
 };
@@ -102,6 +106,7 @@ async function main() {
       { provide: FakePrismaService, useValue: db },
       { provide: FakeBoilerService, useValue: {} },
       { provide: FakeWeatherService, useValue: {} },
+      { provide: FakeDashboardWeatherService, useValue: {} },
       { provide: 'IThermostatAdapter', useValue: {} },
     ],
   }).compile();

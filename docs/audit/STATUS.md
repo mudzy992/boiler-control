@@ -198,7 +198,7 @@
 - `scripts/audit/npm_audit_summary.cjs` sigurno izvlači samo brojke, nazive paketa, direktnost i GHSA ID iz privremenog JSON-a; ne ispisuje sirove npm logove. `node --check`, `--help` i parsing stvarnog JSON-a uspješni. Prvi pokušaj pokretanja iz `backend/` s putanjom za repo root nije pronašao skriptu; ponovljeno iz repozitorijskog korijena uspješno. Privremeni npm JSON nije dio repozitorija.
 - Metadata-only pregled tri Gitom praćena backend loga: `backend/p2b-test-run.log` i `backend/test-run.log` sadrže tekstualne obrasce nalik dodjeli polja `JWT_SECRET`/`password`, zabilježene samo putanje, linije i tip, bez vrijednosti; autentičnost/aktivnost i mogući false positive nisu provjereni. `backend/start-dev.log` pregledan istim ograničenim obrascima. S-008 daje preporuku povjerljivog owner pregleda i rotacije ako su stvarni; nijedan log ni historija nisu brisani ili mijenjani. Regex nije potpun secret scanner i negativni rezultat ne dokazuje odsustvo tajni.
 - GitHub Actions run [40880928939](https://github.com/mudzy992/boiler-control/actions/runs/40880928939) za `7915ea8` završen uspješno: lint/type-check, build, testovi i izolovane CI reprodukcije prošli. Samoprovjera statičkog inventara nakon S-008 i dalje nalazi 16/16 modula, 14/14 common fajlova, 69/69 route markera i 27/27 schema definicija; marker-poklapanje ne potvrđuje semantiku.
-- B-023: **ispravljeno u OBS-1.** `pollDevice` sada vraća eksplicitan ishod (`success/failed/skipped/no_snapshot/incomplete`), a `pollAll` broji ishode po uređaju u nove brojače `poll_devices_*` i pomjera gauge `poll_last_success_timestamp_seconds` samo kad je barem jedan uređaj stvarno obrađen. Inventar prije preimenovanja pokazao je da `prometheus-alert-rules.yml` (19 izraza) ne koristi `poll_runs_*`, dok ih Grafana dashboard koristi, pa su stari nazivi i značenje zadržani a nove metrike dodane uz njih; panel o završetku ciklusa preimenovan, a dodani paneli za uspješnost obrade, razbijanje ishoda i svježinu. Verificirano sa 12 unit testova stvarnog servisa i prepisanom `node scripts/audit/poll_metrics_repro.cjs` (prije je asertirala pogrešno ponašanje). Nije testiran cron, stvarni provider ili produkcijski alert; `/health` ostaje statičan, a liveness/readiness split je i dalje otvoren.
+- B-023: **ispravljeno u OBS-1.** `pollDevice` sada vraća eksplicitan ishod (`success/failed/skipped/no_snapshot/incomplete`), a `pollAll` broji ishode po uređaju u nove brojače `poll_devices_*` i pomjera gauge `poll_last_success_timestamp_seconds` samo kad je barem jedan uređaj stvarno obrađen. Inventar prije preimenovanja pokazao je da `prometheus-alert-rules.yml` (19 izraza) ne koristi `poll_runs_*`, dok ih Grafana dashboard koristi, pa su stari nazivi i značenje zadržani a nove metrike dodane uz njih; panel o završetku ciklusa preimenovan, a dodani paneli za uspješnost obrade, razbijanje ishoda i svježinu. Verificirano sa 12 unit testova stvarnog servisa i prepisanom `node scripts/audit/poll_metrics_repro.cjs` (prije je asertirala pogrešno ponašanje). Nije testiran cron, stvarni provider ili produkcijski alert. Dopuna 2026-11-02: liveness/readiness split je naknadno implementiran i CI-verificiran; detalji i preostala ograničenja su u zasebnom OBS-1/MAINT-3 zapisu ispod.
 - R-006: dva prolaza `node scripts/audit/push_registration_repro.cjs` sa stvarnim notification servisom i fake DB/pushom potvrdila su zamjenu tokena druge instalacije iste platforme te prosljeđivanje sintetički neaktivnog tokena fake pushu; tokeni nisu ispisani. Nema testa stvarnog PostgreSQL-a, HTTP-a, Expo-a, klijenata ili produkcije; značenje `isActive` i policy više uređaja nisu utvrđeni. Dopunjeni model, backlog i plan.
 - R-007: `node scripts/audit/poll_overlap_repro.cjs` dvaput u sintetičkom Nest kontekstu sa stvarnim polling servisom i instaliranim schedulerom potvrdio je istovremeni ulazak dva ručno okinuta ticka u blokiranu fake DB (`waitForCompletion=false`). Nisu testirani prirodni prolazak vremena, AppModule, DB upisi, provideri, više procesa ni produkcija. Dopunjeni Redis/worker analiza, REL-2 i plan. GitHub Actions [40881850195](https://github.com/mudzy992/boiler-control/actions/runs/40881850195) za `7d4dd56` završen uspješno.
 - F-005/F-006: `node scripts/audit/learning_end_repro.cjs` dva prolaza sa stvarnim poll end handlerom, recommendation servisom i engineom te fake DB/pushom potvrđuju ulaz pohranjenog ranijeg očitanja u signal nazvan overshoot i korištenje prethodnog intervalnog prosjeka u neposrednoj preporuci. Nisu mjerene završna/vršna temperatura, stvarni uređaj, DB ili produkcija; fizička semantika i uticaj ostaju za stručnu potvrdu. Dopunjeni formule, FORM-1, plan i katalog skripti. CI [40882395658](https://github.com/mudzy992/boiler-control/actions/runs/40882395658) za `71af02d` završio uspješno.
@@ -2116,6 +2116,36 @@ Nema migracije, backfilla, API/DTO/OpenAPI/mobile/frontend/compose promjene ni
 rollouta. Rollback je i dalje `PROGRAM_SYNC_ATOMIC_ENABLED=off`. Stara miješana
 stanja se ne popravljaju automatski, a stvarni provider/production uticaj nije
 dokazan ovim sintetičkim testom.
+
+### OBS-1/MAINT-3 — liveness i readiness (2026-11-02)
+
+Test-first HTTP spec je na neizmijenjenom kodu dao očekivana **3 nova 404**
+(live, ready success i ready failure) i **2 prošle legacy kontrole**. Commit
+`95789ab` dodaje javni `GET /health/live` bez DB/Redis ovisnosti i javni
+`GET /health/ready` koji preko postojećeg Prisma poola izvodi samo `SELECT 1`.
+Odgovor readiness provjere je ograničen na 1000 ms; greška i timeout vraćaju
+generički 503 `{status:'error',timestamp}` bez SQL-a, connection stringa ili
+interne poruke. Postojeći `/health`, opciono Redis polje i
+`/dashboard/health` nisu mijenjani.
+
+Prvi CI `41510718437` otkrio je test-harness nullable/Redis pretpostavke i
+nedjelotvoran root-Prisma spy. Nakon `6da831e`, CI `41511430613` je i dalje
+dokazao da taj spy ne presreće readiness upit. `5f0247e` zato uvodi eksplicitnu
+`DatabaseHealthService` granicu za kontrolisani 503, bez promjene ruta ili
+odgovora. Integracija sa stvarnim PostgreSQL-om dokazuje ready 200; failure
+test simulira servisni ishod i **nije** stvarni PostgreSQL outage.
+
+Lokalno prolaze fokusirani **2 suitea / 8 testova + 1 Redis skip**, širi common
+skup **18 suiteova / 245 testova + 8 skip** i frontend **11 fajlova / 92 testa**.
+Konačni CI `41512728985`: backend **70/705 + 6/63 integration**, `tsc: 0`,
+`eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula
+failure annotations. OpenAPI i frontend tipovi su regenerisani, a postojeće
+operacije ostaju nepromijenjene za instalirane mobilne klijente.
+
+Nema migracije, backfilla, novog flaga, compose/deployment healthchecka ni
+rollouta. Rollback je prestati koristiti nove rute ili revertovati aditivni
+slice. Per-instance metrike, queue-lag alarmi, Dockerfile/image smoke i stvarni
+produkcijski DB outage ostaju otvoreni.
 
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 

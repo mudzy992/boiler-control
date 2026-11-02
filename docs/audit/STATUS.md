@@ -2185,6 +2185,36 @@ prolaze. CI `41528411640` potvrđuje backend **71/707 + 6/63**, mobile
 **24/136**, frontend **4/4** i nula failure annotations. Rollback je revert
 `cc39769`; image scan i produkcijski deploy/audit ostaju otvoreni.
 
+### SEC-5 — prvi upload content-signature dio (2026-11-02)
+
+Commit `5d14a8b` zatvara samo prvi S-006/SEC-5 slice u zajedničkom
+`FileStorageService.storeFile`. PDF `%PDF-`, JPEG `FF D8 FF`, puni PNG potpis i
+WebP `RIFF`/`WEBP` okvir provjeravaju se prije odredišnog `ensureDir` i
+`writeFile`. Za lažni/mismatched sadržaj i sadržaj kraći od potpisa servis baca
+`BadRequestException` (400) bez upisanog fajla. Validni potpisi se čuvaju
+nepromijenjeni; postojeće MIME allowliste, metadata size limit, random storage
+naziv i sanitizacija originalnog naziva ostaju zadržani.
+
+Na neizmijenjenom kodu helper je potvrdio zapis sintetičkih ne-PDF bajtova s
+PDF MIME-om. Prvih deset testova je test-first dalo **4 očekivana pada / 6
+kontrola**. Nakon dopune truncated PDF/PNG granica, privremeno uklanjanje
+jedinstvenog `validateContent` poziva daje **6 očekivanih padova / 6 kontrola**;
+vraćeni kod prolazi **12/12**, a odbijeni slučajevi nemaju fajlova u privremenom
+storageu. Završni relevantni lokalni skup prolazi **22 suitea / 292 testa + 8
+skip**, uključujući neizmijenjeni Gas multipart HTTP test. Helper prolazi, tačan
+ESLint ima **0 errors / 2 postojeća warnings**, a OpenAPI check nema diff.
+
+CI `41533224216`: backend **72/719 + 6/63 integration**, `tsc: 0`, `eslint: 0`;
+mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure
+annotations. Nema migracije/backfilla, storage-schema, postojećeg
+fajla/download, API/DTO/OpenAPI, compose/deployment, flag ili installed-mobile
+promjene. Rollback je revert `5d14a8b`.
+
+Ovo je magic-bytes kontrola, **ne** puni parser, antivirus ili malware/polyglot
+dokaz. Stari fajlovi nisu retroaktivno validirani; download/ownership/retention,
+filesystem/symlink i produkcijski deploy nisu mijenjani niti verificirani.
+Preostali SEC-5 opseg ostaje otvoren.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

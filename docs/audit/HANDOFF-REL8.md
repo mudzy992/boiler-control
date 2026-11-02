@@ -3,9 +3,19 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-02 — SEC-7/7B dependencies, OBS-1/MAINT-3 i raniji koraci
+## Nastavak 2026-11-02 — SEC-5 upload content-signature
 
-- **Verificirani code HEAD:** `cc39769`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `f426b35`. Vlasnik ručno radi merge, PR se ne otvara.
+- **Verificirani code HEAD:** `5d14a8b`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `8123b3c`, nakon vlasnikovog mergea SEC-7B. Vlasnik ručno radi merge, PR se ne otvara.
+- **SEC-5 prvi dio (`5d14a8b`):** zajednički `FileStorageService.storeFile` sada prije kreiranja odredišnog direktorija i upisa provjerava osnovni potpis PDF, JPEG, PNG i WebP sadržaja. Za lažni/mismatched sadržaj i sadržaj kraći od potpisa servis vraća 400; postojeće MIME allowliste i metadata size limit ostaju ispred novih provjera, a random storage naziv i sanitizacija originalnog naziva su nepromijenjeni.
+  - Na čistom HEAD-u helper je reproducirao `nonPdfWithPdfMimeStored: true`. Prvih deset testova je test-first dalo **4 očekivana pada / 6 kontrola**; nakon dopune truncated PDF/PNG slučajeva, mutation guard bez `validateContent` daje **6 očekivanih padova / 6 kontrola**, a vraćeni kod prolazi **12/12**.
+  - Lokalni završni relevantni skup je **22 suitea / 292 testa + 8 skip**, uključujući postojeći multipart controller/`FileInterceptor` HTTP test. Helper sada potvrđuje validan PDF, sanitizovan naziv i 400 za lažni PDF, nedozvoljen MIME, preveliku metadata veličinu i parent traversal. Tačan ESLint ima **0 errors / 2 postojeća warnings**, a OpenAPI check nema diff.
+  - CI `41533224216`: backend **72/719 + 6/63 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations.
+  - Nema migracije/backfilla, storage-schema, postojećeg fajla/download, API/DTO/OpenAPI, compose/deployment, flag ili installed-mobile promjene. Rollback je revert `5d14a8b`.
+  - **Ograničenje:** magic bytes nisu puni parser, antivirus ni dokaz protiv malware/polyglot sadržaja. Stari fajlovi nisu retroaktivno provjereni; download/ownership/retention, filesystem/symlink i produkcijski deploy ostaju izvan ovog slicea. SEC-5 u cjelini nije zatvoren.
+
+## Raniji nastavak 2026-11-02 — SEC-7/7B dependencies, OBS-1/MAINT-3 i raniji koraci
+
+- **Tadašnji SEC-7B code HEAD:** `cc39769`; udaljena sesijska grana je bila istog SHA-a prije završnog docs upisa. `origin/main` je tada posljednji put provjeren na `f426b35`. Vlasnik ručno radi merge, PR se ne otvara.
 - **SEC-7B dev/tooling (`cc39769`):** lock-only ne-force refresh uklanja preostale critical/high zapise iz development grafa. Handlebars je 4.7.10, Jest 30.5.2, ts-jest 29.4.15 i typescript-eslint 8.72.1; svih 97 verzijskih promjena je dev-only, a production direct verzije i overridei iz `b6b4fed` su nepromijenjeni. Production audit ostaje exit 0 / nula paketa.
   - Konačni full audit ima **34 zapisa** (0 critical, 0 high, 31 moderate, 3 low): stvarni preostali korijeni su `deepmerge`, `glob` i `minimatch` plus propagirani roditelji. npm za njih traži `@nestjs/cli@12.0.11` preko `--force`, što je major i nije primijenjeno. Nema novih overridea, `package.json` ni source promjena.
   - `npm ci`, ciljani **8 suiteova / 64 testa + 1 skip**, OpenAPI check i ESLint **0 errors / 2 postojeća warnings** prolaze. CI `41528411640`: backend **71/707 + 6/63 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations.

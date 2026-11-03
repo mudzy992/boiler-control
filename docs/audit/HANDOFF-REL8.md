@@ -3,6 +3,42 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas reading DELETE path ID validacija (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `de896a8`, fix `d922323`.**
+`origin/arena/c9961f17-boiler-control` je `d922323` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `89514f4`. PR nije otvaran.
+
+- Source review je potvrdio da `DELETE /api/gas/reading/:id` prima string i
+  radi `+id` tek u controlleru. Web i mobile već šalju numerički ID;
+  servisni owner lookup, file deletion i DB delete nisu mijenjani.
+- Postojeći `gas-upload-http.spec.ts` pokreće stvarni controller kroz HTTP s
+  produkcijskim ValidationPipe opcijama i synthetic JWT guard korisnikom.
+  Servisni delete je mockan na DI boundaryju, pa ovo nije real-DB/file dokaz.
+- Baseline je bio **12/12**. Test-only `de896a8` dodaje valjan numeric ID koji
+  zadržava 200/response/argumente i malformed ID koji mora dati 400 bez servisa.
+  Lokalni test-first dao je **13 prošlo / 1 pao / 14 ukupno**: valjana kontrola
+  prolazi, a malformed ID dobija 200 i dolazi do mock servisa.
+- **Test-first CI `41734916905`:** **792 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti i postojeći testovi nisu mijenjani za ispravku.
+- Fix `d922323` dodaje postojeći ParseIntPipe samo na DELETE `:id`, mijenja
+  lokalni tip u number i uklanja `+id`. Nema Min(1), novog importa/flaga ni
+  izmjene drugih ID ruta, servisa, responsea ili stvarnog brisanja fajlova.
+- Lokalno je isti suite nakon ispravke **14/14**, a sva tri Gas suitea **47/47**.
+  **Finalni code CI `41735480831`:** backend **78/793 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- OpenAPI i frontend DELETE path tip su number, što postojeći klijenti već
+  koriste. Sync/type-check i frontend **92/92** prolaze. ESLint ima **0 errors /
+  2 postojeća warnings**. Route markeri i inventory baseline od 34 poznate
+  formalne razlike ostaju nepromijenjeni; privremeni Prisma stubovi su uklonjeni.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `d922323`.
+- **Granica:** real-DB ownership/delete, filesystem side effecti, ID
+  pozitivnost, preostali Gas/HomeProfile/ThermostatDevice/Weather ID parametri
+  i produkcijski rollout nisu obuhvaćeni.
+
 ## S-002 — Gas reference path ID validacija (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0763bb9`, fix `56955be`.**

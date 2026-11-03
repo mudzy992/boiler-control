@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas reading DELETE runtime path ID validacija (2026-11-03)
+
+**STATUS: DELETE PATH ID RIJEŠEN U KODU (`d922323`); HTTP DOKAZ ZELEN.** Servisno brisanje, real-DB ownership/file side effecti i preostali ID parametri nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Web/mobile već koriste `deleteGasReading(id: number)`; servisni owner lookup, file deletion i DB delete ostaju nepromijenjeni.
+- Postojeći stvarni controller HTTP spec dobio je valjan numeric-ID i malformed-ID scenarij s mock delete servisom. Dokaz je controller/path granica, ne real-DB ili filesystem dokaz.
+- **Test-first:** baseline je 12/12. Commit `de896a8` lokalno daje **13/14 prolaza i jedan pad**, a CI `41734916905` potvrđuje **792 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan DELETE ostaje 200, a malformed ID ranije dolazi do servisa sa 200.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Valjan response i `delete(42, 17)` ostaju; nema Min(1), novog flaga ni izmjene drugih ID ruta.
+- **Finalni code CI `41735480831`:** backend **78/793 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **14/14**, svi lokalni Gas testovi **47/47**.
+- OpenAPI/frontend DELETE path tip je number; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `d922323`.
+- **Preostalo:** real-DB/file deletion dokaz, ID pozitivnost, drugi ID parametri i produkcijski rollout.
+
 ### S-002 — Gas reference runtime path ID validacija (2026-11-03)
 
 **STATUS: REFERENCE PATH ID RIJEŠEN U KODU (`56955be`); HTTP DOKAZ ZELEN.** Ostali Gas ID parametri, pozitivnost ID-a i servisna transakcija nisu mijenjani.

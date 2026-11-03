@@ -5,6 +5,7 @@ import {
   Patch,
   Param,
   Body,
+  ParseIntPipe,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -29,7 +30,7 @@ export class HeatingAnomalyController {
   // Update anomaly status
   @Patch(':eventId')
   async updateAnomaly(
-    @Param('eventId') eventId: number,
+    @Param('eventId', ParseIntPipe) eventId: number,
     @Body() dto: UpdateHeatingAnomalyDto,
     @Req() req,
   ) {

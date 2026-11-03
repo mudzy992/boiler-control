@@ -144,7 +144,7 @@ Skraćenice: `A` = `backend/test/integration/api.integration.spec.ts`; `H` = `ba
 
 | Modul | Provjere / ulaz → izlaz koji se može pripisati izvoru | Konkretna nepokrivena ili nedovoljno potvrđena grana |
 |---|---|---|
-| Auth | `A:56-196` registracija/login; `C:37-75`; `auth_session_repro.cjs` sintetički HTTP/JWT i fake DB. | Deaktivacija/poništavanje tokena i sesije nakon promjene lozinke u punom AppModule + stvarni PostgreSQL (S-003/S-004). |
+| Auth | `A:56-196` registracija/login; `C:37-75`; `auth_session_repro.cjs` sintetički HTTP/JWT i fake DB; `auth-refresh.integration.spec.ts` stvarni refresh servis + Prisma/PostgreSQL za sequential i konkurentnu rotaciju. | Deaktivacija/poništavanje access tokena i sesije nakon promjene lozinke u punom AppModule + stvarni PostgreSQL, browser/SecureStore QA (S-003/S-004). |
 | Boiler | `H:335-413` historija i ručni unos; `C:78-108` ima uslovne asertacije; `formula_table.cjs` motor, ne čitav servis. | Prava provjera da ručni unos ne šalje uređajnu komandu, multi-device veza historije (B-024), DB greške i timeout providera. |
 | Dashboard | `A:342-395`, `C:111-121`; `dashboard_repro.cjs` stvarni servis/fake DB za dva uređaja i grupisanje. | HTTP+DB kontrakt dva različita uređaja/vlasnika i DST bucket, pravi provider i cijeli izlaz B-019/B-020. |
 | ExpoPush | `reminder_delivery_repro.cjs` koristi fake push, ne stvarni adapter. | Expo SDK ticket/receipt, partial failure i timeout ne potvrđuju se fake pushom; R-002. |

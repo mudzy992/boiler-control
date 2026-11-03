@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### SEC-4 — atomska konkurentna rotacija refresh tokena (2026-11-03)
+
+**STATUS: RACE ISPRAVLJEN U KODU (`de635ad`); STVARNA PRISMA/POSTGRESQL PROVJERA ZELENA.** Ovo nije zatvaranje ostalih SEC-4 auth/session tema.
+
+- Na neizmijenjenom kodu sonda stvarnog servisa reproducirala je **dva fulfilled ishoda, dva aktivna različita nasljednika i tri vlasnikova reda**. Test-only commiti `a4607f8` i `6d0f4a5` dodali su real-DB service spec; CI `41668760579` pao je samo na konkurentnom testu (**94/95 integration**, `tsc: 0`, `eslint: 0`). Raniji run `41668103008` imao je dvije harness greške tipizacije, zatim ispravljene bez promjene asserta ili production koda.
+- `rotate()` sada koristi conditional `updateMany({ id, revokedAt: null })`; tačno jedan poziv dobiva claim. Opoziv starog i insert nasljednika su u istoj transakciji, a gubitnik claima koristi postojeći reuse cleanup i vraća `UnauthorizedException`. Hash-only pohrana, sequential reuse, logout/revoke i zaštita tuđih sesija ostaju.
+- **Finalni CI `41669534608`:** backend **78/751 + 12/95 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Porast u odnosu na SEC-2 je +1 suite/+2 testa, odnosno +1 integration suite/+2 integration testa.
+- Konkurentni spec dokazuje jedan fulfilled i jedan rejected ishod, samo stari i jedan novi vlasnikov red, nula aktivnih vlasnikovih tokena nakon reusea i jednu aktivnu sesiju drugog korisnika. Lokalni offline helper je prije fixa očekivano pao, a poslije prolazi; fake transakcija modelira row-lock barijeru i ne predstavlja se kao real-DB dokaz. ESLint ima **0 errors / 2 postojeća warnings**. Lokalni Auth unit nije pokrenut bez generated Prisma; CI je autoritativan.
+- Nema nove migracije/backfilla ni novog flaga. `AUTH_COOKIE_REFRESH_ENABLED` ostaje zadano **off**; nema DTO/cookie/Bearer/SecureStore/access-TTL/frontend/mobile promjene. Revert `de635ad` vraća race, a rollback ne smije predstavljati uključivanje feature flaga.
+- **Preostalo:** spec je servisni real-DB dokaz, ne AppModule/HTTP/browser test. Access-token revokacija, `isActive`, promjena lozinke bez stare, 2FA, produkcijski rollout i fizički browser/SecureStore QA ostaju otvoreni.
+
 ### SEC-2/B-009/B-010 — anomaly ownership i DTO stvarni HTTP/PostgreSQL dokaz (2026-11-03)
 
 **STATUS: RUNTIME DOKAZ ZAVRŠEN (`971c8f9`); INVALID-ID GRANICA ISPRAVLJENA (`0bbb5db`).** Source review je potvrdio postojeći JWT userId, owner scope u findFirst/updateMany i DTO validatore. Nova production izmjena je samo ParseIntPipe za eventId; validni response i postojeći foreign/missing odgovor nisu mijenjani.

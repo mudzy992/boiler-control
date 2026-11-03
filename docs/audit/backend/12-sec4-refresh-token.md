@@ -121,13 +121,13 @@ vrijednosti u kodu; dodavanje bi slomilo paritet koji provjerava
 
 ```bash
 cd backend
-npx jest src/modules/Auth/tests/ --runInBand     # 18/18
+npx jest src/modules/Auth/tests/ --runInBand     # 23/23 u zelenom CI-ju
 ```
 
 | Suite | Testova |
 |---|---|
 | `tests/refresh-token.spec.ts` | 12 |
-| `tests/auth-cookie.spec.ts` | 6 |
+| `tests/auth-cookie.spec.ts` | 11 |
 
 TDD: `refresh-token.spec.ts` je napisan **prije** servisa i prvi prolaz je pao s
 „Cannot find module '../refresh-token.service'".
@@ -135,6 +135,49 @@ TDD: `refresh-token.spec.ts` je napisan **prije** servisa i prvi prolaz je pao s
 ```bash
 node scripts/audit/cors_headers_repro.cjs        # EXIT=0
 ```
+
+## Konkurentna rotacija — dopuna 2026-11-03
+
+**STATUS: ATOMSKA ROTACIJA RIJEŠENA U KODU (`de635ad`); CI REAL-DB DOKAZ ZELEN.**
+Ovo rješava race u refresh servisu, ne cijeli preostali SEC-4 auth/session opus.
+
+Izvorna sumnja nije preuzeta napamet: stari `rotate()` je odvojio `findUnique`,
+neuslovni `update` i `issue`. Izolovana sonda stvarnog servisa nad fake bazom je
+na neizmijenjenom kodu dala dva fulfilled ishoda, dva aktivna različita nasljednika
+i tri vlasnikova reda; vrijednosti tokena nisu ispisane.
+
+- **Test-first (`a4607f8`, ispravljen harness `6d0f4a5`):**
+  `backend/test/integration/auth-refresh.integration.spec.ts` pokreće stvarni
+  `RefreshTokenService` i Prisma/PostgreSQL. Barrier tjera oba poziva da pročitaju
+  isti aktivni red prije bilo kakve rotacije. CI `41668760579` dao je **94/95
+  integration**; pao je samo konkurentni test (`fulfilled, fulfilled` umjesto
+  jednog odbijenog poziva), uz `tsc: 0` i `eslint: 0`. Prvi test-only run
+  `41668103008` imao je i dvije greške tipizacije harnessa, ispravljene bez
+  slabljenja asserta ili izmjene production koda.
+- **Ispravka (`de635ad`):** `updateMany({ id, revokedAt: null })` mora pogoditi
+  tačno jedan red. Opoziv starog i kreiranje jednog nasljednika su u istoj
+  transakciji. Izgubljeni claim prolazi kroz postojeći reuse cleanup, opoziva sve
+  vlasnikove sesije i vraća `UnauthorizedException`; tuđe sesije se ne diraju.
+  PostgreSQL row lock drži konkurentni claim do commita cijele transakcije.
+- **Dokaz:** test potvrđuje tačno jedan fulfilled i jedan rejected ishod, samo
+  stari i jedan novi vlasnikov red, nula aktivnih vlasnikovih tokena nakon reuse
+  detekcije i jednu netaknutu aktivnu sesiju drugog korisnika. Sequential reuse,
+  hash-only pohrana, expiry i logout ostaju pokriveni postojećim testovima.
+- **Offline helper:** `node scripts/audit/refresh_token_concurrency_repro.cjs`
+  prije ispravke izlazi sa statusom 1 na `fulfilled, fulfilled`, a poslije prolazi
+  s `fulfilled, rejected`, `ownerActiveRows: 0` i `otherActiveRows: 1`. Fake
+  transakcija modelira row-lock barijeru; helper nije dokaz stvarne baze.
+- **Finalni CI `41669534608`:** backend **78 suiteova / 751 test + 12/95
+  integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`;
+  sva tri joba/koraci success i nula failure annotations.
+
+Nema nove migracije ni backfilla; koristi se postojeća `RefreshToken` tabela.
+`AUTH_COOKIE_REFRESH_ENABLED` ostaje zadano **off**, pa kompatibilni rollback i
+dalje ima postojeći flag, a ne uključivanje novog toka. Revert `de635ad` vraća
+dokazani race. Nema DTO, cookie, Bearer, SecureStore, access-TTL, frontend ili
+mobile promjene. Spec testira servis uz stvarnu bazu, ne AppModule/HTTP/browser;
+`isActive`, access-token revokacija, promjena lozinke, 2FA i produkcijski rollout
+ostaju izvan ovog slicea.
 
 ---
 

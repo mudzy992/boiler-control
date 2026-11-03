@@ -3,6 +3,50 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## SEC-4 — atomska rotacija refresh tokena (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `a4607f8` + `6d0f4a5`, fix `de635ad`.**
+`origin/arena/c9961f17-boiler-control` je `de635ad` prije ovog docs commita;
+vlasnik je SEC-2 docs `21bbbac` već mergeovao u `origin/main`. PR nije otvaran.
+
+- Source review obuhvatio je controller, cookie/refresh DTO, JWT guard,
+  `RefreshTokenService`, Prisma model/migraciju, runbook i postojeće testove.
+  Pravilo izvora nije slijepo preuzeto: izolovana sonda stvarnog servisa je na
+  čistom kodu dala dva fulfilled ishoda, tri vlasnikova reda i dva aktivna
+  različita nasljednika. Vrijednosti tokena nisu ispisane.
+- Novi `backend/test/integration/auth-refresh.integration.spec.ts` pokreće
+  stvarni `RefreshTokenService` s Prisma/PostgreSQL. Postojeći sequential reuse
+  slučaj čuva revoke-all i foreign-session izolaciju; barrier-kontrolisani
+  konkurentni slučaj zahtijeva jedan fulfilled i jedan rejected
+  `UnauthorizedException`, samo stari i jedan novi red, nula aktivnih vlasnikovih
+  tokena nakon reusea i jednu aktivnu sesiju drugog korisnika.
+- Test-only CI `41668103008` reproducirao je race, ali i prijavio dvije greške
+  tipizacije test harnessa. Commit `6d0f4a5` popravio je samo harness; CI
+  `41668760579` zatim je dao **750/751 ukupno, 94/95 integration**, `tsc: 0` i
+  `eslint: 0`, s očekivanim padom samo konkurentnog testa. Asserti nisu ublaženi.
+- Fix `de635ad` koristi conditional `updateMany({ id, revokedAt: null })` i
+  kreira nasljednika u istoj transakciji. Samo count=1 dobiva claim; gubitnik ide
+  kroz postojeći reuse cleanup i `UnauthorizedException`. `issue()` i dalje ima
+  isti javni potpis, a privatni writer prima obični ili transaction-scoped
+  Prisma klijent. Unit fake Prisma podržava `$transaction` i uslovni updateMany.
+- **Finalni CI `41669534608`:** backend **78/751 + 12/95 integration**, mobile
+  **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci
+  success i nula failure annotations. Provjereno preko runs/jobs/annotations API.
+- `scripts/audit/refresh_token_concurrency_repro.cjs` koristi stvarni servis i
+  barrier fake DB. Prije fixa izlazi sa statusom 1 na `fulfilled, fulfilled`;
+  poslije prolazi s `fulfilled, rejected`, `ownerActiveRows: 0` i
+  `otherActiveRows: 1`. Fake transakcija serijalizuje claim do završetka da
+  modelira PostgreSQL row lock; helper nije dokaz stvarne baze ili HTTP toka.
+  ESLint: **0 errors / 2 postojeća warnings**. Lokalni Auth unit bez generated
+  Prisma nije pokrenut; svi testovi i generated Prisma prolaze u CI-ju.
+- Nema nove migracije/backfilla, novog flaga, DTO/cookie/Bearer/SecureStore/
+  access-TTL/frontend/mobile promjene. `AUTH_COOKIE_REFRESH_ENABLED` ostaje
+  zadano **off**; nije produkcijski uključen. Rollback ima postojeći flag, dok
+  bi revert `de635ad` vratio race. Instalirani mobile ugovor nije mijenjan.
+- **Granica:** real-DB spec testira servis, ne AppModule/HTTP/browser i ne
+  SecureStore fizički uređaj. `isActive`, access-token revokacija, stari
+  password tok, 2FA i produkcijski rollout nisu obuhvaćeni ni odobreni.
+
 ## Nastavak 2026-11-03 — SEC-2/B-009/B-010 anomaly ownership i validacija
 
 - **Verificirani test/fix HEAD:** `971c8f9` + `0bbb5db`; udaljena sesijska grana je na `0bbb5db` prije završnog docs upisa. `origin/main` je posljednji put provjeren na `665289c`, nakon vlasnikovog mergea SEC-3 slicea. Vlasnik ručno radi merge, PR se ne otvara.

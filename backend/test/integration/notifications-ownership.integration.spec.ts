@@ -30,11 +30,13 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
   const suffix = randomUUID();
   const userIds: number[] = [];
   const missingId = 2_000_000_000;
+  // Različit tip od SEC-1 fixturea sprječava da postojeći debounce potisne
+  // pozitivnu manual kontrolu; beforeEach uklanja samo prethodne S-002 redove.
   const validManualBody = () => ({
-    type: 'SYSTEM_ALERT',
+    type: 'GAS_READING_REMINDER',
     title: 'S-002 synthetic manual title',
     message: 'S-002 synthetic manual message',
-    data: { type: 'SYSTEM_ALERT', marker: 's002-manual' },
+    data: { type: 'GAS_READING_REMINDER', marker: 's002-manual' },
   });
   const withoutManualField = (field: string) => {
     const body: Record<string, unknown> = validManualBody();

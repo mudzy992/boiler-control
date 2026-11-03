@@ -3,7 +3,18 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-03 — FEAT-8/B-019 stvarni HTTP/PostgreSQL dokaz
+## Nastavak 2026-11-03 — FEAT-8/B-020 summary/stats stvarni HTTP/PostgreSQL dokaz
+
+- **Verificirani test HEAD:** `eed8830`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `f36a8b4`, nakon vlasnikovog mergea cijelog B-019 slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **B-020 runtime dopuna (`9478a9e` + `15694e4` + `eed8830`):** izvor je već imao zadani v1 i opt-in v2 helper/unit ugovor, pa nije bilo produkcijske ispravke. Novi `dashboard-buckets.integration.spec.ts` koristi stvarni `AppModule`, `JwtAuthGuard`, Prisma/PostgreSQL, dva korisnika i potpuno čišćenje sintetičkih fixturea.
+  - Šest scenarija dokazuje: anonymous 401 za summary/stats; v1 spajanje dva dana u jedan `10:00` bucket s tačnim agregatima; v2 hronološke UTC date-hour bucket-e; zajednički v2 UTC dan oko ponoći; v2 razdvajanje ponovljenog Europe/Sarajevo DST sata; te identične foreign/missing/no-data odgovore bez skrivanja postojećeg tuđeg fixturea od njegovog vlasnika.
+  - CI `41630712262`: backend **75/734 + 9/78 integration**, `tsc: 0`, `eslint: 0`; frontend **4/4**. Mobile je u tom runu zabilježio samo poznati `weatherV2NativeWind` timeout (**135/136**); timeout, asserti i paralelizam nisu mijenjani. Svježi puni run pokreće se docs pushom bez code/test promjene.
+  - Prvi pokušaj `41629612657` za `9478a9e` stao je prije HTTP zahtjeva zbog nevažećih polja u novom test fixtureu. `15694e4` usklađuje fixture s aktualnom Prisma shemom i već zelenim B-019 integration obrascem; to nije produkcijski defect.
+  - Lokalne kontrole: postojeći **6 Dashboard suitea / 57 testova**, fokusirani bucket unit **1/8**, helper, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Lokalna baza nije pokretana; stvarni HTTP/DB dokaz je navedeni backend CI, ne discovery.
+  - Test privremeno postavlja `DASHBOARD_BUCKET_V2_ENABLED=on` samo za v2 zahtjeve i vraća originalnu vrijednost. Default ostaje `off`; nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, export ili installed-mobile promjene. Rollback je revert test/docs slicea.
+  - **Ograničenje i preostalo:** v1 kolaps Sarajevo DST para zavisi od server-local zone i ostaje helper/unit dokaz jer je CI server UTC; novi HTTP/DB DST dokaz vrijedi za v2. Export nije proširen ovim specom. Konačna hour-profile-vs-series i timezone odluka, v2 rollout, live-vs-historical snapshot ugovor i produkcijski deploy ostaju otvoreni.
+
+## Raniji nastavak 2026-11-03 — FEAT-8/B-019 stvarni HTTP/PostgreSQL dokaz
 
 - **Verificirani test HEAD:** `13b0b2e`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `518ec1a`, nakon vlasnikovog mergea prethodnog SEC-5 owner-only slicea. Vlasnik ručno radi merge, PR se ne otvara.
 - **B-019 runtime dopuna (`13b0b2e`):** izvor je već imao per-device mapiranje i owner-scope, pa nije bilo produkcijske ispravke. Novi integration spec koristi stvarni `AppModule`, `JwtAuthGuard` i Prisma/PostgreSQL s dva korisnika, dva vlasnikova uređaja i novijim tuđim događajem.

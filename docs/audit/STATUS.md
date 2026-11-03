@@ -2235,6 +2235,16 @@ Preostali SEC-5 opseg ostaje otvoren.
 - **Bez scope širenja:** nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, flag ili installed-mobile promjene. `DASHBOARD_BUCKET_V2_ENABLED` nije diran; rollback je revert test/docs slicea.
 - **Preostalo:** live-vs-historical snapshot ugovor, B-020 v2 rollout/timezone odluka i produkcijski deploy. Summary/stats/export i historijske vrijednosti događaja nisu dokazani ovim specom.
 
+### FEAT-8/B-020 — summary/stats stvarni HTTP/PostgreSQL dokaz (2026-11-03)
+
+**STATUS: BACKEND RUNTIME DOKAZ ZAVRŠEN (`eed8830`); V1 DEFAULT I ROLLOUT ODLUKE OSTAJU.** Produkcijski kod je već imao v1/v2 helper i unit pokrivenost; ovaj slice dodaje samo `backend/test/integration/dashboard-buckets.integration.spec.ts` sa stvarnim `AppModule`, JWT i Prisma/PostgreSQL tokom.
+
+- **Šest scenarija:** anonymous 401 za obje rute; zadani v1 spaja dva dana u `10:00` uz tačne summary/stats agregate; opt-in v2 razdvaja UTC date-hour bucket-e; v2 summary/stats dijele UTC dan oko ponoći; v2 razdvaja ponovljeni Europe/Sarajevo DST sat uz `Intl` kontrolu ulaznog para; foreign/missing/no-data odgovori su prazni i ne cure tuđi događaj.
+- **CI `41630712262`:** backend **75/734 + 9/78 integration**, `tsc: 0`, `eslint: 0`; frontend **4/4**. Mobile je zabilježio samo poznati `weatherV2NativeWind` timeout (**135/136**); timeout, asserti i paralelizam nisu mijenjani. Prvi run `41629612657` pao je prije HTTP toku zbog nevažećeg test fixturea, ispravljenog u `15694e4`; nije bilo production defecta.
+- **Lokalno:** postojeći **6 Dashboard suitea / 57 testova**, fokusirani bucket unit **1/8**, helper, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Stvarni HTTP/DB dokaz je CI; discovery to nije.
+- **Bez scope širenja:** flag se privremeno mijenja samo unutar v2 test zahtjeva i vraća; default `DASHBOARD_BUCKET_V2_ENABLED=off` ostaje. Nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, export ili installed-mobile promjene. Rollback je revert test/docs slicea.
+- **Ograničenje i preostalo:** v1 Sarajevo DST kolaps ostaje helper/unit dokaz jer CI server koristi UTC; v2 DST je stvarni HTTP/DB dokaz. Export nije proširen. Hour-profile-vs-series i timezone odluka, v2 rollout, live-vs-historical snapshot ugovor i produkcijski deploy ostaju otvoreni.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

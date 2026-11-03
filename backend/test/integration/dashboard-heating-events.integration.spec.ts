@@ -253,6 +253,49 @@ describe('Integration: FEAT-8 dashboard heating events', () => {
     );
   });
 
+  it('historijska event polja ostaju stabilna dok thermostat polja prate live izmjenu', async () => {
+    const query = ownerQuery({ deviceId: ownerDeviceAId });
+    const before = await getEvents(query, ownerToken);
+
+    expect(before.status).toBe(200);
+    expect(before.body.meta).toEqual({ page: 1, limit: 20, total: 1 });
+    expect(before.body.data).toHaveLength(1);
+    expect(before.body.data[0]).toMatchObject({
+      deviceId: ownerDeviceAId,
+      currentTemp: 20,
+      targetTemp: 22,
+      curretTempThermostat: 25,
+      targetTempThermostat: 26,
+      durationMinutes: 30,
+    });
+
+    try {
+      await prisma.thermostatDevice.update({
+        where: { id: ownerDeviceAId },
+        data: { roomCurrentTemp: 7, roomTargetTemp: 30 },
+      });
+
+      const after = await getEvents(query, ownerToken);
+
+      expect(after.status).toBe(200);
+      expect(after.body.meta).toEqual(before.body.meta);
+      expect(after.body.data).toHaveLength(1);
+      expect(after.body.data[0]).toMatchObject({
+        deviceId: ownerDeviceAId,
+        currentTemp: 20,
+        targetTemp: 22,
+        curretTempThermostat: 7,
+        targetTempThermostat: 30,
+        durationMinutes: 30,
+      });
+    } finally {
+      await prisma.thermostatDevice.update({
+        where: { id: ownerDeviceAId },
+        data: { roomCurrentTemp: 25, roomTargetTemp: 26 },
+      });
+    }
+  });
+
   it('ne otkriva tuđi događaj i foreign/missing filter je isti prazan odgovor', async () => {
     const other = await getEvents(
       rangeQuery({ homeProfileId: otherProfileId }),

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -78,10 +79,10 @@ export class GasReadingController {
   @ApiOkResponse({ type: GasReadingResponseDto })
   updateReference(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateGasReferenceDto,
   ) {
-    return this.service.updateReference(req.user.userId, +id, dto);
+    return this.service.updateReference(req.user.userId, id, dto);
   }
 
   @Post('reading/:id/meter-image')

@@ -3,7 +3,17 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-03 — FEAT-8/B-020 summary/stats stvarni HTTP/PostgreSQL dokaz
+## Nastavak 2026-11-03 — FEAT-8/B-019 live-vs-historical vremenska kontrola
+
+- **Verificirani test HEAD:** `d4f8d0e`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `f36a8b4`. Vlasnik ručno radi merge, PR se ne otvara.
+- **B-019 live/historical dopuna (`d4f8d0e`):** postojeći izvor već razdvaja historijska event polja `currentTemp/targetTemp` od live thermostat polja `curretTempThermostat/targetTempThermostat`. Peti scenario u postojećem integration specu sada to dokazuje vremenski kroz dva stvarna HTTP/PostgreSQL čitanja istog događaja.
+  - Prije device updatea odgovor sadrži historijske `20/22` i live `25/26`. Nakon promjene device reda na `7/30`, historijska polja i trajanje ostaju nepromijenjeni, a live polja postaju `7/30`. Device se vraća na `25/26` u `finally`, a ostali fixture/asserti nisu mijenjani.
+  - CI `41638063116`: backend **75/735 + 9/79 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba/koraci success i nula failure annotations. Porast je tačno +1 test u obje backend brojke.
+  - Lokalne kontrole: postojeći **6 Dashboard suitea / 57 testova**, helper, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Stvarni dokaz je CI; lokalna baza nije pokretana.
+  - Nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, flag ili installed-mobile promjene. Rollback je revert test/docs slicea.
+  - **Granica dokaza:** ovo karakterizira sadašnje ponašanje i ne odobrava ga kao konačni ugovor. Odluka o nazivu/semantici live naspram historijskog snapshot polja, njenim klijentima i eventualnom verzioniranju i dalje zahtijeva vlasnika; nije provedena nijedna takva promjena.
+
+## Raniji nastavak 2026-11-03 — FEAT-8/B-020 summary/stats stvarni HTTP/PostgreSQL dokaz
 
 - **Verificirani test HEAD:** `eed8830`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `f36a8b4`, nakon vlasnikovog mergea cijelog B-019 slicea. Vlasnik ručno radi merge, PR se ne otvara.
 - **B-020 runtime dopuna (`9478a9e` + `15694e4` + `eed8830`):** izvor je već imao zadani v1 i opt-in v2 helper/unit ugovor, pa nije bilo produkcijske ispravke. Novi `dashboard-buckets.integration.spec.ts` koristi stvarni `AppModule`, `JwtAuthGuard`, Prisma/PostgreSQL, dva korisnika i potpuno čišćenje sintetičkih fixturea.

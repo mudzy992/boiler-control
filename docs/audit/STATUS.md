@@ -2245,6 +2245,15 @@ Preostali SEC-5 opseg ostaje otvoren.
 - **Bez scope širenja:** flag se privremeno mijenja samo unutar v2 test zahtjeva i vraća; default `DASHBOARD_BUCKET_V2_ENABLED=off` ostaje. Nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, export ili installed-mobile promjene. Rollback je revert test/docs slicea.
 - **Ograničenje i preostalo:** v1 Sarajevo DST kolaps ostaje helper/unit dokaz jer CI server koristi UTC; v2 DST je stvarni HTTP/DB dokaz. Export nije proširen. Hour-profile-vs-series i timezone odluka, v2 rollout, live-vs-historical snapshot ugovor i produkcijski deploy ostaju otvoreni.
 
+### FEAT-8/B-019 — live-vs-historical vremenska kontrola (2026-11-03)
+
+**STATUS: POSTOJEĆE PONAŠANJE KARAKTERIZIRANO (`d4f8d0e`); KONAČNI UGOVOR NIJE ODABRAN.** Peti scenario u `backend/test/integration/dashboard-heating-events.integration.spec.ts` dokazuje razliku historijskih event i live thermostat polja kroz dva uzastopna stvarna HTTP/PostgreSQL čitanja.
+
+- Prije updatea odgovor ima historijske `currentTemp/targetTemp = 20/22` i live `curretTempThermostat/targetTempThermostat = 25/26`. Nakon device updatea na `7/30`, historijska polja i trajanje ostaju `20/22` i 30 minuta, dok live polja postaju `7/30`; `finally` vraća fixture.
+- **CI `41638063116`:** backend **75/735 + 9/79 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**; sva tri joba/koraci success, nula failure annotations.
+- **Lokalno:** postojeći **6 Dashboard suitea / 57 testova**, helper, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Nema production/API/DTO/OpenAPI/migracije/flag/mobile promjene; rollback je revert test/docs slicea.
+- **Preostalo:** ovo nije proizvodna odluka niti odobrenje live semantike. Naziv, svrha i buduće verzioniranje live naspram historijskog snapshot polja ostaju vlasnička odluka.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

@@ -433,6 +433,33 @@
         ],
         "type": "object"
       },
+      "CreateHeatingEventDto": {
+        "properties": {
+          "deviceId": {
+            "example": 1,
+            "type": "number"
+          },
+          "roomCurrentTemp": {
+            "example": 21,
+            "type": "number"
+          },
+          "roomFlowTemp": {
+            "example": 45,
+            "type": "number"
+          },
+          "roomTargetTemp": {
+            "example": 22,
+            "type": "number"
+          }
+        },
+        "required": [
+          "deviceId",
+          "roomCurrentTemp",
+          "roomTargetTemp",
+          "roomFlowTemp"
+        ],
+        "type": "object"
+      },
       "CreateHomeProfileDto": {
         "properties": {},
         "type": "object"
@@ -3912,6 +3939,16 @@
       "post": {
         "operationId": "HeatingController_createHeatingEvent",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHeatingEventDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""

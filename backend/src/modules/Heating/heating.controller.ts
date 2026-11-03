@@ -3,6 +3,7 @@ import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { HeatingService } from './heating.service';
+import { CreateHeatingEventDto } from './dto/create-heating-event.dto';
 
 /**
  * Heating Events Controller (P2a)
@@ -19,16 +20,7 @@ export class HeatingController {
    * Create a heating event (manual creation for testing)
    */
   @Post()
-  createHeatingEvent(
-    @Req() req,
-    @Body()
-    body: {
-      deviceId: number;
-      roomCurrentTemp: number;
-      roomTargetTemp: number;
-      roomFlowTemp: number;
-    },
-  ) {
+  createHeatingEvent(@Req() req, @Body() body: CreateHeatingEventDto) {
     // API-1 / B-001: ovo je bio stub koji je vraćao IZMIŠLJENI
     // `Math.floor(Math.random() * 10000)` ID i NIŠTA nije upisivao u bazu —
     // klijent je mislio da je zapis kreiran. Potrošači su verificirani:

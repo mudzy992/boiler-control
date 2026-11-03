@@ -1171,6 +1171,16 @@ export interface components {
              */
             readingDate: string;
         };
+        CreateHeatingEventDto: {
+            /** @example 1 */
+            deviceId: number;
+            /** @example 21 */
+            roomCurrentTemp: number;
+            /** @example 45 */
+            roomFlowTemp: number;
+            /** @example 22 */
+            roomTargetTemp: number;
+        };
         CreateHomeProfileDto: Record<string, never>;
         CreateThermostatDeviceDto: {
             alias?: string;
@@ -2688,7 +2698,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHeatingEventDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {

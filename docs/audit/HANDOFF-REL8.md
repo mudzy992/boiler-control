@@ -31,9 +31,14 @@ otvaran niti je ijedan produkcijski flag/deploy mijenjan.
   `enableImplicitConversion`, ne nedostatak `@IsString`. `4efede1` vraća raw
   root polje samo za title/message prije validacije; globalni pipe, type enum,
   userId konverzija i ostali DTO-ovi nisu mijenjani.
-- **Finalni CI `41695612403`:** backend **78/761 + 12/105 integration**, mobile
-  **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci
-  success i nula failure annotations. Provjereno preko runs/jobs/annotations API.
+- **Finalni code CI `41695612403`:** backend **78/761 + 12/105 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko
+  runs/jobs/annotations API.
+- Prvi docs run `41696454679` potvrdio je iste backend/frontend rezultate, ali
+  mobile bilježi samo poznati `weatherV2NativeWind` timeout (**135/136**).
+  Timeout, asserti i paralelizam nisu mijenjani; svježi puni run slijedi ovim
+  evidencijskim pushom bez code/test promjene.
 - Lokalni actual-DTO probe pokriva validan/legacy success i number-title,
   object-message, unknown-type, extra-field odbijanje. Swagger probe je korišten
   za tačan oblik sheme; OpenAPI i frontend tipovi su regenerisani, frontend

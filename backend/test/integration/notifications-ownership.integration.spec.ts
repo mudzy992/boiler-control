@@ -43,6 +43,10 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     delete body[field];
     return body;
   };
+  const validPreferenceBody = () => ({
+    type: 'HEATING_STARTED',
+    enabled: true,
+  });
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -125,6 +129,9 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     await prisma.notification.deleteMany({
       where: { userId: ownerId, title: { startsWith: 'S-002' } },
     });
+    await prisma.notificationPreference.deleteMany({
+      where: { userId: { in: userIds } },
+    });
     await prisma.notification.updateMany({
       where: { id: notificationId, userId: ownerId },
       data: { isRead: false },
@@ -138,6 +145,9 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
           where: { userId: { in: userIds } },
         });
         await prisma.userDevice.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+        await prisma.notificationPreference.deleteMany({
           where: { userId: { in: userIds } },
         });
         await prisma.user.deleteMany({ where: { id: { in: userIds } } });
@@ -157,6 +167,13 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
   const sendManual = (body: Record<string, unknown>, token?: string) => {
     const pending = request(app.getHttpServer())
       .post('/api/notifications/manual')
+      .send(body);
+    return token ? pending.set('Authorization', `Bearer ${token}`) : pending;
+  };
+
+  const updatePreference = (body: Record<string, unknown>, token?: string) => {
+    const pending = request(app.getHttpServer())
+      .patch('/api/notifications/preferences')
       .send(body);
     return token ? pending.set('Authorization', `Bearer ${token}`) : pending;
   };
@@ -333,6 +350,88 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     expect(sendPushToTokens).not.toHaveBeenCalled();
     expect(
       await prisma.notification.count({ where: { userId: ownerId } }),
+    ).toBe(before);
+  });
+
+  it('S-002 anonymous preferences zahtjev dobija 401 bez DB upisa', async () => {
+    const before = await prisma.notificationPreference.count({
+      where: { userId: { in: [ownerId, otherId] } },
+    });
+
+    const response = await updatePreference(validPreferenceBody());
+
+    expect(response.status).toBe(401);
+    expect(
+      await prisma.notificationPreference.count({
+        where: { userId: { in: [ownerId, otherId] } },
+      }),
+    ).toBe(before);
+  });
+
+  it('S-002 validne preferences zadržavaju response i JWT owner upsert', async () => {
+    const enabled = await updatePreference(validPreferenceBody(), ownerToken);
+
+    expect(enabled.status).toBe(200);
+    expect(enabled.body).toMatchObject({
+      userId: ownerId,
+      type: 'HEATING_STARTED',
+      enabled: true,
+    });
+
+    const disabled = await updatePreference(
+      { ...validPreferenceBody(), enabled: false },
+      ownerToken,
+    );
+    expect(disabled.status).toBe(200);
+    expect(disabled.body).toMatchObject({
+      userId: ownerId,
+      type: 'HEATING_STARTED',
+      enabled: false,
+    });
+
+    const stored = await prisma.notificationPreference.findMany({
+      where: { userId: ownerId },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({
+      userId: ownerId,
+      type: 'HEATING_STARTED',
+      enabled: false,
+    });
+    expect(
+      await prisma.notificationPreference.count({
+        where: { userId: otherId },
+      }),
+    ).toBe(0);
+  });
+
+  it.each<[string, Record<string, unknown>]>([
+    ['nepoznat type', { ...validPreferenceBody(), type: 'NOT_A_TYPE' }],
+    ['type nije string', { ...validPreferenceBody(), type: 42 }],
+    ['nedostaje type', { enabled: true }],
+    ['nedostaje enabled', { type: 'HEATING_STARTED' }],
+    ['enabled je string false', { ...validPreferenceBody(), enabled: 'false' }],
+    ['enabled je broj', { ...validPreferenceBody(), enabled: 0 }],
+    [
+      'enabled je objekt',
+      { ...validPreferenceBody(), enabled: { value: false } },
+    ],
+    [
+      'neočekivano polje',
+      { ...validPreferenceBody(), unexpected: 'must-be-rejected' },
+    ],
+  ])('S-002 odbija preferences: %s bez DB upisa', async (_name, body) => {
+    const before = await prisma.notificationPreference.count({
+      where: { userId: { in: [ownerId, otherId] } },
+    });
+
+    const response = await updatePreference(body, ownerToken);
+
+    expect(response.status).toBe(400);
+    expect(
+      await prisma.notificationPreference.count({
+        where: { userId: { in: [ownerId, otherId] } },
+      }),
     ).toBe(before);
   });
 });

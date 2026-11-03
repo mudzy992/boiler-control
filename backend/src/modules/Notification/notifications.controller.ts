@@ -18,14 +18,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { GasReminderService } from '../Schedule/gas.reminder.service';
 import { NotificationType } from 'src/generated/prisma';
 import { ApiTags } from '@nestjs/swagger';
-
-interface ManualNotificationDTO {
-  userId: number;
-  type: NotificationType;
-  title: string;
-  message: string;
-  data?: any;
-}
+import { ManualNotificationDTO } from './dto/manual-notification.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Notifications')

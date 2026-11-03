@@ -1595,6 +1595,17 @@ export interface components {
             token: string;
             user: components["schemas"]["AuthUserDto"];
         };
+        ManualNotificationDTO: {
+            data?: {
+                [key: string]: unknown;
+            };
+            message: string;
+            title: string;
+            /** @enum {string} */
+            type: "DAILY_RECOMMENDATION" | "FLOW_TEMP_CHANGED" | "HEATING_STARTED" | "HEATING_ENDED" | "SYSTEM_ALERT" | "GAS_READING_REMINDER";
+            /** @description Legacy polje; primalac dolazi isključivo iz JWT-a. */
+            userId?: number;
+        };
         MessageResponseDto: {
             /** @example Password updated successfully */
             message: string;
@@ -2902,7 +2913,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualNotificationDTO"];
+            };
+        };
         responses: {
             201: {
                 headers: {

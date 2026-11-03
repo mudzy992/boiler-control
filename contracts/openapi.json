@@ -1794,6 +1794,41 @@
         ],
         "type": "object"
       },
+      "ManualNotificationDTO": {
+        "properties": {
+          "data": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "DAILY_RECOMMENDATION",
+              "FLOW_TEMP_CHANGED",
+              "HEATING_STARTED",
+              "HEATING_ENDED",
+              "SYSTEM_ALERT",
+              "GAS_READING_REMINDER"
+            ],
+            "type": "string"
+          },
+          "userId": {
+            "description": "Legacy polje; primalac dolazi isključivo iz JWT-a.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "message"
+        ],
+        "type": "object"
+      },
       "MessageResponseDto": {
         "properties": {
           "message": {
@@ -4104,6 +4139,16 @@
       "post": {
         "operationId": "NotificationsController_sendManualNotification",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualNotificationDTO"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""

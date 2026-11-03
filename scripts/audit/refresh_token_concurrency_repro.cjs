@@ -82,10 +82,20 @@ function fakePrisma() {
       return { count: matches.length };
     },
   };
+  // PostgreSQL drži row lock do commita cijele transakcije. Redoslijed fake
+  // transakcija modelira tu barijeru da cleanup ne može preći aktivni claim.
+  let transactionTail = Promise.resolve();
   const prisma = {
     rows,
     refreshToken,
-    $transaction: async (callback) => callback({ refreshToken }),
+    $transaction: (callback) => {
+      const result = transactionTail.then(() => callback({ refreshToken }));
+      transactionTail = result.then(
+        () => undefined,
+        () => undefined,
+      );
+      return result;
+    },
   };
   return prisma;
 }

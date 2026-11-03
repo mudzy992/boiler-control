@@ -27,55 +27,60 @@ interface Row {
 function fakePrisma() {
   const rows: Row[] = [];
   let nextId = 1;
+  const refreshToken = {
+    create: ({ data }: { data: Partial<Row> }) => {
+      const row: Row = {
+        id: nextId++,
+        userId: data.userId as number,
+        tokenHash: data.tokenHash as string,
+        expiresAt: data.expiresAt as Date,
+        revokedAt: data.revokedAt ?? null,
+        userAgent: data.userAgent ?? null,
+        ipAddress: data.ipAddress ?? null,
+        createdAt: new Date(),
+      };
+      rows.push(row);
+      return Promise.resolve(row);
+    },
+    findUnique: ({ where }: { where: { tokenHash: string } }) =>
+      Promise.resolve(
+        rows.find((r) => r.tokenHash === where.tokenHash) ?? null,
+      ),
+    update: ({
+      where,
+      data,
+    }: {
+      where: { id: number };
+      data: Partial<Row>;
+    }) => {
+      const row = rows.find((r) => r.id === where.id);
+      if (!row) return Promise.reject(new Error('not found'));
+      Object.assign(row, data);
+      return Promise.resolve(row);
+    },
+    updateMany: ({
+      where,
+      data,
+    }: {
+      where: { id?: number; userId?: number; revokedAt?: null };
+      data: Partial<Row>;
+    }) => {
+      const hits = rows.filter(
+        (r) =>
+          (where.id === undefined || r.id === where.id) &&
+          (where.userId === undefined || r.userId === where.userId) &&
+          (where.revokedAt === null ? r.revokedAt === null : true),
+      );
+      hits.forEach((r) => Object.assign(r, data));
+      return Promise.resolve({ count: hits.length });
+    },
+  };
   return {
     rows,
-    refreshToken: {
-      create: ({ data }: { data: Partial<Row> }) => {
-        const row: Row = {
-          id: nextId++,
-          userId: data.userId as number,
-          tokenHash: data.tokenHash as string,
-          expiresAt: data.expiresAt as Date,
-          revokedAt: data.revokedAt ?? null,
-          userAgent: data.userAgent ?? null,
-          ipAddress: data.ipAddress ?? null,
-          createdAt: new Date(),
-        };
-        rows.push(row);
-        return Promise.resolve(row);
-      },
-      findUnique: ({ where }: { where: { tokenHash: string } }) =>
-        Promise.resolve(
-          rows.find((r) => r.tokenHash === where.tokenHash) ?? null,
-        ),
-      update: ({
-        where,
-        data,
-      }: {
-        where: { id: number };
-        data: Partial<Row>;
-      }) => {
-        const row = rows.find((r) => r.id === where.id);
-        if (!row) return Promise.reject(new Error('not found'));
-        Object.assign(row, data);
-        return Promise.resolve(row);
-      },
-      updateMany: ({
-        where,
-        data,
-      }: {
-        where: { userId: number; revokedAt?: null };
-        data: Partial<Row>;
-      }) => {
-        const hits = rows.filter(
-          (r) =>
-            r.userId === where.userId &&
-            (where.revokedAt === null ? r.revokedAt === null : true),
-        );
-        hits.forEach((r) => Object.assign(r, data));
-        return Promise.resolve({ count: hits.length });
-      },
-    },
+    refreshToken,
+    $transaction: (
+      callback: (tx: { refreshToken: typeof refreshToken }) => Promise<unknown>,
+    ) => callback({ refreshToken }),
   };
 }
 

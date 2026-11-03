@@ -35,6 +35,11 @@ export interface TokenMeta {
   ipAddress?: string;
 }
 
+type RefreshTokenWriter = Pick<PrismaService, 'refreshToken'>;
+
+/** Interni signal da je drugi konkurentni poziv već uzeo isti token. */
+class RefreshTokenClaimLost extends Error {}
+
 @Injectable()
 export class RefreshTokenService {
   private readonly logger = new Logger(RefreshTokenService.name);
@@ -52,10 +57,20 @@ export class RefreshTokenService {
     meta?: TokenMeta,
     ttlMs: number = REFRESH_TOKEN_TTL_MS,
   ): Promise<IssuedRefreshToken> {
+    return this.issueUsing(this.prisma, userId, meta, ttlMs);
+  }
+
+  /** Isti writer koristi obični Prisma klijent i transaction-scoped klijent. */
+  private async issueUsing(
+    prisma: RefreshTokenWriter,
+    userId: number,
+    meta?: TokenMeta,
+    ttlMs: number = REFRESH_TOKEN_TTL_MS,
+  ): Promise<IssuedRefreshToken> {
     const token = randomBytes(32).toString('base64url');
     const expiresAt = new Date(Date.now() + ttlMs);
 
-    await this.prisma.refreshToken.create({
+    await prisma.refreshToken.create({
       data: {
         userId,
         tokenHash: this.hash(token),
@@ -86,27 +101,44 @@ export class RefreshTokenService {
     }
 
     if (row.revokedAt) {
-      // Reuse detection: netko drži token koji je već rotiran. To je ili
-      // krađa ili jako zastarjeli klijent — u oba slučaja najsigurnije je
-      // opozvati sve sesije tog korisnika.
-      this.logger.warn(
-        `Refresh token reuse detected for user ${row.userId}; revoking all of their sessions`,
-      );
-      await this.revokeAllForUser(row.userId);
-      throw new UnauthorizedException('Refresh token reuse detected');
+      await this.rejectReuse(row.userId);
     }
 
     if (row.expiresAt.getTime() <= Date.now()) {
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    await this.prisma.refreshToken.update({
-      where: { id: row.id },
-      data: { revokedAt: new Date() },
-    });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        // Conditional update je atomski claim: samo jedan konkurentni poziv
+        // smije promijeniti revokedAt null -> timestamp za isti red.
+        const claimed = await tx.refreshToken.updateMany({
+          where: { id: row.id, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+        if (claimed.count !== 1) throw new RefreshTokenClaimLost();
 
-    const issued = await this.issue(row.userId, meta, ttlMs);
-    return { userId: row.userId, ...issued };
+        // Opoziv starog i upis nasljednika commitaju se zajedno. Ako drugi
+        // poziv izgubi claim, njegov cleanup tek nakon ovog commita vidi i
+        // opoziva nasljednika prema postojećoj reuse politici.
+        const issued = await this.issueUsing(tx, row.userId, meta, ttlMs);
+        return { userId: row.userId, ...issued };
+      });
+    } catch (error) {
+      if (error instanceof RefreshTokenClaimLost) {
+        await this.rejectReuse(row.userId);
+      }
+      throw error;
+    }
+  }
+
+  /** Zajednički reuse cleanup za već opozvan token i izgubljeni DB claim. */
+  private async rejectReuse(userId: number): Promise<never> {
+    this.logger.warn(
+      `Refresh token reuse detected for user ${userId}; revoking all of their sessions`,
+    );
+    await this.revokeAllForUser(userId);
+    throw new UnauthorizedException('Refresh token reuse detected');
   }
 
   /** Opoziva jedan token. Vraća `false` ako token ne postoji; ne baca. */

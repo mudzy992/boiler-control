@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — notification preferences DTO validacija (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `32e4e96`, DTO `b7d713c`.**
+`origin/arena/c9961f17-boiler-control` je `b7d713c` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `56bb37c`. PR nije otvaran.
+
+- Na ulazu u turn Arena base reset oporavljen je dogovorenim fetch +
+  `git reset --mixed` na udaljenu granu. Preostali diff je bio stari pre-S-002
+  snapshot koji bi poništio već zeleni manual rad, pa nije commitovan; samo te
+  staze su usklađene s HEAD-om. Radno stablo je bilo čisto prije novog testa.
+- Source review je potvrdio da `PATCH /api/notifications/preferences` još uvijek
+  koristi inline TypeScript tip bez runtime metapodataka. Postojeći frontend i
+  mobile šalju samo `{ type, enabled }`, pa validni ugovor nije mijenjan.
+- Test-only `32e4e96` dodaje deset stvarnih AppModule/JWT/Prisma/PostgreSQL
+  scenarija: anonymous 401, validan true/false upsert uz JWT vlasnika i osam
+  nevažećih oblika koji moraju dati 400 bez DB upisa. Pokriveni su nepoznat i
+  ne-string/missing type, missing/string/number/object enabled i extra polje.
+- **Test-first CI `41723699149`:** **107/115 integration**, tačno osam očekivanih
+  padova i zelene obje kontrole. Nevažeći/missing type daje 500, a missing
+  enabled čak 200; `tsc: 0`, `eslint: 0`, mobile i frontend zeleni. Asserti
+  nisu mijenjani niti ublaženi za ispravku.
+- Fix `b7d713c` dodaje `UpdateNotificationPreferenceDTO` s `IsEnum` i
+  `IsBoolean`. DTO-lokalni raw-input transform za enabled sprječava da globalni
+  `enableImplicitConversion` pretvori string `"false"` u boolean prije
+  validacije; globalni pipe i drugi DTO-ovi nisu mijenjani.
+- **Finalni code CI `41724589209`:** backend **78/771 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko
+  runs/jobs/annotations API.
+- Lokalni actual-DTO probe s produkcijskim ValidationPipe opcijama prolazi za
+  true/false i odbija svih osam nevažećih oblika. OpenAPI i frontend tipovi su
+  regenerisani; sync/type-check i frontend **92/92** prolaze. Tačan ESLint ima
+  **0 errors / 2 postojeća warnings**. Lokalni real-DB Jest nije pokretan;
+  PostgreSQL dokaz je CI.
+- Nema migracije/backfilla, novog flaga, mobile/compose promjene ni deploya.
+  Validni PATCH response i JWT owner upsert ostaju isti; nevažeći oblici sada
+  daju 400 prije Prisma upisa. Rollback je revert `b7d713c`, čime se vraća
+  nedostatak runtime validacije.
+- **Granica:** drugi inline/interface ulazi, proizvoljni manual `data`,
+  length/payload-size politika, token lifecycle i produkcijski deploy nisu
+  obuhvaćeni. Ovo ne zatvara cijeli S-002/DTO inventar.
+
 ## S-002 — manual notification DTO validacija (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `da40cab` + `d989849`, DTO `ce1a2cf`, string-tip dopuna `4efede1`.**
@@ -47,9 +89,9 @@ otvaran niti je ijedan produkcijski flag/deploy mijenjan.
 - Validni manual response i JWT primalac ostaju isti; nevažeći oblici sada 400.
   Nema migracije/backfilla, novog flaga, mobile/compose promjene. Rollback je
   revert `4efede1` i `ce1a2cf` uz zadržavanje testova kao dokaza starog nedostatka.
-- **Granica:** preferences inline DTO, drugi interface/inline ulazi, proizvoljni
+- **Historijska granica tog slicea:** drugi interface/inline ulazi, proizvoljni
   `data`, length/payload-size politika, token lifecycle i produkcijski deploy
-  nisu obuhvaćeni. Ovo nije zatvaranje cijelog DTO inventara.
+  nisu obuhvaćeni. Preferences je naknadno riješen u gore navedenom `b7d713c`.
 
 ## SEC-4 — atomska rotacija refresh tokena (2026-11-03)
 

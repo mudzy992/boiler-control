@@ -1,11 +1,21 @@
-# HANDOFF — stanje na kraju turna (2026-11-02)
+# HANDOFF — stanje na kraju turna (2026-11-03)
 
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-02 — SEC-5 owner-only Gas fajlovi
+## Nastavak 2026-11-03 — FEAT-8/B-019 stvarni HTTP/PostgreSQL dokaz
 
-- **Verificirani test HEAD:** `08391fc`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `d83cdfe`, nakon vlasnikovog mergea prvog SEC-5 slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **Verificirani test HEAD:** `13b0b2e`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `518ec1a`, nakon vlasnikovog mergea prethodnog SEC-5 owner-only slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **B-019 runtime dopuna (`13b0b2e`):** izvor je već imao per-device mapiranje i owner-scope, pa nije bilo produkcijske ispravke. Novi integration spec koristi stvarni `AppModule`, `JwtAuthGuard` i Prisma/PostgreSQL s dva korisnika, dva vlasnikova uređaja i novijim tuđim događajem.
+  - Četiri scenarija dokazuju: anonymous 401; tačne live current/target vrijednosti po uređaju uz pravu nulu i legacy nazive; tačno jedan owner-scoped device `findMany`; foreign/missing filter bez curenja podataka; praznu stranicu bez device lookupa.
+  - Lokalne kontrole: postojeći **6 Dashboard suitea / 57 testova**, helper, OpenAPI bez diffa i tačan ESLint **0 errors / 2 postojeća warnings**. Novi spec je u integration discovery; lokalna baza nije pokretana.
+  - CI `41583943166`: backend **74/728 + 8/72 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba success i nula failure annotations. Porast je tačno +1 suite/+4 testa u obje relevantne Jest brojke.
+  - Nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, flag ili installed-mobile promjene. `DASHBOARD_BUCKET_V2_ENABLED` nije diran. Rollback je revert test/docs slicea.
+  - **Preostalo:** live-vs-historical snapshot ugovor, B-020 v2 rollout/timezone odluka i produkcijski deploy. Test ne dokazuje summary/stats/export niti historijske vrijednosti događaja.
+
+## Raniji nastavak 2026-11-02 — SEC-5 owner-only Gas fajlovi
+
+- **Tadašnji SEC-5 owner-only test HEAD:** `08391fc`; udaljena sesijska grana je bila istog SHA-a prije završnog docs upisa. `origin/main` je tada posljednji put provjeren na `d83cdfe`, nakon vlasnikovog mergea prvog SEC-5 slicea. Vlasnik ručno radi merge, PR se ne otvara.
 - **SEC-5 owner-only verifikacija (`08391fc`):** izvor je već imao `findFirst({ id, userId })` za Gas download/upload/delete, pa nije bilo produkcijske ispravke. Novi integration spec koristi stvarni `AppModule`, `JwtAuthGuard`, PostgreSQL i privremeni storage s dva korisnika.
   - Pet scenarija dokazuje: anonimno 401; owner 200 s tačnim PDF/JPEG bajtovima i postojećim headerima; identičan foreign/missing 404 za obje download rute; foreign upload/invoice delete/reading delete bez file ili DB side effecta; te owner upload/download kroz puni HTTP tok.
   - Lokalne kontrole: postojeći **4 suitea / 47 testova**, helper, OpenAPI bez diffa i tačan ESLint **0 errors / 2 postojeća warnings**. Novi spec je potvrđen u integration discovery; lokalna baza nije pokretana.

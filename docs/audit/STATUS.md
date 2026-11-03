@@ -2225,6 +2225,16 @@ Preostali SEC-5 opseg ostaje otvoren.
 - **Bez scope širenja:** nema production code, migracije/backfilla, API/DTO/OpenAPI, storage-schema, compose/deployment, flag ili installed-mobile promjene. Rollback je revert test/docs slicea.
 - **Preostalo:** puni parser/antivirus/polyglot, stari fajlovi, retention/restore, filesystem/symlink/deploy i dokumentovani TOCTOU/reconciliation. Brisanje po odobrenoj retention politici i produkcijska infrastruktura nisu dokazani ovim testom.
 
+### FEAT-8/B-019 — heating-events stvarni HTTP/PostgreSQL dokaz (2026-11-03)
+
+**STATUS: RUNTIME DOKAZ ZAVRŠEN (`13b0b2e`); SNAPSHOT I ROLLOUT ODLUKE OSTAJU.** Produkcijski kod je već imao per-device mapiranje i owner-scope, pa ovaj slice dodaje samo `backend/test/integration/dashboard-heating-events.integration.spec.ts` sa stvarnim `AppModule`, JWT i Prisma/PostgreSQL tokom.
+
+- **Četiri scenarija:** anonymous 401; dva vlasnikova uređaja dobijaju svoje live current/target vrijednosti uz pravu nulu i legacy nazive; tačno jedan owner-scoped device `findMany`; tuđi noviji događaj ne curi, foreign/missing filter daje isti prazan odgovor; prazna stranica nema device lookup.
+- **Lokalno:** postojeći **6 Dashboard suitea / 57 testova**, helper, OpenAPI bez diffa i tačan ESLint **0 errors / 2 postojeća warnings**. Spec je pronađen u integration discovery; lokalna baza nije pokretana.
+- **CI `41583943166`:** backend **74/728 + 8/72 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**; sva tri joba success, nula failure annotations. Porast je +1 suite/+4 testa u obje relevantne Jest brojke.
+- **Bez scope širenja:** nema production code, migracije/backfilla, API/DTO/OpenAPI, compose/deployment, flag ili installed-mobile promjene. `DASHBOARD_BUCKET_V2_ENABLED` nije diran; rollback je revert test/docs slicea.
+- **Preostalo:** live-vs-historical snapshot ugovor, B-020 v2 rollout/timezone odluka i produkcijski deploy. Summary/stats/export i historijske vrijednosti događaja nisu dokazani ovim specom.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

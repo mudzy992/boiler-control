@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus } from '@nestjs/common';
-import type { INestApplication } from '@nestjs/common';
+import { HttpStatus, ValidationPipe } from '@nestjs/common';
+import type { ExecutionContext, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import {
   DEFAULT_STUB_ENDPOINT_MODE,
@@ -156,10 +156,26 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
     })
       // Guard ovisi o Prismi; za contract test auth nije predmet provjere.
       .overrideGuard(JwtAuthGuard)
-      .useValue({ canActivate: () => true })
+      .useValue({
+        canActivate: (context: ExecutionContext) => {
+          const req = context.switchToHttp().getRequest<{
+            user?: { userId: number };
+          }>();
+          req.user = { userId: 4242 };
+          return true;
+        },
+      })
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
     await app.init();
   });
 
@@ -172,6 +188,20 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
   afterEach(() => {
     delete process.env[ENV_KEY];
   });
+
+  const validHeatingBody = (): Record<string, unknown> => ({
+    deviceId: 1,
+    roomCurrentTemp: 21,
+    roomTargetTemp: 22,
+    roomFlowTemp: 45,
+  });
+  const withoutHeatingField = (field: string) => {
+    const body = validHeatingBody();
+    delete body[field];
+    return body;
+  };
+  const postHeating = (body: Record<string, unknown>) =>
+    request(app.getHttpServer()).post('/api/heating-events').send(body);
 
   const stubs = [
     {
@@ -229,6 +259,12 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
     expect(res.body.deviceId).toBeUndefined();
   });
 
+  it('B-001 reject režim odbija nevažeći DTO prije stub odgovora', async () => {
+    const res = await postHeating(withoutHeatingField('roomTargetTemp'));
+
+    expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+  });
+
   it('weather i recommendations nude stvarnu alternativnu rutu', async () => {
     const weather = await request(app.getHttpServer()).get('/api/weather');
     expect(weather.body.alternative).toBe(
@@ -242,6 +278,49 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
   });
 
   describe('legacy rollback (STUB_ENDPOINTS_MODE=legacy)', () => {
+    it('B-001 validan DTO zadržava stari legacy response', async () => {
+      process.env[ENV_KEY] = 'legacy';
+
+      const res = await postHeating(validHeatingBody());
+
+      expect(res.status).toBe(HttpStatus.CREATED);
+      expect(res.body).toMatchObject({
+        deviceId: 1,
+        roomCurrentTemp: 21,
+        roomTargetTemp: 22,
+        roomFlowTemp: 45,
+        userId: 4242,
+      });
+      expect(Number.isInteger(res.body.id)).toBe(true);
+      expect(Number.isNaN(Date.parse(res.body.timestampStart))).toBe(false);
+    });
+
+    it.each<[string, Record<string, unknown>]>([
+      ['nedostaje deviceId', withoutHeatingField('deviceId')],
+      ['nedostaje roomCurrentTemp', withoutHeatingField('roomCurrentTemp')],
+      ['nedostaje roomTargetTemp', withoutHeatingField('roomTargetTemp')],
+      ['nedostaje roomFlowTemp', withoutHeatingField('roomFlowTemp')],
+      [
+        'deviceId nije broj',
+        { ...validHeatingBody(), deviceId: 'not-a-number' },
+      ],
+      [
+        'roomCurrentTemp nije broj',
+        { ...validHeatingBody(), roomCurrentTemp: { value: 21 } },
+      ],
+      ['roomFlowTemp je null', { ...validHeatingBody(), roomFlowTemp: null }],
+      [
+        'neočekivano polje',
+        { ...validHeatingBody(), unexpected: 'must-be-rejected' },
+      ],
+    ])('B-001 legacy odbija %s', async (_label, body) => {
+      process.env[ENV_KEY] = 'legacy';
+
+      const res = await postHeating(body);
+
+      expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+    });
+
     it('GET /api/weather vraca stari {} ', async () => {
       process.env[ENV_KEY] = 'legacy';
       const res = await request(app.getHttpServer()).get('/api/weather');

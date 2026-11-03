@@ -3,7 +3,18 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-03 — FEAT-8/B-019 live-vs-historical vremenska kontrola
+## Nastavak 2026-11-03 — FEAT-6/B-020 export stvarni HTTP/PostgreSQL dokaz
+
+- **Verificirani test HEAD:** `9b1a9ea`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `e291a74`. Vlasnik ručno radi merge, PR se ne otvara.
+- **B-020 export runtime dopuna (`9b1a9ea`):** postojeći export izvor već je imao legacy/v2 agregaciju, IANA zonu i offset bucket labele, pa nije bilo produkcijske ispravke. Dva nova scenarija u postojećem `analytics-export.integration.spec.ts` koriste stvarni `AppModule`, `JwtAuthGuard` i Prisma/PostgreSQL.
+  - Dva februarska događaja u istom UTC satu na različite dane daju legacy jedan `10:00` bucket sa 75 minuta, dva ciklusa i prosjecima 21/19, dok v2 UTC daje dva hronološka date-hour bucketa s pojedinačnih 30 i 45 minuta. Summary/stats agregati i `sourceRows` su tačno provjereni.
+  - V2 `Europe/Sarajevo` scenarij dokazuje ponovljeni DST sat redom `2026-10-25T02:00:00+02:00` pa `2026-10-25T02:00:00+01:00`, s trajanjima 20 i 40 minuta. Februarski/oktobarski fixture je izvan postojećeg januarskog opsega, pa stari owner-scope i maxRows rezultati ostaju nepromijenjeni.
+  - CI `41644670775`: backend **75/737 + 9/81 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba/koraci success i nula failure annotations. Porast je tačno +2 testa u obje backend brojke, bez novog suitea.
+  - Lokalne kontrole: postojeći **6 Dashboard suitea / 57 testova**, export HTTP helper, mutation checks **5/5 killed uz jedinstvene anchor-e**, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Stvarni DB dokaz je CI; lokalna baza nije pokretana.
+  - `ANALYTICS_EXPORT_V2_ENABLED=on` postavlja se samo za v2 zahtjeve uz postojeće čišćenje/vraćanje okruženja. `DASHBOARD_BUCKET_V2_ENABLED`, defaulti, production code, API/DTO/OpenAPI, migracije, compose/deployment i installed mobile nisu mijenjani. Rollback je revert test/docs slicea.
+  - **Granica dokaza:** ovo ne aktivira export niti summary/stats v2 i ne odabire konačni hour-profile-vs-series ili timezone ugovor. V2 rollout, budući mobile/web JSON potrošači, asinhroni export i produkcijski deploy ostaju otvoreni; PRIV-1 je zaseban.
+
+## Raniji nastavak 2026-11-03 — FEAT-8/B-019 live-vs-historical vremenska kontrola
 
 - **Verificirani test HEAD:** `d4f8d0e`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `f36a8b4`. Vlasnik ručno radi merge, PR se ne otvara.
 - **B-019 live/historical dopuna (`d4f8d0e`):** postojeći izvor već razdvaja historijska event polja `currentTemp/targetTemp` od live thermostat polja `curretTempThermostat/targetTempThermostat`. Peti scenario u postojećem integration specu sada to dokazuje vremenski kroz dva stvarna HTTP/PostgreSQL čitanja istog događaja.

@@ -73,7 +73,7 @@ Instalirani mobile `analytics.api.ts` i `AnalyticsScreen.handleExport` čitaju `
 - `backend/src/modules/Dashboard/tests/analytics-export.spec.ts` — flagovi, limit parser, IANA zona, opseg, DST, bucket keys, agregacija.
 - `backend/src/modules/Dashboard/tests/dashboard-export.spec.ts` — servis, owner 404, legacy kompatibilnost, v2 CSV/JSON, prazan izvoz, 413.
 - `backend/src/modules/Dashboard/tests/dashboard-export-http.spec.ts` — stvarni kontroler, JWT guard i ValidationPipe nad lažnom bazom.
-- `backend/test/integration/analytics-export.integration.spec.ts` — izolovani PostgreSQL HTTP test sa stvarnim guardom.
+- `backend/test/integration/analytics-export.integration.spec.ts` — stvarni AppModule/JWT/Prisma/PostgreSQL: owner-scope, flag/maxRows, višednevni legacy/v2 hour export i Sarajevo DST.
 - `node scripts/audit/analytics_export_repro.cjs` — lokalni HTTP repro bez stvarne baze/mreže.
 - `python3 scripts/audit/analytics_export_mutations.py` — anchored mutation checks; svaki anchor mora biti jedinstven i svaka mutacija mora pasti.
 - `node scripts/audit/openapi_dashboard_fragment.cjs --write` — lokalni OpenAPI fragment iz stvarnih Dashboard dekoratora bez Prisma baze. Mjerodavna provjera je i dalje backend `npm run openapi:generate -- --check` u CI.
@@ -81,6 +81,8 @@ Instalirani mobile `analytics.api.ts` i `AnalyticsScreen.handleExport` čitaju `
 Lokalno izvršeno: ciljani Jest 75/75, HTTP repro, contract OpenAPI test 26/26, eslint 0 errors/2 pre-existing warnings, frontend `openapi:check`, `type-check`, `lint`, 84 Vitest testova i produkcijski build uz `VITE_API_URL`, mutation checks 5/5 killed. Puni backend Jest lokalno pada na nedostajućem generisanom Prisma klijentu; CI generiše Prisma klijent prije testova.
 
 CI run `41251815121` na `47ace4e`: backend `success` (eslint 0, tsc 0, build, OpenAPI sync, 39 suite/519 unit testova, 3 suite/52 integration testova, FEAT-6 HTTP repro), mobile `success`. Frontend je `failure` samo na pre-existing FE2-7 deploy checkeru (`traefik loadbalancer port mora biti 80, bilo undefined`); vlasnikove compose izmjene nisu vraćane niti je checker oslabljen.
+
+**Runtime dopuna (2026-11-03, test HEAD `9b1a9ea`, CI `41644670775`):** dva nova scenarija u postojećem integration specu dokazuju kroz stvarni AppModule/JWT/Prisma/PostgreSQL legacy spajanje dvaju dana u jedan `10:00` bucket i v2 UTC razdvajanje u date-hour bucket-e, te hronološki `Europe/Sarajevo` DST par s offsetima `+02:00` pa `+01:00`. Agregati i `sourceRows` su tačno provjereni, a izdvojeni februarski/oktobarski fixture ne mijenja postojeće januarske owner-scope/maxRows rezultate. CI prolazi backend **75/737 + 9/81 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0` i nula failure annotations. Lokalno prolaze postojeći **6 Dashboard suitea / 57 testova**, HTTP helper, mutation checks **5/5 killed uz unique anchors**, integration discovery i ESLint **0 errors / 2 postojeća warnings**. Nema production/API/DTO/OpenAPI/migracije/flag-default/mobile promjene; v2 rollout i konačni timezone/bucket ugovor ostaju otvoreni.
 
 ## Otvoreno
 

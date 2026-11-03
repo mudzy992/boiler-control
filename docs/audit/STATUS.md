@@ -2254,6 +2254,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - **Lokalno:** postojeći **6 Dashboard suitea / 57 testova**, helper, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Nema production/API/DTO/OpenAPI/migracije/flag/mobile promjene; rollback je revert test/docs slicea.
 - **Preostalo:** ovo nije proizvodna odluka niti odobrenje live semantike. Naziv, svrha i buduće verzioniranje live naspram historijskog snapshot polja ostaju vlasnička odluka.
 
+### FEAT-6/B-020 — export stvarni HTTP/PostgreSQL dokaz (2026-11-03)
+
+**STATUS: RUNTIME DOKAZ ZAVRŠEN (`9b1a9ea`); V2 ROLLOUT NIJE ODABRAN.** Dva nova scenarija u postojećem `backend/test/integration/analytics-export.integration.spec.ts` provjeravaju stvarni `AppModule`/JWT/Prisma/PostgreSQL tok bez production izmjene.
+
+- Višednevni hour export dokazuje legacy jedan `10:00` bucket sa 75 minuta i dva ciklusa, naspram v2 UTC date-hour bucketa s 30 i 45 minuta. V2 `Europe/Sarajevo` dokazuje hronološki ponovljeni sat s offsetima `+02:00` pa `+01:00` i trajanjima 20 i 40 minuta; agregati i `sourceRows` su tačno provjereni.
+- Novi fixture je izvan januarskog opsega postojećih testova, pa njihovi owner-scope, foreign/missing i maxRows rezultati ostaju nepromijenjeni. Zastavica se uključuje samo za v2 zahtjeve i vraća kroz postojeći env cleanup.
+- **CI `41644670775`:** backend **75/737 + 9/81 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**; sva tri joba/koraci success, nula failure annotations.
+- **Lokalno:** postojeći **6 Dashboard suitea / 57 testova**, export helper, mutation checks **5/5 killed uz unique anchors**, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**.
+- Nema production/API/DTO/OpenAPI/migracije/compose/mobile promjene; `DASHBOARD_BUCKET_V2_ENABLED` i svi defaulti su netaknuti. Rollback je revert test/docs slicea.
+- **Preostalo:** konačni hour-profile-vs-series i timezone ugovor, v2 rollout, budući mobile/web JSON potrošači, asinhroni export i deploy. Ovaj dokaz ne aktivira zastavice i ne rješava PRIV-1.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

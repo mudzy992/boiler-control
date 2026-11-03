@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
-import type { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 
 import { AppModule } from '../../src/app.module';
@@ -28,6 +28,7 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
   let otherDeviceId: number;
   let ownerToken: string;
   let otherToken: string;
+  const suffix = randomUUID();
 
   const rangeQuery = {
     from: '2026-01-01T00:00:00.000Z',
@@ -44,69 +45,86 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-    app = moduleRef.createNestApplication();
-    app.setGlobalPrefix('api');
+    app = moduleRef.createNestApplication({ logger: false });
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
-        transform: true,
         forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
       }),
     );
     await app.init();
-    prisma = app.get(PrismaService);
+    prisma = moduleRef.get(PrismaService);
+    const jwt = moduleRef.get(JwtService);
 
-    const ownerPassword = `Own${randomUUID().replaceAll('-', '')}!A1`;
-    const otherPassword = `Oth${randomUUID().replaceAll('-', '')}!A1`;
-    const ownerEmail = `it-dashboard-buckets-owner-${randomUUID()}@example.test`;
-    const otherEmail = `it-dashboard-buckets-other-${randomUUID()}@example.test`;
+    const owner = await prisma.user.create({
+      data: {
+        email: `feat8-buckets-owner-${suffix}@example.test`,
+        username: `feat8-buckets-owner-${suffix}`,
+        passwordHash: 'synthetic-not-a-real-hash',
+      },
+    });
+    const other = await prisma.user.create({
+      data: {
+        email: `feat8-buckets-other-${suffix}@example.test`,
+        username: `feat8-buckets-other-${suffix}`,
+        passwordHash: 'synthetic-not-a-real-hash',
+      },
+    });
+    ownerId = owner.id;
+    otherUserId = other.id;
+    ownerToken = jwt.sign({ userId: ownerId });
+    otherToken = jwt.sign({ userId: otherUserId });
 
-    ownerId = (
-      await prisma.user.create({
-        data: {
-          email: ownerEmail,
-          password: ownerPassword,
-          role: 'OWNER',
-          name: 'Dashboard bucket integration owner',
-          verified: true,
-        },
-      })
-    ).id;
-    otherUserId = (
-      await prisma.user.create({
-        data: {
-          email: otherEmail,
-          password: otherPassword,
-          role: 'USER',
-          name: 'Dashboard bucket integration other',
-          verified: true,
-        },
-      })
-    ).id;
+    const profileData = {
+      floorArea: 120,
+      ceilingHeight: 2.5,
+      insulationType: 'EPS' as const,
+      insulationThickness: 10,
+      windowType: 'DOUBLE_GLAZED' as const,
+      heatingType: 'RADIATOR' as const,
+      constructionYear: 2020,
+    };
     ownerProfileId = (
       await prisma.homeProfile.create({
-        data: { userId: ownerId, name: 'Dashboard bucket owner home' },
+        data: { ...profileData, userId: ownerId },
       })
     ).id;
     otherProfileId = (
       await prisma.homeProfile.create({
-        data: { userId: otherUserId, name: 'Dashboard bucket other home' },
+        data: { ...profileData, userId: otherUserId },
       })
     ).id;
 
     ownerHourDeviceId = (
       await prisma.thermostatDevice.create({
-        data: { homeProfileId: ownerProfileId, tuyaDeviceId: randomUUID() },
+        data: {
+          userId: ownerId,
+          homeProfileId: ownerProfileId,
+          vendor: 'tuya',
+          deviceId: `feat8-buckets-owner-hour-${suffix}`,
+        },
       })
     ).id;
     ownerDayDeviceId = (
       await prisma.thermostatDevice.create({
-        data: { homeProfileId: ownerProfileId, tuyaDeviceId: randomUUID() },
+        data: {
+          userId: ownerId,
+          homeProfileId: ownerProfileId,
+          vendor: 'tuya',
+          deviceId: `feat8-buckets-owner-day-${suffix}`,
+        },
       })
     ).id;
     otherDeviceId = (
       await prisma.thermostatDevice.create({
-        data: { homeProfileId: otherProfileId, tuyaDeviceId: randomUUID() },
+        data: {
+          userId: otherUserId,
+          homeProfileId: otherProfileId,
+          vendor: 'tuya',
+          deviceId: `feat8-buckets-other-${suffix}`,
+        },
       })
     ).id;
 
@@ -118,9 +136,8 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
           timestampEnd: new Date('2026-01-01T10:30:00.000Z'),
           roomTargetTemp: 22,
           roomCurrentTemp: 20,
-          outsideTemp: 1,
-          hvacMode: 'heat',
-          source: 'SCHEDULE',
+          hvacAction: 'heating',
+          source: 'feat8-buckets-integration',
         },
         {
           deviceId: ownerHourDeviceId,
@@ -128,9 +145,8 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
           timestampEnd: new Date('2026-01-02T10:45:00.000Z'),
           roomTargetTemp: 20,
           roomCurrentTemp: 18,
-          outsideTemp: 2,
-          hvacMode: 'heat',
-          source: 'SCHEDULE',
+          hvacAction: 'heating',
+          source: 'feat8-buckets-integration',
         },
         {
           deviceId: ownerDayDeviceId,
@@ -138,9 +154,8 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
           timestampEnd: new Date('2026-01-01T23:45:00.000Z'),
           roomTargetTemp: 23,
           roomCurrentTemp: 21,
-          outsideTemp: 0,
-          hvacMode: 'heat',
-          source: 'MANUAL',
+          hvacAction: 'heating',
+          source: 'feat8-buckets-integration',
         },
         {
           deviceId: otherDeviceId,
@@ -148,15 +163,11 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
           timestampEnd: new Date('2026-01-03T11:00:00.000Z'),
           roomTargetTemp: 99,
           roomCurrentTemp: 99,
-          outsideTemp: 0,
-          hvacMode: 'heat',
-          source: 'MANUAL',
+          hvacAction: 'heating',
+          source: 'feat8-buckets-integration',
         },
       ],
     });
-
-    ownerToken = await login(ownerEmail, ownerPassword);
-    otherToken = await login(otherEmail, otherPassword);
   }, 60_000);
 
   beforeEach(() => {
@@ -186,15 +197,6 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
     }
     if (app) await app.close();
   });
-
-  async function login(email: string, password: string): Promise<string> {
-    const response = await request(app.getHttpServer())
-      .post('/api/auth/login')
-      .send({ email, password });
-    expect(response.status).toBe(201);
-    expect(typeof response.body.access_token).toBe('string');
-    return response.body.access_token as string;
-  }
 
   function getSummary(token: string, query: Record<string, string | number>) {
     return request(app.getHttpServer())

@@ -3,6 +3,49 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — manual notification DTO validacija (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `da40cab` + `d989849`, DTO `ce1a2cf`, string-tip dopuna `4efede1`.**
+`origin/arena/c9961f17-boiler-control` je `4efede1` prije ovog docs commita.
+Arena base reset je oporavljen isključivo fetch + `git reset --mixed` na
+udaljenu sesijsku granu; radno stablo je bilo čisto prije novog rada. PR nije
+otvaran niti je ijedan produkcijski flag/deploy mijenjan.
+
+- Source review je potvrdio S-002: manual DTO je bio interface bez runtime
+  metapodataka. Postojeći `CreateNotificationDTO` nije reuseovan jer zahtijeva
+  `userId`; novi `dto/manual-notification.dto.ts` prihvaća opcioni legacy
+  `userId` samo radi kompatibilnosti, dok controller i dalje koristi JWT userId.
+- `notifications-ownership.integration.spec.ts` sada ima deset dodatnih
+  stvarnih AppModule/JWT/Prisma/PostgreSQL scenarija: anonymous 401, validan
+  response/push/DB upis, JWT ownership uz redundantni userId i sedam nevažećih
+  DTO oblika s očekivanim 400 bez push/DB upisa. ExpoPushService je mockan samo
+  na DI boundaryju. Device token i korisnici su sintetički; nema stvarnog pusha.
+- Test-only CI `41693193798` dao je **96/105 integration** i devet padova.
+  Dvije pozitivne kontrole pale su zbog postojećeg SYSTEM_ALERT debouncea, ne
+  zbog production regressiona. `d989849` mijenja samo fixture u
+  GAS_READING_REMINDER; CI `41693806959` zatim daje **98/105 integration**,
+  tačno sedam očekivanih DTO padova i zelene pozitivne kontrole. Oba runa imaju
+  `tsc: 0` i `eslint: 0`; asserti nisu ublaženi.
+- Prvi DTO code CI `41694883756` dao je **103/105 integration**: preostala su
+  samo number-title i object-message kao 201. Uzrok je globalni
+  `enableImplicitConversion`, ne nedostatak `@IsString`. `4efede1` vraća raw
+  root polje samo za title/message prije validacije; globalni pipe, type enum,
+  userId konverzija i ostali DTO-ovi nisu mijenjani.
+- **Finalni CI `41695612403`:** backend **78/761 + 12/105 integration**, mobile
+  **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci
+  success i nula failure annotations. Provjereno preko runs/jobs/annotations API.
+- Lokalni actual-DTO probe pokriva validan/legacy success i number-title,
+  object-message, unknown-type, extra-field odbijanje. Swagger probe je korišten
+  za tačan oblik sheme; OpenAPI i frontend tipovi su regenerisani, frontend
+  sync/type-check i **92/92** prolaze. ESLint: **0 errors / 2 postojeća
+  warnings**. Lokalni real-DB Jest nije pokretan; PostgreSQL dokaz je CI.
+- Validni manual response i JWT primalac ostaju isti; nevažeći oblici sada 400.
+  Nema migracije/backfilla, novog flaga, mobile/compose promjene. Rollback je
+  revert `4efede1` i `ce1a2cf` uz zadržavanje testova kao dokaza starog nedostatka.
+- **Granica:** preferences inline DTO, drugi interface/inline ulazi, proizvoljni
+  `data`, length/payload-size politika, token lifecycle i produkcijski deploy
+  nisu obuhvaćeni. Ovo nije zatvaranje cijelog DTO inventara.
+
 ## SEC-4 — atomska rotacija refresh tokena (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `a4607f8` + `6d0f4a5`, fix `de635ad`.**

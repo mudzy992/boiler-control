@@ -2285,6 +2285,19 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — manual notification runtime DTO validacija (2026-11-03)
+
+**STATUS: MANUAL DIO RIJEŠEN U KODU (`ce1a2cf` + `4efede1`); STVARNI HTTP/POSTGRESQL DOKAZ ZELEN.** Preferences i ostali inline/interface ulazi nisu obuhvaćeni.
+
+- Source review je potvrdio da je `ManualNotificationDTO` i dalje bio interface. Postojeći `CreateNotificationDTO` nije slijepo reuseovan: njegov obavezni `userId` ne odgovara manual ugovoru u kojem controller primaoca uzima isključivo iz JWT-a. Novi klasni DTO zadržava opcioni legacy `userId`, ali ga i dalje ignorira.
+- Postojeći notification integration spec proširen je s deset scenarija: anonymous 401; validan response/push/DB upis; redundantni userId bez preusmjeravanja; te sedam nevažećih oblika koji moraju dati 400 bez push ili DB upisa. ExpoPushService je mockan samo na DI boundaryju, pa nema stvarnog push saobraćaja.
+- **Test-first:** CI `41693193798` dao je devet padova, ali su dvije pozitivne kontrole pale zbog postojećeg SYSTEM_ALERT debouncea. Commit `d989849` mijenja samo fixture tip. CI `41693806959` zatim daje **98/105 integration**, tačno sedam očekivanih DTO padova, `tsc: 0` i `eslint: 0`; validne kontrole prolaze.
+- **Code provjera:** prvi DTO code run `41694883756` ostavio je samo number-title i object-message kao 201 jer globalni `enableImplicitConversion` pretvara ulaz prije `@IsString`. `4efede1` dodaje DTO-lokalni raw-input transform samo za title/message; globalni pipe i drugi DTO-ovi nisu mijenjani.
+- **Finalni CI `41695612403`:** backend **78/761 + 12/105 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Porast je +10 testova bez novog suitea.
+- Lokalni actual-DTO probe daje nula grešaka za validan i legacy userId te po jednu za number-title, object-message, unknown-type i extra-field. Tačan ESLint ima **0 errors / 2 postojeća warnings**. Frontend OpenAPI sync/type-check i **92/92** testova prolaze. Real-DB rezultat je CI, ne lokalni Jest.
+- OpenAPI sada dokumentuje manual request shemu, a frontend tipovi su regenerisani; response `{success:true,message}` ostaje isti. Nema migracije/backfilla, flaga, mobile ili compose promjene. Rollback je revert `4efede1` i `ce1a2cf`, čime se vraća nedostatak runtime validacije.
+- **Preostalo:** preferences inline DTO, drugi interface/inline ulazi, `data` i title/message length/payload-size politika, token lifecycle i produkcijski deploy.
+
 ### SEC-4 — atomska konkurentna rotacija refresh tokena (2026-11-03)
 
 **STATUS: RACE ISPRAVLJEN U KODU (`de635ad`); STVARNA PRISMA/POSTGRESQL PROVJERA ZELENA.** Ovo nije zatvaranje ostalih SEC-4 auth/session tema.

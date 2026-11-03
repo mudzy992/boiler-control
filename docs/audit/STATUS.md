@@ -2265,6 +2265,16 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/compose/mobile promjene; `DASHBOARD_BUCKET_V2_ENABLED` i svi defaulti su netaknuti. Rollback je revert test/docs slicea.
 - **Preostalo:** konačni hour-profile-vs-series i timezone ugovor, v2 rollout, budući mobile/web JSON potrošači, asinhroni export i deploy. Ovaj dokaz ne aktivira zastavice i ne rješava PRIV-1.
 
+### SEC-1/B-006 — vlasništvo notifikacija stvarni HTTP/PostgreSQL dokaz (2026-11-03)
+
+**STATUS: ZAŠTITA VEĆ PRISUTNA U IZVORU; RUNTIME DOKAZ ZAVRŠEN (`bc7b847`).** Source review potvrdio je JWT `userId` u kontroleru i atomski `updateMany` po `id+userId` u servisu. Nije bilo production ispravke; zastarjeli backlog/API opis usklađen je s kodom.
+
+- Novi `backend/test/integration/notifications-ownership.integration.spec.ts` kroz stvarni `AppModule`/JWT/Prisma/PostgreSQL dokazuje anonymous 401 bez side effecta, owner 201 s postojećim response oblikom i bazom `isRead=true`, te identičan foreign/missing 404 bez vlasničkog sadržaja i bez izmjene zapisa.
+- **CI `41653900831`:** backend **76/740 + 10/84 integration**, `tsc: 0`, `eslint: 0`; frontend **4/4**; postojeći PostgreSQL rollback helper prolazi. Mobile u ovom runu bilježi samo poznati `weatherV2NativeWind` timeout (**135/136**), bez izmjene timeouta, asserta ili paralelizma. Svježi puni run slijedi docs pushom.
+- **Lokalno:** postojeći SEC-1 unit **1/4**, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**.
+- Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/docs slicea i ne uklanja owner zaštitu.
+- **Preostalo:** ovaj spec ne proširuje token lifecycle, preferences, mark-all ili masovni reminder i nije dokaz produkcijskog deploya/logova.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

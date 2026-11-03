@@ -3,7 +3,17 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-03 — FEAT-6/B-020 export stvarni HTTP/PostgreSQL dokaz
+## Nastavak 2026-11-03 — SEC-1/B-006 vlasništvo notifikacija
+
+- **Verificirani test HEAD:** `bc7b847`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `d3350c7`, nakon vlasnikovog mergea prethodnog export slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **SEC-1 runtime dopuna i korekcija evidencije (`bc7b847`):** source review potvrdio je da zaštita već postoji — kontroler prosljeđuje JWT `userId`, servis radi atomski `updateMany` po `id+userId`, a `count=0` daje isti `Notification not found` za tuđi i nepostojeći zapis. Nije napravljena production ispravka; zastarjeli backlog/API nalaz usklađen je s izvorom.
+  - Novi `notifications-ownership.integration.spec.ts` koristi stvarni `AppModule`, `JwtAuthGuard` i Prisma/PostgreSQL s dva korisnika. Tri scenarija dokazuju anonymous 401 bez DB promjene, owner 201 s nepromijenjenim response poljima i `isRead=true`, te identičan foreign/missing 404 bez owner sadržaja i uz nepromijenjeni tuđi zapis.
+  - CI `41653900831`: backend **76/740 + 10/84 integration**, `tsc: 0`, `eslint: 0`; frontend **4/4**. Postojeći `http_postgres_repro.cjs --ci` takodjer prolazi s rollbackom. Mobile bilježi samo poznati `weatherV2NativeWind` timeout (**135/136**); timeout, asserti i paralelizam nisu mijenjani. Svježi puni run pokreće se docs pushom bez code/test promjene.
+  - Lokalne kontrole: postojeći SEC-1 unit **1 suite / 4 testa**, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Stvarni DB dokaz je CI; lokalna baza nije pokretana.
+  - Nema production code, API/DTO/OpenAPI, migracije/backfilla, flag, compose/deployment ili installed-mobile promjene. Rollback je revert test/docs slicea, uz zadržavanje postojeće sigurnosne zaštite.
+  - **Granica dokaza:** potvrđen je samo `POST /api/notifications/:id/read`; token lifecycle, preferences, mark-all i masovni reminder nisu prošireni ovim specom. Produkcijski deploy i logovi nisu provjeravani.
+
+## Raniji nastavak 2026-11-03 — FEAT-6/B-020 export stvarni HTTP/PostgreSQL dokaz
 
 - **Verificirani test HEAD:** `9b1a9ea`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `e291a74`. Vlasnik ručno radi merge, PR se ne otvara.
 - **B-020 export runtime dopuna (`9b1a9ea`):** postojeći export izvor već je imao legacy/v2 agregaciju, IANA zonu i offset bucket labele, pa nije bilo produkcijske ispravke. Dva nova scenarija u postojećem `analytics-export.integration.spec.ts` koriste stvarni `AppModule`, `JwtAuthGuard` i Prisma/PostgreSQL.

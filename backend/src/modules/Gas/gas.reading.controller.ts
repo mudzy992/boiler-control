@@ -71,8 +71,8 @@ export class GasReadingController {
   }
 
   @Delete('reading/:id')
-  delete(@Req() req, @Param('id') id: string) {
-    return this.service.delete(req.user.userId, +id);
+  delete(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.delete(req.user.userId, id);
   }
 
   @Patch('reading/:id/reference')

@@ -13,6 +13,7 @@ import { GasReadingService } from '../gas.reading.service';
 describe('Gas controller HTTP kompatibilnost', () => {
   let app: INestApplication;
   const create = jest.fn();
+  const deleteReading = jest.fn();
   const updateReference = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
@@ -22,7 +23,12 @@ describe('Gas controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: GasReadingService,
-          useValue: { create, updateReference, getEfficiencyAnalysis },
+          useValue: {
+            create,
+            delete: deleteReading,
+            updateReference,
+            getEfficiencyAnalysis,
+          },
         },
       ],
     })
@@ -52,6 +58,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
   beforeEach(() => {
     create.mockReset();
+    deleteReading.mockReset();
     updateReference.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
@@ -104,6 +111,31 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
     expect(response.status).toBe(413);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  describe('DELETE /api/gas/reading/:id path ID (S-002)', () => {
+    it('zadržava numeric ID, response i servisne argumente', async () => {
+      deleteReading.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer()).delete(
+        '/api/gas/reading/17',
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ id: 17 });
+      expect(deleteReading).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      deleteReading.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer()).delete(
+        '/api/gas/reading/not-a-number',
+      );
+
+      expect(response.status).toBe(400);
+      expect(deleteReading).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH /api/gas/reading/:id/reference path ID (S-002)', () => {

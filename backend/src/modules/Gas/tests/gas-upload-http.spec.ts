@@ -13,6 +13,7 @@ import { GasReadingService } from '../gas.reading.service';
 describe('Gas controller HTTP kompatibilnost', () => {
   let app: INestApplication;
   const create = jest.fn();
+  const updateReference = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
   beforeAll(async () => {
@@ -21,7 +22,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: GasReadingService,
-          useValue: { create, getEfficiencyAnalysis },
+          useValue: { create, updateReference, getEfficiencyAnalysis },
         },
       ],
     })
@@ -51,6 +52,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
   beforeEach(() => {
     create.mockReset();
+    updateReference.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
 
@@ -102,6 +104,35 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
     expect(response.status).toBe(413);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  describe('PATCH /api/gas/reading/:id/reference path ID (S-002)', () => {
+    it('zadržava numeric ID, response i servisne argumente', async () => {
+      updateReference.mockResolvedValue({ id: 17, isInvoiceReference: true });
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/gas/reading/17/reference')
+        .send({ isReference: true });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ id: 17, isInvoiceReference: true });
+      expect(updateReference).toHaveBeenCalledWith(
+        42,
+        17,
+        expect.objectContaining({ isReference: true }),
+      );
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      updateReference.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/gas/reading/not-a-number/reference')
+        .send({ isReference: true });
+
+      expect(response.status).toBe(400);
+      expect(updateReference).not.toHaveBeenCalled();
+    });
   });
 
   describe('GET /api/gas/analysis query DTO (S-002)', () => {

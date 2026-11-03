@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-/* CI-only: regresijski dokaz da SEC-1 (IDOR) drži + demonstracija i dalje otvorenog nalaza za masovni gas reminder. Svi sintetički upisi se rollbackuju. */
+/* CI-only: regresijski dokaz da SEC-1 (IDOR) i SEC-3 (admin guard) drže. Svi sintetički upisi se rollbackuju. */
 'use strict';
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 if (process.argv.includes('--help')) {
-  console.log('Upotreba: node scripts/audit/http_postgres_repro.cjs --ci\nSamo efemerni PostgreSQL servis u branch-only GitHub Actions workflowu: stvarni JWT guard, kontroler, servis i Prisma transakcija s dva sintetička korisnika. Svi upisi se namjerno rollbackuju; bez Expo/vanjske mreže.\n\nSkripta je REGRESIJSKI DOKAZ, ne demonstracija propusta: SEC-1 je ispravio IDOR na POST /api/notifications/:id/read, pa cross-user pokušaj sada mora vratiti 404 i NE smije promijeniti zapis, dok vlasnik i dalje uspješno označava svoju notifikaciju (pozitivna kontrola). Masovni gas reminder se i dalje demonstrira kao OTVOREN nalaz: endpoint dokumentuje "admin only" ali nema RolesGuard, pa ga može pozvati svaki prijavljeni korisnik.\n\nNe koristiti s produkcijskom ili trajnom bazom.');
+  console.log('Upotreba: node scripts/audit/http_postgres_repro.cjs --ci\nSamo efemerni PostgreSQL servis u branch-only GitHub Actions workflowu: stvarni JWT guard, kontroler, servis i Prisma transakcija s dva sintetička korisnika. Svi upisi se namjerno rollbackuju; bez Expo/vanjske mreže.\n\nSkripta je REGRESIJSKI DOKAZ, ne demonstracija propusta: SEC-1 je ispravio IDOR na POST /api/notifications/:id/read, pa cross-user pokušaj sada mora vratiti 404 i NE smije promijeniti zapis, dok vlasnik i dalje uspješno označava svoju notifikaciju (pozitivna kontrola). SEC-3 je također regresijski dokaz: običan USER mora dobiti 403 bez poziva reminder servisa, a ADMIN 201 s jednim pozivom mock servisa.\n\nNe koristiti s produkcijskom ili trajnom bazom.');
   process.exit(0);
 }
 if (process.argv.length !== 3 || process.argv[2] !== '--ci' || process.env.GITHUB_ACTIONS !== 'true' || !['refs/heads/arena/1bfee051-boiler-control', 'refs/heads/arena/c9961f17-boiler-control'].includes(process.env.GITHUB_REF) || process.env.AUDIT_DISPOSABLE_POSTGRES !== '1' || process.env.DATABASE_HOST !== '127.0.0.1' || process.env.DATABASE_NAME !== 'audit' || process.env.DATABASE_USER !== 'audit') {

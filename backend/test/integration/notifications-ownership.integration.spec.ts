@@ -5,22 +5,26 @@ import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { GasReminderService } from '../../src/modules/Schedule/gas.reminder.service';
 
 /**
- * SEC-1 / B-006 stvarni HTTP/JWT/Prisma/PostgreSQL dokaz.
+ * SEC-1 / B-006 i SEC-3 / B-007 stvarni HTTP/JWT/Prisma/PostgreSQL dokaz.
  *
- * Produkcijski izvor već radi atomski updateMany po id+userId. Ovaj spec ne
- * mijenja ugovor: dokazuje owner uspjeh, identičan foreign/missing 404 i da
- * odbijeni zahtjevi ne mijenjaju zapis niti vraćaju njegov sadržaj.
+ * Produkcijski izvor već radi atomski updateMany po id+userId i ima admin
+ * RolesGuard. Ovaj spec ne mijenja ugovor. GasReminderService je mockan samo
+ * na DI boundaryju, pa admin pozitivna kontrola ne šalje stvarne notifikacije.
  */
-describe('Integration: SEC-1 notification ownership', () => {
+describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let ownerId: number;
   let otherId: number;
+  let adminId: number;
   let ownerToken: string;
   let otherToken: string;
+  let adminToken: string;
   let notificationId: number;
+  const triggerDailyReminders = jest.fn();
   const suffix = randomUUID();
   const userIds: number[] = [];
   const missingId = 2_000_000_000;
@@ -28,7 +32,10 @@ describe('Integration: SEC-1 notification ownership', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(GasReminderService)
+      .useValue({ triggerDailyReminders })
+      .compile();
     app = moduleRef.createNestApplication({ logger: false });
     app.useGlobalPipes(
       new ValidationPipe({
@@ -56,11 +63,21 @@ describe('Integration: SEC-1 notification ownership', () => {
         passwordHash: 'synthetic-not-a-real-hash',
       },
     });
+    const admin = await prisma.user.create({
+      data: {
+        email: `sec3-admin-${suffix}@example.test`,
+        username: `sec3-admin-${suffix}`,
+        passwordHash: 'synthetic-not-a-real-hash',
+        role: 'ADMIN',
+      },
+    });
     ownerId = owner.id;
     otherId = other.id;
-    userIds.push(ownerId, otherId);
+    adminId = admin.id;
+    userIds.push(ownerId, otherId, adminId);
     ownerToken = jwt.sign({ userId: ownerId });
     otherToken = jwt.sign({ userId: otherId });
+    adminToken = jwt.sign({ userId: adminId });
 
     const notification = await prisma.notification.create({
       data: {
@@ -77,6 +94,8 @@ describe('Integration: SEC-1 notification ownership', () => {
   });
 
   beforeEach(async () => {
+    triggerDailyReminders.mockReset();
+    triggerDailyReminders.mockResolvedValue({ accepted: true });
     await prisma.notification.updateMany({
       where: { id: notificationId, userId: ownerId },
       data: { isRead: false },
@@ -162,5 +181,27 @@ describe('Integration: SEC-1 notification ownership', () => {
       data: { marker: 'owner-only' },
       isRead: false,
     });
+  });
+
+  it('SEC-3 anonymous i USER ne mogu pokrenuti masovni reminder', async () => {
+    const endpoint = '/api/notifications/test-trigger-all-gas-reminders';
+    const anonymous = await request(app.getHttpServer()).post(endpoint);
+    const ordinaryUser = await request(app.getHttpServer())
+      .post(endpoint)
+      .set('Authorization', `Bearer ${otherToken}`);
+
+    expect(anonymous.status).toBe(401);
+    expect(ordinaryUser.status).toBe(403);
+    expect(triggerDailyReminders).not.toHaveBeenCalled();
+  });
+
+  it('SEC-3 ADMIN prolazi i poziva mock reminder tačno jednom', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/notifications/test-trigger-all-gas-reminders')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({ accepted: true });
+    expect(triggerDailyReminders).toHaveBeenCalledTimes(1);
   });
 });

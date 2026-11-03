@@ -166,6 +166,24 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
           hvacAction: 'heating',
           source: 'feat8-buckets-integration',
         },
+        {
+          deviceId: ownerDayDeviceId,
+          timestampStart: new Date('2026-10-25T00:30:00.000Z'),
+          timestampEnd: new Date('2026-10-25T00:50:00.000Z'),
+          roomTargetTemp: 22,
+          roomCurrentTemp: 20,
+          hvacAction: 'heating',
+          source: 'feat8-buckets-integration',
+        },
+        {
+          deviceId: ownerDayDeviceId,
+          timestampStart: new Date('2026-10-25T01:30:00.000Z'),
+          timestampEnd: new Date('2026-10-25T02:10:00.000Z'),
+          roomTargetTemp: 20,
+          roomCurrentTemp: 18,
+          hvacAction: 'heating',
+          source: 'feat8-buckets-integration',
+        },
       ],
     });
   }, 60_000);
@@ -323,6 +341,58 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
           cycles: 1,
           avgTargetTemp: 23,
           avgCurrentTemp: 21,
+        },
+      ],
+    });
+    expect(stats.status).toBe(200);
+    expect(stats.body).toEqual({ buckets: summary.body.buckets });
+  });
+
+  it('opt-in v2 separates the repeated Europe/Sarajevo DST hour through HTTP and PostgreSQL', async () => {
+    const first = new Date('2026-10-25T00:30:00.000Z');
+    const second = new Date('2026-10-25T01:30:00.000Z');
+    const localHour = (date: Date) =>
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Sarajevo',
+        hour: '2-digit',
+        hour12: false,
+      }).format(date);
+    expect(localHour(first)).toBe('02');
+    expect(localHour(second)).toBe('02');
+
+    process.env[FLAG] = 'on';
+    const query = {
+      from: '2026-10-25T00:00:00.000Z',
+      to: '2026-10-26T00:00:00.000Z',
+      homeProfileId: ownerProfileId,
+      deviceId: ownerDayDeviceId,
+      bucket: 'hour',
+    };
+    const summary = await getSummary(ownerToken, query);
+    const stats = await getStats(ownerToken, query);
+
+    expect(summary.status).toBe(200);
+    expect(summary.body).toEqual({
+      summary: {
+        totalCycles: 2,
+        totalDurationMin: 60,
+        avgDurationMin: 30,
+        avgIndoorTemp: 19,
+      },
+      buckets: [
+        {
+          label: '2026-10-25T00:00Z',
+          totalDurationMin: 20,
+          cycles: 1,
+          avgTargetTemp: 22,
+          avgCurrentTemp: 20,
+        },
+        {
+          label: '2026-10-25T01:00Z',
+          totalDurationMin: 40,
+          cycles: 1,
+          avgTargetTemp: 20,
+          avgCurrentTemp: 18,
         },
       ],
     });

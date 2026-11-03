@@ -23,6 +23,7 @@
 - Preporuka: potvrditi stvarnu potrebu za ručnim kreiranjem. Ako je potrebna, uvesti DTO i transakcijski servis s provjerom vlasništva uređaja i pohranom; ako nije, uvesti jasno verzioniran odgovor o nepodržanoj operaciji. Ne mijenjati ugovor postojećim klijentima bez plana kompatibilnosti.
 - Kako provjeriti da je riješeno: integracijski test s izolovanom PostgreSQL bazom kreira događaj za vlastiti uređaj, provjeri zapis i GET, odbije tuđi uređaj i neispravan DTO; test starih klijenata potvrđuje dogovoreno ponašanje. Pokrenuti `cd backend && npm run test:integration`.
 - Trud: M — Zavisnosti: odluka vlasnika, API kompatibilnost i model događaja.
+- **Runtime DTO dopuna (2026-11-03, `ffd1624`):** postojeći stub ulaz sada ima klasni DTO; nevažeća polja daju 400, dok validan default ostaje 501 i validan legacy zadržava stari response. CI `41728674581` je zelen. Ovo ne pohranjuje događaj, ne provjerava ownership uređaja i ne zatvara gornji kriterij stvarnog kreiranja.
 
 ### [B-002] Prazna weather ruta skriva odsustvo podataka — Ozbiljnost: SREDNJE — Pouzdanost: VERIFIKOVANO
 - Gdje: `backend/src/modules/Weather/weather.controller.ts:16-50`.

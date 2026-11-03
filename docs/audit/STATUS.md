@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Heating event stub runtime DTO validacija (2026-11-03)
+
+**STATUS: HEATING STUB ULAZ RIJEŠEN U KODU (`ffd1624`); HTTP DOKAZ ZELEN.** Ovo nije implementacija stvarne pohrane događaja niti fizičke temperaturne politike.
+
+- Source review je potvrdio inline body za postojeća četiri brojčana polja. Zadani stub response ostaje 501, legacy rollback zadržava stari 201 response za validan ulaz, a repo frontend/mobile nema POST potrošača.
+- Postojeći stvarni controller HTTP spec dopunjen je produkcijskim ValidationPipe opcijama i deset scenarija: validna legacy kontrola, jedan default-invalid i osam legacy-invalid oblika. Prisma/vanjske granice su mockane jer ruta ne poziva bazu; to nije real-DB dokaz.
+- **Test-first:** baseline je bio 16/16. Commit `b4652e1` lokalno daje **17/26 prolaza i 9 padova**, a CI `41727970087` potvrđuje **772 prošla / 9 palo**, uz svih **115/115 integration**, `tsc: 0` i `eslint: 0`. Stari default-invalid daje 501, a legacy-invalid 201 umjesto 400.
+- `CreateHeatingEventDto` zahtijeva `deviceId` integer i tri brojčane temperature, uz raw-input zaštitu od implicitne konverzije i whitelist za dodatna polja. Nema temperaturnih min/max pravila ni izmjene globalnog pipea/stub režima.
+- **Finalni code CI `41728674581`:** backend **78/781 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani lokalni suite je **26/26**.
+- OpenAPI/frontend tipovi su regenerisani, sync/type-check i frontend **92/92** prolaze; ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla, novog flaga, mobile/compose promjene. Rollback je revert `ffd1624`.
+- **Preostalo:** stvarna pohrana i ownership uređaja, fizički rasponi, produkcijski rollout i drugi neDTO query/param ulazi.
+
 ### S-002 — notification preferences runtime DTO validacija (2026-11-03)
 
 **STATUS: PREFERENCES DIO RIJEŠEN U KODU (`b7d713c`); STVARNI HTTP/POSTGRESQL DOKAZ ZELEN.** Drugi inline/interface ulazi i šire granice sadržaja nisu obuhvaćeni.

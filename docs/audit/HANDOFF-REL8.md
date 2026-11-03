@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Heating event stub DTO validacija (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `b4652e1`, DTO `ffd1624`.**
+`origin/arena/c9961f17-boiler-control` je `ffd1624` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `4e0305b`. PR nije otvaran.
+
+- Source review je potvrdio inline `@Body()` tip na `POST /api/heating-events`.
+  Ruta je zadano eksplicitni 501 stub, dok `STUB_ENDPOINTS_MODE=legacy` vraća
+  stari sintetički response. Repo frontend/mobile nema POST potrošača; nije
+  implementiran stvarni upis niti su dodana fizička temperaturna ograničenja.
+- Postojeći `stub-endpoint.spec.ts` pokreće stvarni controller kroz HTTP.
+  Harness je dopunjen produkcijskim ValidationPipe opcijama i synthetic JWT
+  guard korisnikom; Prisma i vanjske granice ostaju mockane jer ruta ne čita DB.
+  Baseline prije izmjene bio je **16/16** zelen.
+- Test-only `b4652e1` dodaje deset scenarija: validan legacy response, jedan
+  default-invalid i osam legacy-invalid oblika (četiri missing, tri ne-broj/null
+  i extra polje). Lokalni test-first dao je **17 prošlo / 9 palo / 26 ukupno**:
+  default-invalid 501 umjesto 400 i svih osam legacy-invalid 201 umjesto 400.
+- **Test-first CI `41727970087`:** **772 prošla / 9 palo**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi stub HTTP scenariji
+  padaju. Testovi nisu mijenjani za ispravku.
+- Fix `ffd1624` dodaje `CreateHeatingEventDto` s obavezna četiri brojčana polja,
+  `IsInt` za deviceId i `IsNumber` za temperature. Raw-input transform sprječava
+  implicitnu konverziju null/string vrijednosti; nema min/max temperaturne
+  politike. Globalni pipe i postojeći stub režimi nisu mijenjani.
+- Lokalno je isti suite nakon ispravke **26/26**. **Finalni code CI
+  `41728674581`:** backend **78/781 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula
+  failure annotations. Provjereno preko runs/jobs/annotations API.
+- OpenAPI i frontend tipovi su regenerisani; sync/type-check i frontend **92/92**
+  prolaze. Tačan ESLint ima **0 errors / 2 postojeća warnings**. Dokaz je
+  stvarni HTTP controller s mock boundaryjima, ne real-DB test.
+- Validan default i dalje daje 501, a validan legacy 201 s istim poljima;
+  nevažeći DTO sada daje 400 u oba režima. Nema migracije/backfilla, novog flaga,
+  mobile/compose promjene ni deploya. `STUB_ENDPOINTS_MODE` je nepromijenjen;
+  rollback je revert `ffd1624`.
+- **Granica:** stvarno kreiranje/pohrana događaja, ownership uređaja, fizički
+  rasponi, produkcijski rollout i drugi neDTO query/param ulazi nisu obuhvaćeni.
+
 ## S-002 — notification preferences DTO validacija (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `32e4e96`, DTO `b7d713c`.**

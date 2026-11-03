@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas reference runtime path ID validacija (2026-11-03)
+
+**STATUS: REFERENCE PATH ID RIJEŠEN U KODU (`56955be`); HTTP DOKAZ ZELEN.** Ostali Gas ID parametri, pozitivnost ID-a i servisna transakcija nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju nakon validation sloja. Web/mobile već šalju numerički ID i postojeći boolean body DTO; `GAS_STRICT_VALIDATION` ostaje nepromijenjen.
+- Postojeći stvarni controller HTTP spec s produkcijskim ValidationPipe pravilima dobio je valjan numeric-ID i malformed-ID scenarij. Servis je mockan na DI boundaryju; ovo nije real-DB ownership ili transakcijski dokaz.
+- **Test-first:** baseline je 10/10. Commit `0763bb9` lokalno daje **11/12 prolaza i jedan pad**, a CI `41732729676` potvrđuje **790 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan PATCH ostaje 200, dok malformed ID ranije dobija 200 i dolazi do servisa.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Valjan response i argumenti `(userId=42, readingId=17, dto)` ostaju; nema `Min(1)`, novog flaga ni izmjene drugih ID ruta.
+- **Finalni code CI `41733423596`:** backend **78/791 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **12/12**, svi lokalni Gas testovi **45/45**.
+- OpenAPI i frontend path tip su sada number, što postojeći klijenti već koriste; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `56955be`.
+- **Preostalo:** drugi ID parametri, pozitivnost ID-a, real-DB reference transakcija/ownership i produkcijski rollout.
+
 ### S-002 — Gas analysis runtime query DTO validacija (2026-11-03)
 
 **STATUS: GAS ANALYSIS QUERY ULAZ RIJEŠEN U KODU (`0f45b90`); HTTP DOKAZ ZELEN.** Servisni proračun, fallback i response nisu mijenjani; redoslijed datuma nije nova DTO politika.

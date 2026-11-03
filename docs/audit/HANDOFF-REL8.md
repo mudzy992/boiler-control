@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas reference path ID validacija (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0763bb9`, fix `56955be`.**
+`origin/arena/c9961f17-boiler-control` je `56955be` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `a021c04`. PR nije otvaran.
+
+- Source review je potvrdio da `PATCH /api/gas/reading/:id/reference` prima ID
+  kao string i tek u controlleru radi `+id`. Web i mobile već šalju numerički
+  ID i postojeći boolean body DTO; `GAS_STRICT_VALIDATION` nije mijenjan.
+- Postojeći `gas-upload-http.spec.ts` pokreće stvarni controller kroz HTTP s
+  produkcijskim ValidationPipe opcijama i synthetic JWT guard korisnikom.
+  `updateReference` je mockan na DI boundaryju, pa je dokaz controller/path
+  granica bez baze, ne real-DB vlasnički ili transakcijski test.
+- Baseline je bio **10/10**. Test-only `0763bb9` dodaje valjan numeric ID koji
+  mora zadržati 200/response/argumente i malformed ID koji mora dati 400 bez
+  servisnog poziva. Lokalni test-first dao je **11 prošlo / 1 pao / 12 ukupno**:
+  valjana kontrola prolazi, malformed ID dobija 200 i dolazi do servisa.
+- **Test-first CI `41732729676`:** **790 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti i postojeći testovi nisu mijenjani za ispravku.
+- Fix `56955be` dodaje postojeći `ParseIntPipe` samo na reference `:id`, mijenja
+  lokalni tip u number i uklanja suvišni `+id`. Nema `Min(1)` ili drugih novih
+  pravila, niti izmjena ostalih Gas ID ruta, servisa, body DTO-a ili responsea.
+- Lokalno je isti suite nakon ispravke **12/12**, a sva tri Gas suitea **45/45**.
+  **Finalni code CI `41733423596`:** backend **78/791 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- OpenAPI path `id` je sada number, a generisani frontend tip prati istu
+  promjenu; oba postojeća klijenta već koriste number. Sync/type-check i frontend
+  **92/92** prolaze. ESLint ima **0 errors / 2 postojeća warnings**. Privremeni
+  generated Prisma stubovi su uklonjeni i nisu commitovani.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `56955be`. Novi import pomjera Gas route markere
+  za jednu liniju; svi su usklađeni, a inventory baseline ostaje 34 poznate
+  formalne razlike.
+- **Granica:** drugi Gas/HomeProfile/ThermostatDevice/Weather ID parametri,
+  pozitivnost ID-a, real-DB reference transakcija/ownership i produkcijski
+  rollout nisu obuhvaćeni ovim sliceom.
+
 ## S-002 — Gas analysis query DTO validacija (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `2ff5f02`, DTO `0f45b90`.**

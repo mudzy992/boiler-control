@@ -93,15 +93,20 @@ describe('Integration: SEC-4 refresh token rotation', () => {
     const bothReads = new Promise<void>((resolve) => {
       releaseReads = resolve;
     });
-    const findUniqueSpy = jest
-      .spyOn(delegate, 'findUnique')
-      .mockImplementation(async (args) => {
+    const findUniqueMock = jest.fn(
+      async (args: Parameters<typeof originalFindUnique>[0]) => {
         const row = await originalFindUnique(args);
         arrivals += 1;
         if (arrivals === 2) releaseReads();
         await bothReads;
         return row;
-      });
+      },
+    );
+    const findUniqueSpy = jest
+      .spyOn(delegate, 'findUnique')
+      // PrismaPromise ima nominalni tip koji Jest mock ne može direktno
+      // izraziti; stvarni poziv i rezultat i dalje idu kroz originalni delegate.
+      .mockImplementation(findUniqueMock as never);
 
     try {
       const results = await Promise.allSettled([
@@ -123,10 +128,8 @@ describe('Integration: SEC-4 refresh token rotation', () => {
         where: { userId: ownerId },
       });
       expect(ownerRows).toHaveLength(2);
-      expect(
-        ownerRows.every((row) => row.revokedAt !== null),
-        'reuse mora opozvati i novi token tog korisnika',
-      ).toBe(true);
+      // Reuse mora opozvati i novi token tog korisnika.
+      expect(ownerRows.every((row) => row.revokedAt !== null)).toBe(true);
       expect(
         await prisma.refreshToken.count({
           where: { userId: otherId, revokedAt: null },

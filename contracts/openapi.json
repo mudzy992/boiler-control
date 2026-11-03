@@ -2071,6 +2071,29 @@
         "properties": {},
         "type": "object"
       },
+      "UpdateNotificationPreferenceDTO": {
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "DAILY_RECOMMENDATION",
+              "FLOW_TEMP_CHANGED",
+              "HEATING_STARTED",
+              "HEATING_ENDED",
+              "SYSTEM_ALERT",
+              "GAS_READING_REMINDER"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "enabled"
+        ],
+        "type": "object"
+      },
       "UpdateThermostatDeviceDto": {
         "properties": {
           "alias": {
@@ -4189,6 +4212,16 @@
       "patch": {
         "operationId": "NotificationsController_updatePreference",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferenceDTO"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""

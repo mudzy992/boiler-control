@@ -19,6 +19,7 @@ import { GasReminderService } from '../Schedule/gas.reminder.service';
 import { NotificationType } from 'src/generated/prisma';
 import { ApiTags } from '@nestjs/swagger';
 import { ManualNotificationDTO } from './dto/manual-notification.dto';
+import { UpdateNotificationPreferenceDTO } from './dto/update-notification-preference.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Notifications')
@@ -126,7 +127,7 @@ export class NotificationsController {
   @Patch('preferences')
   updatePreference(
     @User() userId: number,
-    @Body() body: { type: NotificationType; enabled: boolean },
+    @Body() body: UpdateNotificationPreferenceDTO,
   ) {
     return this.prisma.notificationPreference.upsert({
       where: {

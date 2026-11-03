@@ -1697,6 +1697,11 @@ export interface components {
             proposedEndTime?: string;
         };
         UpdateHomeProfileDto: Record<string, never>;
+        UpdateNotificationPreferenceDTO: {
+            enabled: boolean;
+            /** @enum {string} */
+            type: "DAILY_RECOMMENDATION" | "FLOW_TEMP_CHANGED" | "HEATING_STARTED" | "HEATING_ENDED" | "SYSTEM_ALERT" | "GAS_READING_REMINDER";
+        };
         UpdateThermostatDeviceDto: {
             alias?: string;
             deviceId?: string;
@@ -2968,7 +2973,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationPreferenceDTO"];
+            };
+        };
         responses: {
             200: {
                 headers: {

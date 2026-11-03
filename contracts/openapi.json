@@ -3548,6 +3548,7 @@
             "name": "from",
             "required": false,
             "schema": {
+              "example": "2026-10-01",
               "type": "string"
             }
           },
@@ -3556,6 +3557,7 @@
             "name": "to",
             "required": false,
             "schema": {
+              "example": "2026-11-01",
               "type": "string"
             }
           }

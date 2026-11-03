@@ -23,11 +23,11 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { GasReadingResponseDto } from './dto/gas-reading-response.dto';
 import { GasAnalysisResponseDto } from './dto/gas-analysis-response.dto';
+import { GetGasAnalysisDto } from './dto/gas-analysis-query.dto';
 import {
   IMAGE_MAX_SIZE_BYTES,
   PDF_MAX_SIZE_BYTES,
@@ -153,15 +153,9 @@ export class GasReadingController {
 
   @Get('analysis')
   @ApiOkResponse({ type: GasAnalysisResponseDto })
-  @ApiQuery({ name: 'from', required: false })
-  @ApiQuery({ name: 'to', required: false })
-  getAnalysis(
-    @Req() req,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
-    const startDate = from ? new Date(from) : undefined;
-    const endDate = to ? new Date(to) : undefined;
+  getAnalysis(@Req() req, @Query() query: GetGasAnalysisDto) {
+    const startDate = query.from ? new Date(query.from) : undefined;
+    const endDate = query.to ? new Date(query.to) : undefined;
     return this.service.getEfficiencyAnalysis(
       req.user.userId,
       startDate,

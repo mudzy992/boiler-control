@@ -3,7 +3,17 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-03 — SEC-1/B-006 vlasništvo notifikacija
+## Nastavak 2026-11-03 — SEC-3/B-007 admin authorization
+
+- **Verificirani test/helper HEAD:** `54b7de2`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `0a00e5a`, nakon vlasnikovog mergea SEC-1 slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **SEC-3 runtime dopuna (`54b7de2`):** source review potvrdio je postojeći `@Roles(ADMIN)` + `RolesGuard`; nije bilo production ispravke. Postojeći notification integration spec sada pored SEC-1 dokazuje i masovni reminder kroz stvarni AppModule/JWT/Prisma/PostgreSQL, dok je `GasReminderService` mockan samo na DI boundaryju da ne može poslati stvarni push.
+  - Dva nova scenarija dokazuju anonymous 401 i USER 403 bez ijednog delegation poziva, te ADMIN 201 s tačno jednim mock pozivom. Role dolaze iz stvarnih sintetičkih DB korisnika preko JWT guarda; postojeća tri SEC-1 scenarija ostaju nepromijenjena.
+  - CI `41658825259`: backend **76/742 + 10/86 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba/koraci success i nula failure annotations. Porast je +2 testa bez novog suitea. Postojeći PostgreSQL rollback helper prolazi, a njegov zastarjeli opis otvorenog B-007 nalaza ispravljen je bez promjene izvršavanja.
+  - Postojeći throttle dokazi ostaju: `seconds(60)` i stvarni `ThrottlerGuard` s **100 uspješnih + 5×429**. Lokalno prolaze SEC-1 unit **4/4**, throttle **2/2**, helper syntax/help, integration discovery i tačan ESLint **0 errors / 2 postojeća warnings**. Admin unit suite lokalno ne učitava gitignored generated Prisma; CI ga izvršava u zelenom backendu.
+  - Nema production code, API/DTO/OpenAPI, migracije/backfilla, flag, compose/deployment, throttle-default ili installed-mobile promjene. Rollback je revert test/helper/docs slicea i ne uklanja admin zaštitu.
+  - **Granica dokaza:** nema stvarnog Expo/push slanja niti produkcijskog proxy/IP/deploy dokaza. Pojedinačni `test-gas-reminder`, preferences, token lifecycle i druge notification rute nisu prošireni.
+
+## Raniji nastavak 2026-11-03 — SEC-1/B-006 vlasništvo notifikacija
 
 - **Verificirani test HEAD:** `bc7b847`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `d3350c7`, nakon vlasnikovog mergea prethodnog export slicea. Vlasnik ručno radi merge, PR se ne otvara.
 - **SEC-1 runtime dopuna i korekcija evidencije (`bc7b847`):** source review potvrdio je da zaštita već postoji — kontroler prosljeđuje JWT `userId`, servis radi atomski `updateMany` po `id+userId`, a `count=0` daje isti `Notification not found` za tuđi i nepostojeći zapis. Nije napravljena production ispravka; zastarjeli backlog/API nalaz usklađen je s izvorom.

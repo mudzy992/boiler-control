@@ -2275,6 +2275,16 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/docs slicea i ne uklanja owner zaštitu.
 - **Preostalo:** ovaj spec ne proširuje token lifecycle, preferences, mark-all ili masovni reminder i nije dokaz produkcijskog deploya/logova.
 
+### SEC-3/B-007 — admin authorization stvarni HTTP/PostgreSQL dokaz (2026-11-03)
+
+**STATUS: ADMIN ZAŠTITA VEĆ PRISUTNA; RUNTIME DOKAZ ZAVRŠEN (`54b7de2`).** Postojeći `@Roles(ADMIN)` + `RolesGuard` potvrđen je kroz stvarni AppModule/JWT/Prisma/PostgreSQL. `GasReminderService` je mockan samo na DI boundaryju, pa nema stvarnog pusha.
+
+- Dva nova scenarija u postojećem notification integration specu dokazuju anonymous 401 i USER 403 bez delegation poziva, te ADMIN 201 s tačno jednim mock pozivom. Role dolaze iz stvarnih DB korisnika; sva tri postojeća SEC-1 scenarija ostaju zelena.
+- **CI `41658825259`:** backend **76/742 + 10/86 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**; sva tri joba/koraci success, nula failure annotations. PostgreSQL rollback helper prolazi, a zastarjeli help opis je ispravljen bez promjene ponašanja.
+- Throttle ostaje pokriven postojećim `seconds(60)` i **100 uspješnih + 5×429** testovima. Lokalno: SEC-1 **4/4**, throttle **2/2**, helper syntax/help, discovery i ESLint **0 errors / 2 postojeća warnings**; admin unit i real-DB dokaz su autoritativno potvrđeni u CI-ju uz generated Prisma.
+- Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
+- **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

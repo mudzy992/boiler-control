@@ -128,6 +128,42 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
           roomCurrentTemp: 99,
           roomTargetTemp: 99,
         },
+        {
+          deviceId: ownerDevice.id,
+          source: 'test',
+          hvacAction: 'heating',
+          timestampStart: new Date('2026-02-01T10:00:00Z'),
+          timestampEnd: new Date('2026-02-01T10:30:00Z'),
+          roomCurrentTemp: 20,
+          roomTargetTemp: 22,
+        },
+        {
+          deviceId: ownerDevice.id,
+          source: 'test',
+          hvacAction: 'heating',
+          timestampStart: new Date('2026-02-02T10:00:00Z'),
+          timestampEnd: new Date('2026-02-02T10:45:00Z'),
+          roomCurrentTemp: 18,
+          roomTargetTemp: 20,
+        },
+        {
+          deviceId: ownerDevice.id,
+          source: 'test',
+          hvacAction: 'heating',
+          timestampStart: new Date('2026-10-25T00:30:00Z'),
+          timestampEnd: new Date('2026-10-25T00:50:00Z'),
+          roomCurrentTemp: 20,
+          roomTargetTemp: 22,
+        },
+        {
+          deviceId: ownerDevice.id,
+          source: 'test',
+          hvacAction: 'heating',
+          timestampStart: new Date('2026-10-25T01:30:00Z'),
+          timestampEnd: new Date('2026-10-25T02:10:00Z'),
+          roomCurrentTemp: 18,
+          roomTargetTemp: 20,
+        },
       ],
     });
     await prisma.heatingIntervalLearning.createMany({
@@ -255,6 +291,136 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
     expect(content.meta.timeZone).toBe('Europe/Sarajevo');
     expect(content.stats.buckets).toHaveLength(1);
     expect(content.stats.buckets[0].avgCurrentTemp).toBe(20);
+  });
+
+  it('legacy spaja, a v2 razdvaja visednevne hour bucket-e kroz PostgreSQL', async () => {
+    const range = {
+      homeProfileId: ownerProfileId,
+      from: '2026-02-01T00:00:00Z',
+      to: '2026-02-03T00:00:00Z',
+      bucket: 'hour',
+    };
+    const legacy = await request(app.getHttpServer())
+      .get('/api/dashboard/export')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .query(range);
+
+    expect(legacy.status).toBe(200);
+    expect(legacy.body.summary.summary).toEqual({
+      totalCycles: 2,
+      totalDurationMin: 75,
+      avgDurationMin: 37.5,
+      avgIndoorTemp: 19,
+    });
+    expect(legacy.body.stats.buckets).toEqual([
+      {
+        label: '10:00',
+        avgTargetTemp: 21,
+        avgCurrentTemp: 19,
+        totalDurationMin: 75,
+        cycles: 2,
+      },
+    ]);
+    expect(legacy.body.summary.buckets).toEqual(legacy.body.stats.buckets);
+    expect(legacy.body.export.content).toContain('10:00,21,19,75,2');
+    expect(legacy.body.export.content.trim().split('\n')).toHaveLength(2);
+
+    process.env[ANALYTICS_EXPORT_V2_FLAG] = 'on';
+    const v2 = await request(app.getHttpServer())
+      .get('/api/dashboard/export')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .query({
+        ...range,
+        version: 2,
+        format: 'json',
+        timeZone: 'UTC',
+      });
+
+    expect(v2.status).toBe(200);
+    expect(v2.body.meta.sourceRows).toEqual({
+      heatingEvents: 2,
+      learningIntervals: 0,
+      total: 2,
+    });
+    const content = JSON.parse(v2.body.export.content);
+    expect(content.meta).toMatchObject({
+      timeZone: 'UTC',
+      bucket: 'hour',
+      sourceRows: { heatingEvents: 2, learningIntervals: 0, total: 2 },
+    });
+    expect(content.summary.summary).toEqual({
+      totalCycles: 2,
+      totalDurationMin: 75,
+      avgDurationMin: 37.5,
+      avgIndoorTemp: 19,
+    });
+    expect(content.stats.buckets).toEqual([
+      {
+        label: '2026-02-01T10:00:00+00:00',
+        avgTargetTemp: 22,
+        avgCurrentTemp: 20,
+        totalDurationMin: 30,
+        cycles: 1,
+      },
+      {
+        label: '2026-02-02T10:00:00+00:00',
+        avgTargetTemp: 20,
+        avgCurrentTemp: 18,
+        totalDurationMin: 45,
+        cycles: 1,
+      },
+    ]);
+    expect(content.summary.buckets).toEqual(content.stats.buckets);
+    expect(content.learning.points).toEqual([]);
+  });
+
+  it('v2 export cuva hronoloski redoslijed ponovljenog Sarajevo DST sata', async () => {
+    process.env[ANALYTICS_EXPORT_V2_FLAG] = 'on';
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/export')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .query({
+        homeProfileId: ownerProfileId,
+        from: '2026-10-25T00:00:00Z',
+        to: '2026-10-26T00:00:00Z',
+        bucket: 'hour',
+        version: 2,
+        format: 'json',
+        timeZone: 'Europe/Sarajevo',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.meta.sourceRows).toEqual({
+      heatingEvents: 2,
+      learningIntervals: 0,
+      total: 2,
+    });
+    const content = JSON.parse(response.body.export.content);
+    expect(content.meta.timeZone).toBe('Europe/Sarajevo');
+    expect(content.summary.summary).toEqual({
+      totalCycles: 2,
+      totalDurationMin: 60,
+      avgDurationMin: 30,
+      avgIndoorTemp: 19,
+    });
+    expect(content.stats.buckets).toEqual([
+      {
+        label: '2026-10-25T02:00:00+02:00',
+        avgTargetTemp: 22,
+        avgCurrentTemp: 20,
+        totalDurationMin: 20,
+        cycles: 1,
+      },
+      {
+        label: '2026-10-25T02:00:00+01:00',
+        avgTargetTemp: 20,
+        avgCurrentTemp: 18,
+        totalDurationMin: 40,
+        cycles: 1,
+      },
+    ]);
+    expect(content.summary.buckets).toEqual(content.stats.buckets);
+    expect(content.learning.points).toEqual([]);
   });
 
   it('v2 maxRows odbija prevelik izvoz sa 413', async () => {

@@ -6,13 +6,14 @@ import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { GasReminderService } from '../../src/modules/Schedule/gas.reminder.service';
+import { ExpoPushService } from '../../src/modules/ExpoPush/expo.push.notification.service';
 
 /**
- * SEC-1 / B-006 i SEC-3 / B-007 stvarni HTTP/JWT/Prisma/PostgreSQL dokaz.
+ * SEC-1 / B-006, SEC-3 / B-007 i S-002 stvarni HTTP/JWT/Prisma/PostgreSQL dokaz.
  *
  * Produkcijski izvor već radi atomski updateMany po id+userId i ima admin
- * RolesGuard. Ovaj spec ne mijenja ugovor. GasReminderService je mockan samo
- * na DI boundaryju, pa admin pozitivna kontrola ne šalje stvarne notifikacije.
+ * RolesGuard. GasReminderService i ExpoPushService su mockani samo na DI
+ * boundaryju, pa nijedan scenario ne šalje stvarne notifikacije.
  */
 describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
   let app: INestApplication;
@@ -25,9 +26,21 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
   let adminToken: string;
   let notificationId: number;
   const triggerDailyReminders = jest.fn();
+  const sendPushToTokens = jest.fn();
   const suffix = randomUUID();
   const userIds: number[] = [];
   const missingId = 2_000_000_000;
+  const validManualBody = () => ({
+    type: 'SYSTEM_ALERT',
+    title: 'S-002 synthetic manual title',
+    message: 'S-002 synthetic manual message',
+    data: { type: 'SYSTEM_ALERT', marker: 's002-manual' },
+  });
+  const withoutManualField = (field: string) => {
+    const body: Record<string, unknown> = validManualBody();
+    delete body[field];
+    return body;
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -35,6 +48,8 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     })
       .overrideProvider(GasReminderService)
       .useValue({ triggerDailyReminders })
+      .overrideProvider(ExpoPushService)
+      .useValue({ sendPushToTokens })
       .compile();
     app = moduleRef.createNestApplication({ logger: false });
     app.useGlobalPipes(
@@ -91,11 +106,23 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
       },
     });
     notificationId = notification.id;
+    await prisma.userDevice.create({
+      data: {
+        userId: ownerId,
+        platform: 'android',
+        expoPushToken: `ExponentPushToken[s002${suffix.replace(/-/g, '')}]`,
+      },
+    });
   });
 
   beforeEach(async () => {
     triggerDailyReminders.mockReset();
     triggerDailyReminders.mockResolvedValue({ accepted: true });
+    sendPushToTokens.mockReset();
+    sendPushToTokens.mockResolvedValue(undefined);
+    await prisma.notification.deleteMany({
+      where: { userId: ownerId, title: { startsWith: 'S-002' } },
+    });
     await prisma.notification.updateMany({
       where: { id: notificationId, userId: ownerId },
       data: { isRead: false },
@@ -106,6 +133,9 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     if (prisma) {
       if (userIds.length) {
         await prisma.notification.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+        await prisma.userDevice.deleteMany({
           where: { userId: { in: userIds } },
         });
         await prisma.user.deleteMany({ where: { id: { in: userIds } } });
@@ -119,6 +149,13 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     const pending = request(app.getHttpServer()).post(
       `/api/notifications/${id}/read`,
     );
+    return token ? pending.set('Authorization', `Bearer ${token}`) : pending;
+  };
+
+  const sendManual = (body: Record<string, unknown>, token?: string) => {
+    const pending = request(app.getHttpServer())
+      .post('/api/notifications/manual')
+      .send(body);
     return token ? pending.set('Authorization', `Bearer ${token}`) : pending;
   };
 
@@ -203,5 +240,97 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     expect(response.status).toBe(201);
     expect(response.body).toEqual({ accepted: true });
     expect(triggerDailyReminders).toHaveBeenCalledTimes(1);
+  });
+
+  it('S-002 anonymous manual zahtjev dobija 401 bez push ili DB upisa', async () => {
+    const before = await prisma.notification.count({
+      where: { userId: ownerId },
+    });
+
+    const response = await sendManual(validManualBody());
+
+    expect(response.status).toBe(401);
+    expect(sendPushToTokens).not.toHaveBeenCalled();
+    expect(
+      await prisma.notification.count({ where: { userId: ownerId } }),
+    ).toBe(before);
+  });
+
+  it('S-002 validan manual oblik zadržava response i upisuje JWT vlasniku', async () => {
+    const body = validManualBody();
+
+    const response = await sendManual(body, ownerToken);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({
+      success: true,
+      message: 'Notification sent manually',
+    });
+    expect(sendPushToTokens).toHaveBeenCalledWith(
+      [expect.stringMatching(/^ExponentPushToken\[s002/)],
+      body.title,
+      body.message,
+      body.data,
+    );
+    const stored = await prisma.notification.findFirst({
+      where: { userId: ownerId, title: body.title },
+    });
+    expect(stored).toMatchObject({
+      userId: ownerId,
+      type: body.type,
+      title: body.title,
+      message: body.message,
+      data: body.data,
+    });
+  });
+
+  it('S-002 redundantni userId ne može preusmjeriti notifikaciju drugome', async () => {
+    const otherBefore = await prisma.notification.count({
+      where: { userId: otherId },
+    });
+    const body = {
+      ...validManualBody(),
+      title: 'S-002 JWT owner title',
+      userId: otherId,
+    };
+
+    const response = await sendManual(body, ownerToken);
+
+    expect(response.status).toBe(201);
+    const stored = await prisma.notification.findFirst({
+      where: { title: body.title },
+    });
+    expect(stored).toMatchObject({ userId: ownerId, title: body.title });
+    expect(
+      await prisma.notification.count({ where: { userId: otherId } }),
+    ).toBe(otherBefore);
+  });
+
+  it.each<[string, Record<string, unknown>]>([
+    ['nepoznat type', { ...validManualBody(), type: 'NOT_A_TYPE' }],
+    ['nedostaje type', withoutManualField('type')],
+    ['nedostaje title', withoutManualField('title')],
+    ['title nije string', { ...validManualBody(), title: 42 }],
+    ['nedostaje message', withoutManualField('message')],
+    [
+      'message nije string',
+      { ...validManualBody(), message: { text: 'invalid' } },
+    ],
+    [
+      'neočekivano polje',
+      { ...validManualBody(), unexpected: 'must-be-rejected' },
+    ],
+  ])('S-002 odbija %s bez push ili DB upisa', async (_name, body) => {
+    const before = await prisma.notification.count({
+      where: { userId: ownerId },
+    });
+
+    const response = await sendManual(body, ownerToken);
+
+    expect(response.status).toBe(400);
+    expect(sendPushToTokens).not.toHaveBeenCalled();
+    expect(
+      await prisma.notification.count({ where: { userId: ownerId } }),
+    ).toBe(before);
   });
 });

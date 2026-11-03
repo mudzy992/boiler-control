@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas analysis runtime query DTO validacija (2026-11-03)
+
+**STATUS: GAS ANALYSIS QUERY ULAZ RIJEŠEN U KODU (`0f45b90`); HTTP DOKAZ ZELEN.** Servisni proračun, fallback i response nisu mijenjani; redoslijed datuma nije nova DTO politika.
+
+- Source review je potvrdio pojedinačne string query parametre i direktni `new Date`. Web šalje postojeći `YYYY-MM-DD` raspon, installed mobile ne šalje parametre, a postojeći samo-from fallback je također sačuvan.
+- Postojeći stvarni controller HTTP spec s produkcijskim ValidationPipe pravilima dobio je osam scenarija: tri valjane kontrole i pet nevažećih oblika. Servis je mockan jer je predmet controller validacija; nije real-DB dokaz.
+- **Test-first:** baseline je 2/2. Commit `2ff5f02` lokalno daje **5/10 prolaza i 5 padova**, a CI `41730527365` potvrđuje **784 prošla / 5 palo**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Malformed, prazan, ponovljeni i dodatni parametar ranije su dobijali 200 i dolazili do servisa.
+- `GetGasAnalysisDto` ima optional `IsDateString` za from/to i globalni whitelist za dodatna polja. Nema novog para-obaveznih polja, poređenja datuma ili maksimalnog intervala; `GasReadingService` je nepromijenjen.
+- **Finalni code CI `41731170925`:** backend **78/789 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **10/10**, svi lokalni Gas testovi **43/43**.
+- OpenAPI primjeri su regenerisani, a frontend tipovi ostaju isti optional string oblici; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla, novog flaga ili mobile/compose promjene. Rollback je revert `0f45b90`.
+- **Preostalo:** poredjenje i maksimalni raspon datuma, real-DB analiza, preostali `:id` i drugi neDTO ulazi te produkcijski rollout.
+
 ### S-002 — Heating event stub runtime DTO validacija (2026-11-03)
 
 **STATUS: HEATING STUB ULAZ RIJEŠEN U KODU (`ffd1624`); HTTP DOKAZ ZELEN.** Ovo nije implementacija stvarne pohrane događaja niti fizičke temperaturne politike.

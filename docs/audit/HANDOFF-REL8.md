@@ -3,6 +3,47 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas analysis query DTO validacija (2026-11-03)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `2ff5f02`, DTO `0f45b90`.**
+`origin/arena/c9961f17-boiler-control` je `0f45b90` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `4e0305b`. PR nije otvaran.
+
+- Source review je potvrdio da `GET /api/gas/analysis` koristi pojedinačne
+  `@Query('from')`/`@Query('to')` stringove i direktni `new Date`. Web šalje
+  `YYYY-MM-DD` kada su oba polja zadana, installed mobile ne šalje parametre,
+  a servis zadržava fallback kada nedostaje jedan ili oba datuma.
+- Postojeći `gas-upload-http.spec.ts` već pokreće stvarni controller kroz HTTP
+  s produkcijskim ValidationPipe opcijama i synthetic JWT guard korisnikom.
+  Servis je mockan na DI boundaryju; nema DB poziva. Baseline je **2/2** nakon
+  privremenog gitignored PrismaClient stuba koji samo omogućava učitavanje modula.
+- Test-only `2ff5f02` dodaje osam scenarija: bez parametara, web raspon, samo
+  from, nevažeći from/to, prazan i ponovljeni from te dodatni query parametar.
+  Lokalni test-first dao je **5 prošlo / 5 palo / 10 ukupno**: sve tri valjane
+  kontrole prolaze, dok svih pet nevažećih oblika dobija 200 i dolazi do servisa.
+- **Test-first CI `41730527365`:** **784 prošla / 5 palo**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi query scenariji padaju.
+  Asserti i postojeći multipart testovi nisu mijenjani za ispravku.
+- Fix `0f45b90` dodaje `GetGasAnalysisDto` s optional `IsDateString` poljima.
+  Globalni whitelist odbija dodatni parametar, a array/empty/malformed vrijednost
+  ne prolazi validaciju. Nema novog zahtjeva da from i to dolaze u paru niti
+  pravila o redoslijedu/maksimalnom intervalu; servis i response su nepromijenjeni.
+- Lokalno je isti suite nakon ispravke **10/10**, a sva tri Gas suitea **43/43**.
+  **Finalni code CI `41731170925`:** backend **78/789 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- OpenAPI je regenerisan; vidljiva razlika su primjeri postojećih optional string
+  parametara. Frontend tipovi ostaju nepromijenjeni jer je generisani oblik isti;
+  sync/type-check i frontend **92/92** prolaze. ESLint ima **0 errors / 2
+  postojeća warnings**. Route markeri i inventory baseline ostaju nepromijenjeni.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Validni status, response i Date/fallback argumenti ostaju; nevažeći
+  query sada daje 400 prije servisa. Rollback je revert `0f45b90`; privremeni
+  generated Prisma stubovi su uklonjeni i nisu commitovani.
+- **Granica:** stvarni HTTP controller je dokazan s mock servisom, ne real-DB
+  analizom. Redoslijed i maksimalni raspon datuma, preostali `:id` parametri,
+  produkcijski rollout i drugi neDTO ulazi nisu obuhvaćeni.
+
 ## S-002 — Heating event stub DTO validacija (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `b4652e1`, DTO `ffd1624`.**

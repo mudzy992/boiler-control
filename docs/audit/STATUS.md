@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### SEC-2/B-009/B-010 — anomaly ownership i DTO stvarni HTTP/PostgreSQL dokaz (2026-11-03)
+
+**STATUS: RUNTIME DOKAZ ZAVRŠEN (`971c8f9`); INVALID-ID GRANICA ISPRAVLJENA (`0bbb5db`).** Source review je potvrdio postojeći JWT userId, owner scope u findFirst/updateMany i DTO validatore. Nova production izmjena je samo ParseIntPipe za eventId; validni response i postojeći foreign/missing odgovor nisu mijenjani.
+
+- Novi `backend/test/integration/anomalies-ownership.integration.spec.ts` sa stvarnim AppModule/JWT/Prisma/PostgreSQL i dva korisnika ima sedam scenarija: anonymous 401; owner confirm; owner ISO datum; owner prazan body; identičan foreign/missing odgovor bez DB/recommendation side effecta; malformed datum i podvaljeno userId polje 400; nevažeći eventId 400 prije DB upita.
+- **Test-first CI `41662817605`:** real-DB **92/93**, jedini pad je invalid ID — expected 400, received 200. Time je production mismatch dokazan prije ispravke, bez mijenjanja testa radi starog odgovora.
+- **Finalni code CI `41663389051`:** backend **77/749 + 11/93 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Porast je +1 suite/+7 testova.
+- **Lokalno:** DTO unit **7/7**, oba offline helpera, integration discovery, izolovani controller/pipe probe 400 bez servisnog poziva i tačan ESLint **0 errors / 2 postojeća warnings**. Stvarni DB dokaz je CI; lokalna baza nije pokretana.
+- Recommendation je mockan samo na DI boundaryju; nema stvarnog recommendation/push rada. Nema migracije/backfilla, flaga, DTO/OpenAPI/compose promjene. Instalirani mobile zadržava validne odgovore, a nevažeći ID sada dobija 400. Rollback ParseIntPipe-a ne smije ukloniti postojeću owner zaštitu.
+- **Preostalo:** GET anomalija, konkurentni ownership race, produkcijski proxy/deploy i stvarni recommendation tok nisu obuhvaćeni.
+
 ## Implementacija — MO2-2 version gate ZAVRŠEN (2026-10-29)
 
 `MO2-2` je bio **preduslov za API-1/API-2/SEC-4/FEAT-7**: bez gate-a svaka promjena API ugovora ruši instalirane mobilne verzije. Vlasnik ga je odobrio („DA, prije prve promjene API ugovora").

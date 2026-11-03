@@ -3,7 +3,18 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
-## Nastavak 2026-11-03 — SEC-3/B-007 admin authorization
+## Nastavak 2026-11-03 — SEC-2/B-009/B-010 anomaly ownership i validacija
+
+- **Verificirani test/fix HEAD:** `971c8f9` + `0bbb5db`; udaljena sesijska grana je na `0bbb5db` prije završnog docs upisa. `origin/main` je posljednji put provjeren na `665289c`, nakon vlasnikovog mergea SEC-3 slicea. Vlasnik ručno radi merge, PR se ne otvara.
+- **SEC-2 runtime dopuna i minimalna ispravka:** source review je potvrdio postojeći JWT `userId`, owner scope u `findFirst` i `updateMany`, DTO `@IsBoolean`/`@Type(() => Date)`/`@IsDate` i 14 postojećih unit testova. Nije ponovo implementirana owner zaštita. Novi `anomalies-ownership.integration.spec.ts` koristi stvarni AppModule/JWT/Prisma/PostgreSQL s dva korisnika; `HeatingRecommendationService` je mockan samo na DI boundaryju.
+  - Sedam scenarija dokazuje anonymous 401 bez side effecta; owner confirm, ISO proposedEndTime i prazan body s postojećim response oblikom i DB read-backom; identičan foreign/missing `200 {success:false,error:"Event not found"}` bez izmjene ili recommendation poziva; malformed datum i podvaljeno `userId` polje 400; te nevažeći eventId 400 prije DB upita.
+  - Test-only CI `41662817605` namjerno je pokrenut prije production ispravke: **92/93** real-DB testova prolazi, a jedini pad je invalid ID (**expected 400, received 200**), čime je `NaN` mismatch potvrđen i na stvarnom HTTP/DB toku. Test nije prilagođen starom odgovoru.
+  - `0bbb5db` dodaje samo `ParseIntPipe` na postojeći parametar. Finalni code CI `41663389051`: backend **77/749 + 11/93 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136**, frontend **4/4**, sva tri joba/koraci success i nula failure annotations. Porast je +1 suite/+7 testova.
+  - Lokalne kontrole: DTO unit **7/7**, oba postojeća offline helpera, integration discovery, izolovani controller/pipe probe **400 / serviceCalled 0** i tačan ESLint **0 errors / 2 postojeća warnings**. Stvarni HTTP/DB dokaz je CI; lokalna baza nije pokretana.
+  - Nema migracije/backfilla, flaga, DTO/OpenAPI/compose/deployment promjene. Validni installed-mobile request/response ostaje isti; samo nevažeći ID sada dobija 400. Rollback je revert `0bbb5db` i test/docs slicea, bez uklanjanja postojeće owner zaštite.
+  - **Granica dokaza:** recommendation/push nije stvarno izvršen; GET anomalija, konkurentni ownership race, produkcijski proxy/deploy i produkcijski podaci nisu obuhvaćeni.
+
+## Raniji nastavak 2026-11-03 — SEC-3/B-007 admin authorization
 
 - **Verificirani test/helper HEAD:** `54b7de2`; udaljena sesijska grana je istog SHA-a prije završnog docs upisa. `origin/main` je posljednji put provjeren na `0a00e5a`, nakon vlasnikovog mergea SEC-1 slicea. Vlasnik ručno radi merge, PR se ne otvara.
 - **SEC-3 runtime dopuna (`54b7de2`):** source review potvrdio je postojeći `@Roles(ADMIN)` + `RolesGuard`; nije bilo production ispravke. Postojeći notification integration spec sada pored SEC-1 dokazuje i masovni reminder kroz stvarni AppModule/JWT/Prisma/PostgreSQL, dok je `GasReminderService` mockan samo na DI boundaryju da ne može poslati stvarni push.

@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas meter-image download path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `4a9ba4b`, fix `9abe486`.**
+`origin/arena/c9961f17-boiler-control` je `9abe486` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `a6a8784`. PR nije otvaran.
+
+- Source review je potvrdio da meter-image GET prima string ID i radi `+id`
+  tek u controlleru. Web/mobile već koriste numerički ID; servisni owner lookup,
+  private stream, MIME i Content-Disposition logika nisu mijenjani.
+- Postojeći HTTP suite pokreće stvarni controller i produkcijski ValidationPipe
+  s mock servisom i synthetic Readable streamom. To dokazuje controller/stream/
+  header granicu, ne stvarni filesystem/DB; postojeći integration tok je zaseban.
+- Baseline je bio **20/20**. Test-only `4a9ba4b` dodaje valjan numeric ID koji
+  zadržava 200, tačne bajtove/headere i servisne argumente, te malformed ID koji
+  mora dati 400 bez servisa. Lokalni repro dao je **21 prošao / 1 pao / 22
+  ukupno**: valjana kontrola prolazi, a malformed ID dobija **200**.
+- **Test-first CI `41795655135`:** **800 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti, stream/header očekivanja i postojeći testovi nisu mijenjani.
+- Fix `9abe486` dodaje postojeći ParseIntPipe samo na meter-image GET `:id`.
+  Nema Min(1), novog flaga ni izmjene servisnog owner lookupa, private streama,
+  filename sanitizerja, headera, responsea ili invoice download rute.
+- Lokalno je isti suite nakon ispravke **22/22**, a sva tri Gas suitea **55/55**.
+  **Finalni code CI `41796151794`:** backend **78/801 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- Samo GET meter-image OpenAPI/frontend path `id` postaje number; GET invoice i
+  druge operacije nisu mijenjane. Sync/type-check i frontend **92/92** prolaze.
+  ESLint ima **0 errors / 2 postojeća warnings**. Route markeri i inventory
+  baseline od 34 poznate razlike ostaju stabilni.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `9abe486`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** synthetic stream nije novi real-filesystem/DB dokaz; ID
+  pozitivnost, invoice download ID, drugi moduli i rollout ostaju otvoreni.
+
 ## S-002 — Gas invoice DELETE path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `5b6edf0`, fix `f0a3664`.**

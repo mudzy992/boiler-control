@@ -22,6 +22,7 @@ import { ThermostatDeviceService } from '../thermostat.device.service';
 describe('ThermostatDevice controller HTTP kompatibilnost', () => {
   let app: INestApplication;
   const findOne = jest.fn();
+  const getPrograms = jest.fn();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -29,7 +30,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: ThermostatDeviceService,
-          useValue: { findOne },
+          useValue: { findOne, getPrograms },
         },
       ],
     })
@@ -59,6 +60,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
 
   beforeEach(() => {
     findOne.mockReset();
+    getPrograms.mockReset();
   });
 
   afterAll(async () => {
@@ -96,6 +98,52 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(findOne).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /api/devices/:id/programs path ID (S-002)', () => {
+    it('zadržava numeric ID, response i servisne argumente', async () => {
+      const programs = [
+        {
+          id: 101,
+          deviceId: 17,
+          dayType: 'WORKDAY',
+          startMinute: 360,
+          targetTemp: 21.5,
+          orderIndex: 0,
+          programHash: 'weekday-v1',
+        },
+        {
+          id: 102,
+          deviceId: 17,
+          dayType: 'WORKDAY',
+          startMinute: 1320,
+          targetTemp: 17,
+          orderIndex: 1,
+          programHash: 'weekday-v1',
+        },
+      ];
+      getPrograms.mockResolvedValue(programs);
+
+      const response = await request(app.getHttpServer()).get(
+        '/api/devices/17/programs',
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(programs);
+      expect(getPrograms).toHaveBeenCalledTimes(1);
+      expect(getPrograms).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      getPrograms.mockResolvedValue([]);
+
+      const response = await request(app.getHttpServer()).get(
+        '/api/devices/not-a-number/programs',
+      );
+
+      expect(response.status).toBe(400);
+      expect(getPrograms).not.toHaveBeenCalled();
     });
   });
 });

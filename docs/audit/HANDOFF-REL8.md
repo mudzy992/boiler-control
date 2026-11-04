@@ -3,6 +3,42 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile findOne path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `95f9244`, fix `904e14c`.**
+`origin/arena/c9961f17-boiler-control` je `904e14c` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `91c8448`. PR nije otvaran.
+
+- Source review je potvrdio da GET `/api/home-profiles/:id` prima string i
+  radi `+id` u controlleru. Mobile API helper `getHomeProfileById(id: number)`
+  već koristi numerički ID; web nema direktan poziv ove GET rute. Servisni
+  findOne filter po ID-u i userId-u nije mijenjan.
+- Postojeći `home-profile-http.spec.ts` pokreće stvarni controller i
+  produkcijski ValidationPipe s mock servisom. Novi GET dokaz nije real-DB
+  ownership dokaz; postojeći MO2-20 integration tok ostaje nepromijenjen.
+- Baseline je bio **7/7**. Test-only `95f9244` dodaje valjan numeric ID sa
+  200/response/`findOne(42,17)` i malformed ID koji mora dati 400 bez servisa.
+  Lokalni repro je **8 prošlo / 1 pao / 9 ukupno**: valjana kontrola prolazi,
+  a malformed ID dobija **200** i dolazi do servisa.
+- **Test-first CI `41807701616`:** backend **806 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; jedini backend failure
+  je novi GET scenarij. Mobile job je nezavisno pao na poznatom weather
+  timeoutu; mobile izvorni kod i testovi nisu mijenjani.
+- Fix `904e14c` dodaje ParseIntPipe samo na findOne GET `:id`. Nema Min(1),
+  novog flaga ni izmjene activate/update/delete/singular ruta, servisne
+  ownership logike ili baze. Import već postoji, pa route markeri ne mijenjaju
+  linije i inventory ostaje **34**.
+- Lokalno su oba HomeProfile suitea **9/9**. **Finalni code CI `41808450482`:**
+  backend **79/807 + 12/115 integration**, mobile **24/136**, frontend **4/4**,
+  `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure annotations.
+- Samo GET OpenAPI/frontend path `id` postaje number. Sync/type-check i
+  frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `904e14c`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne dokazuje novi real-DB GET ownership tok; ID
+  pozitivnost, preostale HomeProfile/ThermostatDevice/Weather ID rute i rollout
+  ostaju otvoreni.
+
 ## S-002 — HomeProfile activate path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `263f689`, fix `fe22937`.**

@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile findOne runtime path ID validacija (2026-11-04)
+
+**STATUS: FINDONE GET PATH ID RIJEŠEN U KODU (`904e14c`); CI ZELEN.** Servisni owner filter i ostale HomeProfile ID rute nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile API helper već koristi numerički ID; web nema direktan poziv ove GET rute. Servisni findOne filter po ID-u i userId-u ostaje isti.
+- Postojeći stvarni controller HTTP spec koristi produkcijski ValidationPipe i mock servis. Novi GET dokaz nije real-DB ownership dokaz; postojeći MO2-20 integration tok je nepromijenjen.
+- **Test-first:** baseline je 7/7. Commit `95f9244` dodaje dva scenarija i lokalno daje **8/9 prolaza**. CI `41807701616` potvrđuje backend **806 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; jedini backend failure je malformed GET koji ranije dobija 200. Mobile nezavisno ima poznati weather timeout, bez mobile diffa.
+- `ParseIntPipe` sada odbija malformed GET ID s 400 prije servisa, dok valjan ID zadržava 200/response/`findOne(42,17)`. Nema Min(1), novog flaga ni izmjene activate/update/delete/singular ruta ili servisne logike.
+- **Finalni code CI `41808450482`:** backend **79/807 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalna oba HomeProfile suitea su **9/9**.
+- Samo GET OpenAPI/frontend path tip je number; sync/type-check i frontend **92/92** prolaze. Nema pomaka route markera, inventory ostaje 34, migracije/backfilla ili mobile/compose promjene. Rollback je revert `904e14c`.
+- **Preostalo:** real-DB GET ownership dokaz, ID pozitivnost, preostale HomeProfile/ThermostatDevice/Weather ID rute i produkcijski rollout.
+
 ### S-002 — HomeProfile activate runtime path ID validacija (2026-11-04)
 
 **STATUS: ACTIVATE PATH ID RIJEŠEN U KODU (`fe22937`); BACKEND HTTP DOKAZ ZELEN.** Servisna aktivacija i ostali HomeProfile ID parametri nisu mijenjani.

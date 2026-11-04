@@ -153,9 +153,13 @@ describe('User profile HTTP kompatibilnost', () => {
     });
   });
 
-  describe('PUT /api/user profile password DTO (S-002)', () => {
-    it('valjani password zadržava response i servisni argument', async () => {
-      const validPasswordBody = { ...validBody, password: 'new-secret' };
+  describe('PUT /api/user profile password DTO (S-002/S-003)', () => {
+    it('valjani password par zadržava response i cijeli servisni argument', async () => {
+      const validPasswordBody = {
+        ...validBody,
+        currentPassword: 'current-secret',
+        password: 'new-secret',
+      };
       updateMe.mockResolvedValue(result);
 
       const response = await request(app.getHttpServer())
@@ -168,12 +172,33 @@ describe('User profile HTTP kompatibilnost', () => {
       expect(updateMe).toHaveBeenCalledWith(42, validPasswordBody);
     });
 
-    it('numerički password vraća 400 prije servisnog poziva', async () => {
+    it('password bez currentPassword vraća 400 prije servisnog poziva', async () => {
       updateMe.mockResolvedValue(result);
 
       const response = await request(app.getHttpServer())
         .put('/api/user')
-        .send({ ...validBody, password: 123456 });
+        .send({ ...validBody, password: 'new-secret' });
+
+      expect(response.status).toBe(400);
+      expect(updateMe).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['numerički password', { ...validBody, password: 123456 }],
+      [
+        'numerički currentPassword',
+        {
+          ...validBody,
+          currentPassword: 123456,
+          password: 'new-secret',
+        },
+      ],
+    ])('%s vraća 400 prije servisnog poziva', async (_field, body) => {
+      updateMe.mockResolvedValue(result);
+
+      const response = await request(app.getHttpServer())
+        .put('/api/user')
+        .send(body);
 
       expect(response.status).toBe(400);
       expect(updateMe).not.toHaveBeenCalled();

@@ -19,6 +19,7 @@ Module._load = function(request,parent,isMain) {
   return original.call(this,request,parent,isMain);
 };
 require(path.join(root,'backend/node_modules/ts-node/register/transpile-only'));
+require(path.join(root,'backend/node_modules/tsconfig-paths')).register({baseUrl:path.join(root,'backend'),paths:{'src/*':['src/*']}});
 const {Test} = require(path.join(root,'backend/node_modules/@nestjs/testing'));
 const {ValidationPipe} = require(path.join(root,'backend/node_modules/@nestjs/common'));
 const {JwtService} = require(path.join(root,'backend/node_modules/@nestjs/jwt'));
@@ -27,6 +28,8 @@ const bcrypt = require(path.join(root,'backend/node_modules/bcryptjs'));
 const {JwtAuthGuard} = require(path.join(root,'backend/src/modules/Auth/jwt-auth.guard.ts'));
 const {AuthController} = require(path.join(root,'backend/src/modules/Auth/auth.controller.ts'));
 const {AuthService} = require(path.join(root,'backend/src/modules/Auth/auth.service.ts'));
+const {RefreshTokenService} = require(path.join(root,'backend/src/modules/Auth/refresh-token.service.ts'));
+const {AccountExportService} = require(path.join(root,'backend/src/modules/Auth/account-export.service.ts'));
 const {UserController} = require(path.join(root,'backend/src/modules/User/user.controller.ts'));
 const {UserService} = require(path.join(root,'backend/src/modules/User/user.service.ts'));
 async function main() {
@@ -44,6 +47,7 @@ async function main() {
   const jwt = new JwtService({secret:crypto.randomBytes(32).toString('hex'),signOptions:{expiresIn:'24h'}});
   const testing = await Test.createTestingModule({controllers:[AuthController,UserController],providers:[
     JwtAuthGuard, {provide:JwtService,useValue:jwt}, {provide:FakePrismaService,useValue:db},
+    {provide:RefreshTokenService,useValue:{}}, {provide:AccountExportService,useValue:{}},
     {provide:AuthService,useValue:new AuthService(db,jwt)}, {provide:UserService,useValue:new UserService(db)},
   ]}).compile();
   const app = testing.createNestApplication({logger:false});
@@ -61,13 +65,18 @@ async function main() {
     assert.equal(change.status,200); assert.equal(await bcrypt.compare(passwords[1],user.passwordHash),true);
     const oldToken = await supertest(app.getHttpServer()).get('/api/auth/me').set('Authorization',auth);
     assert.equal(oldToken.status,200);
-    const profileUpdate = await supertest(app.getHttpServer()).put('/api/user').set('Authorization',auth).send({password:passwords[2]});
+    const hashBeforeProfile = user.passwordHash;
+    const profileWithoutOld = await supertest(app.getHttpServer()).put('/api/user').set('Authorization',auth).send({password:passwords[2]});
+    assert.equal(profileWithoutOld.status,400); assert.equal(user.passwordHash,hashBeforeProfile);
+    const profileWrongOld = await supertest(app.getHttpServer()).put('/api/user').set('Authorization',auth).send({currentPassword:passwords[0],password:passwords[2]});
+    assert.equal(profileWrongOld.status,401); assert.equal(user.passwordHash,hashBeforeProfile);
+    const profileUpdate = await supertest(app.getHttpServer()).put('/api/user').set('Authorization',auth).send({currentPassword:passwords[1],password:passwords[2]});
     assert.equal(profileUpdate.status,200); assert.equal(await bcrypt.compare(passwords[2],user.passwordHash),true);
     const oldTokenAgain = await supertest(app.getHttpServer()).get('/api/auth/me').set('Authorization',auth);
     assert.equal(oldTokenAgain.status,200);
     const noToken = await supertest(app.getHttpServer()).get('/api/auth/me');
     assert.equal(noToken.status,401);
-    console.log(JSON.stringify({scope:'actual auth/user controllers, services and JWT guard; synthetic inactive user and fake DB; no AppModule or production', inactiveUserLoginStatus:login.status, inactiveTokenMeStatus:me.status, normalPasswordChangeStatus:change.status, preChangeTokenStillAccepted:oldToken.status, profilePasswordChangeWithoutOldPassword:profileUpdate.status, preChangeTokenAcceptedAfterSecondChange:oldTokenAgain.status, anonymousMeStatus:noToken.status},null,2));
+    console.log(JSON.stringify({scope:'actual auth/user controllers, services and JWT guard; synthetic inactive user and fake DB; no AppModule or production', inactiveUserLoginStatus:login.status, inactiveTokenMeStatus:me.status, normalPasswordChangeStatus:change.status, preChangeTokenStillAccepted:oldToken.status, profilePasswordChangeWithoutOldPassword:profileWithoutOld.status, profilePasswordChangeWithWrongOldPassword:profileWrongOld.status, profilePasswordChangeWithOldPassword:profileUpdate.status, preChangeTokenAcceptedAfterSecondChange:oldTokenAgain.status, anonymousMeStatus:noToken.status},null,2));
   } finally { await app.close(); }
 }
 main().catch(() => { console.error('Autentifikacijska reprodukcija nije uspjela; provjerite sintetički bootstrap i zavisnosti.'); process.exitCode=1; });

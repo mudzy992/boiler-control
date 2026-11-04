@@ -130,6 +130,8 @@ describe('stub-endpoint (API-1)', () => {
 describe('HTTP ugovor stub endpointa (API-1)', () => {
   let app: INestApplication;
   let saved: string | undefined;
+  const weatherService = { getTodayWeather: jest.fn() };
+  const prisma = { homeProfile: { findFirst: jest.fn() } };
 
   beforeAll(async () => {
     saved = process.env[ENV_KEY];
@@ -145,9 +147,9 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
           provide: HeatingService,
           useValue: { getHeatingEvents: () => Promise.resolve([]) },
         },
-        { provide: WeatherService, useValue: {} },
+        { provide: WeatherService, useValue: weatherService },
         { provide: WeatherV2Service, useValue: {} },
-        { provide: PrismaService, useValue: {} },
+        { provide: PrismaService, useValue: prisma },
         {
           provide: HeatingRecommendationService,
           useValue: { getRecommendations: () => Promise.resolve([]) },
@@ -275,6 +277,43 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
       '/api/recommendations/today',
     );
     expect(recs.body.alternative).toBe('GET /api/recommendations');
+  });
+
+  describe('GET /api/weather/current/:homeProfileId path ID', () => {
+    beforeEach(() => {
+      weatherService.getTodayWeather.mockReset();
+      prisma.homeProfile.findFirst.mockReset();
+    });
+
+    it('valjan numeric ID zadrzava response, owner/location upit i weather poziv', async () => {
+      const weather = { city: 'Sarajevo', temperature: 18.5 };
+      prisma.homeProfile.findFirst.mockResolvedValue({ location: 'Sarajevo' });
+      weatherService.getTodayWeather.mockResolvedValue(weather);
+
+      const res = await request(app.getHttpServer()).get(
+        '/api/weather/current/17',
+      );
+
+      expect(res.status).toBe(HttpStatus.OK);
+      expect(res.body).toEqual(weather);
+      expect(prisma.homeProfile.findFirst).toHaveBeenCalledTimes(1);
+      expect(prisma.homeProfile.findFirst).toHaveBeenCalledWith({
+        where: { id: 17, userId: 4242 },
+        select: { location: true },
+      });
+      expect(weatherService.getTodayWeather).toHaveBeenCalledTimes(1);
+      expect(weatherService.getTodayWeather).toHaveBeenCalledWith('Sarajevo');
+    });
+
+    it('malformed ID vraca 400 prije Prisme i weather servisa', async () => {
+      const res = await request(app.getHttpServer()).get(
+        '/api/weather/current/not-a-number',
+      );
+
+      expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+      expect(prisma.homeProfile.findFirst).not.toHaveBeenCalled();
+      expect(weatherService.getTodayWeather).not.toHaveBeenCalled();
+    });
   });
 
   describe('legacy rollback (STUB_ENDPOINTS_MODE=legacy)', () => {

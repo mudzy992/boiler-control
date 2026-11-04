@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Auth login runtime body DTO validacija (2026-11-04)
+
+**STATUS: LOGIN STRING TIPOVI RIJEŠENI U KODU (`b6e4f0d`); CI ZELEN.** Identifier/email fallback, AuthService, bcrypt/Prisma lookup, `refreshTransport` i postojeća cookie/refresh politika nisu mijenjani.
+
+- Source review i čisti DTO probe potvrđuju implicitnu konverziju numeričkog identifier/email/password u string bez validator greške. Mobile već šalje dva stringa i `refreshTransport: 'body'`, a web dva stringa. Postojeći Auth baseline je **14/14** uz privremene Prisma import stubove; novi suite koristi mock servis, ne real-DB/bcrypt/throttling dokaz.
+- Test-only `7e51bac` dodaje valjan identifier/response/normalizaciju/mobile payload, legacy email fallback i tri numerička negativca. Novi repro je **2/5 prolaza**, sa Auth kontrolom **16/19**. CI `41875464182` potvrđuje backend **839 prošlo / 3 pala / 842 ukupno**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- Raw-input transform sada daje 400 za numerička polja prije servisa, dok valjani stringovi zadržavaju 200, response, trim/lowercase i servisne argumente. `refreshTransport` i postojeći flag ostaju nepromijenjeni.
+- **Finalni code CI `41876377311`:** backend **83/842 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno Auth HTTP/cookie suiteovi prolaze **19/19**.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Controller nije mijenjan i inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `b6e4f0d`.
+- **Preostalo:** real-DB/bcrypt login, throttling i refresh rollout nisu novi dokaz ovog mock controller slicea.
+
 ### S-002 — Auth change-password runtime body DTO validacija (2026-11-04)
 
 **STATUS: CHANGE-PASSWORD STRING TIPOVI RIJEŠENI U KODU (`e583a10`); CI ZELEN.** Servisni bcrypt compare/hash, Prisma update, JWT userId i postojeća password politika nisu mijenjani.

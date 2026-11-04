@@ -3,6 +3,46 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Auth login body DTO validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `7e51bac`, fix `b6e4f0d`.**
+`origin/arena/c9961f17-boiler-control` je `b6e4f0d` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `c1df637`. PR nije otvaran.
+
+- Source review i DTO probe na čistom HEAD-u potvrđuju da numerički
+  `identifier`, `email` i `password` postaju stringovi bez validator greške.
+  Mobile šalje string identifier/password i `refreshTransport: 'body'`, a web
+  string identifier/password. Postojeća trim/lowercase normalizacija je sačuvana.
+- Novi `auth-login-http.spec.ts` pokreće stvarni controller i produkcijske
+  ValidationPipe opcije s mock AuthService/refresh granicom. Postojeći Auth
+  cookie/change-password baseline je **14/14** uz privremene Prisma import
+  stubove. Novi suite nije real-DB/bcrypt ili throttling dokaz.
+- Test-only `7e51bac` dodaje valjan identifier sa 200, responseom,
+  normaliziranim servisnim argumentima i mobile transport poljem, legacy email
+  fallback, te tri numerička negativca. Novi repro je **2 prošla / 3 pala / 5
+  ukupno**, a sa postojećom Auth kontrolom **16 prošlo / 3 pala / 19 ukupno**.
+- **Test-first CI `41875464182`:** backend **839 prošlo / 3 pala / 842 ukupno**,
+  svih **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo numerički
+  identifier/email/password padaju jer dobijaju **200** umjesto 400. Mobile
+  **24/136** i frontend **4/4** su zeleni.
+- Fix `b6e4f0d` čuva raw password, a email/identifier normalizaciju primjenjuje
+  na raw string bez implicitne konverzije ne-stringova. Controller, identifier
+  fallback, AuthService, bcrypt/Prisma lookup, `refreshTransport` i cookie/refresh
+  logika ostaju isti; nema novog flaga.
+- Lokalno sva tri Auth HTTP/cookie suitea prolaze **19/19**. **Finalni code CI
+  `41876377311`:** backend **83/842 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**. Controller nije mijenjan i inventory ostaje **34**.
+- Nema migracije/backfilla, promjene flaga, AuthService/controllera,
+  mobile/compose izmjena ni deploya. Rollback je revert `b6e4f0d`; privremeni
+  Prisma stubovi su uklonjeni.
+- **Granica:** numerički identifier/email/password sada staju prije servisa,
+  dok valjani stringovi, response, trim/lowercase i email fallback ostaju. Mock
+  controller ne dokazuje real-DB/bcrypt login, throttling ili refresh rollout.
+
 ## S-002 — Auth change-password body DTO validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `5aee897`, fix `e583a10`.**

@@ -1,4 +1,5 @@
 import { Transform } from 'class-transformer';
+import type { TransformFnParams } from 'class-transformer';
 import {
   IsBoolean,
   IsDateString,
@@ -12,8 +13,19 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
+// Globalni enableImplicitConversion ne smije pretvoriti ne-string u string prije
+// @IsString; originalni tip mora ostati vidljiv validatoru.
+const preserveRawInput = ({ obj, key }: TransformFnParams) =>
+  obj[key] as unknown;
+
+const normalizeProfileUsername = (params: TransformFnParams) => {
+  const value = preserveRawInput(params);
+  return typeof value === 'string' ? value.trim().toLowerCase() : value;
+};
+
 export class UpdateUserDto {
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
   name?: string;
@@ -27,12 +39,11 @@ export class UpdateUserDto {
     message:
       'Username may only contain letters, numbers, underscore, dot, and dash',
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @Transform(normalizeProfileUsername)
   username?: string;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
   homeLocation?: string;
@@ -44,16 +55,19 @@ export class UpdateUserDto {
   password?: string;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
   avatarUrl?: string;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
   timezone?: string;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
   locale?: string;

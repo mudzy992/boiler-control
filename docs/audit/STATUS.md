@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas invoice DELETE runtime path ID validacija (2026-11-04)
+
+**STATUS: INVOICE DELETE PATH ID RIJEŠEN U KODU (`f0a3664`); HTTP DOKAZ ZELEN.** Servisno owner/file/DB brisanje i download ID parametri nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Web/mobile već koriste numerički ID; controller ne mijenja servisni owner lookup, file deletion, DB update ili response.
+- Postojeći stvarni controller HTTP spec s produkcijskim ValidationPipe dobio je valjan numeric-ID i malformed-ID scenarij. Servis je mockan; postojeći real-DB/file integration tok je zaseban i nepromijenjen.
+- **Test-first:** baseline je 18/18. Commit `5b6edf0` lokalno daje **19/20 prolaza i jedan pad**, a CI `41791150307` potvrđuje **798 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan DELETE zadržava 200/response/argumente, a malformed ID ranije dobija 200 i dolazi do servisa.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Nema Min(1), novog flaga ni izmjene stvarnog brisanja fajla/zapisa ili drugih ruta.
+- **Finalni code CI `41791663202`:** backend **78/799 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **20/20**, svi lokalni Gas testovi **53/53**.
+- Samo DELETE invoice OpenAPI/frontend path tip je number; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `f0a3664`.
+- **Preostalo:** novi real-DB/file-delete dokaz nije dodat, ID pozitivnost, meter/invoice download i drugi moduli te produkcijski rollout.
+
 ### S-002 — Gas invoice upload runtime path ID validacija (2026-11-04)
 
 **STATUS: INVOICE UPLOAD PATH ID RIJEŠEN U KODU (`2bfa4e3`); HTTP DOKAZ ZELEN.** DTO, PDF/storage/DB logika i drugi ID parametri nisu mijenjani.

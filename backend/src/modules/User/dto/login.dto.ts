@@ -1,22 +1,30 @@
 import { Transform } from 'class-transformer';
+import type { TransformFnParams } from 'class-transformer';
 import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+// Globalni enableImplicitConversion ne smije pretvoriti ne-string u string prije
+// @IsString; originalni tip mora ostati vidljiv validatoru.
+const preserveRawInput = ({ obj, key }: TransformFnParams) =>
+  obj[key] as unknown;
+
+const normalizeLoginIdentifier = (params: TransformFnParams) => {
+  const value = preserveRawInput(params);
+  return typeof value === 'string' ? value.trim().toLowerCase() : value;
+};
 
 export class LoginDto {
   @IsString()
   @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @Transform(normalizeLoginIdentifier)
   email?: string;
 
   @IsString()
   @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @Transform(normalizeLoginIdentifier)
   identifier?: string;
 
+  @Transform(preserveRawInput)
   @IsString()
   @IsNotEmpty()
   password: string;

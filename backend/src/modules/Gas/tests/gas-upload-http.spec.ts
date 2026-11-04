@@ -15,6 +15,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
   const create = jest.fn();
   const deleteReading = jest.fn();
   const updateReference = jest.fn();
+  const uploadMeterImage = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
   beforeAll(async () => {
@@ -27,6 +28,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
             create,
             delete: deleteReading,
             updateReference,
+            uploadMeterImage,
             getEfficiencyAnalysis,
           },
         },
@@ -60,6 +62,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
     create.mockReset();
     deleteReading.mockReset();
     updateReference.mockReset();
+    uploadMeterImage.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
 
@@ -164,6 +167,48 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(updateReference).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /api/gas/reading/:id/meter-image path ID (S-002)', () => {
+    const image = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+
+    it('zadržava numeric ID, multipart response i file argumente', async () => {
+      uploadMeterImage.mockResolvedValue({ id: 17, hasMeterImage: true });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/gas/reading/17/meter-image')
+        .attach('meterImage', image, {
+          filename: 'meter.jpg',
+          contentType: 'image/jpeg',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({ id: 17, hasMeterImage: true });
+      expect(uploadMeterImage).toHaveBeenCalledWith(
+        42,
+        17,
+        expect.objectContaining({
+          originalname: 'meter.jpg',
+          mimetype: 'image/jpeg',
+          size: image.length,
+          buffer: image,
+        }),
+      );
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      uploadMeterImage.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/gas/reading/not-a-number/meter-image')
+        .attach('meterImage', image, {
+          filename: 'meter.jpg',
+          contentType: 'image/jpeg',
+        });
+
+      expect(response.status).toBe(400);
+      expect(uploadMeterImage).not.toHaveBeenCalled();
     });
   });
 

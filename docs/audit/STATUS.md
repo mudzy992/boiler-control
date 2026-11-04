@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas invoice download runtime path ID validacija (2026-11-04)
+
+**STATUS: INVOICE DOWNLOAD PATH ID RIJEŠEN U KODU (`6dc7e90`); SVIH SEDAM GASREADING ID RUTA IMA NUMERIC PARSING.** ID pozitivnost i drugi moduli nisu obuhvaćeni.
+
+- Source review je potvrdio da je invoice GET bio posljednji GasReading `:id` bez ParseIntPipe. Web/mobile već koriste numerički ID; owner lookup, private PDF stream, MIME i Content-Disposition logika ostaju isti.
+- Postojeći stvarni controller HTTP spec dobio je valjan numeric-ID i malformed-ID scenarij sa synthetic Readable streamom i mock servisom. Nije novi real-filesystem/DB dokaz; postojeći integration tok je zaseban.
+- **Test-first:** baseline je 22/22. Commit `1be2cc3` lokalno daje **23/24 prolaza i jedan pad**, a CI `41799552405` potvrđuje **802 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan GET zadržava 200/PDF bajtove/headere/argumente, a malformed ID ranije dobija 200.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Nema Min(1), novog flaga ni izmjene streama, filename sanitizerja, headera ili response logike.
+- **Finalni code CI `41800096690`:** backend **78/803 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **24/24**, svi lokalni Gas testovi **57/57**.
+- Samo GET invoice OpenAPI/frontend path tip je number; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `6dc7e90`.
+- **Preostalo:** real-filesystem/DB nije dodatno dokazan, ID pozitivnost, drugi moduli, cijeli DTO inventar i produkcijski rollout.
+
 ### S-002 — Gas meter-image download runtime path ID validacija (2026-11-04)
 
 **STATUS: METER-IMAGE DOWNLOAD PATH ID RIJEŠEN U KODU (`9abe486`); HTTP STREAM DOKAZ ZELEN.** Owner/filesystem logika, headeri i invoice download nisu mijenjani.

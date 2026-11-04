@@ -3,6 +3,42 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas invoice download path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `1be2cc3`, fix `6dc7e90`.**
+`origin/arena/c9961f17-boiler-control` je `6dc7e90` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `c51b641`. PR nije otvaran.
+
+- Source review je potvrdio da je invoice GET bio posljednji GasReading `:id`
+  bez ParseIntPipe i da radi `+id` tek u controlleru. Web/mobile već koriste
+  numerički ID; servisni owner lookup, private PDF stream i headeri su isti.
+- Postojeći HTTP suite pokreće stvarni controller i produkcijski ValidationPipe
+  s mock servisom i synthetic Readable streamom. To je controller/stream/header
+  dokaz, ne novi real-filesystem/DB dokaz; postojeći integration tok je zaseban.
+- Baseline je bio **22/22**. Test-only `1be2cc3` dodaje valjan numeric ID koji
+  zadržava 200, PDF bajtove/headere i servisne argumente, te malformed ID koji
+  mora dati 400 bez servisa. Lokalni repro dao je **23 prošla / 1 pao / 24
+  ukupno**: valjana kontrola prolazi, a malformed ID dobija **200**.
+- **Test-first CI `41799552405`:** **802 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti, stream/header očekivanja i postojeći testovi nisu mijenjani.
+- Fix `6dc7e90` dodaje postojeći ParseIntPipe samo na invoice GET `:id`. Nema
+  Min(1), novog flaga ni izmjene servisnog owner lookupa, private streama,
+  filename sanitizerja, headera ili responsea.
+- Lokalno je isti suite nakon ispravke **24/24**, a sva tri Gas suitea **57/57**.
+  **Finalni code CI `41800096690`:** backend **78/803 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- Samo GET invoice OpenAPI/frontend path `id` postaje number. Sync/type-check i
+  frontend **92/92** prolaze. ESLint ima **0 errors / 2 postojeća warnings**.
+  Route markeri i inventory baseline od 34 poznate razlike ostaju stabilni.
+- Svih sedam GasReading `:id` ruta sada koristi ParseIntPipe; to zatvara samo
+  numeric parsing za taj controller, ne Min(1)/pozitivnost ili druge module.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `6dc7e90`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** synthetic stream nije novi real-filesystem/DB dokaz; ID
+  pozitivnost, drugi moduli, cijeli DTO inventar i rollout ostaju otvoreni.
+
 ## S-002 — Gas meter-image download path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `4a9ba4b`, fix `9abe486`.**

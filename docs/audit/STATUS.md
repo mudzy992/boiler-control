@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Auth register runtime body DTO validacija (2026-11-04)
+
+**STATUS: ČETIRI REGISTER STRING POLJA RIJEŠENA U KODU (`3ad9c55`); CI ZELEN.** Email, AuthService, bcrypt hash, Prisma uniqueness/create, `refreshTransport` i postojeća cookie/refresh politika nisu mijenjani.
+
+- Source review i čisti DTO probe potvrđuju implicitnu konverziju numeričkog username/password/name/homeLocation u string bez validator greške. Numerički i array email već imaju validator grešku; email nije dio fixa. Mobile već šalje četiri string polja. Postojeći Auth baseline je **19/19** uz privremene Prisma import stubove; novi suite koristi mock servis, ne real-DB/bcrypt/uniqueness dokaz.
+- Test-only `4f6dd12` dodaje potpun valjan payload/response/normalizaciju/servisni argument i četiri numerička negativca. Novi repro je **1/5 prolaza**, sa Auth kontrolom **20/24**. CI `41882246091` potvrđuje backend **843 prošlo / 4 pala / 847 ukupno**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- Raw-input transform sada daje 400 za numerički username/password/name/homeLocation prije servisa, dok valjani payload zadržava 201, response, email/username normalizaciju i cijeli servisni argument. Postojeći flag ostaje nepromijenjen.
+- **Finalni code CI `41883133590`:** backend **84/847 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno Auth HTTP/cookie suiteovi prolaze **24/24**.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Controller nije mijenjan i inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `3ad9c55`.
+- **Preostalo:** real-DB uniqueness/create, bcrypt hash i refresh rollout nisu novi dokaz ovog mock controller slicea.
+
 ### S-002 — Auth login runtime body DTO validacija (2026-11-04)
 
 **STATUS: LOGIN STRING TIPOVI RIJEŠENI U KODU (`b6e4f0d`); CI ZELEN.** Identifier/email fallback, AuthService, bcrypt/Prisma lookup, `refreshTransport` i postojeća cookie/refresh politika nisu mijenjani.

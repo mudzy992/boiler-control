@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  ParseIntPipe,
   UseGuards,
   Patch,
 } from '@nestjs/common';
@@ -64,7 +65,10 @@ export class NotificationsController {
 
   // Označi notifikaciju kao pročitanu
   @Post(':id/read')
-  async markAsRead(@Param('id') id: number, @User() userId: number) {
+  async markAsRead(
+    @Param('id', ParseIntPipe) id: number,
+    @User() userId: number,
+  ) {
     // SEC-1: userId je obavezan — bez njega je ruta bila IDOR.
     return this.notificationsService.markAsRead(id, userId);
   }

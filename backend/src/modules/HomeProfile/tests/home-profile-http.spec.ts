@@ -16,7 +16,10 @@ import {
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { JwtAuthGuard } from '../../Auth/jwt-auth.guard';
-import { HomeProfileController } from '../home.profile.controller';
+import {
+  HomeProfileController,
+  HomeProfileSingleController,
+} from '../home.profile.controller';
 import { HomeProfileService } from '../home.profile.service';
 
 describe('HomeProfile controller HTTP kompatibilnost', () => {
@@ -28,7 +31,7 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [HomeProfileController],
+      controllers: [HomeProfileController, HomeProfileSingleController],
       providers: [
         {
           provide: HomeProfileService,
@@ -196,6 +199,53 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(activate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('PATCH /api/home-profile/:id path ID (S-002)', () => {
+    it('zadržava numeric ID, mapProfile response i servisne argumente', async () => {
+      update.mockResolvedValue({
+        id: 17,
+        userId: 42,
+        floorArea: 150,
+        insulationType: 'EPS',
+        windowType: 'DOUBLE_GLAZED',
+        heatingType: 'RADIATOR',
+        location: 'Sarajevo',
+        isActive: true,
+      });
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/home-profile/17')
+        .send({});
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        id: 17,
+        userId: 42,
+        floorArea: 150,
+        insulationType: 'EPS',
+        windowType: 'DOUBLE_GLAZED',
+        heatingType: 'RADIATOR',
+        location: 'Sarajevo',
+        isActive: true,
+        squareMeters: 150,
+        insulationLevel: 'EPS',
+        windowQuality: 'DOUBLE_GLAZED',
+        radiatorType: 'RADIATOR',
+      });
+      expect(update).toHaveBeenCalledWith(42, 17, {});
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      update.mockResolvedValue({ id: 17, userId: 42 });
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/home-profile/not-a-number')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(update).not.toHaveBeenCalled();
     });
   });
 });

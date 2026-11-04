@@ -33,8 +33,8 @@ export class HomeProfileController {
   }
 
   @Get(':id')
-  findOne(@Req() req, @Param('id') id: string) {
-    return this.service.findOne(req.user.userId, +id);
+  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(req.user.userId, id);
   }
 
   @Post()

@@ -16,6 +16,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
   const deleteReading = jest.fn();
   const updateReference = jest.fn();
   const uploadMeterImage = jest.fn();
+  const uploadInvoice = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
   beforeAll(async () => {
@@ -29,6 +30,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
             delete: deleteReading,
             updateReference,
             uploadMeterImage,
+            uploadInvoice,
             getEfficiencyAnalysis,
           },
         },
@@ -63,6 +65,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
     deleteReading.mockReset();
     updateReference.mockReset();
     uploadMeterImage.mockReset();
+    uploadInvoice.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
 
@@ -209,6 +212,51 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(uploadMeterImage).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /api/gas/reading/:id/invoice path ID (S-002)', () => {
+    const pdf = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+
+    it('zadržava numeric ID, multipart DTO, response i file argumente', async () => {
+      uploadInvoice.mockResolvedValue({ id: 17, hasInvoicePdf: true });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/gas/reading/17/invoice')
+        .field('invoiceGasPriceExVat', '1.25')
+        .attach('invoicePdf', pdf, {
+          filename: 'invoice.pdf',
+          contentType: 'application/pdf',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({ id: 17, hasInvoicePdf: true });
+      expect(uploadInvoice).toHaveBeenCalledWith(
+        42,
+        17,
+        expect.objectContaining({ invoiceGasPriceExVat: 1.25 }),
+        expect.objectContaining({
+          originalname: 'invoice.pdf',
+          mimetype: 'application/pdf',
+          size: pdf.length,
+          buffer: pdf,
+        }),
+      );
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      uploadInvoice.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/gas/reading/not-a-number/invoice')
+        .field('invoiceGasPriceExVat', '1.25')
+        .attach('invoicePdf', pdf, {
+          filename: 'invoice.pdf',
+          contentType: 'application/pdf',
+        });
+
+      expect(response.status).toBe(400);
+      expect(uploadInvoice).not.toHaveBeenCalled();
     });
   });
 

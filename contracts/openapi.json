@@ -2151,6 +2151,10 @@
           "avatarUrl": {
             "type": "string"
           },
+          "currentPassword": {
+            "description": "Required when password is provided.",
+            "type": "string"
+          },
           "gasPriceEffectiveFrom": {
             "type": "string"
           },

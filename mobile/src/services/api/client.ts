@@ -428,6 +428,7 @@ class ApiClientService {
     name?: string;
     username?: string;
     homeLocation?: string;
+    currentPassword?: string;
     password?: string;
     gasPriceExVat?: number;
     gasPriceEffectiveFrom?: string;

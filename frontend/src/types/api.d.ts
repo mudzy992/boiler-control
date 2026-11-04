@@ -1722,6 +1722,8 @@ export interface components {
         };
         UpdateUserDto: {
             avatarUrl?: string;
+            /** @description Required when password is provided. */
+            currentPassword?: string;
             gasPriceEffectiveFrom?: string;
             gasPriceExVat?: number;
             homeLocation?: string;

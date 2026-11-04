@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -51,17 +52,28 @@ export class UserService {
   async updateMe(userId: number, dto: UpdateUserDto) {
     const dataToUpdate: any = { ...dto };
     delete dataToUpdate.gasPriceEffectiveFrom;
-
-    if (dto.password) {
-      const hashed = await bcrypt.hash(dto.password, 12);
-      dataToUpdate.passwordHash = hashed;
-    }
-    delete dataToUpdate.password; // uklonimo plain password
+    delete dataToUpdate.currentPassword;
 
     const existing = await this.prisma.user.findUnique({
       where: { id: userId },
     });
     if (!existing) return null;
+
+    if (dto.password) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required');
+      }
+      const currentPasswordMatches = await bcrypt.compare(
+        dto.currentPassword,
+        existing.passwordHash,
+      );
+      if (!currentPasswordMatches) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+      const hashed = await bcrypt.hash(dto.password, 12);
+      dataToUpdate.passwordHash = hashed;
+    }
+    delete dataToUpdate.password; // uklonimo plain password
 
     if (dto.username && dto.username !== existing.username) {
       const usernameTaken = await this.prisma.user.findUnique({

@@ -3,6 +3,7 @@ import type { TransformFnParams } from 'class-transformer';
 import {
   IsBoolean,
   IsDateString,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -10,6 +11,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -47,6 +49,15 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   homeLocation?: string;
+
+  @ApiPropertyOptional({
+    description: 'Required when password is provided.',
+  })
+  @Transform(preserveRawInput)
+  @ValidateIf((dto) => dto.password !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  currentPassword?: string;
 
   @ApiPropertyOptional()
   @Transform(preserveRawInput)

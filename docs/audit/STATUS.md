@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — ThermostatDevice findOne runtime path ID validacija (2026-11-04)
+
+**STATUS: FINDONE GET PATH ID RIJEŠEN U KODU (`46fbbbd`); CI ZELEN.** Servisni findUnique i 403/404 ownership ponašanje nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile već koristi `getDeviceById(id: number)`, a web nema direktan poziv. Programs, update/delete rute i servisna ownership logika ostaju isti.
+- Novi stvarni controller HTTP spec koristi produkcijske ValidationPipe opcije i mock servis. Ovo nije novi real-DB owner/foreign dokaz; postojeći numeric-missing 404 contract test i integration tokovi su nepromijenjeni.
+- **Test-first:** commit `9c99fde` dodaje novi suite i lokalno daje **1/2 prolaza**. CI `41819704031` potvrđuje backend **816 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed GET koji ranije dobija 200 pada. Frontend je zelen, a mobile nezavisno ima poznati weather UI timeout (**135/136**) bez mobile diffa ili izmjene timeouta/asserti/paralelizma.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa, dok valjan ID zadržava 200, cijeli nested response i `findOne(42,17)`. Nema Min(1), novog flaga ni izmjene DTO-a, servisne logike ili baze.
+- **Finalni code CI `41820151042`:** backend **80/817 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalni novi suite je **2/2**.
+- Samo findOne GET OpenAPI/frontend path tip je number; programs, PATCH i DELETE ostaju nepromijenjeni. Sync/type-check i frontend **92/92** prolaze. Novi import pomjera šest route markera, usklađenih u fix commitu; inventory ostaje 34. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `46fbbbd`.
+- **Preostalo:** real-DB owner/foreign dokazi, ID pozitivnost, programs/update/delete ID rute i produkcijski rollout.
+
 ### S-002 — Legacy Weather current runtime path ID validacija (2026-11-04)
 
 **STATUS: LEGACY WEATHER CURRENT PATH ID RIJEŠEN U KODU (`816e537`); CI ZELEN.** Owner/location upit, WeatherService, provider i v2 rute nisu mijenjani.

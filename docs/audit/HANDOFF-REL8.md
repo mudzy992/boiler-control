@@ -3,6 +3,44 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice findOne path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `9c99fde`, fix `46fbbbd`.**
+`origin/arena/c9961f17-boiler-control` je `46fbbbd` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `00ec393`. PR nije otvaran.
+
+- Source review je potvrdio da GET `/api/devices/:id` prima string i radi `+id`.
+  Mobile `getDeviceById(id: number)` već koristi numerički ID; web nema direktan
+  poziv ove rute. Servisni findUnique, 403/404 ownership ponašanje i programs,
+  update/delete rute nisu mijenjani.
+- Novi `thermostat-device-http.spec.ts` pokreće stvarni controller i produkcijske
+  ValidationPipe opcije s mock servisom. Ovo je controller/path dokaz, ne novi
+  real-DB ownership dokaz. Postojeći real-DB numeric-missing 404 contract test i
+  integration tokovi su nepromijenjeni.
+- Nije postojao dedikovani controller suite. Test-only `9c99fde` dodaje valjan
+  numeric ID sa 200, cijelim nested responseom i `findOne(42,17)`, te malformed
+  ID koji mora dati 400 bez servisa. Lokalni repro je **1 prošao / 1 pao / 2
+  ukupno**: valjana kontrola prolazi, a malformed ID dobija **200**.
+- **Test-first CI `41819704031`:** backend **816 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi malformed GET
+  scenarij pada. Frontend je zelen. Mobile nezavisno ima poznati
+  `weatherV2NativeWind` timeout (**135/136**), bez mobile diffa i bez izmjene
+  timeouta, asserti ili paralelizma.
+- Fix `46fbbbd` dodaje ParseIntPipe samo na findOne GET `:id`. Nema Min(1),
+  novog flaga ni izmjene DTO pravila, servisne ownership logike ili baze. Novi
+  import pomjera šest ThermostatDevice route markera za jednu liniju; svi su
+  usklađeni u fix commitu i inventory ostaje **34**.
+- Lokalno je novi suite **2/2**. **Finalni code CI `41820151042`:** backend
+  **80/817 + 12/115 integration**, mobile **24/136**, frontend **4/4**,
+  `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure annotations.
+- Samo findOne GET OpenAPI/frontend path `id` postaje number; programs, PATCH i
+  DELETE ostaju nepromijenjeni. Sync/type-check i frontend **92/92** prolaze.
+  Backend ESLint ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `46fbbbd`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne dokazuje real-DB owner/foreign tok; ID
+  pozitivnost, programs/update/delete ID rute i rollout ostaju otvoreni.
+
 ## S-002 — Legacy Weather current path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `3c709be`, fix `816e537`.**

@@ -97,11 +97,11 @@ export class HomeProfileSingleController {
   @Patch(':id')
   update(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateHomeProfileDto,
   ) {
     return this.service
-      .update(req.user.userId, Number(id), dto)
+      .update(req.user.userId, id, dto)
       .then((profile) => this.mapProfile(profile));
   }
 }

@@ -3,6 +3,47 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Legacy Weather current path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `3c709be`, fix `816e537`.**
+`origin/arena/c9961f17-boiler-control` je `816e537` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `23857da`. PR nije otvaran.
+
+- Source review je potvrdio da legacy GET `/api/weather/current/:homeProfileId`
+  prima string i radi `Number(homeProfileId)`; sve tri v2 ID rute već imaju
+  ParseIntPipe. Web helper već koristi `homeProfileId: number`, a mobile koristi
+  nepromijenjenu v2 current rutu. Owner/location Prisma upit i WeatherService
+  poziv ostaju nepromijenjeni.
+- Postojeći `stub-endpoint.spec.ts` pokreće stvarni controller i produkcijske
+  ValidationPipe opcije s mock Prismom i weather servisom. Novi dokaz je
+  controller/path granica, ne real-DB ownership, missing-location ili
+  live-provider dokaz. Integration i STUB_ENDPOINTS_MODE ponašanje su isti.
+- Baseline je bio **26/26**. Test-only `3c709be` dodaje valjan numeric ID sa
+  200, responseom, upitom `id:17,userId:4242`, location selectom i
+  `getTodayWeather('Sarajevo')`, te malformed ID koji mora dati 400 bez oba
+  poziva. Lokalni repro je **27 prošlo / 1 pao / 28 ukupno**: valjana kontrola
+  prolazi, a malformed ID dobija **200**.
+- **Test-first CI `41817823362`:** backend **814 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi malformed
+  legacy Weather current scenarij pada. Frontend i mobile **24/136** su zeleni.
+- Fix `816e537` dodaje ParseIntPipe samo na legacy current `homeProfileId`.
+  Time sve Weather current/location ID rute imaju numeric parsing. Nema Min(1),
+  novog flaga ni izmjene v2 ruta, providera, WeatherServicea, cachea ili baze.
+  Import već postoji, route markeri se ne pomjeraju i inventory ostaje **34**.
+- Lokalno je fokusirani suite **28/28**, a sa Weather OpenAPI specom **31/31**.
+  **Finalni code CI `41818244510`:** backend **79/815 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su
+  success i nema failure annotations.
+- Samo legacy current OpenAPI/frontend path `homeProfileId` postaje number.
+  Sync/type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors /
+  2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/provider/mobile/compose
+  promjene ni deploya. Rollback je revert `816e537`; privremeni Prisma stubovi
+  su uklonjeni.
+- **Granica:** mock controller ne dokazuje stvarni owner/missing-location tok
+  ili provider; ID pozitivnost, ThermostatDevice ID rute i rollout ostaju
+  otvoreni.
+
 ## S-002 — HomeProfile singular update path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `af926f7`, fix `12ea42e`.**

@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Legacy Weather current runtime path ID validacija (2026-11-04)
+
+**STATUS: LEGACY WEATHER CURRENT PATH ID RIJEŠEN U KODU (`816e537`); CI ZELEN.** Owner/location upit, WeatherService, provider i v2 rute nisu mijenjani.
+
+- Source review je potvrdio string path ID i `Number(homeProfileId)` konverziju; sve tri v2 ID rute već imaju ParseIntPipe. Web već koristi numerički ID, a instalirani mobile koristi nepromijenjenu v2 current rutu.
+- Postojeći stvarni controller HTTP spec koristi produkcijske ValidationPipe opcije i mock Prisma/weather servis. Ovo je controller/path dokaz, ne real-DB owner/missing-location ili live-provider tok; integration i STUB_ENDPOINTS_MODE ponašanje su nepromijenjeni.
+- **Test-first:** baseline je 26/26. Commit `3c709be` dodaje dva scenarija i lokalno daje **27/28 prolaza**. CI `41817823362` potvrđuje backend **814 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed legacy current ID koji ranije dobija 200 pada. Frontend i mobile **24/136** zeleni su.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije Prisme i weather servisa, dok valjan ID zadržava 200, response, `id:17,userId:4242` owner/location upit i `getTodayWeather('Sarajevo')`. Nema Min(1), novog flaga ni izmjene v2 ruta, providera, servisa, cachea ili baze.
+- **Finalni code CI `41818244510`:** backend **79/815 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalni fokusirani suite je **28/28**, a sa Weather OpenAPI specom **31/31**.
+- Samo legacy current OpenAPI/frontend path tip je number; sve Weather current/location ID rute sada imaju numeric parsing. Sync/type-check i frontend **92/92** prolaze. Nema pomaka route markera, inventory ostaje 34, migracije/backfilla ili mobile/compose promjene. Rollback je revert `816e537`.
+- **Preostalo:** real-DB owner/missing-location i live-provider dokazi, ID pozitivnost, ThermostatDevice ID rute i produkcijski rollout.
+
 ### S-002 — HomeProfile singular update runtime path ID validacija (2026-11-04)
 
 **STATUS: SINGULAR UPDATE PATH ID RIJEŠEN U KODU (`12ea42e`); SVI REGISTROVANI HOME PROFILE ID-EVI NUMERIČKI PARSIRANI.** Servisni update i `mapProfile` nisu mijenjani.

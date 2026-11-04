@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile singular update runtime path ID validacija (2026-11-04)
+
+**STATUS: SINGULAR UPDATE PATH ID RIJEŠEN U KODU (`12ea42e`); SVI REGISTROVANI HOME PROFILE ID-EVI NUMERIČKI PARSIRANI.** Servisni update i `mapProfile` nisu mijenjani.
+
+- Source review je potvrdio string path ID i `Number(id)` konverziju. Web i singularni mobile helper već koriste numerički ID. FindOne owner lookup, update po ID-u i `mapProfile` ostaju isti; neregistrovani duplikat controllera nije mijenjan.
+- HTTP spec koristi oba stvarna controllera, produkcijske ValidationPipe opcije i mock servis. Prazan body je valjan sa stvarnim DTO-om jer su sva polja opciona; dokaz je path parsing, ne novi DTO/real-DB update ili ownership tok.
+- **Test-first:** baseline je 13/13. Commit `af926f7` dodaje dva scenarija i lokalno daje **14/15 prolaza**. CI `41814974102` potvrđuje backend **812 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed singularni PATCH koji ranije dobija 200 pada. Frontend i mobile **24/136** zeleni su.
+- `ParseIntPipe` sada odbija malformed singularni PATCH ID s 400 prije servisa, dok valjan ID zadržava 200, cijeli `mapProfile` response i `update(42,17,{})`. Nema Min(1), novog flaga ni izmjene DTO-a, `mapProfile`, servisne logike ili baze.
+- **Finalni code CI `41815572210`:** backend **79/813 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalna oba HomeProfile suitea su **15/15**.
+- Samo singularni PATCH OpenAPI/frontend path tip je number; svi registrovani HomeProfile `:id` parametri sada imaju numeric parsing. Sync/type-check i frontend **92/92** prolaze. Nema pomaka route markera, inventory ostaje 34, migracije/backfilla ili mobile/compose promjene. Rollback je revert `12ea42e`.
+- **Preostalo:** DTO payload i real-DB update/ownership dokazi, ID pozitivnost, ThermostatDevice/Weather ID rute i produkcijski rollout.
+
 ### S-002 — HomeProfile delete runtime path ID validacija (2026-11-04)
 
 **STATUS: PLURAL DELETE PATH ID RIJEŠEN U KODU (`e3a8195`); SVI PLURALNI HOME PROFILE ID-EVI NUMERIČKI PARSIRANI.** Servisno brisanje i singularna ruta nisu mijenjani.

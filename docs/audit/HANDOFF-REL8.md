@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-003 — User profile potvrda trenutne lozinke (2026-11-04)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `ab8c350`, fix `6345fc7`.**
+`origin/arena/c9961f17-boiler-control` je `6345fc7` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `34ded14`. PR nije otvaran.
+
+- Source review je potvrdio da je profilni PUT hashirao i spremao novi password
+  bez `currentPassword` provjere, dok je namjenski Auth tok već radio bcrypt
+  compare. Poznati web i mobile ekrani ne šalju password kroz profil; mobile
+  Settings koristi `/auth/change-password`.
+- Test-only `ab8c350` dodaje servisne bcrypt/fake-DB i stvarne
+  AppModule/JWT/Prisma/PostgreSQL scenarije, proširuje controller DTO suite i
+  popravlja zastarjeli sintetički auth bootstrap. Lokalni repro je **16 prošlo /
+  5 palo / 21 ukupno**, a audit repro nezavisno dobija 200 umjesto 400 za
+  password bez stare lozinke.
+- **Test-first CI `41905261533`:** backend **864 prošlo / 8 palo / 872 ukupno**,
+  integration **116 prošlo / 3 pala / 119 ukupno**. Svih osam backend i sva tri
+  integration failurea su samo S-003 scenariji; `tsc: 0`, `eslint: 0`, mobile
+  **24/136** i frontend **4/4** ostaju zeleni.
+- Fix `6345fc7` uslovno zahtijeva neprazan raw-string `currentPassword` uz
+  `password`, servis radi bcrypt compare prije novog hasha i ne prosljeđuje
+  `password`/`currentPassword` Prisma updateu. Bez stare lozinke je 400, za
+  netačnu 401 bez DB promjene, a za tačnu 200 uz novi bcrypt hash. Običan
+  profilni update bez password polja ostaje nepromijenjen.
+- Lokalno ciljani suiteovi prolaze **21/21**, povezani Auth/User suiteovi
+  **35/35**, a `auth_session_repro.cjs` potvrđuje 400/401/200 redom za
+  missing/wrong/correct current password. Backend ESLint ima **0 errors / 2
+  poznata warnings**. OpenAPI dodaje samo opcioni `currentPassword`; generated
+  frontend tipovi, sync/type-check i frontend **92/92** prolaze.
+- **Finalni code CI `41906152927`:** backend **87/872 + 13/119 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su
+  success i nema failure annotations. Real-DB integration dokazuje da odbijeni
+  zahtjevi ne mijenjaju hash niti ostala profilna polja.
+- Mobile API tip dobiva samo opcioni `currentPassword`; postojeći ekrani i
+  instalirani mobile password tok nisu mijenjani. Vanjski klijenti koji koriste
+  profilni PUT za password moraju poslati i `currentPassword`.
+- Nema migracije/backfilla, novog flaga, compose ni deploy izmjene. Rollback
+  production fixa je revert `6345fc7`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** S-003 old-password propust je zatvoren i real-DB/bcrypt dokazan.
+  **S-004 nije riješen:** stari JWT i dalje prolazi nakon promjene lozinke u
+  sintetičkom reproe; revokacija sesija i produkcijski rollout ostaju zasebni.
+
 ## S-002 — User profile password raw-tip validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `9935b63`, fix `0300400`.**

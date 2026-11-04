@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-003 — User profile potvrda trenutne lozinke (2026-11-04)
+
+**STATUS: S-003 OLD-PASSWORD PROPUST RIJEŠEN (`6345fc7`); CI ZELEN. S-004 NIJE RIJEŠEN.** Profilni PUT sada zahtijeva `currentPassword` za promjenu passworda i stvarni PostgreSQL/bcrypt tok je pokriven.
+
+- Test-only `ab8c350` daje lokalno **16 prošlo / 5 palo / 21 ukupno**. CI `41905261533` potvrđuje backend **864 prošlo / 8 palo / 872 ukupno** i integration **116 prošlo / 3 pala / 119 ukupno**; svi failurei su ciljani S-003 scenariji, dok su `tsc`, ESLint, mobile i frontend zeleni.
+- Fix uslovno validira neprazan raw-string `currentPassword`, radi bcrypt compare prije hasha i uklanja obje lozinke iz Prisma update podataka. Missing current daje 400, wrong current 401 bez hash/profile promjene, a correct current 200 uz novi hash; običan profile update ostaje isti.
+- Lokalno ciljani testovi su **21/21**, povezani Auth/User suiteovi **35/35**, frontend **92/92**, mobile **24/136**, a backend ESLint ima **0 errors / 2 poznata warnings**. Audit repro daje 400/401/200 za missing/wrong/correct current password.
+- **Finalni code CI `41906152927`:** backend **87/872 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, sva tri joba success i nula failure annotations.
+- OpenAPI/frontend generated tipovi dodaju samo opcioni `currentPassword`; mobile API tip je usklađen bez promjene ekrana. Web i mobile poznati profilni ekrani ne šalju password, a mobile Settings koristi namjenski Auth endpoint.
+- Nema migracije/backfilla, flaga, compose ni deploy izmjene. Rollback production fixa je revert `6345fc7`.
+- **Preostalo:** S-004/session revokacija nije promijenjena; stari JWT ostaje prihvaćen u sintetičkom reproe. Produkcijski rollout nije dokazan.
+
 ### S-002 — User profile runtime password raw-tip validacija (2026-11-04)
 
 **STATUS: PROFILE PASSWORD RAW TIP RIJEŠEN U KODU (`0300400`); CI ZELEN. S-003 NIJE RIJEŠEN.** Controller, UserService, bcrypt/hash, postojeći minimum i valjani profile-password tok nisu mijenjani.

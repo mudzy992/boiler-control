@@ -163,7 +163,7 @@ Aktivna grana: `arena/1bfee051-boiler-control` (`git branch --show-current`).
 | `updateNotificationPreference` | PATCH | `/api/notifications/preferences` | `NotificationPreferencesScreen` |
 | `registerPushToken` | POST | `/api/notifications/register-token` | `AuthContext` |
 | `getUserProfile` | GET | `/api/user` | `ProfileScreen` |
-| `updateUserProfile` | PUT | `/api/user` | `ProfileScreen` |
+| `updateUserProfile` | PUT | `/api/user` | `ProfileScreen` bez password polja; API tip ima opcioni `currentPassword` |
 | `getHomeProfile` | GET | `/api/home-profile` | **niko** (mobile koristi `/home-profiles`) |
 | `updateHomeProfile` | PATCH | `/api/home-profile/:id` | **niko** (isto) |
 | `getRecommendations` | GET | `/api/recommendations` | **niko** (MO-013; plan 4.2) |
@@ -213,7 +213,7 @@ Backend rute i njihovi guardovi/owner filteri su u `docs/audit/backend/02-api-ca
 | `LoginScreen` | `apiClient.login` | `POST /api/auth/login` | token u `expo-secure-store` |
 | `RegisterScreen` | `apiClient.register` | `POST /api/auth/register` | — |
 | `AuthContext` (restore) | `apiClient.getMe` | `GET /api/auth/me` | neuspjeh → `logout()` |
-| `SettingsScreen` | `apiClient.changePassword` | `POST /api/auth/change-password` | traži staru lozinku (za razliku od web S-003) |
+| `SettingsScreen` | `apiClient.changePassword` | `POST /api/auth/change-password` | traži staru lozinku; profilni PUT također zahtijeva `currentPassword` za password nakon S-003 fixa |
 | `DashboardScreen`, `HeatingScreen` | `getDashboard` / `apiClient.getDashboard` | `GET /api/dashboard` | **dva različita query ključa** za isti endpoint (MO-027) |
 | `DashboardScreen` | `apiClient.setBoilerCurrentTemp` | `PATCH /api/boiler/current-temp` | granice 48–55 u klijentu |
 | `HeatingScreen` | `apiClient.getHeatingEvents({limit:20})` | `GET /api/heating-events` | defanzivno čita i niz i `{events}` |

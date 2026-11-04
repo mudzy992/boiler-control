@@ -109,11 +109,11 @@ export class GasReadingController {
   )
   uploadInvoice(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UploadInvoiceDto,
     @UploadedFile() invoicePdf: any,
   ) {
-    return this.service.uploadInvoice(req.user.userId, +id, dto, invoicePdf);
+    return this.service.uploadInvoice(req.user.userId, id, dto, invoicePdf);
   }
 
   @Delete('reading/:id/invoice')

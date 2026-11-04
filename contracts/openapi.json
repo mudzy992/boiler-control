@@ -3749,7 +3749,7 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],

@@ -131,7 +131,10 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
   let app: INestApplication;
   let saved: string | undefined;
   const weatherService = { getTodayWeather: jest.fn() };
-  const weatherV2Service = { getLocationCandidates: jest.fn() };
+  const weatherV2Service = {
+    getLocationCandidates: jest.fn(),
+    confirmLocation: jest.fn(),
+  };
   const prisma = { homeProfile: { findFirst: jest.fn() } };
 
   beforeAll(async () => {
@@ -356,6 +359,54 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
 
       expect(res.status).toBe(HttpStatus.BAD_REQUEST);
       expect(weatherV2Service.getLocationCandidates).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /api/weather/v2/locations/:homeProfileId/confirm body DTO (S-002)', () => {
+    beforeEach(() => {
+      weatherV2Service.confirmLocation.mockReset();
+      weatherV2Service.confirmLocation.mockResolvedValue({
+        status: 'location_confirmed',
+        location: { providerId: 'fallback' },
+      });
+    });
+
+    it('valjani stringovi zadržavaju response i servisne argumente', async () => {
+      const result = {
+        status: 'location_confirmed',
+        location: {
+          providerId: 'candidate-1',
+          label: 'Sarajevo',
+          confirmedAt: '2026-11-04T12:00:00.000Z',
+        },
+      };
+      weatherV2Service.confirmLocation.mockResolvedValue(result);
+
+      const res = await request(app.getHttpServer())
+        .post('/api/weather/v2/locations/17/confirm')
+        .send({ query: '  Sarajevo  ', candidateId: 'candidate-1' });
+
+      expect(res.status).toBe(HttpStatus.OK);
+      expect(res.body).toEqual(result);
+      expect(weatherV2Service.confirmLocation).toHaveBeenCalledTimes(1);
+      expect(weatherV2Service.confirmLocation).toHaveBeenCalledWith(
+        4242,
+        17,
+        '  Sarajevo  ',
+        'candidate-1',
+      );
+    });
+
+    it.each([
+      ['numeric query', { query: 12, candidateId: 'candidate-1' }],
+      ['numeric candidateId', { query: 'Sarajevo', candidateId: 123 }],
+    ])('%s vraća 400 prije servisnog poziva', async (_label, body) => {
+      const res = await request(app.getHttpServer())
+        .post('/api/weather/v2/locations/17/confirm')
+        .send(body);
+
+      expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+      expect(weatherV2Service.confirmLocation).not.toHaveBeenCalled();
     });
   });
 

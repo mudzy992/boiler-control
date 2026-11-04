@@ -118,8 +118,8 @@ export class GasReadingController {
 
   @Delete('reading/:id/invoice')
   @ApiOkResponse({ type: GasReadingResponseDto })
-  deleteInvoice(@Req() req, @Param('id') id: string) {
-    return this.service.deleteInvoice(req.user.userId, +id);
+  deleteInvoice(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteInvoice(req.user.userId, id);
   }
 
   @Get('reading/:id/meter-image')

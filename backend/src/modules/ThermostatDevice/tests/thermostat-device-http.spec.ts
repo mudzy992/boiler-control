@@ -24,6 +24,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
   const findOne = jest.fn();
   const getPrograms = jest.fn();
   const update = jest.fn();
+  const remove = jest.fn();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -31,7 +32,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: ThermostatDeviceService,
-          useValue: { findOne, getPrograms, update },
+          useValue: { findOne, getPrograms, update, remove },
         },
       ],
     })
@@ -63,6 +64,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
     findOne.mockReset();
     getPrograms.mockReset();
     update.mockReset();
+    remove.mockReset();
   });
 
   afterAll(async () => {
@@ -181,6 +183,41 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('DELETE /api/devices/:id path ID (S-002)', () => {
+    it('zadržava numeric ID, response i servisne argumente', async () => {
+      const device = {
+        id: 17,
+        userId: 42,
+        deviceId: 'tuya-17',
+        alias: 'Dnevna soba',
+        vendor: 'tuya',
+        mode: 'PROGRAM',
+        homeProfileId: 7,
+      };
+      remove.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer()).delete(
+        '/api/devices/17',
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(device);
+      expect(remove).toHaveBeenCalledTimes(1);
+      expect(remove).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      remove.mockResolvedValue({ id: 17, userId: 42 });
+
+      const response = await request(app.getHttpServer()).delete(
+        '/api/devices/not-a-number',
+      );
+
+      expect(response.status).toBe(400);
+      expect(remove).not.toHaveBeenCalled();
     });
   });
 });

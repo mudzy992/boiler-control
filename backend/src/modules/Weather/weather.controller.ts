@@ -21,6 +21,7 @@ import {
 import { WeatherService } from './weather.service';
 import { WeatherV2Service } from './weather-v2.service';
 import { ConfirmWeatherLocationDto } from './dto/confirm-weather-location.dto';
+import { WeatherLocationQueryDto } from './dto/weather-location-query.dto';
 import {
   ConfirmWeatherLocationResponseDto,
   WeatherLocationCandidatesResponseDto,
@@ -32,7 +33,6 @@ import { User } from '../Auth/user.decorator';
 /**
  * Weather Controller (P2a)
  * Provides endpoints for weather data
- * Full implementation deferred to later phases
  */
 @ApiTags('Weather')
 @ApiBearerAuth()
@@ -99,12 +99,12 @@ export class WeatherController {
   getWeatherLocationCandidates(
     @User() userId: number,
     @Param('homeProfileId', ParseIntPipe) homeProfileId: number,
-    @Query('query') query: string,
+    @Query() query: WeatherLocationQueryDto,
   ) {
     return this.weatherV2Service.getLocationCandidates(
       userId,
       homeProfileId,
-      query,
+      query.query,
     );
   }
 

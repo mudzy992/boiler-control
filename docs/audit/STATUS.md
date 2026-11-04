@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — ThermostatDevice update runtime path ID validacija (2026-11-04)
+
+**STATUS: UPDATE PATCH PATH ID RIJEŠEN U KODU (`88ff6aa`); CI ZELEN.** Servisni findUnique, provjera profila, update po ID-u i 403/404 ownership ponašanje nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile već koristi `updateDevice(id: number)`, a web nema direktan poziv. GET rute, delete i servisna logika ostaju isti.
+- Postojeći stvarni controller HTTP spec koristi produkcijske ValidationPipe opcije i mock servis/DTO; baseline je bio 4/4. Sva polja stvarnog update DTO-a su opciona, pa je prazan body valjana kontrola. Ovo nije novi DTO, real-DB owner/foreign ili mutation dokaz.
+- **Test-first:** commit `77c23f8` lokalno daje **5/6 prolaza**. CI `41825600924` potvrđuje backend **820 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed PATCH koji ranije dobija 200 pada. Mobile **24/136** i frontend **4/4** su zeleni.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa, dok valjan ID zadržava 200, cijeli response, prazan DTO i `update(42,17,{})`. Nema Min(1), novog flaga ni izmjene DTO-a, servisne logike ili baze.
+- **Finalni code CI `41826075816`:** backend **80/821 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalni cijeli ThermostatDevice HTTP suite je **6/6**.
+- Samo update PATCH OpenAPI/frontend path tip je number; GET findOne/programs ostaju number, a DELETE ostaje string. Sync/type-check i frontend **92/92** prolaze. Import i route markeri su nepromijenjeni; inventory ostaje 34. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `88ff6aa`.
+- **Preostalo:** real-DB owner/foreign/mutation dokazi, ID pozitivnost, DELETE ID ruta i produkcijski rollout.
+
 ### S-002 — ThermostatDevice programs runtime path ID validacija (2026-11-04)
 
 **STATUS: PROGRAMS GET PATH ID RIJEŠEN U KODU (`498e100`); CI ZELEN.** Servisni findUnique, program findMany/ordering i 403/404 ownership ponašanje nisu mijenjani.

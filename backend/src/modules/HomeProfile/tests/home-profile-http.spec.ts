@@ -21,6 +21,7 @@ import { HomeProfileService } from '../home.profile.service';
 
 describe('HomeProfile controller HTTP kompatibilnost', () => {
   let app: INestApplication;
+  const findOne = jest.fn();
   const activate = jest.fn();
 
   beforeAll(async () => {
@@ -29,7 +30,7 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: HomeProfileService,
-          useValue: { activate },
+          useValue: { findOne, activate },
         },
       ],
     })
@@ -58,11 +59,47 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
   });
 
   beforeEach(() => {
+    findOne.mockReset();
     activate.mockReset();
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  describe('GET /api/home-profiles/:id path ID (S-002)', () => {
+    it('zadržava numeric ID, response i servisne argumente', async () => {
+      findOne.mockResolvedValue({
+        id: 17,
+        userId: 42,
+        homeName: 'Kuća',
+        location: 'Sarajevo',
+      });
+
+      const response = await request(app.getHttpServer()).get(
+        '/api/home-profiles/17',
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        id: 17,
+        userId: 42,
+        homeName: 'Kuća',
+        location: 'Sarajevo',
+      });
+      expect(findOne).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      findOne.mockResolvedValue({ id: 17, userId: 42 });
+
+      const response = await request(app.getHttpServer()).get(
+        '/api/home-profiles/not-a-number',
+      );
+
+      expect(response.status).toBe(400);
+      expect(findOne).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH /api/home-profiles/:id/activate path ID (S-002)', () => {

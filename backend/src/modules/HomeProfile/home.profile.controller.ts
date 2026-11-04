@@ -45,10 +45,10 @@ export class HomeProfileController {
   @Patch(':id')
   update(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateHomeProfileDto,
   ) {
-    return this.service.update(req.user.userId, +id, dto);
+    return this.service.update(req.user.userId, id, dto);
   }
 
   @Delete(':id')

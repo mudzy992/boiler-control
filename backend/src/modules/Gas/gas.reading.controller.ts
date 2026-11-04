@@ -125,10 +125,10 @@ export class GasReadingController {
   @Get('reading/:id/meter-image')
   async getMeterImage(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.service.getMeterImageStream(req.user.userId, +id);
+    const result = await this.service.getMeterImageStream(req.user.userId, id);
     res.setHeader('Content-Type', result.mimeType);
     res.setHeader(
       'Content-Disposition',

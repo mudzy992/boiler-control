@@ -3188,7 +3188,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                homeProfileId: string;
+                homeProfileId: number;
             };
             cookie?: never;
         };

@@ -4482,7 +4482,7 @@
             "name": "homeProfileId",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],

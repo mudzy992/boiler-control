@@ -66,10 +66,10 @@ export class WeatherController {
   @Get('current/:homeProfileId')
   async getCurrentWeather(
     @User() userId: number,
-    @Param('homeProfileId') homeProfileId: string,
+    @Param('homeProfileId', ParseIntPipe) homeProfileId: number,
   ) {
     const profile = await this.prisma.homeProfile.findFirst({
-      where: { id: Number(homeProfileId), userId },
+      where: { id: homeProfileId, userId },
       select: { location: true },
     });
 

@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas invoice upload runtime path ID validacija (2026-11-04)
+
+**STATUS: INVOICE UPLOAD PATH ID RIJEŠEN U KODU (`2bfa4e3`); HTTP DOKAZ ZELEN.** DTO, PDF/storage/DB logika i drugi ID parametri nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Web/mobile već šalju numerički ID, `invoicePdf` i optional cijenu; FileInterceptor, UploadInvoiceDto i servis nisu mijenjani.
+- Postojeći stvarni controller HTTP spec s produkcijskim ValidationPipe dobio je valjan numeric-ID i malformed-ID scenarij. Servis je mockan; postojeći real-DB/file integration tok je zaseban i nepromijenjen.
+- **Test-first:** baseline je 16/16. Commit `da4b941` lokalno daje **17/18 prolaza i jedan pad**, a CI `41788986551` potvrđuje **796 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan upload zadržava 201/DTO/file argumente, a malformed ID ranije dobija 201 i dolazi do servisa.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Nema Min(1), novog flaga ni izmjene DTO-a, content-signature, file-limit, storage, ownership, transakcije, price history ili response logike.
+- **Finalni code CI `41789558574`:** backend **78/797 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **18/18**, svi lokalni Gas testovi **51/51**.
+- Samo POST invoice OpenAPI/frontend path tip je number; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `2bfa4e3`.
+- **Preostalo:** novi real-storage/DB/price-history dokaz nije dodat, ID pozitivnost, invoice-delete/download i drugi ID parametri te produkcijski rollout.
+
 ### S-002 — Gas meter-image upload runtime path ID validacija (2026-11-04)
 
 **STATUS: METER-IMAGE UPLOAD PATH ID RIJEŠEN U KODU (`6c0947b`); HTTP DOKAZ ZELEN.** Multipart/storage/DB logika i drugi ID parametri nisu mijenjani.

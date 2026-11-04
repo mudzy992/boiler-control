@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas invoice upload path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `da4b941`, fix `2bfa4e3`.**
+`origin/arena/c9961f17-boiler-control` je `2bfa4e3` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `222c4cc`. PR nije otvaran.
+
+- Arena je ponovo vratila grafted HEAD `179d171` i prividni masovni diff.
+  Dogovoreni fetch + `git reset --mixed` na remote `222c4cc` vratio je čisto
+  stablo, bez `--hard`; HEAD/main/radna grana su tada bili usklađeni. Backend
+  (894) i frontend (664) dependencies vraćeni su npm ci bez lockfile izmjena.
+- Source review je potvrdio da invoice POST prima string ID i radi `+id` tek u
+  controlleru. Web/mobile već šalju numerički ID, `invoicePdf` i optional DTO
+  cijenu; servisni owner lookup, storage, transakcija i price history nisu dirani.
+- Postojeći HTTP suite pokreće stvarni controller, FileInterceptor, DTO i
+  produkcijski ValidationPipe s mock servisom. To je controller/multipart dokaz;
+  postojeći real-DB/file integration tok ostaje zaseban i nepromijenjen.
+- Baseline je bio **16/16**. Test-only `da4b941` dodaje valjan numeric ID s
+  201/response/DTO cijenom/file argumentima i malformed ID koji mora dati 400
+  bez servisa. Lokalni repro dao je **17 prošlo / 1 pao / 18 ukupno**: valjana
+  kontrola prolazi, a malformed ID dobija **201** i dolazi do mock servisa.
+- **Test-first CI `41788986551`:** **796 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti, DTO, PDF i postojeći testovi nisu mijenjani za ispravku.
+- Fix `2bfa4e3` dodaje postojeći ParseIntPipe samo na invoice POST `:id`.
+  Nema Min(1), novog importa/flaga ni izmjene FileInterceptor, UploadInvoiceDto,
+  file-limit, content-signature, storage, ownership, transakcije ili responsea.
+- Lokalno je isti suite nakon ispravke **18/18**, a sva tri Gas suitea **51/51**.
+  **Finalni code CI `41789558574`:** backend **78/797 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- Samo POST invoice OpenAPI/frontend path `id` postaje number; GET invoice i
+  multipart/DTO shema nisu mijenjani. Sync/type-check i frontend **92/92**
+  prolaze. ESLint ima **0 errors / 2 postojeća warnings**. Route markeri i
+  inventory baseline od 34 poznate razlike ostaju stabilni.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `2bfa4e3`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** novi test ne dokazuje stvarni storage/DB/price-history side effect,
+  ID pozitivnost, invoice-delete/download ID-eve, druge module ni rollout.
+
 ## S-002 — Gas meter-image upload path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `89f0e78`, fix `6c0947b`.**

@@ -349,14 +349,8 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
 
     it.each([
       ['missing', '/api/weather/v2/locations/17'],
-      [
-        'array',
-        '/api/weather/v2/locations/17?query=Sarajevo&query=Mostar',
-      ],
-      [
-        'extra',
-        '/api/weather/v2/locations/17?query=Sarajevo&unexpected=1',
-      ],
+      ['array', '/api/weather/v2/locations/17?query=Sarajevo&query=Mostar'],
+      ['extra', '/api/weather/v2/locations/17?query=Sarajevo&unexpected=1'],
     ])('%s query vraća 400 prije servisnog poziva', async (_label, path) => {
       const res = await request(app.getHttpServer()).get(path);
 

@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — User profile scalar DTO validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `a8cc316`, fix `9c72bba`.**
+`origin/arena/c9961f17-boiler-control` je `9c72bba` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `04ca203`. PR nije otvaran.
+
+- Source review i DTO probe na čistom HEAD-u potvrđuju da string `"false"` i
+  brojevi za `prefersDarkMode` prolaze implicitnu boolean konverziju, string i
+  boolean za `gasPriceExVat` postaju brojevi, a numerički `20261104` za
+  `gasPriceEffectiveFrom` postaje string koji prolazi ISO validator. Valjani
+  `false`, `1.25` i ISO string prolaze. Web/mobile već šalju gas cijenu kao
+  number; mobile ne šalje dark-mode/date u profile update.
+- Postojeći `user-profile-http.spec.ts` baseline je **7/7** uz privremeni Prisma
+  import stub. Suite pokreće stvarni controller/production ValidationPipe s mock
+  guardom/servisom; nije real-DB/bcrypt/gas-price/session dokaz.
+- Test-only `a8cc316` dodaje valjan scalar payload sa 200, responseom i cijelim
+  servisnim argumentom, te pet negativaca: string/broj dark mode, string/boolean
+  gas cijenu i numerički basic-ISO datum. Lokalni repro je **8 prošlo / 5 palo /
+  13 ukupno**, bez promjene prethodnih sedam asserti.
+- **Test-first CI `41899374788`:** backend **855 prošlo / 5 palo / 860 ukupno**;
+  samo novi scalar negativci padaju jer dobijaju **200** umjesto 400. Svih
+  **115/115 integration**, mobile **24/136** i frontend **4/4** su zeleni,
+  `tsc: 0`, `eslint: 0`.
+- Fix `9c72bba` dodaje postojeći raw-input transform samo na `prefersDarkMode`,
+  `gasPriceExVat` i `gasPriceEffectiveFrom`. Password/S-003, prethodnih šest
+  tekst polja, controller, UserService, bcrypt/hash i gas-price historija ostaju
+  nepromijenjeni; nema novog flaga ni nove politike cijene/datuma.
+- Lokalno cijeli profile HTTP suite prolazi **13/13**, a probe odbija sve
+  pogrešne varijante i zadržava valjanu kontrolu. **Finalni code CI
+  `41900213890`:** backend **85/860 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**, a inventory ostaje bajtno nepromijenjen (**34**).
+- Nema migracije/backfilla, promjene flaga, mobile/compose izmjena ni deploya.
+  Rollback production fixa je revert `9c72bba`; privremeni Prisma stubovi su
+  uklonjeni.
+- **Granica:** riješene su samo tri raw-type konverzije, ne password/S-003 niti
+  semantičke politike cijene/datuma. Mock controller ne dokazuje real-DB update,
+  bcrypt/hash, gas-price historiju ni session revokaciju.
+
 ## S-002 — User profile šest tekst polja DTO validacije (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `af1ce37`, fix `63b23af`; CI-only recheck `6c3ba5d` nema source diff.**

@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — User profile runtime scalar DTO validacija (2026-11-04)
+
+**STATUS: TRI PROFILE SCALAR POLJA RIJEŠENA U KODU (`9c72bba`); CI ZELEN.** Password/S-003, controller, UserService, bcrypt/hash i gas-price historija nisu mijenjani.
+
+- Source review i čisti DTO probe potvrđuju implicitnu konverziju string/broj dark-mode ulaza u boolean, string/boolean gas cijene u broj i numeričkog basic-ISO datuma u string bez validator greške. Valjani `false`, `1.25` i ISO string prolaze. Web/mobile već šalju gas cijenu kao number; mobile ne šalje dark-mode/date u profile update. Suite koristi mock servis, ne real-DB/bcrypt/gas-price/session dokaz.
+- Test-only `a8cc316` dodaje valjan scalar 200/response/servisni argument i pet negativaca, bez promjene prethodnih sedam asserti. Lokalni repro je **8 prošlo / 5 palo / 13 ukupno**. CI `41899374788` potvrđuje backend **855 prošlo / 5 palo / 860 ukupno**, sve **115/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo ciljani negativci dobiju 200 umjesto 400.
+- Raw-input transform sada daje 400 za pogrešne tipe prije `updateMe`, dok valjani `prefersDarkMode: false`, `gasPriceExVat: 1.25` i ISO `gasPriceEffectiveFrom` zadržavaju 200, response i cijeli servisni argument. Password/S-003 i prethodnih šest tekst polja nisu mijenjani; nema novog flaga ni politike cijene/datuma.
+- **Finalni code CI `41900213890`:** backend **85/860 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno profile HTTP prolazi **13/13**, a probe zadržava valjanu kontrolu i odbija pogrešne varijante.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje bajtno nepromijenjen (**34**). Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `9c72bba`.
+- **Preostalo:** password/S-003, semantičke politike cijene/datuma, real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu obuhvaćeni ovim mock controller dokazom.
+
 ### S-002 — User profile runtime text DTO validacija (2026-11-04)
 
 **STATUS: ŠEST PROFILE TEXT POLJA RIJEŠENO U KODU (`63b23af`); CI ZELEN.** Password/S-003, `prefersDarkMode`, gas-price/date polja, controller, UserService, bcrypt/hash i gas-price historija nisu mijenjani.

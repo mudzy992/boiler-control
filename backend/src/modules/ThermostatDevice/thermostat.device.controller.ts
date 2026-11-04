@@ -34,8 +34,8 @@ export class ThermostatDeviceController {
   }
 
   @Get(':id/programs')
-  getPrograms(@Req() req, @Param('id') id: string) {
-    return this.service.getPrograms(req.user.userId, +id);
+  getPrograms(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.getPrograms(req.user.userId, id);
   }
 
   @Post()

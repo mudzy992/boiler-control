@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — ThermostatDevice runtime create/update body DTO validacija (2026-11-04)
+
+**STATUS: CREATE/UPDATE BODY RAW TIPOVI RIJEŠENI U KODU (`d54ade0`); CI ZELEN.** `mode` enum, path ID-evi, controller, servis, ownership/profil lookupi i Prisma mutacije nisu mijenjani.
+
+- Source review je potvrdio implicitnu konverziju pogrešnih raw tipova za `vendor`, `deviceId`, `alias` i `homeProfileId`. Pregledani mobile update već šalje tipizirane vrijednosti; create consumer nije pronađen. Stvarni controller/DTO HTTP suite koristi mock servis, ne real-DB/ownership dokaz.
+- Test-only `15dcdff` dodaje valjan create/update i osam negativaca uz očuvanih osam path-ID kontrola. Lokalni repro je **10 prošlo / 8 palo / 18 ukupno**. CI `41913583688` potvrđuje backend **874 prošlo / 8 palo / 882 ukupno**, sve **119/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo ciljani body scenariji padaju jer dobijaju 201/200 umjesto 400.
+- Raw-input transformacije sada daju 400 prije servisa za pogrešne tipe, dok valjani create zadržava 201/response/JWT userId/servisni argument, a update 200/response/`update(42,17,validBody)`. Nema novih `IsInt`, `Min(1)`, length/not-empty, `0/null` ili flag pravila.
+- **Finalni code CI `41914703109`:** backend **87/882 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno cijeli ThermostatDevice HTTP suite prolazi **18/18**, a backend ESLint ima **0 errors / 2 poznata warnings**.
+- OpenAPI `--check` i CI generated sync/type-check prolaze bez generated diffa. Nema migracije/backfilla ili mobile/compose/flag promjene. Rollback production fixa je revert `d54ade0`.
+- **Preostalo:** real-DB create/update/ownership i tuđi `homeProfileId`, ID pozitivnost, string sadržaj, `0/null` semantika i produkcijski rollout. S-004/session revokacija nije mijenjana.
+
 ### S-003 — User profile potvrda trenutne lozinke (2026-11-04)
 
 **STATUS: S-003 OLD-PASSWORD PROPUST RIJEŠEN (`6345fc7`); CI ZELEN. S-004 NIJE RIJEŠEN.** Profilni PUT sada zahtijeva `currentPassword` za promjenu passworda i stvarni PostgreSQL/bcrypt tok je pokriven.

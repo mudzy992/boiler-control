@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice create/update body raw-tip validacija (2026-11-04)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `15dcdff`, fix `d54ade0`.**
+`origin/arena/c9961f17-boiler-control` je `d54ade0` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `54c629b`. PR nije otvaran.
+
+- Source review je potvrdio da globalna implicitna konverzija mijenja pogrešne
+  raw tipove za create/update string polja i `homeProfileId` prije validatora.
+  Valjani stringovi/brojevi, `mode` enum, path ID i servisni ugovor ostaju isti.
+  Pregledani mobile update već šalje tipizirane vrijednosti; create consumer
+  nije pronađen i klijent nije mijenjan.
+- Postojeći HTTP suite sada koristi stvarne DTO-e, controller i produkcijske
+  ValidationPipe opcije s mock guardom/servisom. Obje baseline varijante su
+  prolazile **8/8** uz privremene Prisma import stubove. Ovo nije real-DB,
+  ownership, profil lookup ili Prisma mutation dokaz.
+- Test-only `15dcdff` dodaje valjan create/update i osam pogrešnih raw-tip
+  scenarija. Lokalni repro je **10 prošlo / 8 palo / 18 ukupno**: valjani create
+  zadržava 201, update 200, a pogrešni tipovi ranije dobijaju 201/200 umjesto
+  400 i dolaze do mock servisa.
+- **Test-first CI `41913583688`:** backend **874 prošlo / 8 palo / 882 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Svih osam backend failurea su ciljani body scenariji, bez drugih
+  regresija.
+- Fix `d54ade0` dodaje samo raw-input transformacije u dva DTO-a za
+  `vendor`, `deviceId`, `alias` i `homeProfileId`. `mode`, controller, servis,
+  ownership/profil lookupi, Prisma create/update, path ID i response ostaju
+  nepromijenjeni; nema novog flaga, `IsInt`, `Min(1)`, length/not-empty ili
+  `0/null` politike.
+- Lokalni cijeli ThermostatDevice HTTP suite prolazi **18/18**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI `--check` prolazi
+  bez razlike. **Finalni code CI `41914703109`:** backend **87/882 + 13/119
+  integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`;
+  sva tri joba su success i nema failure annotations.
+- OpenAPI i frontend generated fajlovi nisu mijenjani; generated sync i
+  type-check prolaze u CI. Nema migracije/backfilla, promjene flaga,
+  mobile/compose izmjena ni deploya. Rollback production fixa je revert
+  `d54ade0`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller dokazuje samo DTO/HTTP kompatibilnost, ne nove
+  real-DB ownership ili mutation ishode. ID pozitivnost, string sadržaj,
+  `0/null` semantika, S-004/session revokacija i produkcijski rollout ostaju
+  zasebni.
+
 ## S-003 — User profile potvrda trenutne lozinke (2026-11-04)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `ab8c350`, fix `6345fc7`.**

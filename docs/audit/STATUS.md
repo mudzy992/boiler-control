@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile plural update runtime path ID validacija (2026-11-04)
+
+**STATUS: PLURAL UPDATE PATH ID RIJEŠEN U KODU (`5ebd6e0`); CI ZELEN.** Singularni PATCH, DTO pravila i servisni update nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile ekran već koristi numerički ID; web koristi nepromijenjenu singularnu rutu. Servisni findOne owner lookup i update po ID-u ostaju isti.
+- HTTP spec koristi stvarni controller, produkcijske ValidationPipe opcije i mock servis. Prazan body je valjan i sa stvarnim DTO-om jer su sva polja opciona; dokaz je path parsing, ne novi DTO/real-DB update ili ownership tok.
+- **Test-first:** baseline je 9/9. Commit `4f1016f` dodaje dva scenarija i lokalno daje **10/11 prolaza**. CI `41809377585` potvrđuje backend **808 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed PATCH koji ranije dobija 200 pada. Frontend i mobile **24/136** zeleni su.
+- `ParseIntPipe` sada odbija malformed pluralni PATCH ID s 400 prije servisa, dok valjan ID zadržava 200/response/`update(42,17,{})`. Nema Min(1), novog flaga ni izmjene singular/delete/findOne/activate ruta, DTO-a ili servisne logike.
+- **Finalni code CI `41809891813`:** backend **79/809 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalna oba HomeProfile suitea su **11/11**.
+- Samo pluralni PATCH OpenAPI/frontend path tip je number; singularni PATCH ostaje nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Nema pomaka route markera, inventory ostaje 34, migracije/backfilla ili mobile/compose promjene. Rollback je revert `5ebd6e0`.
+- **Preostalo:** DTO payload i real-DB update/ownership dokazi, ID pozitivnost, singular/delete, ThermostatDevice/Weather ID rute i produkcijski rollout.
+
 ### S-002 — HomeProfile findOne runtime path ID validacija (2026-11-04)
 
 **STATUS: FINDONE GET PATH ID RIJEŠEN U KODU (`904e14c`); CI ZELEN.** Servisni owner filter i ostale HomeProfile ID rute nisu mijenjani.

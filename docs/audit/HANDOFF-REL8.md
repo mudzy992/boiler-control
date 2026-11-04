@@ -3,6 +3,43 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile plural update path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `4f1016f`, fix `5ebd6e0`.**
+`origin/arena/c9961f17-boiler-control` je `5ebd6e0` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `91c8448`. PR nije otvaran.
+
+- Source review je potvrdio da pluralni PATCH `/api/home-profiles/:id` prima
+  string i radi `+id`. Mobile ekran koristi `updateHomeProfile(id: number)`;
+  web koristi singularni `/api/home-profile/:id`, koji nije mijenjan. Servisni
+  findOne owner lookup i update po ID-u ostaju nepromijenjeni.
+- Postojeći HTTP spec pokreće stvarni controller i produkcijske ValidationPipe
+  opcije s mock servisom. Prazan body izoluje path parsing i valjan je i sa
+  stvarnim UpdateHomeProfileDto jer su sva polja opciona; ovo nije novi DTO,
+  real-DB update ili ownership dokaz. MO2-20 integration je nepromijenjen.
+- Baseline je bio **9/9**. Test-only `4f1016f` dodaje valjan numeric ID sa
+  200/response/`update(42,17,{})` i malformed ID koji mora dati 400 bez servisa.
+  Lokalni repro je **10 prošlo / 1 pao / 11 ukupno**: valjana kontrola prolazi,
+  a malformed ID dobija **200** i dolazi do servisa.
+- **Test-first CI `41809377585`:** backend **808 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi malformed
+  PATCH scenarij pada. Frontend i mobile **24/136** su zeleni.
+- Fix `5ebd6e0` dodaje ParseIntPipe samo na pluralni update `:id`. Nema Min(1),
+  novog flaga ni izmjene singular update/delete/findOne/activate ruta, DTO
+  pravila, servisne ownership/update logike ili baze. Import već postoji, pa
+  route markeri ostaju na istim linijama i inventory ostaje **34**.
+- Lokalno su oba HomeProfile suitea **11/11**. **Finalni code CI `41809891813`:**
+  backend **79/809 + 12/115 integration**, mobile **24/136**, frontend **4/4**,
+  `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure annotations.
+- Samo pluralni PATCH OpenAPI/frontend path `id` postaje number; singularni
+  PATCH ostaje nepromijenjen. Sync/type-check i frontend **92/92** prolaze.
+  Backend ESLint ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `5ebd6e0`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne dokazuje DTO payload ili real-DB update;
+  ID pozitivnost, singular/delete, ThermostatDevice/Weather ID rute i rollout
+  ostaju otvoreni.
+
 ## S-002 — HomeProfile findOne path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `95f9244`, fix `904e14c`.**

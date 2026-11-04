@@ -8,6 +8,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { Transform, TransformFnParams } from 'class-transformer';
 import {
   HomeProfile_insulationType,
   HomeProfile_windowType,
@@ -15,12 +16,17 @@ import {
   SeasonMode,
 } from 'src/generated/prisma';
 
+// Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije validacije.
+const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
+
 export class UpdateHomeProfileDto {
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsString()
   homeName?: string;
 
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsString()
   location?: string;
 
@@ -67,6 +73,7 @@ export class UpdateHomeProfileDto {
   numberOfResidents?: number;
 
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsString()
   boilerModel?: string;
 
@@ -93,6 +100,7 @@ export class UpdateHomeProfileDto {
   targetNightTemp?: number;
 
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsString()
   preferredScheduleNotes?: string;
 

@@ -131,6 +131,7 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
   let app: INestApplication;
   let saved: string | undefined;
   const weatherService = { getTodayWeather: jest.fn() };
+  const weatherV2Service = { getLocationCandidates: jest.fn() };
   const prisma = { homeProfile: { findFirst: jest.fn() } };
 
   beforeAll(async () => {
@@ -148,7 +149,7 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
           useValue: { getHeatingEvents: () => Promise.resolve([]) },
         },
         { provide: WeatherService, useValue: weatherService },
-        { provide: WeatherV2Service, useValue: {} },
+        { provide: WeatherV2Service, useValue: weatherV2Service },
         { provide: PrismaService, useValue: prisma },
         {
           provide: HeatingRecommendationService,
@@ -313,6 +314,54 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
       expect(res.status).toBe(HttpStatus.BAD_REQUEST);
       expect(prisma.homeProfile.findFirst).not.toHaveBeenCalled();
       expect(weatherService.getTodayWeather).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /api/weather/v2/locations/:homeProfileId query DTO (S-002)', () => {
+    beforeEach(() => {
+      weatherV2Service.getLocationCandidates.mockReset();
+      weatherV2Service.getLocationCandidates.mockResolvedValue({
+        query: 'fallback',
+        candidates: [],
+      });
+    });
+
+    it('valjan query zadržava response, raw string i servisne argumente', async () => {
+      const result = {
+        query: 'Sarajevo',
+        candidates: [{ providerId: 'synthetic-1', label: 'Sarajevo' }],
+      };
+      weatherV2Service.getLocationCandidates.mockResolvedValue(result);
+
+      const res = await request(app.getHttpServer())
+        .get('/api/weather/v2/locations/17')
+        .query({ query: '  Sarajevo  ' });
+
+      expect(res.status).toBe(HttpStatus.OK);
+      expect(res.body).toEqual(result);
+      expect(weatherV2Service.getLocationCandidates).toHaveBeenCalledTimes(1);
+      expect(weatherV2Service.getLocationCandidates).toHaveBeenCalledWith(
+        4242,
+        17,
+        '  Sarajevo  ',
+      );
+    });
+
+    it.each([
+      ['missing', '/api/weather/v2/locations/17'],
+      [
+        'array',
+        '/api/weather/v2/locations/17?query=Sarajevo&query=Mostar',
+      ],
+      [
+        'extra',
+        '/api/weather/v2/locations/17?query=Sarajevo&unexpected=1',
+      ],
+    ])('%s query vraća 400 prije servisnog poziva', async (_label, path) => {
+      const res = await request(app.getHttpServer()).get(path);
+
+      expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+      expect(weatherV2Service.getLocationCandidates).not.toHaveBeenCalled();
     });
   });
 

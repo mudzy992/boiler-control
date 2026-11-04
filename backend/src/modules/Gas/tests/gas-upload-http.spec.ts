@@ -20,6 +20,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
   const uploadInvoice = jest.fn();
   const deleteInvoice = jest.fn();
   const getMeterImageStream = jest.fn();
+  const getInvoiceStream = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
   beforeAll(async () => {
@@ -36,6 +37,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
             uploadInvoice,
             deleteInvoice,
             getMeterImageStream,
+            getInvoiceStream,
             getEfficiencyAnalysis,
           },
         },
@@ -73,6 +75,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
     uploadInvoice.mockReset();
     deleteInvoice.mockReset();
     getMeterImageStream.mockReset();
+    getInvoiceStream.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
 
@@ -325,6 +328,42 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(getMeterImageStream).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /api/gas/reading/:id/invoice path ID (S-002)', () => {
+    const pdf = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+    const invoiceResult = () => ({
+      stream: Readable.from([pdf]),
+      mimeType: 'application/pdf',
+      fileName: 'invoice.pdf',
+    });
+
+    it('zadržava numeric ID, PDF bajtove, headere i servisne argumente', async () => {
+      getInvoiceStream.mockResolvedValue(invoiceResult());
+
+      const response = await request(app.getHttpServer())
+        .get('/api/gas/reading/17/invoice')
+        .responseType('blob');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(pdf);
+      expect(response.headers['content-type']).toBe('application/pdf');
+      expect(response.headers['content-disposition']).toBe(
+        'inline; filename="invoice.pdf"',
+      );
+      expect(getInvoiceStream).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      getInvoiceStream.mockResolvedValue(invoiceResult());
+
+      const response = await request(app.getHttpServer()).get(
+        '/api/gas/reading/not-a-number/invoice',
+      );
+
+      expect(response.status).toBe(400);
+      expect(getInvoiceStream).not.toHaveBeenCalled();
     });
   });
 

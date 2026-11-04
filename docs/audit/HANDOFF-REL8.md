@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — User profile password raw-tip validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `9935b63`, fix `0300400`.**
+`origin/arena/c9961f17-boiler-control` je `0300400` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `71fe5bf`. PR nije otvaran.
+
+- Source review i DTO probe na čistom HEAD-u potvrđuju da numerički `123456`
+  postaje string dužine šest i prolazi postojeći `@IsString`/`@MinLength(6)`.
+  Valjani password string prolazi, a kraći numerički oblik i dalje pokazuje da
+  postojeći minimum radi. Nije uvedena nova password politika.
+- Postojeći `user-profile-http.spec.ts` baseline je **13/13** uz privremeni
+  Prisma import stub. Suite pokreće stvarni controller/production ValidationPipe
+  s mock guardom/servisom; nije real-DB/bcrypt/session dokaz.
+- Test-only `9935b63` dodaje valjan password sa 200, responseom, JWT userId i
+  cijelim servisnim argumentom, te numerički password koji mora dati 400 bez
+  servisa. Lokalni repro je **14 prošlo / 1 pao / 15 ukupno**, bez promjene
+  prethodnih 13 asserti.
+- **Test-first CI `41902676553`:** backend **861 prošao / 1 pao / 862 ukupno**;
+  samo numerički password pada jer dobija **200** umjesto 400. Svih **115/115
+  integration**, mobile **24/136** i frontend **4/4** su zeleni, `tsc: 0`,
+  `eslint: 0`.
+- Fix `0300400` dodaje jedan postojeći raw-input transform na `password`.
+  Controller, UserService, bcrypt/hash, `MinLength(6)`, ostalih devet DTO polja
+  i postojeći profile-password tok ostaju nepromijenjeni; nema novog flaga.
+- Lokalno cijeli profile HTTP suite prolazi **15/15**, a probe zadržava valjani
+  string i odbija numerički password. **Finalni code CI `41903390817`:** backend
+  **85/862 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`; sva tri joba su success i nema failure annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**, a inventory ostaje bajtno nepromijenjen (**34**).
+- Nema migracije/backfilla, promjene flaga, mobile/compose izmjena ni deploya.
+  Rollback production fixa je revert `0300400`; privremeni Prisma stubovi su
+  uklonjeni.
+- **Granica:** svih deset `UpdateUserDto` polja sada čuva raw tip, ali ovo je
+  samo S-002 tip validacija. **S-003 nije riješen:** valjani password string i
+  dalje prolazi profilni PUT bez dodane provjere stare lozinke. Mock controller
+  ne dokazuje real-DB update, bcrypt/hash ni session revokaciju.
+
 ## S-002 — User profile scalar DTO validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `a8cc316`, fix `9c72bba`.**

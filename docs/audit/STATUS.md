@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — User profile runtime password raw-tip validacija (2026-11-04)
+
+**STATUS: PROFILE PASSWORD RAW TIP RIJEŠEN U KODU (`0300400`); CI ZELEN. S-003 NIJE RIJEŠEN.** Controller, UserService, bcrypt/hash, postojeći minimum i valjani profile-password tok nisu mijenjani.
+
+- Source review i čisti DTO probe potvrđuju da numerički `123456` postaje string dužine šest i prolazi postojeći `@IsString`/`@MinLength(6)`. Valjani string prolazi; nije dodana old-password, revokacija, min/max ili složenost politika. Suite koristi mock servis, ne real-DB/bcrypt/session dokaz.
+- Test-only `9935b63` dodaje valjan password 200/response/JWT userId/servisni argument i jedan numerički negativac, bez promjene prethodnih 13 asserti. Lokalni repro je **14 prošlo / 1 pao / 15 ukupno**. CI `41902676553` potvrđuje backend **861 prošao / 1 pao / 862 ukupno**, sve **115/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo numerički password dobija 200 umjesto 400.
+- Raw-input transform sada daje 400 za numerički password prije `updateMe`, dok valjani string zadržava 200, response i cijeli servisni argument. Ostalih devet DTO polja i postojeći `MinLength(6)` nisu mijenjani; nema novog flaga.
+- **Finalni code CI `41903390817`:** backend **85/862 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno profile HTTP prolazi **15/15**, a probe zadržava valjani string i odbija numerički password.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje bajtno nepromijenjen (**34**). Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `0300400`.
+- **Preostalo:** svih deset DTO polja čuva raw tip, ali S-003 ostaje otvoren — valjani password i dalje prolazi profilni PUT bez nove provjere stare lozinke. Real-DB update, bcrypt/hash, session revokacija i produkcijski rollout nisu dokazani ovim mock controller sliceom.
+
 ### S-002 — User profile runtime scalar DTO validacija (2026-11-04)
 
 **STATUS: TRI PROFILE SCALAR POLJA RIJEŠENA U KODU (`9c72bba`); CI ZELEN.** Password/S-003, controller, UserService, bcrypt/hash i gas-price historija nisu mijenjani.

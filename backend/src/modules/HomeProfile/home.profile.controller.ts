@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  ParseIntPipe,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -56,8 +57,8 @@ export class HomeProfileController {
   }
 
   @Patch(':id/activate')
-  activate(@Req() req, @Param('id') id: string) {
-    return this.service.activate(req.user.userId, +id);
+  activate(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.activate(req.user.userId, id);
   }
 }
 

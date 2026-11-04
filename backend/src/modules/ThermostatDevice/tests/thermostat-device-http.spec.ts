@@ -23,6 +23,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
   let app: INestApplication;
   const findOne = jest.fn();
   const getPrograms = jest.fn();
+  const update = jest.fn();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -30,7 +31,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: ThermostatDeviceService,
-          useValue: { findOne, getPrograms },
+          useValue: { findOne, getPrograms, update },
         },
       ],
     })
@@ -61,6 +62,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
   beforeEach(() => {
     findOne.mockReset();
     getPrograms.mockReset();
+    update.mockReset();
   });
 
   afterAll(async () => {
@@ -144,6 +146,41 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(getPrograms).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('PATCH /api/devices/:id path ID (S-002)', () => {
+    it('zadržava numeric ID, response, prazan DTO i servisne argumente', async () => {
+      const device = {
+        id: 17,
+        userId: 42,
+        deviceId: 'tuya-17',
+        alias: 'Dnevna soba',
+        vendor: 'tuya',
+        mode: 'PROGRAM',
+        homeProfileId: 7,
+      };
+      update.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/devices/17')
+        .send({});
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(device);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, {});
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      update.mockResolvedValue({ id: 17, userId: 42 });
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/devices/not-a-number')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(update).not.toHaveBeenCalled();
     });
   });
 });

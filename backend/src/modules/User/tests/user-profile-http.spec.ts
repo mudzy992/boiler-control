@@ -152,4 +152,31 @@ describe('User profile HTTP kompatibilnost', () => {
       expect(updateMe).not.toHaveBeenCalled();
     });
   });
+
+  describe('PUT /api/user profile password DTO (S-002)', () => {
+    it('valjani password zadržava response i servisni argument', async () => {
+      const validPasswordBody = { ...validBody, password: 'new-secret' };
+      updateMe.mockResolvedValue(result);
+
+      const response = await request(app.getHttpServer())
+        .put('/api/user')
+        .send(validPasswordBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(result);
+      expect(updateMe).toHaveBeenCalledTimes(1);
+      expect(updateMe).toHaveBeenCalledWith(42, validPasswordBody);
+    });
+
+    it('numerički password vraća 400 prije servisnog poziva', async () => {
+      updateMe.mockResolvedValue(result);
+
+      const response = await request(app.getHttpServer())
+        .put('/api/user')
+        .send({ ...validBody, password: 123456 });
+
+      expect(response.status).toBe(400);
+      expect(updateMe).not.toHaveBeenCalled();
+    });
+  });
 });

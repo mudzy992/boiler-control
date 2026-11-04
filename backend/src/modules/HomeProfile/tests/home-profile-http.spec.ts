@@ -22,6 +22,17 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
   const update = jest.fn();
   const remove = jest.fn();
   const activate = jest.fn();
+  const scalarWrongRawTypes: Array<[string, string]> = [
+    ['floorArea', '150'],
+    ['ceilingHeight', '2.6'],
+    ['insulationThickness', '12'],
+    ['constructionYear', '2010'],
+    ['numberOfResidents', '4'],
+    ['hasFloorHeating', 'false'],
+    ['targetMorningTemp', '22'],
+    ['targetDayTemp', '21'],
+    ['targetNightTemp', '18'],
+  ];
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -125,6 +136,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
         expect(create).not.toHaveBeenCalled();
       },
     );
+
+    it.each(scalarWrongRawTypes)(
+      '%s s pogrešnim raw tipom vraća 400 prije servisa',
+      async (field, rawValue) => {
+        create.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .post('/api/home-profiles')
+          .send({ ...validBody, [field]: rawValue });
+
+        expect(response.status).toBe(400);
+        expect(create).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/home-profiles/:id body DTO (S-002)', () => {
@@ -133,6 +158,17 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       location: 'Sarajevo',
       boilerModel: 'Bosch',
       preferredScheduleNotes: 'Radnim danom ranije',
+    };
+    const validScalarBody = {
+      floorArea: 150,
+      ceilingHeight: 2.6,
+      insulationThickness: 12,
+      constructionYear: 2010,
+      numberOfResidents: 4,
+      hasFloorHeating: false,
+      targetMorningTemp: 22,
+      targetDayTemp: 21,
+      targetNightTemp: 18,
     };
 
     it('valjan update zadržava 200, response i cijeli servisni argument', async () => {
@@ -147,6 +183,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(response.body).toEqual(profile);
       expect(update).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledWith(42, 17, validBody);
+    });
+
+    it('valjan scalar update zadržava 200, response i servisni argument', async () => {
+      const profile = { id: 17, userId: 42, ...validScalarBody };
+      update.mockResolvedValue(profile);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/home-profiles/17')
+        .send(validScalarBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(profile);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, validScalarBody);
     });
 
     it.each([
@@ -165,6 +215,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
         const response = await request(app.getHttpServer())
           .patch('/api/home-profiles/17')
           .send(body);
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(scalarWrongRawTypes)(
+      '%s s pogrešnim raw tipom vraća 400 prije servisa',
+      async (field, rawValue) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/home-profiles/17')
+          .send({ ...validScalarBody, [field]: rawValue });
 
         expect(response.status).toBe(400);
         expect(update).not.toHaveBeenCalled();

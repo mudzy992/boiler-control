@@ -3,6 +3,46 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile create/update četiri tekst-polja (2026-11-04)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `9c35642`, fix `015712e`.**
+`origin/arena/c9961f17-boiler-control` je `015712e` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `54c629b`. PR nije otvaran.
+
+- Source review je potvrdio da globalna implicitna konverzija mijenja numeričke
+  `homeName`, `location`, `boilerModel` i `preferredScheduleNotes` u string
+  prije `@IsString`. Pregledani mobile i web create/update već šalju tekst;
+  klijent nije mijenjan.
+- Postojeći HTTP suite sada koristi stvarne DTO-e, oba registrovana controllera
+  i produkcijske ValidationPipe opcije s mock guardom/servisom. Obje baseline
+  varijante prolaze **10/10** uz privremene Prisma import stubove. Ovo nije
+  real-DB, ownership, active-profile ili Prisma mutation dokaz.
+- Test-only `9c35642` dodaje valjan pluralni create/update i osam numeričkih
+  negativaca, uz nepromijenjenih deset path-ID kontrola. Lokalni repro je
+  **12 prošlo / 8 palo / 20 ukupno**: valjani create zadržava 201, update 200,
+  a pogrešni tipovi ranije dobijaju 201/200 umjesto 400.
+- **Test-first CI `41916316275`:** backend **884 prošlo / 8 palo / 892 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Svih osam backend failurea su ciljani text-body scenariji.
+- Fix `015712e` dodaje samo raw-input transformacije za četiri tekst-polja u
+  create/update DTO-u. Numerička i boolean polja, enumi, postojeći min/max,
+  controller, servis, active/weather-location logika, Prisma mutacije, path ID
+  i response ostaju nepromijenjeni; nema novog flaga, length/not-empty ili
+  `null` politike.
+- Lokalni HTTP suite prolazi **20/20**, a oba HomeProfile suitea **25/25**.
+  Tačan CI ESLint opseg ima **0 errors / 2 poznata warnings**, a OpenAPI
+  `--check` prolazi bez razlike. **Finalni code CI `41916970223`:** backend
+  **87/892 + 13/119 integration**, mobile **24/136**, frontend **4/4**,
+  `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure annotations.
+- OpenAPI i frontend generated fajlovi nisu mijenjani; generated sync i
+  type-check prolaze u CI. Nema migracije/backfilla, promjene flaga,
+  mobile/compose izmjena ni deploya. Rollback production fixa je revert
+  `015712e`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** pluralni mock-controller scenariji dijele DTO s registrovanim
+  singularnim rutama, ali nisu novi real-DB/create/update/ownership dokaz.
+  Numerički i boolean raw tipovi, `null` semantika, string sadržaj, ID
+  pozitivnost, S-004 i produkcijski rollout ostaju zasebni.
+
 ## S-002 — ThermostatDevice create/update body raw-tip validacija (2026-11-04)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `15dcdff`, fix `d54ade0`.**

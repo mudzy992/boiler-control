@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile runtime create/update tekst-polja (2026-11-04)
+
+**STATUS: ČETIRI CREATE/UPDATE TEXT POLJA RIJEŠENA U KODU (`015712e`); CI ZELEN.** Numerička i boolean polja, enumi, controller, servis, active/weather-location logika i Prisma mutacije nisu mijenjani.
+
+- Source review je potvrdio implicitnu konverziju numeričkih `homeName`, `location`, `boilerModel` i `preferredScheduleNotes` u string. Pregledani mobile i web create/update već šalju tekst. Stvarni controller/DTO HTTP suite koristi mock servis, ne real-DB/ownership dokaz.
+- Test-only `9c35642` dodaje valjan pluralni create/update i osam negativaca uz očuvanih deset path-ID kontrola. Lokalni repro je **12 prošlo / 8 palo / 20 ukupno**. CI `41916316275` potvrđuje backend **884 prošlo / 8 palo / 892 ukupno**, sve **119/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo ciljani text-body scenariji padaju jer dobijaju 201/200 umjesto 400.
+- Raw-input transformacije sada daju 400 prije servisa za numerička tekst-polja, dok valjani create zadržava 201/response/JWT userId/servisni argument, a update 200/response/`update(42,17,validBody)`. Nema novih length/not-empty, `null` ili flag pravila.
+- **Finalni code CI `41916970223`:** backend **87/892 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno HTTP prolazi **20/20**, oba HomeProfile suitea **25/25**, a backend ESLint ima **0 errors / 2 poznata warnings**.
+- OpenAPI `--check` i CI generated sync/type-check prolaze bez generated diffa. Nema migracije/backfilla ili mobile/compose/flag promjene. Rollback production fixa je revert `015712e`.
+- **Preostalo:** numerički i boolean raw tipovi, `null` semantika, string sadržaj, real-DB create/update/ownership, zasebni populated singular-body scenariji, ID pozitivnost i produkcijski rollout. S-004 nije mijenjan.
+
 ### S-002 — ThermostatDevice runtime create/update body DTO validacija (2026-11-04)
 
 **STATUS: CREATE/UPDATE BODY RAW TIPOVI RIJEŠENI U KODU (`d54ade0`); CI ZELEN.** `mode` enum, path ID-evi, controller, servis, ownership/profil lookupi i Prisma mutacije nisu mijenjani.

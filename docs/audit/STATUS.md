@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — ThermostatDevice programs runtime path ID validacija (2026-11-04)
+
+**STATUS: PROGRAMS GET PATH ID RIJEŠEN U KODU (`498e100`); CI ZELEN.** Servisni findUnique, program findMany/ordering i 403/404 ownership ponašanje nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile već koristi `getDevicePrograms(deviceId: number)`, a web nema direktan poziv. FindOne, update/delete rute i servisna logika ostaju isti.
+- Postojeći stvarni controller HTTP spec koristi produkcijske ValidationPipe opcije i mock servis; baseline je bio 2/2. Ovo nije novi real-DB owner/foreign dokaz.
+- **Test-first:** commit `a891aff` lokalno daje **3/4 prolaza**. CI `41821805924` potvrđuje backend **818 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed programs GET koji ranije dobija 200 pada. Mobile **24/136** i frontend **4/4** su zeleni.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa, dok valjan ID zadržava 200, cijeli programs response i `getPrograms(42,17)`. Nema Min(1), novog flaga ni izmjene DTO-a, servisne logike ili baze.
+- **Finalni code CI `41822404446`:** backend **80/819 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalni cijeli ThermostatDevice HTTP suite je **4/4**.
+- Samo programs GET OpenAPI/frontend path tip je number; findOne ostaje number, a PATCH/DELETE ostaju string. Sync/type-check i frontend **92/92** prolaze. Import i route markeri su nepromijenjeni; inventory ostaje 34. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `498e100`.
+- **Preostalo:** real-DB owner/foreign dokazi, ID pozitivnost, PATCH/DELETE ID rute i produkcijski rollout.
+
 ### S-002 — ThermostatDevice findOne runtime path ID validacija (2026-11-04)
 
 **STATUS: FINDONE GET PATH ID RIJEŠEN U KODU (`46fbbbd`); CI ZELEN.** Servisni findUnique i 403/404 ownership ponašanje nisu mijenjani.

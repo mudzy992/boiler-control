@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice programs path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `a891aff`, fix `498e100`.**
+`origin/arena/c9961f17-boiler-control` je `498e100` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `4649287`. PR nije otvaran.
+
+- Source review je potvrdio da GET `/api/devices/:id/programs` prima string i
+  radi `+id`. Mobile `getDevicePrograms(deviceId: number)` već koristi numerički
+  ID; web nema direktan poziv ove rute. Servisni findUnique, program findMany i
+  ordering, 403/404 ownership ponašanje i findOne/update/delete nisu mijenjani.
+- Postojeći `thermostat-device-http.spec.ts` pokreće stvarni controller i
+  produkcijske ValidationPipe opcije s mock servisom. Baseline je bio **2/2**.
+  Novi dokaz je controller/path granica, ne novi real-DB ownership dokaz.
+- Test-only `a891aff` dodaje valjan numeric ID sa 200, cijelim programs
+  responseom i `getPrograms(42,17)`, te malformed ID koji mora dati 400 bez
+  servisa. Lokalni repro je **3 prošla / 1 pao / 4 ukupno**: valjana kontrola
+  prolazi, a malformed ID dobija **200**.
+- **Test-first CI `41821805924`:** backend **818 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi malformed
+  programs GET scenarij pada. Mobile **24/136** i frontend **4/4** su zeleni.
+- Fix `498e100` dodaje ParseIntPipe samo na getPrograms GET `:id`. Nema Min(1),
+  novog flaga ni izmjene DTO pravila, servisne ownership/program logike ili baze.
+  Import već postoji, route markeri se ne pomjeraju i inventory ostaje **34**.
+- Lokalno je cijeli ThermostatDevice HTTP suite **4/4**. **Finalni code CI
+  `41822404446`:** backend **80/819 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations.
+- Samo programs GET OpenAPI/frontend path `id` postaje number; findOne ostaje
+  number, a PATCH/DELETE ostaju string. Sync/type-check i frontend **92/92**
+  prolaze. Backend ESLint ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `498e100`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne dokazuje real-DB owner/foreign tok; ID
+  pozitivnost, PATCH/DELETE ID rute i rollout ostaju otvoreni.
+
 ## S-002 — ThermostatDevice findOne path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `9c99fde`, fix `46fbbbd`.**

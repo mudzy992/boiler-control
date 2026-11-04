@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Auth change-password body DTO validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `5aee897`, fix `e583a10`.**
+`origin/arena/c9961f17-boiler-control` je `e583a10` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `e6e9e7c`. PR nije otvaran.
+
+- Source review je potvrdio da `ChangePasswordDto` ima `@IsString`,
+  `IsNotEmpty` i `MinLength(6)`, ali ne čuva raw tip pri globalnoj implicitnoj
+  konverziji. Servis radi postojeći bcrypt compare/hash i user update. Mobile
+  već šalje current/new password kao stringove.
+- Novi `auth-change-password-http.spec.ts` pokreće stvarni controller i
+  produkcijske ValidationPipe opcije s mock servisom. Postojeći Auth cookie
+  baseline je **11/11** uz privremene Prisma import stubove. Novi suite nije
+  real-DB/bcrypt ili session-revocation dokaz.
+- Test-only `5aee897` dodaje valjane lozinke sa 200, cijelim responseom i
+  `changePassword(42,'current-secret','new-secret')`, te numerički current/new
+  password koji moraju dati 400 bez servisa. Novi repro je **1 prošao / 2 pala
+  / 3 ukupno**, a sa postojećom kontrolom **12 prošlo / 2 pala / 14 ukupno**.
+- **Test-first CI `41850651413`:** backend **835 prošlo / 2 pala / 837 ukupno**,
+  svih **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo numerička
+  password polja padaju jer dobijaju **200** umjesto 400. Mobile **24/136** i
+  frontend **4/4** su zeleni.
+- Fix `e583a10` dodaje raw-input `@Transform` samo na `currentPassword` i
+  `newPassword`, prije postojećih validatora. Controller, AuthService, bcrypt,
+  `MinLength(6)` i Prisma update ostaju isti; nema nove password politike/flaga.
+- Lokalno novi HTTP i postojeći cookie suiteovi prolaze **14/14**. **Finalni
+  code CI `41851404905`:** backend **82/837 + 12/115 integration**, mobile
+  **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i
+  nema failure annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**. Controller nije mijenjan i inventory ostaje **34**.
+- Nema migracije/backfilla, promjene AuthService/controllera, mobile/compose
+  izmjena ni deploya. Rollback je revert `e583a10`; privremeni Prisma stubovi
+  su uklonjeni.
+- **Granica:** numerička password polja sada staju prije servisa/bcrypt/DB
+  updatea; valjani stringovi i postojeći hash tok ostaju. Mock controller ne
+  dokazuje real-DB update ili revokaciju sesija, a rollout ostaje otvoren.
+
 ## S-002 — Notification register-token body DTO validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0d3b414`, fix `eb3313d`.**

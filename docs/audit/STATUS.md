@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Auth change-password runtime body DTO validacija (2026-11-04)
+
+**STATUS: CHANGE-PASSWORD STRING TIPOVI RIJEŠENI U KODU (`e583a10`); CI ZELEN.** Servisni bcrypt compare/hash, Prisma update, JWT userId i postojeća password politika nisu mijenjani.
+
+- Source review je potvrdio `@IsString`/`IsNotEmpty`/`MinLength(6)` bez raw-input čuvanja. Mobile već šalje oba password polja kao stringove. Postojeći Auth cookie baseline je **11/11** uz privremene Prisma import stubove; novi HTTP suite koristi mock servis, ne real-DB/bcrypt/session dokaz.
+- Test-only `5aee897` dodaje valjane lozinke/response/servisne argumente i numerička current/new password polja. Novi repro je **1/3 prolaza**, sa kontrolom **12/14**. CI `41850651413` potvrđuje backend **835 prošlo / 2 pala / 837 ukupno**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- Raw-input transform sada daje 400 za numerička password polja prije servisa, dok valjani stringovi zadržavaju 200, response i `changePassword(42,'current-secret','new-secret')`. `MinLength(6)` i ostala politika ostaju; nema novog flaga.
+- **Finalni code CI `41851404905`:** backend **82/837 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno HTTP/cookie suiteovi prolaze **14/14**.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Controller nije mijenjan i inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `e583a10`.
+- **Preostalo:** real-DB/bcrypt update, revokacija sesija i produkcijski rollout; mock controller ih ne dokazuje.
+
 ### S-002 — Notification register-token runtime body DTO validacija (2026-11-04)
 
 **STATUS: REGISTER-TOKEN STRING TIP RIJEŠEN U KODU (`eb3313d`); CI ZELEN.** Servisni `userDevice` update/create, platform enum i JWT userId nisu mijenjani.

@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Weather v2 location query DTO validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0276912` + format `168d9cc`, fix `a441f90`.**
+`origin/arena/c9961f17-boiler-control` je `a441f90` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `1589db8`. PR nije otvaran.
+
+- Source review je potvrdio da GET `/api/weather/v2/locations/:homeProfileId`
+  koristi direktni `@Query('query')` bez runtime DTO-a. Servis prvo radi owner
+  lookup, zatim `trim` i 2–100 provjeru. Mobile već šalje trimovan string, a web
+  nema potrošača ove v2 location-search rute.
+- Postojeći `stub-endpoint.spec.ts` pokreće stvarni controller i produkcijske
+  ValidationPipe opcije s mock servisom. Zajedno s Weather OpenAPI specom
+  baseline je bio **31/31**. Ovo nije novi real-DB owner ili live-provider dokaz.
+- Test-only `0276912` dodaje valjan raw query sa 200, cijelim responseom i
+  `getLocationCandidates(4242,17,'  Sarajevo  ')`, te missing, array i extra
+  query koji moraju dati 400 bez servisa. Lokalni repro je **29 prošlo / 3 pala
+  / 32 ukupno**. Prvi CI `41836668094` je uz tri ciljana failurea uhvatio dvije
+  Prettier greške; format-only `168d9cc` ih uklanja bez promjene asserti.
+- **Čisti test-first CI `41837152828`:** backend **826 prošlo / 3 pala**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo missing, array i
+  extra query padaju jer dobijaju **200** umjesto 400. Mobile **24/136** i
+  frontend **4/4** su zeleni.
+- Fix `a441f90` dodaje `WeatherLocationQueryDto` s raw-input `@IsString`
+  provjerom i koristi ga kao cijeli query DTO, pa globalni whitelist odbija extra
+  ključeve. Postojeći `@ApiQuery` ostaje za isti OpenAPI parametar. Servis,
+  owner lookup, `trim`, 2–100 pravila i provider nisu mijenjani; nema novog flaga.
+- Lokalno HTTP i OpenAPI suiteovi prolaze **35/35**. **Finalni code CI
+  `41838086198`:** backend **81/829 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**. Weather route linije i inventory (**34**) nepromijenjeni.
+- Nema migracije/backfilla, servis/provider/mobile/compose promjene ni deploya.
+  Rollback je revert `a441f90`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** missing, array i extra query sada staju prije servisa/owner
+  lookupa; string length i `trim` ostaju nakon owner provjere. Mock controller
+  ne dokazuje real-DB owner ili provider tok, a rollout ostaje otvoren.
+
 ## S-002 — Notification mark-as-read path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `bf04af0`, fix `bbf7ce0`.**

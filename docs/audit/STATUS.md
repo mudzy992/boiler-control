@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Weather v2 location query runtime DTO validacija (2026-11-04)
+
+**STATUS: LOCATION SEARCH QUERY RIJEŠEN U KODU (`a441f90`); CI ZELEN.** Servisni owner lookup, `trim`, 2–100 pravila i provider nisu mijenjani.
+
+- Source review je potvrdio direktni `@Query('query')` bez runtime DTO-a. Mobile već šalje trimovan string, a web nema potrošača ove v2 location-search rute. Postojeći Weather HTTP/OpenAPI baseline je **31/31** uz mock servis, ne real-DB/provider dokaz.
+- Test-only `0276912` dodaje valjan raw query/response/servisne argumente i missing/array/extra negativce; format-only `168d9cc` samo ispravlja Prettier bez promjene asserti. Lokalni repro je **29/32 prolaza**. Čisti CI `41837152828` potvrđuje backend **826 prošlo / 3 pala**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- `WeatherLocationQueryDto` sada daje 400 za missing, array i extra query prije servisa, dok valjan raw query zadržava 200, response i `getLocationCandidates(4242,17,'  Sarajevo  ')`. String length i `trim` ostaju u servisu nakon owner provjere; nema novog flaga.
+- **Finalni code CI `41838086198`:** backend **81/829 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno HTTP/OpenAPI prolaze **35/35**.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Weather route linije i inventory **34** ostaju nepromijenjeni. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `a441f90`.
+- **Preostalo:** real-DB owner i stvarni provider tok za location search, te produkcijski rollout; mock controller ih ne dokazuje.
+
 ### S-002 — Notification mark-as-read runtime path ID validacija (2026-11-04)
 
 **STATUS: MARK-AS-READ POST PATH ID RIJEŠEN U KODU (`bbf7ce0`); CI ZELEN.** Servisni atomski `updateMany` po id+userId, neotkrivajući 404 i naknadni `findUnique` nisu mijenjani.

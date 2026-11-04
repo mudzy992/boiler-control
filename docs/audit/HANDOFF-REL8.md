@@ -3,6 +3,43 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile activate path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `263f689`, fix `fe22937`.**
+`origin/arena/c9961f17-boiler-control` je `fe22937` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `abc1080`. PR nije otvaran.
+
+- Source review je potvrdio da activate prima string ID i radi `+id` tek u
+  controlleru. Mobile `switchActiveHome(id: number)` već šalje numerički ID;
+  web nema poseban activate poziv, ali generated tip prati ugovor. Servisni
+  findOne owner lookup, user update i activeHomeProfileId nisu mijenjani.
+- Novi `home-profile-http.spec.ts` pokreće stvarni controller i produkcijski
+  ValidationPipe s mock servisom. To nije novi real-DB dokaz; postojeći MO2-20
+  integration aktivacije i upis aktivnog profila ostaju zasebni i nepromijenjeni.
+- Baseline postojećih HomeProfile testova bio je **5/5**. Test-only `263f689`
+  dodaje valjan numeric ID sa 200/response/`activate(42,17)` i malformed ID koji
+  mora dati 400 bez servisa. Novi suite dao je **1 prošao / 1 pao / 2 ukupno**:
+  valjana kontrola prolazi, a malformed ID dobija **200** i dolazi do servisa.
+- **Test-first CI `41801773939`:** **804 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti i postojeći testovi nisu mijenjani za ispravku.
+- Fix `fe22937` dodaje ParseIntPipe samo na activate `:id`. Nema Min(1), novog
+  flaga ni izmjene servisne ownership/activation logike ili drugih ID ruta.
+  Novi import pomjera deset HomeProfile route markera za jednu liniju; svi su
+  mehanički usklađeni u istom commitu i inventory je ponovo **34**.
+- Lokalno su oba HomeProfile suitea **7/7**. **Code run `41802431050`:**
+  backend **79/805 + 12/115 integration** i frontend **4/4** zeleni su,
+  `tsc: 0`, `eslint: 0`. Mobile je **135/136** zbog postojećeg
+  `weatherV2NativeWind` timeouta; nema mobile diffa. Isti suite lokalno prolazi
+  **3/3** bez promjene timeouta, asserti ili paralelizma. Run nije proglašen
+  potpuno zelenim; finalni docs HEAD dobija novi puni CI.
+- Samo activate OpenAPI/frontend path `id` postaje number. Sync/type-check i
+  frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `fe22937`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne dokazuje novi DB upis; ID pozitivnost, ostale
+  HomeProfile/ThermostatDevice/Weather ID rute i rollout ostaju otvoreni.
+
 ## S-002 — Gas invoice download path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `1be2cc3`, fix `6dc7e90`.**

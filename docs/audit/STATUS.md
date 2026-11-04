@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile activate runtime path ID validacija (2026-11-04)
+
+**STATUS: ACTIVATE PATH ID RIJEŠEN U KODU (`fe22937`); BACKEND HTTP DOKAZ ZELEN.** Servisna aktivacija i ostali HomeProfile ID parametri nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile već koristi numerički ID; web nema poseban activate poziv. Owner lookup, user update i activeHomeProfileId ostaju u nepromijenjenom servisu.
+- Novi stvarni controller HTTP spec koristi produkcijski ValidationPipe i mock servis. Nije novi real-DB dokaz; postojeći MO2-20 integration aktivacije je zaseban i nepromijenjen.
+- **Test-first:** postojeći baseline je 5/5. Commit `263f689` dodaje dva scenarija i lokalno daje **1/2 prolaza**, a CI `41801773939` potvrđuje **804 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan ID zadržava 200/response/argumente, a malformed ID ranije dobija 200.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Nema Min(1), novog flaga ni izmjene ownership/activation logike. Novi import pomjera deset route markera; usklađeni su u fix commitu i inventory ostaje 34.
+- **Code run `41802431050`:** backend **79/805 + 12/115 integration** i frontend **4/4** zeleni, `tsc: 0`, `eslint: 0`. Mobile je **135/136** zbog postojećeg weather UI timeouta; bez mobile diffa, isti suite lokalno prolazi **3/3** bez izmjene timeouta/asserti/paralelizma. Run nije proglašen potpuno zelenim.
+- Lokalna oba HomeProfile suitea su **7/7**. Samo activate OpenAPI/frontend path tip je number; sync/type-check i frontend **92/92** prolaze. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `fe22937`.
+- **Preostalo:** ID pozitivnost, ostale HomeProfile/ThermostatDevice/Weather ID rute, novi real-DB ownership dokazi i produkcijski rollout.
+
 ### S-002 — Gas invoice download runtime path ID validacija (2026-11-04)
 
 **STATUS: INVOICE DOWNLOAD PATH ID RIJEŠEN U KODU (`6dc7e90`); SVIH SEDAM GASREADING ID RUTA IMA NUMERIC PARSING.** ID pozitivnost i drugi moduli nisu obuhvaćeni.

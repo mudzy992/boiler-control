@@ -49,6 +49,7 @@ export class UpdateUserDto {
   homeLocation?: string;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
   @MinLength(6)

@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile create/update numerička i boolean polja (2026-11-04)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `37ffef1`, fix `ac1df9e`.**
+`origin/arena/c9961f17-boiler-control` je `8c1f99b` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `04871ed`. PR nije otvaran.
+
+- Source review je potvrdio da globalna implicitna konverzija prije validatora
+  mijenja raw tipove osam numeričkih polja i `hasFloorHeating`. Pregledani web i
+  mobile create/update već šalju valjane number/boolean vrijednosti; klijent
+  nije mijenjan. Enumi, `null` semantika i postojeće granice nisu mijenjani.
+- Test-only `37ffef1` dodaje devet create i devet update negativaca te valjan
+  scalar update, bez promjene prethodnih 20 text/path kontrola. Lokalni repro je
+  **21 prošlo / 18 palo / 39 ukupno**: stringovani brojevi i string `"false"`
+  ranije dobijaju 201/200 umjesto 400.
+- **Test-first CI `41919186581`:** backend **893 prošlo / 18 palo / 911 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Svih 18 backend failurea su ciljani scalar scenariji.
+- Fix `ac1df9e` dodaje samo devet postojećih `preserveRawInput` dekoratora u
+  svaki DTO, za `floorArea`, `ceilingHeight`, `insulationThickness`,
+  `constructionYear`, `numberOfResidents`, `hasFloorHeating` i tri target
+  temperature. Postojeći `IsNumber`/`IsInt`/`IsBoolean`, min/max i optional
+  validatori ostaju; controller, servis, Prisma i response nisu mijenjani.
+- Lokalni HTTP suite prolazi **39/39**, a oba HomeProfile suitea **44/44**.
+  Valjani create zadržava 201/response/JWT userId/servisni argument, a scalar
+  update 200/response/`update(42,17,validScalarBody)`. Tačan CI ESLint opseg ima
+  **0 errors / 2 poznata warnings**, a OpenAPI `--check` prolazi bez razlike.
+- Prvi code CI `41919897648` imao je **909 prošlo / 2 palo / 911 ukupno** zbog
+  postojećeg dashboard contract timeouta i integration 500; HomeProfile suite,
+  integration **119/119**, mobile i frontend prošli su. Timeoutovi/asserti nisu
+  mijenjani i uzrok nije proglašen dokazanim flakeom. CI-only `8c1f99b` nema file
+  diffa; **recheck CI `41920439894`** istog sourcea je zelen: backend **87/911
+  + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`, sva tri joba success i nula failure annotations.
+- OpenAPI i frontend generated fajlovi nisu mijenjani; generated sync i
+  type-check prolaze u CI. Nema migracije/backfilla, promjene flaga,
+  mobile/compose izmjena ni deploya. Rollback production fixa je revert
+  `ac1df9e`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** pluralni mock-controller scenariji dijele DTO s registrovanim
+  singularnim rutama, ali nisu novi real-DB/create/update/ownership dokaz niti
+  zasebni populated singular-body dokaz. `0/null` semantika, rasponi, enumi,
+  string sadržaj, ID pozitivnost, S-004 i produkcijski rollout ostaju zasebni.
+
 ## S-002 — HomeProfile create/update četiri tekst-polja (2026-11-04)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `9c35642`, fix `015712e`.**

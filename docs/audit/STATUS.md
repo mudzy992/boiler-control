@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile runtime create/update scalar DTO validacija (2026-11-04)
+
+**STATUS: DEVET CREATE/UPDATE SCALAR POLJA RIJEŠENO U KODU (`ac1df9e`); CI ZELEN.** Enumi, min/max/optional validatori, controller, servis, active/weather-location logika i Prisma mutacije nisu mijenjani.
+
+- Source review je potvrdio implicitnu konverzaciju raw tipova za `floorArea`, `ceilingHeight`, `insulationThickness`, `constructionYear`, `numberOfResidents`, `hasFloorHeating` i tri target temperature. Web/mobile već šalju number/boolean; suite koristi stvarne DTO-e/controller i mock servis, ne real-DB/ownership dokaz.
+- Test-only `37ffef1` dodaje 18 negativaca i valjan scalar update, bez promjene prethodnih 20 kontrola. Lokalni repro je **21 prošlo / 18 palo / 39 ukupno**. CI `41919186581` potvrđuje backend **893 prošlo / 18 palo / 911 ukupno**, sve **119/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo ciljani scalar scenariji dobijaju 201/200 umjesto 400.
+- Raw-input transformacije sada daju 400 prije servisa za stringovane brojeve i string `"false"`, dok valjani create zadržava 201/response/JWT userId/servisni argument, a scalar update 200/response/`update(42,17,validScalarBody)`. Lokalno HTTP je **39/39**, oba HomeProfile suitea **44/44**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` prolazi.
+- Prvi code CI `41919897648` imao je **909 prošlo / 2 palo / 911 ukupno** zbog dvaju postojećih dashboard scenarija; HomeProfile, integration, mobile i frontend prošli su, a uzrok nije dokazan. CI-only `8c1f99b` nema file diffa. **Recheck CI `41920439894`:** backend **87/911 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- OpenAPI/frontend generated output je nepromijenjen, uz zeleni CI sync/type-check. Nema migracije/backfilla ili mobile/compose/flag/deploy promjene. Rollback production fixa je revert `ac1df9e`.
+- **Preostalo:** `0/null` semantika, rasponi, enumi, string sadržaj, real-DB create/update/ownership, zasebni populated singular-body scenariji, ID pozitivnost i produkcijski rollout. S-004 nije mijenjan.
+
 ### S-002 — HomeProfile runtime create/update tekst-polja (2026-11-04)
 
 **STATUS: ČETIRI CREATE/UPDATE TEXT POLJA RIJEŠENA U KODU (`015712e`); CI ZELEN.** Numerička i boolean polja, enumi, controller, servis, active/weather-location logika i Prisma mutacije nisu mijenjani.

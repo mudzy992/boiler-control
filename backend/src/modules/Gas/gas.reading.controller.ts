@@ -140,10 +140,10 @@ export class GasReadingController {
   @Get('reading/:id/invoice')
   async getInvoice(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.service.getInvoiceStream(req.user.userId, +id);
+    const result = await this.service.getInvoiceStream(req.user.userId, id);
     res.setHeader('Content-Type', result.mimeType);
     res.setHeader(
       'Content-Disposition',

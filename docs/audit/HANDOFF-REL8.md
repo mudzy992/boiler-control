@@ -3,6 +3,44 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Notification mark-as-read path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `bf04af0`, fix `bbf7ce0`.**
+`origin/arena/c9961f17-boiler-control` je `bbf7ce0` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `48dc7b5`. PR nije otvaran.
+
+- Source review je potvrdio da POST `/api/notifications/:id/read` nema
+  ParseIntPipe. Web i mobile `markNotificationAsRead(id: number)` već šalju
+  numerički ID. Servisni atomski `updateMany` po id+userId, neotkrivajući 404 i
+  naknadni `findUnique` nisu mijenjani.
+- Postojeći `notifications-ownership.integration.spec.ts` već real-DB dokazuje
+  anonymous 401, owner 201/response/`isRead=true`, te foreign/missing 404 bez
+  side effecta. Taj suite je nepromijenjen. Novi controller suite koristi mock
+  servis i nije novi real-DB ownership dokaz.
+- Novi `notifications-read-http.spec.ts` pokreće stvarni controller i
+  produkcijske ValidationPipe opcije. Test-only `bf04af0` dodaje valjan numeric
+  ID sa 201, cijelim responseom i `markAsRead(17,42)`, te malformed ID koji mora
+  dati 400 bez servisa. Lokalni repro je **1 prošao / 1 pao / 2 ukupno**:
+  valjana kontrola prolazi, a malformed ID dobija **201**.
+- **Test-first CI `41831732081`:** backend **824 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi malformed
+  notification read scenarij pada. Mobile **24/136** i frontend **4/4** zeleni.
+- Fix `bbf7ce0` dodaje ParseIntPipe samo na mark-as-read `:id`. Nema Min(1),
+  novog flaga ni izmjene servisne ownership/update logike ili baze. Novi import
+  i Prettier format pomjeraju deset Notification route markera; svi su
+  usklađeni u fix commitu i inventory ostaje **34**.
+- Lokalno novi suite i postojeća SEC-3 kontrola prolaze **6/6**. **Finalni code
+  CI `41832527612`:** backend **81/825 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations. Real-DB SEC-1 owner/foreign rezultat ostaje potvrđen.
+- OpenAPI i frontend path `id` već su bili number; generated output je bajtno
+  nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Backend ESLint
+  ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `bbf7ce0`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne zamjenjuje real-DB owner/foreign/missing
+  dokaze; ID pozitivnost i rollout ostaju otvoreni.
+
 ## S-002 — ThermostatDevice remove path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `c5fcc7c`, fix `ea5e860`.**

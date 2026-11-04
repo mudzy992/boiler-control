@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Notification mark-as-read runtime path ID validacija (2026-11-04)
+
+**STATUS: MARK-AS-READ POST PATH ID RIJEŠEN U KODU (`bbf7ce0`); CI ZELEN.** Servisni atomski `updateMany` po id+userId, neotkrivajući 404 i naknadni `findUnique` nisu mijenjani.
+
+- Source review je potvrdio Notification `:id` bez ParseIntPipe. Web i mobile već koriste `markNotificationAsRead(id: number)`. Postojeći real-DB integration dokazi za anonymous/owner/foreign/missing ostaju nepromijenjeni.
+- Novi stvarni controller HTTP spec koristi produkcijske ValidationPipe opcije i mock servis; to je path/response dokaz, ne novi real-DB ownership dokaz. Test-only `bf04af0` lokalno daje **1/2 prolaza** jer malformed ID dobija 201. CI `41831732081` potvrđuje backend **824 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa, dok valjan ID zadržava 201, cijeli response i `markAsRead(17,42)`. Nema Min(1), novog flaga ni izmjene servisne logike ili baze.
+- **Finalni code CI `41832527612`:** backend **81/825 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno novi suite i SEC-3 kontrola prolaze **6/6**; real-DB SEC-1 rezultat ostaje potvrđen.
+- OpenAPI/frontend path tip već je bio number i generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Deset route markera je usklađeno s importom/formatiranjem; inventory ostaje 34. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `bbf7ce0`.
+- **Preostalo:** ID pozitivnost i produkcijski rollout; novi mock suite ne zamjenjuje postojeće real-DB dokaze.
+
 ### S-002 — ThermostatDevice remove runtime path ID validacija (2026-11-04)
 
 **STATUS: REMOVE DELETE PATH ID RIJEŠEN U KODU (`ea5e860`); CI ZELEN.** Servisni findUnique, delete po ID-u i 403/404 ownership ponašanje nisu mijenjani.

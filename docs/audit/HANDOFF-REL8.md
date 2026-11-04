@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile delete path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0513d3b`, fix `e3a8195`.**
+`origin/arena/c9961f17-boiler-control` je `e3a8195` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `abae11a`. PR nije otvaran.
+
+- Source review je potvrdio da pluralni DELETE `/api/home-profiles/:id` prima
+  string i radi `+id`. Mobile ekran koristi `deleteHomeProfile(id: number)`;
+  web nema direktan DELETE poziv. Servisna zabrana brisanja aktivnog profila,
+  findOne owner lookup i Prisma delete nisu mijenjani.
+- Postojeći HTTP spec pokreće stvarni controller i produkcijske ValidationPipe
+  opcije s mock servisom. Novi dokaz je controller/path granica, ne real-DB
+  delete, active-profile guard ili ownership dokaz. Integration je nepromijenjen.
+- Baseline je bio **11/11**. Test-only `0513d3b` dodaje valjan numeric ID sa
+  200/response/`remove(42,17)` i malformed ID koji mora dati 400 bez servisa.
+  Lokalni repro je **12 prošlo / 1 pao / 13 ukupno**: valjana kontrola prolazi,
+  a malformed ID dobija **200** i dolazi do servisa.
+- **Test-first CI `41811782707`:** backend **810 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi malformed
+  DELETE scenarij pada. Frontend i mobile **24/136** su zeleni.
+- Fix `e3a8195` dodaje ParseIntPipe samo na pluralni DELETE `:id`. Time svi
+  pluralni HomeProfile `:id` parametri imaju numeric parsing. Nema Min(1),
+  novog flaga ni izmjene singularne rute, servisne logike ili baze. Import već
+  postoji, route markeri se ne pomjeraju i inventory ostaje **34**.
+- Lokalno su oba HomeProfile suitea **13/13**. **Finalni code CI `41812292302`:**
+  backend **79/811 + 12/115 integration**, mobile **24/136**, frontend **4/4**,
+  `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure annotations.
+- Samo DELETE OpenAPI/frontend path `id` postaje number. Sync/type-check i
+  frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2 poznata warnings**.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `e3a8195`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock controller ne dokazuje stvarno brisanje ili active/owner
+  guard; ID pozitivnost, singularni PATCH, ThermostatDevice/Weather ID rute i
+  rollout ostaju otvoreni.
+
 ## S-002 — HomeProfile plural update path ID validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `4f1016f`, fix `5ebd6e0`.**

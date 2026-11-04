@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — HomeProfile delete runtime path ID validacija (2026-11-04)
+
+**STATUS: PLURAL DELETE PATH ID RIJEŠEN U KODU (`e3a8195`); SVI PLURALNI HOME PROFILE ID-EVI NUMERIČKI PARSIRANI.** Servisno brisanje i singularna ruta nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. Mobile ekran već koristi numerički ID; web nema direktan DELETE poziv. Active-profile guard, findOne owner lookup i Prisma delete ostaju isti.
+- HTTP spec koristi stvarni controller, produkcijske ValidationPipe opcije i mock servis. Ovo je controller/path dokaz, ne novi real-DB delete/ownership dokaz; integration je nepromijenjen.
+- **Test-first:** baseline je 11/11. Commit `0513d3b` dodaje dva scenarija i lokalno daje **12/13 prolaza**. CI `41811782707` potvrđuje backend **810 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed DELETE koji ranije dobija 200 pada. Frontend i mobile **24/136** zeleni su.
+- `ParseIntPipe` sada odbija malformed DELETE ID s 400 prije servisa, dok valjan ID zadržava 200/response/`remove(42,17)`. Nema Min(1), novog flaga ni izmjene singularne rute, servisne logike ili baze.
+- **Finalni code CI `41812292302`:** backend **79/811 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalna oba HomeProfile suitea su **13/13**.
+- Samo DELETE OpenAPI/frontend path tip je number; svi pluralni HomeProfile `:id` parametri sada imaju numeric parsing. Sync/type-check i frontend **92/92** prolaze. Nema pomaka route markera, inventory ostaje 34, migracije/backfilla ili mobile/compose promjene. Rollback je revert `e3a8195`.
+- **Preostalo:** real-DB delete/active/ownership dokazi, ID pozitivnost, singularni PATCH, ThermostatDevice/Weather ID rute i produkcijski rollout.
+
 ### S-002 — HomeProfile plural update runtime path ID validacija (2026-11-04)
 
 **STATUS: PLURAL UPDATE PATH ID RIJEŠEN U KODU (`5ebd6e0`); CI ZELEN.** Singularni PATCH, DTO pravila i servisni update nisu mijenjani.

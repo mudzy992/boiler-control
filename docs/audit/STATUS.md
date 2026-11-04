@@ -2285,6 +2285,19 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Gas meter-image upload runtime path ID validacija (2026-11-04)
+
+**STATUS: METER-IMAGE UPLOAD PATH ID RIJEŠEN U KODU (`6c0947b`); HTTP DOKAZ ZELEN.** Multipart/storage/DB logika i drugi ID parametri nisu mijenjani.
+
+- Arena grafted base oporavljen je fetch + `git reset --mixed` na remote `1e4e4e5`, bez `--hard`; radno stablo je bilo čisto prije testa. Backend/frontend dependencies vraćeni su npm ci bez lockfile izmjena.
+- Source review je potvrdio string path ID i `+id` konverziju. Web/mobile već šalju numerički ID i isti multipart `meterImage`; FileInterceptor i servis nisu mijenjani.
+- Postojeći stvarni controller HTTP spec s produkcijskim ValidationPipe i stvarnim FileInterceptorom dobio je valjan numeric-ID i malformed-ID scenarij. Servis je mockan; nije real-storage/DB dokaz.
+- **Test-first:** baseline je 14/14. Commit `89f0e78` lokalno daje **15/16 prolaza i jedan pad**, a CI `41779354108` potvrđuje **794 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`. Valjan upload zadržava 201/file argumente, a malformed ID ranije dobija 201 i dolazi do servisa.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa. Nema Min(1), novog flaga ni izmjene content-signature, file-limit, storage, ownership ili response logike.
+- **Finalni code CI `41779782667`:** backend **78/795 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba/koraci success i nula failure annotations. Fokusirani suite je **16/16**, svi lokalni Gas testovi **49/49**.
+- Samo POST meter-image OpenAPI/frontend path tip je number; sync/type-check i frontend **92/92** prolaze. ESLint **0 errors / 2 postojeća warnings**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `6c0947b`.
+- **Preostalo:** real-storage/DB side effecti, ID pozitivnost, invoice/download i drugi ID parametri te produkcijski rollout.
+
 ### S-002 — Gas reading DELETE runtime path ID validacija (2026-11-03)
 
 **STATUS: DELETE PATH ID RIJEŠEN U KODU (`d922323`); HTTP DOKAZ ZELEN.** Servisno brisanje, real-DB ownership/file side effecti i preostali ID parametri nisu mijenjani.

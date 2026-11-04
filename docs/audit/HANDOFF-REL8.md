@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas meter-image upload path ID validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `89f0e78`, fix `6c0947b`.**
+`origin/arena/c9961f17-boiler-control` je `6c0947b` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `1e4e4e5`. PR nije otvaran.
+
+- Na ulazu je Arena vratila grafted HEAD `179d171`, pa se mergeovan rad prikazao
+  kao necommitovan. Oporavak je urađen dogovorenim fetch + `git reset --mixed`
+  na remote `1e4e4e5`, bez `--hard`; HEAD/remote i radno stablo su zatim čisti.
+  Backend (894) i frontend (664) dependencies vraćeni su npm ci iz lockfilea,
+  bez manifest/lockfile izmjena.
+- Source review je potvrdio da meter-image POST prima string ID i radi `+id`
+  tek u controlleru. Web/mobile već šalju numerički ID i multipart `meterImage`.
+- Postojeći `gas-upload-http.spec.ts` pokreće stvarni controller, FileInterceptor
+  i produkcijski ValidationPipe kroz HTTP, sa synthetic JWT korisnikom i mock
+  servisom. Zato dokaz pokriva controller/multipart granicu, ne stvarni storage/DB.
+- Baseline je bio **14/14**. Test-only `89f0e78` dodaje valjan numeric ID s
+  201/response/file argumentima i malformed ID koji mora dati 400 bez servisa.
+  Lokalni test-first dao je **15 prošlo / 1 pao / 16 ukupno**: valjana kontrola
+  prolazi, a malformed ID dobija **201** i dolazi do mock servisa.
+- **Test-first CI `41779354108`:** **794 prošlo / 1 pao**, svih **115/115
+  integration** zeleno, `tsc: 0`, `eslint: 0`; samo novi invalid-ID scenarij
+  pada. Asserti, multipart i postojeći testovi nisu mijenjani za ispravku.
+- Fix `6c0947b` dodaje postojeći ParseIntPipe samo na meter-image POST `:id`.
+  Nema Min(1), novog importa/flaga ni izmjene FileInterceptor, content-signature,
+  file-limit, storage, ownership, response ili servisne logike.
+- Lokalno je isti suite nakon ispravke **16/16**, a sva tri Gas suitea **49/49**.
+  **Finalni code CI `41779782667`:** backend **78/795 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri
+  joba/koraci success i nula failure annotations. Provjereno preko API anotacija.
+- Samo POST meter-image OpenAPI/frontend path `id` postaje number; GET na istoj
+  putanji i multipart shema nisu mijenjani. Sync/type-check i frontend **92/92**
+  prolaze. ESLint ima **0 errors / 2 postojeća warnings**. Route markeri i
+  inventory baseline od 34 poznate razlike ostaju stabilni.
+- Nema migracije/backfilla, novog flaga, servisne/mobile/compose promjene ni
+  deploya. Rollback je revert `6c0947b`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** stvarni storage/DB/file side effecti, ID pozitivnost, invoice i
+  download ID parametri, ostali moduli i produkcijski rollout nisu obuhvaćeni.
+
 ## S-002 — Gas reading DELETE path ID validacija (2026-11-03)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `de896a8`, fix `d922323`.**

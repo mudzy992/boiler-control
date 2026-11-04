@@ -5,6 +5,7 @@ import {
   Patch,
   Delete,
   Param,
+  ParseIntPipe,
   Body,
   Req,
   UseGuards,
@@ -28,8 +29,8 @@ export class ThermostatDeviceController {
   }
 
   @Get(':id')
-  findOne(@Req() req, @Param('id') id: string) {
-    return this.service.findOne(req.user.userId, +id);
+  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(req.user.userId, id);
   }
 
   @Get(':id/programs')

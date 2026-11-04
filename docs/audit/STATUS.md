@@ -2285,6 +2285,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — ThermostatDevice remove runtime path ID validacija (2026-11-04)
+
+**STATUS: REMOVE DELETE PATH ID RIJEŠEN U KODU (`ea5e860`); CI ZELEN.** Servisni findUnique, delete po ID-u i 403/404 ownership ponašanje nisu mijenjani.
+
+- Source review je potvrdio string path ID i `+id` konverziju. U pregledanim mobile/web potrošačima nema direktnog DELETE poziva. Druge device rute i servisna logika ostaju iste.
+- Postojeći stvarni controller HTTP spec koristi produkcijske ValidationPipe opcije i mock servis; baseline je bio 6/6. Test ne izvršava stvarno brisanje i nije novi real-DB owner/foreign/delete dokaz.
+- **Test-first:** commit `c5fcc7c` lokalno daje **7/8 prolaza**. CI `41828837866` potvrđuje backend **822 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0` i `eslint: 0`; samo malformed DELETE koji ranije dobija 200 pada. Mobile **24/136** i frontend **4/4** su zeleni.
+- `ParseIntPipe` sada odbija malformed ID s 400 prije servisa, dok valjan ID zadržava 200, cijeli response i `remove(42,17)`. Nema Min(1), novog flaga ni izmjene servisne logike ili baze.
+- **Finalni code CI `41829546605`:** backend **80/823 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalni cijeli ThermostatDevice HTTP suite je **8/8**.
+- Samo remove DELETE OpenAPI/frontend path tip je number; sva četiri ThermostatDevice `:id` parametra sada imaju ParseIntPipe i number ugovor. Sync/type-check i frontend **92/92** prolaze. Import i route markeri su nepromijenjeni; inventory ostaje 34. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `ea5e860`.
+- **Preostalo:** real-DB owner/foreign/delete dokazi, ID pozitivnost i produkcijski rollout.
+
 ### S-002 — ThermostatDevice update runtime path ID validacija (2026-11-04)
 
 **STATUS: UPDATE PATCH PATH ID RIJEŠEN U KODU (`88ff6aa`); CI ZELEN.** Servisni findUnique, provjera profila, update po ID-u i 403/404 ownership ponašanje nisu mijenjani.

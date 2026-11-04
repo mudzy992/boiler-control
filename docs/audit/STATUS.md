@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — User profile runtime text DTO validacija (2026-11-04)
+
+**STATUS: ŠEST PROFILE TEXT POLJA RIJEŠENO U KODU (`63b23af`); CI ZELEN.** Password/S-003, `prefersDarkMode`, gas-price/date polja, controller, UserService, bcrypt/hash i gas-price historija nisu mijenjani.
+
+- Source review i čisti DTO probe potvrđuju implicitnu konverziju numeričkog name/username/homeLocation/avatarUrl/timezone/locale u string bez validator greške. Mobile već šalje string name/username/homeLocation; consumeri nisu mijenjani. Novi suite koristi stvarni controller/production ValidationPipe, mock guard i mock servis, ne real-DB/bcrypt/gas-price/session dokaz.
+- Test-only `af1ce37` dodaje valjan 200/response/JWT userId/servisni argument, username trim/lowercase i šest numeričkih negativaca. Lokalni repro je **1 prošao / 6 palo / 7 ukupno**. CI `41885089457` potvrđuje backend **848 prošlo / 6 palo / 854 ukupno**, sve **115/115 integration**, mobile **24/136** i frontend **4/4** zelene; samo ciljani numerički ulazi dobiju 200 umjesto 400.
+- Raw-input transform sada daje 400 za numeričke ulaze za šest tekst polja prije `updateMe`, dok valjani stringovi zadržavaju 200, response, cijeli servisni argument i username trim/lowercase normalizaciju. Nema novog flaga.
+- Prvi code CI `41885929193` završio je **851/3/854** zbog tri timeouta u postojećim auth-refresh/duplicate-email integration testovima; novi profile suite i zasebni integration/mobile/frontend jobovi su prošli. Bez izmjene timeoutova ili asserti, CI-only `6c3ba5d` bez source diffa dao je zeleni recheck **`41886589502`**: backend **85/854 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, sva tri joba success i nula failure annotations.
+- Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
+- **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
+
 ### S-002 — Auth register runtime body DTO validacija (2026-11-04)
 
 **STATUS: ČETIRI REGISTER STRING POLJA RIJEŠENA U KODU (`3ad9c55`); CI ZELEN.** Email, AuthService, bcrypt hash, Prisma uniqueness/create, `refreshTransport` i postojeća cookie/refresh politika nisu mijenjani.

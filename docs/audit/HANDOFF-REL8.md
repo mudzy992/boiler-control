@@ -3,6 +3,47 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — User profile šest tekst polja DTO validacije (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `af1ce37`, fix `63b23af`; CI-only recheck `6c3ba5d` nema source diff.**
+`origin/arena/c9961f17-boiler-control` je `6c3ba5d` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `d480f99`. PR nije otvaran.
+
+- Source review i DTO probe na čistom HEAD-u potvrđuju da numerički `name`,
+  `username`, `homeLocation`, `avatarUrl`, `timezone` i `locale` postaju string
+  `"123456"` bez validator greške. Mobile već šalje string name/username/
+  homeLocation; mobile i frontend consumeri nisu mijenjani.
+- Novi `user-profile-http.spec.ts` pokreće stvarni UserController i produkcijske
+  ValidationPipe opcije. Mock guard daje JWT `userId=42`, a mock `updateMe`
+  provjerava 400-prije-servisa i valjani 200/argument. Ovo nije real-DB/bcrypt/
+  gas-price/session dokaz.
+- Test-only `af1ce37` dodaje valjan payload sa 200, cijelim responseom i
+  servisnim argumentom, username trim/lowercase normalizaciju i šest numeričkih
+  negativaca. Lokalni repro je **1 prošao / 6 palo / 7 ukupno**.
+- **Test-first CI `41885089457`:** backend **848 prošlo / 6 palo / 854 ukupno**;
+  samo šest ciljanih numeričkih polja pada jer dobija **200** umjesto 400.
+  Svih **115/115 integration**, mobile **24/136** i frontend **4/4** su zeleni.
+- Fix `63b23af` čuva raw input za šest tekst polja, a username trim/lowercase
+  primjenjuje samo na raw string. Password/S-003, `prefersDarkMode`, gas-price/
+  date polja, controller, UserService, bcrypt/hash i gas-price historija ostaju
+  nepromijenjeni; nema novog flaga.
+- Lokalno novi suite prolazi **7/7**, frontend **92/92**, a OpenAPI i frontend
+  generated output ostaju bajtno nepromijenjeni. Backend ESLint ima **0 errors /
+  2 poznata warnings**; controller i inventory (**34**) su nepromijenjeni.
+- Prvi code CI `41885929193` imao je **851 prošlo / 3 palo / 854 ukupno** zbog
+  tri timeouta u postojećim auth-refresh/duplicate-email integration testovima;
+  novi profile suite i zasebni integration/mobile/frontend jobovi su prošli.
+  Timeoutovi i asserti nisu mijenjani. CI-only `6c3ba5d` nema file diffa, a
+  **recheck CI `41886589502`** je zelen: backend **85/854 + 12/115 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, sva tri joba success.
+- Nema migracije/backfilla, promjene flaga, mobile/compose izmjena ni deploya.
+  Rollback production fixa je revert `63b23af`; privremeni Prisma stubovi su
+  uklonjeni.
+- **Granica:** riješeni su samo numerički ulazi za šest tekst polja, ne cijeli
+  `UpdateUserDto` niti S-003. Valjani stringovi, response, servisni argument i
+  username normalizacija ostaju; mock controller ne dokazuje real-DB update,
+  bcrypt/hash, gas-price historiju ni session revokaciju.
+
 ## S-002 — Auth register body DTO validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `4f6dd12`, fix `3ad9c55`.**

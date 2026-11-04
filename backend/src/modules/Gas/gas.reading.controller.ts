@@ -94,10 +94,10 @@ export class GasReadingController {
   )
   uploadMeterImage(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @UploadedFile() meterImage: any,
   ) {
-    return this.service.uploadMeterImage(req.user.userId, +id, meterImage);
+    return this.service.uploadMeterImage(req.user.userId, id, meterImage);
   }
 
   @Post('reading/:id/invoice')

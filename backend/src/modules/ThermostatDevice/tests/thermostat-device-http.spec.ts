@@ -1,13 +1,6 @@
 jest.mock('../../../prisma/prisma.service', () => ({
   PrismaService: class PrismaService {},
 }));
-jest.mock('../dto/create-thermostat-device.dto', () => ({
-  CreateThermostatDeviceDto: class CreateThermostatDeviceDto {},
-}));
-jest.mock('../dto/update-thermostat-device.dto', () => ({
-  UpdateThermostatDeviceDto: class UpdateThermostatDeviceDto {},
-}));
-
 import {
   ExecutionContext,
   INestApplication,
@@ -21,6 +14,7 @@ import { ThermostatDeviceService } from '../thermostat.device.service';
 
 describe('ThermostatDevice controller HTTP kompatibilnost', () => {
   let app: INestApplication;
+  const create = jest.fn();
   const findOne = jest.fn();
   const getPrograms = jest.fn();
   const update = jest.fn();
@@ -32,7 +26,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: ThermostatDeviceService,
-          useValue: { findOne, getPrograms, update, remove },
+          useValue: { create, findOne, getPrograms, update, remove },
         },
       ],
     })
@@ -61,6 +55,7 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
   });
 
   beforeEach(() => {
+    create.mockReset();
     findOne.mockReset();
     getPrograms.mockReset();
     update.mockReset();
@@ -69,6 +64,49 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  describe('POST /api/devices body DTO (S-002)', () => {
+    const validBody = {
+      vendor: 'tuya',
+      deviceId: 'tuya-17',
+      alias: 'Dnevna soba',
+      mode: 'PROGRAM',
+      homeProfileId: 7,
+    };
+
+    it('valjan create zadržava 201, response, JWT userId i servisni argument', async () => {
+      const device = { id: 17, userId: 42, ...validBody };
+      create.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .post('/api/devices')
+        .send(validBody);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(device);
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(create).toHaveBeenCalledWith(42, validBody);
+    });
+
+    it.each([
+      ['vendor', { ...validBody, vendor: 123456 }],
+      ['deviceId', { ...validBody, deviceId: 123456 }],
+      ['alias', { ...validBody, alias: 123456 }],
+      ['homeProfileId', { ...validBody, homeProfileId: '7' }],
+    ])(
+      '%s s pogrešnim raw tipom vraća 400 prije servisa',
+      async (_field, body) => {
+        create.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .post('/api/devices')
+          .send(body);
+
+        expect(response.status).toBe(400);
+        expect(create).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/devices/:id path ID (S-002)', () => {
@@ -184,6 +222,49 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(update).not.toHaveBeenCalled();
     });
+  });
+
+  describe('PATCH /api/devices/:id body DTO (S-002)', () => {
+    const validBody = {
+      alias: 'Dnevna soba',
+      mode: 'MANUAL',
+      vendor: 'tuya',
+      deviceId: 'tuya-17',
+      homeProfileId: 8,
+    };
+
+    it('valjan update zadržava 200, response i cijeli servisni argument', async () => {
+      const device = { id: 17, userId: 42, ...validBody };
+      update.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/devices/17')
+        .send(validBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(device);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, validBody);
+    });
+
+    it.each([
+      ['alias', { ...validBody, alias: 123456 }],
+      ['vendor', { ...validBody, vendor: 123456 }],
+      ['deviceId', { ...validBody, deviceId: 123456 }],
+      ['homeProfileId', { ...validBody, homeProfileId: '8' }],
+    ])(
+      '%s s pogrešnim raw tipom vraća 400 prije servisa',
+      async (_field, body) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/devices/17')
+          .send(body);
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('DELETE /api/devices/:id path ID (S-002)', () => {

@@ -1,13 +1,6 @@
 jest.mock('../../../prisma/prisma.service', () => ({
   PrismaService: class PrismaService {},
 }));
-jest.mock('../dto/create-home-profile.dto', () => ({
-  CreateHomeProfileDto: class CreateHomeProfileDto {},
-}));
-jest.mock('../dto/update-home-profile.dto', () => ({
-  UpdateHomeProfileDto: class UpdateHomeProfileDto {},
-}));
-
 import {
   ExecutionContext,
   INestApplication,
@@ -24,6 +17,7 @@ import { HomeProfileService } from '../home.profile.service';
 
 describe('HomeProfile controller HTTP kompatibilnost', () => {
   let app: INestApplication;
+  const create = jest.fn();
   const findOne = jest.fn();
   const update = jest.fn();
   const remove = jest.fn();
@@ -35,7 +29,7 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       providers: [
         {
           provide: HomeProfileService,
-          useValue: { findOne, update, remove, activate },
+          useValue: { create, findOne, update, remove, activate },
         },
       ],
     })
@@ -64,6 +58,7 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
   });
 
   beforeEach(() => {
+    create.mockReset();
     findOne.mockReset();
     update.mockReset();
     remove.mockReset();
@@ -72,6 +67,109 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  describe('POST /api/home-profiles body DTO (S-002)', () => {
+    const validBody = {
+      homeName: 'Porodicna kuca',
+      location: 'Sarajevo',
+      floorArea: 150,
+      ceilingHeight: 2.6,
+      insulationType: 'EPS',
+      insulationThickness: 12,
+      windowType: 'DOUBLE_GLAZED',
+      heatingType: 'RADIATOR',
+      constructionYear: 2010,
+      numberOfResidents: 4,
+      boilerModel: 'Bosch',
+      hasFloorHeating: false,
+      targetMorningTemp: 22,
+      targetDayTemp: 21,
+      targetNightTemp: 18,
+      preferredScheduleNotes: 'Radnim danom ranije',
+      seasonMode: 'WINTER',
+    };
+
+    it('valjan create zadržava 201, response, JWT userId i servisni argument', async () => {
+      const profile = { id: 17, userId: 42, ...validBody };
+      create.mockResolvedValue(profile);
+
+      const response = await request(app.getHttpServer())
+        .post('/api/home-profiles')
+        .send(validBody);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(profile);
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(create).toHaveBeenCalledWith(42, validBody);
+    });
+
+    it.each([
+      ['homeName', { ...validBody, homeName: 123456 }],
+      ['location', { ...validBody, location: 123456 }],
+      ['boilerModel', { ...validBody, boilerModel: 123456 }],
+      [
+        'preferredScheduleNotes',
+        { ...validBody, preferredScheduleNotes: 123456 },
+      ],
+    ])(
+      '%s s pogrešnim raw tipom vraća 400 prije servisa',
+      async (_field, body) => {
+        create.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .post('/api/home-profiles')
+          .send(body);
+
+        expect(response.status).toBe(400);
+        expect(create).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  describe('PATCH /api/home-profiles/:id body DTO (S-002)', () => {
+    const validBody = {
+      homeName: 'Porodicna kuca',
+      location: 'Sarajevo',
+      boilerModel: 'Bosch',
+      preferredScheduleNotes: 'Radnim danom ranije',
+    };
+
+    it('valjan update zadržava 200, response i cijeli servisni argument', async () => {
+      const profile = { id: 17, userId: 42, ...validBody };
+      update.mockResolvedValue(profile);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/home-profiles/17')
+        .send(validBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(profile);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, validBody);
+    });
+
+    it.each([
+      ['homeName', { ...validBody, homeName: 123456 }],
+      ['location', { ...validBody, location: 123456 }],
+      ['boilerModel', { ...validBody, boilerModel: 123456 }],
+      [
+        'preferredScheduleNotes',
+        { ...validBody, preferredScheduleNotes: 123456 },
+      ],
+    ])(
+      '%s s pogrešnim raw tipom vraća 400 prije servisa',
+      async (_field, body) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/home-profiles/17')
+          .send(body);
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/home-profiles/:id path ID (S-002)', () => {

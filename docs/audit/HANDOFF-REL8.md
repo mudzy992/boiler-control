@@ -3,6 +3,43 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Weather v2 confirm body DTO validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `1d61859`, fix `4e037b0`.**
+`origin/arena/c9961f17-boiler-control` je `4e037b0` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `849119f`. PR nije otvaran.
+
+- Source review je potvrdio da `ConfirmWeatherLocationDto` ima `@IsString` i
+  `@Length`, ali ne čuva sirovi tip pri globalnoj implicitnoj konverziji.
+  Servisni owner lookup, fresh geocoder, candidate provjera i `updateMany` nisu
+  mijenjani. Mobile već šalje trimovan string query i string candidate ID.
+- Postojeći `stub-endpoint.spec.ts` pokreće stvarni controller i produkcijske
+  ValidationPipe opcije s mock servisom. Zajedno s Weather OpenAPI specom
+  baseline je bio **35/35**. Ovo nije novi real-DB owner ili geocoder dokaz.
+- Test-only `1d61859` dodaje valjan confirm sa 200, cijelim responseom i
+  `confirmLocation(4242,17,'  Sarajevo  ','candidate-1')`, te numerički query i
+  candidateId koji moraju dati 400 bez servisa. Lokalni repro je **33 prošlo /
+  2 pala / 35 ukupno**.
+- **Test-first CI `41839722716`:** backend **830 prošlo / 2 pala**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo numerički query i
+  candidateId padaju jer dobijaju **200** umjesto 400. Mobile **24/136** i
+  frontend **4/4** su zeleni.
+- Fix `4e037b0` dodaje raw-input `@Transform` samo na `query` i `candidateId`,
+  prije postojećih `@IsString`/`@Length` pravila. Controller, servis, owner
+  lookup, fresh geocoder i `updateMany` ostaju isti; nema novog flaga.
+- Lokalno HTTP i OpenAPI suiteovi prolaze **38/38**. **Finalni code CI
+  `41840434457`:** backend **81/832 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**. Controller nije mijenjan i inventory ostaje **34**.
+- Nema migracije/backfilla, servis/provider/mobile/compose promjene ni deploya.
+  Rollback je revert `4e037b0`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** numerički query/candidateId sada staju prije servisa/owner
+  lookupa; postojeća length pravila i fresh-candidate tok ostaju. Mock controller
+  ne dokazuje real-DB owner ili provider tok, a rollout ostaje otvoren.
+
 ## S-002 — Weather v2 location query DTO validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0276912` + format `168d9cc`, fix `a441f90`.**

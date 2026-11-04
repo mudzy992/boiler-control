@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Weather v2 confirm runtime body DTO validacija (2026-11-04)
+
+**STATUS: CONFIRM BODY TIPOVI RIJEŠENI U KODU (`4e037b0`); CI ZELEN.** Servisni owner lookup, fresh geocoder, candidate provjera i `updateMany` nisu mijenjani.
+
+- Source review je potvrdio `@IsString`/`@Length` bez raw-input čuvanja. Mobile već šalje trimovan string query i string candidate ID. Postojeći Weather HTTP/OpenAPI baseline je **35/35** uz mock servis, ne real-DB/geocoder dokaz.
+- Test-only `1d61859` dodaje valjan confirm/response/servisne argumente i numerički query/candidateId negativce. Lokalni repro je **33/35 prolaza**. CI `41839722716` potvrđuje backend **830 prošlo / 2 pala**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- Raw-input transform sada daje 400 za numerički query/candidateId prije servisa, dok valjani stringovi zadržavaju 200, response i `confirmLocation(4242,17,'  Sarajevo  ','candidate-1')`. Postojeća length pravila ostaju; nema novog flaga.
+- **Finalni code CI `41840434457`:** backend **81/832 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalno HTTP/OpenAPI prolaze **38/38**.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Controller nije mijenjan i inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `4e037b0`.
+- **Preostalo:** real-DB owner i stvarni geocoder/update tok za confirm, te produkcijski rollout; mock controller ih ne dokazuje.
+
 ### S-002 — Weather v2 location query runtime DTO validacija (2026-11-04)
 
 **STATUS: LOCATION SEARCH QUERY RIJEŠEN U KODU (`a441f90`); CI ZELEN.** Servisni owner lookup, `trim`, 2–100 pravila i provider nisu mijenjani.

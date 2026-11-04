@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { Readable } from 'node:stream';
 import { JwtAuthGuard } from '../../Auth/jwt-auth.guard';
 import { IMAGE_MAX_SIZE_BYTES } from '../../../common/file-storage.service';
 import { GasReadingController } from '../gas.reading.controller';
@@ -18,6 +19,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
   const uploadMeterImage = jest.fn();
   const uploadInvoice = jest.fn();
   const deleteInvoice = jest.fn();
+  const getMeterImageStream = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
   beforeAll(async () => {
@@ -33,6 +35,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
             uploadMeterImage,
             uploadInvoice,
             deleteInvoice,
+            getMeterImageStream,
             getEfficiencyAnalysis,
           },
         },
@@ -69,6 +72,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
     uploadMeterImage.mockReset();
     uploadInvoice.mockReset();
     deleteInvoice.mockReset();
+    getMeterImageStream.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
 
@@ -285,6 +289,42 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(deleteInvoice).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /api/gas/reading/:id/meter-image path ID (S-002)', () => {
+    const image = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    const meterResult = () => ({
+      stream: Readable.from([image]),
+      mimeType: 'image/jpeg',
+      fileName: 'meter.jpg',
+    });
+
+    it('zadržava numeric ID, stream bajtove, headere i servisne argumente', async () => {
+      getMeterImageStream.mockResolvedValue(meterResult());
+
+      const response = await request(app.getHttpServer())
+        .get('/api/gas/reading/17/meter-image')
+        .responseType('blob');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(image);
+      expect(response.headers['content-type']).toBe('image/jpeg');
+      expect(response.headers['content-disposition']).toBe(
+        'inline; filename="meter.jpg"',
+      );
+      expect(getMeterImageStream).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      getMeterImageStream.mockResolvedValue(meterResult());
+
+      const response = await request(app.getHttpServer()).get(
+        '/api/gas/reading/not-a-number/meter-image',
+      );
+
+      expect(response.status).toBe(400);
+      expect(getMeterImageStream).not.toHaveBeenCalled();
     });
   });
 

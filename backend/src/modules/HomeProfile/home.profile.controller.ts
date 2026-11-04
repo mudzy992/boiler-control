@@ -52,8 +52,8 @@ export class HomeProfileController {
   }
 
   @Delete(':id')
-  remove(@Req() req, @Param('id') id: string) {
-    return this.service.remove(req.user.userId, +id);
+  remove(@Req() req, @Param('id', ParseIntPipe) id: number) {
+    return this.service.remove(req.user.userId, id);
   }
 
   @Patch(':id/activate')

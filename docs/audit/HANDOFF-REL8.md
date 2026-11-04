@@ -3,6 +3,43 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Notification register-token body DTO validacija (2026-11-04)
+
+**VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `0d3b414`, fix `eb3313d`.**
+`origin/arena/c9961f17-boiler-control` je `eb3313d` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `cacd879`. PR nije otvaran.
+
+- Source review je potvrdio da `RegisterDeviceDTO.expoPushToken` ima samo
+  `@IsString`, bez raw-input čuvanja pri globalnoj implicitnoj konverziji.
+  Servis radi postojeći `userDevice` update/create. Mobile već šalje string
+  token i tipiziranu android/ios platformu.
+- Postojeći `notifications-read-http.spec.ts` pokreće stvarni controller i
+  produkcijske ValidationPipe opcije s mock servisom. Baseline je bio **2/2**
+  uz privremene Prisma import stubove. Ovo nije real-DB ili Expo dokaz.
+- Test-only `0d3b414` dodaje valjan token sa 201, cijelim responseom i
+  `registerToken(42,'ExponentPushToken[synthetic-token]','android')`, te
+  numerički token koji mora dati 400 bez servisa. Lokalni repro je **3 prošlo /
+  1 pao / 4 ukupno**.
+- **Test-first CI `41843036696`:** backend **833 prošlo / 1 pao**, svih
+  **115/115 integration** zeleno, `tsc: 0`, `eslint: 0`; samo numerički token
+  pada jer dobija **201** umjesto 400. Mobile **24/136** i frontend **4/4** su
+  zeleni.
+- Fix `eb3313d` dodaje raw-input `@Transform` samo na `expoPushToken`, prije
+  postojećeg `@IsString`. Platform enum, controller, servis i `userDevice`
+  update/create ostaju isti; nema novog token formata, length pravila ni flaga.
+- Lokalni Notification HTTP suite prolazi **4/4**. **Finalni code CI
+  `41843715972`:** backend **81/834 + 12/115 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema failure
+  annotations.
+- OpenAPI i frontend generated output ostaju bajtno nepromijenjeni. Sync/
+  type-check i frontend **92/92** prolaze. Backend ESLint ima **0 errors / 2
+  poznata warnings**. Controller nije mijenjan i inventory ostaje **34**.
+- Nema migracije/backfilla, servis/DB/Expo/mobile/compose promjene ni deploya.
+  Rollback je revert `eb3313d`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** numerički token sada staje prije servisa/DB upisa; valjani string
+  i postojeći update/create tok ostaju. Mock controller ne dokazuje real-DB
+  upis, Expo dostavu ili token lifecycle, a rollout ostaje otvoren.
+
 ## S-002 — Weather v2 confirm body DTO validacija (2026-11-04)
 
 **VERIFIKOVANO, TESTIRANO I PUSHANO: test-first `1d61859`, fix `4e037b0`.**

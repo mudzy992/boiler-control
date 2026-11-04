@@ -2285,6 +2285,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Nema production/API/DTO/OpenAPI/migracije/flag/compose/mobile promjene; rollback je revert test/helper/docs slicea i ne uklanja zaštitu.
 - **Preostalo:** produkcijski proxy/IP/deploy nije dokazan. Pojedinačni reminder, preferences, token lifecycle i druge notification rute nisu prošireni.
 
+### S-002 — Notification register-token runtime body DTO validacija (2026-11-04)
+
+**STATUS: REGISTER-TOKEN STRING TIP RIJEŠEN U KODU (`eb3313d`); CI ZELEN.** Servisni `userDevice` update/create, platform enum i JWT userId nisu mijenjani.
+
+- Source review je potvrdio `expoPushToken` sa samo `@IsString`, bez raw-input čuvanja. Mobile već šalje string token i tipiziranu platformu. Postojeći Notification HTTP baseline je **2/2** uz privremene Prisma import stubove i mock servis, ne real-DB/Expo dokaz.
+- Test-only `0d3b414` dodaje valjan token/response/servisne argumente i numerički token negativac. Lokalni repro je **3/4 prolaza**. CI `41843036696` potvrđuje backend **833 prošlo / 1 pao**, sve **115/115 integration**, `tsc: 0`, `eslint: 0`; mobile **24/136** i frontend **4/4** zeleni.
+- Raw-input transform sada daje 400 za numerički token prije servisa, dok valjani string zadržava 201, response i `registerToken(42,'ExponentPushToken[synthetic-token]','android')`. Nema novog token formata, length pravila ni flaga.
+- **Finalni code CI `41843715972`:** backend **81/834 + 12/115 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations. Lokalni Notification HTTP suite prolazi **4/4**.
+- OpenAPI/frontend generated output je bajtno nepromijenjen. Sync/type-check i frontend **92/92** prolaze. Controller nije mijenjan i inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback je revert `eb3313d`.
+- **Preostalo:** real-DB update/create, stvarna Expo dostava, token lifecycle/više uređaja i produkcijski rollout; mock controller ih ne dokazuje.
+
 ### S-002 — Weather v2 confirm runtime body DTO validacija (2026-11-04)
 
 **STATUS: CONFIRM BODY TIPOVI RIJEŠENI U KODU (`4e037b0`); CI ZELEN.** Servisni owner lookup, fresh geocoder, candidate provjera i `updateMany` nisu mijenjani.

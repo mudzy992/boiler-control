@@ -13,8 +13,8 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-// Globalni enableImplicitConversion ne smije pretvoriti ne-string u string prije
-// @IsString; originalni tip mora ostati vidljiv validatoru.
+// Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije
+// validacije; originalni tip mora ostati vidljiv validatoru.
 const preserveRawInput = ({ obj, key }: TransformFnParams) =>
   obj[key] as unknown;
 
@@ -73,17 +73,20 @@ export class UpdateUserDto {
   locale?: string;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsBoolean()
   prefersDarkMode?: boolean;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsNumber()
   @Min(0)
   gasPriceExVat?: number;
 
   @ApiPropertyOptional()
+  @Transform(preserveRawInput)
   @IsOptional()
   @IsDateString()
   gasPriceEffectiveFrom?: string;

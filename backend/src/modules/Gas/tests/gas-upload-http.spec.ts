@@ -17,6 +17,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
   const updateReference = jest.fn();
   const uploadMeterImage = jest.fn();
   const uploadInvoice = jest.fn();
+  const deleteInvoice = jest.fn();
   const getEfficiencyAnalysis = jest.fn();
 
   beforeAll(async () => {
@@ -31,6 +32,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
             updateReference,
             uploadMeterImage,
             uploadInvoice,
+            deleteInvoice,
             getEfficiencyAnalysis,
           },
         },
@@ -66,6 +68,7 @@ describe('Gas controller HTTP kompatibilnost', () => {
     updateReference.mockReset();
     uploadMeterImage.mockReset();
     uploadInvoice.mockReset();
+    deleteInvoice.mockReset();
     getEfficiencyAnalysis.mockReset();
   });
 
@@ -257,6 +260,31 @@ describe('Gas controller HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(uploadInvoice).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('DELETE /api/gas/reading/:id/invoice path ID (S-002)', () => {
+    it('zadržava numeric ID, response i servisne argumente', async () => {
+      deleteInvoice.mockResolvedValue({ id: 17, hasInvoicePdf: false });
+
+      const response = await request(app.getHttpServer()).delete(
+        '/api/gas/reading/17/invoice',
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ id: 17, hasInvoicePdf: false });
+      expect(deleteInvoice).toHaveBeenCalledWith(42, 17);
+    });
+
+    it('odbija ne-brojčani ID prije servisnog poziva', async () => {
+      deleteInvoice.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer()).delete(
+        '/api/gas/reading/not-a-number/invoice',
+      );
+
+      expect(response.status).toBe(400);
+      expect(deleteInvoice).not.toHaveBeenCalled();
     });
   });
 

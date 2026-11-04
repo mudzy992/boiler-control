@@ -12,9 +12,10 @@ import { GasReminderService } from '../../Schedule/gas.reminder.service';
 import { NotificationsController } from '../notifications.controller';
 import { NotificationsService } from '../notifications.service';
 
-describe('Notifications markAsRead HTTP kompatibilnost', () => {
+describe('Notifications HTTP kompatibilnost', () => {
   let app: INestApplication;
   const markAsRead = jest.fn();
+  const registerToken = jest.fn();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -22,7 +23,7 @@ describe('Notifications markAsRead HTTP kompatibilnost', () => {
       providers: [
         {
           provide: NotificationsService,
-          useValue: { markAsRead },
+          useValue: { markAsRead, registerToken },
         },
         { provide: PrismaService, useValue: {} },
         { provide: GasReminderService, useValue: {} },
@@ -55,6 +56,7 @@ describe('Notifications markAsRead HTTP kompatibilnost', () => {
 
   beforeEach(() => {
     markAsRead.mockReset();
+    registerToken.mockReset();
   });
 
   afterAll(async () => {
@@ -94,6 +96,45 @@ describe('Notifications markAsRead HTTP kompatibilnost', () => {
 
       expect(response.status).toBe(400);
       expect(markAsRead).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /api/notifications/register-token body DTO (S-002)', () => {
+    it('valjani token zadržava response i servisne argumente', async () => {
+      const device = {
+        id: 11,
+        userId: 42,
+        expoPushToken: 'ExponentPushToken[synthetic-token]',
+        platform: 'android',
+      };
+      registerToken.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .post('/api/notifications/register-token')
+        .send({
+          expoPushToken: 'ExponentPushToken[synthetic-token]',
+          platform: 'android',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(device);
+      expect(registerToken).toHaveBeenCalledTimes(1);
+      expect(registerToken).toHaveBeenCalledWith(
+        42,
+        'ExponentPushToken[synthetic-token]',
+        'android',
+      );
+    });
+
+    it('numerički token vraća 400 prije servisnog poziva', async () => {
+      registerToken.mockResolvedValue({ id: 12, userId: 42 });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/notifications/register-token')
+        .send({ expoPushToken: 123456789, platform: 'android' });
+
+      expect(response.status).toBe(400);
+      expect(registerToken).not.toHaveBeenCalled();
     });
   });
 });

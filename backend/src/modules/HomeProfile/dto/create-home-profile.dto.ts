@@ -30,11 +30,13 @@ export class CreateHomeProfileDto {
   @IsString()
   location?: string;
 
+  @Transform(preserveRawInput)
   @IsNumber()
   @Min(10)
   @Max(2000)
   floorArea: number;
 
+  @Transform(preserveRawInput)
   @IsNumber()
   @Min(1.8)
   @Max(5)
@@ -43,6 +45,7 @@ export class CreateHomeProfileDto {
   @IsEnum(HomeProfile_insulationType)
   insulationType: HomeProfile_insulationType;
 
+  @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)
   @Max(30)
@@ -54,12 +57,14 @@ export class CreateHomeProfileDto {
   @IsEnum(HomeProfile_heatingType)
   heatingType: HomeProfile_heatingType;
 
+  @Transform(preserveRawInput)
   @IsInt()
   @Min(1900)
   @Max(2100)
   constructionYear: number;
 
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsInt()
   @Min(1)
   @Max(20)
@@ -70,19 +75,23 @@ export class CreateHomeProfileDto {
   @IsString()
   boilerModel?: string;
 
+  @Transform(preserveRawInput)
   @IsBoolean()
   hasFloorHeating: boolean;
 
+  @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)
   @Max(30)
   targetMorningTemp: number;
 
+  @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)
   @Max(30)
   targetDayTemp: number;
 
+  @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)
   @Max(30)

@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard heating-summary prazan profile query (2026-11-05)
+
+**STATUS: PRAZAN SUMMARY HOME PROFILE ID ODBIJEN U KODU (`97ead0d`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički unos, izostavljeno polje i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.
+
+- Source review potvrđuje da je opcioni summary `homeProfileId=` prolazio kao `0`. Web poziv namjerno izostavlja ID, mobile Analytics šalje `activeHome.id` kao number, a generated ugovor i instalirani klijenti nisu mijenjani.
+- Test-only `0b95ca3` dodaje numerički `"17"`, omitted i prazan summary scenarij u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **63/63**, ciljani repro **8 prošlo / 1 pao / 9**, module-level Dashboard **65 prošlo / 1 pao / 66**. Test-first CI `42002758951` ima samo ciljani backend failure annotation; lint, type-check, integration, mobile i frontend prolaze.
+- Fix čuva raw `''` za `@IsInt`, a zadržava `@Type(() => Number)` za ostale ulaze. Numerički i omitted oblik zadržavaju 200/response/servisne argumente; probe potvrđuju nepromijenjene `"0" → 0` i odbijen niz. Summary `deviceId`, events polja, servis i bucket logika nisu mijenjani.
+- Lokalno ciljani HTTP je **9/9**, module-level Dashboard **66/66**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` bez razlike. **Finalni code CI `42003294213`:** sva tri joba success, uključujući lint, type-check, OpenAPI, backend/integration, mobile i frontend; nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili generated/client/mobile/compose/deploy promjene. Rollback production fixa je revert `97ead0d`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/bucket dokaz. Summary `deviceId`, events `homeProfileId`/`deviceId`, ID pozitivnost, datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Dashboard learning-trends prazan profile query (2026-11-05)
 
 **STATUS: PRAZAN LEARNING HOME PROFILE ID ODBIJEN U KODU (`f8d213e`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički unos i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.

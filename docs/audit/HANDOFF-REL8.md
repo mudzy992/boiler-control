@@ -3,6 +3,45 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard heating-events prazan device query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `3059e75`, fix `95ef417`.**
+`origin/arena/c9961f17-boiler-control` je `95ef417` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `ca3e8ec`. PR nije otvaran.
+
+- Source review potvrđuje da opcioni `GetHeatingEventsDto.deviceId` za raw `''`
+  postaje `0` prije `@IsInt`. Web events poziv ne šalje device ID; mobile
+  tipizirani dashboard wrapper šalje profile/datume, a niži wrapper može
+  prenijeti numerički ID. Pregledani `HeatingScreen` koristi legacy
+  `/heating-events`; generated ugovor i instalirani klijenti nisu mijenjani.
+- Test-only `3059e75` dodaje numerički i prazan events device scenarij u
+  postojeći stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe
+  opcijama i mock servisom/guardom. Baseline je **71/71**; ciljani repro je
+  **15 prošlo / 1 pao / 16 ukupno**, a module-level Dashboard **72 prošlo /
+  1 pao / 73**. Prazan `deviceId` ranije dobija 200 umjesto 400, dok numerički
+  `"23"` i postojeće omitted kontrole zadržavaju 200, `{data, meta}` response
+  i nepromijenjene servisne argumente/default `page=1`/`limit=20`.
+- **Test-first CI `42011578923`:** samo backend test korak pada, s jednim
+  ciljanim test annotationom uz generički process-exit annotation; lint,
+  type-check, OpenAPI, integration, mobile i frontend prolaze.
+- Fix `95ef417` zadržava `@Type(() => Number)` i sve konverzije osim tačnog raw
+  `''`, koji ostaje string za `@IsInt`. Probe potvrđuju `"23" → 23`,
+  izostavljeno polje `undefined`, nepromijenjeno `"0" → 0`, odbijen niz i
+  nepromijenjene paginacijske defaulte. Nema novog `Min(1)` ni izmjene events
+  `homeProfileId`, filtera, controllera, servisa ili paginacije.
+- Lokalni ciljani HTTP suite prolazi **16/16**, svih sedam module-level
+  Dashboard suiteova **73/73**, tačan CI ESLint opseg ima **0 errors / 2
+  poznata warnings**, a OpenAPI `--check` nema razlike. **Finalni code CI
+  `42012155771`:** sva tri joba su success, uključujući lint, type-check,
+  OpenAPI, backend/integration, mobile i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `95ef417`; privremeni Prisma
+  stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership, event-mapping ili pagination dokaz. ID pozitivnost,
+  datumi/timezone, analytics flag i produkcijski rollout ostaju zasebni;
+  cijeli S-002 se ovim ne zatvara.
+
 ## S-002 — Dashboard heating-events prazan profile query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `931d4c5`, fix `5c2fa3b`.**

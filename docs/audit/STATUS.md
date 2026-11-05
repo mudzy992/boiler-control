@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard heating-events prazan device query (2026-11-05)
+
+**STATUS: PRAZAN EVENTS DEVICE ID ODBIJEN U KODU (`95ef417`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički unos, izostavljeno polje, `page/limit` defaulti i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.
+
+- Source review potvrđuje da je opcioni events `deviceId=` prolazio kao `0`. Web poziv ne šalje device ID, mobile tipizirani dashboard wrapper šalje profile/datume, a niži wrapper podržava numerički ID; generated ugovor i instalirani klijenti nisu mijenjani. Pregledani `HeatingScreen` koristi legacy `/heating-events`.
+- Test-only `3059e75` dodaje numerički `"23"` i prazan events device scenarij u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **71/71**, ciljani repro **15 prošlo / 1 pao / 16**, module-level Dashboard **72 prošlo / 1 pao / 73**. Test-first CI `42011578923` ima samo ciljani backend test failure uz generički process-exit annotation; lint, type-check, OpenAPI, integration, mobile i frontend prolaze.
+- Fix čuva raw `''` za `@IsInt`, a zadržava `@Type(() => Number)` za ostale ulaze. Numerički i postojeći omitted oblici zadržavaju 200/`{data, meta}`/servisne argumente/defaulte; probe potvrđuju nepromijenjene `"0" → 0`, odbijen niz i paginacijske defaulte. Events `homeProfileId`, filteri, servis i paginacija nisu mijenjani.
+- Lokalno ciljani HTTP je **16/16**, module-level Dashboard **73/73**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` bez razlike. **Finalni code CI `42012155771`:** sva tri joba success, uključujući lint, type-check, OpenAPI, backend/integration, mobile i frontend; nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili generated/client/mobile/compose/deploy promjene. Rollback production fixa je revert `95ef417`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/event-mapping/pagination dokaz. ID pozitivnost, datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Dashboard heating-events prazan profile query (2026-11-05)
 
 **STATUS: PRAZAN EVENTS HOME PROFILE ID ODBIJEN U KODU (`5c2fa3b`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički unos, izostavljeno polje, `page/limit` defaulti i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.

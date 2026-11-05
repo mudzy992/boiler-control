@@ -122,6 +122,24 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     );
   });
 
+  it('stats homeProfileId=0 vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-stats')
+      .query({ ...validQuery, homeProfileId: '0' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingStats).not.toHaveBeenCalled();
+  });
+
+  it('negativan stats homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-stats')
+      .query({ ...validQuery, homeProfileId: '-1' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingStats).not.toHaveBeenCalled();
+  });
+
   it('numerički deviceId zadržava 200, response i servisne argumente', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-stats')

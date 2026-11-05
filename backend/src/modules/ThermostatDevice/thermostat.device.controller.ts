@@ -5,7 +5,6 @@ import {
   Patch,
   Delete,
   Param,
-  ParseIntPipe,
   Body,
   Req,
   UseGuards,
@@ -14,7 +13,8 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ThermostatDeviceService } from './thermostat.device.service';
 import { CreateThermostatDeviceDto } from './dto/create-thermostat-device.dto';
 import { UpdateThermostatDeviceDto } from './dto/update-thermostat-device.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { PositiveIntPipe } from './positive-int.pipe';
 
 @ApiTags('Thermostats')
 @ApiBearerAuth()
@@ -29,12 +29,14 @@ export class ThermostatDeviceController {
   }
 
   @Get(':id')
-  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  findOne(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.findOne(req.user.userId, id);
   }
 
   @Get(':id/programs')
-  getPrograms(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  getPrograms(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.getPrograms(req.user.userId, id);
   }
 
@@ -44,16 +46,18 @@ export class ThermostatDeviceController {
   }
 
   @Patch(':id')
+  @ApiParam({ name: 'id', type: Number, minimum: 1 })
   update(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Body() dto: UpdateThermostatDeviceDto,
   ) {
     return this.service.update(req.user.userId, id, dto);
   }
 
   @Delete(':id')
-  remove(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  remove(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.remove(req.user.userId, id);
   }
 }

@@ -89,6 +89,33 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     );
   });
 
+  it('numerički deviceId zadržava 200, response i servisne argumente', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-stats')
+      .query({ ...validQuery, deviceId: '23' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ buckets: [] });
+    expect(getHeatingStats).toHaveBeenCalledTimes(1);
+    expect(getHeatingStats).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        ...validQuery,
+        homeProfileId: 17,
+        deviceId: 23,
+      }),
+    );
+  });
+
+  it('prazan deviceId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-stats')
+      .query({ ...validQuery, deviceId: '' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingStats).not.toHaveBeenCalled();
+  });
+
   it('prazan homeProfileId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-stats')

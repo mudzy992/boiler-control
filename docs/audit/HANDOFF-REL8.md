@@ -3,6 +3,47 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas reading create date raw-tip validacija (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `0de024d` + `59970de`, fix `5d1859e`.**
+`origin/arena/c9961f17-boiler-control` je `5d1859e` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `b1d8724`. PR nije otvaran.
+
+- Source review i stvarni controller/DTO HTTP repro potvrdili su da numerički
+  `20261102` postaje string prije `@IsDateString`. Web multipart i mobile
+  JSON/multipart potrošači već šalju `readingDate` kao string; generated
+  ugovor i instalirani mobile nisu mijenjani.
+- Test-only `0de024d` proširuje postojeći stvarni controller/DTO HTTP suite s
+  valjanim JSON i numeričkim datum scenarijem. Lokalni repro je **25 prošlo /
+  1 pao / 26 ukupno**: valjan JSON zadržava 201/response/servisne argumente, a
+  numerički datum ranije dobija 201 umjesto 400. CI `41987170094` potvrđuje
+  backend **922 prošlo / 1 pao / 923 ukupno**, integration **119/119** i
+  frontend **4/4**; mobile ima **135/136** zbog `weatherV2NativeWind` timeouta.
+  Nema mobile diffa ni izmjene timeouta/asserti.
+- Dodatna test-only rollback kontrola `59970de` dokazuje da
+  `GAS_STRICT_VALIDATION=off` zadržava staru konverziju. Lokalno je **26
+  prošlo / 1 pao / 27 ukupno**. Svježi CI `41987662985` potvrđuje backend
+  **923 prošlo / 1 pao / 924 ukupno**, samo ciljani datum, integration
+  **119/119**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`.
+- Fix `5d1859e` čuva raw `readingDate` samo u default strict načinu; rollback
+  vraća prethodno transformiranu vrijednost. `counterValue`, `markAsReference`,
+  flag default/oblik, multipart/file limiti, controller, servis, hronologija i
+  timezone politika ostaju nepromijenjeni.
+- Lokalni HTTP suite prolazi **27/27**, svi Gas testovi **60/60**, a postojeći
+  FEAT-7 audit repro prolazi u strict i rollback pokretanju. Tačan CI ESLint
+  opseg ima **0 errors / 2 poznata warnings**, OpenAPI `--check` bez razlike.
+  **Finalni code CI `41988116396`:** backend **90/924 + 13/119 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su
+  success i nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `5d1859e`; privremeni Prisma
+  stubovi su uklonjeni. `GAS_STRICT_VALIDATION=off` namjerno zadržava stari
+  numerički datum tok i nije dokaz default strict validacije.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  hronologija, filesystem ili `markAsReference` dokaz. Inertno
+  `markAsReference`, B-018 migracija/duplikati, timezone i rollout ostaju
+  zasebni.
+
 ## S-002 — Boiler current-temp body raw-tip validacija (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `be8aac6`, fix `79d2717`.**

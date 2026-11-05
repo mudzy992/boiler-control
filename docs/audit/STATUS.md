@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Gas reading create date runtime DTO validacija (2026-11-05)
+
+**STATUS: READING DATE RAW TIP RIJEŠEN U DEFAULT STRICT NAČINU (`5d1859e`); CI ZELEN.** Postojeći `GAS_STRICT_VALIDATION=off` rollback namjerno zadržava staru konverziju; counter/boolean FEAT-7 ponašanje, servis i hronologija nisu mijenjani.
+
+- Source review i stvarni controller/DTO HTTP repro potvrđuju da numerički `20261102` postaje string prije `@IsDateString`. Web multipart i mobile JSON/multipart već šalju string; generated ugovor i instalirani mobile su nepromijenjeni.
+- Test-only `0de024d` daje lokalno **25 prošlo / 1 pao / 26 ukupno**. CI `41987170094` potvrđuje backend **922 prošlo / 1 pao / 923 ukupno**, integration **119/119**, frontend **4/4** i zaseban mobile `weatherV2NativeWind` timeout (**135/136**), bez mobile diffa ili izmjene timeouta/asserti. Rollback kontrola `59970de` daje lokalno **26/1/27**; CI `41987662985` potvrđuje samo ciljani backend failure (**923/1/924**), integration **119/119**, mobile **24/136**, frontend **4/4**.
+- Default strict raw-input transform sada daje 400 prije servisa za numerički datum; valjan JSON/multipart string zadržava 201/response/servisne argumente, a `off` zadržava stari tok. Lokalno HTTP je **27/27**, svi Gas testovi **60/60**, FEAT-7 audit repro prolazi, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` prolazi.
+- **Finalni code CI `41988116396`:** backend **90/924 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili generated/client/mobile/compose/deploy promjene. Rollback production fixa je revert `5d1859e`.
+- **Preostalo:** novi dokaz nije real-DB/hronologija/filesystem/`markAsReference` test. Inertno `markAsReference`, B-018 migracija/duplikati, timezone i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Boiler current-temp runtime body DTO validacija (2026-11-05)
 
 **STATUS: CURRENT FLOW TEMP RAW TIP RIJEŠEN U KODU (`79d2717`); CI ZELEN.** Controller, servis, persistence, min/max i decimalno pravilo nisu mijenjani.

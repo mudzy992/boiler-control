@@ -211,6 +211,24 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     );
   });
 
+  it('learning homeProfileId=0 vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/learning-trends')
+      .query({ ...validLearningQuery, homeProfileId: '0' });
+
+    expect(response.status).toBe(400);
+    expect(getLearningTrends).not.toHaveBeenCalled();
+  });
+
+  it('negativan learning homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/learning-trends')
+      .query({ ...validLearningQuery, homeProfileId: '-1' });
+
+    expect(response.status).toBe(400);
+    expect(getLearningTrends).not.toHaveBeenCalled();
+  });
+
   it('prazan learning homeProfileId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/learning-trends')

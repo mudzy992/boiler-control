@@ -3,6 +3,46 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice create/update homeProfileId semantic validacija (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `aa99583`, fix `3a17afd`.**
+`origin/arena/c9961f17-boiler-control` je `3a17afd` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `008e3f1`. PR nije otvaran.
+
+- Source review potvrđuje da je `@IsNumber()` na create/update `homeProfileId`
+  prihvaćao `0`, `-1` i `1.5`. `HomeProfile.id` je autoincrement, a
+  `ThermostatDevice.homeProfileId` je Int relacija; update nula zbog truthy
+  uslova preskače profile lookup. Ovo nije cross-user ni real-DB dokaz.
+- Pregledani mobile update wrapper šalje samo `alias`/`mode`/`vendor`, bez
+  `homeProfileId`, i nema create poziv; web runtime create/update poziv nije
+  pronađen. Omitted patch i valjani instalirani klijenti ostaju kompatibilni,
+  a klijentski kod nije mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea s mock servisom/guardom je
+  **18/18** uz privremeni stub stvarnih ThermostatMode vrijednosti jer generated
+  Prisma lokalno nije prisutan. Test-only `aa99583` dodaje `0`, `-1` i `1.5` za
+  create i update. Repro je **18 prošlo / 6 palo / 24 ukupno**: create ranije
+  dobija 201, update 200, a svih 18 postojećih kontrola prolazi.
+- **Test-first CI `42105771090`:** backend Jest summary je **955 prošlo / 6
+  palo / 961 ukupno**, integration **119/119**, mobile i frontend prolaze.
+  Annotations sadrže četiri ciljana Jest failurea i obavijest o dva dodatna
+  izostavljena failurea, uz generički process-exit; nema drugih regresija.
+- Fix `3a17afd` zamjenjuje `@IsNumber()` s `@IsInt()` i dodaje `@Min(1)` te
+  Swagger `minimum: 1` samo na create/update `homeProfileId`. Raw-input
+  transform ostaje; valjani `7`/`8`, 201/200, response, JWT userId, servisni
+  argumenti, omitted `{}` i postojeće raw-string/path kontrole su očuvani.
+- Lokalni cijeli ThermostatDevice HTTP suite prolazi **24/24**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI generate/check
+  dodaje tačno dva `minimum: 1`; frontend `openapi:check` prolazi bez generated
+  type diffa. **Finalni code CI `42106535109`:** sva tri joba su success,
+  uključujući backend/integration, mobile i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, service/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `3a17afd`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller DTO/HTTP dokaz nije novi real-DB/ownership/
+  mutation dokaz. Path-ID pozitivnost, `null` semantika, string sadržaj,
+  S-004/session revokacija i produkcijski rollout ostaju zasebni; cijeli S-002
+  se ovim ne zatvara.
+
 ## S-002 — Dashboard heating-events nepozitivan device query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `aa5dbb3`, fix `c6e487b`.**

@@ -405,6 +405,24 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     );
   });
 
+  it('events deviceId=0 vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, deviceId: '0' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingEvents).not.toHaveBeenCalled();
+  });
+
+  it('negativan events deviceId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, deviceId: '-1' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingEvents).not.toHaveBeenCalled();
+  });
+
   it('prazan events deviceId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-events')

@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard learning-trends prazan profile query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `7bfff5c`, fix `f8d213e`.**
+`origin/arena/c9961f17-boiler-control` je `f8d213e` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `92614c1`. PR nije otvaran.
+
+- Source review potvrđuje da obavezni `GetLearningTrendsDto.homeProfileId` za
+  raw `''` postaje `0` prije `@IsInt`. Mobile Analytics šalje `activeHome.id`
+  kao number kroz Axios query; generated ugovor i instalirani mobile nisu
+  mijenjani.
+- Test-only `7bfff5c` dodaje numerički i prazan learning scenarij u postojeći
+  stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe opcijama i
+  mock servisom/guardom. Baseline je **61/61**; ciljani repro je **5 prošlo /
+  1 pao / 6 ukupno**, a module-level Dashboard **62 prošlo / 1 pao / 63**.
+  Prazan ID ranije dobija 200 umjesto 400, dok numerički `"17"` zadržava 200,
+  `{points: []}` i servisne argumente.
+- **Test-first CI `42000389812`** ima samo ciljani backend failure annotation;
+  lint, type-check, integration, mobile i frontend prolaze.
+- Fix `f8d213e` zadržava `@Type(() => Number)` i sve konverzije osim tačnog raw
+  `''`, koji ostaje string za `@IsInt`. Probe potvrđuju `"17" → 17`,
+  nepromijenjeno `"0" → 0` te odbijen niz i missing polje. Nema novog `Min(1)`
+  ni izmjene drugih DTO polja, controllera, servisa ili learning agregacije.
+- Lokalni ciljani HTTP suite prolazi **6/6**, svih sedam module-level Dashboard
+  suiteova **63/63**, tačan CI ESLint opseg ima **0 errors / 2 poznata
+  warnings**, a OpenAPI `--check` nema razlike. **Finalni code CI
+  `42000904395`:** sva tri joba su success, uključujući lint, type-check,
+  OpenAPI, backend/integration, mobile i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `f8d213e`; privremeni Prisma
+  stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership ili learning-aggregation dokaz. Prazni ID-evi na events/summary,
+  ID pozitivnost, datumi/timezone, analytics flag i produkcijski rollout
+  ostaju zasebni.
+
 ## S-002 — Dashboard heating-stats prazan device query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `71e9b0e`, fix `2201bd8`.**

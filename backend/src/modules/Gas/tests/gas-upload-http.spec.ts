@@ -113,6 +113,37 @@ describe('Gas controller HTTP kompatibilnost', () => {
     );
   });
 
+  it('zadržava JSON DTO, response i servisne argumente', async () => {
+    create.mockResolvedValue({ id: 18 });
+
+    const response = await request(app.getHttpServer())
+      .post('/api/gas/reading')
+      .send({
+        counterValue: 123.45,
+        readingDate: '2026-11-02T10:00:00.000Z',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({ id: 18 });
+    expect(create).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        counterValue: 123.45,
+        readingDate: '2026-11-02T10:00:00.000Z',
+      }),
+      undefined,
+    );
+  });
+
+  it('numerički readingDate vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/gas/reading')
+      .send({ counterValue: 123.45, readingDate: 20261102 });
+
+    expect(response.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('zadržava 413 i ne poziva servis iznad postojećeg file-size limita', async () => {
     const oversized = Buffer.alloc(IMAGE_MAX_SIZE_BYTES + 1, 0);
 

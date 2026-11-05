@@ -309,6 +309,17 @@ describe('Gas controller HTTP kompatibilnost', () => {
       );
     });
 
+    it('boolean cijena vraća 400 prije servisnog poziva', async () => {
+      uploadInvoice.mockResolvedValue({ id: 17 });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/gas/reading/17/invoice')
+        .send({ invoiceGasPriceExVat: true });
+
+      expect(response.status).toBe(400);
+      expect(uploadInvoice).not.toHaveBeenCalled();
+    });
+
     it('odbija ne-brojčani ID prije servisnog poziva', async () => {
       uploadInvoice.mockResolvedValue({ id: 17 });
 

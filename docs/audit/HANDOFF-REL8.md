@@ -3,6 +3,49 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard learning-trends nepozitivan profile query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `cbfa11a`, fix `623f356`.**
+`origin/arena/c9961f17-boiler-control` je `623f356` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `3d8e500`. PR nije otvaran.
+
+- Source review potvrđuje da obavezni `GetLearningTrendsDto.homeProfileId` bez
+  `@Min(1)` za `"0"` i `"-1"` prolazi `@IsInt` i dolazi do servisa. Servis
+  filtrira `heatingIntervalLearning` po profilu i `homeProfile: { userId }`, a
+  Prisma `HomeProfile.id` je autoincrement. Ovo nije cross-user ni real-DB
+  dokaz.
+- Mobile Analytics koristi postojeći learning poziv s aktivnim profilom; web
+  poziv nije pronađen. Valjani instalirani klijenti ostaju kompatibilni i
+  klijentski kod nije mijenjan.
+- Test-only `cbfa11a` dodaje learning zero i negative scenarije u postojeći
+  stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe opcijama i
+  mock servisom/guardom. Baseline je **20/20**, odnosno **77/77** za Dashboard;
+  ciljani repro je **20 prošlo / 2 pala / 22 ukupno**, a module-level Dashboard
+  **77 prošlo / 2 pala / 79**. Oba nepozitivna ID-a ranije dobiju 200 umjesto
+  400; numerički `"17"`, prazan profile i sve prethodne kontrole prolaze.
+- **Test-first CI `42045562114`:** backend ima samo dva ciljana test failurea
+  uz generički process-exit annotation; lint, type-check, OpenAPI, integration,
+  mobile i frontend prolaze.
+- Fix `623f356` dodaje `@Min(1)` i Swagger `minimum: 1` samo na learning
+  `homeProfileId`. Probe potvrđuju valjan `"17" → 17`, odbijene `0`, `-1`,
+  prazan string i array, nepromijenjenu stats profile/device pozitivnost, te
+  nepromijenjeno `homeProfileId=0` na summary/events. Servis, owner filter,
+  datumi, learning agregacija i response nisu mijenjani.
+- Lokalni ciljani HTTP suite prolazi **22/22**, svih sedam module-level
+  Dashboard suiteova **79/79**, a tačan CI ESLint opseg ima **0 errors / 2
+  poznata warnings**. OpenAPI generate/check prolazi uz tačno jedan dodani
+  `minimum: 1` na learning profile parametru; frontend `openapi:check` je
+  usklađen bez generated type diffa. **Finalni code CI `42046369404`:** sva tri
+  joba su success, uključujući mobile, lint, type-check, OpenAPI,
+  backend/integration i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, service/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `623f356`;
+  privremeni Prisma stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership ili learning-aggregation dokaz. Pozitivnost summary/events ID-eva,
+  datumi/timezone, analytics flag i produkcijski rollout ostaju zasebni; cijeli
+  S-002 se ovim ne zatvara.
+
 ## S-002 — Dashboard heating-stats nepozitivan device query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `39616e9`, fix `4343cf2`.**

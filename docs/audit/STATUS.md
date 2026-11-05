@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard learning-trends nepozitivan profile query (2026-11-05)
+
+**STATUS: NEPOZITIVAN LEARNING HOME PROFILE ID ODBIJEN U KODU (`623f356`); CI ZELEN.** Learning `homeProfileId=0` i negativan ID sada daju 400 prije servisa; numerički `"17"`, `{points: []}`, servisni argumenti i owner scope ostaju nepromijenjeni. Summary/events `homeProfileId=0` nije mijenjan ovim sliceom.
+
+- Source review potvrđuje da su `0`/`-1` prolazili `@IsInt` i dolazili do servisa. Servis filtrira learning po profilu i `homeProfile: { userId }`, a `HomeProfile.id` je autoincrement; ovo nije cross-user ni novi real-DB dokaz. Mobile Analytics koristi postojeći poziv s aktivnim profilom, web poziv nije pronađen, a klijentski kod nije mijenjan.
+- Test-only `cbfa11a` dodaje zero i negative learning scenarije u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **20/20**, odnosno **77/77** za Dashboard; ciljani repro **20 prošlo / 2 pala / 22**, module-level Dashboard **77 prošlo / 2 pala / 79**. Test-first CI `42045562114` ima samo dva ciljana backend failurea uz generički process-exit annotation; mobile i frontend prolaze.
+- Fix dodaje `@Min(1)` i Swagger `minimum: 1` samo na learning `homeProfileId`. Probe potvrđuju valjan `"17" → 17`, odbijene `0`, `-1`, prazan string i array, nepromijenjenu stats profile/device pozitivnost i nepromijenjeno summary/events `homeProfileId=0`.
+- Lokalno ciljani HTTP je **22/22**, module-level Dashboard **79/79**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo jedan `minimum: 1`; frontend `openapi:check` je usklađen bez type diffa. **Finalni code CI `42046369404`:** sva tri joba success, uključujući mobile, lint, type-check, OpenAPI, backend/integration i frontend; nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `623f356`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/learning-aggregation dokaz. Pozitivnost summary/events ID-eva, datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Dashboard heating-stats nepozitivan device query (2026-11-05)
 
 **STATUS: NEPOZITIVAN STATS DEVICE ID ODBIJEN U KODU (`4343cf2`); CI ZELEN.** Stats `deviceId=0` i negativan ID sada daju 400 prije servisa; numerički `"23"`, omitted device, response, owner scope i profile pozitivnost ostaju nepromijenjeni. Summary/events `deviceId=0` nije mijenjan ovim sliceom.

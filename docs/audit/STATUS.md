@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Gas invoice price runtime DTO validacija (2026-11-05)
+
+**STATUS: INVOICE PRICE RAW TIP RIJEŠEN U KODU (`80cd380`); CI ZELEN.** Boolean i drugi raw tipovi koji nisu number/string više se ne pretvaraju u broj prije `@IsNumber`; valjan number/numeric-string i prazno polje zadržavaju postojeće ponašanje.
+
+- Source review i stvarni controller/DTO HTTP repro potvrđuju da boolean `true` kroz `Number(value)` postaje `1`. Web i mobile opcionu cijenu već šalju kao multipart string; generated ugovor i instalirani mobile su nepromijenjeni.
+- Test-only `be8dc51` daje lokalno **27 prošlo / 1 pao / 28 ukupno** jer boolean ranije dobija 201 umjesto 400. CI `41990835251` potvrđuje samo ciljani backend failure (**924/1/925**), integration **119/119**, mobile **24/136**, frontend **4/4**, `tsc: 0` i `eslint: 0`.
+- Fix zadržava `Number` samo za raw number/string, `''`/null/undefined i dalje daju `undefined`, a ostale raw tipove ostavlja validatoru. Valjan multipart string/PDF zadržava 201, response, DTO cijenu `1.25` i servisne argumente; `Min(0)`, file/storage/owner/transakcija nisu mijenjani.
+- Lokalno HTTP je **28/28**, svi Gas testovi **61/61**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` bez razlike. **Finalni code CI `41991341767`:** backend **90/925 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili generated/client/mobile/compose/deploy promjene. Rollback production fixa je revert `80cd380`.
+- **Preostalo:** mock-controller dokaz nije novi real-DB/storage/filesystem/gas-price historija dokaz. Produkcijski rollout i preostali S-002/S-004 nalazi ostaju otvoreni.
+
 ### S-002 — Gas reading create date runtime DTO validacija (2026-11-05)
 
 **STATUS: READING DATE RAW TIP RIJEŠEN U DEFAULT STRICT NAČINU (`5d1859e`); CI ZELEN.** Postojeći `GAS_STRICT_VALIDATION=off` rollback namjerno zadržava staru konverziju; counter/boolean FEAT-7 ponašanje, servis i hronologija nisu mijenjani.

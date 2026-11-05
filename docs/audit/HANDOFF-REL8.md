@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Gas invoice price raw-tip validacija (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `be8dc51`, fix `80cd380`.**
+`origin/arena/c9961f17-boiler-control` je `80cd380` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `24c8ad5`. PR nije otvaran.
+
+- Source review i stvarni controller/DTO HTTP repro potvrdili su da se boolean
+  `true` kroz `Number(value)` pretvara u `1` prije `@IsNumber`. Web i mobile
+  opcionu cijenu već šalju kao multipart string; generated ugovor i instalirani
+  mobile nisu mijenjani.
+- Test-only `be8dc51` dodaje jedan JSON boolean scenarij u postojeći stvarni
+  controller/DTO HTTP suite. Lokalni repro je **27 prošlo / 1 pao / 28 ukupno**:
+  boolean je ranije dobio 201 umjesto 400, dok valjan multipart string/PDF
+  zadržava 201, response, DTO cijenu i servisne argumente.
+- **Test-first CI `41990835251`:** backend **924 prošlo / 1 pao / 925 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Jedini test failure je ciljani boolean invoice-price scenarij.
+- Fix `80cd380` u `UploadInvoiceDto` zadržava `Number` samo za raw number/string,
+  prazno polje i dalje pretvara u `undefined`, a ostale raw tipove prosljeđuje
+  nekonvertovane postojećem `@IsNumber`. `Min(0)`, FileInterceptor,
+  PDF/size/content-signature provjere, controller, servis, ownership,
+  transakcija i gas-price historija ostaju nepromijenjeni.
+- Lokalni HTTP suite prolazi **28/28**, svi Gas testovi **61/61**, tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**, a OpenAPI `--check` nema
+  razlike. **Finalni code CI `41991341767`:** backend **90/925 + 13/119
+  integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`;
+  sva tri joba su success i nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `80cd380`; privremeni Prisma
+  stubovi su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB, storage,
+  filesystem ili gas-price historija dokaz. Broj i numerički string ostaju
+  podržani, a postojeća multipart kontrola dokazuje string/PDF tok; produkcijski
+  rollout i preostali S-002/S-004 nalazi ostaju zasebni.
+
 ## S-002 — Gas reading create date raw-tip validacija (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `0de024d` + `59970de`, fix `5d1859e`.**

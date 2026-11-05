@@ -9,7 +9,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetHeatingEventsDto {
@@ -62,6 +62,10 @@ export class GetHeatingEventsDto {
 export class GetHeatingStatsDto {
   @ApiProperty()
   @Type(() => Number)
+  @Transform(({ value, obj, key }) => {
+    const raw = (obj as Record<string, unknown>)[key];
+    return raw === '' ? raw : value;
+  })
   @IsInt()
   homeProfileId: number;
 

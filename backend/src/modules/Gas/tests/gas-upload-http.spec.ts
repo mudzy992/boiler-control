@@ -144,6 +144,30 @@ describe('Gas controller HTTP kompatibilnost', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it('GAS_STRICT_VALIDATION=off zadržava rollback konverziju datuma', async () => {
+    const envKey = 'GAS_STRICT_VALIDATION';
+    const original = process.env[envKey];
+    process.env[envKey] = 'off';
+
+    try {
+      create.mockResolvedValue({ id: 19 });
+      const response = await request(app.getHttpServer())
+        .post('/api/gas/reading')
+        .send({ counterValue: 123.45, readingDate: 20261102 });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({ id: 19 });
+      expect(create).toHaveBeenCalledWith(
+        42,
+        expect.objectContaining({ readingDate: '20261102' }),
+        undefined,
+      );
+    } finally {
+      if (original === undefined) delete process.env[envKey];
+      else process.env[envKey] = original;
+    }
+  });
+
   it('zadržava 413 i ne poziva servis iznad postojećeg file-size limita', async () => {
     const oversized = Buffer.alloc(IMAGE_MAX_SIZE_BYTES + 1, 0);
 

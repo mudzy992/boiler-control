@@ -154,6 +154,19 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(findOne).not.toHaveBeenCalled();
     });
+    it.each(['0', '-1'])(
+      'findOne nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        findOne.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer()).get(
+          `/api/devices/${id}`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(findOne).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/devices/:id/programs path ID (S-002)', () => {
@@ -200,6 +213,19 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(getPrograms).not.toHaveBeenCalled();
     });
+    it.each(['0', '-1'])(
+      'programs nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        getPrograms.mockResolvedValue([]);
+
+        const response = await request(app.getHttpServer()).get(
+          `/api/devices/${id}/programs`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(getPrograms).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/devices/:id path ID (S-002)', () => {
@@ -235,6 +261,19 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(update).not.toHaveBeenCalled();
     });
+    it.each(['0', '-1'])(
+      'update nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch(`/api/devices/${id}`)
+          .send({});
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/devices/:id body DTO (S-002)', () => {
@@ -326,5 +365,19 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(remove).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'remove nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        remove.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer()).delete(
+          `/api/devices/${id}`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(remove).not.toHaveBeenCalled();
+      },
+    );
   });
 });

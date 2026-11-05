@@ -29,13 +29,13 @@ export class ThermostatDeviceController {
   }
 
   @Get(':id')
-  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   findOne(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.findOne(req.user.userId, id);
   }
 
   @Get(':id/programs')
-  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   getPrograms(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.getPrograms(req.user.userId, id);
   }
@@ -46,7 +46,7 @@ export class ThermostatDeviceController {
   }
 
   @Patch(':id')
-  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   update(
     @Req() req,
     @Param('id', PositiveIntPipe) id: number,
@@ -56,7 +56,7 @@ export class ThermostatDeviceController {
   }
 
   @Delete(':id')
-  @ApiParam({ name: 'id', type: Number, minimum: 1 })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   remove(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.remove(req.user.userId, id);
   }

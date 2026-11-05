@@ -1,5 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
+import { Transform, TransformFnParams } from 'class-transformer';
+
+// Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije validacije.
+const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
 
 /**
  * SEC-4 (faza 3): tijelo za `POST /auth/refresh` i `POST /auth/logout`.
@@ -14,6 +18,7 @@ import { IsOptional, IsString } from 'class-validator';
 export class RefreshDto {
   @ApiPropertyOptional({ type: String })
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsString()
   refreshToken?: string;
 }

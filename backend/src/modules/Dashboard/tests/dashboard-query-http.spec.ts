@@ -20,6 +20,7 @@ import { DashboardService } from '../dashboard.service';
 describe('Dashboard query DTO HTTP kompatibilnost', () => {
   let app: INestApplication;
   const getHeatingStats = jest.fn();
+  const getHeatingSummary = jest.fn();
   const getLearningTrends = jest.fn();
   const validQuery = {
     homeProfileId: '17',
@@ -32,6 +33,15 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     from: validQuery.from,
     to: validQuery.to,
   };
+  const summaryResponse = {
+    summary: {
+      totalCycles: 0,
+      totalDurationMin: 0,
+      avgDurationMin: 0,
+      avgIndoorTemp: 0,
+    },
+    buckets: [],
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -39,7 +49,11 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
       providers: [
         {
           provide: DashboardService,
-          useValue: { getHeatingStats, getLearningTrends },
+          useValue: {
+            getHeatingStats,
+            getHeatingSummary,
+            getLearningTrends,
+          },
         },
         { provide: PrismaService, useValue: {} },
         { provide: JwtService, useValue: { verify: jest.fn() } },
@@ -72,6 +86,8 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
   beforeEach(() => {
     getHeatingStats.mockReset();
     getHeatingStats.mockResolvedValue({ buckets: [] });
+    getHeatingSummary.mockReset();
+    getHeatingSummary.mockResolvedValue(summaryResponse);
     getLearningTrends.mockReset();
     getLearningTrends.mockResolvedValue({ points: [] });
   });
@@ -157,5 +173,51 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
 
     expect(response.status).toBe(400);
     expect(getLearningTrends).not.toHaveBeenCalled();
+  });
+
+  it('numerički summary homeProfileId zadržava 200, response i servisne argumente', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-summary')
+      .query(validQuery);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(summaryResponse);
+    expect(getHeatingSummary).toHaveBeenCalledTimes(1);
+    expect(getHeatingSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        ...validQuery,
+        homeProfileId: 17,
+      }),
+    );
+  });
+
+  it('summary bez homeProfileId zadržava 200, response i servisne argumente', async () => {
+    const query = {
+      from: validQuery.from,
+      to: validQuery.to,
+      bucket: validQuery.bucket,
+    };
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-summary')
+      .query(query);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(summaryResponse);
+    expect(getHeatingSummary).toHaveBeenCalledTimes(1);
+    expect(getHeatingSummary).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining(query),
+    );
+    expect(getHeatingSummary.mock.calls[0][1].homeProfileId).toBeUndefined();
+  });
+
+  it('prazan summary homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-summary')
+      .query({ ...validQuery, homeProfileId: '' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingSummary).not.toHaveBeenCalled();
   });
 });

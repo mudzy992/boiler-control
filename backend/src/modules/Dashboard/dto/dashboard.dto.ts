@@ -68,13 +68,14 @@ export class GetHeatingEventsDto {
 }
 
 export class GetHeatingStatsDto {
-  @ApiProperty()
+  @ApiProperty({ minimum: 1 })
   @Type(() => Number)
   @Transform(({ value, obj, key }) => {
     const raw = (obj as Record<string, unknown>)[key];
     return raw === '' ? raw : value;
   })
   @IsInt()
+  @Min(1)
   homeProfileId: number;
 
   @ApiPropertyOptional()

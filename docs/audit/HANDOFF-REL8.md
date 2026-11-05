@@ -3,6 +3,40 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Anomaly confirm body raw-tip validacija (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `13e749b`, fix `e77dbc5`.**
+`origin/arena/c9961f17-boiler-control` je `e77dbc5` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `f68453c`. PR nije otvaran.
+
+- Source review i stvarni controller/DTO HTTP repro potvrdili su da stringovi
+  `"true"` i `"false"` postaju boolean prije `@IsBoolean`. Pregled web/mobile
+  koda nije našao stvarni UI poziv PATCH rute; generated ugovor ostaje
+  `confirm?: boolean`, a instalirani mobile nije mijenjan.
+- Test-only `13e749b` dodaje stvarni controller/DTO, produkcijske
+  ValidationPipe opcije, mock `confirmOrUpdateAnomaly` i override JWT guarda s
+  `userId=42`. Lokalni repro je **2 prošlo / 2 pala / 4 ukupno**: valjani
+  booleani zadržavaju 200, response i `(17, { confirm }, 42)`, dok oba stringa
+  ranije dobijaju 200 umjesto 400.
+- **Test-first CI `41984091483`:** backend **917 prošlo / 2 pala / 919 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Samo dva ciljana string `confirm` scenarija padaju.
+- Fix `e77dbc5` dodaje raw-input transform samo na
+  `UpdateHeatingAnomalyDto.confirm`. `proposedEndTime` Date transform, prazan
+  body, ParseIntPipe, ownership, stvarni servis i response ostaju nepromijenjeni.
+- Lokalni novi suite prolazi **4/4**, postojeća DTO validacija **7/7**, a sva
+  tri anomaly suitea **18/18**. Tačan CI ESLint opseg ima **0 errors / 2 poznata
+  warnings**, a OpenAPI `--check` prolazi bez razlike. **Finalni code CI
+  `41984596626`:** backend **89/919 + 13/119 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema
+  failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `e77dbc5`; privremeni Prisma
+  stubovi su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB/ownership
+  dokaz. Postojeći real-DB testovi nisu mijenjani; S-004/session revokacija i
+  produkcijski rollout ostaju otvoreni.
+
 ## S-002 — Auth refresh/logout body raw-tip validacija (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `2c6b4e2`, fix `e60d2a6`.**

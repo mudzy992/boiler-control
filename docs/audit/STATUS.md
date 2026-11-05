@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Anomaly confirm runtime body DTO validacija (2026-11-05)
+
+**STATUS: ANOMALY CONFIRM RAW TIP RIJEŠEN U KODU (`e77dbc5`); CI ZELEN.** Controller, Date transform, ParseIntPipe, ownership i stvarni anomaly servis nisu mijenjani.
+
+- Source review i stvarni controller/DTO HTTP repro potvrđuju da stringovi `"true"`/`"false"` postaju boolean prije `@IsBoolean`. Web/mobile pregled nije našao stvarni UI poziv PATCH rute; generated ugovor ostaje `confirm?: boolean`, a instalirani mobile je nepromijenjen.
+- Test-only `13e749b` dodaje dvije valjane i dvije negativne kontrole s produkcijskim ValidationPipe opcijama i mock servisom. Lokalni repro je **2 prošlo / 2 pala / 4 ukupno**. CI `41984091483` potvrđuje backend **917 prošlo / 2 pala / 919 ukupno**, sve **119/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo ciljana string scenarija dobijaju 200 umjesto 400.
+- Raw-input transform sada daje 400 prije servisa za oba stringa. Valjani boolean `true`/`false` zadržava 200, response i `(17, { confirm }, 42)`. Lokalno novi suite je **4/4**, postojeća DTO validacija **7/7**, sva tri anomaly suitea **18/18**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` prolazi.
+- **Finalni code CI `41984596626`:** backend **89/919 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- OpenAPI/generated/client output je nepromijenjen. Nema migracije/backfilla, novog flaga ili mobile/compose/deploy promjene. Rollback production fixa je revert `e77dbc5`.
+- **Preostalo:** novi suite nije real-DB/ownership dokaz; postojeći real-DB testovi, prazan body, Date transform i ParseIntPipe nisu mijenjani. S-004/session revokacija i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Auth refresh/logout runtime body DTO validacija (2026-11-05)
 
 **STATUS: REFRESH TOKEN RAW TIP RIJEŠEN U KODU (`e60d2a6`); CI ZELEN. S-004 NIJE RIJEŠEN.** Controller, rotation/revoke servisi, cookie prednost, Bearer i postojeća flag politika nisu mijenjani.

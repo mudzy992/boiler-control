@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard heating-events nepozitivan device query (2026-11-05)
+
+**STATUS: NEPOZITIVAN EVENTS DEVICE ID ODBIJEN U KODU (`c6e487b`); BACKEND/FRONTEND CI ZELEN, MOBILE WEATHER TIMEOUT ZABILJEŽEN.** Events `deviceId=0` i negativan ID sada daju 400 prije servisa; numerički `"23"`, omitted device, `{data, meta}`, servisni argumenti i default `page=1`/`limit=20` ostaju nepromijenjeni. Events profile pozitivnost nije mijenjana ovim sliceom.
+
+- Source review potvrđuje da su `0`/`-1` prolazili `@IsInt` i dolazili do servisa; nula je zbog truthy uslova izostavljala device filter unutar owner-scoped upita. `ThermostatDevice.id` je autoincrement, a ovo nije cross-user ni novi real-DB dokaz. Web events poziv ne šalje device ID, pregledani mobile tipizirani wrapper šalje profile/datume bez device ID-a, a klijentski kod nije mijenjan.
+- Test-only `aa5dbb3` dodaje zero i negative events device scenarije u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **28/28**, odnosno **85/85** za Dashboard; ciljani repro **28 prošlo / 2 pala / 30**, module-level Dashboard **85 prošlo / 2 pala / 87**. Test-first CI `42100968475` ima samo dva ciljana backend failurea uz generički process-exit annotation; mobile i frontend prolaze.
+- Fix dodaje `@Min(1)` i Swagger `minimum: 1` samo na events `deviceId`. Probe potvrđuju valjan `"23" → 23`, omitted `undefined`, odbijene `0`, `-1`, prazan string i array, nepromijenjenu stats/learning/summary/events profile pozitivnost i paginacijske defaulte.
+- Lokalno ciljani HTTP je **30/30**, module-level Dashboard **87/87**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo jedan `minimum: 1`; frontend `openapi:check` je usklađen bez type diffa.
+- **Code CI `42101731088`:** backend i frontend jobovi su success, backend nema failure annotations; mobile job ima samo poznati `MO2-17 WeatherV2Card` timeout uz generički process-exit annotation. Isti weather suite lokalno prolazi **3/3** bez izmjene timeouta, asserta ili paralelizma.
+- Nema migracije/backfilla, novog flaga ili service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `c6e487b`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/event-mapping/pagination dokaz. Datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Dashboard heating-events nepozitivan profile query (2026-11-05)
 
 **STATUS: NEPOZITIVAN EVENTS HOME PROFILE ID ODBIJEN U KODU (`4109771`); CI ZELEN.** Events `homeProfileId=0` i negativan ID sada daju 400 prije servisa; numerički `"17"`, omitted oblik, `{data, meta}`, servisni argumenti i default `page=1`/`limit=20` ostaju nepromijenjeni. Events `deviceId=0` nije mijenjan ovim sliceom.

@@ -3,6 +3,50 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard heating-events nepozitivan device query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `aa5dbb3`, fix `c6e487b`.**
+`origin/arena/c9961f17-boiler-control` je `c6e487b` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `ac9e084`. PR nije otvaran.
+
+- Source review potvrđuje da opcioni `GetHeatingEventsDto.deviceId` bez `@Min(1)`
+  za `"0"` i `"-1"` prolazi `@IsInt` i dolazi do servisa. Nula zbog truthy
+  uslova izostavlja device filter unutar owner-scoped upita; Prisma
+  `ThermostatDevice.id` je autoincrement. Ovo nije cross-user ni real-DB dokaz.
+- Web events poziv ne šalje device ID, a pregledani mobile tipizirani wrapper
+  šalje profile/datume bez device ID-a. Valjani instalirani klijenti ostaju
+  kompatibilni i klijentski kod nije mijenjan.
+- Test-only `aa5dbb3` dodaje events device zero i negative scenarije u postojeći
+  stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe opcijama i
+  mock servisom/guardom. Baseline je **28/28**, odnosno **85/85** za Dashboard;
+  ciljani repro je **28 prošlo / 2 pala / 30 ukupno**, a module-level Dashboard
+  **85 prošlo / 2 pala / 87**. Oba nepozitivna ID-a ranije dobiju 200 umjesto
+  400; numerički `"23"`, omitted, prazan device i ostale kontrole prolaze.
+- **Test-first CI `42100968475`:** backend ima samo dva ciljana test failurea
+  uz generički process-exit annotation; lint, type-check, OpenAPI, integration,
+  mobile i frontend prolaze.
+- Fix `c6e487b` dodaje `@Min(1)` i Swagger `minimum: 1` samo na events
+  `deviceId`. Probe potvrđuju valjan `"23" → 23`, omitted `undefined`, odbijene
+  `0`, `-1`, prazan string i array, nepromijenjenu
+  stats/learning/summary/events profile pozitivnost i default
+  `page=1`/`limit=20`. Servis, owner filter, datumi, event mapping, paginacija
+  i response nisu mijenjani.
+- Lokalni ciljani HTTP suite prolazi **30/30**, svih sedam module-level
+  Dashboard suiteova **87/87**, a tačan CI ESLint opseg ima **0 errors / 2
+  poznata warnings**. OpenAPI generate/check prolazi uz tačno jedan dodani
+  `minimum: 1` na events device parametru; frontend `openapi:check` je usklađen
+  bez generated type diffa.
+- **Code CI `42101731088`:** backend i frontend jobovi su success, backend nema
+  failure annotations; mobile job ima samo poznati `MO2-17 WeatherV2Card`
+  timeout uz generički process-exit annotation. Isti weather suite lokalno
+  prolazi **3/3** bez izmjene timeouta, asserta ili paralelizma.
+- Nema migracije/backfilla, novog flaga, service/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `c6e487b`;
+  privremeni Prisma stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership, event-mapping ili pagination dokaz. Datumi/timezone, analytics
+  flag i produkcijski rollout ostaju zasebni; cijeli S-002 se ovim ne zatvara.
+
 ## S-002 — Dashboard heating-events nepozitivan profile query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `819756c`, fix `4109771`.**

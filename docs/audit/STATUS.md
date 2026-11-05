@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard heating-summary nepozitivan profile query (2026-11-05)
+
+**STATUS: NEPOZITIVAN SUMMARY HOME PROFILE ID ODBIJEN U KODU (`a883ee0`); CI ZELEN.** Summary `homeProfileId=0` i negativan ID sada daju 400 prije servisa; numerički `"17"`, omitted oblik, response, servisni argumenti i owner scope ostaju nepromijenjeni. Summary `deviceId=0` i events `homeProfileId=0` nisu mijenjani ovim sliceom.
+
+- Source review potvrđuje da su `0`/`-1` prolazili `@IsInt` i dolazili do servisa; nula je zbog truthy uslova izostavljala profile filter unutar owner-scoped upita. `HomeProfile.id` je autoincrement, a ovo nije cross-user ni novi real-DB dokaz. Mobile Analytics šalje `activeHome.id` uz `enabled` uslov, web poziv izostavlja ID, a klijentski kod nije mijenjan.
+- Test-only `ace3fcb` dodaje zero i negative summary scenarije u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **22/22**, odnosno **79/79** za Dashboard; ciljani repro **22 prošlo / 2 pala / 24**, module-level Dashboard **79 prošlo / 2 pala / 81**. Test-first CI `42084663736` ima samo dva ciljana backend failurea uz generički process-exit annotation; mobile i frontend prolaze.
+- Fix dodaje `@Min(1)` i Swagger `minimum: 1` samo na summary `homeProfileId`. Probe potvrđuju valjan `"17" → 17`, omitted `undefined`, odbijene `0`, `-1`, prazan string i array, nepromijenjenu stats/learning pozitivnost, summary `deviceId=0` i events `homeProfileId=0`.
+- Lokalno ciljani HTTP je **24/24**, module-level Dashboard **81/81**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo jedan `minimum: 1`; frontend `openapi:check` je usklađen bez type diffa. **Finalni code CI `42086604338`:** sva tri joba success, uključujući mobile, lint, type-check, OpenAPI, backend/integration i frontend; nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `a883ee0`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/bucket dokaz. Pozitivnost summary `deviceId` i events ID-eva, datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Dashboard learning-trends nepozitivan profile query (2026-11-05)
 
 **STATUS: NEPOZITIVAN LEARNING HOME PROFILE ID ODBIJEN U KODU (`623f356`); CI ZELEN.** Learning `homeProfileId=0` i negativan ID sada daju 400 prije servisa; numerički `"17"`, `{points: []}`, servisni argumenti i owner scope ostaju nepromijenjeni. Summary/events `homeProfileId=0` nije mijenjan ovim sliceom.

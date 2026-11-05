@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard heating-stats prazan device query (2026-11-05)
+
+**STATUS: PRAZAN STATS DEVICE ID ODBIJEN U KODU (`2201bd8`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički unos, izostavljeno polje i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.
+
+- Source review potvrđuje da je opcioni stats `deviceId=` prolazio kao `0`. Mobile query dozvoljava opcioni number, pregledani Analytics poziv ga ne šalje, a generated ugovor i instalirani mobile nisu mijenjani.
+- Test-only `71e9b0e` dodaje numerički `"23"` i prazan device scenarij u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **59/59**, ciljani repro **3 prošla / 1 pao / 4**, module-level Dashboard **60 prošlo / 1 pao / 61**. Test-first CI `41995485082` ima samo ciljani backend failure annotation; lint, type-check, integration, mobile i frontend prolaze.
+- Fix čuva raw `''` za `@IsInt`, a zadržava `@Type(() => Number)` za ostale ulaze. Numerički `"23"` zadržava 200/response/servisne argumente; kontrola bez `deviceId` prolazi, a probe potvrđuju nepromijenjene `"0" → 0` i odbijen niz. Ostala Dashboard polja, servis i bucket logika nisu mijenjani.
+- Lokalno ciljani HTTP je **4/4**, module-level Dashboard **61/61**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` bez razlike. **Finalni code CI `41996106449`:** sva tri joba success, uključujući lint, type-check, OpenAPI, backend/integration, mobile i frontend; nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili generated/client/mobile/compose/deploy promjene. Rollback production fixa je revert `2201bd8`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/bucket dokaz. Prazni ID-evi na events/summary/learning, ID pozitivnost, datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Dashboard heating-stats prazan profile query (2026-11-05)
 
 **STATUS: PRAZAN STATS HOME PROFILE ID ODBIJEN U KODU (`4339071`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički query i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.

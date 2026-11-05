@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard heating-stats prazan device query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `71e9b0e`, fix `2201bd8`.**
+`origin/arena/c9961f17-boiler-control` je `2201bd8` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `822375b`. PR nije otvaran.
+
+- Source review potvrđuje da opcioni `GetHeatingStatsDto.deviceId` za raw `''`
+  postaje `0` prije `@IsInt`. Mobile `DateRangeParams` dozvoljava opcioni
+  number kroz Axios query; pregledani Analytics poziv ne šalje `deviceId`, a
+  generated ugovor i instalirani mobile nisu mijenjani.
+- Test-only `71e9b0e` dodaje numerički i prazan device scenarij u postojeći
+  stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe opcijama i
+  mock servisom/guardom. Baseline je **59/59**; ciljani repro je **3 prošla /
+  1 pao / 4 ukupno**, a module-level Dashboard **60 prošlo / 1 pao / 61**.
+  Prazan `deviceId` ranije dobija 200 umjesto 400, dok numerički `"23"`
+  zadržava 200, response i servisne argumente; kontrola bez `deviceId` ostaje zelena.
+- **Test-first CI `41995485082`** ima samo ciljani backend failure annotation;
+  lint, type-check, integration, mobile i frontend prolaze.
+- Fix `2201bd8` zadržava `@Type(() => Number)` i sve konverzije osim tačnog raw
+  `''`, koji ostaje string za `@IsInt`. Probe potvrđuju `"23" → 23`, izostavljeno polje
+  `undefined`, nepromijenjeno `"0" → 0` i odbijen niz. Nema novog `Min(1)` ni
+  izmjene drugih DTO polja, controllera, servisa ili bucket logike.
+- Lokalni ciljani HTTP suite prolazi **4/4**, svih sedam module-level Dashboard
+  suiteova **61/61**, tačan CI ESLint opseg ima **0 errors / 2 poznata
+  warnings**, a OpenAPI `--check` nema razlike. **Finalni code CI
+  `41996106449`:** sva tri joba su success, uključujući lint, type-check,
+  OpenAPI, backend/integration, mobile i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `2201bd8`; privremeni Prisma
+  stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership ili bucket dokaz. Prazni ID-evi na events/summary/learning, ID
+  pozitivnost, datumi/timezone, analytics flag i produkcijski rollout ostaju
+  zasebni.
+
 ## S-002 — Dashboard heating-stats prazan profile query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `4397f4a`, fix `4339071`.**

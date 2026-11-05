@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, TransformFnParams } from 'class-transformer';
 import { IsNotEmpty, IsNumber, Max, Min } from 'class-validator';
+
+// Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije validacije.
+const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
 
 export class SetCurrentTempDto {
   @ApiProperty({
@@ -13,6 +16,6 @@ export class SetCurrentTempDto {
   @IsNotEmpty()
   @Min(48)
   @Max(55)
-  @Transform(({ value }) => Number(value))
+  @Transform(preserveRawInput)
   currentFlowTemp: number;
 }

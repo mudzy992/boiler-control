@@ -302,6 +302,24 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     expect(getHeatingSummary).not.toHaveBeenCalled();
   });
 
+  it('summary homeProfileId=0 vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-summary')
+      .query({ ...validQuery, homeProfileId: '0' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingSummary).not.toHaveBeenCalled();
+  });
+
+  it('negativan summary homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-summary')
+      .query({ ...validQuery, homeProfileId: '-1' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingSummary).not.toHaveBeenCalled();
+  });
+
   it('prazan summary homeProfileId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-summary')

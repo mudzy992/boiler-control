@@ -20,11 +20,17 @@ import { DashboardService } from '../dashboard.service';
 describe('Dashboard query DTO HTTP kompatibilnost', () => {
   let app: INestApplication;
   const getHeatingStats = jest.fn();
+  const getLearningTrends = jest.fn();
   const validQuery = {
     homeProfileId: '17',
     from: '2026-01-01T00:00:00Z',
     to: '2026-01-02T00:00:00Z',
     bucket: 'day',
+  };
+  const validLearningQuery = {
+    homeProfileId: validQuery.homeProfileId,
+    from: validQuery.from,
+    to: validQuery.to,
   };
 
   beforeAll(async () => {
@@ -33,7 +39,7 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
       providers: [
         {
           provide: DashboardService,
-          useValue: { getHeatingStats },
+          useValue: { getHeatingStats, getLearningTrends },
         },
         { provide: PrismaService, useValue: {} },
         { provide: JwtService, useValue: { verify: jest.fn() } },
@@ -66,6 +72,8 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
   beforeEach(() => {
     getHeatingStats.mockReset();
     getHeatingStats.mockResolvedValue({ buckets: [] });
+    getLearningTrends.mockReset();
+    getLearningTrends.mockResolvedValue({ points: [] });
   });
 
   afterAll(async () => {
@@ -123,5 +131,31 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
 
     expect(response.status).toBe(400);
     expect(getHeatingStats).not.toHaveBeenCalled();
+  });
+
+  it('numerički learning homeProfileId zadržava 200, response i servisne argumente', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/learning-trends')
+      .query(validLearningQuery);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ points: [] });
+    expect(getLearningTrends).toHaveBeenCalledTimes(1);
+    expect(getLearningTrends).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        ...validLearningQuery,
+        homeProfileId: 17,
+      }),
+    );
+  });
+
+  it('prazan learning homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/learning-trends')
+      .query({ ...validLearningQuery, homeProfileId: '' });
+
+    expect(response.status).toBe(400);
+    expect(getLearningTrends).not.toHaveBeenCalled();
   });
 });

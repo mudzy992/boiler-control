@@ -107,6 +107,19 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
         expect(create).not.toHaveBeenCalled();
       },
     );
+    it.each([0, -1, 1.5])(
+      'nevažeći create homeProfileId=%s vraća 400 prije servisnog poziva',
+      async (homeProfileId) => {
+        create.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .post('/api/devices')
+          .send({ ...validBody, homeProfileId });
+
+        expect(response.status).toBe(400);
+        expect(create).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/devices/:id path ID (S-002)', () => {
@@ -260,6 +273,19 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
         const response = await request(app.getHttpServer())
           .patch('/api/devices/17')
           .send(body);
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
+    it.each([0, -1, 1.5])(
+      'nevažeći update homeProfileId=%s vraća 400 prije servisnog poziva',
+      async (homeProfileId) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/devices/17')
+          .send({ ...validBody, homeProfileId });
 
         expect(response.status).toBe(400);
         expect(update).not.toHaveBeenCalled();

@@ -3,6 +3,42 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard heating-stats prazan profile query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `4397f4a`, fix `4339071`.**
+`origin/arena/c9961f17-boiler-control` je `4339071` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `0cd1de4`. PR nije otvaran.
+
+- Source review i DTO probe odbacili su sumnju na query nizove: pregledani
+  jednočlani i višečlani nizovi već daju validatorsku grešku. Stvarni nalaz je
+  da obavezni `GetHeatingStatsDto.homeProfileId` za raw `''` postaje `0` prije
+  `@IsInt`. Mobile stats poziv šalje number kroz axios query; pregledani
+  web/mobile pozivi ne šalju prazan ID, a generated ugovor nije mijenjan.
+- Test-only `4397f4a` dodaje stvarni controller/DTO HTTP suite s produkcijskim
+  ValidationPipe opcijama i mock servisom/guardom. Baseline je **57/57**;
+  ciljani repro je **1 prošao / 1 pao / 2 ukupno**, a module-level Dashboard
+  testovi **58 prošlo / 1 pao / 59 ukupno**. Prazan ID ranije dobija 200 umjesto 400,
+  dok numerički `"17"` zadržava 200, response i servisne argumente.
+- **Test-first CI `41993521393`:** backend **926 prošlo / 1 pao / 927 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Jedini test failure je ciljani prazan stats `homeProfileId`.
+- Fix `4339071` zadržava `@Type(() => Number)` i sve konverzije osim tačnog raw
+  `''`, koji ostaje string za `@IsInt`. Dodatna proba potvrđuje `"17" → 17`,
+  nepromijenjeno `"0" → 0` i odbijen niz. Nema novog `Min(1)` ni izmjene
+  ostalih Dashboard polja, controllera, servisa ili bucket logike.
+- Lokalni ciljani HTTP suite prolazi **2/2**, svih sedam module-level Dashboard
+  suiteova **59/59**, tačan CI ESLint opseg ima **0 errors / 2 poznata
+  warnings**, a OpenAPI `--check` nema razlike. **Finalni code CI
+  `41994019841`:** backend **91/927 + 13/119 integration**, mobile **24/136**,
+  frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su success i nema
+  failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `4339071`; privremeni Prisma
+  stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership ili bucket dokaz. Ostali prazni Dashboard ID-evi, ID pozitivnost,
+  datumi/timezone, analytics flag i produkcijski rollout ostaju zasebni.
+
 ## S-002 — Gas invoice price raw-tip validacija (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `be8dc51`, fix `80cd380`.**

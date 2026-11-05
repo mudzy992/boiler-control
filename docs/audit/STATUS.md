@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Dashboard heating-stats prazan profile query (2026-11-05)
+
+**STATUS: PRAZAN STATS HOME PROFILE ID ODBIJEN U KODU (`4339071`); CI ZELEN.** Raw `''` više ne postaje `0` prije `@IsInt`; numerički query i postojeća `0` semantika su nepromijenjeni, bez novog `Min(1)`.
+
+- Source/DTO probe potvrđuju da query nizovi već daju grešku, dok obavezni stats `homeProfileId=` prolazi kao `0`. Mobile šalje number kroz axios query; pregledani web/mobile pozivi ne šalju prazan ID, a generated ugovor je nepromijenjen.
+- Test-only `4397f4a` dodaje dva stvarna controller/DTO HTTP scenarija s mock servisom. Baseline je **57/57**, ciljani repro **1 prošao / 1 pao / 2**, module-level Dashboard **58 prošlo / 1 pao / 59**. CI `41993521393` potvrđuje samo ciljani backend failure (**926/1/927**), integration **119/119**, mobile **24/136**, frontend **4/4**, `tsc: 0` i `eslint: 0`.
+- Fix čuva raw `''` za `@IsInt`, a zadržava `@Type(() => Number)` za ostale ulaze. Numerički `"17"` zadržava 200/response/servisne argumente; probe potvrđuju nepromijenjene `"0" → 0` i odbijen niz. Ostala Dashboard polja, servis i bucket logika nisu mijenjani.
+- Lokalno ciljani HTTP je **2/2**, module-level Dashboard **59/59**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` bez razlike. **Finalni code CI `41994019841`:** backend **91/927 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili generated/client/mobile/compose/deploy promjene. Rollback production fixa je revert `4339071`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/bucket dokaz. Ostali prazni Dashboard ID-evi, ID pozitivnost, datumi/timezone, analytics flag i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Gas invoice price runtime DTO validacija (2026-11-05)
 
 **STATUS: INVOICE PRICE RAW TIP RIJEŠEN U KODU (`80cd380`); CI ZELEN.** Boolean i drugi raw tipovi koji nisu number/string više se ne pretvaraju u broj prije `@IsNumber`; valjan number/numeric-string i prazno polje zadržavaju postojeće ponašanje.

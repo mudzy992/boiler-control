@@ -3,6 +3,39 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Auth refresh/logout body raw-tip validacija (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `2c6b4e2`, fix `e60d2a6`.**
+`origin/arena/c9961f17-boiler-control` je `e60d2a6` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `8fad148`. PR nije otvaran.
+
+- Source review i izolovani DTO probe potvrdili su da numerički `refreshToken`
+  postaje string prije `@IsString`. Mobile već šalje string iz SecureStorea na
+  refresh/logout, a web koristi httpOnly cookie bez bodyja; klijenti nisu
+  mijenjani. Anomaly `confirm` je zaseban kandidat i nije dio ovog slicea.
+- Test-only `2c6b4e2` dodaje stvarni controller/DTO HTTP suite s produkcijskim
+  ValidationPipe opcijama, mock servisima i override guardom. Lokalni repro je
+  **2 prošlo / 2 pala / 4 ukupno**: valjani body refresh/logout zadržavaju 200,
+  dok numerički token na obje rute ranije dobija 200 umjesto 400.
+- **Test-first CI `41982338874`:** backend **913 prošlo / 2 pala / 915 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Samo dva ciljana refresh/logout scenarija padaju.
+- Fix `e60d2a6` dodaje samo raw-input transform na `RefreshDto.refreshToken`.
+  Controller, `rotate`/`revoke`, access-token izdavanje, cookie prednost,
+  Bearer politika, postojeći flag i OpenAPI shema ostaju nepromijenjeni.
+- Lokalni novi suite prolazi **4/4**, a svi Auth testovi **48/48**. Tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**, a OpenAPI `--check`
+  prolazi bez razlike. **Finalni code CI `41982824034`:** backend **88/915 +
+  13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`; sva tri joba su success i nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Test privremeno uključuje postojeći `AUTH_COOKIE_REFRESH_ENABLED`;
+  produkcijski default ostaje isti. Rollback production fixa je revert
+  `e60d2a6`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB
+  rotation/revoke, cookie/browser/SecureStore ili session-revocation dokaz.
+  S-004, stari JWT nakon promjene lozinke i produkcijski rollout ostaju otvoreni.
+
 ## S-002 — HomeProfile create/update numerička i boolean polja (2026-11-04)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `37ffef1`, fix `ac1df9e`.**

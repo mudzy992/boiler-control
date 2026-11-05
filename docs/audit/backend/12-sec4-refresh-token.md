@@ -181,6 +181,32 @@ ostaju izvan ovog slicea.
 
 ---
 
+## S-002 — refresh/logout raw-tip dopuna (2026-11-05)
+
+**STATUS: BODY RAW TIP RIJEŠEN (`e60d2a6`); CI ZELEN.** Ovo je uski DTO slice,
+ne promjena token lifecycle ili S-004 politike.
+
+- `RefreshDto.refreshToken` sada čuva raw tip prije `@IsString`; numerički
+  JSON broj više se ne pretvara u string. Na obje rute daje 400 prije mock
+  `rotate`/`revoke`, dok valjani string zadržava 200, response i servisne
+  argumente. Cookie prednost, Bearer i transport po ulazu ostaju isti.
+- Test-only `2c6b4e2` dodaje četiri stvarna controller/DTO HTTP scenarija.
+  Lokalni repro je **2 prošlo / 2 pala / 4**, a CI `41982338874` **913 prošlo /
+  2 pala / 915 ukupno**, samo ciljano. Poslije fixa lokalno je **4/4**, svi Auth
+  testovi **48/48**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check`
+  prolazi. Finalni CI `41982824034`: backend **88/915 + 13/119 integration**,
+  mobile **24/136**, frontend **4/4**, nula failure annotations.
+- Nema nove migracije/backfilla, flaga, generated/client/compose/deploy
+  promjene. Postojeći `AUTH_COOKIE_REFRESH_ENABLED` je uključen samo unutar
+  testnog setupa; produkcijski default ostaje `off`. Rollback je revert
+  `e60d2a6`.
+- Novi suite koristi mock servise i nije novi real-DB rotation/revoke,
+  browser/SecureStore ili session-revocation dokaz. Postojeći integration i
+  cookie testovi ostaju; S-004, stari JWT nakon promjene lozinke i rollout se
+  ne zatvaraju ovim sliceom.
+
+---
+
 ## Faza 2 — frontend (`frontend/`)
 
 Backend postaje **jedini izvor istine** o stanju zastavice: `AppConfig` je dobio

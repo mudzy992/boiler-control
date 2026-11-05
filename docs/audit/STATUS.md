@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Auth refresh/logout runtime body DTO validacija (2026-11-05)
+
+**STATUS: REFRESH TOKEN RAW TIP RIJEŠEN U KODU (`e60d2a6`); CI ZELEN. S-004 NIJE RIJEŠEN.** Controller, rotation/revoke servisi, cookie prednost, Bearer i postojeća flag politika nisu mijenjani.
+
+- Source review i DTO probe potvrđuju da numerički `refreshToken` postaje string prije `@IsString`. Mobile već šalje string iz SecureStorea, a web koristi cookie bez bodyja. Novi HTTP suite koristi stvarni controller/DTO i mock servise, ne real-DB/session dokaz.
+- Test-only `2c6b4e2` dodaje dvije valjane i dvije negativne kontrole. Lokalni repro je **2 prošlo / 2 pala / 4 ukupno**. CI `41982338874` potvrđuje backend **913 prošlo / 2 pala / 915 ukupno**, sve **119/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; samo ciljana dva scenarija dobijaju 200 umjesto 400.
+- Raw-input transform sada daje 400 prije `rotate`/`revoke` za numerički token. Valjani refresh zadržava 200/response/access-token i rotate argumente, a logout 200/response/revoke argument. Lokalno novi suite je **4/4**, svi Auth testovi **48/48**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` prolazi.
+- **Finalni code CI `41982824034`:** backend **88/915 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- OpenAPI/frontend generated output je nepromijenjen. Nema migracije/backfilla, novog flaga ili mobile/compose/deploy promjene; test samo privremeno uključuje postojeći flag. Rollback production fixa je revert `e60d2a6`.
+- **Preostalo:** real-DB rotation/revoke je pokriven postojećim testovima, ne ovim novim mock suiteom; browser/SecureStore QA, S-004/session revokacija, stari JWT nakon promjene lozinke i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Auth register runtime body DTO validacija (2026-11-04)
 
 **STATUS: ČETIRI REGISTER STRING POLJA RIJEŠENA U KODU (`3ad9c55`); CI ZELEN.** Email, AuthService, bcrypt hash, Prisma uniqueness/create, `refreshTransport` i postojeća cookie/refresh politika nisu mijenjani.

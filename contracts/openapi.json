@@ -3084,6 +3084,7 @@
             "name": "homeProfileId",
             "required": false,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           },

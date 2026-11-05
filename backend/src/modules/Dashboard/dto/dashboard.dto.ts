@@ -13,7 +13,7 @@ import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetHeatingEventsDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minimum: 1 })
   @IsOptional()
   @Type(() => Number)
   @Transform(({ value, obj, key }) => {
@@ -21,6 +21,7 @@ export class GetHeatingEventsDto {
     return raw === '' ? raw : value;
   })
   @IsInt()
+  @Min(1)
   homeProfileId?: number;
 
   @ApiPropertyOptional()

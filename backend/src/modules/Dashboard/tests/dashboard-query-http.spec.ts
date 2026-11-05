@@ -414,6 +414,24 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     expect(getHeatingEvents).not.toHaveBeenCalled();
   });
 
+  it('events homeProfileId=0 vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, homeProfileId: '0' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingEvents).not.toHaveBeenCalled();
+  });
+
+  it('negativan events homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, homeProfileId: '-1' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingEvents).not.toHaveBeenCalled();
+  });
+
   it('prazan events homeProfileId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-events')

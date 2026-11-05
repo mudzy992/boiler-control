@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard heating-stats nepozitivan profile query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `e4e84e8`, fix `d845762`.**
+`origin/arena/c9961f17-boiler-control` je `d845762` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `3921fdb`. PR nije otvaran.
+
+- Source review potvrđuje da obavezni `GetHeatingStatsDto.homeProfileId` bez
+  `@Min(1)` za `"0"` i `"-1"` prolazi `@IsInt` i dolazi do servisa. Servis i
+  dalje primjenjuje `homeProfile.userId` owner scope, a Prisma `HomeProfile.id`
+  je autoincrement; postojeći export već ima `@Min(1)` i HTTP kontrole za
+  `0`/`-1`. Ovo nije dokaz cross-user pristupa niti novi real-DB nalaz.
+- Mobile Analytics šalje postojeći pozitivni `activeHome.id` uz `enabled`
+  uslov, a pregled nije našao web poziv stats rute. Valjani instalirani
+  klijenti ostaju kompatibilni; klijentski kod nije mijenjan.
+- Test-only `e4e84e8` dodaje stats zero i negative scenarij u postojeći
+  stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe opcijama i
+  mock servisom/guardom. Baseline je **73/73**; ciljani repro je **16 prošlo /
+  2 pala / 18 ukupno**, a module-level Dashboard **73 prošlo / 2 pala / 75**.
+  Oba nepozitivna ID-a ranije dobiju 200 umjesto 400; numerički `"17"`,
+  stats device, prazan profile i sve prethodne kontrole prolaze.
+- **Test-first CI `42013794147`:** samo backend test korak pada, s dva ciljana
+  test annotationa uz generički process-exit annotation; lint, type-check,
+  OpenAPI, integration, mobile i frontend prolaze.
+- Fix `d845762` dodaje `@Min(1)` i Swagger `minimum: 1` samo na stats
+  `homeProfileId`. Probe potvrđuju valjan `"17" → 17`, odbijene `0`, `-1`,
+  prazan string i array, te nepromijenjeno stats `deviceId=0`. Drugi Dashboard
+  ID-evi, servis, owner filter, datumi, bucket i response nisu mijenjani.
+- Lokalni ciljani HTTP suite prolazi **18/18**, svih sedam module-level
+  Dashboard suiteova **75/75**, a tačan CI ESLint opseg ima **0 errors / 2
+  poznata warnings**. OpenAPI generate/check prolazi uz tačno jedan dodani
+  `minimum: 1` na stats profile parametru; frontend `openapi:check` je
+  usklađen bez generated type diffa. **Finalni code CI `42014323401`:** sva
+  tri joba su success, uključujući lint, type-check, OpenAPI,
+  backend/integration, mobile i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, service/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `d845762`;
+  privremeni Prisma stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership ili bucket dokaz. Pozitivnost ostalih Dashboard ID-eva,
+  datumi/timezone, analytics flag i produkcijski rollout ostaju zasebni;
+  cijeli S-002 se ovim ne zatvara.
+
 ## S-002 — Dashboard heating-events prazan device query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `3059e75`, fix `95ef417`.**

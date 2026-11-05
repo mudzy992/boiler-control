@@ -2363,6 +2363,20 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — ThermostatDevice path ID positivity (2026-11-05)
+
+**STATUS: NEPOSITIVNI THERMOSTATDEVICE PATH ID-EVI ODBIJENI U KODU (`1a0da0e` + `445ebec`); BACKEND/FRONTEND CI ZELEN, MOBILE WEATHER TIMEOUT ZABILJEŽEN.** FindOne/programs/update/remove sada za `"0"` i `"-1"` daju 400 prije servisa; valjani `"17"`, response, servisni argumenti i postojeće decimal/malformed kontrole ostaju nepromijenjeni.
+
+- Source review i repro potvrđuju da je `ParseIntPipe` propuštao nepozitivne ID-eve. `ThermostatDevice.id` je autoincrement, a postojeći pipe već odbija decimalne i malformed vrijednosti. Ovo nije cross-user ni novi real-DB/ownership/mutation dokaz.
+- Mobile schedule kontrole koriste pozitivne device ID-eve, tipizirani wrapperi ostaju nepromijenjeni, a klijentski kod nije mijenjan.
+- Test-only `ef0f973` dodaje `0` i `-1` za svaku od četiri rute u stvarni controller/DTO HTTP suite s mock servisom. Baseline je **24/24**, repro **24 prošlo / 8 palo / 32**. Test-first CI `42109334092` ima backend **961 prošlo / 8 palo / 969**, integration **119/119** i zelene mobile/frontend; annotations sadrže četiri ciljana failurea, obavijest o četiri izostavljena i generički process-exit.
+- Fix `1a0da0e` dodaje lokalni pipe koji zadržava `ParseIntPipe` parse korak i zahtijeva rezultat ≥1, uz Swagger `minimum: 1`. Valjani response/JWT userId/servisni argumenti i postojeće body/path kontrole prolaze.
+- Lokalno cijeli ThermostatDevice HTTP suite je **32/32**, ESLint **0 errors / 2 poznata warnings**. Probe zadržava `"17" → 17` i odbijene `"1.5"`, `"0"`, `"-1"` i malformed ID. OpenAPI dodaje samo četiri `minimum: 1`; frontend `openapi:check` prolazi bez type diffa.
+- Prvi code CI `42110129676` ima **969/969** runtime testova, ali četiri `TS2353` zbog nevažećeg top-level `ApiParam.minimum`. Corrective `445ebec` prebacuje vrijednost u `schema`; ciljani ApiParam type-check i OpenAPI `--check` prolaze.
+- **Corrective CI `42110691590`:** backend i frontend success, backend **969/969**, integration **119/119**, `tsc: 0`, `eslint: 0`; mobile ima samo poznati `MO2-17 WeatherV2Card` timeout. Isti weather suite lokalno prolazi **3/3** bez izmjene timeouta ili asserti.
+- Nema migracije/backfilla, novog flaga ili service/client/compose/deploy promjene. Rollback je revert `445ebec`, zatim `1a0da0e`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/mutation dokaz. Pozitivnost path ID-eva u drugim kontrolerima, body `null` semantika, string sadržaj, S-004/session revokacija i produkcijski rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — ThermostatDevice create/update homeProfileId semantic validacija (2026-11-05)
 
 **STATUS: CREATE/UPDATE HOME PROFILE ID INTEGER I POZITIVNOST RIJEŠENI U KODU (`3a17afd`); CI ZELEN.** Create/update `homeProfileId` sada prihvaća samo raw cijeli broj ≥1; `0`, `-1` i `1.5` daju 400 prije servisa. Valjani `7`/`8`, 201/200, response, servisni argumenti i omitted update ostaju nepromijenjeni.

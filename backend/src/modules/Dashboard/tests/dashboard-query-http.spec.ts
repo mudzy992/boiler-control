@@ -19,6 +19,7 @@ import { DashboardService } from '../dashboard.service';
 
 describe('Dashboard query DTO HTTP kompatibilnost', () => {
   let app: INestApplication;
+  const getHeatingEvents = jest.fn();
   const getHeatingStats = jest.fn();
   const getHeatingSummary = jest.fn();
   const getLearningTrends = jest.fn();
@@ -32,6 +33,11 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     homeProfileId: validQuery.homeProfileId,
     from: validQuery.from,
     to: validQuery.to,
+  };
+  const validEventsQuery = { ...validLearningQuery };
+  const eventsResponse = {
+    data: [],
+    meta: { page: 1, limit: 20, total: 0 },
   };
   const summaryResponse = {
     summary: {
@@ -50,6 +56,7 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
         {
           provide: DashboardService,
           useValue: {
+            getHeatingEvents,
             getHeatingStats,
             getHeatingSummary,
             getLearningTrends,
@@ -84,6 +91,8 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
   });
 
   beforeEach(() => {
+    getHeatingEvents.mockReset();
+    getHeatingEvents.mockResolvedValue(eventsResponse);
     getHeatingStats.mockReset();
     getHeatingStats.mockResolvedValue({ buckets: [] });
     getHeatingSummary.mockReset();
@@ -246,5 +255,52 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
 
     expect(response.status).toBe(400);
     expect(getHeatingSummary).not.toHaveBeenCalled();
+  });
+
+  it('numerički events homeProfileId zadržava 200, response i servisne argumente', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query(validEventsQuery);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(eventsResponse);
+    expect(getHeatingEvents).toHaveBeenCalledTimes(1);
+    expect(getHeatingEvents).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        ...validEventsQuery,
+        homeProfileId: 17,
+        page: 1,
+        limit: 20,
+      }),
+    );
+  });
+
+  it('events bez homeProfileId zadržava 200, response i servisne argumente', async () => {
+    const query = {
+      from: validEventsQuery.from,
+      to: validEventsQuery.to,
+    };
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query(query);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(eventsResponse);
+    expect(getHeatingEvents).toHaveBeenCalledTimes(1);
+    expect(getHeatingEvents).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ ...query, page: 1, limit: 20 }),
+    );
+    expect(getHeatingEvents.mock.calls[0][1].homeProfileId).toBeUndefined();
+  });
+
+  it('prazan events homeProfileId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, homeProfileId: '' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingEvents).not.toHaveBeenCalled();
   });
 });

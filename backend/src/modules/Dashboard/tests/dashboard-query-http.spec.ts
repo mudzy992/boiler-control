@@ -295,6 +295,35 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     expect(getHeatingEvents.mock.calls[0][1].homeProfileId).toBeUndefined();
   });
 
+  it('numerički events deviceId zadržava 200, response i servisne argumente', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, deviceId: '23' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(eventsResponse);
+    expect(getHeatingEvents).toHaveBeenCalledTimes(1);
+    expect(getHeatingEvents).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        ...validEventsQuery,
+        homeProfileId: 17,
+        deviceId: 23,
+        page: 1,
+        limit: 20,
+      }),
+    );
+  });
+
+  it('prazan events deviceId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-events')
+      .query({ ...validEventsQuery, deviceId: '' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingEvents).not.toHaveBeenCalled();
+  });
+
   it('prazan events homeProfileId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-events')

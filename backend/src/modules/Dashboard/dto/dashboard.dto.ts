@@ -16,6 +16,10 @@ export class GetHeatingEventsDto {
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
+  @Transform(({ value, obj, key }) => {
+    const raw = (obj as Record<string, unknown>)[key];
+    return raw === '' ? raw : value;
+  })
   @IsInt()
   homeProfileId?: number;
 

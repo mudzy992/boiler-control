@@ -3,6 +3,41 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Boiler current-temp body raw-tip validacija (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `be8aac6`, fix `79d2717`.**
+`origin/arena/c9961f17-boiler-control` je `79d2717` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `4b08cb9`. PR nije otvaran.
+
+- Source review i stvarni controller/DTO HTTP repro potvrdili su da string
+  `"52.5"` postaje broj prije `@IsNumber`. Web API prima `number`, a mobile
+  parsira i zaokružuje unos prije slanja; generated ugovor je također `number`.
+  Klijenti i instalirani mobile nisu mijenjani.
+- Test-only `be8aac6` dodaje stvarni controller/DTO, produkcijske
+  ValidationPipe opcije, mock `setCurrentTemp` i override JWT guarda s
+  `userId=42`. Lokalni repro je **1 prošao / 1 pao / 2 ukupno**: valjan number
+  zadržava 200, response i `(42, 52.5)`, dok string ranije dobija 200 umjesto
+  400.
+- **Test-first CI `41985604111`:** backend **920 prošlo / 1 pao / 921 ukupno**,
+  integration **119/119**, mobile **24/136** i frontend **4/4**; `tsc: 0`,
+  `eslint: 0`. Jedini test failure je ciljani string `currentFlowTemp`.
+- Fix `79d2717` zamjenjuje `Number(value)` raw-input čuvanjem samo na
+  `SetCurrentTempDto.currentFlowTemp`. Controller, servis, persistence,
+  `Min(48)`, `Max(55)`, decimalno pravilo i response ostaju nepromijenjeni.
+- Lokalni novi suite prolazi **2/2**, a svi Boiler testovi **24/24**, uz
+  nepromijenjen prethodni baseline **22/22**. Tačan CI ESLint opseg ima **0
+  errors / 2 poznata warnings**, a OpenAPI `--check` prolazi bez razlike.
+  **Finalni code CI `41986032942`:** backend **90/921 + 13/119 integration**,
+  mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba su
+  success i nema failure annotations.
+- Nema migracije/backfilla, novog flaga, generated/client/compose/deploy
+  promjene. Rollback production fixa je revert `79d2717`; privremeni Prisma
+  stubovi su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  multi-device ili uređajna-komanda dokaz. Postojeći real-DB number/range/auth
+  testovi su nepromijenjeni i prolaze u CI; B-024 i produkcijski rollout ostaju
+  otvoreni.
+
 ## S-002 — Anomaly confirm body raw-tip validacija (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `13e749b`, fix `e77dbc5`.**

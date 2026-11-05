@@ -2363,6 +2363,17 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Boiler current-temp runtime body DTO validacija (2026-11-05)
+
+**STATUS: CURRENT FLOW TEMP RAW TIP RIJEŠEN U KODU (`79d2717`); CI ZELEN.** Controller, servis, persistence, min/max i decimalno pravilo nisu mijenjani.
+
+- Source review i stvarni controller/DTO HTTP repro potvrđuju da string `"52.5"` postaje broj prije `@IsNumber`. Web i mobile već šalju JSON number; generated ugovor i instalirani mobile ostaju nepromijenjeni.
+- Test-only `be8aac6` dodaje valjan number i negativni string scenarij s produkcijskim ValidationPipe opcijama i mock servisom. Lokalni repro je **1 prošao / 1 pao / 2 ukupno**. CI `41985604111` potvrđuje backend **920 prošlo / 1 pao / 921 ukupno**, sve **119/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; jedini failure je ciljani string koji dobija 200 umjesto 400.
+- Raw-input transform sada daje 400 prije servisa za string, dok valjan number zadržava 200, response i `setCurrentTemp(42, 52.5)`. Lokalno novi suite je **2/2**, svi Boiler testovi **24/24**, ESLint **0 errors / 2 poznata warnings**, OpenAPI `--check` prolazi.
+- **Finalni code CI `41986032942`:** backend **90/921 + 13/119 integration**, mobile **24/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`; sva tri joba success i nula failure annotations.
+- OpenAPI/generated/client output je nepromijenjen. Nema migracije/backfilla, novog flaga ili mobile/compose/deploy promjene. Rollback production fixa je revert `79d2717`.
+- **Preostalo:** novi suite nije real-DB/multi-device/device-command dokaz; postojeći real-DB number/range/auth testovi su nepromijenjeni. B-024 i produkcijski rollout ostaju otvoreni.
+
 ### S-002 — Anomaly confirm runtime body DTO validacija (2026-11-05)
 
 **STATUS: ANOMALY CONFIRM RAW TIP RIJEŠEN U KODU (`e77dbc5`); CI ZELEN.** Controller, Date transform, ParseIntPipe, ownership i stvarni anomaly servis nisu mijenjani.

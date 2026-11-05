@@ -158,6 +158,24 @@ describe('Dashboard query DTO HTTP kompatibilnost', () => {
     );
   });
 
+  it('stats deviceId=0 vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-stats')
+      .query({ ...validQuery, deviceId: '0' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingStats).not.toHaveBeenCalled();
+  });
+
+  it('negativan stats deviceId vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard/heating-stats')
+      .query({ ...validQuery, deviceId: '-1' });
+
+    expect(response.status).toBe(400);
+    expect(getHeatingStats).not.toHaveBeenCalled();
+  });
+
   it('prazan deviceId vraća 400 prije servisnog poziva', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/dashboard/heating-stats')

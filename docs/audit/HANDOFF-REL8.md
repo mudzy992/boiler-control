@@ -3,6 +3,50 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Dashboard heating-events nepozitivan profile query (2026-11-05)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `819756c`, fix `4109771`.**
+`origin/arena/c9961f17-boiler-control` je `4109771` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `6a6d379`. PR nije otvaran.
+
+- Source review potvrđuje da opcioni `GetHeatingEventsDto.homeProfileId` bez
+  `@Min(1)` za `"0"` i `"-1"` prolazi `@IsInt` i dolazi do servisa. Nula zbog
+  truthy uslova izostavlja profile filter unutar owner-scoped upita; Prisma
+  `HomeProfile.id` je autoincrement. Ovo nije cross-user ni real-DB dokaz.
+- Web events poziv izostavlja profile ID, a mobile tipizirani dashboard wrapper
+  šalje numerički ID. Valjani instalirani klijenti ostaju kompatibilni i
+  klijentski kod nije mijenjan.
+- Test-only `819756c` dodaje events profile zero i negative scenarije u
+  postojeći stvarni controller/DTO HTTP suite s produkcijskim ValidationPipe
+  opcijama i mock servisom/guardom. Baseline je **26/26**, odnosno **83/83** za
+  Dashboard; ciljani repro je **26 prošlo / 2 pala / 28 ukupno**, a module-level
+  Dashboard **83 prošlo / 2 pala / 85**. Oba nepozitivna ID-a ranije dobiju 200
+  umjesto 400; numerički `"17"`, omitted, prazan profile i ostale kontrole
+  prolaze.
+- **Test-first CI `42097557719`:** backend ima samo dva ciljana test failurea
+  uz generički process-exit annotation; lint, type-check, OpenAPI, integration,
+  mobile i frontend prolaze.
+- Fix `4109771` dodaje `@Min(1)` i Swagger `minimum: 1` samo na events
+  `homeProfileId`. Probe potvrđuju valjan `"17" → 17`, omitted `undefined`,
+  odbijene `0`, `-1`, prazan string i array, nepromijenjenu
+  stats/learning/summary pozitivnost, events `deviceId=0` i default
+  `page=1`/`limit=20`. Servis, owner filter, datumi, event mapping, paginacija
+  i response nisu mijenjani.
+- Lokalni ciljani HTTP suite prolazi **28/28**, svih sedam module-level
+  Dashboard suiteova **85/85**, a tačan CI ESLint opseg ima **0 errors / 2
+  poznata warnings**. OpenAPI generate/check prolazi uz tačno jedan dodani
+  `minimum: 1` na events profile parametru; frontend `openapi:check` je
+  usklađen bez generated type diffa. **Finalni code CI `42098224923`:** sva tri
+  joba su success, uključujući mobile, lint, type-check, OpenAPI,
+  backend/integration i frontend; nema failure annotations.
+- Nema migracije/backfilla, novog flaga, service/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `4109771`;
+  privremeni Prisma stubovi za OpenAPI su uklonjeni.
+- **Granica:** ovo je mock-controller DTO/HTTP dokaz, ne novi real-DB,
+  ownership, event-mapping ili pagination dokaz. Pozitivnost events `deviceId`,
+  datumi/timezone, analytics flag i produkcijski rollout ostaju zasebni; cijeli
+  S-002 se ovim ne zatvara.
+
 ## S-002 — Dashboard heating-summary nepozitivan device query (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `0b4f8c6`, fix `0898fef`.**

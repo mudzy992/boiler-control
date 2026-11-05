@@ -1,6 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
 import { IsBoolean, IsDate, IsOptional } from 'class-validator';
+
+// Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije validacije.
+const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
 
 /**
  * `PATCH /api/anomalies/:eventId`.
@@ -25,6 +28,7 @@ export class UpdateHeatingAnomalyDto {
   /** Ako je `true`, korisnik potvrđuje trenutni predlog. */
   @ApiPropertyOptional({ type: Boolean })
   @IsOptional()
+  @Transform(preserveRawInput)
   @IsBoolean()
   confirm?: boolean;
 }

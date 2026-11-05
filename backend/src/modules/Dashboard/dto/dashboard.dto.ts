@@ -78,7 +78,7 @@ export class GetHeatingStatsDto {
   @Min(1)
   homeProfileId: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minimum: 1 })
   @IsOptional()
   @Type(() => Number)
   @Transform(({ value, obj, key }) => {
@@ -86,6 +86,7 @@ export class GetHeatingStatsDto {
     return raw === '' ? raw : value;
   })
   @IsInt()
+  @Min(1)
   deviceId?: number;
 
   @ApiProperty()

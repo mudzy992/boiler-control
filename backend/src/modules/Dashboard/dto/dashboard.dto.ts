@@ -72,6 +72,10 @@ export class GetHeatingStatsDto {
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
+  @Transform(({ value, obj, key }) => {
+    const raw = (obj as Record<string, unknown>)[key];
+    return raw === '' ? raw : value;
+  })
   @IsInt()
   deviceId?: number;
 

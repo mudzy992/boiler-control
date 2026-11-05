@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsInt, Min } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ThermostatMode } from 'src/generated/prisma';
@@ -27,8 +27,9 @@ export class CreateThermostatDeviceDto {
   @IsEnum(ThermostatMode)
   mode: ThermostatMode;
 
-  @ApiProperty()
+  @ApiProperty({ minimum: 1 })
   @Transform(preserveRawInput)
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   homeProfileId: number;
 }

@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsInt, Min } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ThermostatMode } from 'src/generated/prisma';
@@ -30,9 +30,10 @@ export class UpdateThermostatDeviceDto {
   @IsString()
   deviceId?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minimum: 1 })
   @IsOptional()
   @Transform(preserveRawInput)
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   homeProfileId?: number;
 }

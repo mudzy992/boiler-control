@@ -473,6 +473,7 @@
             "type": "string"
           },
           "homeProfileId": {
+            "minimum": 1,
             "type": "number"
           },
           "mode": {
@@ -2130,6 +2131,7 @@
             "type": "string"
           },
           "homeProfileId": {
+            "minimum": 1,
             "type": "number"
           },
           "mode": {

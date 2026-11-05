@@ -3093,6 +3093,7 @@
             "name": "deviceId",
             "required": false,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           },

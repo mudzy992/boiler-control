@@ -5,10 +5,11 @@ export class UploadInvoiceDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Transform(({ value }) =>
-    value === undefined || value === null || value === ''
-      ? undefined
-      : Number(value),
-  )
+  @Transform(({ obj, key }) => {
+    const raw = (obj as Record<string, unknown>)[key];
+    if (raw === undefined || raw === null || raw === '') return undefined;
+    if (typeof raw !== 'number' && typeof raw !== 'string') return raw;
+    return Number(raw);
+  })
   invoiceGasPriceExVat?: number;
 }

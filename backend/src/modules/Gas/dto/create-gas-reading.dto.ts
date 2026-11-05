@@ -55,6 +55,10 @@ export class CreateGasReadingDto {
   })
   @IsDateString()
   @IsNotEmpty()
+  @Transform(({ value, obj, key }) => {
+    if (!isGasStrictValidationEnabled()) return value;
+    return (obj as Record<string, unknown>)[key];
+  })
   readingDate: string;
 
   /**

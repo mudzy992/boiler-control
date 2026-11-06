@@ -1,0 +1,49 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, arena/c9961f17-boiler-control]
+  pull_request:
+    branches: [main, arena/c9961f17-boiler-control]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      VITE_API_URL: ${{ secrets.VITE_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Type check
+        working-directory: frontend
+        run: npm run type-check
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm test
+
+      - name: OpenAPI type sync check
+        working-directory: frontend
+        run: npm run openapi:check
+        env:
+          # openapi-codegen.reads contracts/openapi.json from repo root
+          FRONTEND_ROOT: ./frontend
+
+      - name: Production build
+        working-directory: frontend
+        run: VITE_API_URL=https://api.example.com/api npm run build

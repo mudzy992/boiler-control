@@ -73,8 +73,9 @@ export default tseslint.config(
     // ispravljanje postojeceg koda izaslo izvan obima quick win-a.
     rules: {
       // `any` je u postojecem kodu rasireno (npr. DashboardPage `items: any[]`).
-      // Uskladjen s backend/eslint.config.mjs gdje je takodjer 'off'.
-      '@typescript-eslint/no-explicit-any': 'off',
+      // Postavljeno na 'warn' kao signal za refaktor — ne 'error' jer bi to
+      // rutio postojeći build. Uskladjen s backend/eslint.config.mjs.
+      '@typescript-eslint/no-explicit-any': 'warn',
       // Upozorenja, ne greske: koristan signal za refaktor, ali ne rusi build.
       '@typescript-eslint/no-empty-object-type': 'warn',
       '@typescript-eslint/no-unused-expressions': 'warn',

@@ -3,6 +3,46 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice whitespace-only identifikatori (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `3d8bc54`, fix `d2d54d3`.**
+`origin/arena/c9961f17-boiler-control` je `d2d54d3` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `44c0039`. PR nije otvaran.
+
+- Source review potvrđuje da `@IsString()`/`@IsNotEmpty()` propušta stringove
+  koji sadrže samo razmake, tabove i nove redove. Servis i dalje prima takav
+  `vendor`/`deviceId`; raniji 201/200 kroz mock servis nije real-DB mutation
+  ni ownership dokaz. Nije pronađen namjerni whitespace-only klijentski poziv.
+- Baseline stvarnog controller/DTO HTTP suitea je **41/41**. Test-only
+  `3d8bc54` dodaje četiri whitespace-only create/update scenarija i dvije
+  kontrole s vodećim/pratećim razmacima uz stvarni sadržaj. Repro je **43
+  prošla / 4 pala / 47**: padded kontrole prolaze, a nevažeći create/update
+  ranije dobiju 201/200.
+- **Test-first CI `42180965614`:** backend Jest summary je **980 prošlo / 4
+  pala / 984 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže tačno četiri ciljana failurea uz generički
+  process-exit; `tsc: 0`, `eslint: 0`, bez drugih regresija.
+- Fix `d2d54d3` zadržava `IsString`/`IsNotEmpty` i dodaje `@Matches(/\S/)` te
+  Swagger `pattern: "\S"` na create/update `vendor` i `deviceId`. Time se
+  zahtijeva barem jedan ne-whitespace znak, bez novog vendor/device formata.
+- Padded create/update kontrole zadržavaju 201/200, response i potpuno iste
+  servisne argumente; nema trimminga. Valjane vrijednosti, alias, omitted
+  polja i postojeće raw/null/empty/path kontrole ostaju nepromijenjene.
+- Lokalni cijeli ThermostatDevice HTTP suite prolazi **47/47**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI generate/check
+  dodaje tačno četiri `pattern` svojstva, regex probe prolaze, a frontend
+  `openapi:check` nema generated type diffa.
+- **Code CI `42181422539`:** sva tri joba su success, backend **984/984**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga, controller/service/client/compose/
+  deploy promjene. Rollback production fixa i OpenAPI pattern vrijednosti je
+  revert `d2d54d3`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** alias sadržaj, maksimalne dužine, stroži vendor/device format,
+  normalizacija/trimming, S-004/session revokacija i rollout ostaju zasebni.
+  Mock-controller HTTP dokaz nije real-DB/ownership/mutation dokaz i cijeli
+  S-002 se ovim ne zatvara.
+
 ## S-002 — ThermostatDevice create/update prazni identifikatori (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `8c170ee`, fix `cdf5d2d`.**

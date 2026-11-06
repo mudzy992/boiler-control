@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — ThermostatDevice whitespace-only identifikatori (2026-11-06)
+
+**STATUS: WHITESPACE-ONLY THERMOSTATDEVICE VENDOR/DEVICEID ODBIJENI U KODU (`d2d54d3`); CI ZELEN.** Create/update sada zahtijevaju barem jedan ne-whitespace znak; padded stringovi sa sadržajem zadržavaju 201/200 i potpuno iste servisne argumente bez trimminga.
+
+- Source review potvrđuje da `@IsString()`/`@IsNotEmpty()` propušta same razmake, tabove i nove redove te da takav ulaz dolazi do servisa. Raniji 201/200 kroz mock servis nije real-DB mutation ni ownership dokaz; nije pronađen namjerni whitespace-only klijentski poziv.
+- Test-only `3d8bc54` dodaje četiri whitespace-only scenarija i dvije padded kontrole. Baseline je **41/41**, repro **43 prošla / 4 pala / 47**: padded kontrole prolaze, a nevažeći create/update ranije dobiju 201/200. Test-first CI `42180965614` ima backend **980 prošlo / 4 pala / 984**, integration **119/119**, mobile **136/136** i frontend success; annotations sadrže tačno četiri ciljana failurea uz generički process-exit.
+- Fix `d2d54d3` dodaje `@Matches(/\S/)` i Swagger `pattern: "\S"` uz postojeće `IsString`/`IsNotEmpty` na create/update `vendor` i `deviceId`. Nije uveden stroži format, alias pravilo, max-length, normalizacija ili trimming; controller i servis nisu mijenjani.
+- Lokalno cijeli ThermostatDevice HTTP suite je **47/47**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo četiri `pattern` svojstva, regex probe prolaze, a frontend `openapi:check` nema generated type diffa.
+- **Code CI `42181422539`:** sva tri joba success, backend **984/984**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili client/compose/deploy promjene. Rollback production fixa i OpenAPI pattern vrijednosti je revert `d2d54d3`.
+- **Preostalo:** alias sadržaj, maksimalne dužine, stroži vendor/device format i normalizacija/trimming ostaju zasebne odluke. Mock-controller dokaz nije real-DB/ownership/mutation dokaz; S-004/session revokacija, rollout i cijeli S-002 nisu zatvoreni.
+
 ### S-002 — ThermostatDevice create/update prazni identifikatori (2026-11-06)
 
 **STATUS: PRAZNI THERMOSTATDEVICE VENDOR/DEVICEID ODBIJENI U KODU (`cdf5d2d`); CI ZELEN.** Create/update `vendor` i `deviceId` s `""` daju 400 prije servisa; valjane vrijednosti, response, JWT userId, servisni argumenti i postojeće raw/null/path kontrole ostaju nepromijenjene.

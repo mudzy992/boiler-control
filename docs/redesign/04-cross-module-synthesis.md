@@ -1,6 +1,6 @@
 # Međumodulna sinteza
 
-Faza 3. Datum: 2026-11-06. Izvor su `docs/redesign/modules/*.md`, `02-shared-foundations.md`, `decisions.md` i `gate-2.md`. Produkcijski kod nije mijenjan. Faza 4 ne počinje bez odobrenja.
+Faza 3. Datum: 2026-11-06. Izvor su `docs/redesign/modules/*.md`, `02-shared-foundations.md`, `decisions.md` i `gate-2.md`. Ažurirano poslije `e7142f1` (vidi `05-audit-of-audit.md`).
 
 ## 1. Obrasci
 
@@ -8,14 +8,14 @@ Faza 3. Datum: 2026-11-06. Izvor su `docs/redesign/modules/*.md`, `02-shared-fou
 
 Jedanaest ruta dijeli isti kvar: stranica očekuje lokalni `Button`/`Card`/`Input` (`variant`, `label`, `padding`, `isLoading`), a import je antd ili uopšte ne postoji.
 
-| Obrazac | Nalazi |
-|---|---|
-| JSX se ne parsira, dva omota u jednom fajlu | SH-01, DA-01 |
-| Simbol nije importovan (`Card`, `Button`, `useTranslation`, `useCallback`) | BO-01, HE-01, HE-02, GA-01, RE-01, RE-02, NO-01, HP-01, PR-01 |
-| Import putanja ne postoji | AU-02, DA-06, GR-01 |
-| Antd komponenta dobija propove lokalnog seta | GA-03, NO-02, HP-02, PR-02, HE-05, BO-06 |
+| Obrazac | Nalazi | Status poslije `e7142f1` |
+|---|---|---|
+| JSX se ne parsira, dva omota u jednom fajlu | SH-01, DA-01 | Zatvoreno (jedno stablo + lokalni importi) |
+| Simbol nije importovan | BO-01, HE-01, HE-02, GA-01, RE-01, RE-02, NO-01, HP-01, PR-01 | Zatvoreno za navedene importne greške |
+| Import putanja ne postoji | AU-02, DA-06, GR-01 | Zatvoreno |
+| Antd komponenta dobija propove lokalnog seta / antd u grafu | GA-03, NO-02, HP-02, PR-02, HE-05, BO-06, SH-02 | **Otvoreno** — UX i Q1 |
 
-Treći set (`frontend/src/components`) i shadcn set (`shared/components/ui`) postoje paralelno. Produkcijske stranice shadcn ne zovu. Odluka Q1 ostavlja samo shadcn.
+Treći set (`frontend/src/components`) i shadcn set (`shared/components/ui`) postoje paralelno. Stranice sada zovu lokalni set. Odluka Q1 i dalje ostavlja samo shadcn; lokalni set umire u I7.
 
 ### Greška izgleda kao prazno
 
@@ -102,17 +102,17 @@ Nisu vlasništvo jednog modula:
 
 | Modul | Parse / import | Antd ili tuđi prop | Error = prazno | Literal van `t()` | Dijalog / fokus | Dijeljeni keš |
 |---|---|---|---|---|---|---|
-| Shell | x | x | | x | x | |
-| Auth | x | | x (401 reload) | djelimično ima `t()` | | |
-| Dashboard | x | x | x | x | x | x (temp, notifikacije) |
-| Boiler | x | x | x | x | x | x (temp) |
-| Heating | x | x | x | x | | |
-| Gas readings | x | | x | ima `t()` | x | x |
-| Gas analytics | x | x | x | x | | x |
-| Reports | x | | x | x | | breakdown |
-| Notifications | x | x | x | x | x | x |
-| Home profile | x | x | x | x | | x |
-| Profile | x | x | x | x | | |
+| Shell | zatvoreno | x | | x | x | |
+| Auth | zatvoreno | | x (401 reload) | djelimično ima `t()` | | |
+| Dashboard | zatvoreno | x | x | x | x | x (temp, notifikacije) |
+| Boiler | zatvoreno | x | x | x | x | x (temp) |
+| Heating | zatvoreno | x | x | x | | |
+| Gas readings | zatvoreno | | x | ima `t()` | x | x |
+| Gas analytics | zatvoreno | x | x | x | | x |
+| Reports | zatvoreno | | x | x | | breakdown |
+| Notifications | zatvoreno | x | x | x | x | x |
+| Home profile | zatvoreno | x | x | x | | x |
+| Profile | zatvoreno | x | x | x | | |
 
 ## 5. Zavisnosti i redoslijed
 
@@ -139,14 +139,14 @@ flowchart TD
 
 1. **Tokeni.** Bez njih svaka nova komponenta ili ponovo uvodi hex ili koristi klasu koje nema u temi (`brand`, `z-fixed`).
 2. **`api.ts` 401 i tip `User`.** Login i shell ovise o tome. Nije vizuelni posao.
-3. **Shell iznova.** `MainLayout.tsx` se ne parsira. Stranice se ne mogu vježbati u layoutu dok shell ne montira `main`.
+3. **Shell iznova.** Fajl se parsira, ali je i dalje polovičan (antd ikone, drawer a11y, skip/`main-content`). Q3: rewrite, ne krpanje antd Layout-a.
 4. **Primitivi koji fale:** dialog/sheet, select, checkbox, table, toast ili banner. Button/Card/Input/Label već postoje i treba ih uskladiti sa tokenima, ne pisati paralelno.
 5. **`QueryState`, `PageHeader`, `StatCard`, `StatusBanner`.** Stranice ih zovu umjesto da svaka ponovi prazan `catch`.
 6. **`TempDialog` prije dashboarda i boilera.** Jedan dijalog, oba pozivaoca invalidiraju oba ključa.
 7. **`RecommendationBreakdown` prije heatinga, dashboarda i reportsa.** Inače tri ekrana dijele isti pad.
 8. **Stranice.** Poslije temelja, red po tome koliko drugih lome i koliko su operativne:
-   - Auth login, jer je ulaz i danas se ne učitava (AU-02).
-   - Dashboard, jer ne parsira i drži temperaturu, health, notifikacije i preporuku.
+   - Auth login, jer je ulaz i drži AU-01 (401 reload).
+   - Dashboard, jer drži temperaturu, health, notifikacije, preporuku i plots.
    - Boiler, isti dijalog.
    - Heating, pa reports, jer dijele breakdown.
    - Gas readings, pa analytics. Readings drži formu, karticu i download. Analytics čita isti keš i ne smije računati cijenu.
@@ -173,7 +173,7 @@ Ovo se ne izvlači u zajednički helper koji bi promijenio broj:
 
 ## 7. Šta ova faza ne zatvara
 
-- Q8 Lighthouse. Build i dalje staje prije Vite-a.
+- Q8 Lighthouse. Nije izmjeren (build više nije blokiran parse-om).
 - HTTP status kad home profil ne postoji (HP-04). Create i mrežni pad se razdvajaju u implementaciji tek kad se status pročita, bez novog endpointa.
 - Raspon `confidenceScore` (RE-06).
 - Da li `prefersDarkMode` sa profila prepisuje `boiler.theme`. SH-11 je nizak. Inicijalizacija ostaje lokalni ključ dok Faza 4 ne kaže drugačije.

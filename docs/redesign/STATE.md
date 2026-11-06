@@ -4,28 +4,27 @@ Ažurirano: 2026-11-06.
 
 ## Trenutna faza
 
-**Faza 3 zatvorena.** Sinteza je u `docs/redesign/04-cross-module-synthesis.md`. Faza 4 ne počinje bez odobrenja.
+**GATE 3.** Faza 4 dokumentacija gotova (`05`–`09`, `gate-3.md`). Produkcijski kod Faze 5 čeka izričito odobrenje.
 
 ## Odluke
 
-`docs/redesign/decisions.md`.
+- GATE 1: `docs/redesign/decisions.md` (Q1–Q7)
+- Pristup implementaciji: opcija A — `07-decision-record.md`
 
 ## Završeno
 
-- Faza 1: pregled, mapa, temelji, baseline.
-- Faza 2: svih 11 modula i `gate-2.md`.
-- Faza 3: obrasci, zajedničke komponente, sistemski problemi, matrica, zavisnosti.
+- Faza 1: pregled, mapa, temelji, baseline
+- Faza 2: 11 modula, `gate-2.md`
+- Faza 3: `04-cross-module-synthesis.md` (ažurirano poslije CI fix)
+- Faza 4: audit, design direction, decision, plan, rules, `gate-3.md`
+- CI fix `e7142f1`: parse shell/dashboard; Frontend CI zelen (`42296147396`)
 
 ## Otvoreno
 
-- Q8 Lighthouse, i dalje blokiran padom builda.
-- Home profile: HTTP status kad profil ne postoji (HP-04).
-- Reports: raspon `confidenceScore` (RE-06).
-
-## CI
-
-Run `42293997746` (push "Do faze 3") pao je na type-checku: spojeni JSX u `MainLayout.tsx` i `DashboardPage.tsx`. Poslije toga lokalno prolaze `type-check`, `lint` (0 grešaka, 26 upozorenja) i Vitest (98).
+- Q8 Lighthouse — nije izmjeren (plan I7)
+- HP-04 HTTP status kad nema home profila
+- RE-06 raspon `confidenceScore` u DTO
 
 ## Sljedeći korak
 
-Poslije odobrenja: Faza 4 (`05` do `09`).
+Poslije odobrenja GATE 3: Faza 5 podfaza **I0** (tokeni), strogo po `08` i `09`.

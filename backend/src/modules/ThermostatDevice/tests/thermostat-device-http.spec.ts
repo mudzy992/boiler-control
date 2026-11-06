@@ -89,6 +89,25 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(create).toHaveBeenCalledWith(42, validBody);
     });
 
+    it('create zadržava razmake uz sadržaj bez trimminga', async () => {
+      const body = {
+        ...validBody,
+        vendor: ' tuya ',
+        deviceId: ' tuya-17 ',
+      };
+      const device = { id: 17, userId: 42, ...body };
+      create.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .post('/api/devices')
+        .send(body);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(device);
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(create).toHaveBeenCalledWith(42, body);
+    });
+
     it.each([
       ['vendor', { ...validBody, vendor: 123456 }],
       ['deviceId', { ...validBody, deviceId: 123456 }],
@@ -116,6 +135,20 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
         const response = await request(app.getHttpServer())
           .post('/api/devices')
           .send({ ...validBody, [field]: '' });
+
+        expect(response.status).toBe(400);
+        expect(create).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(['vendor', 'deviceId'])(
+      'whitespace-only create %s vraća 400 prije servisnog poziva',
+      async (field) => {
+        create.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .post('/api/devices')
+          .send({ ...validBody, [field]: ' \t\n ' });
 
         expect(response.status).toBe(400);
         expect(create).not.toHaveBeenCalled();
@@ -314,6 +347,25 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(update).toHaveBeenCalledWith(42, 17, validBody);
     });
 
+    it('update zadržava razmake uz sadržaj bez trimminga', async () => {
+      const body = {
+        ...validBody,
+        vendor: ' tuya ',
+        deviceId: ' tuya-17 ',
+      };
+      const device = { id: 17, userId: 42, ...body };
+      update.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/devices/17')
+        .send(body);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(device);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, body);
+    });
+
     it('nullable alias zadržava null, 200, response i servisni argument', async () => {
       const body = { ...validBody, alias: null };
       const device = { id: 17, userId: 42, ...body };
@@ -370,6 +422,20 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
         const response = await request(app.getHttpServer())
           .patch('/api/devices/17')
           .send({ ...validBody, [field]: '' });
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(['vendor', 'deviceId'])(
+      'whitespace-only update %s vraća 400 prije servisnog poziva',
+      async (field) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/devices/17')
+          .send({ ...validBody, [field]: ' \t\n ' });
 
         expect(response.status).toBe(400);
         expect(update).not.toHaveBeenCalled();

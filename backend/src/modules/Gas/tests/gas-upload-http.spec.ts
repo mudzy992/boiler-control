@@ -207,6 +207,20 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(deleteReading).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        deleteReading.mockResolvedValue({ id: 17 });
+
+        const response = await request(app.getHttpServer()).delete(
+          `/api/gas/reading/${id}`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(deleteReading).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/gas/reading/:id/reference path ID (S-002)', () => {
@@ -236,6 +250,20 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(updateReference).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        updateReference.mockResolvedValue({ id: 17 });
+
+        const response = await request(app.getHttpServer())
+          .patch(`/api/gas/reading/${id}/reference`)
+          .send({ isReference: true });
+
+        expect(response.status).toBe(400);
+        expect(updateReference).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('POST /api/gas/reading/:id/meter-image path ID (S-002)', () => {
@@ -278,6 +306,23 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(uploadMeterImage).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        uploadMeterImage.mockResolvedValue({ id: 17 });
+
+        const response = await request(app.getHttpServer())
+          .post(`/api/gas/reading/${id}/meter-image`)
+          .attach('meterImage', image, {
+            filename: 'meter.jpg',
+            contentType: 'image/jpeg',
+          });
+
+        expect(response.status).toBe(400);
+        expect(uploadMeterImage).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('POST /api/gas/reading/:id/invoice path ID (S-002)', () => {
@@ -334,6 +379,24 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(uploadInvoice).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        uploadInvoice.mockResolvedValue({ id: 17 });
+
+        const response = await request(app.getHttpServer())
+          .post(`/api/gas/reading/${id}/invoice`)
+          .field('invoiceGasPriceExVat', '1.25')
+          .attach('invoicePdf', pdf, {
+            filename: 'invoice.pdf',
+            contentType: 'application/pdf',
+          });
+
+        expect(response.status).toBe(400);
+        expect(uploadInvoice).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('DELETE /api/gas/reading/:id/invoice path ID (S-002)', () => {
@@ -359,6 +422,20 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(deleteInvoice).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        deleteInvoice.mockResolvedValue({ id: 17 });
+
+        const response = await request(app.getHttpServer()).delete(
+          `/api/gas/reading/${id}/invoice`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(deleteInvoice).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/gas/reading/:id/meter-image path ID (S-002)', () => {
@@ -395,6 +472,20 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(getMeterImageStream).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        getMeterImageStream.mockResolvedValue(meterResult());
+
+        const response = await request(app.getHttpServer()).get(
+          `/api/gas/reading/${id}/meter-image`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(getMeterImageStream).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/gas/reading/:id/invoice path ID (S-002)', () => {
@@ -431,6 +522,20 @@ describe('Gas controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(getInvoiceStream).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        getInvoiceStream.mockResolvedValue(invoiceResult());
+
+        const response = await request(app.getHttpServer()).get(
+          `/api/gas/reading/${id}/invoice`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(getInvoiceStream).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/gas/analysis query DTO (S-002)', () => {

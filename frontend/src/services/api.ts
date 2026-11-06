@@ -49,6 +49,10 @@ export class ApiClient {
   private cookieAuthEnabled = false;
   /** Jedan refresh za sve konkurentne 401 (sprječava lavinu zahtjeva). */
   private refreshInFlight: Promise<boolean> | null = null;
+  /** CSRF token za mutacije; dohvaća se lazily prilikom prvog potrebe. */
+  private csrfToken: string | null = null;
+  /** Dostupnost CSRF endpint-a (probijeno jednom, kad je neuspjelo, ne pokušava se ponovo). */
+  private csrfAvailable: boolean | null = null;
   /**
    * FE2-2: access token u **memoriji**, ne u `localStorage`.
    *
@@ -72,8 +76,8 @@ export class ApiClient {
       },
     });
 
-    // Request interceptor to add token
-    this.client.interceptors.request.use((config) => {
+    // Request interceptor to add token and CSRF header for mutations
+    this.client.interceptors.request.use(async (config) => {
       // FE2-2: čita se preko `getToken()`, koji poštuje zastavicu — memorija
       // kad je cookie tok uključen, `localStorage` kad nije.
       const token = this.getToken();
@@ -82,6 +86,21 @@ export class ApiClient {
       }
       // SEC-4: cookie se šalje samo kad backend to dozvoljava.
       config.withCredentials = this.cookieAuthEnabled;
+
+      // SEC-7: CSRF token za mutacije (POST/PUT/PATCH/DELETE), osim auth
+      // endpint-a koji CSRF nije zahtijevan (login, refresh, logout).
+      const method = (config.method ?? 'get').toUpperCase();
+      const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+      const isAuthRoute =
+        config.url?.includes('/auth/login') ||
+        config.url?.includes('/auth/refresh') ||
+        config.url?.includes('/auth/logout');
+      if (isMutation && !isAuthRoute) {
+        const csrf = await this.getCsrfToken();
+        if (csrf) {
+          config.headers['X-CSRF-Token'] = csrf;
+        }
+      }
       return config;
     });
 
@@ -251,6 +270,78 @@ export class ApiClient {
   async getAppConfig() {
     const response = await this.client.get('/app/config');
     return response.data;
+  }
+
+  /**
+   * Type-safe GET poziv. Generički tip T se primenjuje na `response.data`.
+   */
+  async get<T = unknown>(url: string, config?: any): Promise<T> {
+    const response = await this.client.get<T>(url, config);
+    return response.data;
+  }
+
+  /**
+   * Type-safe POST poziv.
+   */
+  async post<T = unknown>(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<T> {
+    const response = await this.client.post<T>(url, data, config);
+    return response.data;
+  }
+
+  /**
+   * Type-safe PUT poziv.
+   */
+  async put<T = unknown>(url: string, data?: any, config?: any): Promise<T> {
+    const response = await this.client.put<T>(url, data, config);
+    return response.data;
+  }
+
+  /**
+   * Type-safe PATCH poziv.
+   */
+  async patch<T = unknown>(
+    url: string,
+    data?: any,
+    config?: any,
+  ): Promise<T> {
+    const response = await this.client.patch<T>(url, data, config);
+    return response.data;
+  }
+
+  /**
+   * Type-safe DELETE poziv.
+   */
+  async delete<T = unknown>(url: string, config?: any): Promise<T> {
+    const response = await this.client.delete<T>(url, config);
+    return response.data;
+  }
+
+  /**
+   * SEC-7: dohvaća CSRF token sa backenda. Zasticen je jednoraznim provjeravanjem
+   * da li endpoint postoji; ako backend ne nudi csrf-token endpoint, brojanje se
+   * prestaje i header se ne salje (soft fail, bez preloma postojećeg ponašanja).
+   */
+  private async getCsrfToken(): Promise<string | null> {
+    if (this.csrfToken) return this.csrfToken;
+    if (this.csrfAvailable === false) return null;
+
+    try {
+      const response = await this.client.get('/auth/csrf-token');
+      const token = response.data?.csrfToken ?? response.data?.token;
+      if (typeof token === 'string' && token.length > 0) {
+        this.csrfToken = token;
+        this.csrfAvailable = true;
+        return token;
+      }
+    } catch {
+      // Endpoint ne postoji ili je nedostupan — CSRF se preskače.
+      this.csrfAvailable = false;
+    }
+    return null;
   }
 
   // Dashboard endpoints

@@ -48,7 +48,20 @@ function requireApiBaseUrl(): Plugin {
 export default defineConfig({
   plugins: [requireApiBaseUrl(), react()],
   server: {
-    port: 80
+    port: 80,
+    // SEC-4 / BFF obrazac: u developmentu Vite proxy-ja /api zahtjeve na
+    // backend (:3020) tako da frontend i API dele isti origin. Izbegava se
+    // CORS preflight za svaki poziv i browser automatski šalje httpOnly
+    // refresh cookie koji je postavio backend.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3020',
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:3020',
+        },
+      },
+    },
   },
   build: {
     /**

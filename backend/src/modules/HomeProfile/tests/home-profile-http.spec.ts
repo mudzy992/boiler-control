@@ -199,6 +199,54 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(update).toHaveBeenCalledWith(42, 17, validScalarBody);
     });
 
+    it('nullable update polja zadržavaju null, response i servisni argument', async () => {
+      const body = {
+        homeName: null,
+        location: null,
+        numberOfResidents: null,
+        boilerModel: null,
+        targetMorningTemp: null,
+        targetDayTemp: null,
+        targetNightTemp: null,
+        preferredScheduleNotes: null,
+      };
+      const profile = { id: 17, userId: 42, ...body };
+      update.mockResolvedValue(profile);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/home-profiles/17')
+        .send(body);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(profile);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, body);
+    });
+
+    it.each([
+      'floorArea',
+      'ceilingHeight',
+      'insulationType',
+      'insulationThickness',
+      'windowType',
+      'heatingType',
+      'constructionYear',
+      'hasFloorHeating',
+      'seasonMode',
+    ])(
+      'non-nullable update %s=null vraća 400 prije servisnog poziva',
+      async (field) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/home-profiles/17')
+          .send({ [field]: null });
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
+
     it.each([
       ['homeName', { ...validBody, homeName: 123456 }],
       ['location', { ...validBody, location: 123456 }],

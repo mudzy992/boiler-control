@@ -1,4 +1,11 @@
-import { IsEnum, IsOptional, IsString, IsInt, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ThermostatMode } from 'src/generated/prisma';
@@ -14,24 +21,24 @@ export class UpdateThermostatDeviceDto {
   alias?: string;
 
   @ApiPropertyOptional({ enum: ThermostatMode })
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsEnum(ThermostatMode)
   mode?: ThermostatMode;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsString()
   vendor?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsString()
   deviceId?: string;
 
   @ApiPropertyOptional({ minimum: 1 })
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsInt()
   @Min(1)

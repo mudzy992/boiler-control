@@ -190,11 +190,7 @@ describe('Notifications HTTP kompatibilnost', () => {
       expect(response.status).toBe(201);
       expect(response.body).toEqual(device);
       expect(registerToken).toHaveBeenCalledTimes(1);
-      expect(registerToken).toHaveBeenCalledWith(
-        42,
-        expoPushToken,
-        'android',
-      );
+      expect(registerToken).toHaveBeenCalledWith(42, expoPushToken, 'android');
     });
   });
 });

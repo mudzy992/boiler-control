@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Heating create deviceId positivity (2026-11-06)
+
+**STATUS: NEPOZITIVAN HEATING EVENT DEVICE ID ODBIJEN U KODU (`c3daea3`); CI ZELEN.** `deviceId: 0` i `-1` daju 400 u default i legacy režimu; valjani `1` zadržava default 501 i postojeći legacy 201 response.
+
+- Source review potvrđuje da raw-input transform i `@IsInt` nisu odbijali nepozitivan `deviceId`, iako je `ThermostatDevice.id` autoincrement. Raniji default 501 i legacy 201 nisu real-DB creation/ownership dokaz; POST i dalje ne upisuje event. Nije pronađen mobile/frontend POST consumer i klijentski kod nije mijenjan.
+- Test-only `fd53682` dodaje `0` i `-1` u oba režima. Baseline je **44/44**, repro **44 prošlo / 4 pala / 48**. Test-first CI `42223059092` ima backend **1034 prošlo / 4 pala / 1038**, integration **119/119**, mobile **136/136**, frontend **4/4** i `tsc/eslint: 0`; annotations sadrže tačno četiri ciljana failurea uz generički process-exit.
+- Fix `c3daea3` dodaje samo `@Min(1)` uz postojeći raw-input transform i `@IsInt`, uz Swagger `minimum: 1`. Controller, servis, ostala tri polja, `STUB_ENDPOINTS_MODE` i globalni ValidationPipe nisu mijenjani.
+- Lokalni cijeli suite je **48/48**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo jedan `deviceId minimum: 1`, a frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42223189956`:** sva tri joba success, backend **1038/1038**, integration **119/119**, mobile **136/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, nula failure annotations. Heating katalog je dopunjen bez novih ruta/markera; API zbir ostaje **78**, inventory **14/13/27**, Heating blok **30**, Weather blok **18**.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene ili novog flaga. Rollback production fixa i OpenAPI minimuma je revert `c3daea3`.
+- **Preostalo:** mock-controller nije real-DB event creation, ownership ili persistence dokaz. POST ostaje stub; temperaturni rasponi, stvarni device ownership/upis, preostali DTO zahtjevi, S-004/session revokacija i rollout ostaju otvoreni, a cijeli S-002 nije zatvoren.
+
 ### S-002 — Notification register-token whitespace-only validacija (2026-11-06)
 
 **STATUS: WHITESPACE-ONLY NOTIFICATION PUSH TOKEN ODBIJEN U KODU (`f557957`); CI ZELEN.** Mixed whitespace daje 400 prije servisa; padded string sa sadržajem zadržava 201, response i argumente bez trimminga.

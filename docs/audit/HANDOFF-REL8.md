@@ -3,6 +3,53 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Heating create deviceId positivity (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `fd53682`, fix `c3daea3`.**
+`origin/arena/c9961f17-boiler-control` je `c3daea3` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `4a58f0c`. PR nije otvaran.
+
+- Source review potvrđuje da je `CreateHeatingEventDto.deviceId` imao raw-input
+  transform i `@IsInt`, ali ne i `@Min(1)`, iako je `ThermostatDevice.id`
+  autoincrement. Nepozitivan ID je u default režimu dolazio do stub 501, a u
+  legacy režimu do 201 odgovora koji ga vraća uz izmišljeni event ID. Ruta i
+  dalje ne upisuje event; ovo nije real-DB creation ili ownership dokaz.
+- Nije pronađen mobile/frontend POST consumer za heating-events. Valjani
+  instalirani klijenti ostaju kompatibilni, a klijentski kod nije mijenjan.
+- Baseline cijelog stvarnog stub/controller/DTO HTTP suitea je **44/44**.
+  Test-only `fd53682` dodaje `deviceId: 0` i `-1` u oba režima. Repro je **44
+  prošlo / 4 pala / 48 ukupno**: default vraća 501, a legacy 201 umjesto 400.
+  Postojeće valjane `deviceId: 1` i Weather/stub kontrole prolaze.
+- **Test-first CI `42223059092`:** backend Jest summary je **1034 prošlo / 4
+  pala / 1038 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  **4/4**. Annotations sadrže tačno četiri ciljana failurea uz generički
+  process-exit; `tsc: 0`, `eslint: 0`.
+- Fix `c3daea3` dodaje samo `@Min(1)` uz postojeći raw-input transform i
+  `@IsInt`, uz Swagger `minimum: 1`. Controller, servis, ostala tri polja,
+  `STUB_ENDPOINTS_MODE` i globalni ValidationPipe nisu mijenjani.
+- Valjani `deviceId: 1` zadržava default 501 i legacy 201 s postojećim
+  responseom. Nepozitivan ID sada daje 400 u oba režima, dok missing/raw-tip/
+  null/extra greške i Weather scenariji ostaju nepromijenjeni. Nisu uvedeni
+  temperaturni rasponi, upis eventa, ownership provjera ili novi flag.
+- Lokalni cijeli suite prolazi **48/48**, a tačan CI ESLint opseg ima **0
+  errors / 2 poznata warnings**. OpenAPI generate/check dodaje tačno jedan
+  `deviceId minimum: 1`; frontend `openapi:check` i pravi `tsconfig.app`
+  type-check prolaze bez generated type diffa.
+- **Code CI `42223189956`:** sva tri joba su success, backend **1038/1038**,
+  integration **119/119**, mobile **136/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Katalog je dopunjen samo na postojećim Heating route/group/field redovima.
+  Controller i route markeri nisu mijenjani, API katalog ostaje na **78
+  redova**, inventory na **14/13/27**; Heating blok sada ima **30**, a Weather
+  nepromijenjenih **18** scenarija u zajedničkom suiteu.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene ni novog
+  flaga. Rollback production fixa i OpenAPI minimuma je revert `c3daea3`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz nije real-DB event creation,
+  ownership ili persistence dokaz. POST ostaje stub, temperaturni rasponi,
+  stvarni device ownership/upis, preostali DTO zahtjevi, S-004/session
+  revokacija i rollout ostaju otvoreni, a cijeli S-002 nije zatvoren.
+
 ## S-002 — Notification register-token whitespace-only validacija (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `12f6d9c`, format `44c2ed4`, fix `f557957`.**

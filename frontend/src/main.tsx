@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import App from './App.tsx';
 import { queryClient } from './lib/queryClient';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
 import './index.css';
 import './locales/config';
 

@@ -1,77 +1,9 @@
+@import './design/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   Design tokens — single source of truth (see src/design/tokens.css)
-   ========================================================================== */
-:root {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-muted: #f3f4f6;
-  --border: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
-
-  /* shadcn/ui CSS varijable — WCAG 2.2 AA kompatibilni kontrast (4.5:1) */
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
-  --radius: 0.5rem;
-}
-
-html.dark {
-  --bg: #0b0f1a;
-  --surface: #1e293b;
-  --surface-muted: #0f172a;
-  --border: #334155;
-  --text-primary: #e5e7eb;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #64748b;
-
-  /* shadcn/ui CSS varijable — dark mod */
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
-  --radius: 0.5rem;
-}
-
-/* ==========================================================================
-   Base reset
-   ========================================================================== */
 *,
 *::before,
 *::after {
@@ -95,43 +27,15 @@ body {
   font-weight: var(--font-weight-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: rgb(var(--surface-muted));
+  background-color: rgb(var(--bg));
   color: rgb(var(--text-primary));
 }
 
-/* Utility: apply semantic color rgb() to arbitrary props via style= or inline */
-.text-primary {
-  color: rgb(var(--text-primary));
-}
-.text-secondary {
-  color: rgb(var(--text-secondary));
-}
-.text-tertiary {
-  color: rgb(var(--text-tertiary));
-}
-.text-inverse {
-  color: rgb(var(--text-inverse));
-}
-.bg-surface {
-  background-color: rgb(var(--surface));
-}
-.bg-surface-muted {
-  background-color: rgb(var(--surface-muted));
-}
-.bg-surface-elevated {
-  background-color: rgb(var(--surface-elevated));
-}
-.border-color {
-  border-color: rgb(var(--border));
-}
-
-/* Focus ring — accessible, visible in both modes */
 *:focus-visible {
   outline: 2px solid rgb(var(--brand));
   outline-offset: 2px;
 }
 
-/* Skip link for keyboard users */
 .skip-link {
   position: absolute;
   top: -10000px;
@@ -144,7 +48,19 @@ body {
   text-decoration: none;
   font-weight: var(--font-weight-semibold);
 }
+
 .skip-link:focus {
   top: var(--space-4);
   left: var(--space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

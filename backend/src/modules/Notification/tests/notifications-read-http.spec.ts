@@ -150,5 +150,16 @@ describe('Notifications HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(registerToken).not.toHaveBeenCalled();
     });
+
+    it('prazan token vraća 400 prije servisnog poziva', async () => {
+      registerToken.mockResolvedValue({ id: 12, userId: 42 });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/notifications/register-token')
+        .send({ expoPushToken: '', platform: 'android' });
+
+      expect(response.status).toBe(400);
+      expect(registerToken).not.toHaveBeenCalled();
+    });
   });
 });

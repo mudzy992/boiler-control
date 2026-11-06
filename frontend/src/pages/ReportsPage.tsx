@@ -1,14 +1,18 @@
-import React, { useEffect } from 'react';
-import { Card, Table, Spin, message } from 'antd';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
 import { queryKeys } from '../lib/queryKeys';
 import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
+import { Button, Card } from '../components/index';
+import { useTranslation } from 'react-i18next';
 import type { components } from '../types/api';
 
 type Recommendation = components['schemas']['RecommendationResponseDto'];
 
 export const ReportsPage: React.FC = () => {
+  const { t } = useTranslation();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
   // FE2-3: React Query instead of manual useEffect fetch.
   const { data: recommendations = [], isLoading: loading, error } = useQuery({
     queryKey: queryKeys.reports,
@@ -18,70 +22,100 @@ export const ReportsPage: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    if (error) message.error('Failed to load recommendations');
-  }, [error]);
-
-  const columns = [
-    {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
-      render: (value: string) => new Date(value).toLocaleDateString(),
-    },
-    {
-      title: 'Flow Temp',
-      dataIndex: 'recommendedFlowTemp',
-      key: 'recommendedFlowTemp',
-      render: (value: number) => `${value.toFixed(1)}°C`,
-    },
-    {
-      title: 'Expected Heat Time',
-      dataIndex: 'expectedHeatTimeMin',
-      key: 'expectedHeatTimeMin',
-      render: (value: number) => `${value.toFixed(0)} min`,
-    },
-    {
-      title: 'Confidence',
-      dataIndex: 'confidenceScore',
-      key: 'confidenceScore',
-      render: (value: number) => `${Math.round(value * 100)}%`,
-    },
-  ];
+  if (error) {
+    console.error('Failed to load recommendations:', error);
+  }
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Spin size="large" />
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
       </div>
     );
   }
 
+  const toggleRow = (id: number) => {
+    setExpandedId((current) => (current === id ? null : id));
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="content">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Reports</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Daily recommendations generated from your heating profile.
+        <h1 className="text-2xl font-semibold text-text-primary">
+          {t('reports.title')}
+        </h1>
+        <p className="text-sm text-text-secondary mt-1">
+          {t('reports.subtitle')}
         </p>
       </div>
-      <Card className="shadow-sm" title="Recommendations">
-          <Table
-            rowKey="id"
-            dataSource={recommendations}
-            columns={columns}
-            pagination={{ pageSize: 8 }}
-            expandable={{
-              rowExpandable: (record) => Boolean(record.breakdown),
-              expandedRowRender: (record) => (
-                <RecommendationBreakdown breakdown={record.breakdown} />
-              ),
-            }}
-            // FE2-13 (FE-021): bez scroll={{ x }} tabela prelijeva na uskim ekranima,
-            // a `overflow-x: hidden` na body-u to prelijevanje tiho odsjeca.
-            scroll={{ x: 'max-content' }}
-          />
+
+      <Card padding="md" elevated>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-border dark:divide-dark-border">
+            <thead className="bg-surface-muted text-xs text-text-secondary dark:bg-dark-surface-muted dark:text-dark-text-secondary">
+              <tr>
+                <th className="px-4 py-3 text-left">Date</th>
+                <th className="px-4 py-3 text-left">Flow Temp</th>
+                <th className="px-4 py-3 text-left">Expected Heat Time</th>
+                <th className="px-4 py-3 text-left">Confidence</th>
+                <th className="px-4 py-3 text-left">Details</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-text-primary divide-y divide-border dark:divide-dark-border">
+              {recommendations.map((record) => {
+                const expanded = expandedId === record.id;
+                return (
+                  <React.Fragment key={record.id}>
+                    <tr className="hover:bg-surface-muted dark:hover:bg-dark-surface-muted transition-colors duration-150">
+                      <td className="px-4 py-3">
+                        {new Date(record.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        {record.recommendedFlowTemp.toFixed(1)}°C
+                      </td>
+                      <td className="px-4 py-3">
+                        {record.expectedHeatTimeMin.toFixed(0)} min
+                      </td>
+                      <td className="px-4 py-3">
+                        {Math.round(record.confidenceScore * 100)}%
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleRow(record.id)}
+                          aria-expanded={expanded}
+                        >
+                          {expanded ? t('reports.hideDetails') : t('reports.showDetails')}
+                        </Button>
+                      </td>
+                    </tr>
+                    {expanded && record.breakdown && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-3">
+                          <RecommendationBreakdown
+                            breakdown={record.breakdown}
+                            title={`${t('reports.title')} — ${new Date(record.date).toLocaleDateString()}`}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {recommendations.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-text-tertiary">
+                    {t('reports.noData')}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );
 };
+
+ReportsPage.displayName = 'ReportsPage';

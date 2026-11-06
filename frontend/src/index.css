@@ -2,43 +2,142 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Design tokens — single source of truth (see src/design/tokens.css)
+   ========================================================================== */
 :root {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-muted: #f3f4f6;
-  --border: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
+  /* Brand */
+  --brand: 255 107 61;
+  --brand-600: 234 88 12;
+  --brand-700: 194 65 12;
+  --brand-50: 254 242 240;
+  --brand-100: 253 224 210;
+  --brand-900: 120 43 8;
+
+  /* Surface & text — light */
+  --surface: 255 255 255;
+  --surface-muted: 248 250 252;
+  --surface-elevated: 255 255 255;
+  --border: 226 232 240;
+  --border-soft: 241 245 249;
+  --text-primary: 15 23 42;
+  --text-secondary: 71 85 105;
+  --text-tertiary: 100 116 139;
+  --text-inverse: 247 250 252;
+
+  /* Semantic — light */
+  --success: 16 185 129;
+  --success-light: 232 245 239;
+  --success-dark: 6 78 59;
+  --warning: 245 158 11;
+  --warning-light: 255 251 235;
+  --warning-dark: 120 53 15;
+  --error: 239 68 68;
+  --error-light: 254 242 242;
+  --error-dark: 127 29 29;
+  --info: 59 130 246;
+  --info-light: 239 246 255;
+  --info-dark: 30 58 138;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas,
+    'Liberation Mono', Menlo, monospace;
+
+  --text-xs: 0.75rem;
+  --text-xs-lh: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm-lh: 1.25rem;
+  --text-base: 1rem;
+  --text-base-lh: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg-lh: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl-lh: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl-lh: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl-lh: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl-lh: 2.5rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html.dark {
-  --bg: #0b0f1a;
-  --surface: #1e293b;
-  --surface-muted: #0f172a;
-  --border: #334155;
-  --text-primary: #e5e7eb;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #64748b;
+  /* Surface & text — dark */
+  --surface: 9 11 18;
+  --surface-muted: 15 18 28;
+  --surface-elevated: 15 23 42;
+  --border: 47 58 77;
+  --border-soft: 30 36 50;
+  --text-primary: 241 245 249;
+  --text-secondary: 156 163 175;
+  --text-tertiary: 94 102 121;
+  --text-inverse: 15 23 42;
+
+  /* Semantic — dark */
+  --success: 34 197 94;
+  --success-light: 20 83 63;
+  --success-dark: 74 153 111;
+  --warning: 251 146 60;
+  --warning-light: 74 36 6;
+  --warning-dark: 178 92 27;
+  --error: 248 113 113;
+  --error-light: 82 25 25;
+  --error-dark: 162 43 43;
+  --info: 96 165 250;
+  --info-light: 29 58 116;
+  --info-dark: 47 88 173;
 }
 
-*, *::before, *::after {
+/* ==========================================================================
+   Base reset
+   ========================================================================== */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-/*
-  FE2-13 (FE-021): `overflow-x: hidden` je ranije tiho odsijecao tabele koje
-  prelijevaju na uskim ekranima — korisnik nije vidio dio kolona niti znao da
-  postoji jos. Tabele sada imaju `scroll={{ x: 'max-content' }}`, pa svaka
-  dobija VLASTITI skrol kontejner (`.ant-table-content { overflow: auto }`) i
-  ova maska ih vise ne sakriva.
-
-  Pravilo je zadrzano namjerno: sprjecava horizontalni scrollbar iz sitnih
-  prelijevanja margina/paddinga. Njegovo potpuno uklanjanje zahtijeva vizuelnu
-  provjeru na 360 px, a to u ovom okruzenju nije moguce (Playwright/Chromium
-  download nije dostupan) — vidi FE2-13 u docs/audit/STATUS.md.
-*/
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -47,11 +146,62 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--text-base-lh);
+  font-weight: var(--font-weight-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--bg);
-  color: var(--text-primary);
+  background-color: rgb(var(--surface-muted));
+  color: rgb(var(--text-primary));
+}
+
+/* Utility: apply semantic color rgb() to arbitrary props via style= or inline */
+.text-primary {
+  color: rgb(var(--text-primary));
+}
+.text-secondary {
+  color: rgb(var(--text-secondary));
+}
+.text-tertiary {
+  color: rgb(var(--text-tertiary));
+}
+.text-inverse {
+  color: rgb(var(--text-inverse));
+}
+.bg-surface {
+  background-color: rgb(var(--surface));
+}
+.bg-surface-muted {
+  background-color: rgb(var(--surface-muted));
+}
+.bg-surface-elevated {
+  background-color: rgb(var(--surface-elevated));
+}
+.border-color {
+  border-color: rgb(var(--border));
+}
+
+/* Focus ring — accessible, visible in both modes */
+*:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -10000px;
+  left: 0;
+  z-index: var(--z-tooltip);
+  padding: var(--space-3) var(--space-4);
+  background: rgb(var(--brand));
+  color: rgb(var(--text-inverse));
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+}
+.skip-link:focus {
+  top: var(--space-4);
+  left: var(--space-4);
 }

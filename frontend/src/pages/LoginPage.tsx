@@ -1,64 +1,77 @@
-import React from 'react';
-import { Form, Input, Button, Card, message, Spin } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Card, Button, Input } from '../components/index';
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation();
-  const [form] = Form.useForm();
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  const onFinish = async (values: { identifier: string; password: string }) => {
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitError, setSubmitError] = useState('');
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError('');
     try {
-      await login(values.identifier, values.password);
-      message.success(t('auth.loginSuccess'));
+      await login(identifier, password);
       navigate('/dashboard');
-    } catch (error) {
-      message.error(t('auth.loginError'));
+    } catch {
+      setSubmitError(t('auth.loginError'));
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-orange-50 px-6 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="flex min-h-screen items-center justify-center px-6">
+      <Card padding="md" elevated className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">🔥 Boiler Control</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('auth.loginTitle')}</p>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            🔥 Boiler Control
+          </h1>
+          <p className="text-sm text-text-secondary mt-1">
+            {t('auth.loginTitle')}
+          </p>
         </div>
 
-        <Spin spinning={isLoading}>
-          <Form form={form} onFinish={onFinish} layout="vertical">
-            <Form.Item
-              name="identifier"
-              rules={[
-                { required: true, message: t('auth.identifierRequired') },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined />}
-                placeholder={t('auth.emailOrUsernamePlaceholder')}
-                size="large"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: t('auth.passwordRequired') }]}
-            >
-              <Input.Password prefix={<LockOutlined />} placeholder={t('auth.password')} size="large" />
-            </Form.Item>
-
-            <Form.Item>
-              <Button type="primary" htmlType="submit" block size="large" loading={isLoading}>
-                {t('auth.signIn')}
-              </Button>
-            </Form.Item>
-          </Form>
-        </Spin>
+        <form onSubmit={onSubmit} className="space-y-4">
+          {submitError && (
+            <div className="p-3 rounded-lg border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
+              {submitError}
+            </div>
+          )}
+          <Input
+            label={t('auth.emailOrUsername')}
+            placeholder={t('auth.emailOrUsernamePlaceholder')}
+            id="login-identifier"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            disabled={isLoading}
+          />
+          <Input
+            label={t('auth.password')}
+            placeholder={t('auth.password')}
+            type="password"
+            id="login-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+          />
+          <Button
+            variant="primary"
+            type="submit"
+            isLoading={isLoading}
+            disabled={isLoading}
+            fullWidth
+          >
+            {t('auth.signIn')}
+          </Button>
+        </form>
       </Card>
     </div>
   );
 };
+
+LoginPage.displayName = 'LoginPage';

@@ -1,21 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Switch,
-  Button,
-  Row,
-  Col,
-  message,
-  Spin,
-} from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../services/api';
-// FE2-1: CreateHomeProfileDto i UpdateHomeProfileDto su uklonjeni — bili su
-// uvezeni ali nikad korišteni (noUnusedLocals ih prijavljuje kao TS6196).
-import type { HomeProfileResponse } from '../types/homeProfile';
+import { Card, Button, Input, InputNumber } from '../components/index';
+import { useTranslation } from 'react-i18next';
+import type {
+  CreateHomeProfileDto,
+  HomeProfileResponse,
+} from '../types/homeProfile';
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,
@@ -26,235 +16,479 @@ import {
 } from '../constants/homeProfileEnums';
 
 interface HomeProfileFormValues {
-  homeName?: string;
-  floorArea: number;
-  ceilingHeight: number;
+  homeName: string;
+  floorArea: number | undefined;
+  ceilingHeight: number | undefined;
   insulationType: InsulationType;
-  insulationThickness: number;
+  insulationThickness: number | undefined;
   windowType: WindowType;
   heatingType: HeatingType;
-  constructionYear: number;
-  numberOfResidents?: number;
-  boilerModel?: string;
-  hasFloorHeating?: boolean;
-  targetMorningTemp: number;
-  targetDayTemp: number;
-  targetNightTemp: number;
-  preferredScheduleNotes?: string;
+  constructionYear: number | undefined;
+  numberOfResidents: number | undefined;
+  boilerModel: string;
+  hasFloorHeating: boolean;
+  targetMorningTemp: number | undefined;
+  targetDayTemp: number | undefined;
+  targetNightTemp: number | undefined;
+  preferredScheduleNotes: string;
 }
 
+const EMPTY_VALUES: HomeProfileFormValues = {
+  homeName: '',
+  floorArea: undefined,
+  ceilingHeight: undefined,
+  insulationType: InsulationType.STANDARD,
+  insulationThickness: undefined,
+  windowType: WindowType.DOUBLE_GLAZED,
+  heatingType: HeatingType.RADIATOR,
+  constructionYear: undefined,
+  numberOfResidents: undefined,
+  boilerModel: '',
+  hasFloorHeating: false,
+  targetMorningTemp: undefined,
+  targetDayTemp: undefined,
+  targetNightTemp: undefined,
+  preferredScheduleNotes: '',
+};
+
 export const HomeProfilePage: React.FC = () => {
-  const [form] = Form.useForm<HomeProfileFormValues>();
+  const { t } = useTranslation();
+  const [profile, setProfile] = useState<HomeProfileResponse | null>(null);
+  const [form, setForm] = useState<HomeProfileFormValues>(EMPTY_VALUES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profileId, setProfileId] = useState<number | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'ok' | 'error'>('idle');
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const response = await apiClient.getHomeProfile();
         if (response) {
-          const profile = response as HomeProfileResponse;
-          setProfileId(profile.id);
-          form.setFieldsValue({
-            homeName: profile.homeName,
-            floorArea: profile.floorArea,
-            ceilingHeight: profile.ceilingHeight,
-            insulationType: profile.insulationType,
-            insulationThickness: profile.insulationThickness,
-            windowType: profile.windowType,
-            heatingType: profile.heatingType,
-            constructionYear: profile.constructionYear,
-            numberOfResidents: profile.numberOfResidents,
-            boilerModel: profile.boilerModel,
-            hasFloorHeating: profile.hasFloorHeating ?? false,
-            targetMorningTemp: profile.targetMorningTemp ?? 20,
-            targetDayTemp: profile.targetDayTemp ?? 21,
-            targetNightTemp: profile.targetNightTemp ?? 18,
-            preferredScheduleNotes: profile.preferredScheduleNotes,
+          const loaded = response as HomeProfileResponse;
+          setProfile(loaded);
+          setForm({
+            homeName: loaded.homeName ?? '',
+            floorArea: loaded.floorArea,
+            ceilingHeight: loaded.ceilingHeight,
+            insulationType: loaded.insulationType ?? InsulationType.STANDARD,
+            insulationThickness: loaded.insulationThickness,
+            windowType: loaded.windowType ?? WindowType.DOUBLE_GLAZED,
+            heatingType: loaded.heatingType ?? HeatingType.RADIATOR,
+            constructionYear: loaded.constructionYear,
+            numberOfResidents: loaded.numberOfResidents,
+            boilerModel: loaded.boilerModel ?? '',
+            hasFloorHeating: loaded.hasFloorHeating ?? false,
+            targetMorningTemp: loaded.targetMorningTemp,
+            targetDayTemp: loaded.targetDayTemp,
+            targetNightTemp: loaded.targetNightTemp,
+            preferredScheduleNotes: loaded.preferredScheduleNotes ?? '',
           });
         }
       } catch (error) {
-        message.error('Failed to load home profile');
+        console.error('Failed to load home profile:', error);
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [form]);
+  }, []);
 
-  const handleSubmit = async (values: HomeProfileFormValues) => {
-    try {
-      setSaving(true);
-      if (profileId) {
-        await apiClient.updateHomeProfile(profileId, values);
-        message.success('Home profile updated successfully');
-      } else {
-        const created = await apiClient.createHomeProfile(values);
-        setProfileId(created.id);
-        message.success('Home profile created successfully');
+  const handleChange = useCallback(
+    (
+      field: keyof HomeProfileFormValues,
+      value: string | number | boolean | undefined,
+    ) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setSaveStatus('idle');
+    },
+    [],
+  );
+
+  const validate = useCallback(() => {
+    const next: Record<string, string> = {};
+    const required: Record<string, string> = {
+      homeName: t('homeProfile.homeName'),
+      floorArea: t('homeProfile.floorArea'),
+      ceilingHeight: t('homeProfile.ceilingHeight'),
+      constructionYear: t('homeProfile.constructionYear'),
+      insulationType: t('homeProfile.insulationType'),
+      windowType: t('homeProfile.windowType'),
+      heatingType: t('homeProfile.heatingType'),
+    };
+
+    Object.entries(required).forEach(([field, label]) => {
+      const value = form[field as keyof HomeProfileFormValues];
+      if (value === '' || value === undefined || value === null) {
+        next[field] = `${label} je obavezno`;
       }
+    });
+
+    const ranges: Array<[string, number, number]> = [
+      ['floorArea', 10, 2000],
+      ['ceilingHeight', 2, 5],
+      ['constructionYear', 1800, 2100],
+      ['insulationThickness', 0, 50],
+      ['numberOfResidents', 1, 20],
+      ['targetMorningTemp', 5, 30],
+      ['targetDayTemp', 5, 30],
+      ['targetNightTemp', 5, 30],
+    ];
+    ranges.forEach(([field, min, max]) => {
+      const value = form[field as keyof HomeProfileFormValues] as
+        | number
+        | undefined;
+      if (value !== undefined && (value < min || value > max)) {
+        next[field] = t('homeProfile.outOfRange', { min, max });
+      }
+    });
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }, [form, t]);
+
+  const onSubmit = useCallback(async () => {
+    if (!validate()) return;
+    setSaving(true);
+    setSaveStatus('idle');
+    try {
+      const payload = {
+        ...form,
+        insulationType: form.insulationType,
+        windowType: form.windowType,
+        heatingType: form.heatingType,
+      };
+      if (profile?.id) {
+        await apiClient.updateHomeProfile(profile.id, payload);
+      } else {
+        await apiClient.createHomeProfile(payload as CreateHomeProfileDto);
+      }
+      setSaveStatus('ok');
     } catch (error) {
-      message.error('Failed to save home profile');
+      console.error('Failed to save home profile:', error);
+      setSaveStatus('error');
     } finally {
       setSaving(false);
     }
-  };
+  }, [form, profile, validate]);
+
+  const isDirty = useMemo(() => {
+    if (!profile) return false;
+    return (
+      form.homeName !== profile.homeName ||
+      form.floorArea !== profile.floorArea ||
+      form.ceilingHeight !== profile.ceilingHeight ||
+      form.insulationType !== profile.insulationType ||
+      form.insulationThickness !== profile.insulationThickness ||
+      form.windowType !== profile.windowType ||
+      form.heatingType !== profile.heatingType ||
+      form.constructionYear !== profile.constructionYear ||
+      form.numberOfResidents !== profile.numberOfResidents ||
+      form.boilerModel !== profile.boilerModel ||
+      form.hasFloorHeating !== profile.hasFloorHeating ||
+      form.targetMorningTemp !== profile.targetMorningTemp ||
+      form.targetDayTemp !== profile.targetDayTemp ||
+      form.targetNightTemp !== profile.targetNightTemp ||
+      form.preferredScheduleNotes !== profile.preferredScheduleNotes
+    );
+  }, [form, profile]);
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Spin size="large" />
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="content">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Home Profile</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Manage your home details to improve heating recommendations.
+        <h1 className="text-2xl font-semibold text-text-primary">
+          {t('homeProfile.title')}
+        </h1>
+        <p className="text-sm text-text-secondary mt-1">
+          {t('homeProfile.subtitle')}
         </p>
       </div>
 
-      <Card className="shadow-sm" title="Home Profile Details">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            floorArea: 100,
-            ceilingHeight: 2.6,
-            insulationType: InsulationType.STANDARD,
-            insulationThickness: 10,
-            windowType: WindowType.DOUBLE_GLAZED,
-            heatingType: HeatingType.RADIATOR,
-            constructionYear: new Date().getFullYear(),
-            hasFloorHeating: false,
-            targetMorningTemp: 22,
-            targetDayTemp: 20,
-            targetNightTemp: 18,
-          }}
-        >
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <Form.Item name="homeName" label="Home Name">
-                <Input placeholder="My Home" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="floorArea"
-                label="Floor Area (m²)"
-                rules={[{ required: true, type: 'number', min: 10, max: 2000 }]}
-              >
-                <InputNumber className="w-full" min={10} max={2000} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="ceilingHeight"
-                label="Ceiling Height (m)"
-                rules={[{ required: true, type: 'number', min: 2.0, max: 5.0 }]}
-              >
-                <InputNumber className="w-full" min={2.0} max={5.0} step={0.1} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="constructionYear"
-                label="Construction Year"
-                rules={[{ required: true, type: 'number', min: 1800, max: 2100 }]}
-              >
-                <InputNumber className="w-full" min={1800} max={2100} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="insulationType" label="Insulation Type" rules={[{ required: true }]}>
-                <Select options={INSULATION_TYPE_OPTIONS} placeholder="Select insulation type" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="insulationThickness"
-                label="Insulation Thickness (cm)"
-                rules={[{ required: true, type: 'number', min: 0, max: 50 }]}
-              >
-                <InputNumber className="w-full" min={0} max={50} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="windowType" label="Window Type" rules={[{ required: true }]}>
-                <Select options={WINDOW_TYPE_OPTIONS} placeholder="Select window type" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="heatingType" label="Heating Type" rules={[{ required: true }]}>
-                <Select options={HEATING_TYPE_OPTIONS} placeholder="Select heating type" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="numberOfResidents"
-                label="Number of Residents"
-                rules={[{ type: 'number', min: 1, max: 20 }]}
-              >
-                <InputNumber className="w-full" min={1} max={20} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="boilerModel" label="Boiler Model">
-                <Input placeholder="Boiler model" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="hasFloorHeating" label="Has Floor Heating" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="targetMorningTemp"
-                label="Target Morning Temp (°C)"
-                rules={[{ type: 'number', min: 5, max: 30 }]}
-              >
-                <InputNumber className="w-full" min={5} max={30} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="targetDayTemp"
-                label="Target Day Temp (°C)"
-                rules={[{ type: 'number', min: 5, max: 30 }]}
-              >
-                <InputNumber className="w-full" min={5} max={30} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="targetNightTemp"
-                label="Target Night Temp (°C)"
-                rules={[{ type: 'number', min: 5, max: 30 }]}
-              >
-                <InputNumber className="w-full" min={5} max={30} />
-              </Form.Item>
-            </Col>
-            <Col xs={24}>
-              <Form.Item name="preferredScheduleNotes" label="Preferred Schedule Notes">
-                <Input.TextArea rows={3} placeholder="Optional notes about preferred schedule" />
-              </Form.Item>
-            </Col>
-          </Row>
+      {saveStatus === 'ok' && (
+        <div className="p-3 rounded-lg border border-success bg-success-50 text-success-700 dark:border-success dark:bg-success-900/20 dark:text-success-100 text-sm">
+          {t('homeProfile.saveSuccess')}
+        </div>
+      )}
+      {saveStatus === 'error' && (
+        <div className="p-3 rounded-lg border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
+          {t('homeProfile.saveError')}
+        </div>
+      )}
 
-          <div className="flex justify-end">
-            <Button type="primary" htmlType="submit" loading={saving}>
-              Save Changes
-            </Button>
+      <Card padding="md" elevated>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Input
+            label={t('homeProfile.homeName')}
+            placeholder="My Home"
+            id="home-profile-home-name"
+            value={form.homeName}
+            error={errors.homeName}
+            onChange={(e) => handleChange('homeName', e.target.value)}
+            disabled={saving}
+          />
+          <InputNumber
+            label={t('homeProfile.floorArea')}
+            placeholder="100"
+            id="home-profile-floor-area"
+            value={form.floorArea}
+            min={10}
+            max={2000}
+            error={errors.floorArea}
+            onChange={(value) =>
+              handleChange(
+                'floorArea',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+          <InputNumber
+            label={t('homeProfile.ceilingHeight')}
+            placeholder="2.6"
+            id="home-profile-ceiling-height"
+            value={form.ceilingHeight}
+            min={2}
+            max={5}
+            step={0.1}
+            precision={1}
+            error={errors.ceilingHeight}
+            onChange={(value) =>
+              handleChange(
+                'ceilingHeight',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+            <InputNumber
+              label={t('homeProfile.constructionYear')}
+              placeholder={String(new Date().getFullYear())}
+            id="home-profile-construction-year"
+            value={form.constructionYear}
+            min={1800}
+            max={2100}
+            error={errors.constructionYear}
+            onChange={(value) =>
+              handleChange(
+                'constructionYear',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+          <div className="col-span-2 md:col-span-1">
+            <label className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1">
+              {t('homeProfile.insulationType')}
+            </label>
+            <select
+              id="home-profile-insulation-type"
+              value={form.insulationType}
+              onChange={(e) =>
+                handleChange('insulationType', e.target.value as InsulationType)
+              }
+              disabled={saving}
+              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+            >
+              {INSULATION_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {errors.insulationType && (
+              <p className="mt-1 text-sm text-error dark:text-dark-error">
+                {errors.insulationType}
+              </p>
+            )}
           </div>
-        </Form>
+          <InputNumber
+            label={t('homeProfile.insulationThickness')}
+            placeholder="10"
+            id="home-profile-insulation-thickness"
+            value={form.insulationThickness}
+            min={0}
+            max={50}
+            error={errors.insulationThickness}
+            onChange={(value) =>
+              handleChange(
+                'insulationThickness',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+          <div className="col-span-2 md:col-span-1">
+            <label className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1">
+              {t('homeProfile.windowType')}
+            </label>
+            <select
+              id="home-profile-window-type"
+              value={form.windowType}
+              onChange={(e) =>
+                handleChange('windowType', e.target.value as WindowType)
+              }
+              disabled={saving}
+              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+            >
+              {WINDOW_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {errors.windowType && (
+              <p className="mt-1 text-sm text-error dark:text-dark-error">
+                {errors.windowType}
+              </p>
+            )}
+          </div>
+          <div className="col-span-2 md:col-span-1">
+            <label className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1">
+              {t('homeProfile.heatingType')}
+            </label>
+            <select
+              id="home-profile-heating-type"
+              value={form.heatingType}
+              onChange={(e) =>
+                handleChange('heatingType', e.target.value as HeatingType)
+              }
+              disabled={saving}
+              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+            >
+              {HEATING_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {errors.heatingType && (
+              <p className="mt-1 text-sm text-error dark:text-dark-error">
+                {errors.heatingType}
+              </p>
+            )}
+          </div>
+          <InputNumber
+            label={t('homeProfile.numberOfResidents')}
+            placeholder="1"
+            id="home-profile-number-of-residents"
+            value={form.numberOfResidents}
+            min={1}
+            max={20}
+            error={errors.numberOfResidents}
+            onChange={(value) =>
+              handleChange(
+                'numberOfResidents',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+          <Input
+            label={t('homeProfile.boilerModel')}
+            placeholder="Boiler model"
+            id="home-profile-boiler-model"
+            value={form.boilerModel}
+            error={errors.boilerModel}
+            onChange={(e) => handleChange('boilerModel', e.target.value)}
+            disabled={saving}
+          />
+          <div className="col-span-2 md:col-span-1 flex items-end">
+            <label className="mr-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+              {t('homeProfile.hasFloorHeating')}
+            </label>
+            <input
+              type="checkbox"
+              id="home-profile-has-floor-heating"
+              checked={form.hasFloorHeating}
+              onChange={(e) => handleChange('hasFloorHeating', e.target.checked)}
+              disabled={saving}
+              className="rounded border-border text-brand focus:ring-brand dark:border-dark-border dark:text-dark-text-primary"
+            />
+          </div>
+          <InputNumber
+            label={t('homeProfile.targetMorningTemp')}
+            placeholder="22"
+            id="home-profile-target-morning-temp"
+            value={form.targetMorningTemp}
+            min={5}
+            max={30}
+            error={errors.targetMorningTemp}
+            onChange={(value) =>
+              handleChange(
+                'targetMorningTemp',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+          <InputNumber
+            label={t('homeProfile.targetDayTemp')}
+            placeholder="20"
+            id="home-profile-target-day-temp"
+            value={form.targetDayTemp}
+            min={5}
+            max={30}
+            error={errors.targetDayTemp}
+            onChange={(value) =>
+              handleChange('targetDayTemp', typeof value === 'number' ? value : undefined)
+            }
+            disabled={saving}
+          />
+          <InputNumber
+            label={t('homeProfile.targetNightTemp')}
+            placeholder="18"
+            id="home-profile-target-night-temp"
+            value={form.targetNightTemp}
+            min={5}
+            max={30}
+            error={errors.targetNightTemp}
+            onChange={(value) =>
+              handleChange(
+                'targetNightTemp',
+                typeof value === 'number' ? value : undefined,
+              )
+            }
+            disabled={saving}
+          />
+          <div className="col-span-full">
+            <Input
+              label={t('homeProfile.preferredScheduleNotes')}
+              placeholder="Optional notes about preferred schedule"
+              id="home-profile-preferred-schedule-notes"
+              value={form.preferredScheduleNotes}
+              error={errors.preferredScheduleNotes}
+              onChange={(e) =>
+                handleChange('preferredScheduleNotes', e.target.value)
+              }
+              disabled={saving}
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <Button
+            variant="primary"
+            onClick={onSubmit}
+            isLoading={saving}
+            disabled={saving || !isDirty}
+          >
+            {t('homeProfile.saveChanges')}
+          </Button>
+        </div>
       </Card>
     </div>
   );
 };
+
+HomeProfilePage.displayName = 'HomeProfilePage';

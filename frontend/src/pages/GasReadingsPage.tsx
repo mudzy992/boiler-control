@@ -1,22 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { message } from 'antd';
 import { apiClient } from '../services/api';
 import { useGasReadingsQuery } from '../hooks/useGasQueries';
 import { queryKeys } from '../lib/queryKeys';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { GasForm } from '../components/GasForm';
-import { Button, message } from 'antd';
+import { Button, Card } from '../components/index';
 import { useTranslation } from 'react-i18next';
 
 export const GasReadingsPage: React.FC = () => {
   const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const queryClient = useQueryClient();
-  // FE2-2: `const token = localStorage.getItem('token')` je uklonjeno. Auth
-  // sloj je sada u `apiClient` (token u memoriji kad je cookie tok uključen),
-  // pa stranica više ne čita token direktno — vidi `openProtectedFile` ispod.
 
+  // FE2-2: auth sloj je u `apiClient`; stranica više ne čita token direktno.
   // FE2-3: shared gas readings cache with GasAnalyticsPage.
   const { data: readings = [], isLoading, error } = useGasReadingsQuery();
 
@@ -137,7 +136,10 @@ export const GasReadingsPage: React.FC = () => {
       const file = input.files?.[0];
       if (!file) return;
       try {
-        await invoiceUploadMutation.mutateAsync({ id: readingId, invoicePdf: file });
+        await invoiceUploadMutation.mutateAsync({
+          id: readingId,
+          invoicePdf: file,
+        });
       } catch {
         message.error(t('gas.invoiceUploadError'));
       }
@@ -164,7 +166,7 @@ export const GasReadingsPage: React.FC = () => {
   // Sort readings (newest first)
   const sortedReadings = useMemo(() => {
     return [...readings].sort((a, b) =>
-      dayjs(b.readingDate).diff(dayjs(a.readingDate))
+      dayjs(b.readingDate).diff(dayjs(a.readingDate)),
     );
   }, [readings]);
 
@@ -192,99 +194,96 @@ export const GasReadingsPage: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const allPending =
+    deleteMutation.isPending ||
+    referenceMutation.isPending ||
+    meterImageUploadMutation.isPending ||
+    invoiceUploadMutation.isPending ||
+    invoiceDeleteMutation.isPending;
+
   if (error) {
     return (
-      <div className="p-6 text-red-600 rounded-lg bg-red-50 dark:bg-red-900/20 dark:text-red-400">
+      <CardError>
         {t('gas.loadError')} {t('gas.loadErrorDesc')}
-      </div>
+      </CardError>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
-        {t('gas.title')}
-      </h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-        {t('gas.subtitle')} {readings.length} {t('gas.readingsRecorded')}.
-      </p>
-
-      {/* Toolbar */}
-      <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:items-center sm:justify-end">
-        {readings.length > 0 && (
-          <Button
-            onClick={handleExportCSV}
-            type='primary'
-            size='large'
-          >
-            {t('gas.exportCsv')}
+    <div className="space-y-6" id="content">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            {t('gas.title')}
+          </h1>
+          <p className="text-sm text-text-secondary mt-1">
+            {t('gas.subtitle')} {readings.length} {t('gas.readingsRecorded')}.
+          </p>
+        </div>
+        <div className="flex items-end gap-3">
+          {readings.length > 0 && (
+            <Button variant="primary" size="sm" onClick={handleExportCSV}>
+              {t('gas.exportCsv')}
+            </Button>
+          )}
+          <Button variant="primary" onClick={() => setShowAddModal(true)}>
+            {t('gas.addReadingCta')}
           </Button>
-        )}
-        <Button
-          onClick={() => setShowAddModal(true)}
-          type='primary'
-          size='large'
-        >
-          {t('gas.addReadingCta')}
-        </Button>
+        </div>
       </div>
 
       {/* Loading state */}
       {isLoading && (
-        <div className="flex items-center justify-center mt-12">
-          <div className="w-8 h-8 border-4 border-gray-300 rounded-full animate-spin border-t-blue-600 dark:border-slate-700 dark:border-t-blue-500"></div>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
         </div>
       )}
 
       {/* Empty state */}
       {!isLoading && readings.length === 0 && (
-        <div className="px-6 py-12 mt-12 text-center border-2 border-gray-300 border-dashed rounded-lg bg-gray-50 dark:border-slate-700 dark:bg-slate-800/30">
-          <svg className="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-gray-600 dark:text-slate-400">
-            {t('gas.noReadingsYet')}
-          </p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-500">
-            {t('gas.noReadingsAddFirst')}
-          </p>
-        </div>
+        <Card padding="lg" elevated className="text-center">
+          <div className="flex flex-col items-center justify-center h-64">
+            <svg className="w-12 h-12 mb-3 text-text-tertiary dark:text-dark-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p className="text-sm text-text-secondary dark:text-dark-text-secondary">
+              {t('gas.noReadingsYet')}
+            </p>
+            <p className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-1">
+              {t('gas.noReadingsAddFirst')}
+            </p>
+          </div>
+        </Card>
       )}
 
       {/* Readings list */}
       {!isLoading && readings.length > 0 && (
-        <div className="mt-8 space-y-3">
+        <div className="space-y-3">
           {sortedReadings.map((reading, index) => (
-              <GasReadingCard
-                key={reading.id}
-                reading={reading}
-                previousReading={index > 0 ? sortedReadings[index - 1] : undefined}
-                onDelete={(id) => deleteMutation.mutateAsync(id)}
-                onToggleReference={(id, isReference) =>
-                  referenceMutation.mutate({ id, isReference })
-                }
-                onUploadMeterImage={handleUploadMeterImage}
-                onUploadInvoice={handleUploadInvoice}
-                onDeleteInvoice={(id) => invoiceDeleteMutation.mutate(id)}
-                onOpenMeterImage={(id) =>
-                  void openProtectedFile(apiClient.getGasMeterImageUrl(id), `meter-${id}.jpg`).catch(
-                    () => message.error(t('gas.meterImageOpenError')),
-                  )
-                }
-                onOpenInvoice={(id) =>
-                  void openProtectedFile(apiClient.getGasInvoiceUrl(id), `invoice-${id}.pdf`).catch(
-                    () => message.error(t('gas.invoiceOpenError')),
-                  )
-                }
-                isLoading={
-                  deleteMutation.isPending ||
-                  referenceMutation.isPending ||
-                  meterImageUploadMutation.isPending ||
-                  invoiceUploadMutation.isPending ||
-                  invoiceDeleteMutation.isPending
-                }
-              />
-            ))}
+            <GasReadingCard
+              key={reading.id}
+              reading={reading}
+              previousReading={index > 0 ? sortedReadings[index - 1] : undefined}
+              onDelete={(id) => deleteMutation.mutateAsync(id)}
+              onToggleReference={(id, isReference) =>
+                referenceMutation.mutate({ id, isReference })
+              }
+              onUploadMeterImage={handleUploadMeterImage}
+              onUploadInvoice={handleUploadInvoice}
+              onDeleteInvoice={(id) => invoiceDeleteMutation.mutate(id)}
+              onOpenMeterImage={(id) =>
+                void openProtectedFile(
+                  apiClient.getGasMeterImageUrl(id),
+                  `meter-${id}.jpg`,
+                ).catch(() => message.error(t('gas.meterImageOpenError')))
+              }
+              onOpenInvoice={(id) =>
+                void openProtectedFile(
+                  apiClient.getGasInvoiceUrl(id),
+                  `invoice-${id}.pdf`,
+                ).catch(() => message.error(t('gas.invoiceOpenError')))
+              }
+              isLoading={allPending}
+            />
+          ))}
         </div>
       )}
 
@@ -298,3 +297,13 @@ export const GasReadingsPage: React.FC = () => {
     </div>
   );
 };
+
+function CardError({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="p-4 rounded-xl border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
+      {children}
+    </div>
+  );
+}
+
+GasReadingsPage.displayName = 'GasReadingsPage';

@@ -1,6 +1,16 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
-import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import React, { useMemo, useState, useCallback } from 'react';
+import { Alert } from 'antd';
+import {
+  AlertOutlined,
+  HomeOutlined,
+  ClockCircleOutlined,
+  BellOutlined,
+  SettingOutlined,
+  WarningOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+  FireOutlined,
+} from '@ant-design/icons';
 import { apiClient } from '../services/api';
 import { StatCard } from '../components/StatCard';
 import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
@@ -9,12 +19,17 @@ import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../lib/queryKeys';
-import { useNotificationsQuery, useNotificationPreferencesQuery } from '../hooks/useNotifications';
+import {
+  useNotificationsQuery,
+  useNotificationPreferencesQuery,
+} from '../hooks/useNotifications';
 import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
+import { Card, Button, InputNumber } from '../components/index';
+import {
+  MIN_CURRENT_FLOW_TEMP,
+  MAX_CURRENT_FLOW_TEMP,
+} from '../constants/boilerLimits';
 
-const { Text } = Typography;
-
-// Type definitions matching actual backend response
 interface Weather {
   temp?: number;
   feelsLike?: number;
@@ -23,8 +38,6 @@ interface Weather {
   windSpeed?: number;
   tempMin?: number;
   tempMax?: number;
-  fetchedAt?: string;
-  // raw fields from current weather endpoint (WeatherCache)
   temperature?: number;
   feelslike?: number;
   condition_text?: string;
@@ -53,14 +66,6 @@ interface ThermostatProgram {
   orderIndex: number;
 }
 
-interface Thermostat {
-  alias: string;
-  currentTemp: number;
-  targetTemp: number;
-  mode: string;
-  program: ThermostatProgram[];
-}
-
 interface HeatingEvent {
   id: number;
   startedAt: string;
@@ -80,6 +85,14 @@ interface Home {
   profile: { floorArea: number };
   thermostats: Thermostat[];
   recentHeatingEvents: HeatingEvent[];
+}
+
+interface Thermostat {
+  alias: string;
+  currentTemp: number;
+  targetTemp: number;
+  mode: string;
+  program: ThermostatProgram[];
 }
 
 interface DashboardResponse {
@@ -131,14 +144,6 @@ type PlotEvent = {
   };
 };
 
-// FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u BoilerPage.tsx.
-// Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
-import {
-  MIN_CURRENT_FLOW_TEMP,
-  MAX_CURRENT_FLOW_TEMP,
-} from '../constants/boilerLimits';
-
-
 type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
 };
@@ -149,13 +154,11 @@ function processDashboardData(raw: DashboardResponse): ProcessedDashboard {
   const recentEvents = home?.recentHeatingEvents || [];
   const thermostatPrograms = thermostat?.program ?? [];
 
-  // FE2-14 (FE-010): health score se vise NE racuna ovdje — dolazi iz
-  // `GET /api/dashboard/health` (jedan izvor za web i mobile).
-  const anomalies = recentEvents.filter(e => e.isAnomaly).length;
-
-  const anomalyRate = recentEvents.length > 0
-    ? Math.round((anomalies / recentEvents.length) * 100)
-    : 0;
+  const anomalies = recentEvents.filter((e) => e.isAnomaly).length;
+  const anomalyRate =
+    recentEvents.length > 0
+      ? Math.round((anomalies / recentEvents.length) * 100)
+      : 0;
 
   return {
     anomalyCount: anomalies,
@@ -175,8 +178,8 @@ export const DashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeBucket, setActiveBucket] = useState<string | null>(null);
   const [range, setRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().startOf('day'), // 00:00:00 today
-    dayjs(), // current time
+    dayjs().startOf('day'),
+    dayjs(),
   ]);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
@@ -184,7 +187,6 @@ export const DashboardPage: React.FC = () => {
   const [setTempValue, setSetTempValue] = useState<number | null>(null);
   const [setTempSubmitting, setSetTempSubmitting] = useState(false);
 
-  // FE2-3: dashboard payload is a React Query cache entry, not local state.
   const dashboardQuery = useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: () => apiClient.getDashboard() as Promise<DashboardResponse>,
@@ -194,16 +196,7 @@ export const DashboardPage: React.FC = () => {
     [dashboardQuery.data],
   );
   const loading = dashboardQuery.isLoading;
-  const refetchDashboard = dashboardQuery.refetch;
 
-  useEffect(() => {
-    if (dashboardQuery.error) {
-      console.error('Dashboard error:', dashboardQuery.error);
-      message.error('Failed to load dashboard data');
-    }
-  }, [dashboardQuery.error]);
-
-  // FE2-3: shared notification cache with NotificationsPage.
   const notificationsQuery = useNotificationsQuery();
   const notificationPreferencesQuery = useNotificationPreferencesQuery();
   const notifications = useMemo(
@@ -217,16 +210,6 @@ export const DashboardPage: React.FC = () => {
   const notificationsLoading =
     notificationsQuery.isLoading || notificationPreferencesQuery.isLoading;
 
-  useEffect(() => {
-    if (notificationsQuery.error || notificationPreferencesQuery.error) {
-      console.error(
-        'Failed to load notifications:',
-        notificationsQuery.error ?? notificationPreferencesQuery.error,
-      );
-      message.error('Error loading notifications');
-    }
-  }, [notificationsQuery.error, notificationPreferencesQuery.error]);
-
   const { data: homeProfile } = useQuery({
     queryKey: queryKeys.homeProfile,
     queryFn: () => apiClient.getHomeProfile(),
@@ -235,13 +218,8 @@ export const DashboardPage: React.FC = () => {
 
   const homeProfileId = homeProfile?.id;
 
-  const {
-    data: currentWeather,
-    isLoading: weatherLoading,
-  } = useQuery({
+  const { data: currentWeather } = useQuery({
     queryKey: queryKeys.weatherCurrent(homeProfileId),
-    // FE2-1: `homeProfileId` je `number | undefined`, ali `enabled: !!homeProfileId`
-    // garantuje da se queryFn ne poziva dok je undefined.
     queryFn: () => apiClient.getCurrentWeather(homeProfileId!),
     enabled: !!homeProfileId,
     staleTime: 1000 * 60 * 10,
@@ -252,7 +230,8 @@ export const DashboardPage: React.FC = () => {
       return {
         outsideTemp: currentWeather.temperature ?? currentWeather.temp ?? null,
         feelsLike: currentWeather.feelslike ?? currentWeather.feelsLike ?? null,
-        condition: currentWeather.condition_text ?? currentWeather.condition ?? null,
+        condition:
+          currentWeather.condition_text ?? currentWeather.condition ?? null,
         humidity: currentWeather.humidity ?? null,
         windSpeed: currentWeather.wind_kph ?? currentWeather.windSpeed ?? null,
         tempMin: currentWeather.temp_min ?? currentWeather.tempMin ?? null,
@@ -264,11 +243,15 @@ export const DashboardPage: React.FC = () => {
       return {
         outsideTemp: data.weather.temp ?? data.weather.temperature ?? null,
         feelsLike: data.weather.feelsLike ?? data.weather.feelslike ?? null,
-        condition: data.weather.condition ?? data.weather.condition_text ?? null,
+        condition:
+          data.weather.condition ?? data.weather.condition_text ?? null,
         humidity: data.weather.humidity ?? null,
-        windSpeed: data.weather.windSpeed ?? data.weather.wind_kph ?? null,
-        tempMin: data.weather.tempMin ?? data.weather.temp_min ?? null,
-        tempMax: data.weather.tempMax ?? data.weather.temp_max ?? null,
+        windSpeed:
+          data.weather.windSpeed ?? data.weather.wind_kph ?? null,
+        tempMin:
+          data.weather.tempMin ?? data.weather.temp_min ?? null,
+        tempMax:
+          data.weather.tempMax ?? data.weather.temp_max ?? null,
       };
     }
 
@@ -277,21 +260,24 @@ export const DashboardPage: React.FC = () => {
 
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.isRead),
-    [notifications]
+    [notifications],
   );
 
   const handleMarkNotificationAsRead = useCallback(
     async (notificationId: number) => {
       try {
         await apiClient.markNotificationAsRead(notificationId);
-        await queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
-        await queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.notifications,
+        });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.notificationsUnreadCount,
+        });
       } catch (error) {
         console.error('Failed to mark notification as read:', error);
-        message.error('Failed to mark notification as read');
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   const openSetTempModal = useCallback(() => {
@@ -304,53 +290,44 @@ export const DashboardPage: React.FC = () => {
     setSetTempModalOpen(true);
   }, [data?.boiler]);
 
-  const submitSetTemp = useCallback(async () => {
+  const submitSetTemp = useCallback(
+    async () => {
     if (typeof setTempValue !== 'number' || Number.isNaN(setTempValue)) {
-      message.error('Enter a valid temperature value');
       return;
     }
 
-    if (setTempValue < MIN_CURRENT_FLOW_TEMP || setTempValue > MAX_CURRENT_FLOW_TEMP) {
-      message.error(
-        `Temperature must be between ${MIN_CURRENT_FLOW_TEMP}°C and ${MAX_CURRENT_FLOW_TEMP}°C`,
-      );
+    if (
+      setTempValue < MIN_CURRENT_FLOW_TEMP ||
+      setTempValue > MAX_CURRENT_FLOW_TEMP
+    ) {
       return;
     }
 
     try {
       setSetTempSubmitting(true);
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
-      await refetchDashboard();
-
-      message.success('Current boiler temperature updated');
+      await dashboardQuery.refetch();
       setSetTempModalOpen(false);
     } catch (error) {
       console.error('Failed to update current boiler temp:', error);
-      message.error('Failed to update current boiler temperature');
     } finally {
       setSetTempSubmitting(false);
     }
-  }, [refetchDashboard, setTempValue]);
+  }, [dashboardQuery, setTempValue]);
 
-  // FE2-3: React Query interval replaces window.setInterval. The interval is
-  // paused while the tab is hidden (`refetchIntervalInBackground: false`).
   const heatingRangeParams = {
     from: range[0].toISOString(),
     to: range[1].toISOString(),
-    bucket: (range[0].isSame(range[1], 'day') ? 'hour' : 'day') as 'hour' | 'day',
+    bucket: range[0].isSame(range[1], 'day')
+      ? ('hour' as const)
+      : ('day' as const),
   };
   const heatingRangeQuery = useDashboardHeatingRange(heatingRangeParams);
-  const events = (heatingRangeQuery.data?.events ?? []) as unknown as HeatingEvent[];
-  const summary = (heatingRangeQuery.data?.summary ?? null) as HeatingSummaryResponse | null;
+  const summary =
+    (heatingRangeQuery.data?.summary ?? null) as
+      | HeatingSummaryResponse
+      | null;
   const isHeatingNow = heatingRangeQuery.data?.isHeatingNow ?? false;
-  const rangeLoading = heatingRangeQuery.isLoading || heatingRangeQuery.isFetching;
-
-  useEffect(() => {
-    if (heatingRangeQuery.error) {
-      console.error('Heating range error:', heatingRangeQuery.error);
-      message.error('Failed to load heating activity');
-    }
-  }, [heatingRangeQuery.error]);
 
   const bucketType: 'hour' | 'day' = range[0].isSame(range[1], 'day')
     ? 'hour'
@@ -369,35 +346,43 @@ export const DashboardPage: React.FC = () => {
     return 'WORKDAY';
   };
 
-  const getActiveProgram = (programs: ThermostatProgram[]) => {
-    if (!programs.length) return null;
-    const today = getTodayDayType();
-    const todaysPrograms = programs
-      .filter((p) => p.dayType === today)
-      .sort((a, b) => a.startMinute - b.startMinute);
-    if (!todaysPrograms.length) return null;
-    const nowMinutes = dayjs().hour() * 60 + dayjs().minute();
-    const current =
-      [...todaysPrograms]
-        .reverse()
-        .find((p) => p.startMinute <= nowMinutes) ??
-      todaysPrograms[todaysPrograms.length - 1];
-    return current;
-  };
+  const getActiveProgram = useCallback(
+    (programs: ThermostatProgram[]) => {
+      if (!programs.length) return null;
+      const today = getTodayDayType();
+      const todaysPrograms = programs
+        .filter((p) => p.dayType === today)
+        .sort((a, b) => a.startMinute - b.startMinute);
+      if (!todaysPrograms.length) return null;
+      const nowMinutes = dayjs().hour() * 60 + dayjs().minute();
+      const current =
+        [...todaysPrograms]
+          .reverse()
+          .find((p) => p.startMinute <= nowMinutes) ??
+        todaysPrograms[todaysPrograms.length - 1];
+      return current;
+    },
+    [],
+  );
 
-  const getBucketLabel = (dateStr: string) => {
-    const date = dayjs(dateStr);
-    return bucketType === 'hour'
-      ? `${date.hour().toString().padStart(2, '0')}:00`
-      : date.format('YYYY-MM-DD');
-  };
+  const getBucketLabel = useCallback(
+    (dateStr: string) => {
+      const date = dayjs(dateStr);
+      return bucketType === 'hour'
+        ? `${date.hour().toString().padStart(2, '0')}:00`
+        : date.format('YYYY-MM-DD');
+    },
+    [bucketType],
+  );
 
   const eventsWithBucket = useMemo<HeatingEventRow[]>(() => {
-    return events.map((e) => ({
+    const ev =
+      (heatingRangeQuery.data?.events ?? []) as unknown as HeatingEvent[];
+    return ev.map((e) => ({
       ...e,
       bucketLabel: getBucketLabel(e.startedAt),
     }));
-  }, [events, bucketType]);
+  }, [heatingRangeQuery.data, getBucketLabel]);
 
   const scheduleByDay = useMemo(() => {
     const map = new Map<string, ThermostatProgram[]>();
@@ -413,7 +398,7 @@ export const DashboardPage: React.FC = () => {
 
   const activeProgram = useMemo(() => {
     return getActiveProgram(data?.thermostatPrograms ?? []);
-  }, [data?.thermostatPrograms]);
+  }, [data?.thermostatPrograms, getActiveProgram]);
 
   const summaryMetrics = summary?.summary ?? {
     totalCycles: 0,
@@ -426,13 +411,6 @@ export const DashboardPage: React.FC = () => {
 
   const isHeatingActive = isHeatingNow;
 
-  /**
-   * FE2-14 (FE-010): health score i upozorenja iz JEDNOG izvora (backend).
-   *
-   * Prije je DashboardPage imao vlastitu kopiju pravila upozorenja, a mobile
-   * vlastitu formulu za health score, pa su za isti ulaz davali različite
-   * rezultate. Sada oba klijenta čitaju `GET /api/dashboard/health`.
-   */
   const healthQuery = useQuery({
     queryKey: queryKeys.dashboardHealth,
     queryFn: () => apiClient.getDashboardHealth(),
@@ -441,34 +419,30 @@ export const DashboardPage: React.FC = () => {
 
   const healthScore = healthQuery.data?.score ?? 0;
 
-  /**
-   * Backend `level` je 'info' | 'warning' | 'error' — isti skup koji antd
-   * `<Alert type>` prima, pa se preslikava direktno.
-   *
-   * ⚠️ PROMJENA PONAŠANJA: backend računa upozorenja nad zadnjih
-   * `HEALTH_EVENT_SAMPLE` (20) događaja, bez obzira na odabrani raspon, dok je
-   * ovdje prije korišten raspon iz date pickera (do 500 događaja). Panel je
-   * sada „ukupno stanje sistema", a ne „analiza odabranog raspona".
-   */
   const alerts = useMemo(() => {
     const warnings = healthQuery.data?.warnings ?? [];
     return warnings.map((w) => ({
       type: w.level,
       message: w.message,
-      icon: w.level === 'info' ? <InfoCircleOutlined /> : <WarningOutlined />,
+      icon:
+        w.level === 'info' ? <InfoCircleOutlined /> : <WarningOutlined />,
     }));
   }, [healthQuery.data]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Spin size="large" />
+        <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
       </div>
     );
   }
 
   if (!data) {
-    return <Card>No data available</Card>;
+    return (
+      <Card padding="lg">
+        <div className="text-sm text-text-secondary">No data available</div>
+      </Card>
+    );
   }
 
   const columns = [
@@ -482,7 +456,8 @@ export const DashboardPage: React.FC = () => {
       title: 'End Time',
       dataIndex: 'endedAt',
       key: 'endedAt',
-      render: (value: string | null) => (value ? new Date(value).toLocaleString() : '—'),
+      render: (value: string | null) =>
+        value ? new Date(value).toLocaleString() : '—',
     },
     {
       title: 'Duration (min)',
@@ -505,294 +480,332 @@ export const DashboardPage: React.FC = () => {
       title: 'Action',
       dataIndex: 'hvacAction',
       key: 'hvacAction',
-      render: (value: string) => (value ? <Tag color="blue">{value}</Tag> : '—'),
+      render: (value: string) =>
+        value ? (
+          <span className="px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-100 text-xs font-medium">
+            {value}
+          </span>
+        ) : (
+          '—'
+        ),
     },
     {
       title: 'Anomaly',
       dataIndex: 'isAnomaly',
       key: 'isAnomaly',
-      render: (value: boolean) => <Tag color={value ? 'red' : 'green'}>{value ? 'YES' : 'NO'}</Tag>,
+      render: (value: boolean) => (
+        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+          value
+            ? 'bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-100'
+            : 'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100'
+        }`}>
+          {value ? 'YES' : 'NO'}
+        </span>
+      ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-6" id="content">
+      {/* Page header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Dashboard</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="text-2xl font-semibold text-text-primary">
+            Dashboard
+          </h1>
+          <p className="text-sm text-text-secondary mt-1">
             Overview of your heating system performance and alerts.
           </p>
         </div>
-        <div className="flex items-center justify-between gap-4">
-          <Badge count={unreadNotifications.length}>
-            <Button
-              onClick={() => setNotificationDrawerOpen(true)}
-              type='primary'
-            >
-              <BellOutlined />
-              <span>Notifications</span>
-            </Button>
-          </Badge>
-          <Button
-            onClick={() => setNotificationSettingsOpen(true)}
-            type='primary'
-          >
-            <SettingOutlined />
-            <span>Settings</span>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setNotificationDrawerOpen(true)} icon={<BellOutlined />}>
+            Notifications
           </Button>
-          <Tag
-            color={isHeatingActive ? 'green' : 'default'}
-            className={
-              isHeatingActive
-                ? 'rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide'
-                : 'rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300'
-            }
+          <Button
+            variant="secondary"
+            onClick={() => setNotificationSettingsOpen(true)}
+            icon={<SettingOutlined />}
           >
+            Settings
+          </Button>
+          <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold ${
+            isHeatingActive
+              ? 'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100'
+              : 'bg-surface-muted text-text-tertiary dark:bg-dark-surface-muted dark:text-dark-text-tertiary'
+          }`}>
             {isHeatingActive ? 'Heating Active' : 'Idle / Not Heating'}
-          </Tag>
+          </span>
         </div>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Home Health Score"
-            value={Math.round(healthScore)}
-            prefix={<HomeOutlined />}
-            suffix="%"
-            valueStyle={{ color: healthScore > 70 ? '#22c55e' : '#f59e0b' }}
-          />
-        </Col>
+      {/* Stat cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Home Health Score"
+          value={Math.round(healthScore)}
+          prefix={<HomeOutlined />}
+          suffix="%"
+          trend={healthScore > 70 ? 'up' : 'down'}
+          trendValue={`${healthScore > 70 ? '+' : ''}${Math.round(healthScore)}%`}
+          valueStyle={{
+            color: healthScore > 70 ? 'rgb(var(--success))' : 'rgb(var(--warning))',
+          }}
+        />
+        <StatCard
+          title="Anomaly Rate"
+          value={data.anomalyRate}
+          prefix={<AlertOutlined />}
+          suffix="%"
+          trend={data.anomalyRate < 20 ? 'up' : 'down'}
+          trendValue={`${data.anomalyRate < 20 ? '+' : '-'}${data.anomalyRate}%`}
+          valueStyle={{
+            color: data.anomalyRate < 20 ? 'rgb(var(--success))' : 'rgb(var(--error))',
+          }}
+        />
+        <StatCard
+          title="Current Temp"
+          value={data.currentTemp}
+          suffix="°C"
+          valueStyle={{ color: 'rgb(var(--info))' }}
+        />
+        <StatCard
+          title="Target Temp"
+          value={data.targetTemp}
+          suffix="°C"
+          valueStyle={{ color: 'rgb(var(--brand))' }}
+        />
+      </div>
 
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Anomaly Rate"
-            value={data.anomalyRate}
-            prefix={<AlertOutlined />}
-            suffix="%"
-            valueStyle={{ color: data.anomalyRate < 20 ? '#22c55e' : '#ef4444' }}
-          />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Current Temp"
-            value={data.currentTemp}
-            suffix="°C"
-            valueStyle={{ color: '#3b82f6' }}
-          />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Target Temp"
-            value={data.targetTemp}
-            suffix="°C"
-            valueStyle={{ color: '#ff6b3d' }}
-          />
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card title="System Information" className="shadow-sm">
-            {weatherLoading ? (
-              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <Spin size="small" />
-                Loading weather...
-              </div>
-            ) : weatherDisplay ? (
-              <div className="space-y-2">
-                <p><strong>Outside Temp:</strong> {weatherDisplay.outsideTemp !== null ? `${Number(weatherDisplay.outsideTemp).toFixed(1)}°C` : '—'}</p>
-                <p><strong>Feels Like:</strong> {weatherDisplay.feelsLike !== null ? `${Number(weatherDisplay.feelsLike).toFixed(1)}°C` : '—'}</p>
-                <p><strong>Weather:</strong> {weatherDisplay.condition ?? '—'}</p>
-                <p><strong>Humidity:</strong> {weatherDisplay.humidity ?? '—'}%</p>
-                <p><strong>Wind Speed:</strong> {weatherDisplay.windSpeed ?? '—'} km/h</p>
-                <p><strong>Today Min/Max:</strong> {weatherDisplay.tempMin ?? '—'}°C / {weatherDisplay.tempMax ?? '—'}°C</p>
-              </div>
+      {/* System info row */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card padding="md" elevated>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-info-50 text-info-700 dark:bg-info-900/20 dark:text-info-100">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text-secondary">Outside Temp</p>
+              <p className="text-lg font-bold text-text-primary">
+                {weatherDisplay?.outsideTemp != null ? `${Number(weatherDisplay.outsideTemp).toFixed(1)}°C` : '—'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            {weatherDisplay ? (
+              <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-tertiary">Feels Like</span>
+                  <span className="text-text-primary">
+                    {weatherDisplay?.feelsLike !== null ? `${Number(weatherDisplay.feelsLike).toFixed(1)}°C` : '—'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-tertiary">Condition</span>
+                  <span className="text-text-primary">{weatherDisplay?.condition ?? '—'}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-tertiary">Humidity</span>
+                  <span className="text-text-primary">
+                    {weatherDisplay?.humidity ?? '—'}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-tertiary">Wind Speed</span>
+                  <span className="text-text-primary">
+                    {weatherDisplay?.windSpeed ?? '—'} km/h
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-tertiary">Today Min/Max</span>
+                  <span className="text-text-primary">
+                    {weatherDisplay?.tempMin ?? '—'}°C / {weatherDisplay?.tempMax ?? '—'}°C
+                  </span>
+                </div>
+              </>
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No weather data available</p>
+              <p className="text-sm text-text-tertiary">No weather data available</p>
             )}
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card
-            title="Boiler Status"
-            className="shadow-sm"
-            extra={
-              <Button size="small" type="primary" onClick={openSetTempModal}>
-                Set current temp
-              </Button>
-            }
-          >
-            <div className="space-y-2">
-              <p><strong>Suggested Flow Temp:</strong> {data.boiler.suggestedFlowTemp.toFixed(1)}°C</p>
-              <p>
-                <strong>Actual Flow Temp:</strong>{' '}
+          </div>
+        </Card>
+
+        <Card padding="md" elevated>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-100">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text-secondary">Boiler Status</p>
+              <p className="text-lg font-bold text-text-primary">
                 {typeof data.boiler.actualFlowTemp === 'number'
                   ? `${data.boiler.actualFlowTemp.toFixed(1)}°C`
                   : '—'}
               </p>
-              <p>
-                <strong>Delta:</strong>{' '}
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-tertiary">Suggested Flow Temp</span>
+              <span className="text-text-primary">
+                {data.boiler.suggestedFlowTemp.toFixed(1)}°C
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-tertiary">Actual Flow Temp</span>
+              <span className="text-text-primary">
+                {typeof data.boiler.actualFlowTemp === 'number'
+                  ? `${data.boiler.actualFlowTemp.toFixed(1)}°C`
+                  : '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-tertiary">Delta</span>
+              <span className="text-text-primary">
                 {typeof data.boiler.actualFlowTemp === 'number'
                   ? `${(data.boiler.actualFlowTemp - data.boiler.suggestedFlowTemp).toFixed(1)}°C`
                   : '—'}
-              </p>
-              <Space>
-                <Button size="small" type="primary" onClick={openSetTempModal}>
-                  Set current temp
-                </Button>
-                <Text type="secondary">
-                  Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
-                </Text>
-              </Space>
+              </span>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+          <div className="mt-4">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={openSetTempModal}
+              fullWidth
+            >
+              Set current temp
+            </Button>
+            <div className="text-xs text-text-tertiary mt-2">
+              Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
+            </div>
+          </div>
+        </Card>
+      </div>
 
+      {/* Recommendation breakdown */}
       <RecommendationBreakdown breakdown={data.recommendation?.breakdown} />
 
-      {/* ALERTS AND WARNINGS */}
+      {/* Alerts and warnings */}
       {alerts.length > 0 && (
-        <Card title={<div className="flex items-center gap-2"><WarningOutlined /> Upozorenja i preporuke</div>} className="shadow-sm">
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Card padding="md" elevated>
+          <div className="flex items-center gap-2 mb-3">
+            <WarningOutlined className="w-4 h-4 text-warning" />
+            <h3 className="text-sm font-semibold text-text-primary">Upozorenja i preporuke</h3>
+          </div>
+          <div className="space-y-2">
             {alerts.map((a, idx) => (
-              <Alert key={idx} type={a.type} showIcon icon={a.icon} message={a.message} />
+              <Alert
+                key={idx}
+                type={a.type as 'info' | 'warning' | 'error'}
+                showIcon
+                icon={a.icon}
+                message={a.message}
+                className="rounded-lg"
+              />
             ))}
-          </Space>
+          </div>
         </Card>
       )}
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24}>
-          <Card title="Daily Heating Schedule" className="shadow-sm">
-            {scheduleByDay.length > 0 ? (
-              <Collapse
-                ghost
-                items={[
-                  {
-                    key: 'active-program',
-                    label: (
-                      <div className="flex items-center gap-3">
-                        <Badge color="#22c55e" text={null} />
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">
-                            Active Program
-                          </span>
-                          {activeProgram ? (
-                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
-                              {formatStartMinute(activeProgram.startMinute)} · {activeProgram.targetTemp.toFixed(1)}°C
-                            </span>
-                          ) : (
-                            <span className="text-xs text-slate-500 dark:text-slate-400">
-                              No active program
-                            </span>
-                          )}
-                        </div>
+      {/* Heating schedule */}
+      <Card padding="md" elevated>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-text-primary">
+            Daily Heating Schedule
+          </h3>
+          {activeProgram ? (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100 text-xs font-semibold">
+              Active: {formatStartMinute(activeProgram.startMinute)} · {activeProgram.targetTemp.toFixed(1)}°C
+            </span>
+          ) : (
+            <span className="text-xs text-text-tertiary">No active program</span>
+          )}
+        </div>
+        {scheduleByDay.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {scheduleByDay.map((day) => (
+              <div key={day.dayType} className="p-3 rounded-lg border border-border bg-surface-muted dark:border-dark-border dark:bg-dark-surface-muted">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-uppercase tracking-wider text-text-secondary">
+                    {day.dayType}
+                  </p>
+                  <span className="text-[10px] text-text-tertiary">
+                    {day.programs.length} blocks
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {day.programs.map((p) => {
+                    const isActive =
+                      activeProgram?.dayType === p.dayType &&
+                      activeProgram?.orderIndex === p.orderIndex;
+                    return (
+                      <div
+                        key={`${day.dayType}-${p.orderIndex}`}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                          isActive
+                            ? 'border border-success bg-success-50 text-success-800 dark:border-success dark:bg-success-900/20 dark:text-success-100 shadow-sm'
+                            : 'border border-border bg-white text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary'
+                        }`}
+                      >
+                        <span className="font-mono">{formatStartMinute(p.startMinute)}</span>
+                        <span>{p.targetTemp.toFixed(1)}°C</span>
                       </div>
-                    ),
-                    children: (
-                      <div className="grid gap-3 mt-2 md:grid-cols-2 xl:grid-cols-3">
-                        {scheduleByDay.map((day) => (
-                          <div
-                            key={day.dayType}
-                            className="p-3 border rounded-lg border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
-                          >
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-300">
-                                {day.dayType}
-                              </p>
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                                {day.programs.length} blocks
-                              </span>
-                            </div>
-                            <div className="mt-2 space-y-2">
-                              {day.programs.map((p) => {
-                                const isActive =
-                                  activeProgram?.dayType === p.dayType &&
-                                  activeProgram?.orderIndex === p.orderIndex;
-                                return (
-                                  <div
-                                    key={`${day.dayType}-${p.orderIndex}`}
-                                    className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs shadow-sm ${
-                                      isActive
-                                        ? 'border-emerald-400 bg-emerald-100 font-bold text-emerald-800 shadow-lg shadow-emerald-200/50 dark:border-emerald-500/60 dark:bg-emerald-500/20 dark:text-emerald-100 dark:shadow-emerald-500/20'
-                                        : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
-                                    }`}
-                                  >
-                                    <span className={`font-mono ${isActive ? 'font-bold' : ''}`}>
-                                      {formatStartMinute(p.startMinute)}
-                                    </span>
-                                    <span className={`text-sm ${isActive ? 'font-bold' : 'font-semibold'}`}>
-                                      {p.targetTemp.toFixed(1)}°C
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ),
-                  },
-                ]}
-              />
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No thermostat schedule configured.</p>
-            )}
-          </Card>
-        </Col>
-      </Row>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-text-tertiary">No thermostat schedule configured.</p>
+        )}
+      </Card>
 
-      <Card
-        title="Heating Events"
-        className="shadow-sm"
-        extra={
-          <DatePicker.RangePicker
-            showTime
-            value={range}
-            onChange={(values) => {
-              if (values?.[0] && values?.[1]) setRange([values[0], values[1]]);
-            }}
+      {/* Heating events */}
+      <Card padding="md" elevated>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-text-primary">
+            Heating Events
+          </h3>
+          <div className="relative inline-block w-64">
+            <input
+              type="date"
+              className="block w-full rounded-lg border border-border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+              defaultValue={range[0].format('YYYY-MM-DD')}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setRange([dayjs(e.target.value), range[1]]);
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
+          <StatCard
+            title="Total Cycles"
+            value={summaryMetrics.totalCycles}
+            prefix={<FireOutlined />}
           />
-        }
-      >
-        <Row gutter={[16, 16]} className="mb-4">
-          <Col xs={24} sm={12} lg={6}>
-            <StatCard
-              title="Total Cycles"
-              value={summaryMetrics.totalCycles}
-              prefix={<FireOutlined />}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <StatCard
-              title="Total Heating Time"
-              value={summaryMetrics.totalDurationMin}
-              suffix="min"
-              prefix={<ClockCircleOutlined />}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <StatCard
-              title="Avg Duration"
-              value={summaryMetrics.avgDurationMin}
-              suffix="min"
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <StatCard
-              title="Avg Indoor Temp"
-              value={summaryMetrics.avgIndoorTemp}
-              suffix="°C"
-            />
-          </Col>
-        </Row>
+          <StatCard
+            title="Total Heating Time"
+            value={summaryMetrics.totalDurationMin}
+            suffix="min"
+            prefix={<ClockCircleOutlined />}
+          />
+          <StatCard
+            title="Avg Duration"
+            value={summaryMetrics.avgDurationMin}
+            suffix="min"
+          />
+          <StatCard
+            title="Avg Indoor Temp"
+            value={summaryMetrics.avgIndoorTemp}
+            suffix="°C"
+          />
+        </div>
 
-        <div className="mb-4">
+        <div className="h-[260px]">
           <Column
             data={chartData}
             xField="label"
@@ -805,33 +818,23 @@ export const DashboardPage: React.FC = () => {
             tooltip={{
               customContent: (title: string, items: any[]) => {
                 if (!items || items.length === 0) return null;
-                const datum = chartData.find(d => d.label === title);
+                const datum = chartData.find((d) => d.label === title);
                 if (!datum) return null;
 
                 return (
-                  <div className="p-3 bg-white border rounded-lg shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="p-3 rounded-lg border border-border bg-surface shadow-lg dark:border-dark-border dark:bg-dark-surface-elevated">
                     <div className="space-y-1">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">{title}</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-300">
+                      <div className="font-semibold text-text-primary">{title}</div>
+                      <div className="text-sm text-text-secondary">
                         Trajanje: <span className="font-medium">{datum.totalDurationMin} min</span>
                       </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-300">
+                      <div className="text-sm text-text-secondary">
                         Ciklusa: <span className="font-medium">{datum.cycles}</span>
                       </div>
-                      {(datum as any).avgTargetTemp && (
-                        <div className="text-sm text-slate-600 dark:text-slate-300">
-                          Prosj. target: <span className="font-medium">{(datum as any).avgTargetTemp.toFixed(1)}°C</span>
-                        </div>
-                      )}
-                      {(datum as any).avgCurrentTemp && (
-                        <div className="text-sm text-slate-600 dark:text-slate-300">
-                          Prosj. stvarna: <span className="font-medium">{(datum as any).avgCurrentTemp.toFixed(1)}°C</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
-              }
+              },
             }}
             onReady={(plot: PlotInstance) => {
               plot.on('element:mouseenter', (evt: PlotEvent) => {
@@ -843,212 +846,266 @@ export const DashboardPage: React.FC = () => {
           />
         </div>
 
-        <Table
-          loading={rangeLoading}
-          dataSource={eventsWithBucket}
-          columns={columns}
-          pagination={{ pageSize: 10 }}
-          rowKey={(record) => record.id}
-          size="small"
-          rowClassName={(record) =>
-            record.bucketLabel === activeBucket
-              ? 'bg-amber-50 dark:bg-amber-500/10'
-              : ''
-          }
-          onRow={(record) => ({
-            onMouseEnter: () => setActiveBucket(record.bucketLabel),
-            onMouseLeave: () => setActiveBucket(null),
-          })}
-          // FE2-13 (FE-021): bez scroll={{ x }} tabela prelijeva na uskim ekranima,
-          // a `overflow-x: hidden` na body-u to prelijevanje tiho odsjeca.
-          scroll={{ x: 'max-content' }}
-        />
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full divide-y divide-border dark:divide-dark-border">
+            <thead>
+              <tr className="bg-surface-muted text-xs text-text-secondary dark:bg-dark-surface-muted dark:text-dark-text-secondary">
+                {columns.map((col) => (
+                  <th key={col.key} className="px-4 py-3 text-left font-medium">
+                    {col.title}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="text-sm text-text-primary divide-y divide-border dark:divide-dark-border">
+              {eventsWithBucket.map((record) => (
+                <tr
+                  key={record.id}
+                  className={`hover:bg-surface-muted dark:hover:bg-dark-surface-muted transition-colors duration-150 ${
+                    record.bucketLabel === activeBucket
+                      ? 'bg-amber-50 dark:bg-amber-500/10'
+                      : ''
+                  }`}
+                >
+                  <td className="px-4 py-3">{new Date(record.startedAt).toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    {record.endedAt ? new Date(record.endedAt).toLocaleString() : '—'}
+                  </td>
+                  <td className="px-4 py-3">{record.durationMinutes}</td>
+                  <td className="px-4 py-3">{record.currentTemp.toFixed(1)}°C</td>
+                  <td className="px-4 py-3">{record.targetTemp}°C</td>
+                  <td className="px-4 py-3">
+                    {record.hvacAction ? (
+                      <span className="px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-100 text-xs font-medium">
+                        {record.hvacAction}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      record.isAnomaly
+                        ? 'bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-100'
+                        : 'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100'
+                    }`}>
+                      {record.isAnomaly ? 'YES' : 'NO'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {eventsWithBucket.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-text-tertiary">
+                    No heating events in the selected range.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
-      {/* NOTIFICATION DRAWER */}
-      <Drawer
-        title={<div className="flex items-center gap-2"><BellOutlined /> Notifikacije</div>}
-        placement="right"
-        width={400}
-        onClose={() => setNotificationDrawerOpen(false)}
-        open={notificationDrawerOpen}
+      {/* Notification Drawer */}
+      <div
+        className={`fixed inset-y-0 right-0 z-modal transform transition-transform duration-300 ${
+          notificationDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+        } w-80 bg-surface border-l border-border shadow-lg dark:border-dark-border dark:bg-dark-surface`}
       >
-        {notificationsLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Spin size="large" />
-          </div>
-        ) : unreadNotifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <BellOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
-            <Text type="secondary">Nema novih notifikacija</Text>
-            <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
-              Notifikacije će se prikazati ovdje kada stignu novi događaji
-            </Text>
-          </div>
-        ) : (
-          <List
-            dataSource={unreadNotifications}
-            renderItem={(notif) => {
-              const getIcon = () => {
-                if (notif.type.includes('ANOMALY') || notif.type.includes('ALERT')) {
-                  return <WarningOutlined style={{ color: '#faad14' }} />;
-                }
-                if (notif.type.includes('ERROR')) {
-                  return <WarningOutlined style={{ color: '#ff4d4f' }} />;
-                }
-                if (notif.type.includes('STARTED') || notif.type.includes('SUCCESS')) {
-                  return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
-                }
-                return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
-              };
-
-              return (
-                <List.Item
-                  onClick={() => !notif.isRead && handleMarkNotificationAsRead(notif.id)}
-                  className="cursor-pointer"
-                >
-                  <List.Item.Meta
-                    avatar={getIcon()}
-                    title={notif.title}
-                    description={
-                      <Space direction="vertical" size="small">
-                        <Text>{notif.message}</Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {dayjs(notif.sentAt).format('DD.MM.YYYY HH:mm')}
-                        </Text>
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              );
-            }}
-          />
-        )}
-      </Drawer>
-
-      {/* NOTIFICATION SETTINGS MODAL */}
-      <Modal
-        title={<div className="flex items-center gap-2"><SettingOutlined /> Postavke notifikacija</div>}
-        open={notificationSettingsOpen}
-        onCancel={() => setNotificationSettingsOpen(false)}
-        footer={null}
-        width={600}
-      >
-        {notificationsLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Spin size="large" />
-          </div>
-        ) : notificationPreferences.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <SettingOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
-            <Text type="secondary">Učitavanje postavki...</Text>
-            <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
-              Ako se postavke ne učitaju, pokušajte osvježiti stranicu
-            </Text>
-          </div>
-        ) : (
-          <>
-            <div style={{ marginBottom: 16, padding: '12px 16px', backgroundColor: '#f0f9ff', borderRadius: 8 }}>
-              <Space direction="vertical" size={4}>
-                <Text strong style={{ color: '#0369a1' }}>
-                  <InfoCircleOutlined /> Upravljajte vašim notifikacijama
-                </Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Odaberite koje tipove notifikacija želite primati. Sve promjene se odmah primjenjuju.
-                </Text>
-              </Space>
+        <div className="flex items-center justify-between p-4 border-b border-border dark:border-dark-border">
+          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+            <BellOutlined className="w-4 h-4" /> Notifications
+          </h3>
+          <Button variant="ghost" size="sm" onClick={() => setNotificationDrawerOpen(false)}>
+            <span className="sr-only">Close</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </Button>
+        </div>
+        <div className="p-4 overflow-y-auto max-h-[60vh]">
+          {notificationsLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-6 h-6 border-4 border-border rounded-full animate-spin border-t-brand"></div>
             </div>
-            <List
-              dataSource={notificationPreferences}
-              renderItem={(pref) => {
-                const getLabel = (type: string) => {
-                  const labels: Record<string, string> = {
-                    'DAILY_RECOMMENDATION': 'Dnevne preporuke',
-                    'FLOW_TEMP_CHANGED': 'Promjena temperature polazne vode',
-                    'HEATING_STARTED': 'Početak grijanja',
-                    'HEATING_ENDED': 'Kraj grijanja',
-                    'SYSTEM_ALERT': 'Sistemska upozorenja',
-                    'GAS_READING_REMINDER': 'Podsjetnik za očitanje plina',
-                  };
-                  return labels[type] || type.replace(/_/g, ' ');
-                };
+          ) : unreadNotifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-center">
+              <BellOutlined className="w-12 h-12 text-text-tertiary mb-3" />
+              <p className="text-sm text-text-secondary">No new notifications</p>
+              <p className="text-xs text-text-tertiary mt-1">
+                Notifications will appear here when new events arrive.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {unreadNotifications.map((notif) => (
+                <div
+                  key={notif.id}
+                  onClick={() => !notif.isRead && handleMarkNotificationAsRead(notif.id)}
+                  className="p-3 rounded-lg border border-border cursor-pointer hover:bg-surface-muted dark:border-dark-border dark:hover:bg-dark-surface-muted transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="shrink-0">
+                      {notif.type.includes('ANOMALY') || notif.type.includes('ALERT') ? (
+                        <WarningOutlined className="w-5 h-5 text-warning" />
+                      ) : notif.type.includes('ERROR') ? (
+                        <WarningOutlined className="w-5 h-5 text-error" />
+                      ) : notif.type.includes('STARTED') || notif.type.includes('SUCCESS') ? (
+                        <CheckCircleOutlined className="w-5 h-5 text-success" />
+                      ) : (
+                        <InfoCircleOutlined className="w-5 h-5 text-info" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-text-primary">{notif.title}</p>
+                      <p className="text-xs text-text-secondary mt-1">{notif.message}</p>
+                      <p className="text-[10px] text-text-tertiary mt-1">
+                        {dayjs(notif.sentAt).format('DD.MM.YYYY HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
-                const getDescription = (type: string) => {
-                  const descriptions: Record<string, string> = {
-                    'DAILY_RECOMMENDATION': 'Preporuke za optimizaciju grijanja svakog dana',
-                    'FLOW_TEMP_CHANGED': 'Obavještenja kada se promijeni temperatura bojlera',
-                    'HEATING_STARTED': 'Obavještenje kada sistem počne grijati',
-                    'HEATING_ENDED': 'Obavještenje kada sistem prestane grijati',
-                    'SYSTEM_ALERT': 'Važna upozorenja o radu sistema',
-                    'GAS_READING_REMINDER': 'Podsjetnici za unos očitanja plina',
-                  };
-                  return descriptions[type] || 'Primaj notifikacije za ovaj tip događaja';
+      {/* Notification Settings Modal */}
+      <div
+        className={`fixed inset-0 z-modal-backdrop bg-black/40 ${
+          notificationSettingsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        } transition-opacity duration-200`}
+        onClick={() => setNotificationSettingsOpen(false)}
+      />
+      <div
+        className={`fixed inset-y-0 right-0 z-modal w-full max-w-md transform transition-transform duration-300 ${
+          notificationSettingsOpen ? 'translate-x-0' : 'translate-x-full'
+        } bg-surface shadow-xl dark:bg-dark-surface`}
+      >
+        <div className="p-4 border-b border-border dark:border-dark-border">
+          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+            <SettingOutlined className="w-4 h-4" /> Notification Settings
+          </h3>
+        </div>
+        <div className="p-4 overflow-y-auto max-h-[70vh]">
+          {notificationsLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-6 h-6 border-4 border-border rounded-full animate-spin border-t-brand"></div>
+            </div>
+          ) : notificationPreferences.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-center">
+              <p className="text-sm text-text-secondary">Loading settings...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {notificationPreferences.map((pref) => {
+                const labels: Record<string, string> = {
+                  DAILY_RECOMMENDATION: 'Daily Recommendations',
+                  FLOW_TEMP_CHANGED: 'Flow Temperature Changes',
+                  HEATING_STARTED: 'Heating Started',
+                  HEATING_ENDED: 'Heating Ended',
+                  SYSTEM_ALERT: 'System Alerts',
+                  GAS_READING_REMINDER: 'Gas Reading Reminder',
+                };
+                const descriptions: Record<string, string> = {
+                  DAILY_RECOMMENDATION: 'Heating optimization recommendations every day',
+                  FLOW_TEMP_CHANGED: 'Notifications when boiler flow temperature changes',
+                  HEATING_STARTED: 'Notification when the system starts heating',
+                  HEATING_ENDED: 'Notification when the system stops heating',
+                  SYSTEM_ALERT: 'Important system alerts',
+                  GAS_READING_REMINDER: 'Reminders to record gas readings',
                 };
 
                 return (
-                  <List.Item>
-                    <List.Item.Meta
-                      title={getLabel(pref.type)}
-                      description={
-                        <Space direction="vertical" size={2}>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            {getDescription(pref.type)}
-                          </Text>
-                          {pref.updatedAt && (
-                            <Text type="secondary" style={{ fontSize: 11 }}>
-                              Posljednja izmjena: {dayjs(pref.updatedAt).format('DD.MM.YYYY HH:mm')}
-                            </Text>
-                          )}
-                        </Space>
-                      }
-                    />
-                    <Switch
+                  <div
+                    key={pref.type}
+                    className="flex items-center justify-between p-3 rounded-lg border border-border dark:border-dark-border"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary">
+                        {labels[pref.type] || pref.type}
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        {descriptions[pref.type] || 'Receive notifications for this event type'}
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
                       checked={pref.enabled}
-                      onChange={async (checked) => {
+                      onChange={async (e) => {
                         try {
-                          await apiClient.updateNotificationPreference(pref.type, checked);
-                          message.success(`Postavke za "${getLabel(pref.type)}" ažurirane`);
+                          await apiClient.updateNotificationPreference(
+                            pref.type,
+                            e.target.checked,
+                          );
                           await queryClient.invalidateQueries({
                             queryKey: queryKeys.notificationPreferences,
                           });
                         } catch (error) {
                           console.error('Failed to update preference:', error);
-                          message.error('Greška pri ažuriranju postavki');
                         }
                       }}
+                      className="rounded border-border text-brand focus:ring-brand dark:border-dark-border dark:text-dark-text-primary"
                     />
-                  </List.Item>
+                  </div>
                 );
-              }}
-            />
-          </>
-        )}
-      </Modal>
+              })}
+            </div>
+          )}
+        </div>
+      </div>
 
-      <Modal
-        title="Set current flow temperature"
-        open={setTempModalOpen}
-        onCancel={() => setSetTempModalOpen(false)}
-        onOk={submitSetTemp}
-        confirmLoading={setTempSubmitting}
-        okText={setTempSubmitting ? 'Saving...' : 'Save'}
+      {/* Set temp modal */}
+      <div
+        className={`fixed inset-0 z-modal-backdrop bg-black/40 ${
+          setTempModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        } transition-opacity duration-200`}
+        onClick={() => setSetTempModalOpen(false)}
+      />
+      <div
+        className={`fixed inset-y-0 left-1/2 top-1/2 z-modal -translate-x-1/2 -translate-y-1/2 w-full max-w-md transform transition-transform duration-300 ${
+          setTempModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        } bg-surface rounded-xl shadow-xl p-6 dark:bg-dark-surface`}
       >
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Text type="secondary">
-            Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
-          </Text>
-          <InputNumber
-            value={setTempValue ?? undefined}
-            onChange={(value) => setSetTempValue(typeof value === 'number' ? value : null)}
-            min={MIN_CURRENT_FLOW_TEMP}
-            max={MAX_CURRENT_FLOW_TEMP}
-            step={0.1}
-            precision={1}
-            style={{ width: '100%' }}
-            addonAfter="°C"
-          />
-        </Space>
-      </Modal>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-text-primary">
+            Set Current Flow Temperature
+          </h3>
+          <Button variant="ghost" size="sm" onClick={() => setSetTempModalOpen(false)}>
+            <span className="sr-only">Close</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </Button>
+        </div>
+        <p className="text-sm text-text-secondary mb-6">
+          Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
+        </p>
+        <InputNumber
+          value={setTempValue ?? undefined}
+          onChange={(value) =>
+            setSetTempValue(typeof value === 'number' ? value : null)
+          }
+          min={MIN_CURRENT_FLOW_TEMP}
+          max={MAX_CURRENT_FLOW_TEMP}
+          step={0.1}
+          precision={1}
+          className="w-full mb-4"
+          addonAfter="°C"
+        />
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={() => setSetTempModalOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={submitSetTemp}
+            isLoading={setTempSubmitting}
+            disabled={typeof setTempValue !== 'number'}
+          >
+            {setTempSubmitting ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
+
+DashboardPage.displayName = 'DashboardPage';

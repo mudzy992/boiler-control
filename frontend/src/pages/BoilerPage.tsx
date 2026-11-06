@@ -1,14 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Table, Tag, Spin, message, Modal, Button, InputNumber, Space, Typography } from 'antd';
+import React, { useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/api';
 import { queryKeys } from '../lib/queryKeys';
-// FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u DashboardPage.tsx.
-// Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
 } from '../constants/boilerLimits';
+import { Card, Button, InputNumber } from '../components/index';
 
 interface BoilerEvent {
   id: number;
@@ -21,13 +19,32 @@ interface BoilerEvent {
   createdAt: string;
 }
 
+interface DeltaChipProps {
+  delta: number;
+}
+
+function DeltaChip({ delta }: DeltaChipProps) {
+  const abs = Math.abs(delta);
+  const config =
+    abs <= 2
+      ? { label: 'OK', className: 'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100' }
+      : delta > 0
+        ? { label: 'HIGH', className: 'bg-warning-50 text-warning-700 dark:bg-warning-900/20 dark:text-warning-100' }
+        : { label: 'LOW', className: 'bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-100' };
+
+  return (
+    <span className={`px-2.5 py-0.5 rounded text-xs font-medium ${config.className}`}>
+      {config.label} {delta >= 0 ? '+' : ''}{delta.toFixed(1)}°C
+    </span>
+  );
+}
+
 export const BoilerPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [setTempModalOpen, setSetTempModalOpen] = useState(false);
   const [setTempValue, setSetTempValue] = useState<number | null>(null);
   const [setTempSubmitting, setSetTempSubmitting] = useState(false);
 
-  // FE2-3: React Query instead of manual useEffect fetch.
   const { data: events = [], isLoading: loading, error } = useQuery({
     queryKey: queryKeys.boilerEvents,
     queryFn: async (): Promise<BoilerEvent[]> => {
@@ -36,12 +53,9 @@ export const BoilerPage: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    if (error) {
-      console.error('Error loading boiler events:', error);
-      message.error('Failed to load boiler history!');
-    }
-  }, [error]);
+  if (error) {
+    console.error('Error loading boiler events:', error);
+  }
 
   const openSetTempModal = useCallback(() => {
     const latest = events[0];
@@ -55,139 +69,180 @@ export const BoilerPage: React.FC = () => {
 
   const submitSetTemp = useCallback(async () => {
     if (typeof setTempValue !== 'number' || Number.isNaN(setTempValue)) {
-      message.error('Enter a valid temperature value');
       return;
     }
 
-    if (setTempValue < MIN_CURRENT_FLOW_TEMP || setTempValue > MAX_CURRENT_FLOW_TEMP) {
-      message.error(
-        `Temperature must be between ${MIN_CURRENT_FLOW_TEMP}°C and ${MAX_CURRENT_FLOW_TEMP}°C`,
-      );
+    if (
+      setTempValue < MIN_CURRENT_FLOW_TEMP ||
+      setTempValue > MAX_CURRENT_FLOW_TEMP
+    ) {
       return;
     }
 
     try {
       setSetTempSubmitting(true);
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
-      message.success('Current boiler temperature updated');
       setSetTempModalOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.boilerEvents });
     } catch (error) {
       console.error('Failed to set boiler current temp:', error);
-      message.error('Failed to update current boiler temperature');
     } finally {
       setSetTempSubmitting(false);
     }
   }, [queryClient, setTempValue]);
 
-  const columns = [
-    {
-      title: 'Created',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (value: string) => new Date(value).toLocaleString(),
-    },
-    {
-      title: 'Heating Start',
-      dataIndex: 'heatingStart',
-      key: 'heatingStart',
-      render: (value: string | null) => (value ? new Date(value).toLocaleString() : '—'),
-    },
-    {
-      title: 'Heating End',
-      dataIndex: 'heatingEnd',
-      key: 'heatingEnd',
-      render: (value: string | null) => (value ? new Date(value).toLocaleString() : '—'),
-    },
-    {
-      title: 'Outside Temp',
-      dataIndex: 'externalTemp',
-      key: 'externalTemp',
-      render: (value: number) => `${value.toFixed(1)}°C`,
-    },
-    {
-      title: 'Suggested Flow',
-      dataIndex: 'suggestedFlowTemp',
-      key: 'suggestedFlowTemp',
-      render: (value: number) => `${value.toFixed(1)}°C`,
-    },
-    {
-      title: 'Actual Flow',
-      dataIndex: 'actualFlowTemp',
-      key: 'actualFlowTemp',
-      render: (value: number | null) =>
-        typeof value === 'number' ? `${value.toFixed(1)}°C` : '—',
-    },
-    {
-      title: 'Delta',
-      key: 'delta',
-      render: (_: unknown, record: BoilerEvent) => {
-        if (typeof record.actualFlowTemp !== 'number') return '—';
-        const delta = record.actualFlowTemp - record.suggestedFlowTemp;
-        const color = Math.abs(delta) <= 2 ? 'green' : delta > 0 ? 'orange' : 'volcano';
-        return <Tag color={color}>{delta >= 0 ? '+' : ''}{delta.toFixed(1)}°C</Tag>;
-      },
-    },
-  ];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Spin size="large" />
+        <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Boiler History</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Review boiler performance, flow temperature accuracy, and runtime history.
-        </p>
-        <div className="mt-3">
-          <Button type="primary" onClick={openSetTempModal}>
+    <div className="space-y-6" id="content">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            Boiler Control
+          </h1>
+          <p className="text-sm text-text-secondary mt-1">
+            Review boiler performance, flow temperature accuracy, and runtime history.
+          </p>
+        </div>
+        <div className="flex items-end gap-3">
+          <Button onClick={openSetTempModal} variant="primary">
             Set current temp
           </Button>
         </div>
       </div>
-      <Card className="shadow-sm" title={`Recent Boiler Events (${events.length})`}>
-        <Table
-          rowKey="id"
-          dataSource={events}
-          columns={columns}
-          pagination={{ pageSize: 8 }}
-          // FE2-13 (FE-021): bez scroll={{ x }} tabela prelijeva na uskim ekranima,
-          // a `overflow-x: hidden` na body-u to prelijevanje tiho odsjeca — korisnik
-          // ne vidi dio kolona i ne zna da postoji jos.
-          scroll={{ x: 'max-content' }}
-        />
+
+      <Card padding="md" elevated>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-text-primary">
+            Recent Boiler Events ({events.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-border dark:divide-dark-border">
+            <thead className="bg-surface-muted text-xs text-text-secondary dark:bg-dark-surface-muted dark:text-dark-text-secondary">
+              <tr>
+                <th className="px-4 py-3 text-left">Created</th>
+                <th className="px-4 py-3 text-left">Heating Start</th>
+                <th className="px-4 py-3 text-left">Heating End</th>
+                <th className="px-4 py-3 text-left">Outside Temp</th>
+                <th className="px-4 py-3 text-left">Suggested Flow</th>
+                <th className="px-4 py-3 text-left">Actual Flow</th>
+                <th className="px-4 py-3 text-left">Delta</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-text-primary divide-y divide-border dark:divide-dark-border">
+              {events.map((record) => (
+                <tr
+                  key={record.id}
+                  className="hover:bg-surface-muted dark:hover:bg-dark-surface-muted transition-colors duration-150"
+                >
+                  <td className="px-4 py-3">
+                    {new Date(record.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    {record.heatingStart
+                      ? new Date(record.heatingStart).toLocaleString()
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {record.heatingEnd
+                      ? new Date(record.heatingEnd).toLocaleString()
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {record.externalTemp.toFixed(1)}°C
+                  </td>
+                  <td className="px-4 py-3">
+                    {record.suggestedFlowTemp.toFixed(1)}°C
+                  </td>
+                  <td className="px-4 py-3">
+                    {typeof record.actualFlowTemp === 'number'
+                      ? `${record.actualFlowTemp.toFixed(1)}°C`
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {typeof record.actualFlowTemp === 'number' ? (
+                      <DeltaChip
+                        delta={
+                          record.actualFlowTemp - record.suggestedFlowTemp
+                        }
+                      />
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {events.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-text-tertiary">
+                    No boiler events recorded yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
-      <Modal
-        title="Set current flow temperature"
-        open={setTempModalOpen}
-        onCancel={() => setSetTempModalOpen(false)}
-        onOk={submitSetTemp}
-        confirmLoading={setTempSubmitting}
-        okText={setTempSubmitting ? 'Saving...' : 'Save'}
+      {/* Set temp modal backdrop */}
+      <div
+        className={`fixed inset-0 z-modal-backdrop bg-black/40 ${
+          setTempModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        } transition-opacity duration-200`}
+        onClick={() => setSetTempModalOpen(false)}
+      />
+      <div
+        className={`fixed inset-y-0 left-1/2 top-1/2 z-modal -translate-x-1/2 -translate-y-1/2 w-full max-w-md transform transition-transform duration-300 ${
+          setTempModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        } bg-surface rounded-xl shadow-xl p-6 dark:bg-dark-surface`}
       >
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Typography.Text type="secondary">
-            Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
-          </Typography.Text>
-          <InputNumber
-            value={setTempValue ?? undefined}
-            onChange={(value) => setSetTempValue(typeof value === 'number' ? value : null)}
-            min={MIN_CURRENT_FLOW_TEMP}
-            max={MAX_CURRENT_FLOW_TEMP}
-            step={0.1}
-            precision={1}
-            style={{ width: '100%' }}
-            addonAfter="°C"
-          />
-        </Space>
-      </Modal>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-text-primary">
+            Set Current Flow Temperature
+          </h3>
+          <Button variant="ghost" size="sm" onClick={() => setSetTempModalOpen(false)}>
+            <span className="sr-only">Close</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </Button>
+        </div>
+        <p className="text-sm text-text-secondary mb-6">
+          Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
+        </p>
+        <InputNumber
+          value={setTempValue ?? undefined}
+          onChange={(value) =>
+            setSetTempValue(typeof value === 'number' ? value : null)
+          }
+          min={MIN_CURRENT_FLOW_TEMP}
+          max={MAX_CURRENT_FLOW_TEMP}
+          step={0.1}
+          precision={1}
+          className="w-full mb-4"
+          addonAfter="°C"
+        />
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={() => setSetTempModalOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={submitSetTemp}
+            isLoading={setTempSubmitting}
+            disabled={typeof setTempValue !== 'number'}
+          >
+            {setTempSubmitting ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
+
+BoilerPage.displayName = 'BoilerPage';

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { RecommendationBreakdown } from '../RecommendationBreakdown';
 import type { RecommendationBreakdownData } from '../RecommendationBreakdown';
+import '../../locales/config';
 
 const breakdown: RecommendationBreakdownData = {
   version: 1,
@@ -24,7 +25,7 @@ describe('FE2-10 RecommendationBreakdown', () => {
   it('prikazuje backend breakdown bez klijentske rekonstrukcije', () => {
     render(<RecommendationBreakdown breakdown={breakdown} />);
 
-    expect(screen.getByText('Razlog preporuke')).toBeInTheDocument();
+    expect(screen.getByText('Recommendation breakdown')).toBeInTheDocument();
     expect(screen.getByText('51.2°C')).toBeInTheDocument();
     expect(screen.getByText('-2.5°C')).toBeInTheDocument();
     expect(screen.getByText('+0.25°C')).toBeInTheDocument();
@@ -34,7 +35,7 @@ describe('FE2-10 RecommendationBreakdown', () => {
     expect(screen.getByText('72%')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
     expect(screen.getByText('28 min')).toBeInTheDocument();
-    expect(screen.getByText(/savjetodavna/i)).toBeInTheDocument();
+    expect(screen.getByText(/advisory/i)).toBeInTheDocument();
   });
 
   it('promjena backend odgovora mijenja prikazane vrijednosti', () => {
@@ -57,7 +58,7 @@ describe('FE2-10 RecommendationBreakdown', () => {
   it('bez breakdowna ne prikazuje karticu niti pogađa formulu', () => {
     const { container } = render(<RecommendationBreakdown breakdown={null} />);
     expect(container).toBeEmptyDOMElement();
-    expect(screen.queryByText('Razlog preporuke')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recommendation breakdown')).not.toBeInTheDocument();
   });
 
   it('null optional polja ne prikazuju redove za uzorke/vrijeme', () => {
@@ -67,9 +68,9 @@ describe('FE2-10 RecommendationBreakdown', () => {
       />,
     );
 
-    expect(screen.queryByText('Broj uzoraka')).not.toBeInTheDocument();
+    expect(screen.queryByText('Number of samples')).not.toBeInTheDocument();
     expect(
-      screen.queryByText('Očekivano vrijeme zagrijavanja'),
+      screen.queryByText('Expected heat-up time'),
     ).not.toBeInTheDocument();
   });
 });

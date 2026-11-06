@@ -1,6 +1,8 @@
 import React from 'react';
-import { Alert, Card } from 'antd';
+import { Alert } from 'antd';
+import { useTranslation } from 'react-i18next';
 import type { components } from '../types/api';
+import { Card } from './Card';
 
 export type RecommendationBreakdownData =
   components['schemas']['RecommendationBreakdownDto'];
@@ -28,62 +30,69 @@ function formatOffset(value: number): string {
  */
 export const RecommendationBreakdown: React.FC<
   RecommendationBreakdownProps
-> = ({ breakdown, title = 'Razlog preporuke' }) => {
+> = ({ breakdown, title }) => {
+  const { t } = useTranslation();
+
   if (!breakdown) return null;
 
   const rows: Array<{ label: string; value: string }> = [
-    { label: 'Bazna krivulja', value: formatTemp(breakdown.baseCurveTemp) },
+    { label: t('recommendation.baseCurve'), value: formatTemp(breakdown.baseCurveTemp) },
     {
-      label: 'Ponderisana vanjska temperatura',
+      label: t('recommendation.weightedExternalTemp'),
       value: formatTemp(breakdown.weightedExternalTemp),
     },
     {
-      label: 'Korekcija profila doma',
+      label: t('recommendation.homeOffset'),
       value: formatOffset(breakdown.appliedOffsets.home),
     },
     {
-      label: 'Korekcija intervala',
+      label: t('recommendation.intervalOffset'),
       value: formatOffset(breakdown.appliedOffsets.interval),
     },
     {
-      label: 'Korekcija nedavnih događaja',
+      label: t('recommendation.eventsOffset'),
       value: formatOffset(breakdown.appliedOffsets.events),
     },
-    { label: 'Konačna preporuka', value: formatTemp(breakdown.finalTemp) },
+    { label: t('recommendation.finalTemp'), value: formatTemp(breakdown.finalTemp) },
     {
-      label: 'Pouzdanost',
+      label: t('recommendation.confidence'),
       value: `${Math.round(breakdown.confidence * 100)}%`,
     },
   ];
 
   if (breakdown.samples !== null) {
-    rows.push({ label: 'Broj uzoraka', value: String(breakdown.samples) });
+    rows.push({ label: t('recommendation.samples'), value: String(breakdown.samples) });
   }
   if (breakdown.expectedHeatTimeMin !== null) {
     rows.push({
-      label: 'Očekivano vrijeme zagrijavanja',
+      label: t('recommendation.heatTime'),
       value: `${breakdown.expectedHeatTimeMin.toFixed(0)} min`,
     });
   }
 
   return (
-    <Card size="small" title={title} className="shadow-sm">
+    <Card padding="md" elevated>
+      <div className="flex items-start justify-between mb-3">
+        <h3 className="text-sm font-semibold text-text-primary dark:text-dark-text-primary">
+          {title ?? t('recommendation.title')}
+        </h3>
+      </div>
       <Alert
         type="info"
         showIcon
-        message="Preporuka je savjetodavna i ne zamjenjuje stručni nadzor."
-        style={{ marginBottom: 12 }}
+        message={t('recommendation.advisory')}
+        className="rounded-lg mb-3"
       />
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <caption className="sr-only">Struktuirani razlog preporuke</caption>
+          <caption className="sr-only">{t('recommendation.caption')}</caption>
           <thead>
-            <tr className="text-left text-slate-600 dark:text-slate-300">
+            <tr className="text-left text-xs text-text-secondary dark:text-dark-text-secondary">
               <th scope="col" className="px-2 py-1">
-                Stavka
+                {t('recommendation.item')}
               </th>
               <th scope="col" className="px-2 py-1">
-                Vrijednost
+                {t('recommendation.value')}
               </th>
             </tr>
           </thead>
@@ -91,15 +100,15 @@ export const RecommendationBreakdown: React.FC<
             {rows.map((row) => (
               <tr
                 key={row.label}
-                className="border-t border-slate-100 dark:border-slate-700"
+                className="border-t border-border dark:border-dark-border"
               >
                 <th
                   scope="row"
-                  className="px-2 py-1 font-normal text-slate-700 dark:text-slate-200"
+                  className="px-2 py-1 font-normal text-text-secondary dark:text-dark-text-secondary"
                 >
                   {row.label}
                 </th>
-                <td className="px-2 py-1 text-slate-900 dark:text-slate-100">
+                <td className="px-2 py-1 text-text-primary dark:text-dark-text-primary">
                   {row.value}
                 </td>
               </tr>
@@ -107,10 +116,12 @@ export const RecommendationBreakdown: React.FC<
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-        Režim: {breakdown.mode}
-        {breakdown.intervalKey ? ` · interval: ${breakdown.intervalKey}` : ''}
+      <p className="mt-2 text-xs text-text-secondary dark:text-dark-text-secondary">
+        {t('recommendation.mode')}: {breakdown.mode}
+        {breakdown.intervalKey ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}` : ''}
       </p>
     </Card>
   );
 };
+
+RecommendationBreakdown.displayName = 'RecommendationBreakdown';

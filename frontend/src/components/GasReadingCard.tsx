@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { Button } from './Button';
 
 interface GasReadingProps {
   reading: {
@@ -26,6 +26,20 @@ interface GasReadingProps {
   onOpenMeterImage?: (id: number) => void;
   onOpenInvoice?: (id: number) => void;
   isLoading?: boolean;
+}
+
+function badge(kind: 'reference' | 'standard' | 'image' | 'invoice') {
+  const variants: Record<string, string> = {
+    reference:
+      'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-100',
+    standard:
+      'bg-surface-muted text-text-tertiary dark:bg-dark-surface-muted dark:text-dark-text-tertiary',
+    image:
+      'bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-100',
+    invoice:
+      'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100',
+  };
+  return `inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${variants[kind]}`;
 }
 
 export const GasReadingCard: React.FC<GasReadingProps> = ({
@@ -61,53 +75,39 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
   };
 
   return (
-    <div className="p-4 transition-all duration-200 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+    <div className="p-5 transition-shadow duration-200 rounded-xl border border-border bg-surface shadow-sm hover:shadow-md dark:border-dark-border dark:bg-dark-surface-elevated">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-text-primary dark:text-dark-text-primary">
             {reading.counterValue} m³
           </h3>
-          <p className="text-sm text-gray-600 dark:text-slate-400">
+          <p className="text-sm text-text-secondary dark:text-dark-text-secondary">
             {dayjs(reading.readingDate).format('MMM DD, YYYY HH:mm')}
           </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                reading.isInvoiceReference
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-              }`}
-            >
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className={badge(reading.isInvoiceReference ? 'reference' : 'standard')}>
               {reading.isInvoiceReference ? t('gas.badgeReference') : t('gas.badgeStandard')}
             </span>
             {reading.hasMeterImage && (
-              <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                {t('gas.badgeImage')}
-              </span>
+              <span className={badge('image')}>{t('gas.badgeImage')}</span>
             )}
             {reading.hasInvoicePdf && (
-              <span className="rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                {t('gas.badgeInvoice')}
-              </span>
+              <span className={badge('invoice')}>{t('gas.badgeInvoice')}</span>
             )}
           </div>
         </div>
-        <Button
-          onClick={handleDelete}
-          disabled={isLoading}
-          danger
-        >
+        <Button variant="danger" size="sm" onClick={handleDelete} disabled={isLoading}>
           {isLoading ? t('gas.deleting') : t('common.delete')}
         </Button>
       </div>
 
-      <div className="mt-3 space-y-2">
-        <div className="flex flex-wrap gap-2">
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap gap-3">
           {onToggleReference && (
             <Button
-              size="small"
-              type={reading.isInvoiceReference ? 'default' : 'primary'}
+              variant={reading.isInvoiceReference ? 'secondary' : 'primary'}
+              size="sm"
               onClick={() => onToggleReference(reading.id, !reading.isInvoiceReference)}
               disabled={isLoading}
             >
@@ -115,98 +115,75 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
             </Button>
           )}
           {onUploadMeterImage && (
-            <Button
-              size="small"
-              type="primary"
-              ghost
-              onClick={() => onUploadMeterImage(reading.id)}
-              disabled={isLoading}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onUploadMeterImage(reading.id)} disabled={isLoading}>
               {reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')}
             </Button>
           )}
           {reading.hasMeterImage && onOpenMeterImage && (
-            <Button
-              size="small"
-              onClick={() => onOpenMeterImage(reading.id)}
-              disabled={isLoading}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onOpenMeterImage(reading.id)} disabled={isLoading}>
               {t('gas.actionOpenImage')}
             </Button>
           )}
         </div>
 
         {reading.isInvoiceReference ? (
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-600 dark:text-slate-400">
+          <div className="border-t border-border pt-3 space-y-2">
+            <p className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
               {t('gas.invoiceActionsTitle')}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {onUploadInvoice && (
-                <Button
-                  size="small"
-                  type="primary"
-                  onClick={() => onUploadInvoice(reading.id)}
-                  disabled={isLoading}
-                >
+                <Button variant="primary" size="sm" onClick={() => onUploadInvoice(reading.id)} disabled={isLoading}>
                   {reading.hasInvoicePdf ? t('gas.actionReplaceInvoice') : t('gas.actionAddInvoice')}
                 </Button>
               )}
               {reading.hasInvoicePdf && onOpenInvoice && (
-                <Button
-                  size="small"
-                  type="default"
-                  onClick={() => onOpenInvoice(reading.id)}
-                  disabled={isLoading}
-                >
+                <Button variant="ghost" size="sm" onClick={() => onOpenInvoice(reading.id)} disabled={isLoading}>
                   {t('gas.actionOpenInvoice')}
                 </Button>
               )}
               {reading.hasInvoicePdf && onDeleteInvoice && (
-                <Button
-                  size="small"
-                  danger
-                  onClick={() => onDeleteInvoice(reading.id)}
-                  disabled={isLoading}
-                >
+                <Button variant="danger" size="sm" onClick={() => onDeleteInvoice(reading.id)} disabled={isLoading}>
                   {t('gas.actionDeleteInvoice')}
                 </Button>
               )}
             </div>
           </div>
         ) : (
-          <p className="text-xs text-gray-500 dark:text-slate-400">
+          <p className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
             {t('gas.invoiceReferenceHint')}
           </p>
         )}
-      </div>
 
-      {/* Consumption Info */}
-      {consumption !== null && daysDiff > 0 && (
-        <div className="p-3 mt-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-medium text-gray-600 dark:text-slate-400">
-                {t('gas.consumption')}
-              </p>
-              <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                +{consumption.toFixed(2)} m³
-              </p>
+        {/* Consumption Info */}
+        {consumption !== null && daysDiff > 0 && (
+          <div className="p-4 mt-3 rounded-lg border border-border bg-info-50 dark:border-dark-border dark:bg-info-900/20">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
+                  {t('gas.consumption')}
+                </p>
+                <p className="text-sm font-bold text-info-700 dark:text-info-100">
+                  +{consumption.toFixed(2)} m³
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
+                  {t('gas.dailyAverage')}
+                </p>
+                <p className="text-sm font-bold text-info-700 dark:text-info-100">
+                  {dailyConsumption.toFixed(2)} m³/day
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-medium text-gray-600 dark:text-slate-400">
-                {t('gas.dailyAverage')}
-              </p>
-              <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                {dailyConsumption.toFixed(2)} m³/day
-              </p>
-            </div>
+            <p className="mt-2 text-xs text-text-secondary dark:text-dark-text-secondary">
+              {t('gas.period')}: {daysDiff}
+            </p>
           </div>
-          <p className="mt-2 text-xs text-gray-600 dark:text-slate-400">
-            {t('gas.period')}: {daysDiff}
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+
+GasReadingCard.displayName = 'GasReadingCard';

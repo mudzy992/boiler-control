@@ -132,6 +132,7 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
   let saved: string | undefined;
   const weatherService = { getTodayWeather: jest.fn() };
   const weatherV2Service = {
+    getWeather: jest.fn(),
     getLocationCandidates: jest.fn(),
     confirmLocation: jest.fn(),
   };
@@ -318,6 +319,66 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
       expect(prisma.homeProfile.findFirst).not.toHaveBeenCalled();
       expect(weatherService.getTodayWeather).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraca 400 prije Prisme i weather servisa',
+      async (id) => {
+        prisma.homeProfile.findFirst.mockResolvedValue({
+          location: 'Sarajevo',
+        });
+        weatherService.getTodayWeather.mockResolvedValue({
+          city: 'Sarajevo',
+        });
+
+        const res = await request(app.getHttpServer()).get(
+          `/api/weather/current/${id}`,
+        );
+
+        expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(prisma.homeProfile.findFirst).not.toHaveBeenCalled();
+        expect(weatherService.getTodayWeather).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  describe('GET /api/weather/v2/current/:homeProfileId path ID', () => {
+    beforeEach(() => {
+      weatherV2Service.getWeather.mockReset();
+    });
+
+    it('valjan numeric ID zadržava response i servisne argumente', async () => {
+      const weather = {
+        version: 2,
+        status: 'location_confirmation_required',
+      };
+      weatherV2Service.getWeather.mockResolvedValue(weather);
+
+      const res = await request(app.getHttpServer()).get(
+        '/api/weather/v2/current/17',
+      );
+
+      expect(res.status).toBe(HttpStatus.OK);
+      expect(res.body).toEqual(weather);
+      expect(weatherV2Service.getWeather).toHaveBeenCalledTimes(1);
+      expect(weatherV2Service.getWeather).toHaveBeenCalledWith(4242, 17);
+    });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        weatherV2Service.getWeather.mockResolvedValue({
+          version: 2,
+          status: 'location_confirmation_required',
+        });
+
+        const res = await request(app.getHttpServer()).get(
+          `/api/weather/v2/current/${id}`,
+        );
+
+        expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(weatherV2Service.getWeather).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('GET /api/weather/v2/locations/:homeProfileId query DTO (S-002)', () => {
@@ -360,6 +421,18 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
       expect(res.status).toBe(HttpStatus.BAD_REQUEST);
       expect(weatherV2Service.getLocationCandidates).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        const res = await request(app.getHttpServer())
+          .get(`/api/weather/v2/locations/${id}`)
+          .query({ query: 'Sarajevo' });
+
+        expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(weatherV2Service.getLocationCandidates).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('POST /api/weather/v2/locations/:homeProfileId/confirm body DTO (S-002)', () => {
@@ -408,6 +481,18 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
       expect(res.status).toBe(HttpStatus.BAD_REQUEST);
       expect(weatherV2Service.confirmLocation).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        const res = await request(app.getHttpServer())
+          .post(`/api/weather/v2/locations/${id}/confirm`)
+          .send({ query: 'Sarajevo', candidateId: 'candidate-1' });
+
+        expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(weatherV2Service.confirmLocation).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('legacy rollback (STUB_ENDPOINTS_MODE=legacy)', () => {

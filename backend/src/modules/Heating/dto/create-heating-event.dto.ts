@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import type { TransformFnParams } from 'class-transformer';
-import { IsInt, IsNumber } from 'class-validator';
+import { IsInt, IsNumber, Min } from 'class-validator';
 
 // Globalni enableImplicitConversion ne smije null ili string pretvoriti u broj
 // prije validacije. Ovaj JSON ugovor deklarira četiri stvarna brojčana polja.
@@ -10,9 +10,10 @@ const preserveRawInput = ({ obj, key }: TransformFnParams) =>
 
 /** Runtime ulaz za POST /api/heating-events u oba stub režima. */
 export class CreateHeatingEventDto {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 1, minimum: 1 })
   @Transform(preserveRawInput)
   @IsInt()
+  @Min(1)
   deviceId: number;
 
   @ApiProperty({ example: 21 })

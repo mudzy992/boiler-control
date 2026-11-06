@@ -18,6 +18,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useThemeMode } from '../context/ThemeContext';
+import { SkipLink } from '../shared/components/SkipLink';
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -113,6 +114,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <Layout className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* WCAG 2.2 2.4.1 — prvi fokusirani element za tastaturatne korisnike */}
+      <SkipLink href="#main-content" />
       <Sider
         trigger={null}
         collapsible
@@ -155,7 +158,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </Tooltip>
         </Header>
         <Content className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl rounded-2xl bg-white/95 p-5 shadow-sm dark:bg-slate-900/80 sm:p-6">
+          <div id="main-content" className="mx-auto w-full max-w-7xl rounded-2xl bg-white/95 p-5 shadow-sm dark:bg-slate-900/80 sm:p-6">
             {children}
           </div>
         </Content>

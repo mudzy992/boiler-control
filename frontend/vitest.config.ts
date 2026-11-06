@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
@@ -22,5 +23,10 @@ export default defineConfig({
     // Antd povlači CSS; bez ovoga Vitest pokušava parsirati stylesheetove.
     css: false,
     restoreMocks: true,
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   },
 });

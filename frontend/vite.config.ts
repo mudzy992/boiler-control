@@ -81,6 +81,8 @@ export default defineConfig({
      * `@ant-design/plots` se provjerava PRIJE `@ant-design/icons` jer oba
      * počinju s `@ant-design/`.
      */
+    /** FE2-4 / FE2-15: bundle budžet — upozorava ako Assembly čip prelazi 800 kB. */
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id: string) {

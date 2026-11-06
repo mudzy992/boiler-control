@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useTransition } from 'react';
 import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '../../../services/api';
@@ -13,6 +13,13 @@ import { useNotificationsQuery, useNotificationPreferencesQuery } from '../../no
 import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
 
 const { Text } = Typography;
+
+/** FE2-15 (FE-024): `useTransition` za teže UI ažuriranja (INP metrika).
+ * `startTransition` označava ažuriranje kao neslužno, tako da React može
+ * prekinuti render ako korisnik unese novi unos dok se prethodni još obradjuje.
+ * Koristi se za mark-as-read i set-temp akcije koje animations + API poziv
+ * mogu da zakople main thread. */
+const [, startTransition] = useTransition();
 
 // Type definitions matching actual backend response
 interface Weather {
@@ -284,8 +291,12 @@ export const DashboardPage: React.FC = () => {
     async (notificationId: number) => {
       try {
         await apiClient.markNotificationAsRead(notificationId);
-        await queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
-        await queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
+        // FE2-15: invalidacija u transitionu — UI ostaje responsivan dok se
+        // podaci osvežavaju u pozadini.
+        startTransition(() => {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+          void queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
+        });
       } catch (error) {
         console.error('Failed to mark notification as read:', error);
         message.error('Failed to mark notification as read');
@@ -320,7 +331,10 @@ export const DashboardPage: React.FC = () => {
     try {
       setSetTempSubmitting(true);
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
-      await refetchDashboard();
+      // FE2-15: refetch u transitionu da UI ostaje responsivan tokom re-fetch-a.
+      startTransition(async () => {
+        await refetchDashboard();
+      });
 
       message.success('Current boiler temperature updated');
       setSetTempModalOpen(false);
@@ -660,7 +674,7 @@ export const DashboardPage: React.FC = () => {
         <Card title={<div className="flex items-center gap-2"><WarningOutlined /> Upozorenja i preporuke</div>} className="shadow-sm">
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             {alerts.map((a, idx) => (
-              <Alert key={idx} type={a.type} showIcon icon={a.icon} message={a.message} />
+              <AlertRow key={idx} alert={a} />
             ))}
           </Space>
         </Card>
@@ -888,40 +902,9 @@ export const DashboardPage: React.FC = () => {
         ) : (
           <List
             dataSource={unreadNotifications}
-            renderItem={(notif) => {
-              const getIcon = () => {
-                if (notif.type.includes('ANOMALY') || notif.type.includes('ALERT')) {
-                  return <WarningOutlined style={{ color: '#faad14' }} />;
-                }
-                if (notif.type.includes('ERROR')) {
-                  return <WarningOutlined style={{ color: '#ff4d4f' }} />;
-                }
-                if (notif.type.includes('STARTED') || notif.type.includes('SUCCESS')) {
-                  return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
-                }
-                return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
-              };
-
-              return (
-                <List.Item
-                  onClick={() => !notif.isRead && handleMarkNotificationAsRead(notif.id)}
-                  className="cursor-pointer"
-                >
-                  <List.Item.Meta
-                    avatar={getIcon()}
-                    title={notif.title}
-                    description={
-                      <Space direction="vertical" size="small">
-                        <Text>{notif.message}</Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {dayjs(notif.sentAt).format('DD.MM.YYYY HH:mm')}
-                        </Text>
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              );
-            }}
+            renderItem={(notif) => (
+              <NotificationItem notif={notif} onMarkAsRead={handleMarkNotificationAsRead} />
+            )}
           />
         )}
       </Drawer>
@@ -1052,3 +1035,54 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+
+/** FE2-15: memoizovana stavka notifikacije — sprječava niepotreban re-render
+ * cijele liste kada se samo jedna notifikacija označi kao pročitana. */
+const NotificationItem = React.memo(
+  ({
+    notif,
+    onMarkAsRead,
+  }: {
+    notif: { id: number; isRead: boolean; type: string; title: string; message: string; sentAt: string };
+    onMarkAsRead: (id: number) => void;
+  }) => {
+    const getIcon = () => {
+      if (notif.type.includes('ANOMALY') || notif.type.includes('ALERT')) {
+        return <WarningOutlined style={{ color: '#faad14' }} />;
+      }
+      if (notif.type.includes('ERROR')) {
+        return <WarningOutlined style={{ color: '#ff4d4f' }} />;
+      }
+      if (notif.type.includes('STARTED') || notif.type.includes('SUCCESS')) {
+        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+      }
+      return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
+    };
+
+    return (
+      <List.Item
+        onClick={() => !notif.isRead && onMarkAsRead(notif.id)}
+        className="cursor-pointer"
+      >
+        <List.Item.Meta
+          avatar={getIcon()}
+          title={notif.title}
+          description={
+            <Space direction="vertical" size="small">
+              <Text>{notif.message}</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {dayjs(notif.sentAt).format('DD.MM.YYYY HH:mm')}
+              </Text>
+            </Space>
+          }
+        />
+      </List.Item>
+    );
+  }
+);
+
+/** FE2-15: memoizovani red upozorenja. */
+const AlertRow = React.memo(({ alert }: { alert: { type: string; message: string; icon: React.ReactNode } }) => (
+  <Alert type={alert.type as 'info' | 'success' | 'warning' | 'error'} showIcon icon={alert.icon} message={alert.message} />
+));
+

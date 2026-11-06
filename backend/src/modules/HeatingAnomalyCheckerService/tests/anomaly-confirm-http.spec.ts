@@ -85,4 +85,16 @@ describe('Anomaly confirm HTTP kompatibilnost', () => {
       expect(confirmOrUpdateAnomaly).not.toHaveBeenCalled();
     },
   );
+
+  it.each(['0', '-1'])(
+    'nepozitivan eventId %s vraća 400 prije servisnog poziva',
+    async (eventId) => {
+      const response = await request(app.getHttpServer())
+        .patch(`/api/anomalies/${eventId}`)
+        .send({ confirm: true });
+
+      expect(response.status).toBe(400);
+      expect(confirmOrUpdateAnomaly).not.toHaveBeenCalled();
+    },
+  );
 });

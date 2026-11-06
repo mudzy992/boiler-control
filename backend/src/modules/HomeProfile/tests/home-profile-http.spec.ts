@@ -317,6 +317,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(findOne).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'findOne nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        findOne.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer()).get(
+          `/api/home-profiles/${id}`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(findOne).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/home-profiles/:id path ID (S-002)', () => {
@@ -352,6 +366,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(update).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'update nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch(`/api/home-profiles/${id}`)
+          .send({});
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('DELETE /api/home-profiles/:id path ID (S-002)', () => {
@@ -385,6 +413,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(remove).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'remove nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        remove.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer()).delete(
+          `/api/home-profiles/${id}`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(remove).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/home-profiles/:id/activate path ID (S-002)', () => {
@@ -410,6 +452,20 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(activate).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'activate nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        activate.mockResolvedValue({ id: 17, isActive: true });
+
+        const response = await request(app.getHttpServer()).patch(
+          `/api/home-profiles/${id}/activate`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(activate).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('PATCH /api/home-profile/:id path ID (S-002)', () => {
@@ -457,5 +513,19 @@ describe('HomeProfile controller HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(update).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'singular update nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch(`/api/home-profile/${id}`)
+          .send({});
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
   });
 });

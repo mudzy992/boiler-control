@@ -3687,6 +3687,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -3715,6 +3716,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -3748,6 +3750,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -3774,6 +3777,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -3819,6 +3823,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -3845,6 +3850,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -3880,6 +3886,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }

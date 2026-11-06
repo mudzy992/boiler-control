@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -24,6 +23,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { GasReadingResponseDto } from './dto/gas-reading-response.dto';
@@ -35,6 +35,7 @@ import {
 } from '../../common/file-storage.service';
 import { UpdateGasReferenceDto } from './dto/update-gas-reference.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
+import { PositiveIntPipe } from './positive-int.pipe';
 
 @ApiTags('Gas Utilities')
 @ApiBearerAuth()
@@ -71,15 +72,17 @@ export class GasReadingController {
   }
 
   @Delete('reading/:id')
-  delete(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
+  delete(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.delete(req.user.userId, id);
   }
 
   @Patch('reading/:id/reference')
   @ApiOkResponse({ type: GasReadingResponseDto })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   updateReference(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Body() dto: UpdateGasReferenceDto,
   ) {
     return this.service.updateReference(req.user.userId, id, dto);
@@ -87,6 +90,7 @@ export class GasReadingController {
 
   @Post('reading/:id/meter-image')
   @ApiCreatedResponse({ type: GasReadingResponseDto })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   @UseInterceptors(
     FileInterceptor('meterImage', {
       limits: { fileSize: IMAGE_MAX_SIZE_BYTES },
@@ -94,7 +98,7 @@ export class GasReadingController {
   )
   uploadMeterImage(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @UploadedFile() meterImage: any,
   ) {
     return this.service.uploadMeterImage(req.user.userId, id, meterImage);
@@ -102,6 +106,7 @@ export class GasReadingController {
 
   @Post('reading/:id/invoice')
   @ApiCreatedResponse({ type: GasReadingResponseDto })
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   @UseInterceptors(
     FileInterceptor('invoicePdf', {
       limits: { fileSize: PDF_MAX_SIZE_BYTES },
@@ -109,7 +114,7 @@ export class GasReadingController {
   )
   uploadInvoice(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Body() dto: UploadInvoiceDto,
     @UploadedFile() invoicePdf: any,
   ) {
@@ -118,14 +123,16 @@ export class GasReadingController {
 
   @Delete('reading/:id/invoice')
   @ApiOkResponse({ type: GasReadingResponseDto })
-  deleteInvoice(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
+  deleteInvoice(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.deleteInvoice(req.user.userId, id);
   }
 
   @Get('reading/:id/meter-image')
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   async getMeterImage(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.service.getMeterImageStream(req.user.userId, id);
@@ -138,9 +145,10 @@ export class GasReadingController {
   }
 
   @Get('reading/:id/invoice')
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   async getInvoice(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.service.getInvoiceStream(req.user.userId, id);

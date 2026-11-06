@@ -3,6 +3,55 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Anomaly proposedEndTime raw-tip validacija (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `64c737d`, fix `ea88feb`.**
+`origin/arena/c9961f17-boiler-control` je `ea88feb` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `34e2e55`. PR nije otvaran.
+
+- Source review potvrđuje da su `@Type(() => Date)` i `@IsDate` numerički
+  `proposedEndTime: 0` pretvarali u valjan `Date(0)`. Controller prosljeđuje
+  DTO servisu, koji tu vrijednost koristi za `timestampEnd` u owner-scoped
+  `updateMany`; raniji 200 je reproduciran i kroz mock i kroz stvarni
+  AppModule/JWT/Prisma/PostgreSQL tok.
+- Nije pronađen negenerisani mobile/frontend anomaly mutation caller. OpenAPI
+  i dalje deklarira ISO `date-time` string, generated tip je nepromijenjen i
+  klijentski kod nije mijenjan.
+- Baseline dva lokalna suitea je **13/13**: šest HTTP i sedam DTO scenarija.
+  Test-only `64c737d` dodaje jedan mock-controller i jedan real-DB numerički
+  negativac. Lokalni repro je **13 prošlo / 1 pao / 14 ukupno**: mock dobija
+  200 umjesto 400, dok ISO, malformed-string, confirm i path kontrole prolaze.
+- **Test-first CI `42230108437`:** opći backend Jest summary je **1038 prošlo /
+  2 pala / 1040 ukupno**, a zasebni integration korak **119 prošlo / 1 pao /
+  120 ukupno**. Integration suite je uključen u oba opsega; oba ciljana
+  negativca dobiju 200 umjesto 400. Mobile je **136/136**, frontend **4/4**,
+  `tsc: 0`, `eslint: 0`.
+- Fix `ea88feb` zadržava `@Type(() => Date)` za ISO string, dok ne-string raw
+  vrijednost vraća `@IsDate` validatoru. Confirm raw-input transform,
+  controller, servis, JWT owner scope, `updateMany` i recommendation tok nisu
+  mijenjani; nije uveden novi raspon datuma ili vremenska politika.
+- Valjani ISO string i dalje postaje `Date` i prolazi postojeći real-DB upis.
+  Numerički datum sada daje 400 prije servisa/DB, uz nepromijenjen event i bez
+  recommendation poziva na mockanom DI boundaryju. Empty body, malformed
+  string, confirm=true/false i path-ID kontrole ostaju nepromijenjene.
+- Lokalno oba suitea prolaze **14/14**, a tačan CI ESLint opseg ima **0 errors
+  / 2 poznata warnings**. OpenAPI generate/check, frontend `openapi:check` i
+  pravi `tsconfig.app` type-check prolaze bez contract/generated type diffa.
+- **Code CI `42230314324`:** sva tri joba su success, backend **1040/1040**,
+  integration **120/120**, mobile **136/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Katalog je dopunjen samo na postojećim anomaly route/group/field redovima.
+  Controller i route markeri nisu mijenjani, API katalog ostaje na **78
+  redova**, inventory na **14/13/27**; anomaly HTTP suite ima **7**, DTO suite
+  **7**, a anomaly integration suite **8** scenarija.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene ni novog
+  flaga. Rollback production fixa je revert `ea88feb`; privremeni Prisma
+  stubovi su uklonjeni.
+- **Granica:** real-DB dokaz pokriva numerički negativac i postojeći ISO tok,
+  ali recommendation ostaje mockan na DI boundaryju. Concurrent ownership,
+  stvarni recommendation izračun, politika vremenskog raspona, S-004/session
+  revokacija i rollout ostaju otvoreni, a cijeli S-002 nije zatvoren.
+
 ## S-002 — Heating create deviceId positivity (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `fd53682`, fix `c3daea3`.**

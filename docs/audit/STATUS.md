@@ -2363,6 +2363,19 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Anomaly proposedEndTime raw-tip validacija (2026-11-06)
+
+**STATUS: NUMERIČKI ANOMALY PROPOSEDENDTIME ODBIJEN U KODU (`ea88feb`); CI ZELEN.** `proposedEndTime: 0` daje 400 prije servisa/DB; ISO string i dalje postaje `Date` i prolazi postojeći real-DB upis.
+
+- Source review potvrđuje da su `@Type(() => Date)` i `@IsDate` numerički ulaz pretvarali u `Date`, koji servis koristi za `timestampEnd` u owner-scoped `updateMany`. Nije pronađen negenerisani mobile/frontend anomaly mutation caller; OpenAPI/generated ISO-string tip i klijentski kod nisu mijenjani.
+- Test-only `64c737d` dodaje mock-controller i real-DB numerički negativac. Lokalni baseline je **13/13**, repro **13 prošlo / 1 pao / 14**. Test-first CI `42230108437` ima opći backend **1038 prošlo / 2 pala / 1040** i zasebni integration **119 prošlo / 1 pao / 120** jer je integration suite u oba opsega; oba negativca dobiju 200 umjesto 400. Mobile **136/136**, frontend **4/4**, `tsc/eslint: 0`.
+- Fix `ea88feb` zadržava `@Type(() => Date)` za ISO string, a ne-string raw vrijednost vraća `@IsDate`. Confirm transform, controller, servis, JWT owner scope, `updateMany` i recommendation tok nisu mijenjani; nema novog raspona datuma.
+- Lokalno oba suitea su **14/14**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check, frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez contract/generated type diffa.
+- **Code CI `42230314324`:** sva tri joba success, backend **1040/1040**, integration **120/120**, mobile **136/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, nula failure annotations. Numerički negativac daje 400 uz nepromijenjen event i bez recommendation poziva na mockanom DI boundaryju; postojeći ISO, empty-body, malformed, confirm i path kontrole prolaze.
+- Katalog je dopunjen bez novih ruta/markera; API zbir ostaje **78**, inventory **14/13/27**. Anomaly HTTP suite ima **7**, DTO suite **7**, integration suite **8** scenarija.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene ili novog flaga. Rollback production fixa je revert `ea88feb`.
+- **Preostalo:** recommendation je mockan na DI boundaryju; concurrent ownership, stvarni recommendation izračun, politika vremenskog raspona, S-004/session revokacija i rollout ostaju otvoreni, a cijeli S-002 nije zatvoren.
+
 ### S-002 — Heating create deviceId positivity (2026-11-06)
 
 **STATUS: NEPOZITIVAN HEATING EVENT DEVICE ID ODBIJEN U KODU (`c3daea3`); CI ZELEN.** `deviceId: 0` i `-1` daju 400 u default i legacy režimu; valjani `1` zadržava default 501 i postojeći legacy 201 response.

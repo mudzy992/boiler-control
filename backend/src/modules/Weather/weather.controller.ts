@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -14,6 +13,7 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -29,6 +29,7 @@ import {
 } from './dto/weather-v2-response.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '../Auth/user.decorator';
+import { PositiveIntPipe } from './positive-int.pipe';
 
 /**
  * Weather Controller (P2a)
@@ -64,9 +65,10 @@ export class WeatherController {
    * Get current weather for a home profile
    */
   @Get('current/:homeProfileId')
+  @ApiParam({ name: 'homeProfileId', schema: { type: 'number', minimum: 1 } })
   async getCurrentWeather(
     @User() userId: number,
-    @Param('homeProfileId', ParseIntPipe) homeProfileId: number,
+    @Param('homeProfileId', PositiveIntPipe) homeProfileId: number,
   ) {
     const profile = await this.prisma.homeProfile.findFirst({
       where: { id: homeProfileId, userId },
@@ -81,6 +83,7 @@ export class WeatherController {
   }
 
   @Get('v2/current/:homeProfileId')
+  @ApiParam({ name: 'homeProfileId', schema: { type: 'number', minimum: 1 } })
   @ApiResponse({ status: 200, type: WeatherV2ResponseDto })
   @ApiResponse({
     status: 503,
@@ -88,17 +91,18 @@ export class WeatherController {
   })
   getCurrentWeatherV2(
     @User() userId: number,
-    @Param('homeProfileId', ParseIntPipe) homeProfileId: number,
+    @Param('homeProfileId', PositiveIntPipe) homeProfileId: number,
   ) {
     return this.weatherV2Service.getWeather(userId, homeProfileId);
   }
 
   @Get('v2/locations/:homeProfileId')
+  @ApiParam({ name: 'homeProfileId', schema: { type: 'number', minimum: 1 } })
   @ApiQuery({ name: 'query', required: true, type: String })
   @ApiResponse({ status: 200, type: WeatherLocationCandidatesResponseDto })
   getWeatherLocationCandidates(
     @User() userId: number,
-    @Param('homeProfileId', ParseIntPipe) homeProfileId: number,
+    @Param('homeProfileId', PositiveIntPipe) homeProfileId: number,
     @Query() query: WeatherLocationQueryDto,
   ) {
     return this.weatherV2Service.getLocationCandidates(
@@ -109,12 +113,13 @@ export class WeatherController {
   }
 
   @Post('v2/locations/:homeProfileId/confirm')
+  @ApiParam({ name: 'homeProfileId', schema: { type: 'number', minimum: 1 } })
   @HttpCode(200)
   @ApiBody({ type: ConfirmWeatherLocationDto })
   @ApiResponse({ status: 200, type: ConfirmWeatherLocationResponseDto })
   confirmWeatherLocation(
     @User() userId: number,
-    @Param('homeProfileId', ParseIntPipe) homeProfileId: number,
+    @Param('homeProfileId', PositiveIntPipe) homeProfileId: number,
     @Body() dto: ConfirmWeatherLocationDto,
   ) {
     return this.weatherV2Service.confirmLocation(

@@ -4521,6 +4521,7 @@
             "name": "homeProfileId",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -4549,6 +4550,7 @@
             "name": "homeProfileId",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }
@@ -4587,6 +4589,7 @@
             "name": "homeProfileId",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           },
@@ -4630,6 +4633,7 @@
             "name": "homeProfileId",
             "required": true,
             "schema": {
+              "minimum": 1,
               "type": "number"
             }
           }

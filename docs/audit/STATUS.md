@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Notification register-token whitespace-only validacija (2026-11-06)
+
+**STATUS: WHITESPACE-ONLY NOTIFICATION PUSH TOKEN ODBIJEN U KODU (`f557957`); CI ZELEN.** Mixed whitespace daje 400 prije servisa; padded string sa sadržajem zadržava 201, response i argumente bez trimminga.
+
+- Source review potvrđuje da `@IsNotEmpty` ne odbija whitespace-only string, koji servis prosljeđuje postojećem `userDevice` update/create toku. Mobile ne šalje namjerni whitespace-only token i klijentski kod nije mijenjan; mock 201 nije real-DB/Expo dokaz.
+- Test-only `12f6d9c` dodaje mixed-whitespace negativac i padded-string kontrolu. Baseline je **7/7**, repro **8 prošlo / 1 pao / 9**. Test-first CI `42218259964` ima backend **1033 prošlo / 1 pao / 1034**, integration **119/119**, mobile **136/136**, frontend **4/4** i `tsc: 0`; ciljani Jest failure je 201 umjesto 400. Zasebna Prettier greška (`eslint: 1`) otklonjena je format-only `44c2ed4` bez promjene asserta.
+- Fix `f557957` dodaje samo `@Matches(/\S/)` uz postojeći raw-input transform, `@IsString` i `@IsNotEmpty`. Platform enum, JWT userId, controller, servis i `userDevice` update/create nisu mijenjani; nema novog flaga ili Swagger dekoratora.
+- Lokalni cijeli notifications-read HTTP suite je **9/9**, ESLint **0 errors / 2 poznata warnings**. OpenAPI `--check`, frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez contract/generated type diffa.
+- **Code CI `42218766816`:** sva tri joba success, backend **1034/1034**, integration **119/119**, mobile **136/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, nula failure annotations. Register-token katalog je dopunjen bez novih ruta/markera; API zbir ostaje **78**, inventory **14/13/27**.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene. Rollback production fixa je revert `f557957`; format commit ostaje nezavisan.
+- **Preostalo:** mock-controller nije real-DB/Expo/token-lifecycle dokaz. Max-length, strogi Expo-format, trimming/normalizacija, više uređaja, receipti, S-004/session revokacija i rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Notification register-token empty-token validacija (2026-11-06)
 
 **STATUS: PRAZAN NOTIFICATION PUSH TOKEN ODBIJEN U KODU (`5bfd7c8`); CI ZELEN.** `expoPushToken: ''` daje 400 prije servisa; valjani token zadržava 201, response i servisne argumente.

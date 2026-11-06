@@ -3,6 +3,54 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Notification register-token whitespace-only validacija (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `12f6d9c`, format `44c2ed4`, fix `f557957`.**
+`origin/arena/c9961f17-boiler-control` je `f557957` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `8511bd8`. PR nije otvaran.
+
+- Source review potvrđuje da postojeći `@IsNotEmpty()` odbija prazan string,
+  ali ne i string koji sadrži samo whitespace. Servis prosljeđuje takav token
+  nepromijenjen postojećem `userDevice` update/create toku. Raniji 201 kroz
+  mock servis nije novi real-DB upis ili Expo dokaz.
+- Mobile dobija token od Expo servisa i ne šalje namjerni whitespace-only
+  token. Valjani instalirani klijenti ostaju kompatibilni; klijentski kod,
+  timeouti, asserti i paralelizam nisu mijenjani.
+- Baseline stvarnog controller/DTO HTTP suitea je **7/7**. Test-only `12f6d9c`
+  dodaje mixed-whitespace negativac i padded-string kontrolu. Repro je **8
+  prošlo / 1 pao / 9 ukupno**: whitespace-only ranije dobija 201, dok padded
+  string sa sadržajem zadržava 201, response i argumente bez trimminga.
+- **Test-first CI `42218259964`:** backend Jest summary je **1033 prošlo / 1
+  pao / 1034 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  **4/4**, uz `tsc: 0`. Jedini Jest failure je ciljani whitespace-only 201
+  umjesto 400. CI je zasebno prijavio jednu Prettier grešku (`eslint: 1`) u
+  novom testu; format-only `44c2ed4` mijenja samo raspored poziva, ne asserte.
+- Fix `f557957` dodaje samo `@Matches(/\S/)` uz postojeći raw-input transform,
+  `@IsString` i `@IsNotEmpty`. Platform enum, JWT userId, controller, servis i
+  `userDevice` update/create ostaju nepromijenjeni; nema novog flaga ili
+  Swagger dekoratora.
+- Valjani token, numerički/prazan token i path-ID kontrole ostaju isti.
+  Whitespace-only sada daje 400 prije servisa, dok padded string sa sadržajem
+  zadržava 201 i identične servisne argumente. Nije uvedeno max-length, strogi
+  Expo-format, trimming/normalizacija niti token-lifecycle pravilo.
+- Lokalni cijeli notifications-read HTTP suite prolazi **9/9**, a tačan CI
+  ESLint opseg nakon format commita ima **0 errors / 2 poznata warnings**.
+  OpenAPI `--check`, frontend `openapi:check` i pravi `tsconfig.app` type-check
+  prolaze bez contract/generated type diffa.
+- **Code CI `42218766816`:** sva tri joba su success, backend **1034/1034**,
+  integration **119/119**, mobile **136/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Katalog je dopunjen samo na postojećem register-token redu. Controller i
+  route markeri nisu mijenjani, API katalog ostaje na **78 redova**, a inventory
+  na **14/13/27**; nije dodana nijedna ruta.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene ni novog
+  flaga. Rollback production fixa je revert `f557957`; format commit ostaje
+  nezavisan, a privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-HTTP nije real-DB/Expo/token-lifecycle dokaz. Max-length,
+  strogi format, trimming/normalizacija, više uređaja, receipti,
+  S-004/session revokacija i rollout ostaju otvoreni, a cijeli S-002 nije
+  zatvoren.
+
 ## S-002 — Notification register-token empty-token validacija (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `93b2f18`, fix `5bfd7c8`.**

@@ -4,7 +4,7 @@ Ažurirano: 2026-11-06.
 
 ## Trenutna faza
 
-**Faza 5 — I0 završen (lokalno).** Tokeni, Tailwind mapa, IBM Plex. Čeka commit/CI pa I1.
+**Faza 5 — I0 zatvoren.** Commit `4106ee7`, CI zelen (`42300885501`). Sljedeće I1 čeka potvrdu.
 
 ## Odluke
 

@@ -5,6 +5,7 @@ import {
   IsString,
   IsInt,
   Min,
+  Matches,
   ValidateIf,
 } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
@@ -26,18 +27,20 @@ export class UpdateThermostatDeviceDto {
   @IsEnum(ThermostatMode)
   mode?: ThermostatMode;
 
-  @ApiPropertyOptional({ minLength: 1 })
+  @ApiPropertyOptional({ minLength: 1, pattern: '\\S' })
   @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsString()
   @IsNotEmpty()
+  @Matches(/\S/)
   vendor?: string;
 
-  @ApiPropertyOptional({ minLength: 1 })
+  @ApiPropertyOptional({ minLength: 1, pattern: '\\S' })
   @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsString()
   @IsNotEmpty()
+  @Matches(/\S/)
   deviceId?: string;
 
   @ApiPropertyOptional({ minimum: 1 })

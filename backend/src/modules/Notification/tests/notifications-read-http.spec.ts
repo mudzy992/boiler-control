@@ -161,5 +161,40 @@ describe('Notifications HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(registerToken).not.toHaveBeenCalled();
     });
+
+    it('whitespace-only token vraća 400 prije servisnog poziva', async () => {
+      registerToken.mockResolvedValue({ id: 12, userId: 42 });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/notifications/register-token')
+        .send({ expoPushToken: ' \t\n ', platform: 'android' });
+
+      expect(response.status).toBe(400);
+      expect(registerToken).not.toHaveBeenCalled();
+    });
+
+    it('token sa sadržajem zadržava razmake bez trimminga', async () => {
+      const expoPushToken = ' ExponentPushToken[synthetic-token] ';
+      const device = {
+        id: 11,
+        userId: 42,
+        expoPushToken,
+        platform: 'android',
+      };
+      registerToken.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .post('/api/notifications/register-token')
+        .send({ expoPushToken, platform: 'android' });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(device);
+      expect(registerToken).toHaveBeenCalledTimes(1);
+      expect(registerToken).toHaveBeenCalledWith(
+        42,
+        expoPushToken,
+        'android',
+      );
+    });
   });
 });

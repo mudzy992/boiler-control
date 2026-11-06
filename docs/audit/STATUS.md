@@ -2363,6 +2363,19 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — ThermostatDevice update non-nullable null semantika (2026-11-06)
+
+**STATUS: NON-NULLABLE THERMOSTATDEVICE UPDATE NULL VRIJEDNOSTI ODBIJENE U KODU (`84f5507`); CI ZELEN.** `vendor`, `deviceId`, `mode` i `homeProfileId` s `null` daju 400 prije servisa; nullable `alias: null`, omitted polja, valjani patch, response i servisni argumenti ostaju nepromijenjeni.
+
+- Source review potvrđuje da je `@IsOptional()` preskačao validaciju za `null` i `undefined`. Prisma `vendor`, `deviceId`, `mode` i `homeProfileId` su non-nullable, a `alias` je nullable. Raniji 200 kroz mock servis nije real-DB mutation ni ownership dokaz.
+- Mobile update wrapper šalje opcione stringove, ne `null`; valjani instalirani klijenti ostaju kompatibilni i klijentski kod nije mijenjan.
+- Test-only `92ba063` dodaje četiri non-nullable `null` scenarija i nullable `alias: null` kontrolu. Baseline je **32/32**, repro **33 prošla / 4 pala / 37**. Test-first CI `42167916993` ima backend **970 prošlo / 4 pala / 974**, integration **119/119**, mobile **136/136** i frontend success; annotations sadrže tačno četiri ciljana failurea uz generički process-exit.
+- Fix `84f5507` koristi `ValidateIf` koji preskače samo `undefined` na četiri non-nullable polja, pa `null` stiže do postojećih validatora. `alias` zadržava `@IsOptional()`; create DTO, controller, servis, ownership i Prisma mutacije nisu mijenjani.
+- Lokalno cijeli ThermostatDevice HTTP suite je **37/37**, ESLint **0 errors / 2 poznata warnings**. OpenAPI `--check` prolazi bez contract diffa, a frontend `openapi:check` bez generated type diffa.
+- **Code CI `42168363520`:** sva tri joba success, backend **974/974**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili client/compose/deploy promjene. Rollback production fixa je revert `84f5507`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/mutation dokaz. `null` semantika drugih DTO-ova, string sadržaj, S-004/session revokacija i produkcijski rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — ThermostatDevice path ID positivity (2026-11-05)
 
 **STATUS: NEPOSITIVNI THERMOSTATDEVICE PATH ID-EVI ODBIJENI U KODU (`1a0da0e` + `445ebec`); BACKEND/FRONTEND CI ZELEN, MOBILE WEATHER TIMEOUT ZABILJEŽEN.** FindOne/programs/update/remove sada za `"0"` i `"-1"` daju 400 prije servisa; valjani `"17"`, response, servisni argumenti i postojeće decimal/malformed kontrole ostaju nepromijenjeni.

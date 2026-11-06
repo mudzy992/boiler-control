@@ -3,6 +3,48 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice update non-nullable null semantika (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `92ba063`, fix `84f5507`.**
+`origin/arena/c9961f17-boiler-control` je `84f5507` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `9b2f5ed`. PR nije otvaran.
+
+- Source review potvrđuje da `@IsOptional()` preskače validaciju za `null` i
+  `undefined` na svim update poljima. Prisma `vendor`, `deviceId`, `mode` i
+  `homeProfileId` su non-nullable, dok je `alias` nullable. Raniji 200 kroz
+  mock servis nije real-DB mutation ni ownership dokaz.
+- Mobile update wrapper šalje opcione `alias`/`mode`/`vendor` stringove, ne
+  `null`. Valjani instalirani klijenti ostaju kompatibilni i klijentski kod
+  nije mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea je **32/32**. Test-only
+  `92ba063` dodaje `null` za četiri non-nullable update polja i posebnu
+  nullable `alias: null` kontrolu. Repro je **33 prošla / 4 pala / 37**:
+  non-nullable vrijednosti ranije dobiju 200 i dođu do mock servisa, dok alias
+  i svih 32 postojeće kontrole prolaze.
+- **Test-first CI `42167916993`:** backend Jest summary je **970 prošlo / 4
+  pala / 974 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže tačno četiri ciljana failurea uz generički
+  process-exit; `tsc: 0`, `eslint: 0`, bez drugih regresija.
+- Fix `84f5507` zamjenjuje `@IsOptional()` s `ValidateIf` uslovom koji preskače
+  samo `undefined` na `vendor`, `deviceId`, `mode` i `homeProfileId`. `null`
+  sada prolazi do postojećih validatora i daje 400 prije servisa. Nullable
+  `alias` zadržava `@IsOptional()` i `null`, dok omitted polja, prazan patch,
+  valjane vrijednosti, response i servisni argumenti ostaju nepromijenjeni.
+- Lokalni cijeli ThermostatDevice HTTP suite prolazi **37/37**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI `--check`
+  prolazi bez contract diffa jer objavljeni update tipovi već nisu nullable;
+  frontend `openapi:check` je usklađen bez generated type diffa.
+- **Code CI `42168363520`:** sva tri joba su success, backend **974/974**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga, controller/service/create-DTO/client/
+  compose/deploy promjene. Rollback production fixa je revert `84f5507`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz nije novi real-DB/ownership/mutation
+  dokaz. `null` semantika drugih DTO-ova, string sadržaj, S-004/session
+  revokacija i produkcijski rollout ostaju zasebni; cijeli S-002 se ovim ne
+  zatvara.
+
 ## S-002 — ThermostatDevice path ID positivity (2026-11-05)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `ef0f973`, fix `1a0da0e`, Swagger corrective `445ebec`.**

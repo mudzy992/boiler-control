@@ -3,6 +3,50 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Anomaly eventId path positivity (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `f3ebb1c`, fix `8bfc948`.**
+`origin/arena/c9961f17-boiler-control` je `8bfc948` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `9ab4ccf`. PR nije otvaran.
+
+- Source review potvrđuje da je `PATCH /api/anomalies/:eventId` koristio samo
+  `ParseIntPipe`, koji prihvata `0` i negativne cijele brojeve. Prisma
+  `HeatingEvent.id` je `@default(autoincrement())`. Servis zadržava JWT
+  userId, owner `findFirst` i atomski `updateMany`; raniji 200 kroz mock
+  servis nije novi real-DB/ownership/mutation/recommendation dokaz.
+- Nije pronađen negenerisani mobile/frontend anomaly mutation caller.
+  Klijentski kod nije mijenjan, a valjani numerički ugovor ostaje isti.
+- Baseline stvarnog controller/DTO HTTP suitea je **4/4**. Test-only
+  `f3ebb1c` dodaje `0` i `-1` za `eventId`. Repro je **4 prošla / 2 pala /
+  6**: oba nevažeća ID-a ranije dobiju 200, dok postojeće confirm=true/false
+  i string-confirm kontrole prolaze.
+- **Test-first CI `42208947344`:** backend Jest summary je **1020 prošlo / 2
+  pala / 1022 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže tačno dva ciljana failurea uz generički
+  process-exit; `tsc: 0`, `eslint: 0`.
+- Fix `8bfc948` dodaje modul-lokalni `PositiveIntPipe` koji prvo poziva
+  postojeći `ParseIntPipe`, zatim odbija rezultat `<1`, uz Swagger
+  `minimum: 1`. Nema cross-module pipe refaktoringa.
+- Valjani `17` za confirm=true/false zadržava 200, response i
+  `confirmOrUpdateAnomaly(17,{confirm},42)`; string confirm ostaje 400.
+  Malformed path, foreign/missing odgovor, DTO, servis, owner upiti,
+  recommendation i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli anomaly-confirm HTTP suite prolazi **6/6**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI generate/check
+  dodaje tačno jedan `eventId minimum: 1`; frontend `openapi:check` i pravi
+  `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42209359555`:** sva tri joba su success, backend **1022/1022**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations. Route marker ostaje **31**.
+- Nema migracije/backfilla, novog flaga, service/DTO/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `8bfc948`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz nije novi
+  real-DB/ownership/mutation/recommendation dokaz; postojeći integration
+  owner/foreign/missing/malformed dokazi ostaju zasebni. Weather path ID
+  pozitivnost, S-004/session revokacija i rollout ostaju otvoreni, a cijeli
+  S-002 nije zatvoren.
+
 ## S-002 — GasReading path ID positivity (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `7b56ec8`, fix `e0b0e35`.**

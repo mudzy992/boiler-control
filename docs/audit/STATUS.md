@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Anomaly eventId path positivity (2026-11-06)
+
+**STATUS: ANOMALY EVENTID PATH POZITIVNOST RIJEŠENA U KODU (`8bfc948`); CI ZELEN.** `0` i `-1` daju 400 prije servisa; valjani ID zadržava 200, response i servisne argumente.
+
+- Source review potvrđuje da je `ParseIntPipe` prihvatao nepozitivne cijele ID-eve, dok je Prisma `HeatingEvent.id` autoincrement. Servis zadržava JWT userId, owner `findFirst` i atomski `updateMany`; raniji 200 kroz mock servis nije real-DB/ownership/mutation/recommendation dokaz. Nije pronađen negenerisani mobile/frontend anomaly mutation caller i klijentski kod nije mijenjan.
+- Test-only `f3ebb1c` dodaje `0` i `-1` za `eventId`. Baseline je **4/4**, repro **4 prošla / 2 pala / 6**. Test-first CI `42208947344` ima backend **1020 prošlo / 2 pala / 1022**, integration **119/119**, mobile **136/136** i frontend success; annotations sadrže tačno dva ciljana failurea uz generički process-exit.
+- Fix `8bfc948` dodaje modul-lokalni `PositiveIntPipe` koji zadržava `ParseIntPipe` korak i zahtijeva rezultat ≥1, uz Swagger `minimum: 1`. DTO, servis, owner upiti, foreign/missing odgovor, recommendation i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli anomaly-confirm HTTP suite je **6/6**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo jedan `eventId minimum: 1`, a frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42209359555`:** sva tri joba success, backend **1022/1022**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations. Route marker ostaje **31**.
+- Nema migracije/backfilla, novog flaga ili DTO/service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `8bfc948`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/mutation/recommendation dokaz; postojeći integration owner/foreign/missing/malformed dokazi ostaju zasebni. Weather path ID pozitivnost, S-004/session revokacija i rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — GasReading path ID positivity (2026-11-06)
 
 **STATUS: GASREADING PATH ID POZITIVNOST RIJEŠENA U KODU (`e0b0e35`); CI ZELEN.** Svih sedam GasReading `:id` ruta odbija `0` i `-1` prije servisa; valjani pozitivni ID-evi, postojeći statusi, response, streamovi i servisni argumenti ostaju nepromijenjeni.

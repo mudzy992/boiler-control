@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  ParseIntPipe,
   UseGuards,
   Patch,
 } from '@nestjs/common';
@@ -18,9 +17,10 @@ import { RegisterDeviceDTO } from './dto/register-device.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GasReminderService } from '../Schedule/gas.reminder.service';
 import { NotificationType } from 'src/generated/prisma';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { ManualNotificationDTO } from './dto/manual-notification.dto';
 import { UpdateNotificationPreferenceDTO } from './dto/update-notification-preference.dto';
+import { PositiveIntPipe } from './positive-int.pipe';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Notifications')
@@ -65,8 +65,9 @@ export class NotificationsController {
 
   // Označi notifikaciju kao pročitanu
   @Post(':id/read')
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   async markAsRead(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @User() userId: number,
   ) {
     // SEC-1: userId je obavezan — bez njega je ruta bila IDOR.

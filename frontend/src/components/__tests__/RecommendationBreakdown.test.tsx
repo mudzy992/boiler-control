@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { RecommendationBreakdown } from '../RecommendationBreakdown';
-import type { RecommendationBreakdownData } from '../RecommendationBreakdown';
-import '../../locales/config';
+import { RecommendationBreakdown } from '../../features/heating/components/RecommendationBreakdown';
+import type { RecommendationBreakdownData } from '../../features/heating/components/RecommendationBreakdown';
 
 const breakdown: RecommendationBreakdownData = {
   version: 1,

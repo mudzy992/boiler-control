@@ -5,12 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../services/api';
 import { createQueryClient } from '../../lib/queryClient';
 import { queryKeys } from '../../lib/queryKeys';
-import { useNotificationsQuery } from '../useNotifications';
-import { useGasReadingsQuery } from '../useGasQueries';
+import { useNotificationsQuery } from '../../features/notifications/hooks/useNotifications';
+import { useGasReadingsQuery } from '../../features/gas/hooks/useGasQueries';
 import {
   DASHBOARD_HEATING_POLL_MS,
   useDashboardHeatingRange,
-} from '../useDashboardHeatingRange';
+} from '../../features/dashboard/hooks/useDashboardHeatingRange';
 
 /**
  * FE2-3: React Query mora dijeliti cache između stranica/drawera, ne smije

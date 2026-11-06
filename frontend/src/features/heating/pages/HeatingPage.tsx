@@ -1,8 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
-import { queryKeys } from '../lib/queryKeys';
-import { Card } from '../components/index';
+import { apiClient } from '../../../services/api';
+import { queryKeys } from '../../../lib/queryKeys';
 
 interface HeatingEvent {
   id: number;

@@ -1,11 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiClient } from '../services/api';
-import { Card, Button, Input, InputNumber } from '../components/index';
-import { useTranslation } from 'react-i18next';
-import type {
-  CreateHomeProfileDto,
-  HomeProfileResponse,
-} from '../types/homeProfile';
+import React, { useEffect, useState } from 'react';
+import {
+  Card,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Switch,
+  Button,
+  Row,
+  Col,
+  message,
+  Spin,
+} from 'antd';
+import { apiClient } from '../../../services/api';
+// FE2-1: CreateHomeProfileDto i UpdateHomeProfileDto su uklonjeni — bili su
+// uvezeni ali nikad korišteni (noUnusedLocals ih prijavljuje kao TS6196).
+import type { HomeProfileResponse } from '../types';
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,
@@ -13,7 +23,7 @@ import {
   InsulationType,
   WindowType,
   HeatingType,
-} from '../constants/homeProfileEnums';
+} from '../../../constants/homeProfileEnums';
 
 interface HomeProfileFormValues {
   homeName: string;

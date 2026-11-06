@@ -1,8 +1,6 @@
 import React from 'react';
-import { Alert } from 'antd';
-import { useTranslation } from 'react-i18next';
-import type { components } from '../types/api';
-import { Card } from './Card';
+import { Alert, Card } from 'antd';
+import type { components } from '../../../types/api';
 
 export type RecommendationBreakdownData =
   components['schemas']['RecommendationBreakdownDto'];

@@ -23,7 +23,7 @@ import viteConfig from '../../vite.config.ts?raw';
  * Sadržaj svih stranica, učitan pri kompilaciji. `import.meta.glob` je
  * Vite-ova transformacija — radi i u Vitest-u.
  */
-const pageModules = import.meta.glob('../pages/*.tsx', {
+const pageModules = import.meta.glob('../features/*/pages/*.tsx', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -31,17 +31,28 @@ const pageModules = import.meta.glob('../pages/*.tsx', {
 
 const pageNames = Object.keys(pageModules).map((p) => p.split('/').pop() as string);
 
+/** Mapira naziv stranice na puni glob ključ (npr. DashboardPage.tsx → ../features/dashboard/pages/DashboardPage.tsx). */
+const pagePaths = Object.fromEntries(
+  Object.keys(pageModules).map((p) => [p.split('/').pop() as string, p])
+);
+
 /**
- * Statički import stranice: `… from './pages/X'`.
+ * Statički import stranice: `… from './pages/X'` ili `… from './features/X/pages/X'`.
  * Dinamički import izgleda `import('./pages/X')` — bez `from`.
  */
 const staticPageImports = (source: string): string[] =>
-  Array.from(source.matchAll(/import\s+[^;]*?from\s+['"](\.\/pages\/[^'"]+)['"]/g)).map(
-    (m) => m[1]
-  );
+  Array.from(
+    source.matchAll(
+      /import\s+[^;]*?from\s+['"](\.\/(?:pages|features\/[^/]+\/pages)\/[^'"]+)['"]/g
+    )
+  ).map((m) => m[1]);
 
 const dynamicPageImports = (source: string): string[] =>
-  Array.from(source.matchAll(/import\(\s*['"](\.\/pages\/[^'"]+)['"]\s*\)/g)).map((m) => m[1]);
+  Array.from(
+    source.matchAll(
+      /import\(\s*['"](\.\/(?:pages|features\/[^/]+\/pages)\/[^'"]+)['"]\s*\)/g
+    )
+  ).map((m) => m[1]);
 
 describe('FE2-4: App.tsx dijeli stranice po ruti', () => {
   it('ne importuje nijednu stranicu statički', () => {
@@ -49,11 +60,11 @@ describe('FE2-4: App.tsx dijeli stranice po ruti', () => {
     expect(staticPageImports(appSource)).toEqual([]);
   });
 
-  it('svaku stranicu iz src/pages/ učitava dinamički (React.lazy)', () => {
+  it('svaku stranicu iz features/*/pages/ učitava dinamički (React.lazy)', () => {
     expect(pageNames.length, 'očekuje se 10 stranica').toBe(10);
     const lazy = dynamicPageImports(appSource);
     const uncovered = pageNames
-      .map((f) => `./pages/${f.replace(/\.tsx$/, '')}`)
+      .map((f) => pagePaths[f]!.replace(/\.tsx$/, '').replace(/^\.\.\//, './'))
       .filter((p) => !lazy.includes(p));
     // Nova stranica bez lazy() tiho povećava početni čip — test mora pasti.
     expect(uncovered).toEqual([]);
@@ -89,7 +100,7 @@ describe('FE2-4: vite.config.ts grupiše vendor pakete u stabilne čipove', () =
     // (antd → icons → rc-util → vendor-antd) i srušilo evaluaciju bundlea.
     ['vendor-antd', '@ant-design/icons'],
   ])('grupa %s se stvarno vraća za %s', (chunk, pattern) => {
-    // Citirani oblici: `toContain('react')` bi preživjelo i u `react-router`,
+    // Citirani oblici: `toContain('react')` bi preživio i u `react-router`,
     // pa bi asertcija bila prazna.
     expect(viteConfig).toContain(`return '${chunk}'`);
     expect(viteConfig).toContain(`'${pattern}'`);
@@ -110,7 +121,7 @@ describe('FE2-4: @ant-design/plots ostaje izolovan na dashboardu', () => {
   it('samo DashboardPage importuje @ant-design/plots', () => {
     // Da neka druga stranica počne koristiti grafikone, `vendor-plots`
     // (1.467 kB) bi se vratio u inicijalno učitavanje za tu rutu.
-    const users = pageNames.filter((f) => pageModules[`../pages/${f}`].includes('@ant-design/plots'));
+    const users = pageNames.filter((f) => pageModules[pagePaths[f]!].includes('@ant-design/plots'));
     expect(users).toEqual(['DashboardPage.tsx']);
   });
 });

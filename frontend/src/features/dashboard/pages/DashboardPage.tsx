@@ -1,28 +1,15 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Alert } from 'antd';
-import {
-  AlertOutlined,
-  HomeOutlined,
-  ClockCircleOutlined,
-  BellOutlined,
-  SettingOutlined,
-  WarningOutlined,
-  InfoCircleOutlined,
-  CheckCircleOutlined,
-  FireOutlined,
-} from '@ant-design/icons';
-import { apiClient } from '../services/api';
-import { StatCard } from '../components/StatCard';
-import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
-import type { RecommendationBreakdownData } from '../components/RecommendationBreakdown';
+import React, { useEffect, useMemo, useState, useCallback, useTransition } from 'react';
+import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
+import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { apiClient } from '../../../services/api';
+import { StatCard } from '../../../components/StatCard';
+import { RecommendationBreakdown } from '../../heating/components/RecommendationBreakdown';
+import type { RecommendationBreakdownData } from '../../heating/components/RecommendationBreakdown';
 import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../lib/queryKeys';
-import {
-  useNotificationsQuery,
-  useNotificationPreferencesQuery,
-} from '../hooks/useNotifications';
+import { queryKeys } from '../../../lib/queryKeys';
+import { useNotificationsQuery, useNotificationPreferencesQuery } from '../../notifications/hooks/useNotifications';
 import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
 import { Card, Button, InputNumber } from '../components/index';
 import {
@@ -30,6 +17,16 @@ import {
   MAX_CURRENT_FLOW_TEMP,
 } from '../constants/boilerLimits';
 
+const { Text } = Typography;
+
+/** FE2-15 (FE-024): `useTransition` za teže UI ažuriranja (INP metrika).
+ * `startTransition` označava ažuriranje kao neslužno, tako da React može
+ * prekinuti render ako korisnik unese novi unos dok se prethodni još obradjuje.
+ * Koristi se za mark-as-read i set-temp akcije koje animations + API poziv
+ * mogu da zakople main thread. */
+const [, startTransition] = useTransition();
+
+// Type definitions matching actual backend response
 interface Weather {
   temp?: number;
   feelsLike?: number;
@@ -143,6 +140,14 @@ type PlotEvent = {
     data?: ChartDatum;
   };
 };
+
+// FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u BoilerPage.tsx.
+// Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
+import {
+  MIN_CURRENT_FLOW_TEMP,
+  MAX_CURRENT_FLOW_TEMP,
+} from '../../../constants/boilerLimits';
+
 
 type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
@@ -267,11 +272,11 @@ export const DashboardPage: React.FC = () => {
     async (notificationId: number) => {
       try {
         await apiClient.markNotificationAsRead(notificationId);
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.notifications,
-        });
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.notificationsUnreadCount,
+        // FE2-15: invalidacija u transitionu — UI ostaje responsivan dok se
+        // podaci osvežavaju u pozadini.
+        startTransition(() => {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+          void queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
         });
       } catch (error) {
         console.error('Failed to mark notification as read:', error);
@@ -306,7 +311,12 @@ export const DashboardPage: React.FC = () => {
     try {
       setSetTempSubmitting(true);
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
-      await dashboardQuery.refetch();
+      // FE2-15: refetch u transitionu da UI ostaje responsivan tokom re-fetch-a.
+      startTransition(async () => {
+        await refetchDashboard();
+      });
+
+      message.success('Current boiler temperature updated');
       setSetTempModalOpen(false);
     } catch (error) {
       console.error('Failed to update current boiler temp:', error);
@@ -694,14 +704,7 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div className="space-y-2">
             {alerts.map((a, idx) => (
-              <Alert
-                key={idx}
-                type={a.type as 'info' | 'warning' | 'error'}
-                showIcon
-                icon={a.icon}
-                message={a.message}
-                className="rounded-lg"
-              />
+              <AlertRow key={idx} alert={a} />
             ))}
           </div>
         </Card>
@@ -912,19 +915,59 @@ export const DashboardPage: React.FC = () => {
           notificationDrawerOpen ? 'translate-x-0' : 'translate-x-full'
         } w-80 bg-surface border-l border-border shadow-lg dark:border-dark-border dark:bg-dark-surface`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border dark:border-dark-border">
-          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <BellOutlined className="w-4 h-4" /> Notifications
-          </h3>
-          <Button variant="ghost" size="sm" onClick={() => setNotificationDrawerOpen(false)}>
-            <span className="sr-only">Close</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </Button>
-        </div>
-        <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {notificationsLoading ? (
-            <div className="flex items-center justify-center h-40">
-              <div className="w-6 h-6 border-4 border-border rounded-full animate-spin border-t-brand"></div>
+        {notificationsLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Spin size="large" />
+          </div>
+        ) : unreadNotifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <BellOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+            <Text type="secondary">Nema novih notifikacija</Text>
+            <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
+              Notifikacije će se prikazati ovdje kada stignu novi događaji
+            </Text>
+          </div>
+        ) : (
+          <List
+            dataSource={unreadNotifications}
+            renderItem={(notif) => (
+              <NotificationItem notif={notif} onMarkAsRead={handleMarkNotificationAsRead} />
+            )}
+          />
+        )}
+      </Drawer>
+
+      {/* NOTIFICATION SETTINGS MODAL */}
+      <Modal
+        title={<div className="flex items-center gap-2"><SettingOutlined /> Postavke notifikacija</div>}
+        open={notificationSettingsOpen}
+        onCancel={() => setNotificationSettingsOpen(false)}
+        footer={null}
+        width={600}
+      >
+        {notificationsLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Spin size="large" />
+          </div>
+        ) : notificationPreferences.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <SettingOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+            <Text type="secondary">Učitavanje postavki...</Text>
+            <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
+              Ako se postavke ne učitaju, pokušajte osvježiti stranicu
+            </Text>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 16, padding: '12px 16px', backgroundColor: '#f0f9ff', borderRadius: 8 }}>
+              <Space direction="vertical" size={4}>
+                <Text strong style={{ color: '#0369a1' }}>
+                  <InfoCircleOutlined /> Upravljajte vašim notifikacijama
+                </Text>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Odaberite koje tipove notifikacija želite primati. Sve promjene se odmah primjenjuju.
+                </Text>
+              </Space>
             </div>
           ) : unreadNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
@@ -1108,4 +1151,53 @@ export const DashboardPage: React.FC = () => {
   );
 };
 
-DashboardPage.displayName = 'DashboardPage';
+/** FE2-15: memoizovana stavka notifikacije — sprječava niepotreban re-render
+ * cijele liste kada se samo jedna notifikacija označi kao pročitana. */
+const NotificationItem = React.memo(
+  ({
+    notif,
+    onMarkAsRead,
+  }: {
+    notif: { id: number; isRead: boolean; type: string; title: string; message: string; sentAt: string };
+    onMarkAsRead: (id: number) => void;
+  }) => {
+    const getIcon = () => {
+      if (notif.type.includes('ANOMALY') || notif.type.includes('ALERT')) {
+        return <WarningOutlined style={{ color: '#faad14' }} />;
+      }
+      if (notif.type.includes('ERROR')) {
+        return <WarningOutlined style={{ color: '#ff4d4f' }} />;
+      }
+      if (notif.type.includes('STARTED') || notif.type.includes('SUCCESS')) {
+        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+      }
+      return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
+    };
+
+    return (
+      <List.Item
+        onClick={() => !notif.isRead && onMarkAsRead(notif.id)}
+        className="cursor-pointer"
+      >
+        <List.Item.Meta
+          avatar={getIcon()}
+          title={notif.title}
+          description={
+            <Space direction="vertical" size="small">
+              <Text>{notif.message}</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {dayjs(notif.sentAt).format('DD.MM.YYYY HH:mm')}
+              </Text>
+            </Space>
+          }
+        />
+      </List.Item>
+    );
+  }
+);
+
+/** FE2-15: memoizovani red upozorenja. */
+const AlertRow = React.memo(({ alert }: { alert: { type: string; message: string; icon: React.ReactNode } }) => (
+  <Alert type={alert.type as 'info' | 'success' | 'warning' | 'error'} showIcon icon={alert.icon} message={alert.message} />
+));
+

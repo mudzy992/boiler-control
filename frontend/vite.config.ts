@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -48,7 +49,20 @@ function requireApiBaseUrl(): Plugin {
 export default defineConfig({
   plugins: [requireApiBaseUrl(), react()],
   server: {
-    port: 80
+    port: 80,
+    // SEC-4 / BFF obrazac: u developmentu Vite proxy-ja /api zahtjeve na
+    // backend (:3020) tako da frontend i API dele isti origin. Izbegava se
+    // CORS preflight za svaki poziv i browser automatski šalje httpOnly
+    // refresh cookie koji je postavio backend.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3020',
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:3020',
+        },
+      },
+    },
   },
   build: {
     /**
@@ -67,6 +81,8 @@ export default defineConfig({
      * `@ant-design/plots` se provjerava PRIJE `@ant-design/icons` jer oba
      * počinju s `@ant-design/`.
      */
+    /** FE2-4 / FE2-15: bundle budžet — upozorava ako Assembly čip prelazi 800 kB. */
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id: string) {
@@ -125,5 +141,10 @@ export default defineConfig({
         }
       }
     }
-  }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 })

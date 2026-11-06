@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
-import { apiClient } from '../services/api';
+import { apiClient } from '../../../services/api';
 import { useGasReadingsQuery } from '../hooks/useGasQueries';
-import { queryKeys } from '../lib/queryKeys';
+import { queryKeys } from '../../../lib/queryKeys';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { GasForm } from '../components/GasForm';
 import { Button, Card } from '../components/index';

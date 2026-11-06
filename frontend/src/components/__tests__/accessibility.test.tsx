@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import axe from 'axe-core';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../locales/config';
-import { GasForm } from '../GasForm';
+import { GasForm } from '../../features/gas/components/GasForm';
 import { THEME_STORAGE_KEY } from '../../context/ThemeContext';
 // `?raw` (vite/client) daje sadržaj fajla kao string bez Node API-ja, koji nije
 // dostupan u tsconfig.app.json — test ostaje u istom type-check prolazu.

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './features/auth/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MainLayout } from './components/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -22,31 +22,35 @@ import './index.css';
  * Stranice koriste **imenovane** izvoze, pa `React.lazy` (koji traži default
  * izvoz) mora mapirati modul: `.then((m) => ({ default: m.X }))`.
  */
-const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
-const DashboardPage = lazy(() =>
-  import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+const LoginPage = lazy(() =>
+  import('./features/auth/pages/LoginPage').then((m) => ({ default: m.LoginPage }))
 );
-const BoilerPage = lazy(() => import('./pages/BoilerPage').then((m) => ({ default: m.BoilerPage })));
+const DashboardPage = lazy(() =>
+  import('./features/dashboard/pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+);
+const BoilerPage = lazy(() =>
+  import('./features/boiler/pages/BoilerPage').then((m) => ({ default: m.BoilerPage }))
+);
 const HeatingPage = lazy(() =>
-  import('./pages/HeatingPage').then((m) => ({ default: m.HeatingPage }))
+  import('./features/heating/pages/HeatingPage').then((m) => ({ default: m.HeatingPage }))
 );
 const ProfilePage = lazy(() =>
-  import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
+  import('./features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
 );
 const ReportsPage = lazy(() =>
-  import('./pages/ReportsPage').then((m) => ({ default: m.ReportsPage }))
+  import('./features/reports/pages/ReportsPage').then((m) => ({ default: m.ReportsPage }))
 );
 const HomeProfilePage = lazy(() =>
-  import('./pages/HomeProfilePage').then((m) => ({ default: m.HomeProfilePage }))
+  import('./features/home-profile/pages/HomeProfilePage').then((m) => ({ default: m.HomeProfilePage }))
 );
 const GasReadingsPage = lazy(() =>
-  import('./pages/GasReadingsPage').then((m) => ({ default: m.GasReadingsPage }))
+  import('./features/gas/pages/GasReadingsPage').then((m) => ({ default: m.GasReadingsPage }))
 );
 const GasAnalyticsPage = lazy(() =>
-  import('./pages/GasAnalyticsPage').then((m) => ({ default: m.GasAnalyticsPage }))
+  import('./features/gas/pages/GasAnalyticsPage').then((m) => ({ default: m.GasAnalyticsPage }))
 );
 const NotificationsPage = lazy(() =>
-  import('./pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage }))
+  import('./features/notifications/pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage }))
 );
 
 /**

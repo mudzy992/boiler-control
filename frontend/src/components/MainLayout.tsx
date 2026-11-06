@@ -14,9 +14,11 @@ import {
   BellOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { useThemeMode } from '../context/ThemeContext';
-import { Button } from './Button';
+import { SkipLink } from '../shared/components/SkipLink';
+
+const { Header, Sider, Content, Footer } = Layout;
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -104,14 +106,26 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-muted text-text-primary transition-colors duration-300">
-      <a href="#content" className="skip-link">
-        Skip to content
-      </a>
-
-      {/* Mobile top bar */}
-      <header className="fixed top-0 left-0 right-0 z-sticky border-b border-border bg-surface/95 backdrop-blur-sm px-4 py-3 dark:border-dark-border dark:bg-dark-surface/95">
-        <div className="flex items-center justify-between">
+    <Layout className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* WCAG 2.2 2.4.1 — prvi fokusirani element za tastaturatne korisnike */}
+      <SkipLink href="#main-content" />
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        breakpoint="lg"
+        collapsedWidth={0}
+        width={240}
+        className="border-r border-gray-200 dark:border-slate-800"
+      >
+        <div className="px-6 py-5 text-lg font-semibold text-black dark:text-slate-100">
+          🔥 Boiler Control
+        </div>
+        <Menu theme={mode === 'dark' ? 'dark' : 'light'} mode="inline" items={menuItems} />
+      </Sider>
+      <Layout>
+        <Header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-6">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -142,6 +156,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               aria-label="Logout"
               icon={<LogoutOutlined />}
             />
+          </Tooltip>
+        </Header>
+        <Content className="px-4 py-6 sm:px-6 lg:px-8">
+          <div id="main-content" className="mx-auto w-full max-w-7xl rounded-2xl bg-white/95 p-5 shadow-sm dark:bg-slate-900/80 sm:p-6">
+            {children}
           </div>
         </div>
       </header>

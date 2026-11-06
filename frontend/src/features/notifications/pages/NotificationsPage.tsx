@@ -1,16 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
+import { apiClient } from '../../../services/api';
 import { useNotificationsQuery } from '../hooks/useNotifications';
-import { queryKeys } from '../lib/queryKeys';
-import {
-  BellOutlined,
-  CheckCircleOutlined,
-  AlertOutlined,
-  InfoOutlined,
-} from '@ant-design/icons';
-import { Card, Button } from '../components/index';
+import { queryKeys } from '../../../lib/queryKeys';
+import { BellOutlined, CheckCircleOutlined, AlertOutlined, InfoOutlined } from '@ant-design/icons';
+import { Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 export const NotificationsPage: React.FC = () => {

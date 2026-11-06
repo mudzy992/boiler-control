@@ -2363,6 +2363,19 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — ThermostatDevice create/update prazni identifikatori (2026-11-06)
+
+**STATUS: PRAZNI THERMOSTATDEVICE VENDOR/DEVICEID ODBIJENI U KODU (`cdf5d2d`); CI ZELEN.** Create/update `vendor` i `deviceId` s `""` daju 400 prije servisa; valjane vrijednosti, response, JWT userId, servisni argumenti i postojeće raw/null/path kontrole ostaju nepromijenjene.
+
+- Source review potvrđuje da su oba DTO-a imala samo `@IsString()` za ova identifikacijska polja i da servis prosljeđuje vrijednosti Prisma upisu. Prisma `String` ne nameće minimalnu dužinu; raniji 201/200 kroz mock servis nije real-DB mutation ni ownership dokaz. Tuya integration DTO već koristi `IsNotEmpty` za vendor.
+- Pregledani mobile wrapper i klijentski izvori ne šalju namjerno prazan `vendor` ili `deviceId`; valjani instalirani klijenti ostaju kompatibilni i klijentski kod nije mijenjan.
+- Test-only `8c170ee` dodaje prazan string za create/update `vendor` i `deviceId`. Baseline je **37/37**, repro **37 prošlo / 4 pala / 41**: create ranije dobija 201, update 200. Test-first CI `42176846814` ima backend **974 prošla / 4 pala / 978**, integration **119/119**, mobile **136/136** i frontend success; annotations sadrže tačno četiri ciljana failurea uz generički process-exit.
+- Fix `cdf5d2d` dodaje `@IsNotEmpty()` uz `@IsString()` i Swagger `minLength: 1` na četiri polja. Alias, whitespace-only ponašanje, max-length, formati, trimming, controller, servis, ownership i Prisma mutacije nisu mijenjani.
+- Lokalno cijeli ThermostatDevice HTTP suite je **41/41**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo četiri `minLength: 1`, a frontend `openapi:check` prolazi bez generated type diffa.
+- **Code CI `42177301328`:** sva tri joba success, backend **978/978**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga ili client/compose/deploy promjene. Rollback production fixa i OpenAPI minLength vrijednosti je revert `cdf5d2d`.
+- **Preostalo:** whitespace-only, alias sadržaj, maksimalne dužine, vendor/device format i trimming ostaju zasebne odluke. Mock-controller dokaz nije real-DB/ownership/mutation dokaz; S-004/session revokacija, rollout i cijeli S-002 nisu zatvoreni.
+
 ### S-002 — ThermostatDevice update non-nullable null semantika (2026-11-06)
 
 **STATUS: NON-NULLABLE THERMOSTATDEVICE UPDATE NULL VRIJEDNOSTI ODBIJENE U KODU (`84f5507`); CI ZELEN.** `vendor`, `deviceId`, `mode` i `homeProfileId` s `null` daju 400 prije servisa; nullable `alias: null`, omitted polja, valjani patch, response i servisni argumenti ostaju nepromijenjeni.

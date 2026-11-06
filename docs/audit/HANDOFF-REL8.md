@@ -3,6 +3,47 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — ThermostatDevice create/update prazni identifikatori (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `8c170ee`, fix `cdf5d2d`.**
+`origin/arena/c9961f17-boiler-control` je `cdf5d2d` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `1db6e3e`. PR nije otvaran.
+
+- Source review potvrđuje da create/update `vendor` i `deviceId` imaju samo
+  `@IsString()` i da servis prosljeđuje vrijednosti Prisma upisu. Prisma
+  `String` ne nameće minimalnu dužinu; raniji 201/200 kroz mock servis nije
+  real-DB mutation ni ownership dokaz. Tuya integration DTO već koristi
+  `IsNotEmpty` za vendor.
+- Pregledani mobile wrapper i klijentski izvori ne šalju namjerno prazan
+  `vendor` ili `deviceId`. Valjani instalirani klijenti ostaju kompatibilni i
+  klijentski kod nije mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea je **37/37**. Test-only
+  `8c170ee` dodaje prazan string za create/update `vendor` i `deviceId`.
+  Repro je **37 prošlo / 4 pala / 41**: create ranije dobija 201, update 200,
+  a svih 37 postojećih kontrola prolazi.
+- **Test-first CI `42176846814`:** backend Jest summary je **974 prošla / 4
+  pala / 978 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže tačno četiri ciljana failurea uz generički
+  process-exit; `tsc: 0`, `eslint: 0`, bez drugih regresija.
+- Fix `cdf5d2d` dodaje `@IsNotEmpty()` uz postojeći `@IsString()` i Swagger
+  `minLength: 1` na create/update `vendor` i `deviceId`. Prazan string sada
+  daje 400 prije servisa. Valjane vrijednosti, response, JWT userId, servisni
+  argumenti i postojeće raw/null/path kontrole ostaju nepromijenjene.
+- Lokalni cijeli ThermostatDevice HTTP suite prolazi **41/41**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI generate/check
+  dodaje tačno četiri `minLength: 1`; frontend `openapi:check` prolazi bez
+  generated type diffa.
+- **Code CI `42177301328`:** sva tri joba su success, backend **978/978**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga, controller/service/client/compose/
+  deploy promjene. Rollback production fixa i OpenAPI minLength vrijednosti je
+  revert `cdf5d2d`; privremeni Prisma stubovi su uklonjeni.
+- **Granica:** nije uvedeno whitespace-only, alias-content, max-length,
+  vendor/device-format niti trimming pravilo. Mock-controller HTTP dokaz nije
+  novi real-DB/ownership/mutation dokaz; S-004/session revokacija i rollout
+  ostaju zasebni, a cijeli S-002 se ovim ne zatvara.
+
 ## S-002 — ThermostatDevice update non-nullable null semantika (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `92ba063`, fix `84f5507`.**

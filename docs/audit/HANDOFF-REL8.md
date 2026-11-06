@@ -3,6 +3,53 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Notification register-token empty-token validacija (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `93b2f18`, fix `5bfd7c8`.**
+`origin/arena/c9961f17-boiler-control` je `5bfd7c8` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `aedd3a9`. PR nije otvaran.
+
+- Source review potvrđuje da `RegisterDeviceDTO.expoPushToken` ima raw-input
+  `@Transform` i `@IsString`, ali nema `@IsNotEmpty`; prazan string prolazi do
+  `registerToken`. Servis prosljeđuje isti token postojećem `userDevice`
+  update/create toku, a Prisma polje je obavezno i jedinstveno. Raniji 201 kroz
+  mock servis nije novi real-DB upis ili Expo dokaz.
+- Mobile dobija token od Expo servisa, a `AuthContext` već preskače registraciju
+  za falsy token. Valjani instalirani klijenti ostaju kompatibilni i klijentski
+  kod nije mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea je **6/6**. Test-only `93b2f18`
+  dodaje `expoPushToken: ''` uz valjanu platformu. Repro je **6 prošlo / 1 pao /
+  7 ukupno**: prazan token ranije dobija 201 i dolazi do mock servisa, dok
+  valjan/numerički token i sve path-ID kontrole prolaze.
+- **Test-first CI `42215561690`:** backend Jest summary je **1031 prošlo / 1
+  pao / 1032 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  **4/4**. Jedini ciljani failure je očekivani 400 naspram dobijenog 201;
+  `tsc: 0`, `eslint: 0`.
+- Fix `5bfd7c8` dodaje samo `@IsNotEmpty()` uz postojeći raw-input transform i
+  `@IsString`. Platform enum, JWT userId, controller, servis i `userDevice`
+  update/create ostaju nepromijenjeni; nema novog flaga ili Swagger dekoratora.
+- Valjani token zadržava 201, response i
+  `registerToken(42,'ExponentPushToken[synthetic-token]','android')`; numerički
+  token i nepozitivni path ID-evi ostaju 400. Nije uvedeno whitespace-only,
+  max-length, Expo-format, trimming niti token-lifecycle pravilo.
+- Lokalni cijeli notifications-read HTTP suite prolazi **7/7**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI `--check`,
+  frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez
+  contract/generated type diffa.
+- **Code CI `42216012895`:** sva tri joba su success, backend **1032/1032**,
+  integration **119/119**, mobile **136/136**, frontend **4/4**, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Katalog je dopunjen samo na postojećem register-token redu. Controller i
+  route markeri nisu mijenjani, API katalog ostaje na **78 redova**, a inventory
+  na **14/13/27**; nije dodana nijedna ruta.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene ni novog
+  flaga. Rollback production fixa je revert `5bfd7c8`; privremeni Prisma
+  stubovi su uklonjeni.
+- **Granica:** prazan string sada staje prije mock servisa/DB granice, ali ovo
+  nije real-DB/Expo/token-lifecycle dokaz. Whitespace-only, max/format/trimming
+  politike, više uređaja, receipti, S-004/session revokacija i rollout ostaju
+  otvoreni, a cijeli S-002 nije zatvoren.
+
 ## S-002 — Weather homeProfileId path positivity (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `59df6d9`, fix `47bb45a`.**

@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Notification register-token empty-token validacija (2026-11-06)
+
+**STATUS: PRAZAN NOTIFICATION PUSH TOKEN ODBIJEN U KODU (`5bfd7c8`); CI ZELEN.** `expoPushToken: ''` daje 400 prije servisa; valjani token zadržava 201, response i servisne argumente.
+
+- Source review potvrđuje da raw-input transform i `@IsString` nisu odbijali prazan string. Servis prosljeđuje token postojećem `userDevice` update/create toku; raniji 201 kroz mock servis nije real-DB/Expo dokaz. Mobile već preskače falsy token i klijentski kod nije mijenjan.
+- Test-only `93b2f18` dodaje prazan token uz valjanu platformu. Baseline je **6/6**, repro **6 prošlo / 1 pao / 7**. Test-first CI `42215561690` ima backend **1031 prošlo / 1 pao / 1032**, integration **119/119**, mobile **136/136** i frontend **4/4**; jedini ciljani failure je dobijeni 201 umjesto 400, uz `tsc: 0` i `eslint: 0`.
+- Fix `5bfd7c8` dodaje samo `@IsNotEmpty()` uz postojeći raw-input transform i `@IsString`. Platform enum, JWT userId, controller, servis i `userDevice` update/create nisu mijenjani; nema novog flaga ili Swagger dekoratora.
+- Lokalni cijeli notifications-read HTTP suite je **7/7**, ESLint **0 errors / 2 poznata warnings**. OpenAPI `--check`, frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez contract/generated type diffa.
+- **Code CI `42216012895`:** sva tri joba success, backend **1032/1032**, integration **119/119**, mobile **136/136**, frontend **4/4**, `tsc: 0`, `eslint: 0`, nula failure annotations. Register-token katalog je dopunjen bez novih ruta ili pomjerenih markera; API zbir ostaje **78**, inventory **14/13/27**.
+- Nema migracije/backfilla, servis/client/compose/deploy promjene. Rollback production fixa je revert `5bfd7c8`.
+- **Preostalo:** mock-controller dokaz nije real-DB/Expo/token-lifecycle dokaz. Whitespace-only, max-length, Expo-format, trimming, više uređaja, receipti, S-004/session revokacija i rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Weather homeProfileId path positivity (2026-11-06)
 
 **STATUS: WEATHER HOMEPROFILEID PATH POZITIVNOST RIJEŠENA U KODU (`47bb45a`); CI ZELEN.** Legacy current, v2 current, v2 locations i v2 confirm odbijaju `0` i `-1` prije servisnih granica; valjani pozitivni ID-evi i postojeći odgovori ostaju nepromijenjeni.

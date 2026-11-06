@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
   Max,
   Min,
 } from 'class-validator';
@@ -30,40 +31,40 @@ export class UpdateHomeProfileDto {
   @IsString()
   location?: string;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsNumber()
   @Min(10)
   @Max(2000)
   floorArea?: number;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsNumber()
   @Min(1.8)
   @Max(5)
   ceilingHeight?: number;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsEnum(HomeProfile_insulationType)
   insulationType?: HomeProfile_insulationType;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)
   @Max(30)
   insulationThickness?: number;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsEnum(HomeProfile_windowType)
   windowType?: HomeProfile_windowType;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsEnum(HomeProfile_heatingType)
   heatingType?: HomeProfile_heatingType;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsInt()
   @Min(1900)
@@ -82,7 +83,7 @@ export class UpdateHomeProfileDto {
   @IsString()
   boilerModel?: string;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsBoolean()
   hasFloorHeating?: boolean;
@@ -113,7 +114,7 @@ export class UpdateHomeProfileDto {
   @IsString()
   preferredScheduleNotes?: string;
 
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsEnum(SeasonMode)
   seasonMode?: SeasonMode;
 }

@@ -5,14 +5,14 @@ import {
   Patch,
   Param,
   Body,
-  ParseIntPipe,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { UpdateHeatingAnomalyDto } from './dto/heating-anomaly.dto';
 import { HeatingAnomalyCheckerService } from './heating.anomayl.checker.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { PositiveIntPipe } from './positive-int.pipe';
 
 @ApiTags('Anomalies')
 @ApiBearerAuth()
@@ -29,8 +29,9 @@ export class HeatingAnomalyController {
 
   // Update anomaly status
   @Patch(':eventId')
+  @ApiParam({ name: 'eventId', schema: { type: 'number', minimum: 1 } })
   async updateAnomaly(
-    @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('eventId', PositiveIntPipe) eventId: number,
     @Body() dto: UpdateHeatingAnomalyDto,
     @Req() req,
   ) {

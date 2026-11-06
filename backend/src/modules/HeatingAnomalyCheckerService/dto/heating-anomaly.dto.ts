@@ -5,6 +5,10 @@ import { IsBoolean, IsDate, IsOptional } from 'class-validator';
 // Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije validacije.
 const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
 
+// ISO string zadržava Date rezultat iz @Type; ne-string raw ide @IsDate.
+const transformDateInput = ({ value, obj, key }: TransformFnParams): unknown =>
+  typeof obj[key] === 'string' ? (value as unknown) : (obj[key] as unknown);
+
 /**
  * `PATCH /api/anomalies/:eventId`.
  *
@@ -22,6 +26,7 @@ export class UpdateHeatingAnomalyDto {
   @ApiPropertyOptional({ type: String, format: 'date-time' })
   @IsOptional()
   @Type(() => Date)
+  @Transform(transformDateInput)
   @IsDate()
   proposedEndTime?: Date;
 

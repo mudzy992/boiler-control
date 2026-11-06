@@ -1,5 +1,7 @@
 import React from 'react';
-import { Alert, Card } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { Alert } from 'antd';
+import { Card } from '../../../components/Card';
 import type { components } from '../../../types/api';
 
 export type RecommendationBreakdownData =

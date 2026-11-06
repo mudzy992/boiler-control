@@ -6,7 +6,9 @@ import { useGasReadingsQuery } from '../hooks/useGasQueries';
 import { queryKeys } from '../../../lib/queryKeys';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { GasForm } from '../components/GasForm';
-import { Button, Card } from '../components/index';
+import { message } from 'antd';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
 import { useTranslation } from 'react-i18next';
 
 export const GasReadingsPage: React.FC = () => {

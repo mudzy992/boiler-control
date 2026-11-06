@@ -17,8 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useThemeMode } from '../context/ThemeContext';
 import { SkipLink } from '../shared/components/SkipLink';
-
-const { Header, Sider, Content, Footer } = Layout;
+import { Button } from './Button';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -106,62 +105,39 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <Layout className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* WCAG 2.2 2.4.1 — prvi fokusirani element za tastaturatne korisnike */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <SkipLink href="#main-content" />
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        breakpoint="lg"
-        collapsedWidth={0}
-        width={240}
-        className="border-r border-gray-200 dark:border-slate-800"
-      >
-        <div className="px-6 py-5 text-lg font-semibold text-black dark:text-slate-100">
-          🔥 Boiler Control
+      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed((prev) => !prev)}
+            aria-label="Toggle navigation"
+            icon={<MenuOutlined />}
+          />
+          <span className="font-semibold text-text-primary tracking-tight">
+            🔥 Boiler Control
+          </span>
         </div>
-        <Menu theme={mode === 'dark' ? 'dark' : 'light'} mode="inline" items={menuItems} />
-      </Sider>
-      <Layout>
-        <Header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCollapsed((prev) => !prev)}
-              aria-label="Toggle navigation"
-              icon={<MenuOutlined />}
-            />
-            <span className="font-semibold text-text-primary tracking-tight">
-              🔥 Boiler Control
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:block text-sm text-text-secondary dark:text-dark-text-secondary">
-              Welcome, {user?.name || 'User'}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMode}
-              aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
-              icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              aria-label="Logout"
-              icon={<LogoutOutlined />}
-            />
-          </Tooltip>
-        </Header>
-        <Content className="px-4 py-6 sm:px-6 lg:px-8">
-          <div id="main-content" className="mx-auto w-full max-w-7xl rounded-2xl bg-white/95 p-5 shadow-sm dark:bg-slate-900/80 sm:p-6">
-            {children}
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:block text-sm text-text-secondary dark:text-dark-text-secondary">
+            Welcome, {user?.name || 'User'}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMode}
+            aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
+            icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            aria-label="Logout"
+            icon={<LogoutOutlined />}
+          />
         </div>
       </header>
 
@@ -236,7 +212,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
       )}
 
-      <main id="content" className="lg:pl-64 pt-16 lg:pt-0 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <main id="main-content" className="lg:pl-64 pt-16 lg:pt-0 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="rounded-2xl border border-border bg-surface shadow-sm p-6 dark:border-dark-border dark:bg-dark-surface-elevated">
           {children}
         </div>

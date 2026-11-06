@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { Input } from './Input';
-import { Button } from './Button';
+import { Button } from '../../../components/Button';
+import { Input } from '../../../components/Input';
 
 /**
  * FE2-13: elementi između kojih Tab smije kružiti dok je dijalog otvoren.

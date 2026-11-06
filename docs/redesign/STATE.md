@@ -4,26 +4,28 @@ Ažurirano: 2026-11-06.
 
 ## Trenutna faza
 
-**GATE 2.** Svi moduli Faze 2 su dokumentovani. Faza 3 ne počinje bez odobrenja.
+**Faza 3 zatvorena.** Sinteza je u `docs/redesign/04-cross-module-synthesis.md`. Faza 4 ne počinje bez odobrenja.
 
 ## Odluke
 
 `docs/redesign/decisions.md`.
 
-## Završeni moduli
+## Završeno
 
-- Shell, Auth, Dashboard, Boiler, Heating
-- Gas readings, Gas analytics, Reports, Notifications
-- Home profile, Profile
-
-Sažetak: `docs/redesign/gate-2.md`.
+- Faza 1: pregled, mapa, temelji, baseline.
+- Faza 2: svih 11 modula i `gate-2.md`.
+- Faza 3: obrasci, zajedničke komponente, sistemski problemi, matrica, zavisnosti.
 
 ## Otvoreno
 
 - Q8 Lighthouse, i dalje blokiran padom builda.
-- Home profile: tačan HTTP status kad profil ne postoji nije čitan u kontroleru (HP-04).
-- Reports: raspon `confidenceScore` nije zapisan u DTO (RE-06). Zadržava se množenje sa 100.
+- Home profile: HTTP status kad profil ne postoji (HP-04).
+- Reports: raspon `confidenceScore` (RE-06).
+
+## CI
+
+Run `42293997746` (push "Do faze 3") pao je na type-checku: spojeni JSX u `MainLayout.tsx` i `DashboardPage.tsx`. Poslije toga lokalno prolaze `type-check`, `lint` (0 grešaka, 26 upozorenja) i Vitest (98).
 
 ## Sljedeći korak
 
-Poslije odobrenja GATE 2: `docs/redesign/04-cross-module-synthesis.md`.
+Poslije odobrenja: Faza 4 (`05` do `09`).

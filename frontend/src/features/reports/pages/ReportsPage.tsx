@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
 import { apiClient } from '../../../services/api';
 import { queryKeys } from '../../../lib/queryKeys';
 import { RecommendationBreakdown } from '../../heating/components/RecommendationBreakdown';

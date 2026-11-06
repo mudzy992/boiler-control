@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState, useCallback, useTransition } from 'react';
-import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
+import React, { useMemo, useState, useCallback, useTransition } from 'react';
+import { Spin, message, List, Typography, Space, Alert } from 'antd';
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '../../../services/api';
 import { StatCard } from '../../../components/StatCard';
@@ -11,11 +11,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../lib/queryKeys';
 import { useNotificationsQuery, useNotificationPreferencesQuery } from '../../notifications/hooks/useNotifications';
 import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
-import { Card, Button, InputNumber } from '../components/index';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
+import { InputNumber } from '../../../components/InputNumber';
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
-} from '../constants/boilerLimits';
+} from '../../../constants/boilerLimits';
 
 const { Text } = Typography;
 
@@ -136,12 +138,6 @@ type PlotEvent = {
 
 // FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u BoilerPage.tsx.
 // Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
-import {
-  MIN_CURRENT_FLOW_TEMP,
-  MAX_CURRENT_FLOW_TEMP,
-} from '../../../constants/boilerLimits';
-
-
 type PlotInstance = {
   on: (event: string, handler: (evt: PlotEvent) => void) => void;
 };
@@ -312,7 +308,7 @@ export const DashboardPage: React.FC = () => {
       await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
       // FE2-15: refetch u transitionu da UI ostaje responsivan tokom re-fetch-a.
       startTransition(async () => {
-        await refetchDashboard();
+        await dashboardQuery.refetch();
       });
 
       message.success('Current boiler temperature updated');
@@ -934,81 +930,6 @@ export const DashboardPage: React.FC = () => {
             )}
           />
         )}
-      </Drawer>
-
-      {/* NOTIFICATION SETTINGS MODAL */}
-      <Modal
-        title={<div className="flex items-center gap-2"><SettingOutlined /> Postavke notifikacija</div>}
-        open={notificationSettingsOpen}
-        onCancel={() => setNotificationSettingsOpen(false)}
-        footer={null}
-        width={600}
-      >
-        {notificationsLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Spin size="large" />
-          </div>
-        ) : notificationPreferences.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <SettingOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
-            <Text type="secondary">Učitavanje postavki...</Text>
-            <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
-              Ako se postavke ne učitaju, pokušajte osvježiti stranicu
-            </Text>
-          </div>
-        ) : (
-          <>
-            <div style={{ marginBottom: 16, padding: '12px 16px', backgroundColor: '#f0f9ff', borderRadius: 8 }}>
-              <Space direction="vertical" size={4}>
-                <Text strong style={{ color: '#0369a1' }}>
-                  <InfoCircleOutlined /> Upravljajte vašim notifikacijama
-                </Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Odaberite koje tipove notifikacija želite primati. Sve promjene se odmah primjenjuju.
-                </Text>
-              </Space>
-            </div>
-          ) : unreadNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-center">
-              <BellOutlined className="w-12 h-12 text-text-tertiary mb-3" />
-              <p className="text-sm text-text-secondary">No new notifications</p>
-              <p className="text-xs text-text-tertiary mt-1">
-                Notifications will appear here when new events arrive.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {unreadNotifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  onClick={() => !notif.isRead && handleMarkNotificationAsRead(notif.id)}
-                  className="p-3 rounded-lg border border-border cursor-pointer hover:bg-surface-muted dark:border-dark-border dark:hover:bg-dark-surface-muted transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0">
-                      {notif.type.includes('ANOMALY') || notif.type.includes('ALERT') ? (
-                        <WarningOutlined className="w-5 h-5 text-warning" />
-                      ) : notif.type.includes('ERROR') ? (
-                        <WarningOutlined className="w-5 h-5 text-error" />
-                      ) : notif.type.includes('STARTED') || notif.type.includes('SUCCESS') ? (
-                        <CheckCircleOutlined className="w-5 h-5 text-success" />
-                      ) : (
-                        <InfoCircleOutlined className="w-5 h-5 text-info" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-text-primary">{notif.title}</p>
-                      <p className="text-xs text-text-secondary mt-1">{notif.message}</p>
-                      <p className="text-[10px] text-text-tertiary mt-1">
-                        {dayjs(notif.sentAt).format('DD.MM.YYYY HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Notification Settings Modal */}

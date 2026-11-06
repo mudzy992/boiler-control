@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useGasAnalysisQuery, useGasReadingsQuery } from '../hooks/useGasQueries';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
 import { StatCard } from '../../../components/StatCard';
-import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 export const GasAnalyticsPage: React.FC = () => {

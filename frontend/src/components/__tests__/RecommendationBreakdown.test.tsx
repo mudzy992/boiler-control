@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import i18n from 'i18next';
 import { RecommendationBreakdown } from '../../features/heating/components/RecommendationBreakdown';
 import type { RecommendationBreakdownData } from '../../features/heating/components/RecommendationBreakdown';
+import '../../locales/config';
+
+beforeAll(async () => {
+  await i18n.changeLanguage('en-US');
+});
 
 const breakdown: RecommendationBreakdownData = {
   version: 1,

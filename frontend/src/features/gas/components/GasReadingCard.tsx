@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { Button } from './Button';
+import { Button } from '../../../components/Button';
 
 interface GasReadingProps {
   reading: {

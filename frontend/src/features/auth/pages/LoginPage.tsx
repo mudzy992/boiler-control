@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card, Button, Input } from '../components/index';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
+import { Input } from '../../../components/Input';
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation();

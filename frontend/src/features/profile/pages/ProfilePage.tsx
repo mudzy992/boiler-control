@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, InputNumber, Button, message, Spin, Typography } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
+import { Input } from '../../../components/Input';
+import { InputNumber } from '../../../components/InputNumber';
 import { apiClient } from '../../../services/api';
 
 interface UserProfile {

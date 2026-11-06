@@ -1,21 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Switch,
-  Button,
-  Row,
-  Col,
-  message,
-  Spin,
-} from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
+import { Input } from '../../../components/Input';
+import { InputNumber } from '../../../components/InputNumber';
 import { apiClient } from '../../../services/api';
-// FE2-1: CreateHomeProfileDto i UpdateHomeProfileDto su uklonjeni — bili su
-// uvezeni ali nikad korišteni (noUnusedLocals ih prijavljuje kao TS6196).
-import type { HomeProfileResponse } from '../types';
+import type { CreateHomeProfileDto, HomeProfileResponse } from '../types';
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,

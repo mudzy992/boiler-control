@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import type { TransformFnParams } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator';
 
 // Globalni enableImplicitConversion ne smije pretvoriti ne-string u string prije
 // @IsString; originalni tip tokena mora ostati vidljiv validatoru.
@@ -11,6 +11,7 @@ export class RegisterDeviceDTO {
   @Transform(preserveRawInput)
   @IsString()
   @IsNotEmpty()
+  @Matches(/\S/)
   expoPushToken: string;
 
   @IsEnum(['android', 'ios'])

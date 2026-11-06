@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — GasReading path ID positivity (2026-11-06)
+
+**STATUS: GASREADING PATH ID POZITIVNOST RIJEŠENA U KODU (`e0b0e35`); CI ZELEN.** Svih sedam GasReading `:id` ruta odbija `0` i `-1` prije servisa; valjani pozitivni ID-evi, postojeći statusi, response, streamovi i servisni argumenti ostaju nepromijenjeni.
+
+- Source review potvrđuje da je `ParseIntPipe` prihvatao nepozitivne cijele ID-eve, dok je Prisma `GasReading.id` autoincrement. Raniji 200/201 kroz mock servis nije real-DB/ownership/storage/mutation dokaz. Mobile/web wrapperi i mutation payloadi koriste numeričke ID-eve stvarnih očitanja i njihov kod nije mijenjan.
+- Test-only `7b56ec8` dodaje `0` i `-1` za delete, reference, meter-image upload/download i invoice upload/delete/download. Baseline je **28/28**, repro **28 prošlo / 14 palo / 42**. Multipart negativci imaju valjan JPEG/PDF i DTO. Test-first CI `42206870879` ima backend **1006 prošlo / 14 palo / 1020**, integration **119/119**, mobile **136/136** i frontend success; annotations sadrže četiri ciljana failurea, obavijest o deset izostavljenih i generički process-exit.
+- Fix `e0b0e35` dodaje modul-lokalni `PositiveIntPipe` koji zadržava `ParseIntPipe` korak i zahtijeva rezultat ≥1, uz sedam Swagger `minimum: 1` vrijednosti. DTO, analysis query, servis, JWT userId, ownership, storage i Prisma mutacije nisu mijenjani.
+- Lokalni ciljani HTTP suite je **42/42**, sva tri Gas suitea **75/75**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo sedam `minimum: 1` na četiri Gas patha, a frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42207433151`:** sva tri joba success, backend **1020/1020**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations. Jedanaest pomjerenih Gas route markera usklađeno je bez promjene dodatnih ruta.
+- Nema migracije/backfilla, novog flaga ili DTO/service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `e0b0e35`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/storage/mutation dokaz. Pozitivnost path ID-eva u drugim modulima, real-storage/DB side effecti, reference transakcija, konkurentnost, S-004/session revokacija i rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — Notification mark-as-read path ID positivity (2026-11-06)
 
 **STATUS: NOTIFICATION MARK-AS-READ PATH ID POZITIVNOST RIJEŠENA U KODU (`cd75e8b`); CI ZELEN.** `0` i `-1` daju 400 prije servisa; valjani ID zadržava 201, response i servisne argumente.

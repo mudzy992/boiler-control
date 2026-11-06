@@ -97,6 +97,20 @@ describe('Notifications HTTP kompatibilnost', () => {
       expect(response.status).toBe(400);
       expect(markAsRead).not.toHaveBeenCalled();
     });
+
+    it.each(['0', '-1'])(
+      'markAsRead nepozitivan ID %s vraća 400 prije servisnog poziva',
+      async (id) => {
+        markAsRead.mockResolvedValue({ id: 17, userId: 42, isRead: true });
+
+        const response = await request(app.getHttpServer()).post(
+          `/api/notifications/${id}/read`,
+        );
+
+        expect(response.status).toBe(400);
+        expect(markAsRead).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('POST /api/notifications/register-token body DTO (S-002)', () => {

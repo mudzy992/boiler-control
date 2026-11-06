@@ -16,6 +16,10 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    // FE2-15 (FE-026): `noUncheckedIndexedAccess` je namjerno `false` —
+    // uključivanje bi rutiralo postojeći kod (11+ lokacija: GasForm,
+    // codeSplitting.test, config.test i drugi). Odloženo na Posebni task
+    // kada tim bude spretan da ispravi sve `arr[i]` pozive sa `?` operatorom.
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

@@ -470,6 +470,7 @@
             "type": "string"
           },
           "deviceId": {
+            "minLength": 1,
             "type": "string"
           },
           "homeProfileId": {
@@ -485,6 +486,7 @@
             "type": "string"
           },
           "vendor": {
+            "minLength": 1,
             "type": "string"
           }
         },
@@ -2128,6 +2130,7 @@
             "type": "string"
           },
           "deviceId": {
+            "minLength": 1,
             "type": "string"
           },
           "homeProfileId": {
@@ -2143,6 +2146,7 @@
             "type": "string"
           },
           "vendor": {
+            "minLength": 1,
             "type": "string"
           }
         },

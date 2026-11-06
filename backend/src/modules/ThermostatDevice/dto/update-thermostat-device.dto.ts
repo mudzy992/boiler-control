@@ -1,5 +1,6 @@
 import {
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsInt,
@@ -25,16 +26,18 @@ export class UpdateThermostatDeviceDto {
   @IsEnum(ThermostatMode)
   mode?: ThermostatMode;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minLength: 1 })
   @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsString()
+  @IsNotEmpty()
   vendor?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minLength: 1 })
   @ValidateIf((_dto, value) => value !== undefined)
   @Transform(preserveRawInput)
   @IsString()
+  @IsNotEmpty()
   deviceId?: string;
 
   @ApiPropertyOptional({ minimum: 1 })

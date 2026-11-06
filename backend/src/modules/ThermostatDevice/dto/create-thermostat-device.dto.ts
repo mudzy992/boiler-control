@@ -1,4 +1,11 @@
-import { IsEnum, IsOptional, IsString, IsInt, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ThermostatMode } from 'src/generated/prisma';
@@ -7,14 +14,16 @@ import { ThermostatMode } from 'src/generated/prisma';
 const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
 
 export class CreateThermostatDeviceDto {
-  @ApiProperty()
+  @ApiProperty({ minLength: 1 })
   @Transform(preserveRawInput)
   @IsString()
+  @IsNotEmpty()
   vendor: string;
 
-  @ApiProperty()
+  @ApiProperty({ minLength: 1 })
   @Transform(preserveRawInput)
   @IsString()
+  @IsNotEmpty()
   deviceId: string;
 
   @ApiPropertyOptional()

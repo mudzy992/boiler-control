@@ -1,15 +1,11 @@
 import React, { createContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { apiClient } from '../../services/api';
+import { mapAuthUser, type AuthUser } from './map-auth-user';
 
-interface User {
-  id: string;
-  email: string;
-  username?: string | null;
-  name: string;
-}
+export type { AuthUser as User } from './map-auth-user';
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
   /**
@@ -25,13 +21,13 @@ interface AuthContextType {
   isInitializing: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
-  setUser: (user: User | null) => void;
+  setUser: (user: AuthUser | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   /**
    * FE2-2: početna vrijednost se čita preko `apiClient.getToken()`, koji
    * poštuje zastavicu. Pri prvom renderu zastavica još nije otkrivena
@@ -87,7 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     apiClient.setToken(token);
     apiClient
       .getUserProfile()
-      .then((profile) => setUser(profile))
+      .then((profile) => setUser(mapAuthUser(profile as Record<string, unknown>)))
       .catch(() => {
         setToken(null);
         setUser(null);
@@ -101,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const data = await apiClient.login(identifier, password);
       setToken(data.token);
-      setUser(data.user);
+      setUser(mapAuthUser((data.user ?? {}) as Record<string, unknown>));
       apiClient.setToken(data.token);
     } finally {
       setIsLoading(false);

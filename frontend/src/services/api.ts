@@ -7,6 +7,7 @@ import type {
 // FE2-14: tipovi generisani iz `contracts/openapi.json` (FE2-8), tako da
 // potpis metode prati ugovor umjesto ručno pisane deklaracije.
 import type { components } from '../types/api';
+import { shouldForceLoginRedirectOn401 } from './auth401';
 
 /**
  * FE2-7 (FE-009): API base URL **bez** dev fallbacka.
@@ -132,9 +133,10 @@ export class ApiClient {
           }
         }
 
-        if (status === 401) {
+        if (status === 401 && shouldForceLoginRedirectOn401(url)) {
           // FE2-2: `clearToken()` čisti i memoriju i localStorage, pa odjava
           // radi bez obzira na to koji je tok bio aktivan.
+          // AU-01: 401 na /auth/login ne radi full reload — forma zadrži poruku.
           this.clearToken();
           window.location.href = '/login';
         }

@@ -4,18 +4,16 @@ Ažurirano: 2026-11-06.
 
 ## Trenutna faza
 
-**Faza 5 — I0 zatvoren.** Commit `4106ee7`, CI zelen (`42300885501`). Sljedeće I1 čeka potvrdu.
+**Faza 5 — I1 zatvoren (lokalno + push).** Sljedeće I2 čeka potvrdu nakon zelenog CI.
 
 ## Odluke
 
-- GATE 1: `decisions.md` (Q1–Q7)
-- GATE 3: odobreno — pristup A, plan I0–I7
+- GATE 1 + GATE 3 odobreni; pristup A
 
 ## Završeno
 
-- Faze 1–4 dokumentacija
-- CI parse fix `e7142f1`
-- **I0:** `tokens.css` validan + import; shadcn HSL usklađen s brand; Tailwind `brand`/`surface`/`text`/`success`/`error`/z-index; `@fontsource/ibm-plex-*`
+- I0: tokeni / Tailwind / IBM Plex (`4106ee7`)
+- **I1:** 401 na `/auth/login` ne radi full reload; `AuthUser` sa `role`; login validacija + `role="alert"` + autoComplete; redirect ako token postoji
 
 ## Otvoreno
 
@@ -24,4 +22,4 @@ Ažurirano: 2026-11-06.
 
 ## Sljedeći korak
 
-I1 — auth 401 + User.role (`08-implementation-plan.md`).
+I2 — shell rewrite.

@@ -3,6 +3,59 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Weather homeProfileId path positivity (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `59df6d9`, fix `47bb45a`.**
+`origin/arena/c9961f17-boiler-control` je `47bb45a` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `aedd3a9`. PR nije otvaran.
+
+- Source review potvrđuje da su legacy current, v2 current, v2 locations i
+  v2 confirm koristili samo `ParseIntPipe`, koji prihvata `0` i negativne
+  cijele brojeve. Prisma `HomeProfile.id` je `@default(autoincrement())`.
+  Legacy owner/location `findFirst`, v2 `ownedProfile`, cache/provider,
+  fresh geocoder i `updateMany` nisu mijenjani; raniji 200 kroz mock granice
+  nije novi real-DB/ownership/provider/mutation dokaz.
+- Mobile v2 i frontend legacy wrapperi koriste numeričke ID-eve stvarnih
+  profila. Klijentski kod, weather UI timeout, asserti i paralelizam nisu
+  mijenjani.
+- Baseline cijelog stvarnog stub/controller/DTO HTTP suitea je **35/35**.
+  Test-only `59df6d9` dodaje valjan v2-current response/servisne argumente i
+  `0`/`-1` za svaku od četiri rute. Repro je **36 prošlo / 8 palo / 44**:
+  valjana v2-current kontrola prolazi, a svih osam nepozitivnih ID-eva ranije
+  dobije 200. Weather blok raste s 9 na 18 scenarija.
+- **Test-first CI `42211812762`:** backend Jest summary je **1023 prošlo / 8
+  palo / 1031 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže četiri detaljna ciljana failurea, obavijest o
+  četiri izostavljena i generički process-exit; `tsc: 0`, `eslint: 0`.
+- Fix `47bb45a` dodaje modul-lokalni `PositiveIntPipe` koji prvo poziva
+  postojeći `ParseIntPipe`, zatim odbija rezultat `<1`, uz četiri Swagger
+  `minimum: 1` vrijednosti. Nema cross-module pipe refaktoringa.
+- Valjani `17` zadržava response, legacy owner/location upit, v2-current,
+  location i confirm servisne argumente te query/body raw vrijednosti.
+  Postojeće query/body greške, malformed legacy ID, 501 i legacy rollback
+  ostaju nepromijenjeni; DTO, servisi i flagovi nisu mijenjani.
+- Lokalni cijeli suite prolazi **44/44**, a tačan CI ESLint opseg ima **0
+  errors / 2 poznata warnings**. OpenAPI generate/check dodaje tačno četiri
+  Weather `homeProfileId minimum: 1`; frontend `openapi:check` i pravi
+  `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42212157673`:** sva tri joba su success, backend **1031/1031**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Katalog je dopunjen za tri već postojeće v2 rute koje su dobile fix; nije
+  dodana nijedna API ruta. Svih pet Weather markera je usklađeno na
+  **52/67/85/99/115**. Inventory se zato mijenja s poznatog **19/15/34** na
+  **14/13/27**, a API katalog sa 75 na 78 redova; preostali jaz je u drugim
+  modulima.
+- Nema migracije/backfilla, novog flaga, service/DTO/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `47bb45a`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz je sintetički i nije novi
+  real-DB/ownership/provider/mutation dokaz; generated weather evidence
+  ostaje odvojen od live-provider evidence. Real-DB profil/two-location/
+  owner tokovi, provider outage, preostali DTO/query/body zahtjevi,
+  S-004/session revokacija i rollout ostaju otvoreni, a cijeli S-002 nije
+  zatvoren.
+
 ## S-002 — Anomaly eventId path positivity (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `f3ebb1c`, fix `8bfc948`.**

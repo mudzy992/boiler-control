@@ -12,10 +12,10 @@ import {
   message,
   Spin,
 } from 'antd';
-import { apiClient } from '../services/api';
+import { apiClient } from '../../../services/api';
 // FE2-1: CreateHomeProfileDto i UpdateHomeProfileDto su uklonjeni — bili su
 // uvezeni ali nikad korišteni (noUnusedLocals ih prijavljuje kao TS6196).
-import type { HomeProfileResponse } from '../types/homeProfile';
+import type { HomeProfileResponse } from '../types';
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,
@@ -23,7 +23,7 @@ import {
   InsulationType,
   WindowType,
   HeatingType,
-} from '../constants/homeProfileEnums';
+} from '../../../constants/homeProfileEnums';
 
 interface HomeProfileFormValues {
   homeName?: string;

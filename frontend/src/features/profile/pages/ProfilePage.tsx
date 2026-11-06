@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Input, InputNumber, Button, message, Spin, Typography } from 'antd';
-import { apiClient } from '../services/api';
+import { apiClient } from '../../../services/api';
 
 interface UserProfile {
   id: number;

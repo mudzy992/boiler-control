@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Card } from 'antd';
-import type { components } from '../types/api';
+import type { components } from '../../../types/api';
 
 export type RecommendationBreakdownData =
   components['schemas']['RecommendationBreakdownDto'];

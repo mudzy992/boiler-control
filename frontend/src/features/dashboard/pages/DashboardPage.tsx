@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Row, Col, Card, Spin, message, Table, Tag, DatePicker, Collapse, Badge, Drawer, List, Typography, Space, Modal, Switch, Alert, Button, InputNumber } from 'antd';
 import { FireOutlined, AlertOutlined, HomeOutlined, ClockCircleOutlined, BellOutlined, SettingOutlined, WarningOutlined, InfoCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { apiClient } from '../services/api';
-import { StatCard } from '../components/StatCard';
-import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
-import type { RecommendationBreakdownData } from '../components/RecommendationBreakdown';
+import { apiClient } from '../../../services/api';
+import { StatCard } from '../../../components/StatCard';
+import { RecommendationBreakdown } from '../../heating/components/RecommendationBreakdown';
+import type { RecommendationBreakdownData } from '../../heating/components/RecommendationBreakdown';
 import { Column } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../lib/queryKeys';
-import { useNotificationsQuery, useNotificationPreferencesQuery } from '../hooks/useNotifications';
+import { queryKeys } from '../../../lib/queryKeys';
+import { useNotificationsQuery, useNotificationPreferencesQuery } from '../../notifications/hooks/useNotifications';
 import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
 
 const { Text } = Typography;
@@ -136,7 +136,7 @@ type PlotEvent = {
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
-} from '../constants/boilerLimits';
+} from '../../../constants/boilerLimits';
 
 
 type PlotInstance = {

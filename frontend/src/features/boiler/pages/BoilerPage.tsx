@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Table, Tag, Spin, message, Modal, Button, InputNumber, Space, Typography } from 'antd';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
-import { queryKeys } from '../lib/queryKeys';
+import { apiClient } from '../../../services/api';
+import { queryKeys } from '../../../lib/queryKeys';
 // FE2-14 (FE-010): granice su ranije bile kopirane ovdje i u DashboardPage.tsx.
 // Sada dolaze iz jednog mjesta, usklađenog s backend `SetCurrentTempDto`.
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
-} from '../constants/boilerLimits';
+} from '../../../constants/boilerLimits';
 
 interface BoilerEvent {
   id: number;

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
-import { queryKeys } from '../lib/queryKeys';
+import { apiClient } from '../../../services/api';
+import { queryKeys } from '../../../lib/queryKeys';
 
 export const DASHBOARD_HEATING_POLL_MS = 60_000;
 

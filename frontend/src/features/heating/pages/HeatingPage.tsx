@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Card, Table, Tag, Spin, message } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
-import { queryKeys } from '../lib/queryKeys';
+import { apiClient } from '../../../services/api';
+import { queryKeys } from '../../../lib/queryKeys';
 
 interface HeatingEvent {
   id: number;

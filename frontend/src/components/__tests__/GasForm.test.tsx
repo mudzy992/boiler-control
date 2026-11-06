@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
-import { GasForm } from '../GasForm';
+import { GasForm } from '../../features/gas/components/GasForm';
 import '../../locales/config';
 
 /**

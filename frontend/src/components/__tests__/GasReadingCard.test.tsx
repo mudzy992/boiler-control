@@ -3,7 +3,7 @@ import type { MockInstance } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
-import { GasReadingCard } from '../GasReadingCard';
+import { GasReadingCard } from '../../features/gas/components/GasReadingCard';
 import '../../locales/config';
 
 /**

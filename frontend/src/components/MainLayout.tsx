@@ -16,7 +16,7 @@ import {
   BellOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { useThemeMode } from '../context/ThemeContext';
 
 const { Header, Sider, Content, Footer } = Layout;

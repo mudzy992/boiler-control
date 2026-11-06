@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
-import { queryKeys } from '../lib/queryKeys';
+import { apiClient } from '../../../services/api';
+import { queryKeys } from '../../../lib/queryKeys';
 
 export interface AppGasReading {
   id: number;

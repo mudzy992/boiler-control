@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { Card, Table, Spin, message } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../services/api';
-import { queryKeys } from '../lib/queryKeys';
-import { RecommendationBreakdown } from '../components/RecommendationBreakdown';
-import type { components } from '../types/api';
+import { apiClient } from '../../../services/api';
+import { queryKeys } from '../../../lib/queryKeys';
+import { RecommendationBreakdown } from '../../heating/components/RecommendationBreakdown';
+import type { components } from '../../../types/api';
 
 type Recommendation = components['schemas']['RecommendationResponseDto'];
 

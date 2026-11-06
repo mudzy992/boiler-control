@@ -13,12 +13,12 @@
  * samo re-export iz `api.d.ts`.
  */
 
-import type { components } from '../../../types/api';
+import { InsulationType, WindowType, HeatingType } from '../../../constants/homeProfileEnums';
 
-/** Generisano iz OpenAPI — unija stringova, bez `any`. */
-export type HomeProfileHeatingType = components['schemas']['HomeProfileHeatingType'];
-export type HomeProfileInsulationType = components['schemas']['HomeProfileInsulationType'];
-export type HomeProfileWindowType = components['schemas']['HomeProfileWindowType'];
+/** HomeProfile enumovi — preuzeti iz backend-konzistentnih konstanti (isti su kao OpenAPI unioni). */
+export type HomeProfileHeatingType = HeatingType;
+export type HomeProfileInsulationType = InsulationType;
+export type HomeProfileWindowType = WindowType;
 
 /** Privremeni ručno pisani DTO-vi dok OpenAPI spec ne pokrije puna polja. */
 export interface CreateHomeProfileDto {

@@ -272,6 +272,15 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
     expect(res.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
+  it.each([0, -1])(
+    'B-001 reject režim odbija deviceId=%s prije stub odgovora',
+    async (deviceId) => {
+      const res = await postHeating({ ...validHeatingBody(), deviceId });
+
+      expect(res.status).toBe(HttpStatus.BAD_REQUEST);
+    },
+  );
+
   it('weather i recommendations nude stvarnu alternativnu rutu', async () => {
     const weather = await request(app.getHttpServer()).get('/api/weather');
     expect(weather.body.alternative).toBe(
@@ -522,6 +531,8 @@ describe('HTTP ugovor stub endpointa (API-1)', () => {
         'deviceId nije broj',
         { ...validHeatingBody(), deviceId: 'not-a-number' },
       ],
+      ['deviceId je nula', { ...validHeatingBody(), deviceId: 0 }],
+      ['deviceId je negativan', { ...validHeatingBody(), deviceId: -1 }],
       [
         'roomCurrentTemp nije broj',
         { ...validHeatingBody(), roomCurrentTemp: { value: 21 } },

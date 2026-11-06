@@ -299,6 +299,21 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
       expect(update).toHaveBeenCalledWith(42, 17, validBody);
     });
 
+    it('nullable alias zadržava null, 200, response i servisni argument', async () => {
+      const body = { ...validBody, alias: null };
+      const device = { id: 17, userId: 42, ...body };
+      update.mockResolvedValue(device);
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/devices/17')
+        .send(body);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(device);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(42, 17, body);
+    });
+
     it.each([
       ['alias', { ...validBody, alias: 123456 }],
       ['vendor', { ...validBody, vendor: 123456 }],
@@ -317,6 +332,21 @@ describe('ThermostatDevice controller HTTP kompatibilnost', () => {
         expect(update).not.toHaveBeenCalled();
       },
     );
+
+    it.each(['vendor', 'deviceId', 'mode', 'homeProfileId'])(
+      'non-nullable update %s=null vraća 400 prije servisnog poziva',
+      async (field) => {
+        update.mockResolvedValue({ id: 17, userId: 42 });
+
+        const response = await request(app.getHttpServer())
+          .patch('/api/devices/17')
+          .send({ ...validBody, [field]: null });
+
+        expect(response.status).toBe(400);
+        expect(update).not.toHaveBeenCalled();
+      },
+    );
+
     it.each([0, -1, 1.5])(
       'nevažeći update homeProfileId=%s vraća 400 prije servisnog poziva',
       async (homeProfileId) => {

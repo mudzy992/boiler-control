@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — HomeProfile path ID positivity (2026-11-06)
+
+**STATUS: HOMEPROFILE PATH ID POZITIVNOST RIJEŠENA U KODU (`13fc715`); CI ZELEN.** Svih pet registrovanih HomeProfile `:id` ruta odbija `0` i `-1` prije servisa; valjani pozitivni ID-evi, response i servisni argumenti ostaju nepromijenjeni.
+
+- Source review potvrđuje da je `ParseIntPipe` prihvatao nepozitivne cijele ID-eve, dok je Prisma `HomeProfile.id` autoincrement. Raniji 200 kroz mock servis nije real-DB/ownership/mutation dokaz. Mobile/web wrapperi koriste numeričke ID-eve stvarnih profila i njihov kod nije mijenjan.
+- Test-only `af22dd9` dodaje `0` i `-1` za findOne, pluralni update/delete/activate i singularni update. Baseline je **49/49**, repro **49 prošlo / 10 palo / 59**. Test-first CI `42194235803` ima backend **994 prošlo / 10 palo / 1004**, integration **119/119**, mobile **136/136** i frontend success. Annotations sadrže četiri ciljana failurea, obavijest o šest izostavljenih i generički process-exit.
+- Fix `13fc715` dodaje modul-lokalni `PositiveIntPipe` koji zadržava `ParseIntPipe` korak i zahtijeva rezultat ≥1, uz pet Swagger `minimum: 1` vrijednosti. DTO, servis, ownership i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli HomeProfile HTTP suite je **59/59**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo pet `minimum: 1`, a frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42194721095`:** sva tri joba success, backend **1004/1004**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations. Sedam pomjerenih route markera i inventory referenca usklađeni su bez promjene dodatnih ruta.
+- Nema migracije/backfilla, novog flaga ili DTO/service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `13fc715`.
+- **Preostalo:** mock-controller dokaz nije real-DB/ownership/mutation dokaz. Pozitivnost path ID-eva u drugim kontrolerima, S-004/session revokacija i rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — HomeProfile update non-nullable null semantika (2026-11-06)
 
 **STATUS: NON-NULLABLE HOMEPROFILE UPDATE NULL VRIJEDNOSTI ODBIJENE U KODU (`2388521`); CI ZELEN.** Devet non-nullable polja s `null` daje 400 prije servisa; osam nullable polja zadržava `null`, a omitted polja, valjani patch, response i servisni argumenti ostaju nepromijenjeni.

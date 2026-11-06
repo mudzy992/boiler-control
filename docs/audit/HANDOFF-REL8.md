@@ -3,6 +3,51 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile path ID positivity (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `af22dd9`, fix `13fc715`.**
+`origin/arena/c9961f17-boiler-control` je `13fc715` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `d2f6151`. PR nije otvaran.
+
+- Source review potvrđuje da je svih pet registrovanih HomeProfile `:id`
+  parametara koristilo samo `ParseIntPipe`, koji prihvata `0` i negativne
+  cijele brojeve. Prisma `HomeProfile.id` je `@default(autoincrement())`, a
+  modul već ima provjereni ThermostatDevice `PositiveIntPipe` obrazac. Raniji
+  200 kroz mock servis nije real-DB/ownership/mutation dokaz.
+- Pregledani mobile/web wrapperi koriste numeričke ID-eve stvarnih profila.
+  Valjani instalirani klijenti ostaju kompatibilni i klijentski kod nije
+  mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea je **49/49**. Test-only
+  `af22dd9` dodaje `0` i `-1` za findOne, pluralni update/delete/activate i
+  singularni update. Repro je **49 prošlo / 10 palo / 59**: svih deset
+  nevažećih ID-eva ranije dobija 200, a postojeće kontrole prolaze.
+- **Test-first CI `42194235803`:** backend Jest summary je **994 prošlo / 10
+  palo / 1004 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže četiri ciljana failurea, obavijest o šest
+  izostavljenih i generički process-exit; `tsc: 0`, `eslint: 0`.
+- Fix `13fc715` dodaje modul-lokalni `PositiveIntPipe` koji prvo poziva
+  postojeći `ParseIntPipe`, zatim odbija rezultat `<1`. Svih pet parametara
+  koristi taj pipe i Swagger `minimum: 1`; nema cross-module pipe refaktoringa.
+- Valjani `17`, postojeći malformed-ID odgovori, response, JWT userId,
+  `mapProfile` i servisni argumenti ostaju nepromijenjeni. Controller servisni
+  pozivi, DTO, ownership i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli HomeProfile HTTP suite prolazi **59/59**, a tačan CI ESLint
+  opseg ima **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje
+  tačno pet `minimum: 1`; frontend `openapi:check` i pravi `tsconfig.app`
+  type-check prolaze bez generated type diffa.
+- **Code CI `42194721095`:** sva tri joba su success, backend **1004/1004**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Pet Swagger dekoratora pomjera sedam kasnijih route markera, uključujući
+  create i singularni GET/POST koji nisu mijenjani; katalog i inventory
+  referenca su usklađeni bez promjene njihovog runtime ponašanja.
+- Nema migracije/backfilla, novog flaga, service/DTO/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `13fc715`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz nije real-DB/ownership/mutation
+  dokaz. Pozitivnost path ID-eva u drugim kontrolerima, S-004/session
+  revokacija i rollout ostaju otvoreni, a cijeli S-002 nije zatvoren.
+
 ## S-002 — HomeProfile update non-nullable null semantika (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `4748d02`, fix `2388521`.**

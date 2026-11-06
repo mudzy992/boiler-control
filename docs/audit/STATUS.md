@@ -2363,6 +2363,18 @@ Preostali SEC-5 opseg ostaje otvoren.
 - Lokalno profile HTTP prolazi **7/7**, frontend **92/92**. OpenAPI/frontend generated output je bajtno nepromijenjen, backend ESLint ima **0 errors / 2 poznata warnings**, a inventory ostaje **34**. Nema migracije/backfilla ili mobile/compose promjene. Rollback production fixa je revert `63b23af`.
 - **Preostalo:** password/S-003, boolean/gas-price/date polja i cijeli `UpdateUserDto` nisu obuhvaćeni ovim fixom. Real-DB update, bcrypt/hash, gas-price historija, session revokacija i produkcijski rollout nisu novi dokaz mock controller slicea.
 
+### S-002 — Notification mark-as-read path ID positivity (2026-11-06)
+
+**STATUS: NOTIFICATION MARK-AS-READ PATH ID POZITIVNOST RIJEŠENA U KODU (`cd75e8b`); CI ZELEN.** `0` i `-1` daju 400 prije servisa; valjani ID zadržava 201, response i servisne argumente.
+
+- Source review potvrđuje da je `ParseIntPipe` prihvatao nepozitivne cijele ID-eve, dok je Prisma `Notification.id` autoincrement. Servis zadržava atomski `updateMany` po `id+userId`; raniji 201 kroz mock servis nije novi real-DB/ownership/mutation dokaz. Mobile/frontend wrapperi primaju numeričke ID-eve stvarnih notifikacija i njihov kod nije mijenjan.
+- Test-only `d9561ab` dodaje `0` i `-1` za mark-as-read. Baseline je **4/4**, repro **4 prošla / 2 pala / 6**. Test-first CI `42197848917` ima backend **1004 prošla / 2 pala / 1006**, integration **119/119**, mobile **136/136** i frontend success; annotations sadrže tačno dva ciljana failurea uz generički process-exit.
+- Fix `cd75e8b` dodaje modul-lokalni `PositiveIntPipe` koji zadržava `ParseIntPipe` korak i zahtijeva rezultat ≥1, uz Swagger `minimum: 1`. JWT userId, foreign/missing 404, DTO, servis i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli notifications-read HTTP suite je **6/6**, ESLint **0 errors / 2 poznata warnings**. OpenAPI generate/check dodaje samo jedan `minimum: 1`, a frontend `openapi:check` i pravi `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42198222082`:** sva tri joba success, backend **1006/1006**, integration **119/119**, mobile **136/136**, `tsc: 0`, `eslint: 0`, nula failure annotations. Šest pomjerenih route markera usklađeno je bez promjene dodatnih ruta.
+- Nema migracije/backfilla, novog flaga ili DTO/service/client/compose/deploy promjene. Rollback production fixa i OpenAPI minimuma je revert `cd75e8b`.
+- **Preostalo:** mock-controller dokaz nije novi real-DB/ownership/mutation dokaz; postojeći integration owner/foreign/missing dokazi ostaju zasebni. Pozitivnost drugih path ID-eva, token lifecycle, S-004/session revokacija i rollout ostaju otvoreni; cijeli S-002 nije zatvoren.
+
 ### S-002 — HomeProfile path ID positivity (2026-11-06)
 
 **STATUS: HOMEPROFILE PATH ID POZITIVNOST RIJEŠENA U KODU (`13fc715`); CI ZELEN.** Svih pet registrovanih HomeProfile `:id` ruta odbija `0` i `-1` prije servisa; valjani pozitivni ID-evi, response i servisni argumenti ostaju nepromijenjeni.

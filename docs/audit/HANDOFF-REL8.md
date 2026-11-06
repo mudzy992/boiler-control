@@ -3,6 +3,51 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — Notification mark-as-read path ID positivity (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `d9561ab`, fix `cd75e8b`.**
+`origin/arena/c9961f17-boiler-control` je `cd75e8b` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `d2f6151`. PR nije otvaran.
+
+- Source review potvrđuje da je `POST /api/notifications/:id/read` koristio
+  samo `ParseIntPipe`, koji prihvata `0` i negativne cijele brojeve. Prisma
+  `Notification.id` je `@default(autoincrement())`, a servis zadržava atomski
+  `updateMany` po `id+userId`. Raniji 201 kroz mock servis nije novi
+  real-DB/ownership/mutation dokaz.
+- Mobile i frontend wrapperi primaju `id: number` stvarne notifikacije.
+  Valjani instalirani klijenti ostaju kompatibilni i klijentski kod nije
+  mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea je **4/4**. Test-only
+  `d9561ab` dodaje `0` i `-1` za mark-as-read. Repro je **4 prošla / 2 pala /
+  6**: oba nevažeća ID-a ranije dobiju 201, a postojeće path i register-token
+  kontrole prolaze.
+- **Test-first CI `42197848917`:** backend Jest summary je **1004 prošla / 2
+  pala / 1006 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže tačno dva ciljana failurea uz generički
+  process-exit; `tsc: 0`, `eslint: 0`.
+- Fix `cd75e8b` dodaje modul-lokalni `PositiveIntPipe` koji prvo poziva
+  postojeći `ParseIntPipe`, zatim odbija rezultat `<1`, uz Swagger
+  `minimum: 1`. Nema cross-module pipe refaktoringa.
+- Valjani `17` zadržava 201, response i `markAsRead(17,42)`; malformed ID
+  ostaje 400 prije servisa. JWT userId, atomski `id+userId` updateMany,
+  foreign/missing 404, DTO i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli notifications-read HTTP suite prolazi **6/6**, a tačan CI
+  ESLint opseg ima **0 errors / 2 poznata warnings**. OpenAPI generate/check
+  dodaje tačno jedan `minimum: 1`; frontend `openapi:check` i pravi
+  `tsconfig.app` type-check prolaze bez generated type diffa.
+- **Code CI `42198222082`:** sva tri joba su success, backend **1006/1006**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Jedan Swagger dekorator pomjera šest kasnijih route markera; katalog je
+  usklađen bez promjene mark-all-read, types, preferences ili test ruta.
+- Nema migracije/backfilla, novog flaga, service/DTO/client/compose/deploy
+  promjene. Rollback production fixa i OpenAPI minimuma je revert `cd75e8b`;
+  privremeni Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz nije novi real-DB/ownership/mutation
+  dokaz; postojeći integration owner/foreign/missing dokazi ostaju zasebni.
+  Pozitivnost drugih path ID-eva, token lifecycle, S-004/session revokacija i
+  rollout ostaju otvoreni, a cijeli S-002 nije zatvoren.
+
 ## S-002 — HomeProfile path ID positivity (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `af22dd9`, fix `13fc715`.**

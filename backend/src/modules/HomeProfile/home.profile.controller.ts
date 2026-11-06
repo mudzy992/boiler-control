@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  ParseIntPipe,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -14,7 +13,8 @@ import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { HomeProfileService } from './home.profile.service';
 import { CreateHomeProfileDto } from './dto/create-home-profile.dto';
 import { UpdateHomeProfileDto } from './dto/update-home-profile.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { PositiveIntPipe } from './positive-int.pipe';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Home Profiles')
@@ -33,7 +33,8 @@ export class HomeProfileController {
   }
 
   @Get(':id')
-  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
+  findOne(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.findOne(req.user.userId, id);
   }
 
@@ -43,21 +44,24 @@ export class HomeProfileController {
   }
 
   @Patch(':id')
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   update(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Body() dto: UpdateHomeProfileDto,
   ) {
     return this.service.update(req.user.userId, id, dto);
   }
 
   @Delete(':id')
-  remove(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
+  remove(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.remove(req.user.userId, id);
   }
 
   @Patch(':id/activate')
-  activate(@Req() req, @Param('id', ParseIntPipe) id: number) {
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
+  activate(@Req() req, @Param('id', PositiveIntPipe) id: number) {
     return this.service.activate(req.user.userId, id);
   }
 }
@@ -95,9 +99,10 @@ export class HomeProfileSingleController {
   }
 
   @Patch(':id')
+  @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   update(
     @Req() req,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', PositiveIntPipe) id: number,
     @Body() dto: UpdateHomeProfileDto,
   ) {
     return this.service

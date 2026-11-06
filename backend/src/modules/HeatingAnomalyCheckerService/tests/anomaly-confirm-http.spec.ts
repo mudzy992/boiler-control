@@ -74,6 +74,15 @@ describe('Anomaly confirm HTTP kompatibilnost', () => {
     },
   );
 
+  it('numerički proposedEndTime vraća 400 prije servisnog poziva', async () => {
+    const response = await request(app.getHttpServer())
+      .patch('/api/anomalies/17')
+      .send({ proposedEndTime: 0 });
+
+    expect(response.status).toBe(400);
+    expect(confirmOrUpdateAnomaly).not.toHaveBeenCalled();
+  });
+
   it.each(['true', 'false'])(
     'string confirm="%s" vraća 400 prije servisnog poziva',
     async (confirm) => {

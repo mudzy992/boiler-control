@@ -234,6 +234,15 @@ describe('Integration: SEC-2 anomaly ownership and validation', () => {
     expect(processHeatingEvent).toHaveBeenCalledTimes(1);
   });
 
+  it('numerički proposedEndTime daje 400 bez DB ili recommendation side effecta', async () => {
+    const response = await patchAnomaly(eventId, ownerToken).send({
+      proposedEndTime: 0,
+    });
+
+    expect(response.status).toBe(400);
+    await expectEventUnchanged();
+  });
+
   it('owner prazan body zadržava postojeću potvrdu predloženog vremena', async () => {
     const response = await patchAnomaly(eventId, ownerToken).send({});
 

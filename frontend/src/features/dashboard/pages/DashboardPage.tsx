@@ -14,13 +14,6 @@ import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
 
 const { Text } = Typography;
 
-/** FE2-15 (FE-024): `useTransition` za teže UI ažuriranja (INP metrika).
- * `startTransition` označava ažuriranje kao neslužno, tako da React može
- * prekinuti render ako korisnik unese novi unos dok se prethodni još obradjuje.
- * Koristi se za mark-as-read i set-temp akcije koje animations + API poziv
- * mogu da zakople main thread. */
-const [, startTransition] = useTransition();
-
 // Type definitions matching actual backend response
 interface Weather {
   temp?: number;
@@ -190,6 +183,11 @@ export const DashboardPage: React.FC = () => {
   const [setTempModalOpen, setSetTempModalOpen] = useState(false);
   const [setTempValue, setSetTempValue] = useState<number | null>(null);
   const [setTempSubmitting, setSetTempSubmitting] = useState(false);
+
+  // FE2-15 (FE-024): `useTransition` za teže UI ažuriranja (INP metrika).
+  // `startTransition` označava ažuriranje kao neslužno, tako da React može
+  // prekinuti render ako korisnik unese novi unos dok se prethodni još obradjuje.
+  const [, startTransition] = useTransition();
 
   // FE2-3: dashboard payload is a React Query cache entry, not local state.
   const dashboardQuery = useQuery({
@@ -1080,9 +1078,11 @@ const NotificationItem = React.memo(
     );
   }
 );
+NotificationItem.displayName = 'NotificationItem';
 
 /** FE2-15: memoizovani red upozorenja. */
 const AlertRow = React.memo(({ alert }: { alert: { type: string; message: string; icon: React.ReactNode } }) => (
   <Alert type={alert.type as 'info' | 'success' | 'warning' | 'error'} showIcon icon={alert.icon} message={alert.message} />
 ));
+AlertRow.displayName = 'AlertRow';
 

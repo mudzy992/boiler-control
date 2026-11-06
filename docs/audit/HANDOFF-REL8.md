@@ -3,6 +3,55 @@
 Radni dokument za nastavak. Nije dio audit nalaza; može se obrisati kad se
 Talas D završi.
 
+## S-002 — HomeProfile update non-nullable null semantika (2026-11-06)
+
+**RIJEŠENO, TESTIRANO I PUSHANO: test-first `4748d02`, fix `2388521`.**
+`origin/arena/c9961f17-boiler-control` je `2388521` prije ovog docs commita;
+`origin/main` je posljednji put provjeren na `509a136`. PR nije otvaran.
+
+- Source review potvrđuje da `@IsOptional()` preskače validaciju za `null` i
+  `undefined`. Update polja `floorArea`, `ceilingHeight`, `insulationType`,
+  `insulationThickness`, `windowType`, `heatingType`, `constructionYear`,
+  `hasFloorHeating` i `seasonMode` mapiraju na non-nullable Prisma kolone, a
+  servis za svako `!== undefined` polje prosljeđuje vrijednost u update. Raniji
+  200 kroz mock servis nije real-DB mutation ni ownership dokaz.
+- Nullable `homeName`, `location`, `numberOfResidents`, `boilerModel`, tri
+  target temperature i `preferredScheduleNotes` zadržavaju `null`. Create
+  `seasonMode` nije mijenjan jer servis izričito koristi
+  `dto.seasonMode ?? 'WINTER'`, pa tamo `null` ima postojeće default ponašanje.
+- Pregledani mobile tipovi i mobile/web forme ne šalju `null` za ovih devet
+  non-nullable update polja. Valjani instalirani klijenti ostaju kompatibilni;
+  klijentski kod nije mijenjan.
+- Baseline stvarnog controller/DTO HTTP suitea je **39/39**. Test-only
+  `4748d02` dodaje devet non-nullable `null` scenarija i jednu zajedničku
+  nullable-`null` kontrolu. Repro je **40 prošlo / 9 palo / 49**: kontrola i
+  svih 39 postojećih testova prolaze, a nevažeća polja ranije dobiju 200.
+- **Test-first CI `42189194342`:** backend Jest summary je **985 prošlo / 9
+  palo / 994 ukupno**, integration **119/119**, mobile **136/136** i frontend
+  success. Annotations sadrže četiri ciljana failurea, obavijest o pet
+  izostavljenih i generički process-exit; `tsc: 0`, `eslint: 0`.
+- Fix `2388521` koristi `ValidateIf` koji preskače samo `undefined` na devet
+  non-nullable polja, pa `null` stiže do postojećih number/integer/enum/boolean
+  validatora i daje 400 prije servisnog poziva. Osam nullable polja zadržava
+  `@IsOptional()`; omitted i prazan patch ostaju nepromijenjeni.
+- Valjani update zadržava 200, response, JWT userId i servisne argumente;
+  nullable-`null` kontrola zadržava isti ugovor. Create DTO/servis, controller,
+  ownership i Prisma mutacije nisu mijenjani.
+- Lokalni cijeli HomeProfile HTTP suite prolazi **49/49**, a tačan CI ESLint
+  opseg ima **0 errors / 2 poznata warnings**. OpenAPI `--check` prolazi bez
+  contract diffa, a frontend `openapi:check` bez generated type diffa.
+- **Code CI `42189613382`:** sva tri joba su success, backend **994/994**,
+  integration **119/119**, mobile **136/136**, frontend success, `tsc: 0`,
+  `eslint: 0`, nula failure annotations.
+- Nema migracije/backfilla, novog flaga, controller/service/client/compose/
+  deploy promjene. Rollback production fixa je revert `2388521`; privremeni
+  Prisma stubovi su uklonjeni.
+- **Granica:** mock-controller HTTP dokaz nije real-DB/ownership/mutation niti
+  weather-side-effect dokaz. Create `null` i zasebni populated singular-body
+  scenariji nemaju novi HTTP dokaz; `null` semantika drugih DTO-ova,
+  S-004/session revokacija i rollout ostaju otvoreni, a cijeli S-002 nije
+  zatvoren.
+
 ## S-002 — ThermostatDevice whitespace-only identifikatori (2026-11-06)
 
 **RIJEŠENO, TESTIRANO I PUSHANO: test-first `3d8bc54`, fix `d2d54d3`.**

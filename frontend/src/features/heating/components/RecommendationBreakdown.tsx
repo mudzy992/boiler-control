@@ -67,7 +67,7 @@ export const RecommendationBreakdown = ({
 
   return (
     <Card variant="elevated">
-      <CardContent className="space-y-3 pt-6">
+      <CardContent className="space-y-3 pt-4 sm:pt-5">
         <h3 className="text-sm font-semibold text-foreground">
           {title ?? t('recommendation.title')}
         </h3>

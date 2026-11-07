@@ -22,7 +22,7 @@ export const DashboardStatusBand = ({
   return (
     <section
       className={cn(
-        'relative overflow-hidden rounded-lg border border-border bg-card p-5 shadow-cockpit sm:p-6',
+        'relative overflow-hidden rounded-lg border border-border bg-card p-4 shadow-cockpit sm:p-5',
         isHeatingActive && 'shadow-glow',
       )}
       aria-live="polite"

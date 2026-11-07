@@ -28,7 +28,7 @@ export const DashboardSchedule = ({
 
   return (
     <Card variant="elevated">
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-4 pt-4 sm:pt-5">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold tracking-tight">
             {t('dashboard.scheduleTitle')}

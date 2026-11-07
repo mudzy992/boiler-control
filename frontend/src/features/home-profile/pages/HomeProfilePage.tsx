@@ -214,7 +214,7 @@ export const HomeProfilePage: React.FC = () => {
       ) : null}
 
       <Card variant="elevated">
-        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="grid gap-4 pt-4 sm:grid-cols-2 sm:pt-5 lg:grid-cols-3">
           <Input
             label={t('homeProfile.homeName')}
             placeholder="My Home"
@@ -474,7 +474,7 @@ export const HomeProfilePage: React.FC = () => {
           </div>
         </CardContent>
 
-        <div className="flex gap-3 px-6 pb-6">
+        <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5 sm:pb-5">
           <Button
             type="button"
             onClick={onSubmit}

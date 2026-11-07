@@ -42,7 +42,7 @@ export const DashboardEventsPanel = ({
 
   return (
     <Card variant="elevated">
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-4 pt-4 sm:pt-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight">
             {t('dashboard.eventsTitle')}

@@ -87,7 +87,7 @@ export const NotificationsPage = (): JSX.Element => {
           </Button>
         }
       />
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           variant={!showAll ? 'default' : 'ghost'}

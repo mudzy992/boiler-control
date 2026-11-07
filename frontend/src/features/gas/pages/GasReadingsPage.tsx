@@ -171,7 +171,7 @@ export const GasReadingsPage = (): JSX.Element => {
         : 'success';
 
   return (
-    <div className="space-y-6" id="content">
+    <div className="space-y-6">
       <PageHeader
         title={t('gas.title')}
         description={`${t('gas.subtitle')} ${readings.length} ${t('gas.readingsRecorded')}.`}

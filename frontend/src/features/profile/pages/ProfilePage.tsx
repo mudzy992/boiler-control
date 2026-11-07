@@ -105,7 +105,7 @@ export const ProfilePage = (): JSX.Element => {
       ) : null}
       <QueryState status={status} onRetry={() => void loadProfile()}>
         <Card>
-          <CardContent className="space-y-4 pt-6">
+          <CardContent className="space-y-4 pt-4 sm:pt-5">
             {(
               [
                 ['name', t('profile.name')],

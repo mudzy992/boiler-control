@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-I0–I7 + cockpit + **Vercel density polish** gotovi. Vidi `11-cockpit-ui.md`.
+I0–I7 + cockpit + Vercel density + **shell/contrast/spacing** gotovi. Vidi `11-cockpit-ui.md`.
 
 ---
 
@@ -11,18 +11,17 @@ I0–I7 + cockpit + **Vercel density polish** gotovi. Vidi `11-cockpit-ui.md`.
 | Sloj | Status |
 |---|---|
 | I0–I7 implement | Gotovo |
-| Cockpit visual override | Gotovo |
-| Vercel density polish | Gotovo (Flame, header h-12/14, no nav underline, quiet type/forms) |
+| Cockpit + Vercel density | Gotovo |
+| Shell / contrast / buttons / spacing | Gotovo |
 
-CI: Frontend on `main`. Zadnji run zelen: `42387408487` (`aa023b5`).
+CI: Frontend on `main`.
 
-## Vercel polish sažetak
+## Shell polish sažetak
 
-- `BrandMark` (Flame) u header/sidebar/login.
-- Nav: `no-underline`, quiet active (muted + left bar).
-- Header: ghost icon logout/theme, tight gaps.
-- PageHeader `text-2xl`; Input `h-9`; Button bez default glow.
-- Dark muted-foreground blago jači.
+- Dark contrast max (foreground/muted/border/card).
+- Sidebar `w-60` + `lg:pl-60` aligned.
+- Button sizes locked; outline on `bg-background`.
+- Card `p-4`/`sm:p-5`; page `space-y-6`; actions `gap-2`.
 
 ## Next (opcionalno)
 
@@ -32,5 +31,5 @@ CI: Frontend on `main`. Zadnji run zelen: `42387408487` (`aa023b5`).
 ## Prompt
 
 ```
-Boiler-control: I0–I7 + cockpit + Vercel polish gotovi. Pročitaj docs/redesign/HANDOFF.md i 11-cockpit-ui.md.
+Boiler-control: I0–I7 + cockpit + shell/contrast polish gotovi. Pročitaj docs/redesign/HANDOFF.md i 11-cockpit-ui.md.
 ```

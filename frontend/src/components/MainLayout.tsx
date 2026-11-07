@@ -33,12 +33,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SkipLink href="#main-content" />
-      <header className="sticky top-0 z-sticky flex h-12 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-md sm:h-14 sm:px-5">
+      <header className="sticky top-0 z-sticky flex h-12 items-center justify-between border-b border-border bg-background px-4 sm:h-14 sm:px-5">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 lg:hidden"
+            className="lg:hidden"
             onClick={() => setIsNavOpen(true)}
             aria-label={t('shell.openMenu')}
             aria-expanded={isNavOpen}
@@ -65,7 +65,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
             onClick={toggleMode}
             aria-label={
               mode === 'dark'
@@ -82,7 +81,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
             onClick={handleLogout}
             aria-label={t('common.logout')}
           >
@@ -91,7 +89,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      <aside className="fixed bottom-0 left-0 top-12 z-0 hidden w-56 flex-col border-r border-border bg-background p-3 sm:top-14 lg:flex">
+      <aside className="fixed bottom-0 left-0 top-12 z-0 hidden w-60 flex-col border-r border-border bg-background p-3 sm:top-14 lg:flex">
         <div className="mb-3 flex items-center gap-2 px-2.5 py-1">
           <BrandMark size="sm" />
           <span className="text-xs font-semibold tracking-tight text-foreground">
@@ -107,13 +105,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       <main
         id="main-content"
-        className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:pl-64 lg:pr-8"
+        className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:pl-60 lg:pr-8"
         tabIndex={-1}
       >
         {children}
       </main>
 
-      <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground lg:pl-64">
+      <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground lg:pl-60">
         {t('shell.footer')}
       </footer>
     </div>

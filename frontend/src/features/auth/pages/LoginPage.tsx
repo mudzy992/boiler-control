@@ -51,7 +51,7 @@ export const LoginPage = (): JSX.Element => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm border-border" variant="elevated">
-        <CardHeader className="space-y-3 pb-4 pt-6 text-center">
+        <CardHeader className="space-y-3 text-center">
           <BrandMark size="md" className="mx-auto" />
           <div className="space-y-1">
             <CardTitle className="text-xl font-semibold tracking-tight">
@@ -60,7 +60,7 @@ export const LoginPage = (): JSX.Element => {
             <CardDescription>{t('auth.loginTitle')}</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="pb-6">
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {submitError ? (
               <StatusBanner variant="error" message={submitError} />

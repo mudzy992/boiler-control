@@ -75,7 +75,7 @@ export const GasAnalyticsPage = (): JSX.Element => {
         }}
       />
       <Card>
-        <CardContent className="space-y-1 pt-6 text-sm">
+        <CardContent className="space-y-1 pt-4 text-sm sm:pt-5">
           <p className="font-medium">{periodModeLabel}</p>
           <p className="text-muted-foreground">
             {(period?.startDate || period?.from

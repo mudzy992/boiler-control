@@ -28,7 +28,7 @@ export const GasAnalyticsPeriodBar = ({
 
   return (
     <Card>
-      <CardContent className="space-y-3 pt-6">
+      <CardContent className="space-y-3 pt-4 sm:pt-5">
         <p className="text-sm font-medium text-muted-foreground">{t('gas.analyzePeriod')}</p>
         <div className="flex flex-wrap gap-2">
           {options.map((option) => {

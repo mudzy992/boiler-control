@@ -80,7 +80,7 @@ export const ShellNavDrawer: React.FC<ShellNavDrawerProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={t('shell.menu')}
-        className="fixed inset-y-0 left-0 z-popover flex w-56 flex-col border-r border-border bg-background lg:hidden"
+        className="fixed inset-y-0 left-0 z-popover flex w-60 flex-col border-r border-border bg-background lg:hidden"
       >
         <div className="flex items-center justify-between border-b border-border px-3 py-3">
           <div className="flex items-center gap-2">
@@ -92,7 +92,6 @@ export const ShellNavDrawer: React.FC<ShellNavDrawerProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
             onClick={onClose}
             aria-label={t('shell.closeMenu')}
           >

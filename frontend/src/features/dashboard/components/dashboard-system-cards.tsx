@@ -26,7 +26,7 @@ export const DashboardSystemCards = ({
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Card variant="elevated">
-        <CardContent className="space-y-3 pt-6">
+        <CardContent className="space-y-3 pt-4 sm:pt-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {t('dashboard.outsideTemp')}
           </p>
@@ -74,7 +74,7 @@ export const DashboardSystemCards = ({
       </Card>
 
       <Card variant="elevated">
-        <CardContent className="space-y-3 pt-6">
+        <CardContent className="space-y-3 pt-4 sm:pt-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {t('dashboard.boilerStatus')}
           </p>

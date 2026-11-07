@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { Alert, FlatList, RefreshControl, Platform, View } from 'react-native';
+import { FlatList, RefreshControl, Platform, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
@@ -14,11 +14,8 @@ import {
   Text,
   Icon,
   useColorModeValue,
-  Spinner,
-  ScrollView,
   Pressable,
   useToast,
-  Center,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
@@ -26,14 +23,24 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
 import { useTranslation } from '../../hooks/useTranslation';
-import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
-import { MonoLabel, MonoMeta, Panel, PanelRow, Readout } from '../../ui';
+
 import { useTokens } from '../../ui/theme';
 import { radius, space } from '../../theme/tokens';
 import { SecureStorage } from '../../services/storage/SecureStorage';
-import { Screen, ScreenHeader } from '../../ui';
+import {
+  Button,
+  MonoLabel,
+  MonoMeta,
+  Panel,
+  PanelRow,
+  Readout,
+  Screen,
+  ScreenHeader,
+  Sheet,
+  SkeletonRows,
+} from '../../ui';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
 // postavke i ovaj ekran čiste ISTU putanju.
 import {
@@ -77,6 +84,8 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     'week'
   );
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  // F4 (UX-19): izbor akcije za sliku brojila ide kroz sheet, ne kroz sistemski dijalog.
+  const [meterImageReading, setMeterImageReading] = useState<GasReading | null>(null);
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -120,7 +129,6 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'dark.700');
-  const accentColor = useColorModeValue('brand.500', 'brand.400');
   const filterBg = useColorModeValue('gray.200', 'gray.700');
 
   const {
@@ -515,32 +523,30 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     });
   };
 
+  /**
+   * F4 (UX-19): jedini sistemski dijalog u aplikaciji zamijenjen je istim
+   * `Sheet`-om koji nose sve ostale potvrde — ista vizuelna gramatika, isti
+   * jezik i ista a11y pravila.
+   */
   const handleUploadMeterImage = (reading: GasReading) => {
-    Alert.alert(
-      t('gas.meterImageActionTitle') || 'Meter Image',
-      t('gas.meterImageActionPrompt') || 'Choose how to add meter image',
-      [
-        {
-          text: t('gas.selectImage') || 'Select Image',
-          onPress: () => {
-            void pickMeterImageFromGallery(reading).catch((error) =>
-              showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
-            );
-          },
-        },
-        {
-          text: t('gas.takePhoto') || 'Take Photo',
-          onPress: () => {
-            void captureMeterImage(reading).catch((error) =>
-              showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
-            );
-          },
-        },
-        {
-          text: t('common.cancel') || 'Cancel',
-          style: 'cancel',
-        },
-      ],
+    setMeterImageReading(reading);
+  };
+
+  const handlePickFromGallery = () => {
+    const reading = meterImageReading;
+    setMeterImageReading(null);
+    if (!reading) return;
+    void pickMeterImageFromGallery(reading).catch((error) =>
+      showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
+    );
+  };
+
+  const handleTakePhoto = () => {
+    const reading = meterImageReading;
+    setMeterImageReading(null);
+    if (!reading) return;
+    void captureMeterImage(reading).catch((error) =>
+      showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
     );
   };
 
@@ -648,14 +654,10 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
           }
           testID="gas-readings-header"
         />
-        <Center flex={1}>
-          <VStack space={4} alignItems="center">
-            <Spinner size="lg" color={accentColor} />
-            <Text fontSize="lg" color={mutedColor}>
-              {t('gas.loading')}
-            </Text>
-          </VStack>
-        </Center>
+        {/* F4 (UX-07): skeleton u footprintu liste, umjesto ekrana koji nestane. */}
+        <View style={{ paddingHorizontal: space.lg, paddingTop: space.md, gap: space.md }}>
+          <SkeletonRows count={5} />
+        </View>
       </Screen>
     );
   }
@@ -751,7 +753,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                       setDateFilter(filter.key);
                     }}
                     accessibilityRole="button"
+                    accessibilityLabel={filter.label}
                     accessibilityState={{ selected: active }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     style={{
                       paddingHorizontal: 10,
                       paddingVertical: 6,
@@ -816,41 +820,65 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       />
 
       {/* Add Reading Modal */}
-      <BottomSheetModal
+      {/* F4 (UX-14): isti `Sheet` primitiv kao na Početnoj — naslov u zaglavlju,
+          animirano zatvaranje i X sa labelom iz `t()`. */}
+      <Sheet
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
+        title={t('gas.addReading')}
+        closeLabel={t('common.close')}
         snapPoints={['75%', '95%']}
+        scrollable
+        testID="gas-add-sheet"
       >
-        <VStack space={4} flex={1}>
-          <HStack justifyContent="space-between" alignItems="center">
-            <Text fontSize="lg" fontWeight="bold" color={textColor}>
-              {t('gas.addReading') || 'Add Gas Reading'}
-            </Text>
-            <Pressable onPress={() => setShowAddModal(false)}>
-              <Icon as={Ionicons} name="close" size={6} color={textColor} />
-            </Pressable>
-          </HStack>
-          <ScrollView bounces={false} flex={1}>
-            <GasForm
-              onSubmit={addMutation.mutateAsync}
-              isLoading={addMutation.isPending}
-              onCancel={() => setShowAddModal(false)}
-              existingReadings={readings}
-            />
-          </ScrollView>
+        <GasForm
+          onSubmit={addMutation.mutateAsync}
+          isLoading={addMutation.isPending}
+          onCancel={() => setShowAddModal(false)}
+          existingReadings={readings}
+        />
+      </Sheet>
+
+      {/* F4 (UX-19): akcije za sliku brojila — sheet umjesto sistemskog dijaloga. */}
+      <Sheet
+        isOpen={meterImageReading !== null}
+        onClose={() => setMeterImageReading(null)}
+        title={t('gas.meterImageActionTitle')}
+        closeLabel={t('common.close')}
+        snapPoints={['40%']}
+        testID="gas-meter-image-sheet"
+      >
+        <VStack space={3}>
+          <Text fontSize="sm" color={textColor}>
+            {t('gas.meterImageActionPrompt')}
+          </Text>
+          <Button label={t('gas.selectImage')} block onPress={handlePickFromGallery} />
+          <Button
+            label={t('gas.takePhoto')}
+            variant="secondary"
+            block
+            onPress={handleTakePhoto}
+          />
+          <Button
+            label={t('common.cancel')}
+            variant="ghost"
+            block
+            onPress={() => setMeterImageReading(null)}
+          />
         </VStack>
-      </BottomSheetModal>
+      </Sheet>
 
       {/* Date Range Picker Modal */}
-      <BottomSheetModal
+      <Sheet
         isOpen={showDateRangePicker}
         onClose={() => setShowDateRangePicker(false)}
+        title={t('gas.dateRange.title')}
+        closeLabel={t('common.close')}
         snapPoints={['60%', '85%']}
+        scrollable
+        testID="gas-date-range-sheet"
       >
         <VStack space={4}>
-          <Text fontSize="lg" fontWeight="bold" color={textColor}>
-            {t('gas.dateRange.title') || 'Select Date Range'}
-          </Text>
           <VStack space={4}>
             {/* Start Date */}
             <Box>
@@ -859,6 +887,13 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
               </Text>
               <Pressable
                 onPress={() => setShowStartPicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('gas.dateRange.startDate')}: ${
+                  customStartDate
+                    ? customStartDate.toLocaleDateString()
+                    : t('gas.dateRange.selectStart')
+                }`}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 bg={filterBg}
                 px={4}
                 py={3}
@@ -888,6 +923,11 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
               </Text>
               <Pressable
                 onPress={() => setShowEndPicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('gas.dateRange.endDate')}: ${
+                  customEndDate ? customEndDate.toLocaleDateString() : t('gas.dateRange.selectEnd')
+                }`}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 bg={filterBg}
                 px={4}
                 py={3}
@@ -930,6 +970,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                     py={2}
                     rounded="md"
                     flex={1}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('gas.dateRange.last30')}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Text fontSize="xs" color={textColor} textAlign="center">
                       {t('gas.dateRange.last30') || 'Last 30 days'}
@@ -948,6 +991,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                     py={2}
                     rounded="md"
                     flex={1}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('gas.dateRange.last60')}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Text fontSize="xs" color={textColor} textAlign="center">
                       {t('gas.dateRange.last60') || 'Last 60 days'}
@@ -966,6 +1012,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                   px={3}
                   py={2}
                   rounded="md"
+                  accessibilityRole="button"
+                  accessibilityLabel={t('gas.dateRange.last90')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Text fontSize="xs" color={textColor} textAlign="center">
                     {t('gas.dateRange.last90') || 'Last 90 days'}
@@ -979,6 +1028,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
           <HStack space={3} w="full" mt={4}>
             <Pressable
               flex={1}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.clear')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               onPress={() => {
                 setCustomStartDate(null);
                 setCustomEndDate(null);
@@ -995,6 +1047,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             </Pressable>
             <Pressable
               flex={1}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.save')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               onPress={() => setShowDateRangePicker(false)}
               bg={tokens.signal}
               py={3}
@@ -1007,7 +1062,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             </Pressable>
           </HStack>
         </VStack>
-      </BottomSheetModal>
+      </Sheet>
 
       {/* Start Date Picker */}
       {showStartPicker && (

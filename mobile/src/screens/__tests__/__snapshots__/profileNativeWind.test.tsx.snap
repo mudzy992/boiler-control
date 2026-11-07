@@ -270,6 +270,11 @@ exports[`Profile nativewind matches the dark snapshot 1`] = `
                     <TextInput
                       accessibilityHint="Email cannot be changed here"
                       accessibilityLabel="Email"
+                      accessibilityState={
+                        {
+                          "disabled": true,
+                        }
+                      }
                       editable={false}
                       placeholderTextColor="#64748b"
                       style={
@@ -1184,6 +1189,11 @@ exports[`Profile nativewind matches the light snapshot 1`] = `
                     <TextInput
                       accessibilityHint="Email cannot be changed here"
                       accessibilityLabel="Email"
+                      accessibilityState={
+                        {
+                          "disabled": true,
+                        }
+                      }
                       editable={false}
                       placeholderTextColor="#94a3b8"
                       style={

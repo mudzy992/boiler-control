@@ -175,6 +175,36 @@ sekciju. `package-lock.json` je promijenjen isključivo uklanjanjem
 
 Skeleton na svim ekranima, a11y labele i role, `hitSlop`, ispravke toastova, brisanje mrtvih stilova.
 
+### Šta je F4 stvarno isporučio
+
+| Nalaz iz audita | Šta je urađeno | Dokaz |
+|---|---|---|
+| UX-07 pun ekranski spinner (7 ekrani) | Svi preostali spinneri zamijenjeni skeletonima u footprintu sadržaja: Očitanja (`SkeletonRows`), Analiza plina (redovi + graf), Obavijesti, Postavke obavijesti (`SkeletonPanel` + redovi), Profil, Rasporedi, Upravljanje domovima. Analiza plina **zadržava zaglavlje sa nazad** i dok se čita — prije je cijeli ekran nestajao | `f4Polish.test.tsx` (nijedan ekran nema `<Spinner>`) |
+| UX-06 15 labela na 10 776 LOC | Svaki `Pressable` u ekranima ima `accessibilityLabel`; ikonografske kontrole dobile `hitSlop` ≥ 8 i `accessibilityState`; `FormInput` veže labelu na polje (`accessibilityLabel ?? placeholder`), pa čitač ekrana ne kaže samo „tekstualno polje" | `f4Polish.test.tsx` (statistički prolaz kroz sve `Pressable` tagove) |
+| UX-19 jedini `Alert.alert` | Akcije za sliku brojila idu kroz `ui/Sheet` — ista gramatika kao sve ostale potvrde, isti jezik, ista a11y pravila | `gas-meter-image-sheet` |
+| UX-14 dva bottom sheeta u Plinu | `components/BottomSheetModal.tsx` **obrisan**; Očitanja koriste `ui/Sheet` (naslov u zaglavlju, animirano zatvaranje, X sa labelom iz `t()` — `closeLabel` prop, jer je prije bio hardkodovan „Zatvori") | `gas-add-sheet`, `gas-date-range-sheet` |
+| UX-24 prazna stanja bez „šta dalje" | Grijanje bez termostata → `EmptyState` sa akcijom ka Rasporedima (jedina postojeća ruta, bez izmišljenog ekrana); Analiza plina bez podataka → akcija „Idi na očitanja" | `noThermostatsAction`, `gas.analysisNoDataAction` |
+| UX-23 splash 2,5 s fiksno | Splash se sklanja kad su jezik i fontovi spremni, uz minimum 600 ms (bez bijelog bljeska) i maksimum 2,5 s (spor disk ne zadržava korisnika) | `App.tsx` |
+| UX-16 hook u JSX-u (preostalo) | `GasForm` (tri `useColorModeValue` u grani) i `RecentHeatingEvents` (hook u `renderEventItem`) — boje se računaju na vrhu komponente | `eslint` — 0 `rules-of-hooks` |
+| Bug u locale fajlu (`gas.dateRange`) | Ključevi Postavki (`accountSection`, `appearanceSection`, `notificationsSection`, `homesSection`, `dataPrivacySection`, `aboutSection`, `languageEnglish`, `languageBosnian`) i `units.dailyGasReminderTime` bili su fizički u `gas.*`, sa **bosanskim vrijednostima u engleskom bloku**. Sada su u `settings.*` u oba jezika, a `gas.dateRange`/`gas.units` sadrže samo svoje ključeve | `f4Polish.test.tsx` (5 locale testova), `parity.test.ts` proširen na `gas`/`settings`/`notifications`/`analytics` |
+| Mrtav kod | `console.error` bez radnje u `ProfileScreen` (odjava je lokalna), nekorišteni importi i `useColorModeValue` vrijednosti u ekranima koji su prešli na tokene (`Spinner`, `Center`, `accentColor`, `bgColor`, `spinnerColor`) | `tsc` sa `noUnusedLocals` |
+
+Provjera poslije F4 (2026-11-08):
+
+```
+npm run type-check   → 0 grešaka
+npm test             → 31 suite, 222 testa, 32 snapshot-a — sve zeleno
+                       (30 postojećih + 1 novi: f4Polish.test.tsx, 13 testova)
+npm run lint         → 0 grešaka, 50 upozorenja (sva postojeća u starom sloju)
+```
+
+Snimci su regenerisani za 6 ekrana (Prijava, Registracija, Profil, Obavijesti,
+Postavke, Upravljanje domovima, Očitanja plina) — razlika je posljedica dvije
+sistemske promjene, ne kozmetike: (1) `FormInput` sada nosi `accessibilityLabel`
+i `accessibilityState` na polju; (2) `Pressable`-i nose `accessibilityLabel`/
+`accessibilityRole`. Nijedna asertacija nije mijenjana; u tri testa je uklonjen
+`jest.mock('../../components/BottomSheetModal')` jer modul više ne postoji.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -183,7 +213,7 @@ Skeleton na svim ekranima, a11y labele i role, `hitSlop`, ispravke toastova, bri
 | F1 Navigacija i jezik | **završeno 2026-11-07** | jedan tab bar, `Segmented` u Plinu, `ScreenHeader` na svim push ekranima, tri ekrana prevedena, 14 novih testova |
 | F2 Glavni ekrani | **završeno 2026-11-07** | Početna = hero + 3 KPI + liste; Grijanje red-po-uređaju; Plin red-po-očitanju; Postavke jedna lista; 11 novih testova |
 | F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
-| F4 Završnica | — | — |
+| F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

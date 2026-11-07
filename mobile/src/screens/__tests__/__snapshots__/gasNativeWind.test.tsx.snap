@@ -1697,10 +1697,19 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
             }
           >
             <Pressable
+              accessibilityLabel="gas.filterLastWeek"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -1729,10 +1738,19 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterMonth"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -1761,10 +1779,19 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterYear"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -1793,10 +1820,19 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterAll"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": true,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -1825,10 +1861,19 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterCustom"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -2198,6 +2243,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               }
             >
               <View
+                accessibilityLabel="gas.filterLastWeek"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -2219,6 +2265,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -2256,6 +2310,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterMonth"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -2277,6 +2332,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -2314,6 +2377,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterYear"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -2335,6 +2399,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -2372,6 +2444,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterAll"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -2393,6 +2466,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -2430,6 +2511,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterCustom"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -2451,6 +2533,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -2799,6 +2889,1768 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
         </View>
       </View>
     </RCTScrollView>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#1f2733",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#e8edf4",
+                "fontFamily": undefined,
+                "fontSize": 13,
+              },
+              null,
+              {
+                "color": "#e8edf4",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          gas.addReading
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="gas-add-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <RCTScrollView
+        contentContainerStyle={
+          {
+            "paddingBottom": 48,
+            "paddingHorizontal": 16,
+            "paddingTop": 12,
+          }
+        }
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "flex": 1,
+                "gap": 16,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 4,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#f3f4f6",
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                    "marginBottom": 4,
+                  }
+                }
+              >
+                gas.counterValueLabel
+                 *
+              </Text>
+              <View
+                style={
+                  {
+                    "backgroundColor": "#0f172a",
+                    "borderColor": "#1e293b",
+                    "borderRadius": 6,
+                    "borderWidth": 1,
+                    "opacity": 1,
+                    "paddingBottom": 8,
+                    "paddingLeft": 12,
+                    "paddingRight": 12,
+                    "paddingTop": 8,
+                  }
+                }
+              >
+                <TextInput
+                  accessibilityLabel="gas.counterValuePlaceholder"
+                  editable={true}
+                  keyboardType="decimal-pad"
+                  onChangeText={[Function]}
+                  placeholder="gas.counterValuePlaceholder"
+                  placeholderTextColor="#64748b"
+                  style={
+                    [
+                      {
+                        "fontSize": 16,
+                        "paddingVertical": 2,
+                      },
+                      {
+                        "color": "#f1f5f9",
+                      },
+                      undefined,
+                    ]
+                  }
+                  value=""
+                />
+              </View>
+            </View>
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 4,
+                }
+              }
+            >
+              <View
+                className="flex flex-row"
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#1e293b",
+                    "borderRadius": 6,
+                    "justifyContent": "space-between",
+                    "padding": 12,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "center",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    accessibilityLabel="time-outline"
+                  >
+                    time-outline
+                  </Text>
+                  <Text
+                    style={
+                      {
+                        "color": "#f3f4f6",
+                        "fontSize": 14,
+                        "fontWeight": "500",
+                      }
+                    }
+                  >
+                    gas.useCurrentDateTime
+                  </Text>
+                </View>
+                <RCTSwitch
+                  accessibilityRole="switch"
+                  disabled={false}
+                  onChange={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  onTintColor="#ff8c6f"
+                  style={
+                    [
+                      {
+                        "alignSelf": "flex-start",
+                      },
+                      [
+                        {
+                          "transform": [
+                            {
+                              "scaleX": 0.85,
+                            },
+                            {
+                              "scaleY": 0.85,
+                            },
+                          ],
+                        },
+                        undefined,
+                      ],
+                    ]
+                  }
+                  thumbTintColor="#e85223"
+                  tintColor="#d1d5db"
+                  value={true}
+                />
+              </View>
+            </View>
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 4,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#f3f4f6",
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                    "marginBottom": 4,
+                  }
+                }
+              >
+                gas.meterImage
+              </Text>
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <View
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderColor": "#e85223",
+                          "borderRadius": 6,
+                          "borderWidth": 1,
+                          "color": "#ff8c6f",
+                          "flex": 1,
+                          "justifyContent": "center",
+                          "paddingBottom": 10,
+                          "paddingLeft": 16,
+                          "paddingRight": 16,
+                          "paddingTop": 10,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                          "justifyContent": "center",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="image-outline"
+                      >
+                        image-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#ff8c6f",
+                            "fontSize": 16,
+                            "fontWeight": "600",
+                          }
+                        }
+                      >
+                        gas.selectImage
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderColor": "#e85223",
+                          "borderRadius": 6,
+                          "borderWidth": 1,
+                          "color": "#ff8c6f",
+                          "flex": 1,
+                          "justifyContent": "center",
+                          "paddingBottom": 10,
+                          "paddingLeft": 16,
+                          "paddingRight": 16,
+                          "paddingTop": 10,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                          "justifyContent": "center",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="camera-outline"
+                      >
+                        camera-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#ff8c6f",
+                            "fontSize": 16,
+                            "fontWeight": "600",
+                          }
+                        }
+                      >
+                        gas.takePhoto
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              className="flex flex-row"
+              style={
+                {
+                  "gap": 8,
+                  "marginTop": 16,
+                }
+              }
+            >
+              <View
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "transparent",
+                      "borderColor": "#e85223",
+                      "borderRadius": 6,
+                      "borderWidth": 1,
+                      "color": "#ff8c6f",
+                      "flex": 1,
+                      "justifyContent": "center",
+                      "paddingBottom": 10,
+                      "paddingLeft": 16,
+                      "paddingRight": 16,
+                      "paddingTop": 10,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "center",
+                      "gap": 8,
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#4b5563",
+                        "fontSize": 16,
+                        "fontWeight": "600",
+                      }
+                    }
+                  >
+                    common.cancel
+                  </Text>
+                </View>
+              </View>
+              <View
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": true,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#e85223",
+                      "borderColor": "#e85223",
+                      "borderRadius": 6,
+                      "borderWidth": 1,
+                      "color": "#ffffff",
+                      "flex": 1,
+                      "justifyContent": "center",
+                      "opacity": 0.5,
+                      "paddingBottom": 10,
+                      "paddingLeft": 16,
+                      "paddingRight": 16,
+                      "paddingTop": 10,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "center",
+                      "gap": 8,
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#ffffff",
+                        "fontSize": 16,
+                        "fontWeight": "bold",
+                      }
+                    }
+                  >
+                    gas.addReading
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </RCTScrollView>
+    </View>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#1f2733",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#e8edf4",
+                "fontFamily": undefined,
+                "fontSize": 13,
+              },
+              null,
+              {
+                "color": "#e8edf4",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          gas.meterImageActionTitle
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="gas-meter-image-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <View
+        className="flex flex-col"
+        style={
+          {
+            "gap": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#f3f4f6",
+              "fontSize": 14,
+            }
+          }
+        >
+          gas.meterImageActionPrompt
+        </Text>
+        <View
+          accessibilityLabel="gas.selectImage"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": false,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 16,
+                },
+                {
+                  "backgroundColor": "#ff6b3d",
+                  "borderColor": "#ff6b3d",
+                  "opacity": 1,
+                },
+                {
+                  "alignSelf": "stretch",
+                },
+                undefined,
+              ],
+              null,
+            ]
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 6,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#e8edf4",
+                    "fontFamily": undefined,
+                    "fontSize": 13,
+                  },
+                  null,
+                  {
+                    "color": "#0b0f16",
+                    "fontFamily": undefined,
+                    "fontSize": 12.5,
+                  },
+                ]
+              }
+            >
+              gas.selectImage
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="gas.takePhoto"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": false,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 16,
+                },
+                {
+                  "backgroundColor": "#111723",
+                  "borderColor": "#2c3746",
+                  "opacity": 1,
+                },
+                {
+                  "alignSelf": "stretch",
+                },
+                undefined,
+              ],
+              null,
+            ]
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 6,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#e8edf4",
+                    "fontFamily": undefined,
+                    "fontSize": 13,
+                  },
+                  null,
+                  {
+                    "color": "#e8edf4",
+                    "fontFamily": undefined,
+                    "fontSize": 12.5,
+                  },
+                ]
+              }
+            >
+              gas.takePhoto
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="common.cancel"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": false,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 16,
+                },
+                {
+                  "backgroundColor": "transparent",
+                  "borderColor": "#1f2733",
+                  "opacity": 1,
+                },
+                {
+                  "alignSelf": "stretch",
+                },
+                undefined,
+              ],
+              null,
+            ]
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 6,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#e8edf4",
+                    "fontFamily": undefined,
+                    "fontSize": 13,
+                  },
+                  null,
+                  {
+                    "color": "#9aa6b6",
+                    "fontFamily": undefined,
+                    "fontSize": 12.5,
+                  },
+                ]
+              }
+            >
+              common.cancel
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#1f2733",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#e8edf4",
+                "fontFamily": undefined,
+                "fontSize": 13,
+              },
+              null,
+              {
+                "color": "#e8edf4",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          gas.dateRange.title
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="gas-date-range-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <RCTScrollView
+        contentContainerStyle={
+          {
+            "paddingBottom": 48,
+            "paddingHorizontal": 16,
+            "paddingTop": 12,
+          }
+        }
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "gap": 16,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 16,
+                }
+              }
+            >
+              <View
+                style={{}}
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#f3f4f6",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  gas.dateRange.startDate
+                </Text>
+                <View
+                  accessibilityLabel="gas.dateRange.startDate: gas.dateRange.selectStart"
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  hitSlop={
+                    {
+                      "bottom": 8,
+                      "left": 8,
+                      "right": 8,
+                      "top": 8,
+                    }
+                  }
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#374151",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 8,
+                        "borderWidth": 1,
+                        "paddingBottom": 12,
+                        "paddingLeft": 16,
+                        "paddingRight": 16,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#f3f4f6",
+                          "fontSize": 14,
+                        }
+                      }
+                    >
+                      gas.dateRange.selectStart
+                    </Text>
+                    <Text
+                      accessibilityLabel="calendar"
+                    >
+                      calendar
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View
+                style={{}}
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#f3f4f6",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  gas.dateRange.endDate
+                </Text>
+                <View
+                  accessibilityLabel="gas.dateRange.endDate: gas.dateRange.selectEnd"
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  hitSlop={
+                    {
+                      "bottom": 8,
+                      "left": 8,
+                      "right": 8,
+                      "top": 8,
+                    }
+                  }
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#374151",
+                        "borderColor": "#1e293b",
+                        "borderRadius": 8,
+                        "borderWidth": 1,
+                        "paddingBottom": 12,
+                        "paddingLeft": 16,
+                        "paddingRight": 16,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#f3f4f6",
+                          "fontSize": 14,
+                        }
+                      }
+                    >
+                      gas.dateRange.selectEnd
+                    </Text>
+                    <Text
+                      accessibilityLabel="calendar"
+                    >
+                      calendar
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 8,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#9ca3af",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "marginBottom": 4,
+                    }
+                  }
+                >
+                  gas.dateRange.quickPresets
+                </Text>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityLabel="gas.dateRange.last30"
+                      accessibilityRole="button"
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 8,
+                          "left": 8,
+                          "right": 8,
+                          "top": 8,
+                        }
+                      }
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {
+                            "backgroundColor": "#374151",
+                            "borderRadius": 6,
+                            "flex": 1,
+                            "paddingBottom": 8,
+                            "paddingLeft": 12,
+                            "paddingRight": 12,
+                            "paddingTop": 8,
+                          },
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          {
+                            "color": "#f3f4f6",
+                            "fontSize": 12,
+                            "textAlign": "center",
+                          }
+                        }
+                      >
+                        gas.dateRange.last30
+                      </Text>
+                    </View>
+                    <View
+                      accessibilityLabel="gas.dateRange.last60"
+                      accessibilityRole="button"
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 8,
+                          "left": 8,
+                          "right": 8,
+                          "top": 8,
+                        }
+                      }
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {
+                            "backgroundColor": "#374151",
+                            "borderRadius": 6,
+                            "flex": 1,
+                            "paddingBottom": 8,
+                            "paddingLeft": 12,
+                            "paddingRight": 12,
+                            "paddingTop": 8,
+                          },
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          {
+                            "color": "#f3f4f6",
+                            "fontSize": 12,
+                            "textAlign": "center",
+                          }
+                        }
+                      >
+                        gas.dateRange.last60
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityLabel="gas.dateRange.last90"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    hitSlop={
+                      {
+                        "bottom": 8,
+                        "left": 8,
+                        "right": 8,
+                        "top": 8,
+                      }
+                    }
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {
+                          "backgroundColor": "#374151",
+                          "borderRadius": 6,
+                          "paddingBottom": 8,
+                          "paddingLeft": 12,
+                          "paddingRight": 12,
+                          "paddingTop": 8,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#f3f4f6",
+                          "fontSize": 12,
+                          "textAlign": "center",
+                        }
+                      }
+                    >
+                      gas.dateRange.last90
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              className="flex flex-row"
+              style={
+                {
+                  "gap": 12,
+                  "marginTop": 16,
+                  "width": "full",
+                }
+              }
+            >
+              <View
+                accessibilityLabel="common.clear"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#374151",
+                      "borderRadius": 8,
+                      "flex": 1,
+                      "paddingBottom": 12,
+                      "paddingTop": 12,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#f3f4f6",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  common.clear
+                </Text>
+              </View>
+              <View
+                accessibilityLabel="common.save"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#ff6b3d",
+                      "borderRadius": 8,
+                      "flex": 1,
+                      "paddingBottom": 12,
+                      "paddingTop": 12,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#0b0f16",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  common.save
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </RCTScrollView>
+    </View>
   </RNCSafeAreaView>
   <View
     pointerEvents="box-none"
@@ -3118,10 +4970,19 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
             }
           >
             <Pressable
+              accessibilityLabel="gas.filterLastWeek"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -3150,10 +5011,19 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterMonth"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -3182,10 +5052,19 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterYear"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -3214,10 +5093,19 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterAll"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": true,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -3246,10 +5134,19 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               </Text>
             </Pressable>
             <Pressable
+              accessibilityLabel="gas.filterCustom"
               accessibilityRole="button"
               accessibilityState={
                 {
                   "selected": false,
+                }
+              }
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
                 }
               }
               onPress={[Function]}
@@ -3619,6 +5516,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               }
             >
               <View
+                accessibilityLabel="gas.filterLastWeek"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -3640,6 +5538,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -3677,6 +5583,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterMonth"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -3698,6 +5605,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -3735,6 +5650,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterYear"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -3756,6 +5672,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -3793,6 +5717,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterAll"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -3814,6 +5739,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -3851,6 +5784,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="gas.filterCustom"
                 accessibilityRole="button"
                 accessibilityState={
                   {
@@ -3872,6 +5806,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 accessible={true}
                 collapsable={false}
                 focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
                 onBlur={[Function]}
                 onClick={[Function]}
                 onFocus={[Function]}
@@ -4220,6 +6162,1768 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
         </View>
       </View>
     </RCTScrollView>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#dce0e8",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#111827",
+                "fontFamily": undefined,
+                "fontSize": 13,
+              },
+              null,
+              {
+                "color": "#111827",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          gas.addReading
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="gas-add-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <RCTScrollView
+        contentContainerStyle={
+          {
+            "paddingBottom": 48,
+            "paddingHorizontal": 16,
+            "paddingTop": 12,
+          }
+        }
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "flex": 1,
+                "gap": 16,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 4,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#1f2937",
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                    "marginBottom": 4,
+                  }
+                }
+              >
+                gas.counterValueLabel
+                 *
+              </Text>
+              <View
+                style={
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#e2e8f0",
+                    "borderRadius": 6,
+                    "borderWidth": 1,
+                    "opacity": 1,
+                    "paddingBottom": 8,
+                    "paddingLeft": 12,
+                    "paddingRight": 12,
+                    "paddingTop": 8,
+                  }
+                }
+              >
+                <TextInput
+                  accessibilityLabel="gas.counterValuePlaceholder"
+                  editable={true}
+                  keyboardType="decimal-pad"
+                  onChangeText={[Function]}
+                  placeholder="gas.counterValuePlaceholder"
+                  placeholderTextColor="#94a3b8"
+                  style={
+                    [
+                      {
+                        "fontSize": 16,
+                        "paddingVertical": 2,
+                      },
+                      {
+                        "color": "#1f2937",
+                      },
+                      undefined,
+                    ]
+                  }
+                  value=""
+                />
+              </View>
+            </View>
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 4,
+                }
+              }
+            >
+              <View
+                className="flex flex-row"
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#f9fafb",
+                    "borderRadius": 6,
+                    "justifyContent": "space-between",
+                    "padding": 12,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "center",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    accessibilityLabel="time-outline"
+                  >
+                    time-outline
+                  </Text>
+                  <Text
+                    style={
+                      {
+                        "color": "#1f2937",
+                        "fontSize": 14,
+                        "fontWeight": "500",
+                      }
+                    }
+                  >
+                    gas.useCurrentDateTime
+                  </Text>
+                </View>
+                <RCTSwitch
+                  accessibilityRole="switch"
+                  disabled={false}
+                  onChange={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  onTintColor="#ff8c6f"
+                  style={
+                    [
+                      {
+                        "alignSelf": "flex-start",
+                      },
+                      [
+                        {
+                          "transform": [
+                            {
+                              "scaleX": 0.85,
+                            },
+                            {
+                              "scaleY": 0.85,
+                            },
+                          ],
+                        },
+                        undefined,
+                      ],
+                    ]
+                  }
+                  thumbTintColor="#e85223"
+                  tintColor="#d1d5db"
+                  value={true}
+                />
+              </View>
+            </View>
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 4,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#1f2937",
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                    "marginBottom": 4,
+                  }
+                }
+              >
+                gas.meterImage
+              </Text>
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <View
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderColor": "#e85223",
+                          "borderRadius": 6,
+                          "borderWidth": 1,
+                          "color": "#993316",
+                          "flex": 1,
+                          "justifyContent": "center",
+                          "paddingBottom": 10,
+                          "paddingLeft": 16,
+                          "paddingRight": 16,
+                          "paddingTop": 10,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                          "justifyContent": "center",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="image-outline"
+                      >
+                        image-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#993316",
+                            "fontSize": 16,
+                            "fontWeight": "600",
+                          }
+                        }
+                      >
+                        gas.selectImage
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderColor": "#e85223",
+                          "borderRadius": 6,
+                          "borderWidth": 1,
+                          "color": "#993316",
+                          "flex": 1,
+                          "justifyContent": "center",
+                          "paddingBottom": 10,
+                          "paddingLeft": 16,
+                          "paddingRight": 16,
+                          "paddingTop": 10,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    <View
+                      className="flex flex-row"
+                      style={
+                        {
+                          "alignItems": "center",
+                          "gap": 8,
+                          "justifyContent": "center",
+                        }
+                      }
+                    >
+                      <Text
+                        accessibilityLabel="camera-outline"
+                      >
+                        camera-outline
+                      </Text>
+                      <Text
+                        style={
+                          {
+                            "color": "#993316",
+                            "fontSize": 16,
+                            "fontWeight": "600",
+                          }
+                        }
+                      >
+                        gas.takePhoto
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              className="flex flex-row"
+              style={
+                {
+                  "gap": 8,
+                  "marginTop": 16,
+                }
+              }
+            >
+              <View
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "transparent",
+                      "borderColor": "#e85223",
+                      "borderRadius": 6,
+                      "borderWidth": 1,
+                      "color": "#993316",
+                      "flex": 1,
+                      "justifyContent": "center",
+                      "paddingBottom": 10,
+                      "paddingLeft": 16,
+                      "paddingRight": 16,
+                      "paddingTop": 10,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "center",
+                      "gap": 8,
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#4b5563",
+                        "fontSize": 16,
+                        "fontWeight": "600",
+                      }
+                    }
+                  >
+                    common.cancel
+                  </Text>
+                </View>
+              </View>
+              <View
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": true,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#e85223",
+                      "borderColor": "#e85223",
+                      "borderRadius": 6,
+                      "borderWidth": 1,
+                      "color": "#ffffff",
+                      "flex": 1,
+                      "justifyContent": "center",
+                      "opacity": 0.5,
+                      "paddingBottom": 10,
+                      "paddingLeft": 16,
+                      "paddingRight": 16,
+                      "paddingTop": 10,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  className="flex flex-row"
+                  style={
+                    {
+                      "alignItems": "center",
+                      "gap": 8,
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "#ffffff",
+                        "fontSize": 16,
+                        "fontWeight": "bold",
+                      }
+                    }
+                  >
+                    gas.addReading
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </RCTScrollView>
+    </View>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#dce0e8",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#111827",
+                "fontFamily": undefined,
+                "fontSize": 13,
+              },
+              null,
+              {
+                "color": "#111827",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          gas.meterImageActionTitle
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="gas-meter-image-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <View
+        className="flex flex-col"
+        style={
+          {
+            "gap": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#1f2937",
+              "fontSize": 14,
+            }
+          }
+        >
+          gas.meterImageActionPrompt
+        </Text>
+        <View
+          accessibilityLabel="gas.selectImage"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": false,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 16,
+                },
+                {
+                  "backgroundColor": "#e85223",
+                  "borderColor": "#e85223",
+                  "opacity": 1,
+                },
+                {
+                  "alignSelf": "stretch",
+                },
+                undefined,
+              ],
+              null,
+            ]
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 6,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#111827",
+                    "fontFamily": undefined,
+                    "fontSize": 13,
+                  },
+                  null,
+                  {
+                    "color": "#ffffff",
+                    "fontFamily": undefined,
+                    "fontSize": 12.5,
+                  },
+                ]
+              }
+            >
+              gas.selectImage
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="gas.takePhoto"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": false,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 16,
+                },
+                {
+                  "backgroundColor": "#f1f3f7",
+                  "borderColor": "#c3cad6",
+                  "opacity": 1,
+                },
+                {
+                  "alignSelf": "stretch",
+                },
+                undefined,
+              ],
+              null,
+            ]
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 6,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#111827",
+                    "fontFamily": undefined,
+                    "fontSize": 13,
+                  },
+                  null,
+                  {
+                    "color": "#111827",
+                    "fontFamily": undefined,
+                    "fontSize": 12.5,
+                  },
+                ]
+              }
+            >
+              gas.takePhoto
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="common.cancel"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": false,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 16,
+                },
+                {
+                  "backgroundColor": "transparent",
+                  "borderColor": "#dce0e8",
+                  "opacity": 1,
+                },
+                {
+                  "alignSelf": "stretch",
+                },
+                undefined,
+              ],
+              null,
+            ]
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 6,
+              }
+            }
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#111827",
+                    "fontFamily": undefined,
+                    "fontSize": 13,
+                  },
+                  null,
+                  {
+                    "color": "#4b5563",
+                    "fontFamily": undefined,
+                    "fontSize": 12.5,
+                  },
+                ]
+              }
+            >
+              common.cancel
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#dce0e8",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#111827",
+                "fontFamily": undefined,
+                "fontSize": 13,
+              },
+              null,
+              {
+                "color": "#111827",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          gas.dateRange.title
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="gas-date-range-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <RCTScrollView
+        contentContainerStyle={
+          {
+            "paddingBottom": 48,
+            "paddingHorizontal": 16,
+            "paddingTop": 12,
+          }
+        }
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <View
+            className="flex flex-col"
+            style={
+              {
+                "gap": 16,
+              }
+            }
+          >
+            <View
+              className="flex flex-col"
+              style={
+                {
+                  "gap": 16,
+                }
+              }
+            >
+              <View
+                style={{}}
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#1f2937",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  gas.dateRange.startDate
+                </Text>
+                <View
+                  accessibilityLabel="gas.dateRange.startDate: gas.dateRange.selectStart"
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  hitSlop={
+                    {
+                      "bottom": 8,
+                      "left": 8,
+                      "right": 8,
+                      "top": 8,
+                    }
+                  }
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#e5e7eb",
+                        "borderColor": "#e5e7eb",
+                        "borderRadius": 8,
+                        "borderWidth": 1,
+                        "paddingBottom": 12,
+                        "paddingLeft": 16,
+                        "paddingRight": 16,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#1f2937",
+                          "fontSize": 14,
+                        }
+                      }
+                    >
+                      gas.dateRange.selectStart
+                    </Text>
+                    <Text
+                      accessibilityLabel="calendar"
+                    >
+                      calendar
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View
+                style={{}}
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#1f2937",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                      "marginBottom": 8,
+                    }
+                  }
+                >
+                  gas.dateRange.endDate
+                </Text>
+                <View
+                  accessibilityLabel="gas.dateRange.endDate: gas.dateRange.selectEnd"
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  hitSlop={
+                    {
+                      "bottom": 8,
+                      "left": 8,
+                      "right": 8,
+                      "top": 8,
+                    }
+                  }
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#e5e7eb",
+                        "borderColor": "#e5e7eb",
+                        "borderRadius": 8,
+                        "borderWidth": 1,
+                        "paddingBottom": 12,
+                        "paddingLeft": 16,
+                        "paddingRight": 16,
+                        "paddingTop": 12,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#1f2937",
+                          "fontSize": 14,
+                        }
+                      }
+                    >
+                      gas.dateRange.selectEnd
+                    </Text>
+                    <Text
+                      accessibilityLabel="calendar"
+                    >
+                      calendar
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View
+                className="flex flex-col"
+                style={
+                  {
+                    "gap": 8,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#4b5563",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "marginBottom": 4,
+                    }
+                  }
+                >
+                  gas.dateRange.quickPresets
+                </Text>
+                <View
+                  className="flex flex-col"
+                  style={
+                    {
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <View
+                    className="flex flex-row"
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityLabel="gas.dateRange.last30"
+                      accessibilityRole="button"
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 8,
+                          "left": 8,
+                          "right": 8,
+                          "top": 8,
+                        }
+                      }
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {
+                            "backgroundColor": "#e5e7eb",
+                            "borderRadius": 6,
+                            "flex": 1,
+                            "paddingBottom": 8,
+                            "paddingLeft": 12,
+                            "paddingRight": 12,
+                            "paddingTop": 8,
+                          },
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          {
+                            "color": "#1f2937",
+                            "fontSize": 12,
+                            "textAlign": "center",
+                          }
+                        }
+                      >
+                        gas.dateRange.last30
+                      </Text>
+                    </View>
+                    <View
+                      accessibilityLabel="gas.dateRange.last60"
+                      accessibilityRole="button"
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 8,
+                          "left": 8,
+                          "right": 8,
+                          "top": 8,
+                        }
+                      }
+                      onBlur={[Function]}
+                      onClick={[Function]}
+                      onFocus={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        [
+                          {
+                            "backgroundColor": "#e5e7eb",
+                            "borderRadius": 6,
+                            "flex": 1,
+                            "paddingBottom": 8,
+                            "paddingLeft": 12,
+                            "paddingRight": 12,
+                            "paddingTop": 8,
+                          },
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          {
+                            "color": "#1f2937",
+                            "fontSize": 12,
+                            "textAlign": "center",
+                          }
+                        }
+                      >
+                        gas.dateRange.last60
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityLabel="gas.dateRange.last90"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    hitSlop={
+                      {
+                        "bottom": 8,
+                        "left": 8,
+                        "right": 8,
+                        "top": 8,
+                      }
+                    }
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    style={
+                      [
+                        {
+                          "backgroundColor": "#e5e7eb",
+                          "borderRadius": 6,
+                          "paddingBottom": 8,
+                          "paddingLeft": 12,
+                          "paddingRight": 12,
+                          "paddingTop": 8,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        {
+                          "color": "#1f2937",
+                          "fontSize": 12,
+                          "textAlign": "center",
+                        }
+                      }
+                    >
+                      gas.dateRange.last90
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View
+              className="flex flex-row"
+              style={
+                {
+                  "gap": 12,
+                  "marginTop": 16,
+                  "width": "full",
+                }
+              }
+            >
+              <View
+                accessibilityLabel="common.clear"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#e5e7eb",
+                      "borderRadius": 8,
+                      "flex": 1,
+                      "paddingBottom": 12,
+                      "paddingTop": 12,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#1f2937",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  common.clear
+                </Text>
+              </View>
+              <View
+                accessibilityLabel="common.save"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 8,
+                    "left": 8,
+                    "right": 8,
+                    "top": 8,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#e85223",
+                      "borderRadius": 8,
+                      "flex": 1,
+                      "paddingBottom": 12,
+                      "paddingTop": 12,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#ffffff",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  common.save
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </RCTScrollView>
+    </View>
   </RNCSafeAreaView>
   <View
     pointerEvents="box-none"

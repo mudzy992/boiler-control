@@ -144,6 +144,8 @@ export function WeatherV2Card({ homeProfileId }: WeatherV2CardProps) {
               <Text color="red.500">{t('weather.unavailable')}</Text>
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={t('common.retry')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 onPress={() => void weatherQuery.refetch()}
                 bg="brand.500"
                 rounded="md"

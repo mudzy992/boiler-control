@@ -180,7 +180,11 @@ const RegisterScreenContent = ({ navigation }: any) => {
                   <Text fontSize="sm" color="gray.500">
                     {t('auth.alreadyHaveAccount')}{' '}
                   </Text>
-                  <Pressable onPress={() => navigation.navigate('Login')}>
+                  <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('auth.login')}
+                  onPress={() => navigation.navigate('Login')}
+                >
                     <Text fontSize="sm" color="brand.400" fontWeight="semibold">
                       {t('auth.signIn')}
                     </Text>

@@ -14,6 +14,7 @@ import {
 import i18n from './src/locales/config';
 import { AppStorage } from './src/services/storage/AppStorage';
 import { AppThemeProvider } from './src/theme/AppTheme';
+import { useAppFonts } from './src/theme/fonts';
 import { ToastProvider } from './src/components/ui/nativewind';
 
 // Create React Query client
@@ -31,6 +32,8 @@ const queryClient = new QueryClient({
 export default function App() {
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+  const [appSplashMinimumElapsed, setAppSplashMinimumElapsed] = useState(false);
+  const [languageReady, setLanguageReady] = useState(false);
 
   useEffect(() => {
     configureNotificationHandler();
@@ -53,16 +56,32 @@ export default function App() {
       }
     };
 
-    loadLanguage();
+    loadLanguage()
+      .catch(() => undefined)
+      .finally(() => setLanguageReady(true));
   }, []);
+
+  /**
+   * F4 (UX-23): splash je ranije trajao fiksno 2,5 s bez veze sa spremnošću.
+   * Sada se sklanja čim su jezik i fontovi spremni, uz dva ograničenja:
+   *  - najkraće 600 ms, da se ne vidi „bijeli bljesak" između splasha i ekrana;
+   *  - najduže 2,5 s, da spor disk ili mreža ne zadrže korisnika na splashi.
+   */
+  const fontsReady = useAppFonts().loaded;
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShowAnimatedSplash(false);
-    }, 2500);
-
-    return () => clearTimeout(timeout);
+    const minimum = setTimeout(() => setAppSplashMinimumElapsed(true), 600);
+    const maximum = setTimeout(() => setShowAnimatedSplash(false), 2500);
+    return () => {
+      clearTimeout(minimum);
+      clearTimeout(maximum);
+    };
   }, []);
+
+  // Izvedeno stanje, ne još jedan `setState` u efektu: splash je vidljiv dok
+  // traje minimum ILI dok jezik/fontovi nisu spremni.
+  const splashVisible =
+    showAnimatedSplash && !(appSplashMinimumElapsed && languageReady && fontsReady);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -73,7 +92,7 @@ export default function App() {
               <StatusBar style="auto" />
               <RootNavigator ref={navigationRef} />
               <AnimatedSplash
-                visible={showAnimatedSplash}
+                visible={splashVisible}
                 onFinished={() => setShowAnimatedSplash(false)}
               />
             </AuthProvider>

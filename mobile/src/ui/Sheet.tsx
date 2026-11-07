@@ -46,6 +46,8 @@ export type SheetProps = {
   /** `true` kad sadržaj treba da skrola unutar lista (duge forme). */
   scrollable?: boolean;
   testID?: string;
+  /** Labela za X dugme; F4 traži da i ona prolazi kroz `t()`. */
+  closeLabel?: string;
 };
 
 export function Sheet({
@@ -56,6 +58,7 @@ export function Sheet({
   snapPoints = ['50%', '90%'],
   scrollable = false,
   testID,
+  closeLabel = 'Zatvori',
 }: SheetProps) {
   const { t, fonts } = useTokens();
   const { height } = useWindowDimensions();
@@ -129,7 +132,7 @@ export function Sheet({
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
-              accessibilityLabel="Zatvori"
+              accessibilityLabel={closeLabel}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               testID={testID ? `${testID}-close` : undefined}
             >

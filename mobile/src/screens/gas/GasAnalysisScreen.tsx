@@ -5,7 +5,6 @@ import {
   HStack,
   Text,
   useColorModeValue,
-  Spinner,
   ScrollView,
   Icon,
 } from '../../components/ui/nativewind';
@@ -14,7 +13,16 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
-import { Screen, ScreenHeader, TrendChart, TrendSummary, type TrendPoint } from '../../ui';
+import {
+  EmptyState,
+  Screen,
+  ScreenHeader,
+  Skeleton,
+  SkeletonRows,
+  TrendChart,
+  TrendSummary,
+  type TrendPoint,
+} from '../../ui';
 
 interface GasAnalysisData {
   period?: {
@@ -166,12 +174,10 @@ type GasAnalysisScreenProps = {
 
 const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, headerSlot }) => {
   const { t } = useTranslation();
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const spinnerColor = useColorModeValue('brand.500', 'brand.400');
   const blueBg = useColorModeValue('blue.50', 'blue.900');
   const blueBorder = useColorModeValue('blue.200', 'blue.700');
   const blueIcon = useColorModeValue('blue.600', 'blue.300');
@@ -213,13 +219,22 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
   );
 
   if (isLoading) {
+    // F4 (UX-07): isti okvir (zaglavlje + nazad) i skeleton umjesto spinnera,
+    // pa ekran ne „nestane" i ne izgubi način za nazad dok se podaci čitaju.
     return (
-      <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
-        <Spinner size="lg" color={spinnerColor} />
-        <Text mt={3} color={subtextColor}>
-          {t('gas.analysisLoading')}
-        </Text>
-      </Box>
+      <Screen edges={['top']}>
+        <ScreenHeader
+          title={t('gas.analyticsTitle')}
+          subtitle={t('gas.analyticsSubtitle')}
+          onBack={onBack}
+          backLabel={t('common.back') || 'Nazad'}
+          testID="gas-analysis-header"
+        />
+        <Box p={4} style={{ gap: 12 }}>
+          <SkeletonRows count={3} />
+          <Skeleton height={200} />
+        </Box>
+      </Screen>
     );
   }
 
@@ -234,9 +249,14 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
           testID="gas-analysis-header"
         />
         {headerSlot ? <Box px={5} pt={2}>{headerSlot}</Box> : null}
-        <Box p={4}>
-          <Text color={subtextColor}>{t('gas.analysisNoData')}</Text>
-        </Box>
+        {/* F4 (UX-24): analiza bez podataka nudi prelazak na očitanja, jer je
+           jedini put do podataka — novo očitanje. */}
+        <EmptyState
+          icon="bar-chart-outline"
+          title={t('gas.analysisNoData')}
+          message={t('gas.analysisNoDataBody')}
+          action={onBack ? { label: t('gas.analysisNoDataAction'), onPress: onBack } : undefined}
+        />
       </Screen>
     );
   }

@@ -6,6 +6,12 @@ export type FormInputProps = TextInputProps & {
   isDisabled?: boolean;
 };
 
+/**
+ * F4 (UX-06): labela je ranije bila samo `Text` iznad polja, bez programske
+ * veze. Kad pozivalac ne proslijedi `accessibilityLabel`, koristi se
+ * `placeholder` (koji je i sam preveden), pa čitač ekrana nikad ne kaže samo
+ * „tekstualno polje".
+ */
 export const FormInput: React.FC<FormInputProps> = ({ isDisabled, style, ...props }) => {
   const bg = useColorModeValue('white', '#0f172a');
   const border = useColorModeValue('#e2e8f0', '#1e293b');
@@ -23,6 +29,8 @@ export const FormInput: React.FC<FormInputProps> = ({ isDisabled, style, ...prop
       opacity={isDisabled ? 0.6 : 1}
     >
       <TextInput
+        accessibilityLabel={props.accessibilityLabel ?? props.placeholder}
+        accessibilityState={isDisabled ? { disabled: true } : undefined}
         {...props}
         editable={!isDisabled}
         placeholderTextColor={placeholder}

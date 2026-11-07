@@ -50,10 +50,6 @@ jest.mock('../../config/version.config', () => ({
   getAppVersion: () => '2.0.0',
 }));
 
-jest.mock('../../components/BottomSheetModal', () => ({
-  BottomSheetModal: () => null,
-}));
-
 jest.mock('../../services/storage/downloadCache', () => ({
   purgeDownloadsDirectory: jest.fn(),
 }));

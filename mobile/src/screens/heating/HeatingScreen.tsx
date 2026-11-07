@@ -27,6 +27,7 @@ import {
   Text,
 } from '../../ui';
 import { useToast } from '../../components/ui/nativewind';
+import { SETTINGS_STACK_SCREENS } from '../../constants/routes';
 import { space } from '../../theme/tokens';
 
 /**
@@ -303,11 +304,20 @@ export const HeatingScreen = () => {
         >
           <Panel variant="flush" padded={false} testID="heating-devices">
             {thermostats.length === 0 ? (
-              <PanelRow divider={false}>
-                <Text tone="muted" size="body">
-                  {t('heating.noThermostats')}
-                </Text>
-              </PanelRow>
+              /* F4 (UX-24): prazno stanje nosi „šta dalje" — ruta ka upravljanju
+                 termostatima, a ne samo rečenicu bez izlaza. */
+              <EmptyState
+                icon="thermometer-outline"
+                title={t('heating.noThermostats')}
+                message={t('heating.noThermostatsBody')}
+                action={{
+                  label: t('heating.noThermostatsAction'),
+                  // Jedina ruta koja danas prikazuje termostate i rasporede je
+                  // Postavke → Rasporedi; nema izmišljenog novog ekrana.
+                  onPress: () =>
+                    (navigation as any).navigate(SETTINGS_STACK_SCREENS.ScheduleManagement),
+                }}
+              />
             ) : (
               thermostats.map((thermostat) => (
                 <DeviceRow

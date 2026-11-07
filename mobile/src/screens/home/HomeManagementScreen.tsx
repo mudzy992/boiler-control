@@ -38,7 +38,7 @@ import {
 import { AxiosError } from 'axios';
 import { homeProfileToForm } from './homeProfileForm';
 import { useTranslation } from '../../hooks/useTranslation';
-import { Screen, ScreenHeader } from '../../ui';
+import { Screen, ScreenHeader, SkeletonRows } from '../../ui';
 
 
 /**
@@ -420,6 +420,10 @@ const HomeManagementScreenContent = () => {
         if (!home.isActive) switchHomeMutation.mutate(home.id);
       }}
       _pressed={{ opacity: 0.7 }}
+      accessibilityRole="button"
+      accessibilityLabel={`${home.name ?? ''}${home.isActive ? ` — ${t('homeManagement.active')}` : ''}`}
+      accessibilityHint={t('homeManagement.setActive')}
+      accessibilityState={{ selected: Boolean(home.isActive), disabled: Boolean(anyMutationPending) }}
     >
       <Box
         bg={cardBg}
@@ -516,7 +520,8 @@ const HomeManagementScreenContent = () => {
           </HStack>
 
           {isLoading ? (
-            <Text color={subtextColor}>{t('homeManagement.loading')}</Text>
+            /* F4 (UX-07): skeleton kartica domova umjesto jednog reda teksta. */
+            <SkeletonRows count={3} />
           ) : isError ? (
             <Box bg={cardBg} rounded="xl" p={6} alignItems="center" justifyContent="center">
               <Icon as={Ionicons} name="alert-circle-outline" size={10} color="red.500" mb={2} />

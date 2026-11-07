@@ -10,7 +10,6 @@ import {
   Divider,
   useColorMode,
   useToast,
-  Spinner,
   ScrollView,
 } from '../../components/ui/nativewind';
 import { useNavigation } from '@react-navigation/native';
@@ -18,7 +17,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { FormInput } from '../../components/FormInput';
 import { apiClient } from '../../services/api/client';
-import { Screen, ScreenHeader } from '../../ui';
+import { Screen, ScreenHeader, SkeletonPanel } from '../../ui';
 
 const VAT_RATE = 0.17;
 
@@ -57,7 +56,7 @@ const ProfileScreenContent = () => {
         );
         setGasPriceSource(profile?.gasPriceSource ?? null);
         setGasPriceLastUpdatedAt(profile?.gasPriceLastUpdatedAt ?? null);
-      } catch (error) {
+      } catch {
         // F1: prije je ovdje bila engleska string konstanta.
         toast.show({
           description: t('profile.loadError'),
@@ -116,8 +115,10 @@ const ProfileScreenContent = () => {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      // F4: odjava je lokalna operacija; greška se ne prikazuje korisniku jer
+      // nema radnje koju može preduzeti, a `console.error` je bio mrtav kod.
+
     }
   };
 
@@ -135,8 +136,10 @@ const ProfileScreenContent = () => {
           backLabel={t('common.back')}
           testID="profile-header"
         />
-        <Box flex={1} alignItems="center" justifyContent="center">
-          <Spinner />
+        {/* F4 (UX-07): skeleton u obliku formi, umjesto praznog ekrana sa spinnerom. */}
+        <Box px={4} pt={3} style={{ gap: 12 }}>
+          <SkeletonPanel lines={3} height={120} />
+          <SkeletonPanel lines={2} height={110} />
         </Box>
       </Screen>
     );

@@ -6,14 +6,13 @@ import {
   Text,
   Switch,
   useColorModeValue,
-  Spinner,
   Icon,
   Divider,
   ScrollView,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { Screen, ScreenHeader } from '../../ui';
+import { Screen, ScreenHeader, SkeletonPanel, SkeletonRows } from '../../ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
@@ -43,7 +42,6 @@ const NotificationPreferencesScreenContent: React.FC = () => {
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const loadingSpinnerColor = useColorModeValue('brand.500', 'brand.400');
   const infoBg = useColorModeValue('blue.50', 'blue.900');
   const infoBorder = useColorModeValue('blue.200', 'blue.700');
   const infoIconColor = useColorModeValue('blue.600', 'blue.300');
@@ -75,11 +73,10 @@ const NotificationPreferencesScreenContent: React.FC = () => {
     return (
       <Screen edges={['top']}>
         {header}
-        <Box flex={1} alignItems="center" justifyContent="center">
-          <Spinner size="lg" color={loadingSpinnerColor} />
-          <Text mt={3} color={subtextColor}>
-            {t('notifications.preferencesLoading')}
-          </Text>
+        {/* F4 (UX-07): skeleton u obliku liste prekidača. */}
+        <Box px={4} pt={3} style={{ gap: 12 }}>
+          <SkeletonPanel lines={1} height={64} />
+          <SkeletonRows count={4} />
         </Box>
       </Screen>
     );

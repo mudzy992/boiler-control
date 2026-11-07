@@ -7,14 +7,13 @@ import {
   Text,
   useColorModeValue,
   Pressable,
-  Spinner,
   Icon,
   Badge,
   Divider,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { Screen, ScreenHeader } from '../../ui';
+import { Screen, ScreenHeader, SkeletonRows } from '../../ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { apiClient } from '../../services/api/client';
@@ -147,11 +146,9 @@ const NotificationsScreenContent: React.FC = () => {
     return (
       <Screen edges={['top']}>
         {header}
-        <Box flex={1} alignItems="center" justifyContent="center">
-          <Spinner size="lg" color={brandColor} />
-          <Text mt={3} color={subtextColor}>
-            {t('notifications.loading')}
-          </Text>
+        {/* F4 (UX-07): skeleton redova umjesto spinnera preko cijelog ekrana. */}
+        <Box px={4} pt={3}>
+          <SkeletonRows count={5} />
         </Box>
       </Screen>
     );
@@ -162,7 +159,13 @@ const NotificationsScreenContent: React.FC = () => {
       {header}
       <HStack space={3} px={4} pt={2} pb={2} alignItems="center" justifyContent="space-between">
         <HStack space={2} alignItems="center">
-          <Pressable onPress={() => setShowAll(false)}>
+          <Pressable
+            onPress={() => setShowAll(false)}
+            accessibilityRole="tab"
+            accessibilityLabel={t('notifications.unread')}
+            accessibilityState={{ selected: !showAll }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Box
               px={4}
               py={2}
@@ -176,7 +179,13 @@ const NotificationsScreenContent: React.FC = () => {
               </Text>
             </Box>
           </Pressable>
-          <Pressable onPress={() => setShowAll(true)}>
+          <Pressable
+            onPress={() => setShowAll(true)}
+            accessibilityRole="tab"
+            accessibilityLabel={t('notifications.all')}
+            accessibilityState={{ selected: showAll }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Box
               px={4}
               py={2}
@@ -194,6 +203,13 @@ const NotificationsScreenContent: React.FC = () => {
         <Pressable
           onPress={() => markAllReadMutation.mutate()}
           disabled={unreadCount === 0 || markAllReadMutation.isPending}
+          accessibilityRole="button"
+          accessibilityLabel={t('notifications.markAllRead')}
+          accessibilityState={{
+            disabled: unreadCount === 0 || markAllReadMutation.isPending,
+            busy: markAllReadMutation.isPending,
+          }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Box
             px={3}
@@ -222,7 +238,12 @@ const NotificationsScreenContent: React.FC = () => {
           </Text>
         )}
         renderItem={({ item }) => (
-          <Pressable onPress={() => handlePress(item)}>
+          <Pressable
+            onPress={() => handlePress(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.title}${item.isRead ? '' : ` — ${t('notifications.new')}`}`}
+            accessibilityHint={t('notifications.markAsRead')}
+          >
             <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4} mb={3}>
               <HStack space={3} alignItems="flex-start">
                 <Box mt={1}>

@@ -15,6 +15,9 @@ export const RecentHeatingEvents = React.memo(function RecentHeatingEvents({ eve
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const accentColor = useColorModeValue('red.600', 'red.200');
+  // F4 (UX-16): hook je ranije pozivan unutar `renderEventItem`, dakle uslovno
+  // i van komponente. Boja se izračuna jednom, na vrhu komponente.
+  const rowBg = useColorModeValue('gray.50', 'gray.900');
 
   // Calculate event duration
   const getDuration = (startedAt: string, endedAt: string | null) => {
@@ -53,7 +56,7 @@ export const RecentHeatingEvents = React.memo(function RecentHeatingEvents({ eve
 
     return (
       <Box
-        bg={useColorModeValue('gray.50', 'gray.900')}
+        bg={rowBg}
         rounded="lg"
         p={3}
         mb={2}

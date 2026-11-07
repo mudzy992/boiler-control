@@ -8,7 +8,20 @@ import i18n from '../config';
  * u build-u, pa je jedina odbrana provjera pariteta u testu.
  */
 
-const PARITY_NAMESPACES = ['profile', 'schedule', 'homeManagement'] as const;
+/**
+ * F4: paritet više nije ograničen na tri F1 ekrana — u istom prolazu se
+ * provjerava i `gas`/`settings`, jer je tu bug (ključevi Postavki fizički u
+ * `gas.dateRange`, uz bosanske vrijednosti u engleskom bloku) i prošao neopažen.
+ */
+const PARITY_NAMESPACES = [
+  'profile',
+  'schedule',
+  'homeManagement',
+  'gas',
+  'settings',
+  'notifications',
+  'analytics',
+] as const;
 
 type Bundle = Record<string, unknown>;
 
@@ -33,6 +46,21 @@ const leaves = (value: unknown, prefix = ''): [string, string][] => {
 const SAME_IN_BOTH: Record<string, readonly string[]> = {
   profile: ['email'],
   schedule: ['mode.PROGRAM', 'mode.MANUAL', 'mode.OFF'],
+  // F4: izmjereno u oba jezika — jedinice i međunarodne oznake se ne prevode,
+  // a šabloni bez teksta (`{{value}} / m³`) su identični po definiciji.
+  gas: ['badgeStandard', 'currencyKM', 'analysisPriceExVatValue', 'units.m3', 'units.m3h'],
+  // F4: isto — „Period", „Min"/„Max" i putanja API-ja su iste u oba jezika;
+  // `targetDash`/`chartMin`/`chartMax` su čisti šabloni brojeva.
+  analytics: [
+    'periodLabel',
+    'minutes',
+    'targetDash',
+    'dataSource',
+    'chartMin',
+    'chartMax',
+    'minLabel',
+    'maxLabel',
+  ],
 };
 
 const PLURAL_SUFFIXES = ['_zero', '_one', '_two', '_few', '_many', '_other'];

@@ -63,6 +63,10 @@ export const GasForm: React.FC<GasFormProps> = ({
   const errorBorder = useColorModeValue('red.200', 'red.700');
   const errorText = useColorModeValue('red.700', 'red.200');
   const switchTrackColor = useColorModeValue('brand.300', 'brand.500');
+  // F4 (UX-16): tri hooka su bila pozvana unutar JSX-a (uslovno, u grani
+  // `!useCurrentDateTime`) — sada su na vrhu komponente, kao svi ostali.
+  const sectionBg = useColorModeValue('gray.50', 'dark.700');
+  const fieldBg = useColorModeValue('white', 'dark.700');
 
   const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
     if (event.type === 'set' && date) {
@@ -248,7 +252,7 @@ export const GasForm: React.FC<GasFormProps> = ({
         <HStack
           justifyContent="space-between"
           alignItems="center"
-          bg={useColorModeValue('gray.50', 'dark.700')}
+          bg={sectionBg}
           p={3}
           rounded="md"
         >
@@ -280,6 +284,10 @@ export const GasForm: React.FC<GasFormProps> = ({
                 Platform.OS === 'android' ? openAndroidDatePicker() : setShowDatePicker(true)
               }
               disabled={isLoading}
+              accessibilityRole="button"
+              accessibilityLabel={`${t('gas.readingDate')}: ${dayjs(selectedDate).format('DD.MM.YYYY')}`}
+              accessibilityState={{ disabled: isLoading }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Box
                 borderWidth={1}
@@ -287,7 +295,7 @@ export const GasForm: React.FC<GasFormProps> = ({
                 rounded="md"
                 px={3}
                 py={2}
-                bg={useColorModeValue('white', 'dark.700')}
+                bg={fieldBg}
               >
                 <HStack justifyContent="space-between" alignItems="center">
                   <Text color={textColor}>{dayjs(selectedDate).format('DD.MM.YYYY')}</Text>
@@ -306,6 +314,10 @@ export const GasForm: React.FC<GasFormProps> = ({
                 Platform.OS === 'android' ? openAndroidTimePicker() : setShowTimePicker(true)
               }
               disabled={isLoading}
+              accessibilityRole="button"
+              accessibilityLabel={`${t('gas.readingTime')}: ${dayjs(selectedDate).format('HH:mm')}`}
+              accessibilityState={{ disabled: isLoading }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Box
                 borderWidth={1}
@@ -313,7 +325,7 @@ export const GasForm: React.FC<GasFormProps> = ({
                 rounded="md"
                 px={3}
                 py={2}
-                bg={useColorModeValue('white', 'dark.700')}
+                bg={fieldBg}
               >
                 <HStack justifyContent="space-between" alignItems="center">
                   <Text color={textColor}>{dayjs(selectedTime).format('HH:mm')}</Text>

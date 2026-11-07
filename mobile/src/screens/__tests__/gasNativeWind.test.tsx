@@ -1,5 +1,5 @@
 import mockReact from 'react';
-import { Text as mockNativeText, View as mockNativeView } from 'react-native';
+import { Text as mockNativeText } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../../components/ui/nativewind';
@@ -43,10 +43,6 @@ jest.mock('../../services/storage/SecureStorage', () => ({
   SecureStorage: { getToken: jest.fn() },
 }));
 
-jest.mock('../../components/BottomSheetModal', () => ({
-  BottomSheetModal: ({ isOpen, children }: { isOpen: boolean; children: mockReact.ReactNode }) =>
-    isOpen ? mockReact.createElement(mockNativeView, null, children) : null,
-}));
 
 jest.mock('../../hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (key: string) => key }),

@@ -287,13 +287,16 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
             }
           >
             <View
+              accessibilityHint="Set as active"
+              accessibilityLabel="Main House — Active"
+              accessibilityRole="button"
               accessibilityState={
                 {
                   "busy": undefined,
                   "checked": undefined,
                   "disabled": false,
                   "expanded": undefined,
-                  "selected": undefined,
+                  "selected": true,
                 }
               }
               accessibilityValue={
@@ -520,13 +523,16 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
               </View>
             </View>
             <View
+              accessibilityHint="Set as active"
+              accessibilityLabel="Weekend House"
+              accessibilityRole="button"
               accessibilityState={
                 {
                   "busy": undefined,
                   "checked": undefined,
                   "disabled": false,
                   "expanded": undefined,
-                  "selected": undefined,
+                  "selected": false,
                 }
               }
               accessibilityValue={
@@ -1096,13 +1102,16 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
             }
           >
             <View
+              accessibilityHint="Set as active"
+              accessibilityLabel="Main House — Active"
+              accessibilityRole="button"
               accessibilityState={
                 {
                   "busy": undefined,
                   "checked": undefined,
                   "disabled": false,
                   "expanded": undefined,
-                  "selected": undefined,
+                  "selected": true,
                 }
               }
               accessibilityValue={
@@ -1329,13 +1338,16 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
               </View>
             </View>
             <View
+              accessibilityHint="Set as active"
+              accessibilityLabel="Weekend House"
+              accessibilityRole="button"
               accessibilityState={
                 {
                   "busy": undefined,
                   "checked": undefined,
                   "disabled": false,
                   "expanded": undefined,
-                  "selected": undefined,
+                  "selected": false,
                 }
               }
               accessibilityValue={

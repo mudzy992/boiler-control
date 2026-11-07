@@ -180,6 +180,7 @@ exports[`Login before/after NativeWind nativewind matches the dark snapshot 1`] 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.emailOrUsernamePlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -237,6 +238,7 @@ exports[`Login before/after NativeWind nativewind matches the dark snapshot 1`] 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.passwordPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -356,6 +358,8 @@ exports[`Login before/after NativeWind nativewind matches the dark snapshot 1`] 
                      
                   </Text>
                   <View
+                    accessibilityLabel="auth.register"
+                    accessibilityRole="button"
                     accessibilityState={
                       {
                         "busy": undefined,
@@ -619,6 +623,7 @@ exports[`Login before/after NativeWind nativewind matches the light snapshot 1`]
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.emailOrUsernamePlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -676,6 +681,7 @@ exports[`Login before/after NativeWind nativewind matches the light snapshot 1`]
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.passwordPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -795,6 +801,8 @@ exports[`Login before/after NativeWind nativewind matches the light snapshot 1`]
                      
                   </Text>
                   <View
+                    accessibilityLabel="auth.register"
+                    accessibilityRole="button"
                     accessibilityState={
                       {
                         "busy": undefined,
@@ -1058,6 +1066,7 @@ exports[`Register before/after NativeWind nativewind matches the dark snapshot 1
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.namePlaceholder"
                       autoCapitalize="words"
                       editable={true}
                       onChangeText={[Function]}
@@ -1114,6 +1123,7 @@ exports[`Register before/after NativeWind nativewind matches the dark snapshot 1
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.emailPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1172,6 +1182,7 @@ exports[`Register before/after NativeWind nativewind matches the dark snapshot 1
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.usernamePlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1229,6 +1240,7 @@ exports[`Register before/after NativeWind nativewind matches the dark snapshot 1
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.passwordPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1287,6 +1299,7 @@ exports[`Register before/after NativeWind nativewind matches the dark snapshot 1
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.passwordPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1406,6 +1419,8 @@ exports[`Register before/after NativeWind nativewind matches the dark snapshot 1
                      
                   </Text>
                   <View
+                    accessibilityLabel="auth.login"
+                    accessibilityRole="button"
                     accessibilityState={
                       {
                         "busy": undefined,
@@ -1669,6 +1684,7 @@ exports[`Register before/after NativeWind nativewind matches the light snapshot 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.namePlaceholder"
                       autoCapitalize="words"
                       editable={true}
                       onChangeText={[Function]}
@@ -1725,6 +1741,7 @@ exports[`Register before/after NativeWind nativewind matches the light snapshot 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.emailPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1783,6 +1800,7 @@ exports[`Register before/after NativeWind nativewind matches the light snapshot 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.usernamePlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1840,6 +1858,7 @@ exports[`Register before/after NativeWind nativewind matches the light snapshot 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.passwordPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -1898,6 +1917,7 @@ exports[`Register before/after NativeWind nativewind matches the light snapshot 
                     }
                   >
                     <TextInput
+                      accessibilityLabel="auth.passwordPlaceholder"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={true}
@@ -2017,6 +2037,8 @@ exports[`Register before/after NativeWind nativewind matches the light snapshot 
                      
                   </Text>
                   <View
+                    accessibilityLabel="auth.login"
+                    accessibilityRole="button"
                     accessibilityState={
                       {
                         "busy": undefined,

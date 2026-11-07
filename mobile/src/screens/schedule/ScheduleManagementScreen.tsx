@@ -9,16 +9,15 @@ import {
   ScrollView,
   Icon,
   Badge,
-  Spinner,
-  Center,
   Select,
+  Center,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { thermostatApi } from '../../services/api/thermostat.api';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useNavigation } from '@react-navigation/native';
-import { Screen, ScreenHeader } from '../../ui';
+import { Screen, ScreenHeader, SkeletonPanel, SkeletonRows } from '../../ui';
 
 /**
  * SCHEDULE MANAGEMENT SCREEN (VIEW-ONLY)
@@ -288,12 +287,11 @@ const ScheduleManagementScreenContent = () => {
           backLabel={t('common.back')}
           testID="schedule-header"
         />
-        <Center flex={1}>
-          <Spinner size="lg" color="brand.500" />
-          <Text color={subtextColor} mt={4}>
-            {t('schedule.loading')}
-          </Text>
-        </Center>
+        {/* F4 (UX-07): skeleton redova programa, u footprintu liste. */}
+        <Box px={4} pt={3} style={{ gap: 12 }}>
+          <SkeletonPanel lines={1} height={84} />
+          <SkeletonRows count={4} />
+        </Box>
       </Screen>
     );
   }

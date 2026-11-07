@@ -48,7 +48,13 @@ export const DashboardSystemCards = ({
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.condition')}</dt>
-                <dd>{weather.condition ?? '—'}</dd>
+                <dd>
+                  {weather.condition
+                    ? t(`weather.conditions.${weather.condition.trim().toLowerCase().replace(/\s+/g, '_')}`, {
+                        defaultValue: weather.condition,
+                      })
+                    : '—'}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.humidity')}</dt>
@@ -57,13 +63,22 @@ export const DashboardSystemCards = ({
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.wind')}</dt>
                 <dd>
-                  {weather.windSpeed != null ? `${weather.windSpeed} km/h` : '—'}
+                  {weather.windSpeed != null
+                    ? `${Number(weather.windSpeed).toFixed(1)} km/h`
+                    : '—'}
                 </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.minMax')}</dt>
                 <dd>
-                  {weather.tempMin ?? '—'}°C / {weather.tempMax ?? '—'}°C
+                  {weather.tempMin != null
+                    ? `${Number(weather.tempMin).toFixed(1)}`
+                    : '—'}
+                  °C /{' '}
+                  {weather.tempMax != null
+                    ? `${Number(weather.tempMax).toFixed(1)}`
+                    : '—'}
+                  °C
                 </dd>
               </div>
             </dl>

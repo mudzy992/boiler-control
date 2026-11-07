@@ -85,7 +85,11 @@ export const HeatingPage = (): JSX.Element => {
                     <TableCell>{record.roomTargetTemp.toFixed(1)}°C</TableCell>
                     <TableCell>
                       <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
-                        {record.hvacAction}
+                        {record.hvacAction
+                          ? t(`heating.actions.${record.hvacAction}`, {
+                              defaultValue: record.hvacAction,
+                            })
+                          : '—'}
                       </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{record.source}</TableCell>

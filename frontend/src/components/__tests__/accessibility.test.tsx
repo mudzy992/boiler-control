@@ -82,22 +82,22 @@ describe('FE2-13: GasForm dijalog — tastatura', () => {
     renderDialog();
     const dialog = screen.getByRole('dialog');
     const submit = screen.getByRole('button', { name: 'Add Reading' });
+    const close = screen.getByRole('button', { name: 'Close' });
 
     submit.focus();
     expect(dialog.contains(document.activeElement)).toBe(true);
 
     fireEvent.keyDown(dialog, { key: 'Tab' });
 
-    const counterInput = screen.getByLabelText(/Counter Value/);
-    expect(document.activeElement).toBe(counterInput);
+    expect(document.activeElement).toBe(close);
   });
 
   it('Shift+Tab s prvog elementa vraća fokus na posljednji', () => {
     renderDialog();
     const dialog = screen.getByRole('dialog');
-    const counterInput = screen.getByLabelText(/Counter Value/);
+    const close = screen.getByRole('button', { name: 'Close' });
 
-    counterInput.focus();
+    close.focus();
     fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
 
     expect(document.activeElement).toBe(

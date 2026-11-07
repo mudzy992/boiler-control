@@ -62,8 +62,10 @@ export const DashboardEventsTable = ({
                 <TableCell>{record.targetTemp}°C</TableCell>
                 <TableCell>
                   {record.hvacAction ? (
-                    <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                      {record.hvacAction}
+                    <span className="rounded bg-signal/10 px-2 py-0.5 text-xs font-medium text-signal">
+                      {t(`heating.actions.${record.hvacAction}`, {
+                        defaultValue: record.hvacAction,
+                      })}
                     </span>
                   ) : (
                     '—'

@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from './cn';
 import { IconButton } from './icon-button';
@@ -12,6 +13,8 @@ export interface ModalProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  /** Hide the built-in header when the body already contains a title. */
+  hideChrome?: boolean;
 }
 
 export const Modal = ({
@@ -21,8 +24,11 @@ export const Modal = ({
   description,
   children,
   className,
+  hideChrome = false,
 }: ModalProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const descId = useId();
   useFocusTrap(panelRef, open);
   useEscapeKey(open, onClose);
 
@@ -37,46 +43,50 @@ export const Modal = ({
     };
   }, [open]);
 
-  if (!open) {
+  if (!open || typeof document === 'undefined') {
     return null;
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
       <button
         type="button"
-        className="absolute inset-0 z-modal-backdrop bg-canvas/70"
-        aria-label="Close"
+        className="absolute inset-0 z-0 bg-canvas/75"
+        aria-label="Dismiss overlay"
         onClick={onClose}
       />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ui-modal-title"
-        aria-describedby={description ? 'ui-modal-desc' : undefined}
+        aria-labelledby={hideChrome ? undefined : titleId}
+        aria-label={hideChrome ? title : undefined}
+        aria-describedby={!hideChrome && description ? descId : undefined}
         className={cn(
-          'relative z-modal w-full max-w-lg rounded-panel border border-panel-border bg-panel p-4 text-ink shadow-none',
+          'relative z-10 w-full max-w-lg rounded-panel border border-panel-border bg-panel p-4 text-ink',
           className,
         )}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h2 id="ui-modal-title" className="text-base font-semibold text-ink">
-              {title}
-            </h2>
-            {description ? (
-              <p id="ui-modal-desc" className="mt-1 text-sm text-ink-muted">
-                {description}
-              </p>
-            ) : null}
+        {!hideChrome ? (
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 id={titleId} className="text-base font-semibold text-ink">
+                {title}
+              </h2>
+              {description ? (
+                <p id={descId} className="mt-1 text-sm text-ink-muted">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            <IconButton variant="ghost" aria-label="Close" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden />
+            </IconButton>
           </div>
-          <IconButton variant="ghost" aria-label="Close" onClick={onClose}>
-            <X className="h-4 w-4" aria-hidden />
-          </IconButton>
-        </div>
+        ) : null}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

@@ -181,6 +181,33 @@ const enUS = {
     colAnomaly: 'Anomaly',
     anomalyYes: 'YES',
     anomalyNo: 'NO',
+    actions: {
+      HEATING_ON: 'Heating on',
+      HEATING_OFF: 'Heating off',
+      HEATING: 'Heating',
+      IDLE: 'Idle',
+    },
+  },
+  weather: {
+    conditions: {
+      clear: 'Clear',
+      sunny: 'Sunny',
+      partly_cloudy: 'Partly cloudy',
+      partly_cloudy_: 'Partly cloudy',
+      cloudy: 'Cloudy',
+      overcast: 'Overcast',
+      mist: 'Mist',
+      fog: 'Fog',
+      light_rain: 'Light rain',
+      moderate_rain: 'Moderate rain',
+      heavy_rain: 'Heavy rain',
+      light_snow: 'Light snow',
+      snow: 'Snow',
+      thunder: 'Thunder',
+      thunderstorm: 'Thunderstorm',
+      drizzle: 'Drizzle',
+      windy: 'Windy',
+    },
   },
   gas: {
     title: 'Gas Readings',
@@ -580,6 +607,33 @@ const bsBS = {
     colAnomaly: 'Anomalija',
     anomalyYes: 'DA',
     anomalyNo: 'NE',
+    actions: {
+      HEATING_ON: 'Grijanje uključeno',
+      HEATING_OFF: 'Grijanje isključeno',
+      HEATING: 'Grijanje',
+      IDLE: 'Mirovanje',
+    },
+  },
+  weather: {
+    conditions: {
+      clear: 'Vedro',
+      sunny: 'Sunčano',
+      partly_cloudy: 'Djelomično oblačno',
+      partly_cloudy_: 'Djelomično oblačno',
+      cloudy: 'Oblačno',
+      overcast: 'Naoblačeno',
+      mist: 'Izmaglica',
+      fog: 'Magla',
+      light_rain: 'Slaba kiša',
+      moderate_rain: 'Umjerena kiša',
+      heavy_rain: 'Jaka kiša',
+      light_snow: 'Slab snijeg',
+      snow: 'Snijeg',
+      thunder: 'Grmljavina',
+      thunderstorm: 'Oluja s grmljavinom',
+      drizzle: 'Romiženje',
+      windy: 'Vjetrovito',
+    },
   },
   gas: {
     title: 'Čitanja plina',
@@ -813,15 +867,12 @@ i18n.use(initReactI18next).init({
 });
 
 function getDefaultLanguage(): string {
-  // Check browser language
-  const browserLang = navigator.language || 'en-US';
-
-  // Map browser language to supported locales
-  if (browserLang.startsWith('bs')) {
-    return 'bs-BS';
+  // Product default is Bosnian; honour explicit English browser prefs.
+  const browserLang = navigator.language || 'bs-BS';
+  if (browserLang.toLowerCase().startsWith('en')) {
+    return 'en-US';
   }
-
-  return 'en-US';
+  return 'bs-BS';
 }
 
 /**

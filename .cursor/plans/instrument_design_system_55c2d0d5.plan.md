@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: p5-cleanup-guard
     content: Delete shadcn/Radix/cva files+deps, ESLint guardrails, docs, verify, ship
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

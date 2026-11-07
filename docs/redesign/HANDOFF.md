@@ -34,9 +34,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `c3d2b5f` | **I6 partial** Auth + Boiler + Dashboard TempDialog |
 | `db2c9e7` | **I6** Heating + Reports + gas ConfirmDialog |
 | `28b762d` | **I6** Gas analytics + Notifications + Profile + Home profile shells |
-| _(pending)_ | **I6** Dashboard full (SVG/QueryState/DA-02/04/05) |
+| `f60a04f` | **I6** Dashboard full (SVG/QueryState/DA-02/04/05) |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42379269941` (pre Dashboard full).
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42382387551`.
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 

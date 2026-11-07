@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/shared/lib/utils';
 
 const inputVariants = cva(
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+  'flex w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -11,9 +11,9 @@ const inputVariants = cva(
         error: 'border-destructive focus-visible:ring-destructive',
       },
       inputSize: {
-        default: 'h-10 px-3 py-2',
-        sm: 'h-9 px-2.5 text-xs',
-        lg: 'h-11 px-4 text-base',
+        default: 'h-9 py-2',
+        sm: 'h-8 px-2.5 text-xs',
+        lg: 'h-10 px-3.5 text-base',
       },
     },
     defaultVariants: {
@@ -48,7 +48,7 @@ InputGroup.displayName = 'InputGroup';
 
 export const InputWrapper = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-col gap-1', className)} {...props} />
+    <div ref={ref} className={cn('flex flex-col gap-1.5', className)} {...props} />
   ),
 );
 InputWrapper.displayName = 'InputWrapper';

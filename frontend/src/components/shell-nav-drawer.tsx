@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
+import { BrandMark } from '@/shared/components/brand-mark';
 import { Button } from '@/shared/components/ui/Button';
 import { ShellNavList } from './shell-nav-list';
 
@@ -78,22 +80,26 @@ export const ShellNavDrawer: React.FC<ShellNavDrawerProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={t('shell.menu')}
-        className="fixed inset-y-0 left-0 z-popover flex w-56 flex-col border-r border-border/80 bg-card/95 shadow-cockpit backdrop-blur-md lg:hidden"
+        className="fixed inset-y-0 left-0 z-popover flex w-56 flex-col border-r border-border bg-background lg:hidden"
       >
-        <div className="flex items-center justify-between border-b border-border/80 p-4">
-          <span className="text-sm font-semibold tracking-tight text-foreground">
-            {t('shell.menu')}
-          </span>
+        <div className="flex items-center justify-between border-b border-border px-3 py-3">
+          <div className="flex items-center gap-2">
+            <BrandMark size="sm" />
+            <span className="text-sm font-semibold tracking-tight text-foreground">
+              {t('shell.brand')}
+            </span>
+          </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="h-8 w-8"
             onClick={onClose}
             aria-label={t('shell.closeMenu')}
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden />
           </Button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3">
           <ShellNavList onNavigate={onClose} />
         </div>
       </div>

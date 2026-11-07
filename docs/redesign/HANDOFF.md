@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-I0–I7 zatvoreni. Dodatni **cockpit UI** (dark-first) je implementiran — vidi `11-cockpit-ui.md`.
+I0–I7 + cockpit + **Vercel density polish** gotovi. Vidi `11-cockpit-ui.md`.
 
 ---
 
@@ -11,16 +11,18 @@ I0–I7 zatvoreni. Dodatni **cockpit UI** (dark-first) je implementiran — vidi
 | Sloj | Status |
 |---|---|
 | I0–I7 implement | Gotovo |
-| Cockpit visual override | Gotovo (tokens + shell + dashboard hero + shared surfaces) |
+| Cockpit visual override | Gotovo |
+| Vercel density polish | Gotovo (Flame, header h-12/14, no nav underline, quiet type/forms) |
 
-CI: Frontend on `main`. Zadnji run zelen: `42386468112` (`cee2db2`).
+CI: Frontend on `main`.
 
-## Cockpit sažetak
+## Vercel polish sažetak
 
-- Default tema: **dark** osim ako je `boiler.theme=light`.
-- Shell: instrument sidebar, radial main bg, bez full-page card wrap.
-- Dashboard: status band (pulse + flow temp), hero KPI, brand SVG bars.
-- Hex samo u `tokens.css`; glow via `shadow-glow` / `shadow-glow-soft`.
+- `BrandMark` (Flame) u header/sidebar/login.
+- Nav: `no-underline`, quiet active (muted + left bar).
+- Header: ghost icon logout/theme, tight gaps.
+- PageHeader `text-2xl`; Input `h-9`; Button bez default glow.
+- Dark muted-foreground blago jači.
 
 ## Next (opcionalno)
 
@@ -30,5 +32,5 @@ CI: Frontend on `main`. Zadnji run zelen: `42386468112` (`cee2db2`).
 ## Prompt
 
 ```
-Boiler-control: I0–I7 + cockpit UI gotovi. Pročitaj docs/redesign/HANDOFF.md i 11-cockpit-ui.md.
+Boiler-control: I0–I7 + cockpit + Vercel polish gotovi. Pročitaj docs/redesign/HANDOFF.md i 11-cockpit-ui.md.
 ```

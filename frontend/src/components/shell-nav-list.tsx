@@ -12,7 +12,7 @@ export const ShellNavList: React.FC<ShellNavListProps> = ({ onNavigate }) => {
   const { t } = useTranslation();
 
   return (
-    <nav className="space-y-1" aria-label={t('shell.primaryNav')}>
+    <nav className="space-y-0.5" aria-label={t('shell.primaryNav')}>
       {SHELL_NAV_ITEMS.map((item) => (
         <NavLink
           key={item.key}
@@ -20,10 +20,10 @@ export const ShellNavList: React.FC<ShellNavListProps> = ({ onNavigate }) => {
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
-              'relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-base',
+              'relative flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium no-underline transition-colors duration-base hover:no-underline',
               isActive
-                ? 'bg-brand/10 text-brand shadow-glow-soft'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ? 'bg-muted text-foreground'
+                : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
             )
           }
         >
@@ -31,11 +31,11 @@ export const ShellNavList: React.FC<ShellNavListProps> = ({ onNavigate }) => {
             <>
               {isActive ? (
                 <span
-                  className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-brand shadow-glow"
+                  className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-brand"
                   aria-hidden
                 />
               ) : null}
-              {t(item.labelKey)}
+              <span className={cn(isActive && 'pl-1')}>{t(item.labelKey)}</span>
             </>
           )}
         </NavLink>

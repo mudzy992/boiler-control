@@ -17,12 +17,12 @@ export const PageHeader = ({
 }: PageHeaderProps): React.JSX.Element => (
   <header
     className={cn(
-      'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between',
+      'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between',
       className,
     )}
   >
-    <div className="min-w-0 space-y-1.5">
-      <h1 className="text-display font-semibold tracking-tight text-foreground">
+    <div className="min-w-0 space-y-1">
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
         {title}
       </h1>
       {description ? (

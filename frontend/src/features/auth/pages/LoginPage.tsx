@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { BrandMark } from '@/shared/components/brand-mark';
 import { StatusBanner } from '@/shared/components/status-banner';
 import { Button } from '@/shared/components/ui/Button';
 import {
@@ -48,23 +49,23 @@ export const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background bg-cockpit-radial px-6">
-      <Card className="w-full max-w-md border-border/80 shadow-glow-soft" variant="elevated">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand/15 shadow-glow">
-            <span className="h-2.5 w-2.5 rounded-full bg-brand" aria-hidden />
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-sm border-border" variant="elevated">
+        <CardHeader className="space-y-3 pb-4 pt-6 text-center">
+          <BrandMark size="md" className="mx-auto" />
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-semibold tracking-tight">
+              {t('shell.brand')}
+            </CardTitle>
+            <CardDescription>{t('auth.loginTitle')}</CardDescription>
           </div>
-          <CardTitle className="text-display font-semibold tracking-tight">
-            {t('shell.brand')}
-          </CardTitle>
-          <CardDescription>{t('auth.loginTitle')}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-6">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {submitError ? (
               <StatusBanner variant="error" message={submitError} />
             ) : null}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="login-identifier">{t('auth.emailOrUsername')}</Label>
               <Input
                 id="login-identifier"
@@ -75,7 +76,7 @@ export const LoginPage = (): JSX.Element => {
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="login-password">{t('auth.password')}</Label>
               <Input
                 id="login-password"

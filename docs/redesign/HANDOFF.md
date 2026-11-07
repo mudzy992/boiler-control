@@ -18,10 +18,9 @@ CI: Frontend on `main`. Zadnji run zelen: `42393185224` (`eebbf4e`).
 
 ## Shell polish sažetak
 
-- Dark contrast max (foreground/muted/border/card).
-- Sidebar `w-60` + `lg:pl-60` aligned.
-- Button sizes locked; outline on `bg-background`.
-- Card `p-4`/`sm:p-5`; page `space-y-6`; actions `gap-2`.
+- Dark contrast max; sidebar `w-60` + `lg:ml-60` (bez max-w guttera).
+- Brand samo u headeru (ne duplo u sidebaru).
+- Buttons flat: `brand-700`, no shadow/ring-offset; Set temp = outline.
 
 ## Next (opcionalno)
 

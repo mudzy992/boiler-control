@@ -100,7 +100,7 @@ export const DashboardSystemCards = ({
               </dd>
             </div>
           </dl>
-          <Button type="button" className="w-full" size="sm" onClick={onSetTemp}>
+          <Button type="button" variant="outline" className="w-full" onClick={onSetTemp}>
             {t('dashboard.setCurrentTemp')}
           </Button>
           <p className="text-xs text-muted-foreground">

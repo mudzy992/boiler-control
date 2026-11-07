@@ -33,7 +33,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SkipLink href="#main-content" />
-      <header className="sticky top-0 z-sticky flex h-12 items-center justify-between border-b border-border bg-background px-4 sm:h-14 sm:px-5">
+      <header className="sticky top-0 z-sticky flex h-12 items-center justify-between border-b border-border bg-background px-4 sm:h-14 sm:px-6">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -53,8 +53,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="mr-2 hidden items-center gap-2 sm:flex">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <div className="mr-1 hidden items-center gap-2 sm:mr-3 sm:flex">
             <span className="text-sm text-muted-foreground">{displayName}</span>
             {user?.role ? (
               <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -90,12 +90,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </header>
 
       <aside className="fixed bottom-0 left-0 top-12 z-0 hidden w-60 flex-col border-r border-border bg-background p-3 sm:top-14 lg:flex">
-        <div className="mb-3 flex items-center gap-2 px-2.5 py-1">
-          <BrandMark size="sm" />
-          <span className="text-xs font-semibold tracking-tight text-foreground">
-            {t('shell.brand')}
-          </span>
-        </div>
         <ShellNavList />
       </aside>
 
@@ -105,13 +99,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       <main
         id="main-content"
-        className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:pl-60 lg:pr-8"
+        className="px-4 pb-10 pt-6 sm:px-6 lg:ml-60 lg:px-8"
         tabIndex={-1}
       >
         {children}
       </main>
 
-      <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground lg:pl-60">
+      <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground sm:px-6 lg:ml-60 lg:px-8">
         {t('shell.footer')}
       </footer>
     </div>

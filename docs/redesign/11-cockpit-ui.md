@@ -15,14 +15,16 @@ Datum: 2026-11-07. Nadograđuje `06-design-direction.md`.
 
 ## Brand + shell
 
-- `BrandMark` = lucide Flame u `bg-brand/15`.
-- Sidebar/drawer `w-60` (240px); main/footer `lg:pl-60`.
+- `BrandMark` samo u headeru (ne i u desktop sidebaru).
+- Sidebar/drawer `w-60`; main/footer `lg:ml-60` + isti horizontalni padding kao header.
 - Header `h-12`/`h-14`, solid `bg-background`, icon `size="icon"`.
 
-## Buttons
+## Buttons (flat)
 
-- default `h-9 px-4` brand solid; outline `bg-background`; ghost/secondary hover `bg-muted`.
-- sm `h-8`, lg `h-10`, icon `h-8 w-8`. Bez default glow.
+- Bez shadow/bevel/ring-offset — flat fill + border.
+- default: `bg-brand-700` + bijeli tekst (AA kontrast).
+- outline/ghost/secondary: border ili transparent, hover `bg-muted`.
+- sm `h-8`, default `h-9`, lg `h-10`, icon `h-8 w-8`.
 
 ## Spacing
 

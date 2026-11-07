@@ -5,6 +5,9 @@ import { Card } from '../../../components/Card';
 import { Input } from '../../../components/Input';
 import { InputNumber } from '../../../components/InputNumber';
 import { apiClient } from '../../../services/api';
+import { PageHeader } from '@/shared/components/page-header';
+import { QueryState } from '@/shared/components/query-state';
+import { StatusBanner } from '@/shared/components/status-banner';
 import type { CreateHomeProfileDto, HomeProfileResponse } from '../types';
 import {
   INSULATION_TYPE_OPTIONS,
@@ -196,34 +199,19 @@ export const HomeProfilePage: React.FC = () => {
   }, [form, profile]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
-      </div>
-    );
+    return <QueryState status="loading" />;
   }
 
   return (
-    <div className="space-y-6" id="content">
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary">
-          {t('homeProfile.title')}
-        </h1>
-        <p className="text-sm text-text-secondary mt-1">
-          {t('homeProfile.subtitle')}
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title={t('homeProfile.title')} description={t('homeProfile.subtitle')} />
 
-      {saveStatus === 'ok' && (
-        <div className="p-3 rounded-lg border border-success bg-success-50 text-success-700 dark:border-success dark:bg-success-900/20 dark:text-success-100 text-sm">
-          {t('homeProfile.saveSuccess')}
-        </div>
-      )}
-      {saveStatus === 'error' && (
-        <div className="p-3 rounded-lg border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
-          {t('homeProfile.saveError')}
-        </div>
-      )}
+      {saveStatus === 'ok' ? (
+        <StatusBanner variant="success" message={t('homeProfile.saveSuccess')} />
+      ) : null}
+      {saveStatus === 'error' ? (
+        <StatusBanner variant="error" message={t('homeProfile.saveError')} />
+      ) : null}
 
       <Card padding="md" elevated>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

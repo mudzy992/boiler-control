@@ -1,9 +1,15 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Button } from '../../../components/Button';
-import { Card } from '../../../components/Card';
-import { Input } from '../../../components/Input';
-import { InputNumber } from '../../../components/InputNumber';
-import { apiClient } from '../../../services/api';
+import { useCallback, useEffect, useState, type JSX } from 'react';
+import { useTranslation } from 'react-i18next';
+import { apiClient } from '@/services/api';
+import { DEFAULT_GAS_PRICE_VAT_RATE } from '@/constants/gas-vat';
+import { PageHeader } from '@/shared/components/page-header';
+import { QueryState } from '@/shared/components/query-state';
+import { StatusBanner } from '@/shared/components/status-banner';
+import { Button } from '@/shared/components/ui/Button';
+import { Card, CardContent } from '@/shared/components/ui/Card';
+import { Input } from '@/shared/components/ui/Input';
+import { Label } from '@/shared/components/ui/Label';
+import { InputNumber } from '@/components/InputNumber';
 
 interface UserProfile {
   id: number;
@@ -17,39 +23,35 @@ interface UserProfile {
   gasPriceIncVat?: number;
   gasPriceLastUpdatedAt?: string;
   gasPriceSource?: string;
+  gasPriceVatRate?: number;
 }
 
-export const ProfilePage: React.FC = () => {
+export const ProfilePage = (): JSX.Element => {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [form, setForm] = useState<UserProfile>({
-    id: 0,
-    email: '',
-    username: '',
-    name: '',
-    homeLocation: '',
-    timezone: '',
-    locale: '',
-    gasPriceExVat: undefined,
-  });
+  const [form, setForm] = useState<UserProfile>({ id: 0, email: '' });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'ok' | 'error'>('idle');
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const loaded = await apiClient.getUserProfile();
-        setProfile(loaded);
-        setForm({ ...loaded, gasPriceExVat: loaded.gasPriceExVat ?? undefined });
-      } catch (error) {
-        console.error('Failed to load profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const loaded = (await apiClient.getUserProfile()) as UserProfile;
+      setProfile(loaded);
+      setForm({ ...loaded, gasPriceExVat: loaded.gasPriceExVat ?? undefined });
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
 
   const handleChange = useCallback(
     (field: keyof UserProfile, value: string | number | undefined) => {
@@ -59,146 +61,96 @@ export const ProfilePage: React.FC = () => {
     [],
   );
 
-  const onFinish = useCallback(async () => {
-    if (!profile) return;
+  const handleSave = useCallback(async () => {
+    if (!profile) {
+      return;
+    }
     setSaving(true);
     setSaveStatus('idle');
     try {
-      // Exclude email from update (it's read-only)
-      const { email, ...updateData } = form;
+      const {
+        email: _email,
+        gasPriceIncVat: _inc,
+        gasPriceLastUpdatedAt: _updated,
+        gasPriceSource: _source,
+        gasPriceVatRate: _vat,
+        ...updateData
+      } = form;
       await apiClient.updateUserProfile(updateData as Omit<UserProfile, 'email'>);
       setProfile((prev) => (prev ? { ...prev, ...updateData } : prev));
       setSaveStatus('ok');
-    } catch (error) {
-      console.error('Failed to update profile:', error);
+    } catch {
       setSaveStatus('error');
     } finally {
       setSaving(false);
     }
   }, [form, profile]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
-      </div>
-    );
-  }
-
+  const vatRate = form.gasPriceVatRate ?? DEFAULT_GAS_PRICE_VAT_RATE;
   const gasPriceInclVat =
     typeof form.gasPriceExVat === 'number'
-      ? Number(form.gasPriceExVat * 1.17).toFixed(4)
+      ? Number(form.gasPriceExVat * (1 + vatRate)).toFixed(4)
       : null;
 
+  const status = loading ? 'loading' : loadError ? 'error' : 'success';
+
   return (
-    <div className="space-y-6" id="content">
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary">
-          Profile
-        </h1>
-        <p className="text-sm text-text-secondary mt-1">
-          Update your account details and preferences.
-        </p>
-      </div>
-
-      {saveStatus === 'ok' && (
-        <div className="p-3 rounded-lg border border-success bg-success-50 text-success-700 dark:border-success dark:bg-success-900/20 dark:text-success-100 text-sm">
-          Profile updated.
-        </div>
-      )}
-      {saveStatus === 'error' && (
-        <div className="p-3 rounded-lg border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
-          Failed to update profile.
-        </div>
-      )}
-
-      <Card padding="md" elevated>
-        <div className="space-y-4">
-          <div>
-            <Input
-              label="Name"
-              placeholder="Your name"
-              value={form.name ?? ''}
-              onChange={(e) => handleChange('name', e.target.value)}
-              disabled={saving}
-            />
-            <Input
-              label="Username"
-              placeholder="username"
-              value={form.username ?? ''}
-              onChange={(e) => handleChange('username', e.target.value)}
-              disabled={saving}
-            />
-            <Input
-              label="Email"
-              placeholder="email@example.com"
-              value={form.email}
-              disabled
-            />
-            <Input
-              label="Home Location"
-              placeholder="City, Country"
-              value={form.homeLocation ?? ''}
-              onChange={(e) => handleChange('homeLocation', e.target.value)}
-              disabled={saving}
-            />
-            <Input
-              label="Timezone"
-              placeholder="Europe/Sarajevo"
-              value={form.timezone ?? ''}
-              onChange={(e) => handleChange('timezone', e.target.value)}
-              disabled={saving}
-            />
-            <Input
-              label="Locale"
-              placeholder="en-US"
-              value={form.locale ?? ''}
-              onChange={(e) => handleChange('locale', e.target.value)}
-              disabled={saving}
-            />
+    <div className="space-y-6">
+      <PageHeader title={t('settings.profile')} description={t('profile.subtitle')} />
+      {saveStatus === 'ok' ? (
+        <StatusBanner variant="success" message={t('profile.saveOk')} />
+      ) : null}
+      {saveStatus === 'error' ? (
+        <StatusBanner variant="error" message={t('profile.saveError')} />
+      ) : null}
+      <QueryState status={status} onRetry={() => void loadProfile()}>
+        <Card>
+          <CardContent className="space-y-4 pt-6">
+            {(
+              [
+                ['name', t('profile.name')],
+                ['username', t('profile.username')],
+                ['homeLocation', t('profile.homeLocation')],
+                ['timezone', t('profile.timezone')],
+                ['locale', t('profile.locale')],
+              ] as const
+            ).map(([field, label]) => (
+              <div key={field} className="space-y-2">
+                <Label htmlFor={`profile-${field}`}>{label}</Label>
+                <Input
+                  id={`profile-${field}`}
+                  value={String(form[field] ?? '')}
+                  onChange={(event) => handleChange(field, event.target.value)}
+                  disabled={saving}
+                />
+              </div>
+            ))}
+            <div className="space-y-2">
+              <Label htmlFor="profile-email">{t('profile.email')}</Label>
+              <Input id="profile-email" value={form.email} disabled />
+            </div>
             <InputNumber
-              label="Gas Price per m³ (Ex VAT)"
-              placeholder="0.0000"
+              id="profile-gas-price"
+              label={t('profile.gasPriceExVat')}
               value={form.gasPriceExVat ?? undefined}
               min={0}
               step={0.0001}
               precision={4}
-              onChange={(value) =>
-                handleChange(
-                  'gasPriceExVat',
-                  typeof value === 'number' ? value : undefined,
-                )
-              }
+              onChange={(value) => handleChange('gasPriceExVat', value ?? undefined)}
               disabled={saving}
             />
-          </div>
-
-          <div className="pt-2 border-t border-border space-y-1">
-            <p className="text-xs text-text-secondary dark:text-dark-text-secondary">
-              VAT: 17% | Price incl VAT:{' '}
-              {gasPriceInclVat !== null ? gasPriceInclVat : '—'}
+            <p className="text-xs text-muted-foreground">
+              {t('profile.vatLine', {
+                rate: Math.round(vatRate * 100),
+                price: gasPriceInclVat ?? '—',
+              })}
             </p>
-            <p className="text-xs text-text-secondary dark:text-dark-text-secondary">
-              Last update:{' '}
-              {form.gasPriceLastUpdatedAt
-                ? new Date(form.gasPriceLastUpdatedAt).toLocaleDateString()
-                : '—'}{' | '}Source:{' '}
-              {form.gasPriceSource || '—'}
-            </p>
-          </div>
-
-          <Button
-            variant="primary"
-            type="submit"
-            onClick={onFinish}
-            isLoading={saving}
-            disabled={saving}
-            fullWidth
-          >
-            Save Changes
-          </Button>
-        </div>
-      </Card>
+            <Button type="button" className="w-full" onClick={() => void handleSave()} isLoading={saving}>
+              {t('common.save')}
+            </Button>
+          </CardContent>
+        </Card>
+      </QueryState>
     </div>
   );
 };

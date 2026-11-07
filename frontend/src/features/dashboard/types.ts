@@ -1,0 +1,115 @@
+import type { RecommendationBreakdownData } from '../heating/components/RecommendationBreakdown';
+
+export interface Weather {
+  temp?: number;
+  feelsLike?: number;
+  condition?: string;
+  humidity?: number;
+  windSpeed?: number;
+  tempMin?: number;
+  tempMax?: number;
+  temperature?: number;
+  feelslike?: number;
+  condition_text?: string;
+  wind_kph?: number;
+  temp_min?: number;
+  temp_max?: number;
+}
+
+export interface Boiler {
+  externalTemp: number;
+  suggestedFlowTemp: number;
+  actualFlowTemp: number | null;
+}
+
+export interface Recommendation {
+  recommendedFlowTemp: number;
+  expectedHeatTimeMin?: number;
+  confidenceScore?: number;
+  breakdown?: RecommendationBreakdownData | null;
+}
+
+export interface ThermostatProgram {
+  dayType: string;
+  startMinute: number;
+  targetTemp: number;
+  orderIndex: number;
+}
+
+export interface HeatingEvent {
+  id: number;
+  startedAt: string;
+  endedAt: string | null;
+  targetTemp: number;
+  currentTemp: number;
+  durationMinutes: number;
+  hvacAction?: string;
+  isAnomaly: boolean;
+}
+
+export interface HeatingEventRow extends HeatingEvent {
+  bucketLabel: string;
+}
+
+export interface Thermostat {
+  alias: string;
+  currentTemp: number;
+  targetTemp: number;
+  mode: string;
+  program: ThermostatProgram[];
+}
+
+export interface Home {
+  profile: { floorArea: number };
+  thermostats: Thermostat[];
+  recentHeatingEvents: HeatingEvent[];
+}
+
+export interface DashboardResponse {
+  capabilities: unknown;
+  system: {
+    weather: Weather;
+    boiler: Boiler;
+    recommendation: Recommendation;
+  };
+  homes: Home[];
+}
+
+export interface ProcessedDashboard {
+  anomalyCount: number;
+  anomalyRate: number;
+  currentTemp: number;
+  targetTemp: number;
+  lastUpdate: string;
+  recentEvents: HeatingEvent[];
+  boiler: Boiler;
+  weather: Weather;
+  thermostatPrograms: ThermostatProgram[];
+  recommendation: Recommendation | null;
+}
+
+export interface HeatingBucket {
+  label: string;
+  totalDurationMin: number;
+  cycles: number;
+}
+
+export interface HeatingSummaryResponse {
+  summary: {
+    totalCycles: number;
+    totalDurationMin: number;
+    avgDurationMin: number;
+    avgIndoorTemp: number;
+  };
+  buckets: HeatingBucket[];
+}
+
+export interface WeatherDisplay {
+  outsideTemp: number | null;
+  feelsLike: number | null;
+  condition: string | null;
+  humidity: number | null;
+  windSpeed: number | null;
+  tempMin: number | null;
+  tempMax: number | null;
+}

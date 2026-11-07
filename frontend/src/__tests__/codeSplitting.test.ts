@@ -117,11 +117,10 @@ describe('FE2-4: vite.config.ts grupiše vendor pakete u stabilne čipove', () =
   });
 });
 
-describe('FE2-4: @ant-design/plots ostaje izolovan na dashboardu', () => {
-  it('samo DashboardPage importuje @ant-design/plots', () => {
-    // Da neka druga stranica počne koristiti grafikone, `vendor-plots`
-    // (1.467 kB) bi se vratio u inicijalno učitavanje za tu rutu.
+describe('FE2-4: @ant-design/plots nije u page grafu (I6 SVG bar)', () => {
+  it('nijedna page ne importuje @ant-design/plots', () => {
+    // I6 Dashboard koristi SVG bar; plots ostaje u package.json do I7 cleanup-a.
     const users = pageNames.filter((f) => pageModules[pagePaths[f]!].includes('@ant-design/plots'));
-    expect(users).toEqual(['DashboardPage.tsx']);
+    expect(users).toEqual([]);
   });
 });

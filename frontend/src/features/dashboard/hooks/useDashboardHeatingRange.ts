@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/api';
 import { queryKeys } from '../../../lib/queryKeys';
+import { resolveIsHeatingNow } from '../lib/resolve-is-heating-now';
 
 export const DASHBOARD_HEATING_POLL_MS = 60_000;
 
@@ -37,7 +38,7 @@ export function useDashboardHeatingRange(range: DashboardHeatingRange) {
       return {
         events: Array.isArray(eventsResponse?.data) ? eventsResponse.data : [],
         summary: summaryResponse ?? null,
-        isHeatingNow: statusResponse?.isHeatingNow ?? false,
+        isHeatingNow: resolveIsHeatingNow(statusResponse),
       };
     },
     refetchInterval: DASHBOARD_HEATING_POLL_MS,

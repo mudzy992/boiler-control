@@ -125,7 +125,7 @@ describe('FE2-3 dashboard heating polling visibility', () => {
     });
     const status = vi
       .spyOn(apiClient, 'getDashboardHeatingStatus')
-      .mockResolvedValue({ isHeatingNow: false });
+      .mockResolvedValue([{ deviceId: 1, isHeatingNow: false }]);
 
     const { result } = renderHook(
       () =>

@@ -4,22 +4,18 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I6 u toku.** Auth…Profile shells gotovi; Dashboard još TempDialog only.
+**Faza 5 — I6 zatvoren.** Sve stranice migrirane (uključujući Dashboard full).
 
-**Sljedeće:** Dashboard full (SVG/QueryState) → I7 antd out.
+**Sljedeće:** I7 antd out + Lighthouse (Q8).
 
 ## Završeno (I6)
 
-- Auth, Boiler
-- Heating + Reports (PageHeader/QueryState/Table)
-- Gas readings: ConfirmDialog umjesto `window.confirm`
-- Gas analytics: PageHeader/QueryState + period-bar/metrics helpers
-- Notifications: lucide + QueryState (bez antd icons)
-- Profile: shells + VAT via `gasPriceVatRate ?? DEFAULT_GAS_PRICE_VAT_RATE` (0.17)
-- Home profile: PageHeader/QueryState/StatusBanner (minimal)
-- Dashboard: TempDialog only
-- i18n: 297 keys EN=BS (profile.* + notifications count keys)
+- Auth, Boiler, Heating, Reports
+- Gas readings ConfirmDialog; Gas analytics shells
+- Notifications, Profile (VAT 0.17), Home profile minimal
+- Dashboard full: PageHeader/QueryState/SVG bar/Sheets; DA-02/04/05
+- i18n: 353 keys EN=BS
 
-## Još nije (I6)
+## Još nije
 
-- Dashboard full redesign (SVG/antd out of page shell)
+- I7: ukloniti antd/`@ant-design/plots`/`icons` iz package grafa, ThemeContext, Lighthouse

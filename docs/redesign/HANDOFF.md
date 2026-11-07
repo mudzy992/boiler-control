@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi **I6 Dashboard full** (Gas analytics → Profile gotovi). Ne ponavljaj I0–I5 ni ostale I6 stranice.
+Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi **I7** (antd out + Lighthouse). Ne ponavljaj I0–I6.
 
 ---
 
@@ -14,7 +14,7 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | 2 Modules | Gotovo — `modules/*.md`, `gate-2.md` |
 | 3 Synthesis | Gotovo — `04-cross-module-synthesis.md` |
 | 4 Plan | Gotovo — `05`–`09`, `gate-3.md` (odobreno) |
-| 5 Implement | **I0–I5 gotovi. I6 djelimično** (Auth…Profile shells). Sljedeće: Dashboard full → I7. |
+| 5 Implement | **I0–I6 gotovi.** Sljedeće: I7 antd out + Lighthouse. |
 
 ### Recent commits (main)
 
@@ -34,8 +34,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `c3d2b5f` | **I6 partial** Auth + Boiler + Dashboard TempDialog |
 | `db2c9e7` | **I6** Heating + Reports + gas ConfirmDialog |
 | `28b762d` | **I6** Gas analytics + Notifications + Profile + Home profile shells |
+| _(pending)_ | **I6** Dashboard full (SVG/QueryState/DA-02/04/05) |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42379269941`.
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42379269941` (pre Dashboard full).
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 
@@ -106,12 +107,11 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 - **Notifications** ✅ lucide + PageHeader/QueryState (bez antd icons).
 - **Profile** ✅ shells + VAT `gasPriceVatRate ?? 0.17` (`constants/gas-vat.ts`); uzak PUT.
 - **Home profile** ✅ PageHeader/QueryState/StatusBanner (minimal; fajl i dalje velik).
-- **Dashboard** 🟡 samo TempDialog + invalidate.
+- **Dashboard** ✅ full: PageHeader/QueryState/SVG bar/Sheets; DA-02 array `isHeatingNow`; DA-04 error≠empty; DA-05 controlled from+to; TempDialog zadržan. Bez antd/plots u dashboard feature.
 
 ### Još nije
-- Dashboard full (SVG/QueryState shells).
-- Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` i dalje na većini stranica (I7).
-- Antd u ThemeContext, plots, Dashboard, …
+- Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` ako još ima importa (I7).
+- Antd u ThemeContext + package deps (`antd`, plots, icons).
 - I7 antd out + Lighthouse.
 
 ---
@@ -119,8 +119,6 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 ## 4. Next steps (redoslijed)
 
 Strogo po `08-implementation-plan.md` + `09-implementation-rules.md`.
-
-### I6 (nastavak) — Dashboard full (SVG/QueryState)
 
 ### I7 — Ukloniti antd, obrisati mrtav lokalni set, Lighthouse (Q8)
 
@@ -134,7 +132,7 @@ Po podfazi: **jedna** I-podfaza; stop ako CI crven ili poslovni broj regressira 
 |---|---|
 | `npm run type-check` (frontend) | Prolazi nakon I2 |
 | `npm run lint` | 0 errors, ~26 warnings (poznati) |
-| `npm test` | 118 pass |
+| `npm test` | 121 pass |
 | `npm run build` + `VITE_API_URL` | Prolazi |
 | Frontend CI on main | Zelen za I0–I2 |
 | Lighthouse Q8 | **Nije pokrenut** (plan I7) |
@@ -175,7 +173,7 @@ frontend/tailwind.config.js
 ## 8. Prompt za novu sesiju (kopiraj)
 
 ```
-Nastavi boiler-control dashboard redesign I6 Dashboard full.
+Nastavi boiler-control dashboard redesign I7.
 Pročitaj docs/redesign/HANDOFF.md, STATE.md, 08-implementation-plan.md, 09-implementation-rules.md.
-Ne ponavljaj gotove I6 stranice (Auth…Profile). Uradi Dashboard full (SVG/QueryState); commit+push+gh run watch. Stani prije I7.
+I0–I6 gotovi. Ukloni antd/@ant-design/plots/icons iz produkcijskog grafa, mrtav lokalni UI set, ThemeContext bez ConfigProvider; Lighthouse Q8. Commit+push+gh run watch.
 ```

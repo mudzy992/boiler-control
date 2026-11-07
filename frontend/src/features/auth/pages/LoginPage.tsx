@@ -48,10 +48,15 @@ export const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6">
-      <Card className="w-full max-w-md" variant="elevated">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{t('shell.brand')}</CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-background bg-cockpit-radial px-6">
+      <Card className="w-full max-w-md border-border/80 shadow-glow-soft" variant="elevated">
+        <CardHeader className="space-y-3 text-center">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand/15 shadow-glow">
+            <span className="h-2.5 w-2.5 rounded-full bg-brand" aria-hidden />
+          </div>
+          <CardTitle className="text-display font-semibold tracking-tight">
+            {t('shell.brand')}
+          </CardTitle>
           <CardDescription>{t('auth.loginTitle')}</CardDescription>
         </CardHeader>
         <CardContent>

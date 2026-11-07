@@ -2,18 +2,21 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/shared/lib/utils';
 
-const cardVariants = cva('rounded-lg border bg-card text-card-foreground shadow-sm', {
-  variants: {
-    variant: {
-      default: '',
-      elevated: 'shadow-md',
-      outlined: 'shadow-none hover:border-primary/50',
+const cardVariants = cva(
+  'rounded-lg border border-border/80 bg-card text-card-foreground',
+  {
+    variants: {
+      variant: {
+        default: 'shadow-sm',
+        elevated: 'shadow-cockpit',
+        outlined: 'shadow-none hover:border-primary/40',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
     },
   },
-  defaultVariants: {
-    variant: 'default',
-  },
-});
+);
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,

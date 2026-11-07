@@ -2,48 +2,33 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-Nova sesija: I0–I7 **zatvoreni**. Pročitaj `STATE.md` i `10-lighthouse-i7.md` ako treba polish ili protected Lighthouse.
+I0–I7 zatvoreni. Dodatni **cockpit UI** (dark-first) je implementiran — vidi `11-cockpit-ui.md`.
 
 ---
 
-## 1. Gdje smo
+## Gdje smo
 
-| Faza | Status |
+| Sloj | Status |
 |---|---|
-| 1–4 Analysis → Plan | Gotovo |
-| 5 Implement I0–I7 | **Gotovo** |
+| I0–I7 implement | Gotovo |
+| Cockpit visual override | Gotovo (tokens + shell + dashboard hero + shared surfaces) |
 
-### Recent commits (main)
+CI: Frontend on `main`. Pre-cockpit zelen: `42383549705`.
 
-| SHA | Opis |
-|---|---|
-| `f60a04f` | **I6** Dashboard full |
-| `367a0c6` | docs: I6 Dashboard CI green |
-| `f315354` | **I7** antd out + Lighthouse |
+## Cockpit sažetak
 
-CI: Frontend workflow on `main`. Zadnji run zelen: `42383549705`.
+- Default tema: **dark** osim ako je `boiler.theme=light`.
+- Shell: instrument sidebar, radial main bg, bez full-page card wrap.
+- Dashboard: status band (pulse + flow temp), hero KPI, brand SVG bars.
+- Hex samo u `tokens.css`; glow via `shadow-glow` / `shadow-glow-soft`.
 
----
+## Next (opcionalno)
 
-## 2. I7 sažetak
-
-- Nema `antd` / `@ant-design/plots` / `@ant-design/icons` u `package.json` ni source importima.
-- `ThemeContext` samo `boiler.theme` + `html.dark` (bez ConfigProvider).
-- Lokalni `Button`/`Card`/`StatCard` obrisani; `Input` je tanki Label+shared wrapper; `InputNumber` ostaje.
-- Vite manualChunks: react/router/query/i18n/utils (bez vendor-antd/plots).
-- Lighthouse login: Perf 100 / A11y 88 / BP 96 / SEO 82 — `docs/redesign/10-lighthouse-i7.md`.
-
----
-
-## 3. Next (opcionalno)
-
-- Lighthouse na zaštićenoj ruti uz sesiju
+- Lighthouse protected ruta
 - A11y/SEO polish
-- HomeProfile i dalje velik fajl (split kad se dira)
 
-## 4. Prompt za novu sesiju
+## Prompt
 
 ```
-Boiler-control redesign I0–I7 gotovi. Pročitaj docs/redesign/HANDOFF.md i STATE.md.
-Ako treba: Lighthouse protected ruta ili A11y/SEO polish iz 10-lighthouse-i7.md.
+Boiler-control: I0–I7 + cockpit UI gotovi. Pročitaj docs/redesign/HANDOFF.md i 11-cockpit-ui.md.
 ```

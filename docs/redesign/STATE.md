@@ -4,14 +4,17 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I0–I7 zatvoreni.** Antd van produkcijskog grafa; Lighthouse Q8 login izmjereno.
+**Cockpit UI override** (dark-first) nakon I0–I7. Vizuelni smjer: instrument panel + brand glow.
 
 ## Završeno
 
-- I0–I6 (stranice + Dashboard SVG)
-- I7: ThemeContext bez ConfigProvider; antd/plots/icons uklonjeni; lokalni Button/Card/StatCard obrisani; Lighthouse annex `10-lighthouse-i7.md`
+- I0–I7 (antd out, Lighthouse login)
+- Cockpit tokens, dark default, shell chrome
+- Dashboard status band / hero KPI / brand SVG bars
+- Login + shared Card/Button/PageHeader cockpit surfaces
+- Docs: `11-cockpit-ui.md`, override u `06-design-direction.md`
 
-## Otvoreno (van implement plan faza)
+## Otvoreno
 
-- Lighthouse protected ruta kad postoji sesija
-- A11y/SEO polish iznad baseline-a
+- Lighthouse protected ruta (treba sesija)
+- Dalji A11y/SEO polish

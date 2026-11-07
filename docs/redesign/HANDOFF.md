@@ -19,9 +19,9 @@ Nova sesija: I0–I7 **zatvoreni**. Pročitaj `STATE.md` i `10-lighthouse-i7.md`
 |---|---|
 | `f60a04f` | **I6** Dashboard full |
 | `367a0c6` | docs: I6 Dashboard CI green |
-| _(pending)_ | **I7** antd out + Lighthouse |
+| `f315354` | **I7** antd out + Lighthouse |
 
-CI: Frontend workflow on `main`. Pre-I7 zelen: `42382387551`.
+CI: Frontend workflow on `main`. Zadnji run zelen: `42383549705`.
 
 ---
 

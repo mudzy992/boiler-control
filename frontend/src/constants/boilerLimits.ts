@@ -39,3 +39,21 @@ export function flowTempRangeMessage(): string {
 export function isWithinFlowTempRange(value: number): boolean {
   return value >= MIN_CURRENT_FLOW_TEMP && value <= MAX_CURRENT_FLOW_TEMP;
 }
+
+export type FlowTempValidation =
+  | { ok: true; value: number }
+  | { ok: false; reason: 'required' | 'outOfRange' };
+
+/** Normalize to one decimal (API + UI contract) then validate 48–55 inclusive. */
+export function validateFlowTempInput(
+  value: number | null | undefined,
+): FlowTempValidation {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return { ok: false, reason: 'required' };
+  }
+  const normalized = Number(value.toFixed(1));
+  if (!isWithinFlowTempRange(normalized)) {
+    return { ok: false, reason: 'outOfRange' };
+  }
+  return { ok: true, value: normalized };
+}

@@ -20,6 +20,15 @@ const enUS = {
     empty: 'No data available',
     loadFailed: 'Failed to load data',
     dismiss: 'Dismiss',
+    confirm: 'Confirm',
+  },
+  tempDialog: {
+    title: 'Set flow temperature',
+    label: 'Temperature',
+    range: 'Allowed range: {{min}}°C – {{max}}°C',
+    required: 'Temperature is required',
+    save: 'Save',
+    saving: 'Saving...',
   },
   shell: {
     brand: 'Boiler Control',
@@ -305,6 +314,15 @@ const bsBS = {
     empty: 'Nema podataka',
     loadFailed: 'Učitavanje podataka nije uspjelo',
     dismiss: 'Zatvori',
+    confirm: 'Potvrdi',
+  },
+  tempDialog: {
+    title: 'Postavi temperaturu polaza',
+    label: 'Temperatura',
+    range: 'Dozvoljeni raspon: {{min}}°C – {{max}}°C',
+    required: 'Temperatura je obavezna',
+    save: 'Spremi',
+    saving: 'Spremanje...',
   },
   shell: {
     brand: 'Boiler Control',

@@ -6,3 +6,8 @@ export { StatCard } from './stat-card';
 export type { StatCardProps } from './stat-card';
 export { StatusBanner } from './status-banner';
 export type { StatusBannerProps, StatusBannerVariant } from './status-banner';
+export { TempDialog } from './temp-dialog';
+export type { TempDialogProps } from './temp-dialog';
+export { ConfirmDialog } from './confirm-dialog';
+export type { ConfirmDialogProps } from './confirm-dialog';
+

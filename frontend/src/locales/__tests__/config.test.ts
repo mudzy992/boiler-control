@@ -44,9 +44,9 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 250 uključuje shell/nav (I2) + common.empty/loadFailed/dismiss (I4).
+    // Čuva i broj: 257 = I4 (250) + common.confirm + tempDialog.* (I5).
     // Pad znači da je neko obrisao ključ ili dodao novi bez prijevoda.
-    expect(en.length).toBe(250);
+    expect(en.length).toBe(257);
   });
 });
 

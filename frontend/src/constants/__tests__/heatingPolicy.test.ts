@@ -4,6 +4,7 @@ import {
   MAX_CURRENT_FLOW_TEMP,
   flowTempRangeMessage,
   isWithinFlowTempRange,
+  validateFlowTempInput,
 } from '../boilerLimits';
 // `?raw` daje sadržaj backend DTO-a kao string, pa test može provjeriti da se
 // klijentske granice i dalje poklapaju sa serverom.
@@ -58,4 +59,15 @@ describe('FE2-14: granice temperature polaznog voda', () => {
     expect(Number(minMatch?.[1])).toBe(MIN_CURRENT_FLOW_TEMP);
     expect(Number(maxMatch?.[1])).toBe(MAX_CURRENT_FLOW_TEMP);
   });
+
+  it('I5 validateFlowTempInput: 48/55 ok, van granica i prazno ne', () => {
+    expect(validateFlowTempInput(48)).toEqual({ ok: true, value: 48 });
+    expect(validateFlowTempInput(55)).toEqual({ ok: true, value: 55 });
+    expect(validateFlowTempInput(51.26)).toEqual({ ok: true, value: 51.3 });
+    expect(validateFlowTempInput(47.9)).toEqual({ ok: false, reason: 'outOfRange' });
+    expect(validateFlowTempInput(55.1)).toEqual({ ok: false, reason: 'outOfRange' });
+    expect(validateFlowTempInput(null)).toEqual({ ok: false, reason: 'required' });
+    expect(validateFlowTempInput(undefined)).toEqual({ ok: false, reason: 'required' });
+  });
 });
+

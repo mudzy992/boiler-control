@@ -14,7 +14,7 @@ I0–I7 + cockpit + **Vercel density polish** gotovi. Vidi `11-cockpit-ui.md`.
 | Cockpit visual override | Gotovo |
 | Vercel density polish | Gotovo (Flame, header h-12/14, no nav underline, quiet type/forms) |
 
-CI: Frontend on `main`.
+CI: Frontend on `main`. Zadnji run zelen: `42387408487` (`aa023b5`).
 
 ## Vercel polish sažetak
 

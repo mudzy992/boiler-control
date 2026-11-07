@@ -33,9 +33,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `b0e0a2c` | **I5** TempDialog + ConfirmDialog |
 | `c3d2b5f` | **I6 partial** Auth + Boiler + Dashboard TempDialog |
 | `db2c9e7` | **I6** Heating + Reports + gas ConfirmDialog |
-| _(pending)_ | **I6** Gas analytics + Notifications + Profile + Home profile shells |
+| `28b762d` | **I6** Gas analytics + Notifications + Profile + Home profile shells |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42378305964` (pre ovog commit-a).
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42379269941`.
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 

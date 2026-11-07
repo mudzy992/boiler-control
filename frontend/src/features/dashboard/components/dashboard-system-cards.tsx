@@ -6,6 +6,7 @@ import {
 } from '@/constants/boilerLimits';
 import { Button } from '@/shared/components/ui/Button';
 import { Card, CardContent } from '@/shared/components/ui/Card';
+import { formatOneDecimal } from '../lib/weather-format';
 import type { Boiler, WeatherDisplay } from '../types';
 
 interface DashboardSystemCardsProps {
@@ -22,6 +23,11 @@ export const DashboardSystemCards = ({
   const { t } = useTranslation();
   const actual =
     typeof boiler.actualFlowTemp === 'number' ? boiler.actualFlowTemp : null;
+  const outside = formatOneDecimal(weather?.outsideTemp);
+  const feelsLike = formatOneDecimal(weather?.feelsLike);
+  const wind = formatOneDecimal(weather?.windSpeed);
+  const tempMin = formatOneDecimal(weather?.tempMin);
+  const tempMax = formatOneDecimal(weather?.tempMax);
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -31,26 +37,20 @@ export const DashboardSystemCards = ({
             {t('dashboard.outsideTemp')}
           </p>
           <p className="font-mono text-3xl font-semibold tracking-tight text-foreground">
-            {weather?.outsideTemp != null
-              ? `${Number(weather.outsideTemp).toFixed(1)}`
-              : '—'}
+            {outside ?? '—'}
             <span className="ml-1 text-base text-muted-foreground">°C</span>
           </p>
           {weather ? (
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.feelsLike')}</dt>
-                <dd>
-                  {weather.feelsLike != null
-                    ? `${Number(weather.feelsLike).toFixed(1)}°C`
-                    : '—'}
-                </dd>
+                <dd>{feelsLike != null ? `${feelsLike}°C` : '—'}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.condition')}</dt>
                 <dd>
                   {weather.condition
-                    ? t(`weather.conditions.${weather.condition.trim().toLowerCase().replace(/\s+/g, '_')}`, {
+                    ? t(`weather.conditions.${weather.condition}`, {
                         defaultValue: weather.condition,
                       })
                     : '—'}
@@ -62,23 +62,12 @@ export const DashboardSystemCards = ({
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.wind')}</dt>
-                <dd>
-                  {weather.windSpeed != null
-                    ? `${Number(weather.windSpeed).toFixed(1)} km/h`
-                    : '—'}
-                </dd>
+                <dd>{wind != null ? `${wind} km/h` : '—'}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('dashboard.minMax')}</dt>
                 <dd>
-                  {weather.tempMin != null
-                    ? `${Number(weather.tempMin).toFixed(1)}`
-                    : '—'}
-                  °C /{' '}
-                  {weather.tempMax != null
-                    ? `${Number(weather.tempMax).toFixed(1)}`
-                    : '—'}
-                  °C
+                  {tempMin ?? '—'}°C / {tempMax ?? '—'}°C
                 </dd>
               </div>
             </dl>

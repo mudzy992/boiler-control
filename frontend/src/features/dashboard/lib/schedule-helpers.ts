@@ -1,5 +1,9 @@
 import dayjs from 'dayjs';
 import type { ThermostatProgram } from '../types';
+import {
+  resolveWeatherConditionKey,
+  roundOneDecimal,
+} from './weather-format';
 
 export const getTodayDayType = (): string => {
   const day = dayjs().day();
@@ -50,19 +54,41 @@ export const buildWeatherDisplay = (
   tempMax: number | null;
 } | null => {
   if (!src) return null;
+  const rawCondition =
+    (src.conditionKey as string | undefined) ??
+    (src.condition_text as string | undefined) ??
+    (src.condition as string | undefined) ??
+    null;
   return {
-    outsideTemp: (src.temperature as number | undefined) ?? (src.temp as number | undefined) ?? null,
-    feelsLike: (src.feelslike as number | undefined) ?? (src.feelsLike as number | undefined) ?? null,
-    condition:
-      (src.condition_text as string | undefined) ??
-      (src.condition as string | undefined) ??
+    outsideTemp: roundOneDecimal(
+      (src.temperature as number | undefined) ??
+        (src.temperatureC as number | undefined) ??
+        (src.temp as number | undefined),
+    ),
+    feelsLike: roundOneDecimal(
+      (src.feelslike as number | undefined) ??
+        (src.feelsLike as number | undefined) ??
+        (src.apparentTemperatureC as number | undefined),
+    ),
+    condition: resolveWeatherConditionKey(rawCondition),
+    humidity:
+      (src.humidity as number | undefined) ??
+      (src.humidityPercent as number | undefined) ??
       null,
-    humidity: (src.humidity as number | undefined) ?? null,
-    windSpeed:
+    windSpeed: roundOneDecimal(
       (src.wind_kph as number | undefined) ??
-      (src.windSpeed as number | undefined) ??
-      null,
-    tempMin: (src.temp_min as number | undefined) ?? (src.tempMin as number | undefined) ?? null,
-    tempMax: (src.temp_max as number | undefined) ?? (src.tempMax as number | undefined) ?? null,
+        (src.windSpeed as number | undefined) ??
+        (src.windKph as number | undefined),
+    ),
+    tempMin: roundOneDecimal(
+      (src.temp_min as number | undefined) ??
+        (src.tempMin as number | undefined) ??
+        (src.temperatureMinC as number | undefined),
+    ),
+    tempMax: roundOneDecimal(
+      (src.temp_max as number | undefined) ??
+        (src.tempMax as number | undefined) ??
+        (src.temperatureMaxC as number | undefined),
+    ),
   };
 };

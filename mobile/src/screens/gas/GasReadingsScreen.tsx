@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { Alert, FlatList, RefreshControl, Platform } from 'react-native';
+import { Alert, FlatList, RefreshControl, Platform, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
@@ -21,6 +21,7 @@ import {
   Center,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
+import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
@@ -28,6 +29,9 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
+import { MonoLabel, MonoMeta, Panel, PanelRow, Readout } from '../../ui';
+import { useTokens } from '../../ui/theme';
+import { radius, space } from '../../theme/tokens';
 import { SecureStorage } from '../../services/storage/SecureStorage';
 import { Screen, ScreenHeader } from '../../ui';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
@@ -81,6 +85,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   const toast = useToast();
   const { showError } = useErrorHandler();
   const { t } = useTranslation();
+  const { t: tokens } = useTokens();
 
   // Handle deep link to open add modal
   React.useEffect(() => {
@@ -115,10 +120,8 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'dark.700');
-  const fabBg = useColorModeValue('brand.500', 'brand.600');
   const accentColor = useColorModeValue('brand.500', 'brand.400');
   const filterBg = useColorModeValue('gray.200', 'gray.700');
-  const filterActiveBg = useColorModeValue('brand.500', 'brand.600');
 
   const {
     data: readings = [],
@@ -662,11 +665,11 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       <ScreenHeader
         title={t('gas.title')}
         subtitle={t('gas.subtitle')}
-        action={
-          onOpenAnalysis
-            ? { icon: 'stats-chart-outline', label: t('navigation.analysis'), onPress: onOpenAnalysis }
-            : undefined
-        }
+        action={{
+          icon: 'add',
+          label: t('gas.addReading'),
+          onPress: () => setShowAddModal(true),
+        }}
         testID="gas-readings-header"
       />
       <FlatList
@@ -675,175 +678,113 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         keyExtractor={(item) => String(item.id)}
         renderItem={renderReadingItem}
         ListHeaderComponent={
-          <VStack space={4} mb={4}>
+          <VStack space={4} mb={4} px={4} pt={2}>
+            {/* F1: sekcijska traka (Očitanja | Analiza) iz GasScreen-a */}
+            {headerSlot}
 
-          {/* F1: sekcijska traka (Očitanja | Analiza) iz GasScreen-a */}
-          {headerSlot ? <Box px={4} pt={2}>{headerSlot}</Box> : null}
+            {/* Sažetak iznad liste (prototip §04): mjesec, potrošnja, broj zapisa */}
+            <Panel variant="flush" padded={false} testID="gas-summary">
+              <PanelRow divider={false}>
+                <View style={{ flexDirection: 'row', gap: space.md }}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <MonoLabel>
+                      {dateFilter === 'week'
+                        ? t('gas.filterLastWeek')
+                        : dateFilter === 'month'
+                          ? t('gas.summaryMonth')
+                          : dateFilter === 'year'
+                            ? t('gas.filterYear')
+                            : dateFilter === 'custom'
+                              ? t('gas.filterCustom')
+                              : t('gas.filterAll')}
+                    </MonoLabel>
+                    <Readout
+                      value={periodConsumption.toFixed(2)}
+                      unit="m³"
+                      size="md"
+                      tone="ink"
+                      testID="gas-period-consumption"
+                    />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <MonoLabel>{t('gas.totalReadings')}</MonoLabel>
+                    <Readout
+                      value={filteredReadings.length}
+                      size="md"
+                      tone="muted"
+                      testID="gas-readings-count"
+                    />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <MonoLabel>{t('gas.lastReading')}</MonoLabel>
+                    <MonoMeta>
+                      {filteredReadings.length > 0
+                        ? dayjs(filteredReadings[0].readingDate).format('DD.MM')
+                        : '—'}
+                    </MonoMeta>
+                  </View>
+                </View>
+              </PanelRow>
+            </Panel>
 
-          {/* Date Filter Tabs */}
-          <VStack space={2}>
-            {/* First Row */}
-            <HStack space={2}>
+            {/* Filter: jedna traka, 5 opcija; signal samo na aktivnoj */}
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
               {(
                 [
-                  { label: t('gas.filterLastWeek') || 'Last Week', value: 'week' },
-                  { label: t('gas.filterMonth') || 'This Month', value: 'month' },
-                  { label: t('gas.filterYear') || 'This Year', value: 'year' },
-                ] as Array<{ label: string; value: 'week' | 'month' | 'year' }>
-              ).map((filter) => (
-                <Pressable
-                  key={filter.value}
-                  onPress={() => setDateFilter(filter.value)}
-                  bg={dateFilter === filter.value ? filterActiveBg : filterBg}
-                  px={4}
-                  py={2}
-                  rounded="full"
-                  flex={1}
-                  _pressed={{
-                    opacity: 0.8,
-                  }}
-                >
-                  <Text
-                    fontSize="xs"
-                    fontWeight="600"
-                    color={dateFilter === filter.value ? 'white' : textColor}
-                    textAlign="center"
+                  { key: 'week', label: t('gas.filterLastWeek') },
+                  { key: 'month', label: t('gas.filterMonth') },
+                  { key: 'year', label: t('gas.filterYear') },
+                  { key: 'all', label: t('gas.filterAll') },
+                  { key: 'custom', label: t('gas.filterCustom') },
+                ] as const
+              ).map((filter) => {
+                const active = dateFilter === filter.key;
+                return (
+                  <Pressable
+                    key={filter.key}
+                    onPress={() => {
+                      if (filter.key === 'custom') {
+                        setDateFilter('custom');
+                        setShowDateRangePicker(true);
+                        return;
+                      }
+                      setDateFilter(filter.key);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: radius.tag,
+                      borderWidth: 1,
+                      borderColor: active ? tokens.signal : tokens.line,
+                      backgroundColor: active ? tokens.signalSoft : 'transparent',
+                    }}
                   >
-                    {filter.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </HStack>
-            {/* Second Row */}
-            <HStack space={2}>
-              <Pressable
-                onPress={() => setDateFilter('all')}
-                bg={dateFilter === 'all' ? filterActiveBg : filterBg}
-                px={4}
-                py={2}
-                rounded="full"
-                flex={1}
-                _pressed={{
-                  opacity: 0.8,
-                }}
-              >
-                <Text
-                  fontSize="xs"
-                  fontWeight="600"
-                  color={dateFilter === 'all' ? 'white' : textColor}
-                  textAlign="center"
-                >
-                  {t('gas.filterAll') || 'All'}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setDateFilter('custom');
-                  setShowDateRangePicker(true);
-                }}
-                bg={dateFilter === 'custom' ? filterActiveBg : filterBg}
-                px={4}
-                py={2}
-                rounded="full"
-                flex={1}
-                _pressed={{
-                  opacity: 0.8,
-                }}
-              >
-                <HStack space={1} alignItems="center" justifyContent="center">
-                  <Icon
-                    as={Ionicons}
-                    name="calendar-outline"
-                    size={3}
-                    color={dateFilter === 'custom' ? 'white' : textColor}
-                  />
-                  <Text
-                    fontSize="xs"
-                    fontWeight="600"
-                    color={dateFilter === 'custom' ? 'white' : textColor}
-                  >
-                    {t('gas.filterCustom') || 'Custom'}
-                  </Text>
-                </HStack>
-              </Pressable>
-            </HStack>
-          </VStack>
+                    <Text
+                      size="label"
+                      weight="monoMedium"
+                      tone={active ? 'signal' : 'dim'}
+                      style={{ letterSpacing: 0.9 }}
+                    >
+                      {filter.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
 
-          {/* Stats Bar */}
-          <VStack space={3}>
-            <HStack space={3}>
-              <Box
-                flex={1}
-                bg={cardBg}
-                rounded="xl"
-                p={4}
-                borderWidth={1}
-                borderColor={borderColor}
-                shadow={1}
-              >
-                <Text fontSize="2xs" fontWeight="600" color={mutedColor} mb={1}>
-                  {t('gas.totalReadings') || 'Total Readings'}
-                </Text>
-                <Text fontSize="2xl" fontWeight="700" color={textColor}>
-                  {filteredReadings.length}
-                </Text>
-              </Box>
-              <Box
-                flex={1}
-                bg={cardBg}
-                rounded="xl"
-                p={4}
-                borderWidth={1}
-                borderColor={borderColor}
-                shadow={1}
-              >
-                <Text fontSize="2xs" fontWeight="600" color={mutedColor} mb={1}>
-                  {t('gas.lastReading') || 'Last Reading'}
-                </Text>
-                <Text fontSize="2xl" fontWeight="700" color={textColor}>
-                  {filteredReadings.length > 0
-                    ? new Date(filteredReadings[0].readingDate).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    : '—'}
-                </Text>
-              </Box>
-            </HStack>
-            <Box
-              bg={cardBg}
-              rounded="xl"
-              p={4}
-              borderWidth={1}
-              borderColor={borderColor}
-              shadow={1}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: 4,
+              }}
             >
-              <HStack justifyContent="space-between" alignItems="center">
-                <VStack>
-                  <Text fontSize="2xs" fontWeight="600" color={mutedColor} mb={1}>
-                    {dateFilter === 'week'
-                      ? t('gas.consumptionLastWeek')
-                      : dateFilter === 'month'
-                        ? t('gas.consumptionThisMonth')
-                        : dateFilter === 'year'
-                          ? t('gas.consumptionThisYear')
-                          : dateFilter === 'custom'
-                            ? t('gas.consumptionCustom')
-                            : t('gas.consumptionTotal')}
-                  </Text>
-                  <HStack alignItems="baseline" space={1}>
-                    <Text fontSize="2xl" fontWeight="700" color={textColor}>
-                      {periodConsumption.toFixed(2)}
-                    </Text>
-                    <Text fontSize="md" fontWeight="600" color={mutedColor}>
-                      m³
-                    </Text>
-                  </HStack>
-                </VStack>
-                <Icon as={Ionicons} name="flame-outline" size={10} color="orange.500" />
-              </HStack>
-            </Box>
-          </VStack>
+              <MonoLabel>{t('gas.readings')}</MonoLabel>
+              <MonoMeta>{t('gas.readingCount', { count: filteredReadings.length })}</MonoMeta>
+            </View>
           </VStack>
         }
         ListEmptyComponent={
@@ -867,31 +808,12 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         refreshControl={
           <RefreshControl refreshing={refreshing || isFetching} onRefresh={handleRefresh} />
         }
-        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 20, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
+        ItemSeparatorComponent={undefined}
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={5}
       />
-
-      {/* Floating Action Button */}
-      <Pressable
-        position="absolute"
-        bottom={8}
-        right={8}
-        onPress={() => setShowAddModal(true)}
-        bg={fabBg}
-        rounded="full"
-        w={20}
-        h={20}
-        alignItems="center"
-        justifyContent="center"
-        _pressed={{
-          opacity: 0.85,
-        }}
-        shadow={9}
-      >
-        <Icon as={Ionicons} name="add" size={10} color="white" fontWeight="bold" />
-      </Pressable>
 
       {/* Add Reading Modal */}
       <BottomSheetModal
@@ -1074,13 +996,13 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             <Pressable
               flex={1}
               onPress={() => setShowDateRangePicker(false)}
-              bg={fabBg}
+              bg={tokens.signal}
               py={3}
               rounded="lg"
               alignItems="center"
             >
-              <Text fontSize="sm" fontWeight="600" color="white">
-                {t('common.save') || 'Apply'}
+              <Text fontSize="sm" fontWeight="600" color={tokens.onSignal}>
+                {t('common.save')}
               </Text>
             </Pressable>
           </HStack>

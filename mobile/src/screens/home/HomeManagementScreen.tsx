@@ -89,6 +89,7 @@ const useHomeManagementScreen = () => {
   const [selectedHome, setSelectedHome] = useState<HomeProfile | null>(null);
 
   const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
 
@@ -105,6 +106,7 @@ const useHomeManagementScreen = () => {
     selectedHome,
     setSelectedHome,
     cardBg,
+    borderColor,
     textColor,
     subtextColor,
     queryClient,
@@ -123,6 +125,7 @@ const HomeManagementScreenContent = () => {
     selectedHome,
     setSelectedHome,
     cardBg,
+    borderColor,
     textColor,
     subtextColor,
     queryClient,
@@ -421,10 +424,9 @@ const HomeManagementScreenContent = () => {
       <Box
         bg={cardBg}
         rounded="xl"
-        shadow={2}
         p={4}
-        borderWidth={home.isActive ? 2 : 0}
-        borderColor="blue.500"
+        borderWidth={1}
+        borderColor={home.isActive ? 'brand.500' : borderColor}
       >
         <HStack justifyContent="space-between" alignItems="flex-start">
           <VStack flex={1} space={1}>

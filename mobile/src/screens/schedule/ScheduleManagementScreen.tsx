@@ -218,6 +218,7 @@ const ScheduleManagementScreenContent = () => {
   // ALL HOOKS CALLED AT TOP LEVEL UNCONDITIONALLY
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
+  const borderColor = useColorModeValue('gray.200', 'dark.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const infoColor = useColorModeValue('blue.50', 'dark.700');
@@ -447,8 +448,7 @@ const ScheduleManagementScreenContent = () => {
                   bg={cardBg}
                   rounded="lg"
                   p={4}
-                  shadow={1}
-                  borderLeftWidth={3}
+                  borderLeftWidth={2}
                   borderLeftColor="orange.400"
                 >
                   <HStack space={3} alignItems="flex-start">
@@ -488,7 +488,7 @@ const ScheduleManagementScreenContent = () => {
               </VStack>
 
               {/* Bottom Info */}
-              <Box bg={cardBg} rounded="lg" p={4} shadow={1} mt={2}>
+              <Box bg={cardBg} rounded="lg" p={4} mt={2} borderWidth={1} borderColor={borderColor}>
                 <VStack space={2}>
                   <Text fontSize="xs" fontWeight="bold" color={textColor}>
                     {t('schedule.howItWorks')}

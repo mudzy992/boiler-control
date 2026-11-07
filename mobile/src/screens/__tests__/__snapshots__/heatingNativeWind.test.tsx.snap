@@ -5,392 +5,496 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#0b0f1a",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#05070b",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
+    testID="heating-screen"
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="heating-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            heating.title
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       contentContainerStyle={
         {
-          "paddingHorizontal": 16,
-          "paddingVertical": 16,
+          "flexGrow": 1,
         }
       }
+      keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControlMock
           onRefresh={[Function]}
           refreshing={false}
         />
       }
-      style={{}}
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
     >
       <RCTRefreshControl />
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 4,
-              "marginBottom": 24,
-            }
-          }
-        >
-          <Text
-            accessibilityRole="header"
-            style={
+            [
               {
-                "color": "#f3f4f6",
-                "fontSize": 36,
-                "fontWeight": "700",
-              }
-            }
-          >
-            heating.title
-          </Text>
-          <Text
-            style={
-              {
-                "color": "#9ca3af",
-                "fontSize": 14,
-              }
-            }
-          >
-            heating.subtitle
-          </Text>
-        </View>
-        <View
-          className="flex flex-col"
-          style={
-            {
-              "gap": 16,
-            }
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
             style={
-              {
-                "backgroundColor": "#0f172a",
-                "borderColor": "#1e293b",
-                "borderLeftColor": "#f87171",
-                "borderLeftWidth": 4,
-                "borderRadius": 12,
-                "borderWidth": 1,
-                "elevation": 0,
-                "padding": 16,
-                "shadowColor": "#000000",
-                "shadowOffset": {
-                  "height": 1,
-                  "width": 0,
+              [
+                {
+                  "gap": 8,
                 },
-                "shadowOpacity": 0.11,
-                "shadowRadius": 1.5,
-              }
+                undefined,
+              ]
             }
           >
             <View
-              className="flex flex-row"
               style={
                 {
                   "alignItems": "center",
+                  "flexDirection": "row",
                   "justifyContent": "space-between",
-                  "marginBottom": 16,
                 }
               }
             >
-              <View
-                className="flex flex-col"
+              <Text
                 style={
-                  {
-                    "flex": 1,
-                  }
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                    },
+                    null,
+                    {
+                      "color": "#6b7788",
+                      "fontFamily": "monospace",
+                      "fontSize": 9,
+                      "letterSpacing": 1.4,
+                      "textTransform": "uppercase",
+                    },
+                  ]
                 }
               >
-                <Text
-                  style={
+                Home
+              </Text>
+              <Text
+                style={
+                  [
                     {
-                      "color": "#f3f4f6",
-                      "fontSize": 16,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  Living Room
-                </Text>
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                    },
+                    null,
+                    {
+                      "color": "#9aa6b6",
+                      "fontFamily": "monospace",
+                      "fontSize": 9,
+                      "letterSpacing": 1.1,
+                      "textTransform": "uppercase",
+                    },
+                  ]
+                }
+              >
+                heating.heatingCount
+              </Text>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "overflow": "hidden",
+                  },
+                  {
+                    "backgroundColor": "#0b0f16",
+                    "borderColor": "#1f2733",
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+              testID="heating-devices"
+            >
+              <View
+                accessibilityLabel="Living Room: 21.5 → 23.0 °C"
+                accessible={true}
+                style={
+                  [
+                    {
+                      "paddingHorizontal": 12,
+                      "paddingVertical": 10,
+                    },
+                    {
+                      "borderBottomColor": "#1f2733",
+                      "borderBottomWidth": 1,
+                    },
+                    undefined,
+                  ]
+                }
+              >
                 <View
-                  className="flex flex-row"
                   style={
                     {
                       "gap": 8,
-                      "marginTop": 4,
                     }
                   }
                 >
                   <View
                     style={
                       {
-                        "alignSelf": "flex-start",
-                        "backgroundColor": "#ef4444",
-                        "borderColor": "#ef4444",
-                        "borderRadius": 6,
-                        "borderWidth": 1,
-                        "color": "#ffffff",
-                        "paddingBottom": 4,
-                        "paddingLeft": 8,
-                        "paddingRight": 8,
-                        "paddingTop": 4,
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
                       }
                     }
                   >
+                    <View
+                      style={
+                        [
+                          {
+                            "backgroundColor": "#ff6b3d",
+                            "borderRadius": 999,
+                            "height": 7,
+                            "width": 7,
+                          },
+                          {
+                            "elevation": 0,
+                            "shadowColor": "#ff6b3d",
+                            "shadowOffset": {
+                              "height": 0,
+                              "width": 0,
+                            },
+                            "shadowOpacity": 0.9,
+                            "shadowRadius": 4,
+                          },
+                          undefined,
+                        ]
+                      }
+                    />
                     <Text
+                      numberOfLines={1}
+                      style={
+                        [
+                          {
+                            "color": "#e8edf4",
+                            "fontFamily": undefined,
+                            "fontSize": 12,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      Living Room
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                      testID="thermostat-readout-10"
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 13,
+                            },
+                            null,
+                            {
+                              "color": "#ff8a5f",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        21.5 → 23.0
+                      </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 13,
+                            },
+                            null,
+                            {
+                              "color": "#9aa6b6",
+                              "fontFamily": "monospace",
+                              "fontSize": 11,
+                              "marginBottom": 2,
+                              "marginLeft": 3,
+                            },
+                          ]
+                        }
+                      >
+                        °C
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
                       style={
                         {
-                          "color": "#ffffff",
-                          "fontSize": 12,
+                          "flex": 1,
                         }
                       }
                     >
+                      <View
+                        accessibilityLabel="heating.current 21.5, heating.target 23.0"
+                        accessibilityRole="progressbar"
+                        accessibilityValue={
+                          {
+                            "max": 100,
+                            "min": 0,
+                            "now": 72,
+                          }
+                        }
+                        accessible={true}
+                        style={
+                          [
+                            {
+                              "borderRadius": 2,
+                              "borderWidth": 1,
+                              "overflow": "hidden",
+                              "width": "100%",
+                            },
+                            {
+                              "backgroundColor": "#111723",
+                              "borderColor": "#1f2733",
+                              "height": 3,
+                            },
+                            undefined,
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            {
+                              "backgroundColor": "#ff6b3d",
+                              "borderRadius": 2,
+                              "bottom": 0,
+                              "left": 0,
+                              "position": "absolute",
+                              "top": 0,
+                              "width": "71.66666666666667%",
+                            }
+                          }
+                        />
+                        <View
+                          style={
+                            {
+                              "backgroundColor": "#e8edf4",
+                              "bottom": -1,
+                              "left": "76.66666666666667%",
+                              "marginLeft": -1,
+                              "opacity": 0.55,
+                              "position": "absolute",
+                              "top": -1,
+                              "width": 2,
+                            }
+                          }
+                        />
+                      </View>
+                    </View>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#ff8a5f",
+                            "fontFamily": "monospace",
+                            "fontSize": 10,
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
                       heating.heating
+                    </Text>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#6b7788",
+                            "fontFamily": "monospace",
+                            "fontSize": 10,
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      Δ +1.5
                     </Text>
                   </View>
                 </View>
               </View>
             </View>
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "gap": 16,
-                  "justifyContent": "space-around",
-                  "marginBottom": 16,
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "alignItems": "center",
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#9ca3af",
-                      "fontSize": 12,
-                      "marginBottom": 4,
-                    }
-                  }
-                >
-                  heating.current
-                </Text>
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "baseline",
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    21.5
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    °C
-                  </Text>
-                </View>
-              </View>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "alignItems": "center",
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#9ca3af",
-                      "fontSize": 12,
-                      "marginBottom": 4,
-                    }
-                  }
-                >
-                  heating.target
-                </Text>
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "baseline",
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    23.0
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    °C
-                  </Text>
-                </View>
-              </View>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "alignItems": "center",
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#9ca3af",
-                      "fontSize": 12,
-                      "marginBottom": 4,
-                    }
-                  }
-                >
-                  heating.difference
-                </Text>
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "baseline",
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#f87171",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    1.5
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    °C
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "center",
-                  "gap": 8,
-                  "marginTop": 16,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="flame"
-              >
-                flame
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#9ca3af",
-                    "fontSize": 14,
-                  }
-                }
-              >
-                heating.heatingActive
-              </Text>
-            </View>
           </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#1e3a8a",
-              "borderRadius": 8,
-              "marginTop": 24,
-              "padding": 12,
-            }
-          }
-        >
           <View
-            className="flex flex-row"
+            accessibilityLabel="heating.autoRefreshInfo"
+            accessibilityRole="alert"
+            accessible={true}
             style={
-              {
-                "alignItems": "center",
-                "gap": 8,
-              }
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#111723",
+                  "borderColor": "#1f2733",
+                  "borderLeftColor": "#38bdf8",
+                },
+                undefined,
+              ]
             }
           >
             <Text
-              accessibilityLabel="information-circle"
+              accessibilityLabel="information-circle-outline"
             >
-              information-circle
+              information-circle-outline
             </Text>
-            <Text
+            <View
               style={
                 {
-                  "color": "#9ca3af",
                   "flex": 1,
-                  "fontSize": 12,
+                  "gap": 2,
                 }
               }
             >
-              heating.autoRefreshInfo
-            </Text>
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                    },
+                    null,
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 12.5,
+                    },
+                  ]
+                }
+              >
+                heating.autoRefreshInfo
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -428,392 +532,496 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#f9fafb",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#f6f7fb",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
+    testID="heating-screen"
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="heating-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            heating.title
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       contentContainerStyle={
         {
-          "paddingHorizontal": 16,
-          "paddingVertical": 16,
+          "flexGrow": 1,
         }
       }
+      keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControlMock
           onRefresh={[Function]}
           refreshing={false}
         />
       }
-      style={{}}
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
     >
       <RCTRefreshControl />
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 4,
-              "marginBottom": 24,
-            }
-          }
-        >
-          <Text
-            accessibilityRole="header"
-            style={
+            [
               {
-                "color": "#1f2937",
-                "fontSize": 36,
-                "fontWeight": "700",
-              }
-            }
-          >
-            heating.title
-          </Text>
-          <Text
-            style={
-              {
-                "color": "#4b5563",
-                "fontSize": 14,
-              }
-            }
-          >
-            heating.subtitle
-          </Text>
-        </View>
-        <View
-          className="flex flex-col"
-          style={
-            {
-              "gap": 16,
-            }
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
             style={
-              {
-                "backgroundColor": "#ffffff",
-                "borderColor": "#e5e7eb",
-                "borderLeftColor": "#ef4444",
-                "borderLeftWidth": 4,
-                "borderRadius": 12,
-                "borderWidth": 1,
-                "elevation": 0,
-                "padding": 16,
-                "shadowColor": "#000000",
-                "shadowOffset": {
-                  "height": 1,
-                  "width": 0,
+              [
+                {
+                  "gap": 8,
                 },
-                "shadowOpacity": 0.11,
-                "shadowRadius": 1.5,
-              }
+                undefined,
+              ]
             }
           >
             <View
-              className="flex flex-row"
               style={
                 {
                   "alignItems": "center",
+                  "flexDirection": "row",
                   "justifyContent": "space-between",
-                  "marginBottom": 16,
                 }
               }
             >
-              <View
-                className="flex flex-col"
+              <Text
                 style={
-                  {
-                    "flex": 1,
-                  }
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                    },
+                    null,
+                    {
+                      "color": "#6b7280",
+                      "fontFamily": "monospace",
+                      "fontSize": 9,
+                      "letterSpacing": 1.4,
+                      "textTransform": "uppercase",
+                    },
+                  ]
                 }
               >
-                <Text
-                  style={
+                Home
+              </Text>
+              <Text
+                style={
+                  [
                     {
-                      "color": "#1f2937",
-                      "fontSize": 16,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  Living Room
-                </Text>
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                    },
+                    null,
+                    {
+                      "color": "#4b5563",
+                      "fontFamily": "monospace",
+                      "fontSize": 9,
+                      "letterSpacing": 1.1,
+                      "textTransform": "uppercase",
+                    },
+                  ]
+                }
+              >
+                heating.heatingCount
+              </Text>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "overflow": "hidden",
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#dce0e8",
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+              testID="heating-devices"
+            >
+              <View
+                accessibilityLabel="Living Room: 21.5 → 23.0 °C"
+                accessible={true}
+                style={
+                  [
+                    {
+                      "paddingHorizontal": 12,
+                      "paddingVertical": 10,
+                    },
+                    {
+                      "borderBottomColor": "#dce0e8",
+                      "borderBottomWidth": 1,
+                    },
+                    undefined,
+                  ]
+                }
+              >
                 <View
-                  className="flex flex-row"
                   style={
                     {
                       "gap": 8,
-                      "marginTop": 4,
                     }
                   }
                 >
                   <View
                     style={
                       {
-                        "alignSelf": "flex-start",
-                        "backgroundColor": "#ef4444",
-                        "borderColor": "#ef4444",
-                        "borderRadius": 6,
-                        "borderWidth": 1,
-                        "color": "#ffffff",
-                        "paddingBottom": 4,
-                        "paddingLeft": 8,
-                        "paddingRight": 8,
-                        "paddingTop": 4,
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
                       }
                     }
                   >
+                    <View
+                      style={
+                        [
+                          {
+                            "backgroundColor": "#e85223",
+                            "borderRadius": 999,
+                            "height": 7,
+                            "width": 7,
+                          },
+                          {
+                            "elevation": 0,
+                            "shadowColor": "#e85223",
+                            "shadowOffset": {
+                              "height": 0,
+                              "width": 0,
+                            },
+                            "shadowOpacity": 0.9,
+                            "shadowRadius": 4,
+                          },
+                          undefined,
+                        ]
+                      }
+                    />
                     <Text
+                      numberOfLines={1}
+                      style={
+                        [
+                          {
+                            "color": "#111827",
+                            "fontFamily": undefined,
+                            "fontSize": 12,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      Living Room
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                      testID="thermostat-readout-10"
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 13,
+                            },
+                            null,
+                            {
+                              "color": "#c1411c",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        21.5 → 23.0
+                      </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 13,
+                            },
+                            null,
+                            {
+                              "color": "#4b5563",
+                              "fontFamily": "monospace",
+                              "fontSize": 11,
+                              "marginBottom": 2,
+                              "marginLeft": 3,
+                            },
+                          ]
+                        }
+                      >
+                        °C
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
                       style={
                         {
-                          "color": "#ffffff",
-                          "fontSize": 12,
+                          "flex": 1,
                         }
                       }
                     >
+                      <View
+                        accessibilityLabel="heating.current 21.5, heating.target 23.0"
+                        accessibilityRole="progressbar"
+                        accessibilityValue={
+                          {
+                            "max": 100,
+                            "min": 0,
+                            "now": 72,
+                          }
+                        }
+                        accessible={true}
+                        style={
+                          [
+                            {
+                              "borderRadius": 2,
+                              "borderWidth": 1,
+                              "overflow": "hidden",
+                              "width": "100%",
+                            },
+                            {
+                              "backgroundColor": "#f1f3f7",
+                              "borderColor": "#dce0e8",
+                              "height": 3,
+                            },
+                            undefined,
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            {
+                              "backgroundColor": "#e85223",
+                              "borderRadius": 2,
+                              "bottom": 0,
+                              "left": 0,
+                              "position": "absolute",
+                              "top": 0,
+                              "width": "71.66666666666667%",
+                            }
+                          }
+                        />
+                        <View
+                          style={
+                            {
+                              "backgroundColor": "#111827",
+                              "bottom": -1,
+                              "left": "76.66666666666667%",
+                              "marginLeft": -1,
+                              "opacity": 0.55,
+                              "position": "absolute",
+                              "top": -1,
+                              "width": 2,
+                            }
+                          }
+                        />
+                      </View>
+                    </View>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#c1411c",
+                            "fontFamily": "monospace",
+                            "fontSize": 10,
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
                       heating.heating
+                    </Text>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#6b7280",
+                            "fontFamily": "monospace",
+                            "fontSize": 10,
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      Δ +1.5
                     </Text>
                   </View>
                 </View>
               </View>
             </View>
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "gap": 16,
-                  "justifyContent": "space-around",
-                  "marginBottom": 16,
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "alignItems": "center",
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#4b5563",
-                      "fontSize": 12,
-                      "marginBottom": 4,
-                    }
-                  }
-                >
-                  heating.current
-                </Text>
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "baseline",
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    21.5
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    °C
-                  </Text>
-                </View>
-              </View>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "alignItems": "center",
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#4b5563",
-                      "fontSize": 12,
-                      "marginBottom": 4,
-                    }
-                  }
-                >
-                  heating.target
-                </Text>
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "baseline",
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    23.0
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    °C
-                  </Text>
-                </View>
-              </View>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "alignItems": "center",
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#4b5563",
-                      "fontSize": 12,
-                      "marginBottom": 4,
-                    }
-                  }
-                >
-                  heating.difference
-                </Text>
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "baseline",
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#ef4444",
-                        "fontSize": 24,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    1.5
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    °C
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "center",
-                  "gap": 8,
-                  "marginTop": 16,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="flame"
-              >
-                flame
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#4b5563",
-                    "fontSize": 14,
-                  }
-                }
-              >
-                heating.heatingActive
-              </Text>
-            </View>
           </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#eff6ff",
-              "borderRadius": 8,
-              "marginTop": 24,
-              "padding": 12,
-            }
-          }
-        >
           <View
-            className="flex flex-row"
+            accessibilityLabel="heating.autoRefreshInfo"
+            accessibilityRole="alert"
+            accessible={true}
             style={
-              {
-                "alignItems": "center",
-                "gap": 8,
-              }
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#f1f3f7",
+                  "borderColor": "#dce0e8",
+                  "borderLeftColor": "#0284c7",
+                },
+                undefined,
+              ]
             }
           >
             <Text
-              accessibilityLabel="information-circle"
+              accessibilityLabel="information-circle-outline"
             >
-              information-circle
+              information-circle-outline
             </Text>
-            <Text
+            <View
               style={
                 {
-                  "color": "#4b5563",
                   "flex": 1,
-                  "fontSize": 12,
+                  "gap": 2,
                 }
               }
             >
-              heating.autoRefreshInfo
-            </Text>
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                    },
+                    null,
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 12.5,
+                    },
+                  ]
+                }
+              >
+                heating.autoRefreshInfo
+              </Text>
+            </View>
           </View>
         </View>
       </View>

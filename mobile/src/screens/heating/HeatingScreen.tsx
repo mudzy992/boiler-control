@@ -1,28 +1,45 @@
-import React, { useState } from 'react';
-import { RefreshControl } from 'react-native';
+import React from 'react';
+import { RefreshControl, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Box,
-  VStack,
-  HStack,
-  Heading,
-  Text,
-  useColorModeValue,
-  Center,
-  ScrollView,
-  Icon,
-  Badge,
-  Spinner,
-  useToast,
-  Divider,
-} from '../../components/ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAppState } from '../../hooks/useAppState';
 import { dashboardRefetchInterval } from '../../services/query/polling';
 import { DASHBOARD_QUERY_KEY } from '../../services/query/keys';
+import {
+  EmptyState,
+  GaugeBar,
+  InlineBanner,
+  Led,
+  MonoLabel,
+  MonoMeta,
+  Panel,
+  PanelRow,
+  Readout,
+  Screen,
+  ScreenBody,
+  ScreenHeader,
+  Section,
+  SkeletonRows,
+  Text,
+} from '../../ui';
+import { useToast } from '../../components/ui/nativewind';
+import { space } from '../../theme/tokens';
+
+/**
+ * Grijanje — red po uređaju (prototip §03).
+ *
+ * Prije: kartica po termostatu sa četiri velika broja (trenutna, ciljna, razlika,
+ * status) i puna obojena „ZAGRIJAVA" značka — tri termostata su trošila ~630px, a
+ * najjači element na ekranu je bila riječ, ne broj.
+ *
+ * Sada: jedan red = jedan uređaj. „21.4 → 22.5" u mono brojevima (mjerena je
+ * velika, izvedena mala), gauge ka cilju, a boja se troši samo kad uređaj
+ * stvarno grije.
+ */
 
 interface Thermostat {
   id: number;
@@ -34,11 +51,11 @@ interface Thermostat {
 }
 
 interface DashboardData {
-  homes: Array<{
+  homes: {
     id: number;
     name: string;
     thermostats?: Thermostat[];
-  }>;
+  }[];
 }
 
 interface HeatingEvent {
@@ -53,24 +70,96 @@ interface HeatingEvent {
   isAnomaly: boolean;
 }
 
-const HeatingScreenContent = () => {
+const startOfDay = (iso: string) => {
+  const date = new Date(iso);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+};
+
+const isToday = (iso: string) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return startOfDay(iso) === today.getTime();
+};
+
+/** „1h 42m" — trajanje između dva ISO vremena (otvoren događaj traje do sada). */
+function formatDuration(startIso: string, endIso: string | null): string {
+  const start = new Date(startIso).getTime();
+  const end = endIso ? new Date(endIso).getTime() : Date.now();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return '—';
+  const minutes = Math.max(0, Math.floor((end - start) / 60000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest > 0 ? `${hours}h ${rest}m` : `${hours}h`;
+}
+
+const formatTime = (iso: string, locale: string) =>
+  new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+
+function DeviceRow({
+  thermostat,
+  isHeating,
+}: {
+  thermostat: Thermostat;
+  isHeating: boolean;
+}) {
+  const { t } = useTranslation();
+  const current = Number(thermostat.currentTemp ?? 0);
+  const target = Number(thermostat.targetTemp ?? 0);
+  const gap = target - current;
+
+  return (
+    <PanelRow
+      accessibilityLabel={`${thermostat.alias ?? thermostat.name ?? ''}: ${current.toFixed(1)} → ${target.toFixed(1)} °C`}
+    >
+      <View style={{ gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          <Led state={isHeating ? 'on' : 'off'} />
+          <Text size="body" weight="medium" style={{ flex: 1 }} numberOfLines={1}>
+            {thermostat.alias || thermostat.name || `#${thermostat.id}`}
+          </Text>
+          <Readout
+            value={`${current.toFixed(1)} → ${target.toFixed(1)}`}
+            unit="°C"
+            size="md"
+            tone={isHeating ? 'signal' : 'ink'}
+            testID={`thermostat-readout-${thermostat.id}`}
+          />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          <View style={{ flex: 1 }}>
+            <GaugeBar
+              value={current / 30}
+              target={target / 30}
+              tone={isHeating ? 'signal' : 'muted'}
+              height={3}
+              accessibilityLabel={`${t('heating.current')} ${current.toFixed(
+                1,
+              )}, ${t('heating.target')} ${target.toFixed(1)}`}
+            />
+          </View>
+          <MonoMeta tone={isHeating ? 'signal' : 'dim'}>
+            {isHeating ? t('heating.heating') : t('heating.standbyShort')}
+          </MonoMeta>
+          <MonoMeta tone={Math.abs(gap) < 0.05 ? 'ok' : 'dim'}>
+            {`Δ ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}`}
+          </MonoMeta>
+        </View>
+      </View>
+    </PanelRow>
+  );
+}
+
+export const HeatingScreen = () => {
+  const { t, i18n } = useTranslation();
+  const navigation = useNavigation();
   const toast = useToast();
   const { showError } = useErrorHandler();
-  const { t } = useTranslation();
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
   const appState = useAppState();
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
-  const cardBg = useColorModeValue('white', 'dark.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const accentColor = useColorModeValue('brand.500', 'brand.400');
-  const heatingActiveColor = useColorModeValue('red.500', 'red.400');
-  const heatingInactiveColor = useColorModeValue('blue.500', 'blue.400');
-  const borderColor = useColorModeValue('gray.200', 'dark.700');
-  const infoBoxBg = useColorModeValue('blue.50', 'blue.900');
-
-  // Fetch live dashboard data with heating status
   const {
     data: dashboardData,
     isLoading,
@@ -80,12 +169,11 @@ const HeatingScreenContent = () => {
   } = useQuery({
     queryKey: DASHBOARD_QUERY_KEY,
     queryFn: () => apiClient.getDashboard() as Promise<DashboardData>,
-    staleTime: 1000 * 60 * 2, // Stale after 2 minutes
+    staleTime: 1000 * 60 * 2,
     // MO2-13: one dashboard cache entry; no polling while backgrounded.
     refetchInterval: dashboardRefetchInterval(appState),
   });
 
-  // Fetch heating events
   const {
     data: heatingEventsData,
     isLoading: eventsLoading,
@@ -93,423 +181,206 @@ const HeatingScreenContent = () => {
   } = useQuery({
     queryKey: ['heating-events'],
     queryFn: () => apiClient.getHeatingEvents({ limit: 20 }),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Get data early to use in hooks
-  const homes = dashboardData?.homes || [];
-  const currentHome = homes[0];
-  const thermostats = currentHome?.thermostats || [];
-  const allHeatingEvents = Array.isArray(heatingEventsData)
-    ? heatingEventsData
-    : (heatingEventsData as any)?.events || [];
-
-  // Calculate isHeating for each thermostat based on latest heating event
-  const getIsHeatingForThermostat = (thermostatId: number): boolean => {
-    if (!allHeatingEvents || allHeatingEvents.length === 0) return false;
-
-    // Filter events for this thermostat
-    const thermostatEvents = allHeatingEvents.filter(
-      (event: HeatingEvent) => event.deviceId === thermostatId
-    );
-
-    if (thermostatEvents.length === 0) return false;
-
-    // Sort by timestampStart descending to get the latest event
-    const sortedEvents = [...thermostatEvents].sort(
-      (a, b) => new Date(b.timestampStart).getTime() - new Date(a.timestampStart).getTime()
-    );
-
-    const latestEvent = sortedEvents[0];
-
-    // Check if the latest event is still ongoing (no timestampEnd) and has HEATING_ON action
-    return !latestEvent.timestampEnd && latestEvent.hvacAction === 'HEATING_ON';
-  };
-
-  // Enhance thermostats with correct isHeating status
-  const enhancedThermostats = thermostats.map((thermostat) => ({
-    ...thermostat,
-    name: thermostat.alias || thermostat.name || `Thermostat ${thermostat.id}`,
-    currentTemp: Number(thermostat.currentTemp ?? 0),
-    targetTemp: Number(thermostat.targetTemp ?? 0),
-    isHeating:
-      typeof thermostat.isHeatingNow === 'boolean'
-        ? thermostat.isHeatingNow
-        : getIsHeatingForThermostat(thermostat.id),
-  }));
-
-  // Filter events to only show today's events
-  const getTodayEvents = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return allHeatingEvents.filter((event: HeatingEvent) => {
-      const eventDate = new Date(event.timestampStart);
-      eventDate.setHours(0, 0, 0, 0);
-      return eventDate.getTime() === today.getTime();
-    });
-  };
-
-  const heatingEvents = getTodayEvents();
-
-  // Handle query errors outside the query config to maintain hook order
   React.useEffect(() => {
-    if (queryError) {
-      showError(queryError, t('heating.loadError') || 'Failed to load heating data');
-    }
+    if (queryError) showError(queryError, t('heating.loadError'));
   }, [queryError, showError, t]);
 
-  const handleRefresh = async () => {
+  const homes = dashboardData?.homes ?? [];
+  const currentHome = homes[0];
+  const thermostats = currentHome?.thermostats ?? [];
+  const allEvents: HeatingEvent[] = Array.isArray(heatingEventsData)
+    ? (heatingEventsData as HeatingEvent[])
+    : ((heatingEventsData as { events?: HeatingEvent[] })?.events ?? []);
+
+  /**
+   * Status grijanja dolazi iz NAJNOVIJEG događaja po uređaju: otvoren događaj sa
+   * `HEATING_ON` znači da uređaj grije. `isHeatingNow` s backenda, kad postoji,
+   * ima prednost.
+   */
+  const heatingByDevice = React.useMemo(() => {
+    const map = new Map<number, boolean>();
+    allEvents.forEach((event) => {
+      if (event.deviceId == null) return;
+      const previous = allEvents
+        .filter((candidate) => candidate.deviceId === event.deviceId)
+        .sort(
+          (a, b) => new Date(b.timestampStart).getTime() - new Date(a.timestampStart).getTime(),
+        )[0];
+      if (previous?.id !== event.id) return;
+      map.set(event.deviceId, !previous.timestampEnd && previous.hvacAction === 'HEATING_ON');
+    });
+    return map;
+  }, [allEvents]);
+
+  const todayEvents = React.useMemo(
+    () => allEvents.filter((event) => isToday(event.timestampStart)),
+    [allEvents],
+  );
+
+  const totalHeatingMinutes = React.useMemo(
+    () =>
+      todayEvents.reduce((sum, event) => {
+        const start = new Date(event.timestampStart).getTime();
+        const end = event.timestampEnd ? new Date(event.timestampEnd).getTime() : Date.now();
+        return sum + Math.max(0, (end - start) / 60000);
+      }, 0),
+    [todayEvents],
+  );
+
+  const handleRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
       await Promise.all([refetch(), refetchEvents()]);
-      toast.show({
-        render: () => (
-          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('heating.updated')}
-            </Text>
-          </Box>
-        ),
-        duration: 2000,
-        placement: 'top',
-      });
-    } catch (error) {
-      console.error('Refresh error:', error);
+      toast.show({ description: t('heating.updated'), placement: 'top' });
+    } catch (refreshError) {
+      console.error('Refresh error:', refreshError);
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [refetch, refetchEvents, t, toast]);
+
+  const header = <ScreenHeader title={t('heating.title')} testID="heating-header" />;
 
   if (isLoading) {
     return (
-      <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
-        <Spinner size="lg" color={accentColor} />
-        <Text mt={3} color={subtextColor}>
-          {t('heating.loading')}
-        </Text>
-      </Box>
+      <Screen edges={['top']}>
+        {header}
+        <ScreenBody>
+          <SkeletonRows count={3} />
+          <SkeletonRows count={2} />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (homes.length === 0) {
     return (
-      <Box flex={1} bg={bgColor} safeArea p={4} justifyContent="center">
-        <Center>
-          <Text color={subtextColor} textAlign="center">
-            {t('heating.noHomes')}
-          </Text>
-        </Center>
-      </Box>
+      <Screen edges={['top']}>
+        {header}
+        <ScreenBody>
+          <EmptyState
+            title={t('heating.noHomes')}
+            message={t('heating.noHomesHint')}
+            action={{
+              label: t('settings.manageHomes'),
+              onPress: () => (navigation as any).navigate('Settings', {
+                screen: 'HomeManagement',
+              }),
+            }}
+          />
+        </ScreenBody>
+      </Screen>
     );
   }
 
-  // Helper functions for heating events
-  const formatEventTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) return t('heatingEvents.today');
-    if (date.toDateString() === yesterday.toDateString()) return t('heatingEvents.yesterday');
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const calculateDuration = (start: string, end: string | null) => {
-    const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
-    const minutes = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60));
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
-  };
+  const activeDevices = thermostats.filter((thermostat) =>
+    thermostat.isHeatingNow === true
+      ? true
+      : heatingByDevice.get(thermostat.id) === true,
+  ).length;
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
-      <ScrollView
+    <Screen edges={['top']} testID="heating-screen">
+      {header}
+      <ScreenBody
         refreshControl={
           <RefreshControl refreshing={refreshing || isRefetching} onRefresh={handleRefresh} />
         }
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
       >
-        {/* Header */}
-        <VStack space={1} mb={6}>
-          <Heading color={textColor} size="2xl" fontWeight="700">
-            {t('heating.title') || 'Heating'}
-          </Heading>
-          <Text fontSize="sm" color={subtextColor}>
-            {t('heating.subtitle') || 'Monitor your heating system and thermostat status'}
-          </Text>
-        </VStack>
-
-        {/* Thermostats Status */}
-        <VStack space={4}>
-          {enhancedThermostats.length > 0 ? (
-            enhancedThermostats.map((thermostat) => (
-              <Box
-                key={thermostat.id}
-                bg={cardBg}
-                rounded="xl"
-                p={4}
-                borderLeftWidth={4}
-                borderLeftColor={thermostat.isHeating ? heatingActiveColor : heatingInactiveColor}
-                shadow={1}
-                borderColor={borderColor}
-                borderWidth={1}
-              >
-                <HStack justifyContent="space-between" alignItems="center" mb={4}>
-                  <VStack flex={1}>
-                    <Text fontWeight="bold" color={textColor} fontSize="md">
-                      {thermostat.name}
-                    </Text>
-                    <HStack space={2} mt={1}>
-                      <Badge colorScheme={thermostat.isHeating ? 'error' : 'info'} variant="solid">
-                        <Text color="white" fontSize="xs">
-                          {thermostat.isHeating ? t('heating.heating') : t('heating.idle')}
-                        </Text>
-                      </Badge>
-                    </HStack>
-                  </VStack>
-                </HStack>
-
-                {/* Temperature Display Grid */}
-                <HStack justifyContent="space-around" space={4} mb={4}>
-                  {/* Current Temperature */}
-                  <VStack alignItems="center" flex={1}>
-                    <Text color={subtextColor} fontSize="xs" mb={1}>
-                      {t('heating.current')}
-                    </Text>
-                    <HStack alignItems="baseline">
-                      <Text color={textColor} fontSize="2xl" fontWeight="bold">
-                        {thermostat.currentTemp.toFixed(1)}
-                      </Text>
-                      <Text color={subtextColor} fontSize="sm">
-                        °C
-                      </Text>
-                    </HStack>
-                  </VStack>
-
-                  {/* Target Temperature */}
-                  <VStack alignItems="center" flex={1}>
-                    <Text color={subtextColor} fontSize="xs" mb={1}>
-                      {t('heating.target')}
-                    </Text>
-                    <HStack alignItems="baseline">
-                      <Text color={textColor} fontSize="2xl" fontWeight="bold">
-                        {thermostat.targetTemp.toFixed(1)}
-                      </Text>
-                      <Text color={subtextColor} fontSize="sm">
-                        °C
-                      </Text>
-                    </HStack>
-                  </VStack>
-
-                  {/* Difference */}
-                  <VStack alignItems="center" flex={1}>
-                    <Text color={subtextColor} fontSize="xs" mb={1}>
-                      {t('heating.difference')}
-                    </Text>
-                    <HStack alignItems="baseline">
-                      <Text
-                        color={
-                          thermostat.currentTemp < thermostat.targetTemp
-                            ? heatingActiveColor
-                            : heatingInactiveColor
-                        }
-                        fontSize="2xl"
-                        fontWeight="bold"
-                      >
-                        {(thermostat.targetTemp - thermostat.currentTemp).toFixed(1)}
-                      </Text>
-                      <Text color={subtextColor} fontSize="sm">
-                        °C
-                      </Text>
-                    </HStack>
-                  </VStack>
-                </HStack>
-
-                {/* Status Indicator */}
-                <HStack mt={4} alignItems="center" space={2}>
-                  <Icon
-                    as={Ionicons}
-                    name={thermostat.isHeating ? 'flame' : 'water'}
-                    size={5}
-                    color={thermostat.isHeating ? heatingActiveColor : heatingInactiveColor}
-                  />
-                  <Text color={subtextColor} fontSize="sm">
-                    {thermostat.isHeating ? t('heating.heatingActive') : t('heating.standby')}
-                  </Text>
-                </HStack>
-              </Box>
-            ))
-          ) : (
-            <Center p={8}>
-              <Text color={subtextColor}>{t('heating.noThermostats')}</Text>
-            </Center>
-          )}
-        </VStack>
-
-        {/* Auto-refresh Info */}
-        <Box bg={infoBoxBg} rounded="lg" p={3} mt={6}>
-          <HStack space={2} alignItems="center">
-            <Icon as={Ionicons} name="information-circle" size={5} color={accentColor} />
-            <Text color={subtextColor} fontSize="xs" flex={1}>
-              {t('heating.autoRefreshInfo')}
-            </Text>
-          </HStack>
-        </Box>
-
-        {/* Recent Heating Sessions */}
-        {heatingEvents.length > 0 && (
-          <VStack space={3} mt={6}>
-            <Divider />
-            <Heading color={textColor} size="md" mt={2}>
-              {t('heating.recentSessions') || 'Recent Heating Sessions'}
-            </Heading>
-            <Text color={subtextColor} fontSize="xs">
-              {t('heating.sessionsDesc') || 'History of heating events and cycles'}
-            </Text>
-
-            {eventsLoading ? (
-              <Center py={8}>
-                <Spinner size="sm" color={accentColor} />
-              </Center>
+        <Section
+          label={currentHome?.name ?? t('heating.title')}
+          meta={
+            thermostats.length > 0
+              ? t('heating.heatingCount', {
+                  active: activeDevices,
+                  total: thermostats.length,
+                })
+              : undefined
+          }
+        >
+          <Panel variant="flush" padded={false} testID="heating-devices">
+            {thermostats.length === 0 ? (
+              <PanelRow divider={false}>
+                <Text tone="muted" size="body">
+                  {t('heating.noThermostats')}
+                </Text>
+              </PanelRow>
             ) : (
-              <VStack space={3} mt={2}>
-                {heatingEvents.map((event: HeatingEvent) => {
-                  const isActive = !event.timestampEnd;
-                  const duration = calculateDuration(event.timestampStart, event.timestampEnd);
-                  const tempChange = (event.roomCurrentTemp - event.roomTargetTemp).toFixed(1);
-                  const isHeating = event.hvacAction.includes('HEATING_ON');
-
-                  return (
-                    <Box
-                      key={event.id}
-                      bg={cardBg}
-                      rounded="lg"
-                      p={4}
-                      borderLeftWidth={3}
-                      borderLeftColor={
-                        event.isAnomaly
-                          ? 'orange.500'
-                          : isHeating
-                            ? heatingActiveColor
-                            : heatingInactiveColor
-                      }
-                      shadow={1}
-                      borderColor={borderColor}
-                      borderWidth={1}
-                    >
-                      {/* Header */}
-                      <HStack justifyContent="space-between" alignItems="flex-start" mb={3}>
-                        <VStack flex={1}>
-                          <HStack space={2} alignItems="center">
-                            <Icon
-                              as={Ionicons}
-                              name={isHeating ? 'flame' : 'water'}
-                              size={4}
-                              color={isHeating ? heatingActiveColor : heatingInactiveColor}
-                            />
-                            <Text fontWeight="600" color={textColor} fontSize="sm">
-                              {formatEventDate(event.timestampStart)}
-                            </Text>
-                          </HStack>
-                          <Text color={subtextColor} fontSize="xs" mt={1}>
-                            {formatEventTime(event.timestampStart)} -{' '}
-                            {event.timestampEnd
-                              ? formatEventTime(event.timestampEnd)
-                              : t('heatingEvents.active')}
-                          </Text>
-                        </VStack>
-                        <HStack space={2}>
-                          {isActive && (
-                            <Badge colorScheme="error" variant="solid" rounded="md">
-                              <Text fontSize="2xs" color="white">
-                                {t('heatingEvents.active')}
-                              </Text>
-                            </Badge>
-                          )}
-                          {event.isAnomaly && (
-                            <Badge colorScheme="warning" variant="solid" rounded="md">
-                              <Text fontSize="2xs" color="white">
-                                {t('heatingEvents.anomaly')}
-                              </Text>
-                            </Badge>
-                          )}
-                        </HStack>
-                      </HStack>
-
-                      {/* Stats Grid */}
-                      <HStack justifyContent="space-between" space={2}>
-                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
-                          <Text color={subtextColor} fontSize="2xs">
-                            {t('heatingEvents.duration')}
-                          </Text>
-                          <Text color={textColor} fontSize="sm" fontWeight="600">
-                            {duration}
-                          </Text>
-                        </VStack>
-                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
-                          <Text color={subtextColor} fontSize="2xs">
-                            {t('heatingEvents.current')}
-                          </Text>
-                          <Text color={textColor} fontSize="sm" fontWeight="600">
-                            {event.roomCurrentTemp.toFixed(1)}°C
-                          </Text>
-                        </VStack>
-                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
-                          <Text color={subtextColor} fontSize="2xs">
-                            {t('heatingEvents.target')}
-                          </Text>
-                          <Text color={textColor} fontSize="sm" fontWeight="600">
-                            {event.roomTargetTemp.toFixed(1)}°C
-                          </Text>
-                        </VStack>
-                        <VStack flex={1} bg={infoBoxBg} rounded="md" p={2}>
-                          <Text color={subtextColor} fontSize="2xs">
-                            {t('heatingEvents.diff')}
-                          </Text>
-                          <Text
-                            color={parseFloat(tempChange) < 0 ? heatingActiveColor : 'green.500'}
-                            fontSize="sm"
-                            fontWeight="600"
-                          >
-                            {tempChange}°C
-                          </Text>
-                        </VStack>
-                      </HStack>
-
-                      {/* Source */}
-                      <HStack mt={2} space={1} alignItems="center">
-                        <Icon
-                          as={Ionicons}
-                          name="information-circle-outline"
-                          size={3}
-                          color={subtextColor}
-                        />
-                        <Text color={subtextColor} fontSize="2xs">
-                          {t('heatingEvents.source', {
-                            source: event.source || t('heatingEvents.system'),
-                          })}
-                        </Text>
-                      </HStack>
-                    </Box>
-                  );
-                })}
-              </VStack>
+              thermostats.map((thermostat) => (
+                <DeviceRow
+                  key={thermostat.id}
+                  thermostat={thermostat}
+                  isHeating={
+                    thermostat.isHeatingNow === true
+                      ? true
+                      : heatingByDevice.get(thermostat.id) === true
+                  }
+                />
+              ))
             )}
-          </VStack>
+          </Panel>
+        </Section>
+
+        {todayEvents.length > 0 ? (
+          <Section
+            label={t('heating.today')}
+            meta={
+              totalHeatingMinutes > 0
+                ? t('heating.sessionsToday', {
+                    count: todayEvents.length,
+                    duration: formatDuration(new Date(Date.now() - totalHeatingMinutes * 60000).toISOString(), null),
+                  })
+                : undefined
+            }
+          >
+            <Panel variant="flush" padded={false} testID="heating-events">
+              {todayEvents.map((event, index) => {
+                const heating = event.hvacAction.includes('HEATING_ON');
+                return (
+                  <PanelRow
+                    key={event.id}
+                    divider={index < todayEvents.length - 1}
+                    accessibilityLabel={t('heatingEvents.source', {
+                      source: t('heatingEvents.system'),
+                    })}
+                  >
+                    <View style={{ gap: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                        <Led state={event.isAnomaly ? 'warn' : heating ? 'on' : 'off'} />
+                        <Text size="body" weight="medium" style={{ flex: 1 }} numberOfLines={1}>
+                          {`${formatTime(event.timestampStart, i18n.language)} → ${
+                            event.timestampEnd
+                              ? formatTime(event.timestampEnd, i18n.language)
+                              : t('heatingEvents.active')
+                          }`}
+                        </Text>
+                        <MonoMeta>
+                          {`${event.roomCurrentTemp.toFixed(1)} → ${event.roomTargetTemp.toFixed(1)}`}
+                        </MonoMeta>
+                        <MonoLabel tone={heating ? 'signal' : 'dim'}>
+                          {formatDuration(event.timestampStart, event.timestampEnd)}
+                        </MonoLabel>
+                      </View>
+                      <MonoMeta>
+                        {t('heatingEvents.source', {
+                          source: event.source || t('heatingEvents.system'),
+                        })}
+                      </MonoMeta>
+                    </View>
+                  </PanelRow>
+                );
+              })}
+            </Panel>
+          </Section>
+        ) : (
+          <InlineBanner tone="info" title={t('heating.autoRefreshInfo')} />
         )}
-      </ScrollView>
-    </Box>
+
+        {eventsLoading ? <SkeletonRows count={2} /> : null}
+      </ScreenBody>
+    </Screen>
   );
 };
-
-export const HeatingScreen = HeatingScreenContent;

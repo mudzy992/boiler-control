@@ -1,57 +1,81 @@
 import React from 'react';
-import { RefreshControl } from 'react-native';
-import {
-  Box,
-  VStack,
-  Heading,
-  Text,
-  useColorModeValue,
-  Spinner,
-  Center,
-  ScrollView,
-  HStack,
-  Pressable,
-  Icon,
-  useToast,
-} from '../../components/ui/nativewind';
+import { RefreshControl, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+
 import { getDashboard } from '../../api/dashboard.api';
-import { useErrorHandler } from '../../services/api/error.handler';
-import { HealthScoreCard } from '../../components/HealthScoreCard';
-import { WeatherCard } from '../../components/WeatherCard';
-import { WeatherV2Card } from '../../components/weather/WeatherV2Card';
-import { WEATHER_UI_V2 } from '../../config/weather.config';
-import { BoilerStatusCard } from '../../components/BoilerStatusCard';
-import { ThermostatCard } from '../../components/ThermostatCard';
-import { AlertsCard } from '../../components/AlertsCard';
-import { RecommendationBreakdown } from '../../components/RecommendationBreakdown';
-import { useTranslation } from '../../hooks/useTranslation';
-import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { apiClient } from '../../services/api/client';
-import { FormInput } from '../../components/FormInput';
+import { useErrorHandler } from '../../services/api/error.handler';
+import { useTranslation } from '../../hooks/useTranslation';
+import {
+  Button,
+  GaugeBar,
+  InlineBanner,
+  Kpi,
+  Led,
+  MonoLabel,
+  MonoMeta,
+  Panel,
+  PanelRow,
+  Readout,
+  Screen,
+  ScreenBody,
+  ScreenHeader,
+  Section,
+  Sheet,
+  Skeleton,
+  StatusDot,
+  Text,
+} from '../../ui';
+import { useToast } from '../../components/ui/nativewind';
+import { space } from '../../theme/tokens';
 import { DASHBOARD_QUERY_KEY, DASHBOARD_HEALTH_QUERY_KEY } from '../../services/query/keys';
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
   isWithinCurrentFlowTempRange,
 } from '../../constants/boilerLimits';
+import { AlertsCard } from '../../components/AlertsCard';
+import { RecommendationBreakdown } from '../../components/RecommendationBreakdown';
+import { WeatherV2Card } from '../../components/weather/WeatherV2Card';
+import { TemperatureField, WeatherRow } from '../../components/WeatherRow';
+import { WEATHER_UI_V2 } from '../../config/weather.config';
 
-const DashboardScreenContent = () => {
+/**
+ * Početna — instrument panel (prototip §02).
+ *
+ * Prije: osam kartica jedna pod drugom, svaka sa sjenom i svojim akcentom
+ * (narandžasta akcija + plava „preporučeno" + zelena „stvarno"), pa korisnik ne
+ * zna koji je broj glavni; zdravlje sistema i status kotla bili su dvije velike
+ * kartice sa dva velika broja koja se takmiče za pažnju.
+ *
+ * Sada: jedan hero (polazna voda) + tri KPI pločice + liste redova. Nema sjena —
+ * dubinu nosi hairline ivica, a akcent se troši samo na akciju i živo stanje.
+ */
+
+/** „1h 12m" iz ISO početka grijanja. */
+function formatDuration(startIso: string): string {
+  const start = new Date(startIso).getTime();
+  if (!Number.isFinite(start)) return '—';
+  const minutes = Math.max(0, Math.floor((Date.now() - start) / 60000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${String(minutes % 60).padStart(2, '0')}m`;
+}
+
+const scale = (value: number) =>
+  (value - MIN_CURRENT_FLOW_TEMP) / (MAX_CURRENT_FLOW_TEMP - MIN_CURRENT_FLOW_TEMP);
+
+export const DashboardScreen = () => {
   const { t, i18n } = useTranslation();
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const mutedColor = useColorModeValue('gray.600', 'gray.400');
-  const headerBtnBg = useColorModeValue('gray.100', 'gray.700');
-  const additionalHomesBg = useColorModeValue('blue.100', 'blue.900');
-  const sheetCancelBg = useColorModeValue('gray.200', 'gray.700');
   const navigation = useNavigation();
   const { showError } = useErrorHandler();
   const toast = useToast();
   const queryClient = useQueryClient();
+
   const [showSetTempSheet, setShowSetTempSheet] = React.useState(false);
   const [currentTempInput, setCurrentTempInput] = React.useState('');
+  const [tempError, setTempError] = React.useState<string | null>(null);
 
   const {
     data: dashboardData,
@@ -63,8 +87,8 @@ const DashboardScreenContent = () => {
   } = useQuery({
     queryKey: DASHBOARD_QUERY_KEY,
     queryFn: getDashboard,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
   });
 
   // MO2-12: health score and alerts are computed by the backend, not here.
@@ -74,23 +98,16 @@ const DashboardScreenContent = () => {
     staleTime: 1000 * 60,
   });
 
-  // Handle query errors outside the query config to maintain hook order
   React.useEffect(() => {
-    if (error) {
-      showError(error, t('dashboard.loadError'));
-    }
+    if (error) showError(error, t('dashboard.loadError'));
   }, [error, showError, t]);
 
   React.useEffect(() => {
-    if (healthQuery.error) {
-      showError(healthQuery.error, t('dashboard.loadError'));
-    }
+    if (healthQuery.error) showError(healthQuery.error, t('dashboard.loadError'));
   }, [healthQuery.error, showError, t]);
 
   const setCurrentTempMutation = useMutation({
-    mutationFn: async (temp: number) => {
-      return await apiClient.setBoilerCurrentTemp(temp);
-    },
+    mutationFn: async (temp: number) => apiClient.setBoilerCurrentTemp(temp),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_KEY }),
@@ -98,22 +115,20 @@ const DashboardScreenContent = () => {
         queryClient.invalidateQueries({ queryKey: ['gas-analysis'] }),
       ]);
       setShowSetTempSheet(false);
-      toast.show({
-        render: () => (
-          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('boiler.currentTempUpdated')}
-            </Text>
-          </Box>
-        ),
-        duration: 2000,
-        placement: 'top',
-      });
+      // UX-15: jedna forma potvrde kroz aplikaciju — `toast.show`, ne ručno
+      // sastavljena zelena kutija po ekranu.
+      toast.show({ description: t('boiler.currentTempUpdated'), placement: 'top' });
     },
     onError: (mutationError) => {
       showError(mutationError, t('boiler.currentTempUpdateError'));
     },
   });
+
+  const refreshAll = React.useCallback(() => {
+    void refetch();
+    void healthQuery.refetch();
+    void queryClient.invalidateQueries({ queryKey: ['weather-v2'] });
+  }, [healthQuery, queryClient, refetch]);
 
   const openSetCurrentTempSheet = React.useCallback(() => {
     const boiler = dashboardData?.system?.boiler;
@@ -124,303 +139,405 @@ const DashboardScreenContent = () => {
           ? boiler.suggestedFlowTemp
           : 52;
     setCurrentTempInput(suggested.toFixed(1));
+    setTempError(null);
     setShowSetTempSheet(true);
   }, [dashboardData?.system?.boiler]);
 
   const submitCurrentTemp = React.useCallback(() => {
-    const normalized = currentTempInput.replace(',', '.').trim();
-    const parsed = Number(normalized);
+    const parsed = Number(currentTempInput.replace(',', '.').trim());
 
     if (!Number.isFinite(parsed)) {
-      toast.show({
-        render: () => (
-          <Box bg="red.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('boiler.currentTempValidation')}
-            </Text>
-          </Box>
-        ),
-        duration: 2500,
-        placement: 'top',
-      });
+      // Validacija ostaje UNUTAR sheeta: toast sa naslovom „nije uspjelo
+      // ažuriranje" bi za pogrešan unos bio netačan i odveo pažnju sa polja.
+      setTempError(t('boiler.currentTempValidation'));
       return;
     }
 
     const rounded = Math.round(parsed * 10) / 10;
     if (!isWithinCurrentFlowTempRange(rounded)) {
-      toast.show({
-        render: () => (
-          <Box bg="red.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('boiler.currentTempRangeError', {
-                min: MIN_CURRENT_FLOW_TEMP,
-                max: MAX_CURRENT_FLOW_TEMP,
-              })}
-            </Text>
-          </Box>
-        ),
-        duration: 2500,
-        placement: 'top',
-      });
+      setTempError(
+        t('boiler.currentTempRangeError', {
+          min: MIN_CURRENT_FLOW_TEMP,
+          max: MAX_CURRENT_FLOW_TEMP,
+        }),
+      );
       return;
     }
 
+    setTempError(null);
     setCurrentTempMutation.mutate(rounded);
-  }, [currentTempInput, setCurrentTempMutation, t, toast]);
+  }, [currentTempInput, setCurrentTempMutation, t]);
+
+  const header = (
+    <ScreenHeader
+      title={t('dashboard.title')}
+      subtitle={new Date().toLocaleDateString(i18n.language, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+      })}
+      action={{
+        icon: 'refresh',
+        label: t('common.retry'),
+        onPress: refreshAll,
+        disabled: isFetching,
+      }}
+      testID="dashboard-header"
+    />
+  );
 
   if (isLoading) {
+    // Nalaz UX-07: skeleton u istom footprintu umjesto punog ekranskog spinnera.
     return (
-      <Box flex={1} bg={bgColor} safeArea>
-        <Center flex={1}>
-          <VStack space={4} alignItems="center">
-            <Spinner size="lg" color="brand.400" />
-            <Text fontSize="lg" color={mutedColor}>
-              {t('dashboard.loading')}
-            </Text>
-          </VStack>
-        </Center>
-      </Box>
+      <Screen edges={['top']}>
+        {header}
+        <ScreenBody>
+          <Panel variant="hero">
+            <View style={{ gap: space.sm }}>
+              <Skeleton width="32%" height={8} />
+              <Skeleton width="52%" height={40} />
+              <Skeleton width="100%" height={6} />
+            </View>
+          </Panel>
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Skeleton width="30%" height={68} />
+            <Skeleton width="30%" height={68} />
+            <Skeleton width="30%" height={68} />
+          </View>
+          <Skeleton width="100%" height={120} />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (isError) {
     return (
-      <Box flex={1} bg={bgColor} safeArea>
-        <VStack flex={1} px={4} py={6} space={4} justifyContent="center">
-          <Center>
-            <VStack space={4} alignItems="center" w="100%">
-              <MaterialCommunityIcons name="alert-circle" size={40} color={mutedColor} />
-              <Text fontSize="lg" fontWeight="600" color={textColor}>
-                {t('dashboard.unableToLoad')}
-              </Text>
-              <Text fontSize="sm" color={mutedColor} textAlign="center">
-                {error instanceof Error ? error.message : t('dashboard.loadErrorGeneric')}
-              </Text>
-              <Pressable mt={4} onPress={() => refetch()} bg="brand.500" px={6} py={3} rounded="md">
-                <Text fontWeight="600" color="white">
-                  {t('common.retry')}
-                </Text>
-              </Pressable>
-            </VStack>
-          </Center>
-        </VStack>
-      </Box>
+      <Screen edges={['top']}>
+        {header}
+        <ScreenBody>
+          <InlineBanner
+            tone="fault"
+            title={t('dashboard.unableToLoad')}
+            message={error instanceof Error ? error.message : t('dashboard.loadErrorGeneric')}
+            action={{ label: t('common.retry'), onPress: () => void refetch() }}
+          />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   const primaryHome = dashboardData?.homes?.[0];
-  const healthScore = healthQuery.data?.score ?? 0;
-  const learningConfidencePercent = healthQuery.data?.learningConfidence ?? 0;
-  const isHeating =
-    dashboardData?.system?.boiler?.heatingStart && !dashboardData?.system?.boiler?.heatingEnd;
+  const boiler = dashboardData?.system?.boiler;
+  const weather = dashboardData?.system?.weather;
+  const thermostats = primaryHome?.thermostats ?? [];
+  const health = healthQuery.data;
+
+  const isHeating = Boolean(boiler?.heatingStart && !boiler?.heatingEnd);
+  const actualFlow = typeof boiler?.actualFlowTemp === 'number' ? boiler.actualFlowTemp : null;
+  const targetFlow =
+    typeof boiler?.suggestedFlowTemp === 'number' ? boiler.suggestedFlowTemp : null;
+  const flowGap = actualFlow !== null && targetFlow !== null ? actualFlow - targetFlow : null;
+  const withinTolerance = flowGap !== null && Math.abs(flowGap) <= 2;
+
+  const onlineThermostats = thermostats.filter((thermostat) => {
+    const seen = new Date(thermostat.lastSeen).getTime();
+    return Number.isFinite(seen) ? Date.now() - seen < 1000 * 60 * 15 : false;
+  }).length;
+
+  const healthTone = !health ? 'neutral' : health.score >= 80 ? 'ok' : health.score >= 60 ? 'warn' : 'fault';
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
-      <ScrollView
+    <Screen edges={['top']} testID="dashboard-screen">
+      {header}
+
+      <ScreenBody
         refreshControl={
           <RefreshControl
             refreshing={isFetching}
-            // RN 0.88 suzio je `onRefresh` na `() => void | Promise<void>`,
-            // a React Query `refetch()` vraca `Promise<QueryObserverResult>`.
-            // Rezultat se namjerno odbacuje.
-            onRefresh={() => {
-              void refetch();
-              void healthQuery.refetch();
-              void queryClient.invalidateQueries({ queryKey: ['weather-v2'] });
-            }}
-            tintColor="brand.400"
+            // RN 0.88: `onRefresh` je `() => void`; React Query `refetch()`
+            // vraća Promise, pa se rezultat namjerno odbacuje.
+            onRefresh={refreshAll}
+            tintColor={undefined}
           />
         }
+        testID="dashboard-body"
       >
-        <VStack px={5} py={5} space={5} pb={8}>
-          {/* Header */}
-          <HStack justifyContent="space-between" alignItems="center" mb={1}>
-            <VStack space={0}>
-              <Heading size="2xl" color={textColor} fontWeight="700">
-                {t('dashboard.title')}
-              </Heading>
-              <Text fontSize="sm" color={mutedColor} mt={1}>
-                {new Date().toLocaleDateString(i18n.language, {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </Text>
-            </VStack>
-            <HStack space={3} alignItems="center">
-              {/*
-                F1 (nalaz UX-12): plamen je prije bio `Pressable` BEZ `onPress` —
-                izgledao je kao dugme, a nije radio ništa. Sada je statusna
-                ikona bez pressed stanja: boja govori da li kotao grije, a
-                akciju nosi susjedno dugme.
-              */}
-              <Box
-                bg={headerBtnBg}
-                rounded="full"
-                p={2}
-                accessibilityRole="image"
-                accessibilityLabel={
-                  isHeating ? t('boiler.heating') : t('boiler.idle')
+        {/* HERO — jedan broj koji je stvarno glavni. */}
+        <Section label={t('boiler.status')}>
+          <Panel variant="hero" testID="dashboard-hero">
+            <View style={{ gap: 10 }}>
+              <StatusDot
+                state={isHeating ? 'on' : 'off'}
+                label={isHeating ? t('boiler.heating') : t('boiler.idle')}
+                meta={
+                  isHeating && boiler?.heatingStart
+                    ? `· ${formatDuration(boiler.heatingStart)}`
+                    : undefined
                 }
-                accessibilityState={{ selected: isHeating }}
-              >
-                <Icon
-                  as={Ionicons}
-                  name="flame"
-                  size={6}
-                  color={isHeating ? 'red.500' : mutedColor}
+              />
+
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.md }}>
+                <Readout
+                  value={actualFlow !== null ? actualFlow.toFixed(1) : '—'}
+                  unit="°C"
+                  size="xl"
+                  tone={actualFlow === null ? 'dim' : 'ink'}
+                  accessibilityLabel={t('boiler.flowLine')}
+                  testID="dashboard-flow-actual"
                 />
-              </Box>
-              <Pressable
-                onPress={() => (navigation as any).navigate('Analytics')}
-                _pressed={{ opacity: 0.6 }}
-                bg={headerBtnBg}
-                rounded="full"
-                p={2}
-                accessibilityRole="button"
-                accessibilityLabel={t('analytics.title')}
-              >
-                <Icon as={Ionicons} name="bar-chart-outline" size={5} color="brand.400" />
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  void refetch();
-                  void healthQuery.refetch();
-                  void queryClient.invalidateQueries({ queryKey: ['weather-v2'] });
-                }}
-                opacity={isFetching ? 0.5 : 1}
-                bg={headerBtnBg}
-                rounded="full"
-                p={2}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.retry')}
-                accessibilityState={{ busy: isFetching }}
-              >
-                <MaterialCommunityIcons
-                  name={isFetching ? 'loading' : 'refresh'}
-                  size={20}
-                  color="brand.400"
-                />
-              </Pressable>
-            </HStack>
-          </HStack>
+                <View style={{ paddingBottom: 6, gap: 2 }}>
+                  <MonoLabel>{t('dashboard.flowTarget')}</MonoLabel>
+                  <Readout
+                    value={targetFlow !== null ? targetFlow.toFixed(1) : '—'}
+                    unit="°C"
+                    size="md"
+                    tone="muted"
+                  />
+                </View>
+              </View>
 
-          {/* Alerts Section */}
-          <AlertsCard warnings={healthQuery.data?.warnings ?? []} />
+              <GaugeBar
+                value={actualFlow !== null ? scale(actualFlow) : 0}
+                target={targetFlow !== null ? scale(targetFlow) : undefined}
+                tone={actualFlow === null ? 'muted' : withinTolerance ? 'ok' : 'warn'}
+                height={6}
+                accessibilityLabel={t('boiler.flowTemp')}
+              />
 
-          {/* Health Score */}
-          {primaryHome && healthQuery.data && (
-            <HealthScoreCard score={healthScore} confidence={learningConfidencePercent} />
-          )}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.sm }}>
+                <MonoMeta tone={flowGap === null ? 'dim' : withinTolerance ? 'ok' : 'warn'}>
+                  {flowGap === null
+                    ? t('boiler.actualNotSet')
+                    : `${t('dashboard.flowGap', {
+                        value: flowGap.toFixed(1),
+                      })} · ${
+                        withinTolerance
+                          ? t('dashboard.flowWithinTolerance')
+                          : t('dashboard.flowOutsideTolerance')
+                      }`}
+                </MonoMeta>
+                <MonoMeta>
+                  {t('dashboard.flowScale', {
+                    min: MIN_CURRENT_FLOW_TEMP,
+                    max: MAX_CURRENT_FLOW_TEMP,
+                  })}
+                </MonoMeta>
+              </View>
 
-          {/* Boiler Status */}
-          <BoilerStatusCard
-            boiler={dashboardData?.system?.boiler}
-            onSetCurrentTempPress={openSetCurrentTempSheet}
-            setCurrentTempLoading={setCurrentTempMutation.isPending}
+              <Button
+                label={t('boiler.setCurrentTemp')}
+                variant="secondary"
+                block
+                loading={setCurrentTempMutation.isPending}
+                onPress={openSetCurrentTempSheet}
+                testID="open-set-temp"
+              />
+            </View>
+          </Panel>
+        </Section>
+
+        {/* Tri KPI pločice u jednom redu — bez kartica i bez trećeg akcenta. */}
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <Kpi
+            label={t('dashboard.outdoor')}
+            value={boiler?.externalTemp != null ? boiler.externalTemp.toFixed(1) : '—'}
+            unit="°C"
+            meta={
+              weather?.feelsLike != null
+                ? t('dashboard.outdoorFeels', { value: Number(weather.feelsLike).toFixed(0) })
+                : undefined
+            }
+            testID="kpi-outdoor"
           />
+          <Kpi
+            label={t('dashboard.health')}
+            value={health ? Math.round(health.score) : '—'}
+            unit={health ? '/100' : undefined}
+            tone={healthTone}
+            meta={
+              health
+                ? t('dashboard.healthMeta', {
+                    value: Math.round(health.learningConfidence ?? 0),
+                  })
+                : undefined
+            }
+            onPress={() => (navigation as any).navigate('Analytics')}
+            testID="kpi-health"
+          />
+          <Kpi
+            label={t('dashboard.thermostatsKpi')}
+            value={thermostats.length === 0 ? '—' : `${onlineThermostats}/${thermostats.length}`}
+            meta={
+              thermostats.length === 0
+                ? t('heating.noThermostats')
+                : t('dashboard.thermostatsOnline', {
+                    online: onlineThermostats,
+                    total: thermostats.length,
+                  })
+            }
+            tone={
+              thermostats.length === 0
+                ? 'neutral'
+                : onlineThermostats === thermostats.length
+                  ? 'ok'
+                  : 'warn'
+            }
+            testID="kpi-thermostats"
+          />
+        </View>
 
-          {/* MO2-15: recommendation reason, only when backend sent a breakdown */}
-          <RecommendationBreakdown breakdown={dashboardData?.system?.recommendation?.breakdown} />
+        {health?.warnings?.length ? (
+          <Section label={t('dashboard.activeAlerts')} meta={String(health.warnings.length)}>
+            <AlertsCard warnings={health.warnings} />
+          </Section>
+        ) : null}
 
-          {/* Weather */}
-          {WEATHER_UI_V2 && primaryHome?.profile?.id ? (
-            <WeatherV2Card homeProfileId={primaryHome.profile.id} />
-          ) : (
-            dashboardData?.system?.weather && <WeatherCard weather={dashboardData.system.weather} />
-          )}
-
-          {/* Thermostats */}
-          {primaryHome?.thermostats && primaryHome.thermostats.length > 0 && (
-            <VStack space={2}>
-              <Text fontSize="sm" fontWeight="600" color={mutedColor}>
-                {t('dashboard.thermostats', { count: primaryHome.thermostats.length })}
-              </Text>
-              {primaryHome.thermostats.map((thermostat) => {
-                // Find matching recent event for current temp
-                const recentEvent = primaryHome.recentHeatingEvents?.find(
+        <Section
+          label={t('thermostat.title')}
+          meta={
+            thermostats.length > 0
+              ? t('dashboard.thermostatsOnline', {
+                  online: onlineThermostats,
+                  total: thermostats.length,
+                })
+              : undefined
+          }
+        >
+          <Panel variant="flush" padded={false} testID="thermostat-panel">
+            {thermostats.length === 0 ? (
+              <PanelRow divider={false}>
+                <Text tone="muted" size="body">
+                  {t('heating.noThermostats')}
+                </Text>
+              </PanelRow>
+            ) : (
+              thermostats.map((thermostat, index) => {
+                const recentEvent = primaryHome?.recentHeatingEvents?.find(
                   (event) => event.deviceId === thermostat.id,
                 );
+                const current = recentEvent?.currentTemp ?? thermostat.currentTemp ?? null;
+                const target = thermostat.targetTemp ?? null;
+                const heating = thermostat.isHeatingNow === true;
+
                 return (
-                  <ThermostatCard
+                  <PanelRow
                     key={thermostat.id}
-                    thermostat={thermostat}
-                    currentTemp={recentEvent?.currentTemp}
-                  />
+                    divider={index < thermostats.length - 1}
+                    accessibilityLabel={`${thermostat.alias}: ${
+                      current !== null ? current.toFixed(1) : '—'
+                    } → ${target !== null ? target.toFixed(1) : '—'} °C`}
+                  >
+                    <View style={{ gap: 6 }}>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: space.sm,
+                        }}
+                      >
+                        <View
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}
+                        >
+                          <Led state={heating ? 'on' : 'off'} />
+                          <Text size="body" weight="medium" numberOfLines={1}>
+                            {thermostat.alias}
+                          </Text>
+                        </View>
+                        <Readout
+                          value={`${current !== null ? current.toFixed(1) : '—'} → ${
+                            target !== null ? target.toFixed(1) : '—'
+                          }`}
+                          unit="°C"
+                          size="md"
+                          tone={heating ? 'signal' : 'ink'}
+                        />
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                        <View style={{ flex: 1 }}>
+                          <GaugeBar
+                            value={(current ?? 0) / 30}
+                            target={target !== null ? target / 30 : undefined}
+                            tone={heating ? 'signal' : 'muted'}
+                            height={3}
+                            accessibilityLabel={`${thermostat.alias}: ${t(
+                              'thermostat.current',
+                            )} ${current ?? '—'}, ${t('thermostat.target')} ${target ?? '—'}`}
+                          />
+                        </View>
+                        <MonoMeta>
+                          {t(`thermostat.mode.${thermostat.mode.toLowerCase()}`, {
+                            defaultValue: thermostat.mode,
+                          })}
+                        </MonoMeta>
+                      </View>
+                    </View>
+                  </PanelRow>
                 );
-              })}
-            </VStack>
-          )}
+              })
+            )}
+          </Panel>
+        </Section>
 
-          {/* Additional homes (if any) */}
-          {dashboardData?.homes && dashboardData.homes.length > 1 && (
-            <Box bg={additionalHomesBg} rounded="lg" p={3}>
-              <Text fontSize="xs" color="blue.600">
-                {t('dashboard.additionalHomes', { count: dashboardData.homes.length - 1 })}
-              </Text>
-            </Box>
-          )}
-        </VStack>
-      </ScrollView>
+        {/* MO2-15: samo backend snapshot; klijent ne rekonstruiše formulu. */}
+        <RecommendationBreakdown breakdown={dashboardData?.system?.recommendation?.breakdown} />
 
-      <BottomSheetModal
+        {WEATHER_UI_V2 && primaryHome?.profile?.id ? (
+          <WeatherV2Card homeProfileId={primaryHome.profile.id} />
+        ) : (
+          <WeatherRow weather={weather} isFetching={isFetching} />
+        )}
+
+        {dashboardData?.homes && dashboardData.homes.length > 1 && (
+          <MonoMeta>
+            {t('dashboard.moreHomes', { count: dashboardData.homes.length - 1 })}
+          </MonoMeta>
+        )}
+      </ScreenBody>
+
+      <Sheet
         isOpen={showSetTempSheet}
         onClose={() => setShowSetTempSheet(false)}
-        snapPoints={['45%', '60%']}
+        title={t('boiler.setCurrentTemp')}
+        snapPoints={['45%', '65%']}
+        testID="set-temp-sheet"
       >
-        <VStack space={4} py={2}>
-          <Text fontSize="lg" fontWeight="700" color={textColor}>
-            {t('boiler.setCurrentTemp')}
-          </Text>
-          <Text fontSize="sm" color={mutedColor}>
+        <View style={{ gap: space.md }}>
+          <Text tone="muted" size="body">
             {t('boiler.currentTempRangeHint', {
               min: MIN_CURRENT_FLOW_TEMP,
               max: MAX_CURRENT_FLOW_TEMP,
             })}
           </Text>
-
-          <FormInput
+          <TemperatureField
             value={currentTempInput}
             onChangeText={setCurrentTempInput}
-            keyboardType="decimal-pad"
             placeholder={`${MIN_CURRENT_FLOW_TEMP} - ${MAX_CURRENT_FLOW_TEMP}`}
-            style={{ fontSize: 18 }}
-            isDisabled={setCurrentTempMutation.isPending}
+            editable={!setCurrentTempMutation.isPending}
+            accessibilityLabel={t('boiler.setCurrentTemp')}
           />
-
-          <HStack space={3}>
-            <Pressable
-              flex={1}
+          {tempError ? <InlineBanner tone="fault" title={tempError} /> : null}
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Button
+              label={t('common.cancel')}
+              variant="ghost"
+              style={{ flex: 1 }}
               onPress={() => setShowSetTempSheet(false)}
-              _pressed={{ opacity: 0.7 }}
               disabled={setCurrentTempMutation.isPending}
-            >
-              <Box bg={sheetCancelBg} rounded="lg" py={3} alignItems="center">
-                <Text fontWeight="600" color={textColor}>
-                  {t('common.cancel')}
-                </Text>
-              </Box>
-            </Pressable>
-
-            <Pressable
-              flex={1}
+            />
+            <Button
+              label={
+                setCurrentTempMutation.isPending
+                  ? t('boiler.savingCurrentTemp')
+                  : t('boiler.saveCurrentTemp')
+              }
+              style={{ flex: 1 }}
+              loading={setCurrentTempMutation.isPending}
               onPress={submitCurrentTemp}
-              _pressed={{ opacity: 0.7 }}
-              disabled={setCurrentTempMutation.isPending}
-            >
-              <Box bg="brand.500" rounded="lg" py={3} alignItems="center">
-                <Text fontWeight="600" color="white">
-                  {setCurrentTempMutation.isPending
-                    ? t('boiler.savingCurrentTemp')
-                    : t('boiler.saveCurrentTemp')}
-                </Text>
-              </Box>
-            </Pressable>
-          </HStack>
-        </VStack>
-      </BottomSheetModal>
-    </Box>
+            />
+          </View>
+        </View>
+      </Sheet>
+    </Screen>
   );
 };
-
-export const DashboardScreen = DashboardScreenContent;

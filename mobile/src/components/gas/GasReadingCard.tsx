@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  VStack,
-  HStack,
-  Text,
-  Icon,
-  Pressable,
-  Actionsheet,
-  useColorModeValue,
-} from '../ui/nativewind';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
+
 import { useTranslation } from '../../hooks/useTranslation';
+import { useTokens } from '../../ui/theme';
+import { Led, MonoMeta, Pressable, Readout, Text } from '../../ui';
+import { space } from '../../theme/tokens';
+import { Actionsheet } from '../ui/nativewind';
+
+/**
+ * Red očitanja (prototip §04).
+ *
+ * Prije: kartica sa ikonom plamena, dva reda datuma/vremena, obojena
+ * „POTROŠNJA" kutija i četiri pune boje značaka (REFERENCA / SLIKA / RAČUN),
+ * plus „…" dugme bez ikakve afordance. Tri očitanja su trošila ~460px.
+ *
+ * Sada: jedan red — brojač u mono brojevima, pa datum · izvedena dnevna
+ * potrošnja i cijena desno. Značke su outline; signalna boja ide samo na REF,
+ * jer je to jedina oznaka koja nosi odluku. Akcije se otvaraju dodirom na red.
+ */
 
 interface GasReading {
   id: number;
@@ -28,7 +36,7 @@ interface GasReading {
 
 interface GasReadingCardProps {
   reading: GasReading;
-  previousReading?: GasReading; // Previous reading in the list (newer reading)
+  previousReading?: GasReading;
   onDelete?: (id: number) => void;
   onToggleReference?: (reading: GasReading, isReference: boolean) => void;
   onUploadMeterImage?: (reading: GasReading) => void;
@@ -38,6 +46,8 @@ interface GasReadingCardProps {
   onOpenInvoice?: (reading: GasReading) => void;
   isDeleting?: boolean;
   isMutating?: boolean;
+  /** Cijena m³ sa PDV-om, kad je poznata — prikazuje se desno. */
+  pricePerM3?: number | null;
 }
 
 export const GasReadingCard = React.memo(function GasReadingCard({
@@ -52,27 +62,11 @@ export const GasReadingCard = React.memo(function GasReadingCard({
   onOpenInvoice,
   isDeleting,
   isMutating,
+  pricePerM3,
 }: GasReadingCardProps) {
   const { t } = useTranslation();
-  const cardBg = useColorModeValue('white', 'dark.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const consumptionBg = useColorModeValue('blue.50', 'blue.900');
-  const consumptionBorder = useColorModeValue('blue.200', 'blue.700');
-  const consumptionText = useColorModeValue('blue.700', 'blue.200');
-  const standardBadgeBg = useColorModeValue('gray.300', 'gray.600');
-  const standardBadgeText = useColorModeValue('gray.700', 'gray.100');
-  const actionTriggerBg = useColorModeValue('gray.100', 'gray.700');
-  const actionTriggerBorder = useColorModeValue('gray.200', 'gray.600');
-  const actionTriggerText = useColorModeValue('gray.700', 'gray.200');
-  const menuTitleColor = useColorModeValue('gray.500', 'gray.300');
-  const destructiveColor = useColorModeValue('red.600', 'red.300');
-
+  const { t: tokens } = useTokens();
   const [showActions, setShowActions] = useState(false);
-
-  const formattedDate = dayjs(reading.readingDate).format('DD.MM.YYYY');
-  const formattedTime = dayjs(reading.readingDate).format('HH:mm');
 
   const consumption =
     previousReading && previousReading.counterValue >= reading.counterValue
@@ -85,255 +79,231 @@ export const GasReadingCard = React.memo(function GasReadingCard({
       : null;
 
   const dailyConsumption =
-    consumption && daysDiff && daysDiff > 0 ? consumption / daysDiff : null;
+    consumption !== null && daysDiff && daysDiff > 0 ? consumption / daysDiff : null;
 
+  const cost = pricePerM3 && consumption !== null ? consumption * pricePerM3 : null;
   const isBusy = Boolean(isDeleting || isMutating);
 
   const runAction = (action?: () => void) => {
     setShowActions(false);
-    if (!action || isBusy) {
-      return;
-    }
+    if (!action || isBusy) return;
     requestAnimationFrame(() => action());
   };
 
-  return (
-    <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4} mb={3}>
-      <VStack space={3}>
-        <HStack justifyContent="space-between" alignItems="flex-start">
-          <VStack flex={1} space={2}>
-            <HStack alignItems="center" space={2}>
-              <Icon as={Ionicons} name="flame-outline" size={5} color="orange.500" />
-              <Text fontSize="lg" fontWeight="600" color={textColor}>
-                {reading.counterValue.toFixed(2)} m³
-              </Text>
-            </HStack>
-            <HStack space={2}>
-              {reading.isInvoiceReference ? (
-                <Box px={2} py={1} rounded="full" bg="amber.500">
-                  <Text fontSize="2xs" color="white" fontWeight="700">
-                    {t('gas.badgeReference')}
-                  </Text>
-                </Box>
-              ) : (
-                <Box px={2} py={1} rounded="full" bg={standardBadgeBg}>
-                  <Text fontSize="2xs" color={standardBadgeText} fontWeight="700">
-                    {t('gas.badgeStandard')}
-                  </Text>
-                </Box>
-              )}
-              {reading.hasMeterImage && (
-                <Box px={2} py={1} rounded="full" bg="blue.500">
-                  <Text fontSize="2xs" color="white" fontWeight="700">
-                    {t('gas.badgeImage')}
-                  </Text>
-                </Box>
-              )}
-              {reading.hasInvoicePdf && (
-                <Box px={2} py={1} rounded="full" bg="green.500">
-                  <Text fontSize="2xs" color="white" fontWeight="700">
-                    {t('gas.badgeInvoice')}
-                  </Text>
-                </Box>
-              )}
-            </HStack>
-            <HStack space={4}>
-              <VStack>
-                <Text fontSize="xs" color={subtextColor}>
-                  {t('gas.dateLabel')}
-                </Text>
-                <Text fontSize="sm" fontWeight="500" color={textColor}>
-                  {formattedDate}
-                </Text>
-              </VStack>
-              <VStack>
-                <Text fontSize="xs" color={subtextColor}>
-                  {t('gas.timeLabel')}
-                </Text>
-                <Text fontSize="sm" fontWeight="500" color={textColor}>
-                  {formattedTime}
-                </Text>
-              </VStack>
-            </HStack>
-          </VStack>
-
-          <Pressable
-            onPress={() => setShowActions(true)}
-            disabled={isBusy}
-            _pressed={{ opacity: 0.8 }}
-            ml={3}
-          >
-            <Box
-              px={3}
-              py={2}
-              rounded="full"
-              bg={actionTriggerBg}
-              borderWidth={1}
-              borderColor={actionTriggerBorder}
-            >
-              <HStack space={1.5} alignItems="center">
-                <Icon as={Ionicons} name="ellipsis-horizontal" size={4} color={actionTriggerText} />
-                <Text fontSize="xs" fontWeight="700" color={actionTriggerText}>
-                  {t('gas.actionsMenuTrigger')}
-                </Text>
-              </HStack>
-            </Box>
-          </Pressable>
-        </HStack>
-
-        {consumption !== null && (
-          <Box
-            bg={consumptionBg}
-            borderWidth={1}
-            borderColor={consumptionBorder}
-            rounded="md"
-            p={3}
-          >
-            <HStack justifyContent="space-between" alignItems="center">
-              <VStack>
-                <Text fontSize="xs" color={consumptionText} fontWeight="600">
-                  {t('gas.consumption')}
-                </Text>
-                <Text fontSize="sm" fontWeight="bold" color={consumptionText}>
-                  {consumption.toFixed(2)} m³
-                </Text>
-              </VStack>
-              {dailyConsumption !== null && (
-                <VStack alignItems="flex-end">
-                  <Text fontSize="xs" color={consumptionText} fontWeight="600">
-                    {t('gas.dailyLabel')}
-                  </Text>
-                  <Text fontSize="sm" fontWeight="bold" color={consumptionText}>
-                    {t('gas.dailyValue', { value: dailyConsumption.toFixed(2) })}
-                  </Text>
-                </VStack>
-              )}
-            </HStack>
-          </Box>
-        )}
-
-        <Actionsheet
-          isOpen={showActions}
-          onClose={() => setShowActions(false)}
-          _backdrop={{
-            onTouchEnd: () => setShowActions(false),
-            bg: 'rgba(0,0,0,0.1)',
-          }}
-        >
-          <Actionsheet.Content>
-            <Text
-              fontSize="xs"
-              textTransform="uppercase"
-              letterSpacing={0.5}
-              color={menuTitleColor}
-              fontWeight="700"
-              mb={1}
-            >
-              {t('gas.actionsMenuTitle')}
-            </Text>
-
-            {onToggleReference && (
-              <Actionsheet.Item
-                onPress={() =>
-                  runAction(() => onToggleReference(reading, !reading.isInvoiceReference))
-                }
-              >
-                <HStack space={2} alignItems="center">
-                  <Icon
-                    as={Ionicons}
-                    name={reading.isInvoiceReference ? 'flag' : 'flag-outline'}
-                    size={4}
-                    color={textColor}
-                  />
-                  <Text color={textColor} fontWeight="600">
-                    {reading.isInvoiceReference
-                      ? t('gas.actionUnsetReference')
-                      : t('gas.actionSetReference')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-
-            {onUploadMeterImage && (
-              <Actionsheet.Item onPress={() => runAction(() => onUploadMeterImage(reading))}>
-                <HStack space={2} alignItems="center">
-                  <Icon
-                    as={Ionicons}
-                    name={reading.hasMeterImage ? 'images-outline' : 'camera-outline'}
-                    size={4}
-                    color={textColor}
-                  />
-                  <Text color={textColor} fontWeight="600">
-                    {reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-
-            {reading.hasMeterImage && onOpenMeterImage && (
-              <Actionsheet.Item onPress={() => runAction(() => onOpenMeterImage(reading))}>
-                <HStack space={2} alignItems="center">
-                  <Icon as={Ionicons} name="open-outline" size={4} color={textColor} />
-                  <Text color={textColor} fontWeight="600">
-                    {t('gas.actionOpenImage')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-
-            {reading.isInvoiceReference && onUploadInvoice && (
-              <Actionsheet.Item onPress={() => runAction(() => onUploadInvoice(reading))}>
-                <HStack space={2} alignItems="center">
-                  <Icon
-                    as={Ionicons}
-                    name={reading.hasInvoicePdf ? 'refresh-outline' : 'document-outline'}
-                    size={4}
-                    color={textColor}
-                  />
-                  <Text color={textColor} fontWeight="600">
-                    {reading.hasInvoicePdf
-                      ? t('gas.actionReplaceInvoice')
-                      : t('gas.actionAddInvoice')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-
-            {reading.isInvoiceReference && reading.hasInvoicePdf && onOpenInvoice && (
-              <Actionsheet.Item onPress={() => runAction(() => onOpenInvoice(reading))}>
-                <HStack space={2} alignItems="center">
-                  <Icon as={Ionicons} name="open-outline" size={4} color={textColor} />
-                  <Text color={textColor} fontWeight="600">
-                    {t('gas.actionOpenInvoice')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-
-            {reading.isInvoiceReference && reading.hasInvoicePdf && onDeleteInvoice && (
-              <Actionsheet.Item onPress={() => runAction(() => onDeleteInvoice(reading))}>
-                <HStack space={2} alignItems="center">
-                  <Icon as={Ionicons} name="trash-outline" size={4} color={destructiveColor} />
-                  <Text color={destructiveColor} fontWeight="700">
-                    {t('gas.actionDeleteInvoice')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-
-            {onDelete && (
-              <Actionsheet.Item onPress={() => runAction(() => onDelete(reading.id))}>
-                <HStack space={2} alignItems="center">
-                  <Icon as={Ionicons} name="trash-outline" size={4} color={destructiveColor} />
-                  <Text color={destructiveColor} fontWeight="700">
-                    {t('gas.actionDeleteReading')}
-                  </Text>
-                </HStack>
-              </Actionsheet.Item>
-            )}
-          </Actionsheet.Content>
-        </Actionsheet>
-      </VStack>
-    </Box>
+  const badges: { label: string; tone: 'signal' | 'muted' }[] = [];
+  badges.push(
+    reading.isInvoiceReference
+      ? { label: t('gas.badgeReference'), tone: 'signal' }
+      : { label: t('gas.badgeStandard'), tone: 'muted' },
   );
+  if (reading.hasMeterImage) badges.push({ label: t('gas.badgeImage'), tone: 'muted' });
+  if (reading.hasInvoicePdf) badges.push({ label: t('gas.badgeInvoice'), tone: 'muted' });
+
+  return (
+    <View>
+      <Pressable
+        onPress={() => setShowActions(true)}
+        disabled={isBusy}
+        accessibilityRole="button"
+        accessibilityLabel={`${reading.counterValue.toFixed(2)} m³, ${dayjs(
+          reading.readingDate,
+        ).format('DD.MM')} — ${t('gas.actionsMenuTitle')}`}
+        accessibilityState={{ disabled: isBusy }}
+        style={[styles.row, { opacity: isBusy ? 0.5 : 1 }]}
+      >
+        <View style={styles.left}>
+          <Readout
+            value={reading.counterValue.toFixed(2)}
+            unit="m³"
+            size="md"
+            tone={reading.isInvoiceReference ? 'signal' : 'ink'}
+          />
+          <View style={styles.metaRow}>
+            <MonoMeta>
+              {`${dayjs(reading.readingDate).format('DD.MM')} · ${dayjs(
+                reading.readingDate,
+              ).format('HH:mm')}`}
+            </MonoMeta>
+            {dailyConsumption !== null ? (
+              <MonoMeta>
+                {t('gas.dailyValue', { value: dailyConsumption.toFixed(2) })}
+              </MonoMeta>
+            ) : null}
+          </View>
+          <View style={styles.badges}>
+            {badges.map((badge) => (
+              <View
+                key={badge.label}
+                style={[
+                  styles.badge,
+                  {
+                    borderColor: badge.tone === 'signal' ? tokens.signal : tokens.line,
+                  },
+                ]}
+              >
+                <Text
+                  size="label"
+                  weight="monoSemiBold"
+                  tone={badge.tone === 'signal' ? 'signal' : 'dim'}
+                  style={{ letterSpacing: 0.8 }}
+                >
+                  {badge.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.right}>
+          {consumption !== null ? (
+            <MonoMeta>{`+${consumption.toFixed(2)} m³`}</MonoMeta>
+          ) : null}
+          {cost !== null ? (
+            <Text size="body" weight="medium">
+              {`${cost.toFixed(2)} ${t('gas.currencyKM')}`}
+            </Text>
+          ) : null}
+          <View style={styles.chevron}>
+            <Led state={reading.isInvoiceReference ? 'on' : 'off'} size={5} />
+            <Ionicons name="ellipsis-horizontal" size={14} color={tokens.inkDim} />
+            <Text size="label" tone="dim" style={{ opacity: 0 }}>
+              {t('gas.actionsMenuTrigger')}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+
+      <Actionsheet isOpen={showActions} onClose={() => setShowActions(false)}>
+        <Actionsheet.Content>
+          <MonoMeta style={{ alignSelf: 'flex-start', marginBottom: 6 }}>
+            {t('gas.actionsMenuTitle')}
+          </MonoMeta>
+          {onToggleReference && (
+            <Actionsheet.Item
+              onPress={() =>
+                runAction(() => onToggleReference(reading, !reading.isInvoiceReference))
+              }
+            >
+              <ActionRow
+                icon={reading.isInvoiceReference ? 'flag' : 'flag-outline'}
+                label={
+                  reading.isInvoiceReference
+                    ? t('gas.actionUnsetReference')
+                    : t('gas.actionSetReference')
+                }
+              />
+            </Actionsheet.Item>
+          )}
+          {onUploadMeterImage && (
+            <Actionsheet.Item onPress={() => runAction(() => onUploadMeterImage(reading))}>
+              <ActionRow
+                icon={reading.hasMeterImage ? 'images-outline' : 'camera-outline'}
+                label={
+                  reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')
+                }
+              />
+            </Actionsheet.Item>
+          )}
+          {reading.hasMeterImage && onOpenMeterImage && (
+            <Actionsheet.Item onPress={() => runAction(() => onOpenMeterImage(reading))}>
+              <ActionRow icon="open-outline" label={t('gas.actionOpenImage')} />
+            </Actionsheet.Item>
+          )}
+          {reading.isInvoiceReference && onUploadInvoice && (
+            <Actionsheet.Item onPress={() => runAction(() => onUploadInvoice(reading))}>
+              <ActionRow
+                icon={reading.hasInvoicePdf ? 'refresh-outline' : 'document-outline'}
+                label={
+                  reading.hasInvoicePdf
+                    ? t('gas.actionReplaceInvoice')
+                    : t('gas.actionAddInvoice')
+                }
+              />
+            </Actionsheet.Item>
+          )}
+          {reading.isInvoiceReference && reading.hasInvoicePdf && onOpenInvoice && (
+            <Actionsheet.Item onPress={() => runAction(() => onOpenInvoice(reading))}>
+              <ActionRow icon="open-outline" label={t('gas.actionOpenInvoice')} />
+            </Actionsheet.Item>
+          )}
+          {reading.isInvoiceReference && reading.hasInvoicePdf && onDeleteInvoice && (
+            <Actionsheet.Item onPress={() => runAction(() => onDeleteInvoice(reading))}>
+              <ActionRow icon="trash-outline" label={t('gas.actionDeleteInvoice')} destructive />
+            </Actionsheet.Item>
+          )}
+          {onDelete && (
+            <Actionsheet.Item onPress={() => runAction(() => onDelete(reading.id))}>
+              <ActionRow icon="trash-outline" label={t('gas.actionDeleteReading')} destructive />
+            </Actionsheet.Item>
+          )}
+        </Actionsheet.Content>
+      </Actionsheet>
+    </View>
+  );
+});
+
+function ActionRow({
+  icon,
+  label,
+  destructive = false,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  destructive?: boolean;
+}) {
+  const { t: tokens } = useTokens();
+  return (
+    <View style={styles.actionRow}>
+      <Ionicons name={icon} size={16} color={destructive ? tokens.fault : tokens.ink} />
+      <Text size="body" weight={destructive ? 'semibold' : 'medium'} tone={destructive ? 'fault' : 'ink'}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: space.sm,
+    paddingVertical: 10,
+    paddingHorizontal: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth * 2,
+  },
+  left: {
+    flex: 1,
+    gap: 3,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: space.sm,
+    flexWrap: 'wrap',
+  },
+  badges: {
+    flexDirection: 'row',
+    gap: 4,
+    flexWrap: 'wrap',
+  },
+  badge: {
+    borderWidth: 1,
+    borderRadius: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  right: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  chevron: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
 });

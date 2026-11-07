@@ -97,6 +97,38 @@ placeholder `e.g., Main House` → `Home Name`. Testovi su dobili
 
 Početna (hero + 3 KPI + liste), Grijanje (red-po-uređaju), Plin (red-po-očitanju), Postavke (jedna lista).
 
+### Šta je F2 stvarno isporučio
+
+| Nalaz iz audita | Šta je urađeno | Dokaz |
+|---|---|---|
+| UX-08 sjene bez hijerarhije | Početna, Grijanje, Plin (red), Postavke, `WeatherRow`, `GasReadingCard` **bez ijednog `shadow` propa** — dubinu nosi hairline ivica; uklonjeno 4 mrtve komponente (`BoilerStatusCard`, `HealthScoreCard`, `ThermostatCard`, `WeatherCard`) | `f2Screens.test.tsx` (regex po fajlu) |
+| UX-09 tri akcenta u prvoj kartici | Početna: **jedan hero** (polazna voda) + **tri KPI pločice**; akcent samo na akciji i živom stanju (`Led`/`StatusDot`), ne na pločicama | `findByTestId('dashboard-hero')`, `kpi-*` |
+| Dva velika broja bez glavnog | Hero nosi `Readout` xl za mjerenu vrijednost, cilj je `md` mono; `GaugeBar` nosi odnos bez trećeg broja | `dashboard-flow-actual` |
+| Vrijeme ~200px za podatak koji nije odluka | `WeatherRow` — jedan red: temperatura, stanje, `68% · 2.4 m/s · 1018 hPa` u mono meti | `WeatherRow.tsx` |
+| Grijanje: 4 broja + puna značka po kartici | Red po uređaju: `21.5 → 23.0 °C` u jednom `Readout`-u, gauge ka cilju, LED umjesto pune boje; 3 termostata ≈ 330px umjesto 630px | `f2Screens.test.tsx` |
+| UX-11 FAB prekriva sadržaj | „Dodaj očitanje" je u zaglavlju (`ScreenHeader action`), FAB uklonjen; `keyExtractor`/`renderItem` ugovor (MO2-13) netaknut | `f2Screens.test.tsx` |
+| Plin: 4 pune boje značaka | Red očitanja: brojač mono, `07.11 · 08:15 · +4.82 m³/dan`, cijena desno; značke outline, signal samo na REF; sažetak (potrošnja / broj / zadnje) iznad liste | `GasReadingCard.tsx`, `gas-summary` |
+| UX-07 pun ekranski spinner | Početna i Grijanje: skeleton u istom footprintu (`Skeleton`, `SkeletonRows`) umjesto spinnera | `DashboardScreen`, `HeatingScreen` |
+| UX-16 hook unutar JSX-a | Postavke: `SettingRow` bez ijednog hooka u uslovnom izrazu; šest kartica → `Section` + `Panel variant="flush"` | `SettingsScreen.tsx` |
+| UX-15 devet ručnih toastova | Početna koristi `toast.show`; validacija temperature ostaje **u sheetu** (`InlineBanner`) jer toast „nije uspjelo ažuriranje" za pogrešan unos nije tačan | `DashboardScreen.tsx` |
+
+Provjera poslije F2 (2026-11-07):
+
+```
+npm run type-check   → 0 grešaka
+npm test             → 29 suite-ova, 195 testova, 32 snapshot-a — sve zeleno
+                       (28 postojećih + 1 novi: f2Screens.test.tsx, 11 testova)
+npm run lint         → 0 grešaka
+```
+
+Snimci su ažurirani za 4 ekrana (Početna, Grijanje, Plin, Postavke) i
+`homeManagement` (uklonjena sjena sa kartice doma). Jedna asertacija je
+promijenjena: `123.45 m³` se traži kroz `getAllByLabelText` jer red očitanja
+razdvaja broj i jedinicu u `Readout` — ista informacija, jedan a11y čvor.
+Test „submits a valid current temperature" sada traži dugme po `testID`-u
+(`open-set-temp`): `Sheet` ostaje montiran (UX-14), pa se naslov pojavljuje i
+prije otvaranja i `getByText` bi našao dva elementa.
+
 ### F3 — Analitika i grafovi
 
 Uklanjanje fiktivnih metrika i bloka „AI Insights", `react-native-chart-kit` → `react-native-svg`,
@@ -112,7 +144,7 @@ Skeleton na svim ekranima, a11y labele i role, `hitSlop`, ispravke toastova, bri
 |---|---|---|
 | F0 Temelj | **završeno 2026-11-07** | `src/theme/tokens.ts`, `src/theme/fonts.ts`, `src/ui/*` (11 primitiva), 34 nova testa |
 | F1 Navigacija i jezik | **završeno 2026-11-07** | jedan tab bar, `Segmented` u Plinu, `ScreenHeader` na svim push ekranima, tri ekrana prevedena, 14 novih testova |
-| F2 Glavni ekrani | sljedeće | — |
+| F2 Glavni ekrani | **završeno 2026-11-07** | Početna = hero + 3 KPI + liste; Grijanje red-po-uređaju; Plin red-po-očitanju; Postavke jedna lista; 11 novih testova |
 | F3 Analitika i grafovi | — | — |
 | F4 Završnica | — | — |
 

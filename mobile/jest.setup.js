@@ -29,4 +29,10 @@ jest.mock(
 // (`loadUnpackersWithCode`). Mock dolazi iz samog paketa, dakle ponašanje je
 // autorovo, a ne naše nagađanje — i sprječava da svaki test koji dotakne
 // `src/ui` mora ponavljati isti `jest.mock`.
-jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
+// Namjerno se NE vraća `require('.../mock')` direktno: taj modul nema
+// `__esModule`, pa bi Babel interop postavio `default` na CIJELI objekat i
+// `<BottomSheet />` bi pao kao „Element type is invalid: got object".
+jest.mock('@gorhom/bottom-sheet', () => {
+  const mock = require('@gorhom/bottom-sheet/mock');
+  return { __esModule: true, ...mock, default: mock.default };
+});

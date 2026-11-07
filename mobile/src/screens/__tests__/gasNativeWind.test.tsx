@@ -143,7 +143,11 @@ describe('GasReadings nativewind', () => {
     );
     await result.findByText('gas.title');
     await fireEvent.press(result.getByText('gas.filterAll'));
-    await waitFor(() => expect(result.getAllByText('123.45 m³').length).toBeGreaterThan(0));
+    // F2: red očitanja razdvaja broj i jedinicu (Readout), pa se vrijednost
+    // provjerava kroz labelu reda — ista informacija, jedan a11y čvor.
+    await waitFor(() =>
+      expect(result.getAllByLabelText(/123\.45 m³/).length).toBeGreaterThan(0),
+    );
     expect(result.toJSON()).toMatchSnapshot();
     await result.unmount();
     queryClient.clear();

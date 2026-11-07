@@ -182,7 +182,9 @@ describe('Dashboard nativewind', () => {
 it('submits a valid NativeWind current temperature and refreshes dashboard data', async () => {
   const { result, queryClient } = await screenTree('dark');
 
-  await fireEvent.press(result.getByText('boiler.setCurrentTemp'));
+  // F2: sheet ostaje montiran (UX-14), pa se naslov „Postavi polaznu" pojavljuje
+  // i prije otvaranja — dugme se zato traži po testID-u, ne po tekstu.
+  await fireEvent.press(result.getByTestId('open-set-temp'));
   const input = await result.findByPlaceholderText('48 - 55');
   await fireEvent.changeText(input, '52.4');
   await fireEvent.press(result.getByText('boiler.saveCurrentTemp'));

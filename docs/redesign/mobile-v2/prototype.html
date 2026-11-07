@@ -1,0 +1,2016 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Boiler Control — Mobile UX/UI refaktor · prijedlog</title>
+<style>
+/* ============================================================
+   PROTO PROTOTIP — nije aplikacijski kod.
+   Služi da se prije refaktora odobri vizuelni pravac.
+   ============================================================ */
+
+/* ---------- Stranica (dokument) ---------- */
+:root{
+  --doc-bg:#07090d;
+  --doc-panel:#0d1117;
+  --doc-line:#1e2632;
+  --doc-ink:#e8edf4;
+  --doc-muted:#8b98a9;
+  --signal:#ff6b3d;
+  --ok:#22c55e;
+  --warn:#f5a524;
+  --fault:#ef4444;
+  --info:#38bdf8;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255,107,61,.10), transparent 60%),
+    radial-gradient(900px 500px at 0% 0%, rgba(56,189,248,.06), transparent 55%),
+    var(--doc-bg);
+  color:var(--doc-ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+}
+a{color:var(--signal);text-decoration:none}
+.wrap{max-width:1560px;margin:0 auto;padding:40px 28px 120px}
+
+/* ---------- Doc header ---------- */
+.doc-head{border-bottom:1px solid var(--doc-line);padding-bottom:28px;margin-bottom:8px}
+.doc-kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--signal);margin:0 0 14px
+}
+.doc-head h1{font-size:clamp(28px,4vw,44px);line-height:1.08;margin:0 0 14px;letter-spacing:-.02em}
+.doc-head p{max-width:78ch;color:var(--doc-muted);margin:0;font-size:15px}
+.doc-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  border:1px solid var(--doc-line);border-radius:2px;padding:5px 9px;color:var(--doc-muted);
+}
+.chip b{color:var(--doc-ink);font-weight:600}
+
+/* ---------- Section ---------- */
+.section{margin-top:64px}
+.section-head{display:flex;gap:20px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;
+  border-left:2px solid var(--signal);padding-left:16px;margin-bottom:22px}
+.section-head h2{font-size:24px;margin:0 0 6px;letter-spacing:-.01em}
+.section-head .sub{color:var(--doc-muted);font-size:14px;margin:0;max-width:80ch}
+.section-index{font-family:var(--mono);font-size:11px;color:var(--doc-muted);letter-spacing:.14em}
+
+.findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:0 0 26px}
+.finding{background:var(--doc-panel);border:1px solid var(--doc-line);border-radius:3px;padding:13px 14px}
+.finding .t{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--doc-muted);margin-bottom:7px}
+.finding .b{font-size:13px;color:#c6d0dd}
+.finding.bad{border-left:2px solid var(--fault)}
+.finding.good{border-left:2px solid var(--ok)}
+
+/* ---------- Compare layout ---------- */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
+@media (max-width:1100px){.compare{grid-template-columns:1fr;gap:26px}}
+.pane{min-width:0}
+.pane-label{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pane-tag{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;padding:4px 8px;border-radius:2px;
+  border:1px solid var(--doc-line);color:var(--doc-muted)
+}
+.pane-tag.now{border-color:#4a2d2d;color:#ff8d8d;background:rgba(239,68,68,.07)}
+.pane-tag.next{border-color:#2b4634;color:#7ee2a1;background:rgba(34,197,94,.07)}
+.pane-note{font-size:12px;color:var(--doc-muted)}
+
+/* ---------- Phone frame ---------- */
+.phone{
+  width:392px;max-width:100%;height:800px;margin:0 auto;
+  border-radius:36px;padding:10px;
+  background:linear-gradient(180deg,#20262f,#101419);
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06);
+  position:relative;
+}
+.phone::after{
+  content:"";position:absolute;left:50%;transform:translateX(-50%);top:14px;
+  width:96px;height:22px;border-radius:0 0 14px 14px;background:#0a0d11;z-index:20;
+}
+.screen{
+  height:100%;border-radius:28px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;font-size:14px;
+}
+
+/* ================= BEFORE (trenutna aplikacija) ================= */
+/* vjerno imitira: gray.50 bg, bijele kartice rounded-xl + shadow,
+   plavi akcenti, uppercase mikro-labale, gust spinner */
+.b{
+  --bg:#f9fafb; --card:#ffffff; --ink:#1f2937; --muted:#4b5563; --line:#e5e7eb;
+  --accent:#e85223; --blue:#2563eb; --blue-soft:#eff6ff;
+  background:var(--bg); color:var(--ink);
+  font-family:var(--sans);
+}
+.b .statusbar{display:flex;justify-content:space-between;padding:14px 20px 6px;font-size:11px;color:#6b7280;font-weight:600}
+.b .body{flex:1;overflow:hidden;padding:0 0 0 0}
+.b .scrollpad{padding:18px 18px 20px}
+.b h1{font-size:26px;font-weight:700;margin:0;letter-spacing:-.01em;color:#111827}
+.b .date{font-size:12px;color:#6b7280;margin-top:3px}
+.b .hrow{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.b .circ{width:34px;height:34px;border-radius:99px;background:#f3f4f6;display:grid;place-items:center;font-size:14px;color:#e85223}
+.b .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.b .microlabel{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280}
+.b .big{font-size:34px;font-weight:800;line-height:1.1;color:#111827}
+.b .unit{font-size:13px;color:#6b7280;font-weight:600}
+.b .row{display:flex;gap:12px}
+.b .col{flex:1;min-width:0}
+.b .tile{background:#f3f4f6;border-radius:12px;padding:12px}
+.b .tile.blue{background:#eff6ff;border:2px solid #60a5fa}
+.b .tile.green{background:#f0fdf4;border:2px solid #4ade80}
+.b .tile.red{background:#fef2f2;border:2px solid #f87171}
+.b .pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.b .pill.red{background:#ef4444;color:#fff}
+.b .pill.blue{background:#3b82f6;color:#fff}
+.b .muted{color:#6b7280;font-size:12px}
+.b .tiny{font-size:11px;color:#6b7280}
+.b .btn{border-radius:8px;padding:11px 14px;text-align:center;font-weight:600;font-size:13px}
+.b .btn.primary{background:#e85223;color:#fff}
+.b .btn.ghost{background:#f3f4f6;color:#1f2937}
+.b .stack>*+*{margin-top:10px}
+.b .tabbar{
+  display:flex;justify-content:space-around;align-items:center;background:#fff;border-top:1px solid #e5e7eb;
+  padding:9px 0 16px;font-size:10px;color:#6b7280
+}
+.b .tabbar .on{color:#ff6b3d;font-weight:600}
+.b .tabbar .ic{font-size:17px;display:block;text-align:center;line-height:1.2}
+.b .seg{display:flex;gap:8px}
+.b .segi{flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:#e5e7eb;color:#374151;font-size:11px;font-weight:600}
+.b .segi.on{background:#e85223;color:#fff}
+.b .spinner{width:26px;height:26px;border-radius:99px;border:3px solid #e5e7eb;border-top-color:#e85223;margin:0 auto 12px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.b .listrow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f3f4f6;font-size:13px}
+.b .fab{position:absolute;right:16px;bottom:78px;width:56px;height:56px;border-radius:99px;background:#e85223;color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 8px 20px rgba(232,82,35,.4)}
+
+/* ================= AFTER (predloženi instrument UI) ================= */
+.a{
+  --bg:#05070b; --panel:#0b0f16; --raised:#111723; --line:#1f2733; --line2:#2c3746;
+  --ink:#e8edf4; --muted:#9aa6b6; --dim:#6b7788;
+  --signal:#ff6b3d; --ok:#22c55e; --warn:#f5a524; --fault:#ef4444; --info:#38bdf8;
+  background:var(--bg); color:var(--ink);
+  font-family:var(--sans);
+}
+.a.light{
+  --bg:#f6f7fb; --panel:#ffffff; --raised:#f1f3f7; --line:#dce0e8; --line2:#c3cad6;
+  --ink:#111827; --muted:#4b5563; --dim:#6b7280;
+}
+.a .statusbar{display:flex;justify-content:space-between;padding:14px 18px 4px;font-size:10px;font-family:var(--mono);letter-spacing:.08em;color:var(--muted)}
+.a .body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.a .scrollpad{padding:10px 16px 16px;overflow:hidden}
+.a .topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 16px 12px}
+.a .brandline{display:flex;align-items:center;gap:8px}
+.a .logo{width:26px;height:26px;border-radius:3px;background:linear-gradient(160deg,#ff8a5f,#e2451a);display:grid;place-items:center;font-size:13px;color:#0b0f16;font-weight:800}
+.a .brandname{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.a .iconbtn{width:30px;height:30px;border:1px solid var(--line);border-radius:3px;display:grid;place-items:center;color:var(--muted);font-size:13px;background:var(--panel)}
+.a .h1{font-size:21px;font-weight:600;letter-spacing:-.01em;margin:0}
+.a .sub{font-size:11px;color:var(--dim);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.a .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:13px}
+.a .panel.hero{border-color:#3a2a22;background:linear-gradient(180deg,rgba(255,107,61,.07),transparent 70%),var(--panel)}
+.a.light .panel.hero{border-color:#ffd9c8;background:linear-gradient(180deg,rgba(255,107,61,.06),transparent 70%),var(--panel)}
+.a .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.a .readout{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.a .r-xl{font-size:40px;line-height:1}
+.a .r-lg{font-size:26px;line-height:1.05}
+.a .r-md{font-size:16px}
+.a .u{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:3px}
+.a .led{width:7px;height:7px;border-radius:99px;display:inline-block;flex:0 0 auto}
+.a .led.on{background:var(--signal);box-shadow:0 0 0 3px rgba(255,107,61,.15),0 0 10px rgba(255,107,61,.7)}
+.a .led.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+.a .led.warn{background:var(--warn);box-shadow:0 0 0 3px rgba(245,165,36,.14)}
+.a .led.off{background:var(--line2)}
+.a .status{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.a .row{display:flex;align-items:center;gap:10px}
+.a .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.a .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.a .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.a .kpi{background:var(--raised);border:1px solid var(--line);border-radius:3px;padding:9px 10px}
+.a .kpi .k{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.a .gauge{height:6px;border-radius:2px;background:var(--raised);position:relative;overflow:hidden;border:1px solid var(--line)}
+.a .gauge i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff8a5f,#ff6b3d);border-radius:2px}
+.a .gauge .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.55}
+.a .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:3px;padding:10px 12px;font-size:12px;font-weight:600;letter-spacing:.02em;border:1px solid transparent;font-family:var(--sans)}
+.a .btn.primary{background:var(--signal);color:#0b0f16;border-color:var(--signal)}
+.a .btn.secondary{background:var(--raised);color:var(--ink);border-color:var(--line2)}
+.a .btn.ghost{background:transparent;color:var(--muted);border-color:var(--line)}
+.a .btn.block{width:100%}
+.a .seg{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--panel)}
+.a .seg span{flex:1;text-align:center;padding:7px 4px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-right:1px solid var(--line)}
+.a .seg span:last-child{border-right:0}
+.a .seg span.on{background:var(--raised);color:var(--ink);box-shadow:inset 0 -2px 0 var(--signal)}
+.a .divider{height:1px;background:var(--line);margin:10px -13px}
+.a .tabbar{
+  display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border-top:1px solid var(--line);
+  padding:8px 6px 16px
+}
+.a .tabbar div{text-align:center;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.a .tabbar div .ic{display:block;font-size:15px;margin-bottom:3px;line-height:1}
+.a .tabbar div.on{color:var(--signal)}
+.a .tabbar div.on .ic{filter:drop-shadow(0 0 6px rgba(255,107,61,.8))}
+.a .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line2);border-radius:8px 8px 0 0;padding:8px 16px 20px}
+.a .grabber{width:34px;height:3px;border-radius:2px;background:var(--line2);margin:0 auto 12px}
+.a .field{background:var(--raised);border:1px solid var(--line2);border-radius:3px;padding:10px 11px;font-family:var(--mono);font-size:15px;color:var(--ink)}
+.a .fab{position:absolute;right:14px;bottom:78px;width:46px;height:46px;border-radius:4px;background:var(--signal);color:#0b0f16;display:grid;place-items:center;font-size:22px;box-shadow:0 10px 24px -6px rgba(255,107,61,.6)}
+.a .banner{border:1px solid var(--line2);border-left:2px solid var(--warn);background:var(--raised);border-radius:3px;padding:9px 11px}
+.a .banner.fault{border-left-color:var(--fault)}
+.a .banner.ok{border-left-color:var(--ok)}
+.a .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.a .t-xs{font-size:10px}
+.a .t-sm{font-size:11.5px;color:var(--muted)}
+.a .t-md{font-size:13px}
+.a .gap4>*+*{margin-top:4px}
+.a .gap8>*+*{margin-top:8px}
+.a .gap12>*+*{margin-top:12px}
+.a .gap16>*+*{margin-top:16px}
+.a .scroll{overflow:hidden}
+.a .empty{text-align:center;padding:20px 10px;color:var(--dim)}
+.a .skel{background:linear-gradient(90deg,var(--raised),var(--line),var(--raised));background-size:200% 100%;border-radius:2px;animation:sh 1.4s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.a .spark{display:flex;align-items:flex-end;gap:3px;height:38px}
+.a .spark i{flex:1;background:var(--line2);border-radius:1px;min-height:3px}
+.a .spark i.hi{background:var(--signal)}
+.a .table{width:100%;font-size:11.5px;border-collapse:collapse}
+.a .table th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:left;padding:0 0 6px;font-weight:500;border-bottom:1px solid var(--line)}
+.a .table td{padding:7px 0;border-bottom:1px solid var(--line);color:var(--ink)}
+.a .table td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- Anotacije ispod telefona ---------- */
+.annotations{margin-top:16px;display:grid;gap:6px}
+.ann{display:grid;grid-template-columns:20px 1fr;gap:8px;font-size:12px;color:var(--muted);align-items:start}
+.ann b{color:var(--doc-ink);font-weight:600}
+.ann .n{font-family:var(--mono);font-size:10px;color:var(--signal);border:1px solid #4a2c22;border-radius:2px;text-align:center;padding:1px 0;margin-top:1px}
+.ann.after .n{color:var(--ok);border-color:#26402f}
+
+/* ---------- Design system ---------- */
+.ds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.ds-card{background:var(--doc-panel);border:1px solid var(--doc-line);border-radius:4px;padding:18px}
+.ds-card h3{margin:0 0 4px;font-size:14px;letter-spacing:.01em}
+.ds-card .hint{font-size:11.5px;color:var(--doc-muted);margin:0 0 14px;font-family:var(--mono)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.sw{border:1px solid var(--doc-line);border-radius:3px;overflow:hidden}
+.sw .bar{height:38px}
+.sw .met{padding:6px 7px;font-family:var(--mono);font-size:9px;color:var(--doc-muted);line-height:1.5}
+.sw .met b{display:block;color:var(--doc-ink);font-size:10px}
+.spec{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:7px 0;border-bottom:1px solid var(--doc-line)}
+.spec:last-child{border-bottom:0}
+.spec b{font-family:var(--mono);font-size:11px;color:var(--doc-ink);font-weight:500}
+.spec span{color:var(--doc-muted)}
+.ds-demo{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* ---------- Table findings ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+.tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--doc-muted);padding:9px 10px;border-bottom:1px solid var(--doc-line);font-weight:500}
+.tbl td{padding:9px 10px;border-bottom:1px solid #151b24;color:#c2ccd9;vertical-align:top}
+.tbl td code{font-family:var(--mono);font-size:11px;color:#ffb39c;background:rgba(255,107,61,.08);padding:1px 5px;border-radius:2px}
+.sev{font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:2px 6px;border-radius:2px;white-space:nowrap}
+.sev.hi{background:rgba(239,68,68,.14);color:#ff9b9b;border:1px solid #4a2626}
+.sev.mid{background:rgba(245,165,36,.12);color:#ffcd7a;border:1px solid #4a3a1c}
+.sev.lo{background:rgba(56,189,248,.10);color:#9ad8f7;border:1px solid #1e3a4a}
+
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.toc a{
+  font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--doc-muted);
+  border:1px solid var(--doc-line);border-radius:2px;padding:7px 10px;text-decoration:none
+}
+.toc a:hover{color:var(--doc-ink);border-color:#3a4453}
+.foot{margin-top:80px;padding-top:22px;border-top:1px solid var(--doc-line);font-size:12px;color:var(--doc-muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <p class="doc-kicker">Boiler Control · Mobile · UX/UI refaktor · Prijedlog za odobrenje</p>
+  <h1>Instrument panel na telefonu</h1>
+  <p>
+    Ovo je ilustracija, ne implementacija. Lijevo je <b>trenutno stanje</b> (rekonstruisano iz koda),
+    desno je <b>predloženi pravac</b>. Cilj je da mobilna aplikacija progovori istim jezikom kao
+    web instrument panel — tamna podloga, hairline ivice, mono brojevi, brand signal samo za akciju i živo stanje.
+    Nijedan fajl u <code style="font-family:var(--mono)">mobile/src</code> još nije promijenjen.
+  </p>
+  <div class="doc-meta">
+    <span class="chip">Branch <b>arena/456ec6f2-boiler-control</b></span>
+    <span class="chip">15 ekrana · 10.776 LOC</span>
+    <span class="chip">228× <b>useColorModeValue</b></span>
+    <span class="chip">3 ekrana bez ijednog <b>t()</b></span>
+    <span class="chip">15 <b>accessibilityLabel</b></span>
+    <span class="chip">35 <b>shadow</b> upotreba</span>
+  </div>
+  <nav class="toc">
+    <a href="#ia">01 · Navigacija</a>
+    <a href="#pocetna">02 · Početna</a>
+    <a href="#grijanje">03 · Grijanje</a>
+    <a href="#plin">04 · Plin</a>
+    <a href="#analitika">05 · Analitika</a>
+    <a href="#postavke">06 · Postavke</a>
+    <a href="#stanja">07 · Stanja i sistemski sloj</a>
+    <a href="#ds">08 · Design system</a>
+    <a href="#nalazi">09 · Nalazi</a>
+    <a href="#plan">10 · Plan refaktora</a>
+  </nav>
+</header>
+
+<!-- ============================ 01 IA ============================ -->
+<section class="section" id="ia">
+  <div class="section-head">
+    <div>
+      <h2>01 · Informaciona arhitektura i navigacija</h2>
+      <p class="sub">
+        Najveći pojedinačni UX problem nije boja — nego to što se korisnik može zaglaviti i
+        što postoje dvije trake tabova jedna iznad druge. Ovo se rješava prije ijednog piksela stilova.
+      </p>
+    </div>
+    <span class="section-index">NAV-01 … NAV-05</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad">
+      <div class="t">Dokaz · GasScreen.tsx:22</div>
+      <div class="b"><b>Dvostruka traka tabova.</b> <code>Gas</code> tab renderuje <code>createBottomTabNavigator</code>
+      (Readings / Analysis) unutar glavnog bottom-tab navigatora → dva tab bara, jedan iznad drugog.</div>
+    </div>
+    <div class="finding bad">
+      <div class="t">Dokaz · AnalyticsScreen.tsx (0 pogodaka)</div>
+      <div class="b"><b>Slijepa ulica.</b> Analitika se otvara iz headera početne s <code>headerShown:false</code>,
+      a u ekranu nema nijednog <code>goBack</code> ni strelice. Nazad postoji samo kao Android hardverska tipka.</div>
+    </div>
+    <div class="finding bad">
+      <div class="t">Dokaz · SettingsStackNavigator.tsx:38,46,54,62</div>
+      <div class="b"><b>Naslovi nisu prevedeni</b> i pišu se kao string literali u navigatoru:
+      „Manage Homes", „Heating Schedules", „Notifications", „Notification Preferences".</div>
+    </div>
+    <div class="finding mid">
+      <div class="t">Dokaz · DashboardScreen.tsx:296-326</div>
+      <div class="b"><b>Tri ikone bez teksta i bez labele</b> u headeru (plamen, grafikon, refresh).
+      Prva ikona (plamen) uopšte nema <code>onPress</code> — izgleda kao dugme, a nije.</div>
+    </div>
+  </div>
+
+  <div class="ds-grid" style="grid-template-columns:1fr 1fr">
+    <div class="ds-card">
+      <h3 style="color:#ff9b9b">Sada</h3>
+      <p class="hint">četiri taba + ugniježđeni tab bar</p>
+      <pre style="font-family:var(--mono);font-size:11.5px;line-height:1.9;color:#c2ccd9;margin:0;white-space:pre-wrap">
+BottomTabs
+├─ Naslovna ── Stack ── DashboardMain
+│                    └─ Analytics   ← bez nazad
+├─ Grijanje  ── HeatingScreen
+├─ Plin      ── BottomTabs        ← DRUGI tab bar
+│              ├─ Očitanja
+│              └─ Analiza
+└─ Postavke  ── Stack ── Profile  ← bez nazad, bez i18n
+                    ├─ Manage Homes   ← engleski naslov
+                    ├─ Heating Schedules
+                    ├─ Notifications
+                    └─ Notification Preferences</pre>
+    </div>
+    <div class="ds-card">
+      <h3 style="color:#7ee2a1">Predlažem</h3>
+      <p class="hint">četiri taba, jedan nivo + zajednički ScreenHeader</p>
+      <pre style="font-family:var(--mono);font-size:11.5px;line-height:1.9;color:#c2ccd9;margin:0;white-space:pre-wrap">
+BottomTabs (jedan)
+├─ Početna ── Stack
+│              ├─ Početna
+│              └─ Analitika      ← ScreenHeader + nazad
+├─ Grijanje  ── Grijanje
+├─ Plin      ── Stack
+│              ├─ Očitanja       ← Segmented: Očitanja | Analiza
+│              └─ Analiza        (ista traka, ne drugi tab bar)
+└─ Postavke  ── Stack
+               ├─ Postavke
+               ├─ Profil         ← ScreenHeader + nazad + i18n
+               ├─ Domovi
+               ├─ Rasporedi
+               └─ Obavijesti     ← naslovi iz t(), ne iz navigatora</pre>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th style="width:80px">ID</th><th>Odluka</th><th style="width:340px">Zašto</th><th style="width:90px">Rizik</th></tr></thead>
+    <tbody>
+      <tr><td>NAV-01</td><td>Ukinuti ugniježđeni tab bar u Plinu; zamijeniti <b>segmented kontrolom</b> u zaglavlju ekrana.</td><td>Jedna traka tabova, jasna hijerarhija, +56px vertikalnog prostora za sadržaj.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>NAV-02</td><td>Uvesti zajednički <code>ScreenHeader</code> (nazad + naslov + akcija) i obavezan <code>headerShown</code> na svim push ekranima.</td><td>Nema više slijepih ulica; gesture nazad i tipka nazad se poklapaju.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>NAV-03</td><td>Svi naslovi ekrana iz <code>t()</code> ključeva, nikad iz navigatora.</td><td>Nestaje klasa buga „ekran na bosanskom, header na engleskom".</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>NAV-04</td><td>Ikonografske kontrole dobijaju <code>accessibilityLabel</code> + <code>hitSlop</code> 44×44; dekorativna ikona prestaje biti <code>Pressable</code>.</td><td>TalkBack/VoiceOver; manje lažnih afordanci.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>NAV-05</td><td>Duboki linkovi ostaju <code>myapp://</code> i imena ruta ostaju ista (<code>routes.ts</code> se ne dira).</td><td>Instalirane verzije i push notifikacije ne smiju pući.</td><td><span class="sev hi">PAZI</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 02 POČETNA ============================ -->
+<section class="section" id="pocetna">
+  <div class="section-head">
+    <div>
+      <h2>02 · Početna</h2>
+      <p class="sub">
+        Danas: osam kartica jedna pod drugom, svaka sa sjenom i svojim akcentom, pa korisnik ne zna šta je
+        glavni podatak. Predlažem: jedan hero (polazna voda), tri KPI pločice, pa ostalo u padajuće sekcije.
+      </p>
+    </div>
+    <span class="section-index">HOME</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad"><div class="t">Trenutno</div><div class="b">8 sekcija · 23 <code>shadow</code> · 11 kartica · 4 različita akcenta (brand, blue, green, red) u prvom ekranu.</div></div>
+    <div class="finding mid"><div class="t">Trenutno</div><div class="b">Zdravlje sistema i status kotla su dvije odvojene velike kartice s dva različita velika broja.</div></div>
+    <div class="finding good"><div class="t">Predloženo</div><div class="b">1 hero + 3 KPI + 2 lista. Sve ivice hairline, nula sjena, brand samo na akciji i živom stanju.</div></div>
+  </div>
+
+  <div class="compare">
+    <!-- BEFORE -->
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag now">SADA</span><span class="pane-note">rekonstrukcija iz DashboardScreen.tsx</span></div>
+      <div class="phone">
+        <div class="screen b">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮ ▮</span></div>
+          <div class="body">
+            <div class="scrollpad">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div>
+                  <h1>Naslovna</h1>
+                  <div class="date">subota, 7. novembar</div>
+                </div>
+                <div class="hrow">
+                  <div class="circ">🔥</div>
+                  <div class="circ">📊</div>
+                  <div class="circ">↻</div>
+                </div>
+              </div>
+
+              <!-- boiler status card -->
+              <div class="card">
+                <div class="microlabel">Status kotla</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+                  <div style="width:44px;height:44px;border-radius:99px;background:rgba(232,82,35,.15);display:grid;place-items:center;font-size:20px">🔥</div>
+                  <div>
+                    <div style="font-size:19px;font-weight:800;color:#e85223">Zagrijavanje</div>
+                    <div class="tiny">Trajanje: 1h 12m</div>
+                  </div>
+                </div>
+                <div class="tile" style="margin-top:12px">
+                  <div class="microlabel">Vanjska temperatura</div>
+                  <div><span class="big">-2.1</span><span class="unit"> °C</span></div>
+                </div>
+                <div style="margin-top:12px">
+                  <div class="microlabel">Temperatura polazne vode</div>
+                  <div class="row" style="margin-top:8px">
+                    <div class="col tile blue">
+                      <div class="tiny" style="font-weight:700">Preporučeno</div>
+                      <div><span style="font-size:22px;font-weight:800;color:#2563eb">54.0</span><span class="unit">°C</span></div>
+                    </div>
+                    <div class="col tile green">
+                      <div class="tiny" style="font-weight:700">Stvarno</div>
+                      <div><span style="font-size:22px;font-weight:800;color:#16a34a">52.4</span><span class="unit">°C</span></div>
+                    </div>
+                  </div>
+                  <div style="margin-top:8px;font-size:12px;font-weight:700;color:#16a34a">✓ Optimalno (Δ 1.6°C)</div>
+                </div>
+                <div class="row" style="margin-top:12px">
+                  <div class="btn primary col">Postavi trenutnu temperaturu</div>
+                </div>
+              </div>
+
+              <!-- health -->
+              <div class="card">
+                <div class="microlabel">Stanje sistema</div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><span class="big">82</span><span class="unit"> / 100</span>
+                    <div class="muted" style="margin-top:2px">Pouzdanost: 74%</div>
+                  </div>
+                  <div style="width:80px;height:80px;border-radius:99px;background:rgba(34,197,94,.15);display:grid;place-items:center;font-size:28px">✓</div>
+                </div>
+                <div style="margin-top:10px;height:8px;border-radius:99px;background:#e5e7eb;overflow:hidden">
+                  <div style="width:82%;height:100%;background:#22c55e"></div>
+                </div>
+              </div>
+
+              <!-- weather -->
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div class="microlabel">Trenutna prognoza vremena</div>
+                    <div><span style="font-size:44px;font-weight:800">-2</span><span style="font-size:22px;color:#6b7280">°C</span></div>
+                    <div class="muted">Osjećaj -5°C</div>
+                    <div style="color:#e85223;font-weight:700;margin-top:4px">Vedro</div>
+                  </div>
+                  <div style="width:96px;height:96px;border-radius:99px;background:#e85223;display:grid;place-items:center;font-size:44px">☀</div>
+                </div>
+                <div class="row" style="margin-top:10px">
+                  <div class="col tile" style="text-align:center"><div>💧</div><div style="font-weight:700">68%</div><div class="tiny">Vlažnost</div></div>
+                  <div class="col tile" style="text-align:center"><div>💨</div><div style="font-weight:700">2.4</div><div class="tiny">m/s</div></div>
+                  <div class="col tile" style="text-align:center"><div>◎</div><div style="font-weight:700">1018</div><div class="tiny">hPa</div></div>
+                </div>
+              </div>
+              <div style="text-align:center;font-size:11px;color:#9ca3af;padding:14px 0">↓ još 4 kartice: preporuka, termostati, domovi</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="on"><span class="ic">◉</span>Naslovna</div>
+            <div><span class="ic">🔥</span>Grijanje</div>
+            <div><span class="ic">◉</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="ann"><span class="n">1</span><div><b>Plamen u headeru nema <code>onPress</code></b> — izgleda kliktabilno, ne radi ništa. Tri ikone bez labele za čitač ekrana.</div></div>
+        <div class="ann"><span class="n">2</span><div><b>Plava i zelena pločica</b> uz narandžastu akciju: tri akcenta u jednoj kartici. Plava nije nigdje drugdje u brand sistemu.</div></div>
+        <div class="ann"><span class="n">3</span><div><b>Dva velika broja</b> (52.4 i 82) se takmiče za pažnju, a nijedan nije označen kao glavni.</div></div>
+        <div class="ann"><span class="n">4</span><div><b>Vrijeme zauzima 200px</b> za informaciju koja ovdje nije odluka — ikona od 96px u punom krugu.</div></div>
+        <div class="ann"><span class="n">5</span><div><b>Donja traka</b> je vizuelno neutralna; aktivni tab se ne razlikuje dovoljno (samo boja teksta).</div></div>
+      </div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag next">PREDLOG</span><span class="pane-note">instrument panel · dark-first</span></div>
+      <div class="phone">
+        <div class="screen a">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar">
+            <div class="brandline">
+              <div class="logo">B</div>
+              <div>
+                <div class="brandname">Boiler Control</div>
+                <div style="font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:.08em">STAN 1 · VISOKO</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <div class="iconbtn" aria-label="Osvježi">↻</div>
+              <div class="iconbtn" aria-label="Analitika">▤</div>
+            </div>
+          </div>
+
+          <div class="body scroll">
+            <div class="scrollpad">
+              <!-- HERO -->
+              <div class="panel hero">
+                <div class="between">
+                  <div class="status"><span class="led on"></span>Grije · 01:12</div>
+                  <div class="lbl">Polazna voda</div>
+                </div>
+                <div class="row" style="align-items:baseline;margin-top:10px;gap:6px">
+                  <div class="readout r-xl">52.4</div>
+                  <div class="u" style="font-size:13px">°C</div>
+                  <div style="margin-left:auto;text-align:right">
+                    <div class="lbl">Cilj</div>
+                    <div class="readout r-md">54.0</div>
+                  </div>
+                </div>
+                <div class="gauge" style="margin-top:12px">
+                  <i style="width:61%"></i>
+                  <span class="mark" style="left:54.4%"></span>
+                </div>
+                <div class="between" style="margin-top:7px">
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">Δ −1.6 °C · u toleranciji</div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--dim)">40 — 75</div>
+                </div>
+                <div class="divider"></div>
+                <button class="btn primary block" style="margin-top:2px">Postavi polaznu temperaturu</button>
+              </div>
+
+              <!-- KPI ROW -->
+              <div class="grid3" style="margin-top:8px">
+                <div class="kpi">
+                  <div class="k">Vanjska</div>
+                  <div class="readout r-lg">−2.1<span class="u">°C</span></div>
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px">osjećaj −5</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">Zdravlje</div>
+                  <div class="readout r-lg">82<span class="u">/100</span></div>
+                  <div class="row" style="margin-top:4px;gap:4px"><span class="led ok" style="width:5px;height:5px"></span><span style="font-family:var(--mono);font-size:9px;color:var(--ok);letter-spacing:.06em">DOBRO</span></div>
+                </div>
+                <div class="kpi">
+                  <div class="k">Termostati</div>
+                  <div class="readout r-lg">3<span class="u">/3</span></div>
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px">online</div>
+                </div>
+              </div>
+
+              <!-- ALERT -->
+              <div class="banner" style="margin-top:8px">
+                <div class="between">
+                  <div class="row" style="gap:7px">
+                    <span class="led warn" style="width:6px;height:6px"></span>
+                    <div>
+                      <div style="font-size:11.5px;font-weight:600">Kratki ciklusi grijanja</div>
+                      <div class="t-xs" style="color:var(--dim);font-family:var(--mono)">14 ciklusa · prosjek 11 min</div>
+                    </div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">›</div>
+                </div>
+              </div>
+
+              <!-- WEATHER STRIP -->
+              <div class="panel" style="margin-top:8px;padding:9px 11px">
+                <div class="between">
+                  <div class="row" style="gap:8px">
+                    <span style="font-size:15px">☀</span>
+                    <div style="font-size:11.5px">Vedro</div>
+                    <div class="t-xs" style="color:var(--dim);font-family:var(--mono)">68% · 2.4 m/s</div>
+                  </div>
+                  <div class="readout r-md">−2<span class="u">°C</span></div>
+                </div>
+              </div>
+
+              <!-- THERMOSTATS -->
+              <div class="between" style="margin-top:14px;margin-bottom:6px">
+                <div class="lbl">Termostati</div>
+                <div class="lbl" style="color:var(--muted)">2 griju</div>
+              </div>
+              <div class="panel" style="padding:0">
+                <div class="between" style="padding:9px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:8px">
+                    <span class="led on"></span>
+                    <div>
+                      <div style="font-size:12px">Dnevna soba</div>
+                      <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">21.4 → 22.5</div>
+                    </div>
+                  </div>
+                  <div class="readout r-md" style="color:var(--signal)">+1.1</div>
+                </div>
+                <div class="between" style="padding:9px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:8px">
+                    <span class="led on"></span>
+                    <div>
+                      <div style="font-size:12px">Kuhinja</div>
+                      <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">20.8 → 21.0</div>
+                    </div>
+                  </div>
+                  <div class="readout r-md" style="color:var(--signal)">+0.2</div>
+                </div>
+                <div class="between" style="padding:9px 11px">
+                  <div class="row" style="gap:8px">
+                    <span class="led off"></span>
+                    <div>
+                      <div style="font-size:12px;color:var(--muted)">Spavaća soba</div>
+                      <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">19.0 → 19.0</div>
+                    </div>
+                  </div>
+                  <div class="readout r-md" style="color:var(--dim)">0.0</div>
+                </div>
+              </div>
+
+              <!-- DISCLOSURE -->
+              <div class="panel" style="margin-top:8px;padding:9px 11px">
+                <div class="between">
+                  <div class="lbl">Zašto 54.0 °C?</div>
+                  <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">＋</div>
+                </div>
+                <div class="t-xs" style="color:var(--dim);margin-top:4px">Krivulja 48.0 · vanjska −2.1 · profil +4.0 · pouzdanost 74%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabbar">
+            <div class="on"><span class="ic">◉</span>Početna</div>
+            <div><span class="ic">△</span>Grijanje</div>
+            <div><span class="ic">▤</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations after">
+        <div class="ann after"><span class="n">1</span><div><b>Jedan hero nosi odluku.</b> Polazna voda je najveći broj na ekranu, mono, tabularno poravnat; cilj je manji i desno. Gauge pokazuje gdje si u odnosu na cilj.</div></div>
+        <div class="ann after"><span class="n">2</span><div><b>Živo stanje je LED + tekst, ne puna crvena pločica.</b> Boja signala se troši samo na „grije".</div></div>
+        <div class="ann after"><span class="n">3</span><div><b>Tri KPI pločice</b> zamjenjuju tri odvojene kartice: vanjska, zdravlje, termostati — jedan red, ista visina, ista tipografija.</div></div>
+        <div class="ann after"><span class="n">4</span><div><b>Upozorenje je hairline banner</b> s lijevom ivicom u boji, ne cijela obojena kartica. Kad nema upozorenja — banner se ne renderuje (nema prazne kartice).</div></div>
+        <div class="ann after"><span class="n">5</span><div><b>Vrijeme je jedan red</b>, ne 200px kartica. Detalji ostaju u Analitici/prognozi na dodir.</div></div>
+        <div class="ann after"><span class="n">6</span><div><b>Termostati su lista-redovi</b> sa mono vrijednostima i LED stanjem — čitljivo jednim pogledom, bez 12 kartica.</div></div>
+        <div class="ann after"><span class="n">7</span><div><b>Preporuka je disclosure.</b> Podrazumijevano sakrivena; otvara razlog na zahtjev, umjesto da zauzima pola ekrana svaki put.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 03 GRIJANJE ============================ -->
+<section class="section" id="grijanje">
+  <div class="section-head">
+    <div>
+      <h2>03 · Grijanje</h2>
+      <p class="sub">
+        Isti podatak (trenutna / ciljna / razlika) se danas ispisuje tri puta kroz tri kolone s tri ista stupca
+        i tri boje. Predlažem red-po-termostatu s jednim mini-gauge-om i vertikalnom listom — bez ijedne kartice.
+      </p>
+    </div>
+    <span class="section-index">HEAT</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad"><div class="t">Trenutno · HeatingScreen.tsx:270-340</div><div class="b">3 kolone × „Trenutna / Ciljna / Razlika" po termostatu = <b>9 velikih brojeva</b> za 3 uređaja, sve u <code>2xl</code> težini bold.</div></div>
+    <div class="finding mid"><div class="t">Trenutno</div><div class="b">Status je <code>Badge variant="solid"</code> u punoj crvenoj/plavoj boji — najjači vizuelni element na ekranu je riječ „ZAGRIJAVA".</div></div>
+    <div class="finding good"><div class="t">Predloženo</div><div class="b">Jedan red = jedan termostat. Naziv, LED, „21.4 → 22.5", odstupanje kao mono broj. Gauge pokazuje progres.</div></div>
+  </div>
+
+  <div class="compare">
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag now">SADA</span><span class="pane-note">bijele kartice, tri kolone</span></div>
+      <div class="phone">
+        <div class="screen b">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮ ▮</span></div>
+          <div class="body">
+            <div class="scrollpad">
+              <div><h1>Status grijanja</h1><div class="date">Prati svoj sistem grijanja i status termostata</div></div>
+
+              <div class="card" style="border-left:4px solid #ef4444">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:15px">Dnevna soba</div>
+                    <span class="pill red" style="margin-top:4px">ZAGRIJAVA</span>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:14px;text-align:center">
+                  <div class="col">
+                    <div class="tiny">Trenutna</div>
+                    <div><span style="font-size:24px;font-weight:700">21.4</span><span class="tiny"> °C</span></div>
+                  </div>
+                  <div class="col">
+                    <div class="tiny">Ciljna</div>
+                    <div><span style="font-size:24px;font-weight:700">22.5</span><span class="tiny"> °C</span></div>
+                  </div>
+                  <div class="col">
+                    <div class="tiny">Razlika</div>
+                    <div><span style="font-size:24px;font-weight:700;color:#ef4444">1.1</span><span class="tiny"> °C</span></div>
+                  </div>
+                </div>
+                <div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px;color:#6b7280">
+                  <span>🔥</span> Aktivno zagrijava do ciljne temperature
+                </div>
+              </div>
+
+              <div class="card" style="border-left:4px solid #ef4444">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:15px">Kuhinja</div>
+                    <span class="pill red" style="margin-top:4px">ZAGRIJAVA</span>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:14px;text-align:center">
+                  <div class="col"><div class="tiny">Trenutna</div><div><span style="font-size:24px;font-weight:700">20.8</span><span class="tiny"> °C</span></div></div>
+                  <div class="col"><div class="tiny">Ciljna</div><div><span style="font-size:24px;font-weight:700">21.0</span><span class="tiny"> °C</span></div></div>
+                  <div class="col"><div class="tiny">Razlika</div><div><span style="font-size:24px;font-weight:700;color:#ef4444">0.2</span><span class="tiny"> °C</span></div></div>
+                </div>
+                <div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px;color:#6b7280">
+                  <span>🔥</span> Aktivno zagrijava do ciljne temperature
+                </div>
+              </div>
+
+              <div class="card" style="border-left:4px solid #3b82f6;opacity:.9">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:15px">Spavaća soba</div>
+                    <span class="pill blue" style="margin-top:4px">MIRUJE</span>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:14px;text-align:center">
+                  <div class="col"><div class="tiny">Trenutna</div><div><span style="font-size:24px;font-weight:700">19.0</span><span class="tiny"> °C</span></div></div>
+                  <div class="col"><div class="tiny">Ciljna</div><div><span style="font-size:24px;font-weight:700">19.0</span><span class="tiny"> °C</span></div></div>
+                  <div class="col"><div class="tiny">Razlika</div><div><span style="font-size:24px;font-weight:700;color:#3b82f6">0.0</span><span class="tiny"> °C</span></div></div>
+                </div>
+                <div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px;color:#6b7280">
+                  <span>✓</span> Čekanje - temperatura na cilju
+                </div>
+              </div>
+              <div style="text-align:center;font-size:11px;color:#9ca3af;padding:12px 0">↓ Nedavne sesije grijanja, lista događaja</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div><span class="ic">◉</span>Naslovna</div>
+            <div class="on"><span class="ic">🔥</span>Grijanje</div>
+            <div><span class="ic">◉</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="ann"><span class="n">1</span><div><b>Crvena i plava ivica</b> od 4px su najdominantniji elementi — jači od same temperature. Boja nosi značenje koje tekst već kaže.</div></div>
+        <div class="ann"><span class="n">2</span><div><b>Devet brojeva iste veličine.</b> Oko ne zna gdje početi; „Razlika" je izvedena vrijednost i ne bi trebala biti iste težine kao mjerene.</div></div>
+        <div class="ann"><span class="n">3</span><div><b>Tri kartice × ~210px</b> = 630px, pa se treći termostat ne vidi bez skrolanja.</div></div>
+        <div class="ann"><span class="n">4</span><div><b>Nema informacije o svježini.</b> „Podaci se ažuriraju svakog minuta" piše na dnu ekrana, a ne uz podatak.</div></div>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag next">PREDLOG</span><span class="pane-note">lista redova + mini gauge</span></div>
+      <div class="phone">
+        <div class="screen a">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar">
+            <div class="brandline">
+              <div class="logo">B</div>
+              <div class="brandname">Boiler Control</div>
+            </div>
+            <div class="iconbtn" aria-label="Osvježi">↻</div>
+          </div>
+          <div class="body scroll">
+            <div class="scrollpad">
+              <div class="between">
+                <div>
+                  <div class="h1">Grijanje</div>
+                  <div class="sub">3 termostata · 2 griju</div>
+                </div>
+              </div>
+
+              <div class="panel" style="margin-top:12px;padding:0">
+                <div style="padding:11px 11px 10px;border-bottom:1px solid var(--line)">
+                  <div class="between">
+                    <div class="row" style="gap:7px">
+                      <span class="led on"></span>
+                      <div style="font-size:12.5px;font-weight:600">Dnevna soba</div>
+                    </div>
+                    <div class="readout r-md" style="color:var(--signal)">+1.1</div>
+                  </div>
+                  <div class="row" style="align-items:baseline;margin-top:7px;gap:5px">
+                    <div class="readout r-lg">21.4</div>
+                    <div class="u">→ 22.5 °C</div>
+                    <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim)">GRije 14 min</div>
+                  </div>
+                  <div class="gauge" style="margin-top:8px;height:4px"><i style="width:80%"></i></div>
+                </div>
+                <div style="padding:11px 11px 10px;border-bottom:1px solid var(--line)">
+                  <div class="between">
+                    <div class="row" style="gap:7px">
+                      <span class="led on"></span>
+                      <div style="font-size:12.5px;font-weight:600">Kuhinja</div>
+                    </div>
+                    <div class="readout r-md" style="color:var(--signal)">+0.2</div>
+                  </div>
+                  <div class="row" style="align-items:baseline;margin-top:7px;gap:5px">
+                    <div class="readout r-lg">20.8</div>
+                    <div class="u">→ 21.0 °C</div>
+                    <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim)">GRije 4 min</div>
+                  </div>
+                  <div class="gauge" style="margin-top:8px;height:4px"><i style="width:93%"></i></div>
+                </div>
+                <div style="padding:11px 11px 10px">
+                  <div class="between">
+                    <div class="row" style="gap:7px">
+                      <span class="led off"></span>
+                      <div style="font-size:12.5px;font-weight:600;color:var(--muted)">Spavaća soba</div>
+                    </div>
+                    <div class="readout r-md" style="color:var(--dim)">0.0</div>
+                  </div>
+                  <div class="row" style="align-items:baseline;margin-top:7px;gap:5px">
+                    <div class="readout r-lg" style="color:var(--muted)">19.0</div>
+                    <div class="u">→ 19.0 °C</div>
+                    <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim)">miruje</div>
+                  </div>
+                  <div class="gauge" style="margin-top:8px;height:4px"><i style="width:100%;background:var(--line2)"></i></div>
+                </div>
+              </div>
+
+              <div class="between" style="margin-top:14px;margin-bottom:6px">
+                <div class="lbl">Danas</div>
+                <div class="lbl" style="color:var(--muted)">3 sesije · 1h 42m</div>
+              </div>
+              <div class="panel" style="padding:0">
+                <div class="between" style="padding:9px 11px;border-bottom:1px solid var(--line)">
+                  <div>
+                    <div style="font-size:12px">Dnevna soba</div>
+                    <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">06:12 → 07:26 · 21.1 → 22.5</div>
+                  </div>
+                  <div class="readout r-md" style="font-size:13px">74m</div>
+                </div>
+                <div class="between" style="padding:9px 11px;border-bottom:1px solid var(--line)">
+                  <div>
+                    <div style="font-size:12px">Kuhinja</div>
+                    <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">06:12 → 06:20 · 20.6 → 21.0</div>
+                  </div>
+                  <div class="readout r-md" style="font-size:13px">8m</div>
+                </div>
+                <div class="between" style="padding:9px 11px">
+                  <div>
+                    <div style="font-size:12px">Dnevna soba</div>
+                    <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">05:02 → 05:22 · 20.4 → 21.1</div>
+                  </div>
+                  <div class="readout r-md" style="font-size:13px">20m</div>
+                </div>
+              </div>
+
+              <div class="panel" style="margin-top:8px;padding:9px 11px">
+                <div class="between">
+                  <div class="t-xs" style="color:var(--dim);font-family:var(--mono)">Ažurirano prije 40 s</div>
+                  <div class="t-xs" style="color:var(--dim);font-family:var(--mono)">automatski 60 s</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div><span class="ic">◉</span>Početna</div>
+            <div class="on"><span class="ic">△</span>Grijanje</div>
+            <div><span class="ic">▤</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations after">
+        <div class="ann after"><span class="n">1</span><div><b>Red = uređaj.</b> 3 termostata staju u ~330px umjesto 630px. Sve tri temperature su u jednom redu: „21.4 → 22.5".</div></div>
+        <div class="ann after"><span class="n">2</span><div><b>Mjerena vrijednost je velika, izvedena je mala.</b> „Razlika" postaje desni mono broj u boji signala — nosi značenje, ne takmiči se.</div></div>
+        <div class="ann after"><span class="n">3</span><div><b>Gauge po termostatu</b> daje progres ka cilju; boja se troši samo kad uređaj stvarno grije.</div></div>
+        <div class="ann after"><span class="n">4</span><div><b>Svježina podataka je uz sadržaj</b> („Ažurirano prije 40 s" + interval), umjesto marketinške rečenice na dnu.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 04 PLIN ============================ -->
+<section class="section" id="plin">
+  <div class="section-head">
+    <div>
+      <h2>04 · Plin</h2>
+      <p class="sub">
+        Ekran s najviše funkcija (1.094 LOC) i najjasnijim strukturnim problemom: dva tab bara, FAB koji
+        prekriva zadnji red liste i akcije po očitanju skrivene u „…" meniju bez ikakve oznake.
+      </p>
+    </div>
+    <span class="section-index">GAS-01 … GAS-05</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad"><div class="t">Trenutno · GasScreen.tsx:22 + GasReadingsScreen.tsx:848</div><div class="b">Unutrašnji tab bar (Očitanja / Analiza) stoji <b>iznad</b> glavnog — 2× tab bar, 112px potrošeno na navigaciju.</div></div>
+    <div class="finding bad"><div class="t">Trenutno · GasReadingsScreen.tsx:849-868</div><div class="b">FAB <code>w={20} h={20}</code> (80px) s <code>shadow={9}</code> lebdi iznad liste; lista ima <code>paddingBottom:32</code> — FAB prekriva zadnji red.</div></div>
+    <div class="finding mid"><div class="t">Trenutno · GasReadingCard.tsx</div><div class="b">Kartica po očitanju s 14 <code>useColorModeValue</code> poziva: svaki red nosi svoju paletu (badge REFERENCA / STANDARD / SLIKA / RAČUN) u 4 različite boje.</div></div>
+    <div class="finding mid"><div class="t">Trenutno · GasReadingsScreen.tsx:503</div><div class="b">Jedini <code>Alert.alert</code> u aplikaciji — brisanje ide kroz sistemski dijalog, dok sve ostalo koristi bottom sheet. Dva jezika dijaloga.</div></div>
+  </div>
+
+  <div class="compare">
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag now">SADA</span><span class="pane-note">dva tab bara</span></div>
+      <div class="phone">
+        <div class="screen b">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮ ▮</span></div>
+          <div class="body">
+            <div class="scrollpad" style="padding-bottom:0">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:22px;font-weight:700">Očitanja plina</div>
+                  <div class="date">Prati očitanja plina i potrošnju</div>
+                </div>
+              </div>
+
+              <!-- filter chips -->
+              <div class="seg" style="margin-top:12px">
+                <div class="segi on">Sedmica</div>
+                <div class="segi">Mjesec</div>
+                <div class="segi">Godina</div>
+                <div class="segi">Sve</div>
+              </div>
+
+              <div class="card" style="margin-top:12px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  <div>
+                    <div style="display:flex;gap:6px;align-items:center">
+                      <span class="pill" style="background:#fef3c7;color:#b45309">REFERENCA</span>
+                      <span class="pill" style="background:#dbeafe;color:#1d4ed8">RAČUN</span>
+                    </div>
+                    <div style="font-size:24px;font-weight:800;margin-top:8px">12 480.5 <span class="unit">m³</span></div>
+                    <div class="muted">07.11.2026 · 08:15</div>
+                  </div>
+                  <div style="font-size:20px;color:#6b7280">⋯</div>
+                </div>
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between">
+                  <div><div class="tiny">Potrošnja</div><div style="font-weight:700">4.82 m³/dan</div></div>
+                  <div style="text-align:right"><div class="tiny">Trošak</div><div style="font-weight:700">9.31 KM</div></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  <div>
+                    <span class="pill" style="background:#f3f4f6;color:#374151">STANDARD</span>
+                    <div style="font-size:24px;font-weight:800;margin-top:8px">12 466.2 <span class="unit">m³</span></div>
+                    <div class="muted">30.10.2026 · 09:04</div>
+                  </div>
+                  <div style="font-size:20px;color:#6b7280">⋯</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  <div>
+                    <span class="pill" style="background:#f0fdf4;color:#15803d">SLIKA</span>
+                    <div style="font-size:24px;font-weight:800;margin-top:8px">12 451.0 <span class="unit">m³</span></div>
+                    <div class="muted">23.10.2026 · 18:40</div>
+                  </div>
+                  <div style="font-size:20px;color:#6b7280">⋯</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INNER TAB BAR (problem) -->
+            <div style="border-top:1px solid #e5e7eb;background:#fff;display:flex;padding:8px 24px;gap:12px;justify-content:space-around;position:relative;z-index:5">
+              <div style="text-align:center;color:#f97316;font-size:10px"><div style="font-size:16px">📄</div>Očitanja</div>
+              <div style="text-align:center;color:#9ca3af;font-size:10px"><div style="font-size:16px">📈</div>Analiza</div>
+            </div>
+            <div style="height:3px;background:#fde68a;text-align:center;font-size:7px;color:#92400e;letter-spacing:.14em;display:grid;place-items:center">↑ DRUGI TAB BAR</div>
+          </div>
+          <div class="tabbar">
+            <div><span class="ic">◉</span>Naslovna</div>
+            <div><span class="ic">🔥</span>Grijanje</div>
+            <div class="on"><span class="ic">◉</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+          <div class="fab">＋</div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="ann"><span class="n">1</span><div><b>Dva tab bara.</b> Gornji (Očitanja/Analiza) pripada unutrašnjem navigatoru, donji glavnom. Korisnik mora naučiti koja traka šta mijenja. Ukupno 112px na 800px ekrana.</div></div>
+        <div class="ann"><span class="n">2</span><div><b>FAB prekriva sadržaj</b> — 80px kružnica s najjačom sjenom u aplikaciji sjedi preko treće kartice.</div></div>
+        <div class="ann"><span class="n">3</span><div><b>„…" meni bez labele</b> vodi na <code>actionsMenuTitle</code> bottom sheet — tri dodira do brisanja, bez vidljive afordance.</div></div>
+        <div class="ann"><span class="n">4</span><div><b>Četiri boje badgeva</b> (žuta, plava, siva, zelena) nemaju semantičku hijerarhiju — REFERENCA i RAČUN su najčešće zajedno, a izgledaju kao dvije nepovezane oznake.</div></div>
+        <div class="ann"><span class="n">5</span><div><b>Filter chips</b> su puni brand kad su aktivni — isti tretman kao primarna akcija „Dodaj očitanje".</div></div>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag next">PREDLOG</span><span class="pane-note">jedan tab bar + segmented zaglavlje</span></div>
+      <div class="phone">
+        <div class="screen a">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar">
+            <div class="brandline">
+              <div class="logo">B</div>
+              <div class="brandname">Plin</div>
+            </div>
+            <div class="iconbtn" aria-label="Dodaj očitanje">＋</div>
+          </div>
+          <div class="body scroll">
+            <div class="scrollpad">
+              <div class="seg">
+                <span class="on">Očitanja</span>
+                <span>Analiza</span>
+              </div>
+
+              <div class="between" style="margin-top:12px">
+                <div class="seg" style="flex:1;margin-right:8px">
+                  <span>7d</span><span class="on">30d</span><span>1g</span><span>Sve</span>
+                </div>
+              </div>
+
+              <!-- summary strip -->
+              <div class="grid3" style="margin-top:8px">
+                <div class="kpi"><div class="k">Ovaj mjesec</div><div class="readout r-lg">14.2<span class="u">m³</span></div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px">−8% vs prošli</div></div>
+                <div class="kpi"><div class="k">Trošak</div><div class="readout r-lg">27.4<span class="u">KM</span></div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px">0.83 KM/m³</div></div>
+                <div class="kpi"><div class="k">Zadnje</div><div class="readout r-lg">12480<span class="u">m³</span></div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:3px">prije 2 d</div></div>
+              </div>
+
+              <div class="between" style="margin-top:14px;margin-bottom:6px">
+                <div class="lbl">Očitanja</div>
+                <div class="lbl" style="color:var(--muted)">18 zapisa</div>
+              </div>
+
+              <div class="panel" style="padding:0">
+                <!-- row 1 -->
+                <div style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="between">
+                    <div class="row" style="gap:8px">
+                      <span class="led ok" style="width:5px;height:5px"></span>
+                      <div class="readout r-md">12 480.5<span class="u">m³</span></div>
+                    </div>
+                    <div style="display:flex;gap:5px;align-items:center">
+                      <span style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;border:1px solid #3a2a22;color:#ffb39c;border-radius:2px;padding:2px 5px">REF</span>
+                      <span style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;border:1px solid var(--line2);color:var(--muted);border-radius:2px;padding:2px 5px">RAČUN</span>
+                    </div>
+                  </div>
+                  <div class="between" style="margin-top:5px">
+                    <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">07.11 · 08:15 · +4.82 m³/dan</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">9.31 KM</div>
+                  </div>
+                </div>
+                <!-- row 2 -->
+                <div style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="between">
+                    <div class="row" style="gap:8px">
+                      <span class="led off" style="width:5px;height:5px"></span>
+                      <div class="readout r-md">12 466.2<span class="u">m³</span></div>
+                    </div>
+                    <span style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;border:1px solid var(--line2);color:var(--dim);border-radius:2px;padding:2px 5px">STANDARD</span>
+                  </div>
+                  <div class="between" style="margin-top:5px">
+                    <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">30.10 · 09:04 · +3.91 m³/dan</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">7.54 KM</div>
+                  </div>
+                </div>
+                <!-- row 3 -->
+                <div style="padding:10px 11px">
+                  <div class="between">
+                    <div class="row" style="gap:8px">
+                      <span class="led off" style="width:5px;height:5px"></span>
+                      <div class="readout r-md">12 451.0<span class="u">m³</span></div>
+                    </div>
+                    <span style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;border:1px solid var(--line2);color:var(--dim);border-radius:2px;padding:2px 5px">SLIKA</span>
+                  </div>
+                  <div class="between" style="margin-top:5px">
+                    <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">23.10 · 18:40 · +4.10 m³/dan</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">7.92 KM</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel" style="margin-top:8px;padding:9px 11px">
+                <div class="row" style="gap:8px">
+                  <span style="font-size:12px">🔍</span>
+                  <div class="t-xs" style="color:var(--dim)">Dodir na red otvara akcije: referenca, slika, račun, brisanje</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div><span class="ic">◉</span>Početna</div>
+            <div><span class="ic">△</span>Grijanje</div>
+            <div class="on"><span class="ic">▤</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations after">
+        <div class="ann after"><span class="n">1</span><div><b>Jedan tab bar.</b> Očitanja/Analiza je segmented kontrola u zaglavlju — ista traka, isto mjesto, nema drugog nivoa navigacije.</div></div>
+        <div class="ann after"><span class="n">2</span><div><b>„Dodaj" je u zaglavlju</b>, ne FAB. Ne prekriva sadržaj i nalazi se gdje korisnik traži akciju ekrana.</div></div>
+        <div class="ann after"><span class="n">3</span><div><b>Red očitanja umjesto kartice:</b> brojač mono, pa datum i izvedena potrošnja u istom redu, cijena desno. 3 reda u ~230px.</div></div>
+        <div class="ann after"><span class="n">4</span><div><b>Oznake su outline</b>, ne pune boje: REF je jedina u signalnoj boji jer je jedina akcija-odluka.</div></div>
+        <div class="ann after"><span class="n">5</span><div><b>Akcije po redu su u listu na dodir</b>, isti bottom-sheet obrazac kao svuda; sistemski <code>Alert</code> nestaje.</div></div>
+        <div class="ann after"><span class="n">6</span><div><b>Sažetak iznad liste</b> (mjesec, trošak, zadnje) — korisnik ne mora prelaziti na Analizu za osnovni broj.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 05 ANALITIKA ============================ -->
+<section class="section" id="analitika">
+  <div class="section-head">
+    <div>
+      <h2>05 · Analitika</h2>
+      <p class="sub">
+        Ekran ima 4 KPI kartice s trendovima, linijski graf i dva bloka tvrdnji („12% bolji od sličnih domova",
+        „poboljšanje 18%") koje <b>nisu iz podataka</b> nego string literali u kodu. Prvo se to rješava.
+      </p>
+    </div>
+    <span class="section-index">AN-01 … AN-04</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad"><div class="t">Trenutno · AnalyticsScreen.tsx:712-736</div><div class="b"><b>Fiktivne metrike.</b> <code>t('analytics.better', {percent:'12'})</code> i <code>{percent:'18'}</code> — konstante u kodu prikazane kao mjerenja. U domenu potrošnje plina to je ozbiljno.</div></div>
+    <div class="finding mid"><div class="t">Trenutno · AnalyticsScreen.tsx (0 goBack)</div><div class="b"><b>Nema nazad.</b> Ekran se otvara iz headera početne s <code>headerShown:false</code>; jedini izlaz je Android tipka.</div></div>
+    <div class="finding mid"><div class="t">Trenutno · GasAnalysisScreen.tsx:20-22</div><div class="b"><code>require('react-native-chart-kit')</code> u <code>try/catch</code> uz <code>Dimensions.get('window')</code> — graf se lomi na rotaciji i ima sopstveni vizuelni jezik.</div></div>
+    <div class="finding mid"><div class="t">Trenutno · AnalyticsScreen.tsx:399-456</div><div class="b">Četiri kartice imaju <b>hardkodiran</b> <code>trend</code> (dvije „down", dvije „up"), a labela tvrdi „u odnosu na prošlu sedmicu" — dok se <b>nikad ne dohvata prethodni period</b> (samo <code>analytics-summary/stats</code> za tekući raspon).</div></div>
+  </div>
+
+  <div class="compare">
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag now">SADA</span><span class="pane-note">4 KPI + graf + fiktivne tvrdnje</span></div>
+      <div class="phone">
+        <div class="screen b">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮ ▮</span></div>
+          <div class="body">
+            <div class="scrollpad">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div><div style="font-size:22px;font-weight:700">Analitika</div><div class="date">Trendovi grijanja i uvidi</div></div>
+                <div style="border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;font-size:11px">Sedmica ▾</div>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <div class="col card" style="margin-top:0">
+                  <div class="tiny">SATI GRIJANJA</div>
+                  <div><span style="font-size:22px;font-weight:700">26.4</span><span class="tiny"> h</span></div>
+                  <div style="font-size:10px;color:#ef4444">↑ 14 ciklusa</div>
+                  <div class="tiny">u odnosu na prošlu sedmicu</div>
+                </div>
+                <div class="col card" style="margin-top:0">
+                  <div class="tiny">PROSJ. SOBA</div>
+                  <div><span style="font-size:22px;font-weight:700">21.8</span><span class="tiny"> °C</span></div>
+                  <div style="font-size:10px;color:#22c55e">↓ 43.2 min</div>
+                  <div class="tiny">u odnosu na prošlu sedmicu</div>
+                </div>
+              </div>
+              <div class="row" style="margin-top:10px">
+                <div class="col card" style="margin-top:0">
+                  <div class="tiny">CIKLUSI</div>
+                  <div><span style="font-size:22px;font-weight:700">14</span></div>
+                  <div style="font-size:10px;color:#ef4444">↑ 8%</div>
+                </div>
+                <div class="col card" style="margin-top:0">
+                  <div class="tiny">EFIKASNOST</div>
+                  <div><span style="font-size:22px;font-weight:700">96.2</span><span class="tiny">%</span></div>
+                  <div style="font-size:10px;color:#22c55e">↓ 2%</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="microlabel">Temperatura kroz vrijeme</div>
+                <svg viewBox="0 0 300 90" style="width:100%;height:90px;margin-top:8px">
+                  <polyline points="0,70 30,55 60,62 90,40 120,48 150,30 180,44 210,26 240,38 270,22 300,30"
+                    fill="none" stroke="#2563eb" stroke-width="2"/>
+                </svg>
+              </div>
+
+              <div class="card" style="border:1px solid #fecaca">
+                <div class="microlabel" style="color:#ef4444">AI Insights</div>
+                <div style="margin-top:8px;font-size:13px">📈 <b>12% bolji</b> od sličnih domova</div>
+                <div style="margin-top:6px;font-size:13px">🎯 <b>18% poboljšanje</b> u odnosu na prošlu godinu</div>
+                <div class="tiny" style="margin-top:6px">Pouzdanost modela: 74% · 1240 uzoraka</div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="on"><span class="ic">◉</span>Naslovna</div>
+            <div><span class="ic">🔥</span>Grijanje</div>
+            <div><span class="ic">◉</span>Plin</div>
+            <div><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="ann"><span class="n">1</span><div><b>Nema nazad.</b> Ekran izgleda kao tab (donja traka je vidljiva), a otvorio se kao push. Korisnik ne zna gdje je.</div></div>
+        <div class="ann"><span class="n">2</span><div><b>„12% bolji od sličnih domova"</b> — nema izvora podatka. Ovo ne smije ostati u aplikaciji koja preporučuje temperaturu polaza.</div></div>
+        <div class="ann"><span class="n">3</span><div><b>Četiri kartice s trendom, nula upita za prethodni period.</b> Strelice i tekst „u odnosu na prošlu sedmicu" su hardkodirani (<code>trend="down"</code> na tri kartice), pa tvrde poređenje kojeg nema.</div></div>
+        <div class="ann"><span class="n">4</span><div><b>Graf je druga biblioteka</b> (chart-kit) s plavom linijom koja ne postoji nigdje drugdje; nema osa, nema jedinica, nema tooltipa.</div></div>
+        <div class="ann"><span class="n">5</span><div><b>Vremenski period</b> je select s 4 opcije — treba biti segmented, uvijek vidljiv.</div></div>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag next">PREDLOG</span><span class="pane-note">bez tvrdnji bez izvora</span></div>
+      <div class="phone">
+        <div class="screen a">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar" style="padding-bottom:6px">
+            <div class="row" style="gap:8px">
+              <div class="iconbtn" aria-label="Nazad">‹</div>
+              <div class="brandname">Analitika</div>
+            </div>
+            <div class="iconbtn" aria-label="Izvezi">↥</div>
+          </div>
+          <div class="body scroll">
+            <div class="scrollpad">
+              <div class="seg">
+                <span>Dan</span><span class="on">7 d</span><span>30 d</span><span>God</span>
+              </div>
+
+              <!-- chart panel -->
+              <div class="panel" style="margin-top:10px">
+                <div class="between">
+                  <div class="lbl">Prosječna sobna temp.</div>
+                  <div class="readout r-md" style="font-size:13px">21.8<span class="u">°C</span></div>
+                </div>
+                <svg viewBox="0 0 300 76" style="width:100%;height:76px;margin-top:10px">
+                  <g stroke="#1f2733" stroke-width="1">
+                    <line x1="0" y1="18" x2="300" y2="18"/><line x1="0" y1="38" x2="300" y2="38"/><line x1="0" y1="58" x2="300" y2="58"/>
+                  </g>
+                  <polyline points="0,52 30,44 60,48 90,36 120,42 150,30 180,38 210,26 240,34 270,24 300,30"
+                    fill="none" stroke="#ff6b3d" stroke-width="1.6" stroke-linejoin="round"/>
+                  <circle cx="300" cy="30" r="2.6" fill="#ff6b3d"/>
+                  <g font-size="6" fill="#6b7788" font-family="monospace">
+                    <text x="0" y="74">pon</text><text x="72" y="74">sri</text><text x="144" y="74">pet</text><text x="216" y="74">ned</text>
+                  </g>
+                </svg>
+                <div class="between" style="margin-top:6px">
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">min 20.1 · max 22.4</div>
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">7 dana · 168 tačaka</div>
+                </div>
+              </div>
+
+              <!-- CILJ vs POSTIGNUTO -->
+              <div class="panel" style="margin-top:8px">
+                <div class="lbl">Cilj vs postignuto</div>
+                <div style="margin-top:9px" class="gap8">
+                  <div>
+                    <div class="between" style="margin-bottom:4px">
+                      <div class="t-xs">Dnevna soba</div>
+                      <div style="font-family:var(--mono);font-size:10px">22.1 / 22.5</div>
+                    </div>
+                    <div class="gauge" style="height:4px"><i style="width:98%"></i></div>
+                  </div>
+                  <div>
+                    <div class="between" style="margin-bottom:4px">
+                      <div class="t-xs">Kuhinja</div>
+                      <div style="font-family:var(--mono);font-size:10px">20.9 / 21.0</div>
+                    </div>
+                    <div class="gauge" style="height:4px"><i style="width:99%"></i></div>
+                  </div>
+                  <div>
+                    <div class="between" style="margin-bottom:4px">
+                      <div class="t-xs">Spavaća soba</div>
+                      <div style="font-family:var(--mono);font-size:10px">18.4 / 19.0</div>
+                    </div>
+                    <div class="gauge" style="height:4px"><i style="width:96%;background:var(--warn)"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TABLE -->
+              <div class="panel" style="margin-top:8px">
+                <div class="lbl" style="margin-bottom:7px">Sažetak perioda</div>
+                <table class="table">
+                  <thead><tr><th>Metrika</th><th style="text-align:right">Vrijednost</th><th style="text-align:right">Prethodno</th></tr></thead>
+                  <tbody>
+                    <tr><td>Sati grijanja</td><td class="num">26.4 h</td><td class="num" style="color:var(--dim)">28.1 h</td></tr>
+                    <tr><td>Ciklusi</td><td class="num">14</td><td class="num" style="color:var(--dim)">13</td></tr>
+                    <tr><td>Prosj. trajanje</td><td class="num">43.2 min</td><td class="num" style="color:var(--dim)">46.0 min</td></tr>
+                    <tr><td style="border-bottom:0">Odstupanje od cilja</td><td class="num" style="border-bottom:0">0.6 °C</td><td class="num" style="border-bottom:0;color:var(--dim)">0.9 °C</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="banner ok" style="margin-top:8px">
+                <div style="font-size:11px;font-weight:600">Model učenja · pouzdanost 74%</div>
+                <div class="t-xs" style="color:var(--dim);margin-top:2px">1 240 uzoraka. Više podataka = bolje preporuke polazne vode.</div>
+              </div>
+
+              <div class="t-xs" style="color:var(--dim);margin-top:9px;text-align:center;line-height:1.6">
+                Sve vrijednosti dolaze iz <span style="font-family:var(--mono)">/api/analytics</span>.<br>
+                Nema poređenja s drugim domovima dok backend ne vrati stvarnu normalizaciju.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations after">
+        <div class="ann after"><span class="n">1</span><div><b>ScreenHeader s nazad strelicom.</b> Ekran više nije slijepa ulica; izlaz je vidljiv i na iOS-u.</div></div>
+        <div class="ann after"><span class="n">2</span><div><b>Jedan graf, brand linija, hairline grid.</b> Chart-kit izlazi; isti <code>react-native-svg</code> koji app već ima, pa nema nove zavisnosti.</div></div>
+        <div class="ann after"><span class="n">3</span><div><b>Cilj vs postignuto</b> kao tri gauge reda — to je odluka koju korisnik želi, a ne 4 kartice s trendovima.</div></div>
+        <div class="ann after"><span class="n">4</span><div><b>Tabela „Vrijednost / Prethodno"</b> zamjenjuje trend strelice: poređenje je eksplicitno, sa stvarnim brojem iz API-ja.</div></div>
+        <div class="ann after"><span class="n">5</span><div><b>Fiktivne tvrdnje uklonjene.</b> „12% bolji" i „18% poboljšanje" nestaju; ostaje samo ono što backend vraća, s izvorom napisanim na ekranu.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 06 POSTAVKE ============================ -->
+<section class="section" id="postavke">
+  <div class="section-head">
+    <div>
+      <h2>06 · Postavke, profil, domovi, rasporedi</h2>
+      <p class="sub">
+        Četiri potekrana su <b>potpuno na engleskom u bosanskoj aplikaciji</b> (0 <code>t()</code> poziva), a glavni
+        ekran je 8 kartica sa sjenama. Predlažem jednu listu s mono grupama — kao sistemske postavke.
+      </p>
+    </div>
+    <span class="section-index">SET-01 … SET-06</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad"><div class="t">Trenutno</div><div class="b"><b>0 <code>t()</code> poziva</b> u <code>HomeManagementScreen</code> (1073 LOC), <code>ProfileScreen</code> (264 LOC), <code>ScheduleManagementScreen</code> (487 LOC). Bosanski korisnik dobija engleski ekran.</div></div>
+    <div class="finding bad"><div class="t">Trenutno · SettingsScreen.tsx:340-345</div><div class="b"><code>SettingItem</code> je <code>Pressable</code> bez <code>accessible</code>/<code>role</code>; redovi nisu jedna a11y cjelina za čitač ekrana.</div></div>
+    <div class="finding mid"><div class="t">Trenutno · SettingsScreen.tsx:344</div><div class="b"><code>useColorModeValue</code> se poziva <b>unutar</b> <code>JSX</code>-a u <code>SettingItem</code> — hook u komponenti koja se renderuje uslovno; krši pravila hookova.</div></div>
+    <div class="finding mid"><div class="t">Trenutno</div><div class="b">Svaka grupa je kartica sa <code>shadow={2}</code> + <code>rounded="xl"</code> + uppercase zaglavlje 10px — 5 kartica, 5 sjena, 5 ivica.</div></div>
+  </div>
+
+  <div class="compare">
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag now">SADA</span><span class="pane-note">5 kartica sa sjenama</span></div>
+      <div class="phone">
+        <div class="screen b">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮ ▮</span></div>
+          <div class="body">
+            <div class="scrollpad">
+              <div style="font-size:22px;font-weight:700">Postavke</div>
+
+              <div class="card" style="margin-top:12px;padding:0;overflow:hidden">
+                <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb">
+                  <div class="microlabel">RAČUN</div>
+                </div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;background:#f9fafb">
+                  <span style="color:#e85223">👤</span>
+                  <div style="flex:1">
+                    <div style="font-weight:500">Mirza Hodžić</div>
+                    <div class="tiny">mirza@example.com</div>
+                  </div>
+                  <span style="color:#6b7280">›</span>
+                </div>
+                <div style="height:1px;background:#e5e7eb"></div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;background:#f9fafb">
+                  <span style="color:#e85223">🔑</span>
+                  <div style="flex:1">Promijeni lozinku</div>
+                  <span style="color:#6b7280">›</span>
+                </div>
+              </div>
+
+              <div class="card" style="padding:0;overflow:hidden">
+                <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb"><div class="microlabel">IZGLED</div></div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px">
+                  <span style="color:#e85223">🌙</span>
+                  <div style="flex:1"><div>Tamni način</div><div class="tiny">Omogućeno</div></div>
+                  <div style="width:40px;height:22px;border-radius:99px;background:#e85223;position:relative"><div style="width:18px;height:18px;border-radius:99px;background:#fff;position:absolute;right:2px;top:2px"></div></div>
+                </div>
+                <div style="height:1px;background:#e5e7eb"></div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px">
+                  <span style="color:#e85223">🌐</span>
+                  <div style="flex:1"><div>Jezik</div><div class="tiny">Bosanski</div></div>
+                  <span style="color:#6b7280">›</span>
+                </div>
+              </div>
+
+              <div class="card" style="padding:0;overflow:hidden">
+                <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb"><div class="microlabel">DOMOVI I GRIJANJE</div></div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;background:#f9fafb">
+                  <span style="color:#e85223">🏠</span>
+                  <div style="flex:1">Upravljaj domovima</div>
+                  <span style="color:#6b7280">›</span>
+                </div>
+                <div style="height:1px;background:#e5e7eb"></div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;background:#f9fafb">
+                  <span style="color:#e85223">🗓</span>
+                  <div style="flex:1">Rasporedi grijanja</div>
+                  <span style="color:#6b7280">›</span>
+                </div>
+              </div>
+
+              <div class="card" style="padding:0;overflow:hidden">
+                <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb"><div class="microlabel">PODACI</div></div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:12px">
+                  <span style="color:#e85223">🗑</span>
+                  <div style="flex:1">Očisti keš</div>
+                </div>
+              </div>
+              <div style="text-align:center;font-size:11px;color:#9ca3af;padding:14px 0">↓ još: obavijesti, izvoz naloga, odjava</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div><span class="ic">◉</span>Naslovna</div>
+            <div><span class="ic">🔥</span>Grijanje</div>
+            <div><span class="ic">◉</span>Plin</div>
+            <div class="on"><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="ann"><span class="n">1</span><div><b>Pet sjena</b> na ekranu koji nema ni jedan podatak — sjena sugeriše „kartica s podacima", a ovdje je navigacija.</div></div>
+        <div class="ann"><span class="n">2</span><div><b>Dvostruki okviri:</b> kartica ima ivicu, a redovi unutra imaju <code>rounded="md"</code> i svoju pozadinu — vizuelno „kutija u kutiji".</div></div>
+        <div class="ann"><span class="n">3</span><div><b>Uppercase mikro-zaglavlja</b> (10px, letterSpacing) izgledaju drugačije od svih ostalih labela u aplikaciji.</div></div>
+        <div class="ann"><span class="n">4</span><div><b>Potekrani naslovi na engleskom</b>: „Upravljaj domovima" vodi na „Manage Homes" — vidi se u zaglavlju sljedećeg ekrana.</div></div>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-label"><span class="pane-tag next">PREDLOG</span><span class="pane-note">jedna lista, mono grupe</span></div>
+      <div class="phone">
+        <div class="screen a">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar">
+            <div class="brandline"><div class="logo">B</div><div class="brandname">Boiler Control</div></div>
+            <div class="iconbtn" aria-label="Profil">◔</div>
+          </div>
+          <div class="body scroll">
+            <div class="scrollpad">
+              <div class="h1">Postavke</div>
+              <div class="sub">mirza@example.com</div>
+
+              <div class="lbl" style="margin-top:16px;margin-bottom:5px">Račun</div>
+              <div class="panel" style="padding:0">
+                <div class="between" style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">◔</span>
+                    <div>
+                      <div style="font-size:12.5px">Mirza Hodžić</div>
+                      <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">Vlasnik · 1 dom</div>
+                    </div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">›</div>
+                </div>
+                <div class="between" style="padding:10px 11px">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">⚿</span>
+                    <div style="font-size:12.5px">Promijeni lozinku</div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">›</div>
+                </div>
+              </div>
+
+              <div class="lbl" style="margin-top:14px;margin-bottom:5px">Izgled</div>
+              <div class="panel" style="padding:0">
+                <div class="between" style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">◐</span>
+                    <div style="font-size:12.5px">Tema</div>
+                  </div>
+                  <div class="seg" style="width:124px">
+                    <span>Svijetla</span><span class="on">Tamna</span>
+                  </div>
+                </div>
+                <div class="between" style="padding:10px 11px">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">⌘</span>
+                    <div style="font-size:12.5px">Jezik</div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Bosanski ›</div>
+                </div>
+              </div>
+
+              <div class="lbl" style="margin-top:14px;margin-bottom:5px">Domovi i grijanje</div>
+              <div class="panel" style="padding:0">
+                <div class="between" style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">⌂</span>
+                    <div style="font-size:12.5px">Domovi</div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--dim)">1 aktivan ›</div>
+                </div>
+                <div class="between" style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">☰</span>
+                    <div style="font-size:12.5px">Rasporedi</div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--dim)">3 uređaja ›</div>
+                </div>
+                <div class="between" style="padding:10px 11px">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">◔</span>
+                    <div style="font-size:12.5px">Obavijesti</div>
+                  </div>
+                  <div class="row" style="gap:6px">
+                    <span class="led ok" style="width:5px;height:5px"></span>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--dim)">4 od 6 ›</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lbl" style="margin-top:14px;margin-bottom:5px">Podaci</div>
+              <div class="panel" style="padding:0">
+                <div class="between" style="padding:10px 11px;border-bottom:1px solid var(--line)">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">↥</span>
+                    <div style="font-size:12.5px">Izvezi nalog</div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--dim)">JSON ›</div>
+                </div>
+                <div class="between" style="padding:10px 11px">
+                  <div class="row" style="gap:9px">
+                    <span style="width:16px;text-align:center;color:var(--muted);font-size:11px">⌫</span>
+                    <div style="font-size:12.5px">Očisti keš</div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--dim)">14 MB</div>
+                </div>
+              </div>
+
+              <button class="btn secondary block" style="margin-top:14px;border-color:#3d2222;color:#ff9b9b">Odjavi se</button>
+              <div style="text-align:center;font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:9px;letter-spacing:.1em">BOILER CONTROL 2.0.0 · BUILD 214</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div><span class="ic">◉</span>Početna</div>
+            <div><span class="ic">△</span>Grijanje</div>
+            <div><span class="ic">▤</span>Plin</div>
+            <div class="on"><span class="ic">⚙</span>Postavke</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotations after">
+        <div class="ann after"><span class="n">1</span><div><b>Jedna lista, tri hairline panela.</b> Grupe nosi mono labela iznad panela — nema sjeni, nema „kutije u kutiji".</div></div>
+        <div class="ann after"><span class="n">2</span><div><b>Meta-podatak desno u mono fontu</b> („1 aktivan ›", „4 od 6 ›", „14 MB") — redovi nose stanje, ne samo naslov.</div></div>
+        <div class="ann after"><span class="n">3</span><div><b>Tema je segmented</b> (Svijetla / Tamna / Sistem), a ne prekidač — dodaje se „Sistem" koji sad ne postoji.</div></div>
+        <div class="ann after"><span class="n">4</span><div><b>Odjava je sekundarno dugme</b> s crvenim tekstom na kraju liste, umjesto pune crvene kartice.</div></div>
+        <div class="ann after"><span class="n">5</span><div><b>Svi potekrani dobijaju isti ScreenHeader</b> i prevode se: Domovi, Rasporedi, Obavijesti, Profil.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 07 STANJA ============================ -->
+<section class="section" id="stanja">
+  <div class="section-head">
+    <div>
+      <h2>07 · Stanja, greške i sistemski sloj</h2>
+      <p class="sub">
+        Danas <b>7 ekrana</b> prikazuje pun ekranski spinner sa centriranim tekstom, a skeleton postoji samo u
+        Analitici. To je najveći percipirani problem brzine: svaki ulazak u ekran izgleda kao čekanje.
+      </p>
+    </div>
+    <span class="section-index">STA-01 … STA-06</span>
+  </div>
+
+  <div class="findings">
+    <div class="finding bad"><div class="t">Dokaz · 7 fajlova, 8 spinnera</div><div class="b"><code>DashboardScreen:176</code>, <code>HeatingScreen:187</code>, <code>GasReadingsScreen:624</code>, <code>GasAnalysisScreen:232</code>, <code>NotificationsScreen:138</code>, <code>NotificationPreferencesScreen:66</code>, <code>ScheduleManagementScreen:271</code> — svi vraćaju <b>cijeli ekran</b> u spinner.</div></div>
+    <div class="finding mid"><div class="t">Dokaz · 3 definicije toast kartice</div><div class="b">Toasts se pojavljuju u dva oblika: 9 mjesta renderuje ručni <code>&lt;Box bg="green.500"&gt;</code>, 27 mjesta koristi <code>description:</code>. Ista poruka, dva izgleda.</div></div>
+    <div class="finding mid"><div class="t">Dokaz · app.json:7</div><div class="b"><code>"userInterfaceStyle": "light"</code> — a aplikacija ima potpuni dark mode. System dark se ne prati; status bar je <code>style="auto"</code> uz zaključanu svijetlu aplikaciju.</div></div>
+    <div class="finding mid"><div class="t">Dokaz · BottomSheetModal.tsx:69</div><div class="b"><code>if (!isOpen) return null</code> gasi sheet prije animacije zatvaranja; prop <code>title</code> se prima i nikad ne renderuje.</div></div>
+  </div>
+
+  <div class="ds-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    <!-- Loading -->
+    <div class="ds-card">
+      <h3>Učitavanje → skeleton u istom obliku</h3>
+      <p class="hint">nema layout shifta, nema spinnera preko cijelog ekrana</p>
+      <div class="screen a" style="height:300px;border:1px solid var(--doc-line);border-radius:4px">
+        <div class="body">
+          <div class="scrollpad">
+            <div class="panel hero">
+              <div class="between"><div class="skel" style="width:74px;height:8px"></div><div class="skel" style="width:56px;height:8px"></div></div>
+              <div class="skel" style="width:120px;height:34px;margin-top:12px"></div>
+              <div class="skel" style="width:100%;height:6px;margin-top:12px"></div>
+              <div class="skel" style="width:100%;height:32px;margin-top:14px"></div>
+            </div>
+            <div class="grid3" style="margin-top:8px">
+              <div class="kpi"><div class="skel" style="width:40px;height:7px"></div><div class="skel" style="width:60px;height:18px;margin-top:7px"></div></div>
+              <div class="kpi"><div class="skel" style="width:40px;height:7px"></div><div class="skel" style="width:60px;height:18px;margin-top:7px"></div></div>
+              <div class="kpi"><div class="skel" style="width:40px;height:7px"></div><div class="skel" style="width:60px;height:18px;margin-top:7px"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="ds-card">
+      <h3>Greška → u mjestu, sa retry</h3>
+      <p class="hint">ne mijenja cijeli ekran; stari podaci ostaju vidljivi</p>
+      <div class="screen a" style="height:300px;border:1px solid var(--doc-line);border-radius:4px">
+        <div class="body">
+          <div class="scrollpad">
+            <div class="panel hero">
+              <div class="between"><div class="status"><span class="led on"></span>Grije · 01:12</div><div class="lbl">Polazna voda</div></div>
+              <div class="row" style="align-items:baseline;margin-top:10px;gap:6px">
+                <div class="readout r-xl" style="opacity:.35">52.4</div><div class="u">°C</div>
+              </div>
+              <div class="gauge" style="margin-top:12px"><i style="width:61%;opacity:.35"></i></div>
+            </div>
+            <div class="banner fault" style="margin-top:8px">
+              <div class="between">
+                <div>
+                  <div style="font-size:11.5px;font-weight:600">Nema veze s kotlom</div>
+                  <div class="t-xs" style="color:var(--dim);font-family:var(--mono);margin-top:2px">zadnji podatak prije 4 min</div>
+                </div>
+                <button class="btn ghost" style="padding:6px 10px;font-size:11px">Pokušaj</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="ds-card">
+      <h3>Prazno → šta dalje</h3>
+      <p class="hint">poruka + primarna akcija, bez ilustracije preko pola ekrana</p>
+      <div class="screen a" style="height:300px;border:1px solid var(--doc-line);border-radius:4px">
+        <div class="body">
+          <div class="scrollpad">
+            <div class="empty" style="padding-top:44px">
+              <div style="font-size:26px;color:var(--line2);margin-bottom:10px">▤</div>
+              <div style="font-size:12.5px;color:var(--ink);font-weight:600">Nema očitanja u ovom periodu</div>
+              <div class="t-sm" style="margin-top:4px;max-width:220px;margin-left:auto;margin-right:auto">Promijeni period ili dodaj novo očitanje.</div>
+              <button class="btn primary" style="margin-top:14px">Dodaj očitanje</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast / snackbar -->
+    <div class="ds-card">
+      <h3>Potvrda → jedna traka na dnu</h3>
+      <p class="hint">36 mjesta u kodu trenutno ima dva različita izgleda</p>
+      <div class="screen a" style="height:300px;border:1px solid var(--doc-line);border-radius:4px;position:relative">
+        <div class="body">
+          <div class="scrollpad">
+            <div class="panel" style="opacity:.5"><div class="skel" style="width:80px;height:8px"></div><div class="skel" style="width:150px;height:14px;margin-top:8px"></div></div>
+            <div class="panel" style="opacity:.3;margin-top:8px"><div class="skel" style="width:80px;height:8px"></div><div class="skel" style="width:110px;height:14px;margin-top:8px"></div></div>
+          </div>
+        </div>
+        <div style="position:absolute;left:10px;right:10px;bottom:12px;background:var(--raised);border:1px solid var(--line2);border-left:2px solid var(--ok);border-radius:3px;padding:9px 11px;display:flex;gap:8px;align-items:center">
+          <span class="led ok" style="width:5px;height:5px"></span>
+          <div style="font-size:11.5px">Očitanje dodano</div>
+          <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim)">UNDO</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom sheet fixed -->
+    <div class="ds-card">
+      <h3>Bottom sheet s naslovom</h3>
+      <p class="hint">title prop se konačno renderuje; zatvaranje ima animaciju</p>
+      <div class="screen a" style="height:300px;border:1px solid var(--doc-line);border-radius:4px;position:relative;overflow:hidden">
+        <div class="body"><div class="scrollpad"><div class="skel" style="width:100%;height:120px"></div></div></div>
+        <div style="position:absolute;inset:0;background:rgba(3,5,8,.6)"></div>
+        <div class="sheet" style="height:150px">
+          <div class="grabber"></div>
+          <div class="between" style="margin-bottom:10px">
+            <div style="font-size:13px;font-weight:600">Postavi polaznu temperaturu</div>
+            <div style="font-family:var(--mono);font-size:13px;color:var(--muted)">✕</div>
+          </div>
+          <div class="field">52.4</div>
+          <div class="between" style="margin-top:5px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">40 — 75 °C · korak 0.1</div>
+          </div>
+          <div class="row" style="margin-top:10px;gap:6px">
+            <button class="btn secondary" style="flex:1">Otkaži</button>
+            <button class="btn primary" style="flex:1">Sačuvaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard -->
+    <div class="ds-card">
+      <h3>Forme i tastatura</h3>
+      <p class="hint">labela iznad polja, validacija ispod, CTA iznad tastature</p>
+      <div class="screen a" style="height:300px;border:1px solid var(--doc-line);border-radius:4px;position:relative">
+        <div class="body">
+          <div class="scrollpad">
+            <div class="lbl">Vrijednost brojača (m³)</div>
+            <div class="field" style="margin-top:5px">12 480.5</div>
+            <div style="margin-top:6px;font-size:10px;color:var(--fault);font-family:var(--mono)">⚠ manje od prethodnog (12 466.2)</div>
+            <div class="lbl" style="margin-top:12px">Datum očitanja</div>
+            <div class="field" style="margin-top:5px;color:var(--muted);font-size:13px">07.11.2026 · 08:15</div>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:var(--raised);border-top:1px solid var(--line);padding:8px 10px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+            <span>8</span><span>9</span><span>0</span><span>,</span><span>⌫</span><span style="grid-column:span 2;background:var(--signal);color:#0b0f16;border-radius:2px;font-weight:700">SAČUVAJ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th style="width:80px">ID</th><th>Odluka</th><th style="width:330px">Zašto</th><th style="width:90px">Rizik</th></tr></thead>
+    <tbody>
+      <tr><td>STA-01</td><td>Uvesti <code>Screen</code> + <code>AsyncState</code> primitive: skeleton po obliku sadržaja na svih 7 ekrana.</td><td>Nema layout shifta; percipirana brzina raste bez ijedne promjene mreže.</td><td><span class="sev mid">SREDNJI</span></td></tr>
+      <tr><td>STA-02</td><td>Jedan <code>InlineBanner</code> (info/ok/warn/fault) zamjenjuje sve ručne obojene kutije.</td><td>36 mjesta u kodu ima dva vizuelna jezika za istu poruku.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>STA-03</td><td><code>app.json</code>: <code>userInterfaceStyle: "automatic"</code>; tema ide u tri stanja (Svijetla / Tamna / Sistem).</td><td>System dark prestaje biti ignorisan; status bar se slaže s temom.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>STA-04</td><td>Popraviti <code>BottomSheetModal</code>: bez ranog <code>return null</code>, renderovati <code>title</code>, <code>keyboardBehavior</code>.</td><td>Zatvaranje bez animacije izgleda kao bug; tastatura prekriva dugmad.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>STA-05</td><td>Zamijeniti <code>Alert.alert</code> potvrdu brisanja bottom sheetom s imenom zapisa.</td><td>Jedan obrazac za sve potvrde, u aplikacijinom jeziku.</td><td><span class="sev lo">NIZAK</span></td></tr>
+      <tr><td>STA-06</td><td><code>accessibilityLabel</code> na svaku ikonografsku kontrolu + <code>hitSlop</code> 44×44 + <code>accessibilityRole</code> na redove liste.</td><td>Trenutno 15 labela na 10.776 LOC; ikone bez teksta su nijeme.</td><td><span class="sev mid">SREDNJI</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 08 DESIGN SYSTEM ============================ -->
+<section class="section" id="ds">
+  <div class="section-head">
+    <div>
+      <h2>08 · Design system za mobilni</h2>
+      <p class="sub">
+        Isti tokeni kao web instrument panel, prevedeni u React Native. Ključna promjena:
+        <b>228 poziva <code>useColorModeValue</code> nestaje</b> — semantički token nosi obje teme.
+      </p>
+    </div>
+    <span class="section-index">DS</span>
+  </div>
+
+  <div class="ds-grid" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
+    <div class="ds-card">
+      <h3>Paleta</h3>
+      <p class="hint">jedna definicija, dvije teme · hex samo u <code>tokens.ts</code></p>
+      <div class="swatches">
+        <div class="sw"><div class="bar" style="background:#05070b"></div><div class="met"><b>canvas</b>#05070B</div></div>
+        <div class="sw"><div class="bar" style="background:#0b0f16"></div><div class="met"><b>panel</b>#0B0F16</div></div>
+        <div class="sw"><div class="bar" style="background:#111723"></div><div class="met"><b>raised</b>#111723</div></div>
+        <div class="sw"><div class="bar" style="background:#1f2733"></div><div class="met"><b>line</b>#1F2733</div></div>
+        <div class="sw"><div class="bar" style="background:#2c3746"></div><div class="met"><b>line-strong</b>#2C3746</div></div>
+        <div class="sw"><div class="bar" style="background:#e8edf4"></div><div class="met"><b>ink</b>#E8EDF4</div></div>
+        <div class="sw"><div class="bar" style="background:#9aa6b6"></div><div class="met"><b>ink-muted</b>#9AA6B6</div></div>
+        <div class="sw"><div class="bar" style="background:#6b7788"></div><div class="met"><b>ink-dim</b>#6B7788</div></div>
+        <div class="sw"><div class="bar" style="background:#ff6b3d"></div><div class="met"><b>signal</b>#FF6B3D</div></div>
+        <div class="sw"><div class="bar" style="background:#22c55e"></div><div class="met"><b>ok</b>#22C55E</div></div>
+        <div class="sw"><div class="bar" style="background:#f5a524"></div><div class="met"><b>warn</b>#F5A524</div></div>
+        <div class="sw"><div class="bar" style="background:#ef4444"></div><div class="met"><b>fault</b>#EF4444</div></div>
+      </div>
+      <div style="margin-top:12px;font-size:11.5px;color:var(--doc-muted)">
+        Signal <b>#FF6B3D</b> ostaje brand boja (ista kao web i trenutni <code>brand.400</code>).
+        Gasimo <code>brand.500 #e85223</code> kao akcenat — zadržava se samo u gradijentu logotipa.
+      </div>
+    </div>
+
+    <div class="ds-card">
+      <h3>Tipografija</h3>
+      <p class="hint">brojevi mono i tabularni · tekst sistemski sans</p>
+      <div class="spec"><span>Readout XL</span><b style="font-family:var(--mono);font-size:20px">52.4</b></div>
+      <div class="spec"><span>Readout LG</span><b style="font-family:var(--mono);font-size:16px">12 480.5</b></div>
+      <div class="spec"><span>Readout MD</span><b style="font-family:var(--mono);font-size:13px">−1.6 °C</b></div>
+      <div class="spec"><span>Naslov ekrana</span><b style="font-size:15px">Grijanje</b></div>
+      <div class="spec"><span>Tijelo</span><b style="font-size:12.5px;font-weight:400">Dnevna soba</b></div>
+      <div class="spec"><span>Mono labela</span><b style="font-family:var(--mono);font-size:9px;letter-spacing:.16em">POLAZNA VODA</b></div>
+      <div class="spec"><span>Mono meta</span><b style="font-family:var(--mono);font-size:10px;color:var(--muted)">07.11 · 08:15</b></div>
+      <p style="font-size:11px;color:var(--doc-muted);margin:12px 0 0">
+        Bez dodatnog webfonta na startu aplikacije: sistemski sans nosi tekst, sistemski mono nosi brojeve.
+        <code>IBM Plex</code> s weba ostaje opcija za kasnije, ali nije uslov za ovaj refaktor.
+      </p>
+    </div>
+
+    <div class="ds-card">
+      <h3>Skala</h3>
+      <p class="hint">4px baza · radijus 2/3/4 · nula sjena</p>
+      <div class="spec"><span>Razmaci</span><b>4 · 8 · 12 · 16 · 24</b></div>
+      <div class="spec"><span>Radijus</span><b>2 (pill/oznaka) · 3 (kontrola) · 4 (panel)</b></div>
+      <div class="spec"><span>Ivica</span><b>1px hairline, nikad 2px akcent</b></div>
+      <div class="spec"><span>Sjena</span><b>0 — dubinu nosi ivica</b></div>
+      <div class="spec"><span>Dodirna zona</span><b>≥ 44 × 44</b></div>
+      <div class="spec"><span>Animacija</span><b>150–200 ms, ease-out</b></div>
+      <div class="spec"><span>Prekid</span><b>prefers-reduced-motion → bez transform</b></div>
+      <p style="font-size:11px;color:var(--doc-muted);margin:12px 0 0">
+        Danas u kodu: 35 upotreba <code>shadow</code> (do <code>shadow={9}</code>), 5 različitih
+        vrijednosti radijusa, 2px obojene ivice na karticama termostata.
+      </p>
+    </div>
+
+    <div class="ds-card">
+      <h3>Primitivi</h3>
+      <p class="hint">7 komponenti pokriva 90% ekrana</p>
+      <div class="ds-demo" style="margin-bottom:10px">
+        <button class="btn primary">Primarna</button>
+        <button class="btn secondary">Sekundarna</button>
+        <button class="btn ghost">Ghost</button>
+      </div>
+      <div class="ds-demo" style="margin-bottom:12px">
+        <div class="seg" style="width:150px"><span>7d</span><span class="on">30d</span><span>1g</span></div>
+        <span style="font-family:var(--mono);font-size:8px;letter-spacing:.1em;border:1px solid #3a2a22;color:#ffb39c;border-radius:2px;padding:3px 6px">REF</span>
+        <span class="status"><span class="led on"></span>Grije</span>
+        <span class="status"><span class="led ok"></span>OK</span>
+        <span class="status"><span class="led off"></span>Miruje</span>
+      </div>
+      <div class="spec"><span><code>Panel</code></span><b>hairline okvir + opc. hero</b></div>
+      <div class="spec"><span><code>Readout</code></span><b>mono broj + jedinica</b></div>
+      <div class="spec"><span><code>GaugeBar</code></span><b>progres + marker cilja</b></div>
+      <div class="spec"><span><code>Led</code></span><b>živo stanje (on/ok/warn/off)</b></div>
+      <div class="spec"><span><code>Segmented</code></span><b>filteri i prekidači sekcija</b></div>
+      <div class="spec"><span><code>InlineBanner</code></span><b>info/ok/warn/fault</b></div>
+      <div class="spec"><span><code>ScreenHeader</code></span><b>nazad + naslov + akcija</b></div>
+    </div>
+  </div>
+
+  <div class="ds-grid" style="margin-top:18px;grid-template-columns:1fr 1fr">
+    <div class="ds-card">
+      <h3>Kako se gasi 228 <code>useColorModeValue</code></h3>
+      <p class="hint">prije → poslije, isti ekran</p>
+      <div style="font-family:var(--mono);font-size:11px;line-height:1.85;color:#c2ccd9;white-space:pre-wrap">
+<span style="color:#ff9b9b">// PRIJE — 9 poziva u jednom ekranu</span>
+const bgColor = useColorModeValue('gray.50', 'dark.900');
+const cardBg = useColorModeValue('white', 'dark.800');
+const textColor = useColorModeValue('gray.800', 'gray.100');
+const subtextColor = useColorModeValue('gray.600', 'gray.400');
+const borderColor = useColorModeValue('gray.200', 'gray.700');
+const accentColor = useColorModeValue('brand.500', 'brand.400');
+const infoBoxBg = useColorModeValue('blue.50', 'blue.900');
+const activeBg = useColorModeValue('brand.500', 'brand.600');
+const inactiveBg = useColorModeValue('gray.200', 'gray.700');
+
+&lt;Box bg={bgColor}&gt;
+  &lt;Box bg={cardBg} borderColor={borderColor} shadow={2} rounded="xl"&gt;
+    &lt;Text color={textColor}&gt;…&lt;/Text&gt;
+
+<span style="color:#7ee2a1">// POSLIJE — semantički token nosi obje teme</span>
+&lt;Screen&gt;
+  &lt;Panel&gt;
+    &lt;Text&gt;…&lt;/Text&gt;
+
+<span style="color:#8b98a9">// tokens.ts — jedna tačka istine</span>
+canvas: { light: '#f6f7fb', dark: '#05070b' },
+panel:  { light: '#ffffff', dark: '#0b0f16' },
+ink:    { light: '#111827', dark: '#e8edf4' },
+signal: { light: '#ff6b3d', dark: '#ff6b3d' },
+      </div>
+    </div>
+    <div class="ds-card">
+      <h3>Šta se ne dira</h3>
+      <p class="hint">granice refaktora</p>
+      <div class="spec"><span>API sloj</span><b>bez promjena</b></div>
+      <div class="spec"><span>React Query ključevi</span><b>bez promjena</b></div>
+      <div class="spec"><span>Imena ruta / deep linkovi</span><b><code>myapp://</code> ostaje</b></div>
+      <div class="spec"><span>Auth tok</span><b>bez promjena</b></div>
+      <div class="spec"><span>i18n ključevi</span><b>samo dopuna, bez preimenovanja</b></div>
+      <div class="spec"><span>Testovi</span><b>postojeći NativeWind testovi ostaju zeleni</b></div>
+      <p style="font-size:11px;color:var(--doc-muted);margin:12px 0 0">
+        Ovo je UX/UI refaktor, ne prepisivanje aplikacije. Svaki ekran se mijenja u mjestu,
+        a poslovna logika (mutacije, invalidacije, validacije) se ne dira.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 09 NALAZI ============================ -->
+<section class="section" id="nalazi">
+  <div class="section-head">
+    <div>
+      <h2>09 · Nalazi audita — prioritet</h2>
+      <p class="sub">Sve provjereno čitanjem koda na ovom branchu. Brojevi su iz <code>grep</code>/<code>wc</code>, ne iz procjene.</p>
+    </div>
+    <span class="section-index">26 nalaza</span>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th style="width:70px">ID</th><th style="width:70px">Nivo</th><th>Nalaz</th><th style="width:230px">Dokaz</th></tr></thead>
+    <tbody>
+      <tr><td>UX-01</td><td><span class="sev hi">VISOKO</span></td><td>Fiktivne metrike („12% bolji od sličnih domova", „18% poboljšanje") prikazane kao mjerenja</td><td><code>AnalyticsScreen.tsx:712-736</code></td></tr>
+      <tr><td>UX-02</td><td><span class="sev hi">VISOKO</span></td><td>Analitika bez ikakvog načina da se vratiš (headerShown false, 0 goBack)</td><td><code>AnalyticsScreen.tsx</code></td></tr>
+      <tr><td>UX-03</td><td><span class="sev hi">VISOKO</span></td><td>Dva tab bara jedan iznad drugog u Plinu</td><td><code>GasScreen.tsx:22</code></td></tr>
+      <tr><td>UX-04</td><td><span class="sev hi">VISOKO</span></td><td>Tri ekrana potpuno bez prijevoda (0 <code>t()</code>)</td><td><code>HomeManagement</code>, <code>Profile</code>, <code>ScheduleManagement</code></td></tr>
+      <tr><td>UX-05</td><td><span class="sev hi">VISOKO</span></td><td>Naslovi u navigatoru hardkodirani na engleskom</td><td><code>SettingsStackNavigator.tsx:38,46,54,62</code></td></tr>
+      <tr><td>UX-06</td><td><span class="sev hi">VISOKO</span></td><td>Accessibility: 15 labela na 10.776 LOC; ikone bez teksta su nijeme za TalkBack</td><td><code>DashboardScreen.tsx:251-288</code></td></tr>
+      <tr><td>UX-07</td><td><span class="sev mid">SREDNJE</span></td><td>7 ekrana: pun ekranski spinner umjesto skeletona</td><td>8 × <code>&lt;Spinner size="lg"&gt;</code></td></tr>
+      <tr><td>UX-08</td><td><span class="sev mid">SREDNJE</span></td><td>35 sjena (do <code>shadow={9}</code>) i 5 različitih radijusa — nema vizuelne hijerarhije</td><td><code>rounded</code>/<code>shadow</code> grep</td></tr>
+      <tr><td>UX-09</td><td><span class="sev mid">SREDNJE</span></td><td>Tri akcenta u prvom ekranu (brand, blue, green) + ljubičasta u grafovima</td><td><code>BoilerStatusCard.tsx</code></td></tr>
+      <tr><td>UX-10</td><td><span class="sev mid">SREDNJE</span></td><td>Dvije boje branda: <code>brand.400 #ff6b3d</code> i <code>brand.500 #e85223</code> se koriste naizmjenično</td><td><code>palette.ts</code></td></tr>
+      <tr><td>UX-11</td><td><span class="sev mid">SREDNJE</span></td><td>FAB od 80px s najjačom sjenom prekriva zadnji red liste očitanja</td><td><code>GasReadingsScreen.tsx:849</code></td></tr>
+      <tr><td>UX-12</td><td><span class="sev mid">SREDNJE</span></td><td>Plamen u headeru početne izgleda kao dugme, nema <code>onPress</code></td><td><code>DashboardScreen.tsx:251</code></td></tr>
+      <tr><td>UX-13</td><td><span class="sev mid">SREDNJE</span></td><td>„Trend" strelice u analitici nisu vezane na stvarno poređenje</td><td><code>AnalyticsScreen.tsx</code> StatCard</td></tr>
+      <tr><td>UX-14</td><td><span class="sev mid">SREDNJE</span></td><td>Bottom sheet: rani <code>return null</code> ubija animaciju; <code>title</code> se nikad ne renderuje</td><td><code>BottomSheetModal.tsx:69</code></td></tr>
+      <tr><td>UX-15</td><td><span class="sev mid">SREDNJE</span></td><td>Toasts imaju dva izgleda (9 ručnih <code>Box</code>-ova vs 27 <code>description</code>)</td><td><code>DashboardScreen.tsx:104</code></td></tr>
+      <tr><td>UX-16</td><td><span class="sev mid">SREDNJE</span></td><td>Hook unutar JSX-a u <code>SettingItem</code> — kršenje pravila hookova</td><td><code>SettingsScreen.tsx:344</code></td></tr>
+      <tr><td>UX-17</td><td><span class="sev mid">SREDNJE</span></td><td><code>userInterfaceStyle: "light"</code> — sistem dark mode se ignoriše</td><td><code>app.json:7</code></td></tr>
+      <tr><td>UX-18</td><td><span class="sev mid">SREDNJE</span></td><td>Grafovi: <code>react-native-chart-kit</code> s <code>Dimensions.get</code> — sopstveni vizuelni jezik, lomi se na rotaciji</td><td><code>GasAnalysisScreen.tsx:20</code></td></tr>
+      <tr><td>UX-19</td><td><span class="sev lo">NISKO</span></td><td><code>Alert.alert</code> za brisanje — jedini sistemski dijalog u aplikaciji</td><td><code>GasReadingsScreen.tsx:503</code></td></tr>
+      <tr><td>UX-20</td><td><span class="sev lo">NISKO</span></td><td>Uppercase mikro-labale (10px, tracking) postoje u 3 različita stila</td><td>više fajlova</td></tr>
+      <tr><td>UX-21</td><td><span class="sev lo">NISKO</span></td><td>Header početne ima 3 ikone istog tretmana — nema hijerarhije akcija</td><td><code>DashboardScreen.tsx:251</code></td></tr>
+      <tr><td>UX-22</td><td><span class="sev lo">NISKO</span></td><td>Poruka „Podaci se ažuriraju svakog minuta" na dnu ekrana umjesto uz podatak</td><td><code>HeatingScreen</code></td></tr>
+      <tr><td>UX-23</td><td><span class="sev lo">NISKO</span></td><td>Splash traje fiksno 2.5 s neovisno o spremnosti aplikacije</td><td><code>App.tsx:68</code></td></tr>
+      <tr><td>UX-24</td><td><span class="sev lo">NISKO</span></td><td>Prazna stanja nedostaju na 4 ekrana (nema „šta dalje")</td><td><code>Heating</code>, <code>Schedule</code>, <code>Home</code>, <code>GasAnalysis</code></td></tr>
+      <tr><td>UX-25</td><td><span class="sev lo">NISKO</span></td><td>Vremenska kartica troši ~200px na ikonu od 96px u punom krugu</td><td><code>WeatherCard.tsx:64</code></td></tr>
+      <tr><td>UX-26</td><td><span class="sev lo">NISKO</span></td><td>„Izvoz izvještaja" u analitici je primarno dugme ispod 4 kartice — teško se nađe</td><td><code>AnalyticsScreen.tsx:738</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 10 PLAN ============================ -->
+<section class="section" id="plan">
+  <div class="section-head">
+    <div>
+      <h2>10 · Plan refaktora nakon odobrenja</h2>
+      <p class="sub">Pet faza, svaka ostavlja aplikaciju u radnom stanju. Redoslijed je namjerno takav da se rizik smanjuje, a vidljivi rezultat dolazi rano.</p>
+    </div>
+    <span class="section-index">F0 … F4</span>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th style="width:60px">Faza</th><th>Obim</th><th style="width:150px">Fajlovi</th><th style="width:150px">Rezultat</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>F0</b></td>
+        <td><b>Temelj.</b> <code>src/theme/tokens.ts</code> (canvas/panel/raised/line/ink/signal/ok/warn/fault za obje teme),
+            <code>src/ui/</code> primitivi: <code>Screen</code>, <code>ScreenHeader</code>, <code>Panel</code>, <code>Readout</code>,
+            <code>GaugeBar</code>, <code>Led</code>, <code>Segmented</code>, <code>InlineBanner</code>, <code>AsyncState</code>,
+            <code>Button</code>, <code>Sheet</code>. Stare komponente ostaju — ništa se ne lomi.</td>
+        <td>+11 novih, 0 izmijenjenih ekrana</td>
+        <td>Nova baza radi paralelno sa starom</td>
+      </tr>
+      <tr>
+        <td><b>F1</b></td>
+        <td><b>Navigacija i jezik.</b> Ukinuti ugniježđeni tab bar u Plinu, uvesti <code>ScreenHeader</code> svuda,
+            prevesti tri ekrana bez <code>t()</code>, izvaditi naslove iz navigatora u <code>t()</code>.</td>
+        <td><code>RootNavigator</code>, <code>GasScreen</code>, <code>SettingsStackNavigator</code>, 3 ekrana, <code>locales</code></td>
+        <td>Nema slijepih ulica ni miješanih jezika</td>
+      </tr>
+      <tr>
+        <td><b>F2</b></td>
+        <td><b>Glavni ekrani.</b> Početna (hero + tri KPI + liste), Grijanje (red-po-uređaju), Plin (red-po-očitanju + segmented),
+            Postavke (jedna lista). Poslovna logika i mutacije netaknute.</td>
+        <td>6 ekrana + 5 komponenti</td>
+        <td>Najveći vidljivi dobitak</td>
+      </tr>
+      <tr>
+        <td><b>F3</b></td>
+        <td><b>Analitika i grafovi.</b> Ukloniti fiktivne tvrdnje, chart-kit → <code>react-native-svg</code>,
+            tabela „vrijednost/prethodno", cilj-vs-postignuto gauge.</td>
+        <td><code>AnalyticsScreen</code>, <code>GasAnalysisScreen</code>, novi <code>LineChart</code></td>
+        <td>Nema tvrdnji bez izvora</td>
+      </tr>
+      <tr>
+        <td><b>F4</b></td>
+        <td><b>Završnica.</b> Skeleton na svim ekranima, a11y labele i role, <code>hitSlop</code>,
+            <code>userInterfaceStyle: automatic</code>, ispravke bottom sheeta, brisanje mrtvih stilova.</td>
+        <td>svi ekrani + <code>app.json</code></td>
+        <td>Konzistentno, pristupačno, čisto</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="ds-grid" style="margin-top:22px">
+    <div class="ds-card">
+      <h3>Kako provjeravamo da nije regresija</h3>
+      <div class="spec"><span><code>npm run type-check</code></span><b>mora proći</b></div>
+      <div class="spec"><span><code>npm test</code></span><b>12 postojećih suite-ova zeleno</b></div>
+      <div class="spec"><span><code>npm run lint</code></span><b>bez novih upozorenja</b></div>
+      <div class="spec"><span>NativeWind testovi</span><b>ostaju — ne mijenjamo njihov ugovor</b></div>
+      <div class="spec"><span>Ručno</span><b>360px i 430px, obje teme, bs + en</b></div>
+    </div>
+    <div class="ds-card">
+      <h3>Otvorena pitanja prije F2</h3>
+      <div class="spec"><span>1</span><b>Zadržati 4 taba ili preimenovati „Naslovna" → „Pregled"?</b></div>
+      <div class="spec"><span>2</span><b>Treći tab „Sistem" (kotao+termostati) ili ostaje 4?</b></div>
+      <div class="spec"><span>3</span><b>Dark kao default (kao web) ili prati sistem?</b></div>
+      <div class="spec"><span>4</span><b>„12% bolji od sličnih domova" — brisati ili čekati backend?</b></div>
+      <div class="spec"><span>5</span><b>IBM Plex na mobilnom ili sistemski font?</b></div>
+      <p style="font-size:11px;color:var(--doc-muted);margin:12px 0 0">
+        Predlažem: 4 taba, dark kao default uz „Sistem" opciju, fiktivne metrike brisati odmah
+        (vraćaju se kad backend vrati stvarnu normalizaciju), sistemski font.
+      </p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>Status:</b> prijedlog, ništa nije implementirano. Nijedan fajl u <code>mobile/src</code> nije promijenjen na ovom branchu.
+    <br>Ilustracije su ručno napisane u HTML/CSS radi pregleda u browseru — nisu screenshotovi i ne dolaze iz builda aplikacije.
+    <br>Web stranica: <code>docs/redesign/mobile-v2/prototype.html</code> · audit nalazi: <code>docs/redesign/mobile-v2/audit.md</code>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

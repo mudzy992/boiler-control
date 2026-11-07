@@ -4,9 +4,9 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I3 zatvoren.** Commit `b496765`, CI zelen (`42374502533`).
+**Faza 5 — I4 zatvoren.** PageHeader, QueryState, StatCard, StatusBanner u `shared/components`; RouteFallback koristi QueryState.
 
-**Sljedeće:** **I4** (PageHeader, QueryState, StatCard, StatusBanner).
+**Sljedeće:** **I5** (TempDialog 48–55, ConfirmDialog).
 
 ## Završeno
 
@@ -15,7 +15,8 @@ Ažurirano: 2026-11-07.
 - I1 auth 401 + role (`f99a53b`)
 - I2 shell NavLink + drawer (`26805b2`)
 - I3 primitives (`b496765`)
+- I4 shared states (ovaj commit)
 
 ## Sljedeći korak
 
-I4 — shared stanja (vidi `08-implementation-plan.md`, `HANDOFF.md`).
+I5 — TempDialog + ConfirmDialog (vidi `08-implementation-plan.md`).

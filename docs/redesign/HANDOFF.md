@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi sa **I4**. Ne počinji I0–I3 ispočetka.
+Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi sa **I5**. Ne počinji I0–I4 ispočetka.
 
 ---
 
@@ -14,7 +14,7 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | 2 Modules | Gotovo — `modules/*.md`, `gate-2.md` |
 | 3 Synthesis | Gotovo — `04-cross-module-synthesis.md` |
 | 4 Plan | Gotovo — `05`–`09`, `gate-3.md` (odobreno) |
-| 5 Implement | **I0–I3 gotovi.** Sljedeće: **I4** |
+| 5 Implement | **I0–I4 gotovi.** Sljedeće: **I5** |
 
 ### Recent commits (main)
 
@@ -27,8 +27,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `26805b2` | **I2** shell rewrite (NavLink, drawer) |
 | `8ae15d7` | STATE: I2 closed |
 | `b496765` | **I3** shadcn primitives + native InputNumber |
+| `2ba7dac` | STATE: I3 closed |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I3 run zelen: `42374502533`.
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I3 run zelen: `42374502533` (I4 SHA/CI upisati nakon pusha).
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 
@@ -76,6 +77,13 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 - `components/InputNumber.tsx` — native brojčani unos (bez antd), isti props ugovor (`onChange(number|null)`, precision, addonAfter).
 - Testovi: `shared/components/ui/__tests__/primitives.test.tsx`.
 
+### I4 — Shared stanja
+- `shared/components/{page-header,query-state,stat-card,status-banner}.tsx` + barrel `index.ts`.
+- `RouteFallback` → `<QueryState status="loading" />`.
+- i18n: `common.empty`, `common.loadFailed`, `common.dismiss` (EN+BS).
+- Testovi: `shared/components/__tests__/shared-states.test.tsx`.
+- Lokalni `components/StatCard` ostaje na stranicama do I6/I7.
+
 ### Još nije
 - Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` i dalje u upotrebi na stranicama (brišu se u I7).
 - Antd i dalje u ThemeContext, plots, nekim stranicama.
@@ -87,9 +95,8 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 
 Strogo po `08-implementation-plan.md` + `09-implementation-rules.md`.
 
-### I4 (sljedeće) — PageHeader, QueryState, StatCard, StatusBanner  
+### I5 (sljedeće) — TempDialog (48–55), ConfirmDialog  
 
-### I5 — TempDialog (48–55), ConfirmDialog  
 ### I6 — Stranice redom: Auth → Dashboard → Boiler → Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile  
 ### I7 — Ukloniti antd, obrisati mrtav lokalni set, Lighthouse (Q8)
 
@@ -144,7 +151,7 @@ frontend/tailwind.config.js
 ## 8. Prompt za novu sesiju (kopiraj)
 
 ```
-Nastavi boiler-control dashboard redesign Fazu 5 od I3.
+Nastavi boiler-control dashboard redesign Fazu 5 od I5.
 Pročitaj docs/redesign/HANDOFF.md, STATE.md, 08-implementation-plan.md, 09-implementation-rules.md.
-Ne ponavljaj I0–I2. Implementiraj I3 (shadcn Dialog/Sheet/Select/Checkbox/Table/Switch + lucide, InputNumber bez antd), pa commit + push + gh run watch. Stani prije I4.
+Ne ponavljaj I0–I4. Implementiraj I5 (TempDialog 48–55 + ConfirmDialog), pa commit + push + gh run watch. Stani prije I6.
 ```

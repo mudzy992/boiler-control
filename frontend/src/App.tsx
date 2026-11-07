@@ -4,6 +4,7 @@ import { AuthProvider } from './features/auth/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MainLayout } from './components/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { QueryState } from './shared/components/query-state';
 import './index.css';
 
 /**
@@ -59,19 +60,7 @@ const NotificationsPage = lazy(() =>
  * utvrdio da a11y nedostaci u ovom projektu nisu bili samo vizuelni.
  */
 function RouteFallback() {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex min-h-64 items-center justify-center"
-    >
-      <div
-        className="h-8 w-48 animate-pulse rounded-md bg-surface-muted dark:bg-dark-surface-muted"
-        aria-hidden="true"
-      />
-      <span className="sr-only">Loading…</span>
-    </div>
-  );
+  return <QueryState status="loading" />;
 }
 
 function App() {

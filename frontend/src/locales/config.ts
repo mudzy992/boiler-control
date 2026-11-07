@@ -17,6 +17,9 @@ const enUS = {
     offline: 'Offline',
     retry: 'Retry',
     ok: 'OK',
+    empty: 'No data available',
+    loadFailed: 'Failed to load data',
+    dismiss: 'Dismiss',
   },
   shell: {
     brand: 'Boiler Control',
@@ -299,6 +302,9 @@ const bsBS = {
     offline: 'Nije dostupno',
     retry: 'Pokušaj ponovo',
     ok: 'OK',
+    empty: 'Nema podataka',
+    loadFailed: 'Učitavanje podataka nije uspjelo',
+    dismiss: 'Zatvori',
   },
   shell: {
     brand: 'Boiler Control',

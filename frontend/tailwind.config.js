@@ -1,5 +1,3 @@
-import animate from 'tailwindcss-animate';
-
 /** @type {import('tailwindcss').Config} */
 const rgb = (name) => `rgb(var(${name}) / <alpha-value>)`;
 
@@ -13,116 +11,172 @@ export default {
         mono: ['var(--font-mono)'],
       },
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+        canvas: rgb('--canvas'),
+        panel: {
+          DEFAULT: rgb('--panel-bg'),
+          border: rgb('--panel-border'),
+          header: rgb('--panel-header-bg'),
         },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+        raised: rgb('--raised'),
+        line: {
+          DEFAULT: rgb('--line'),
+          strong: rgb('--line-strong'),
         },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+        ink: {
+          DEFAULT: rgb('--ink'),
+          muted: rgb('--ink-muted'),
+          dim: rgb('--ink-dim'),
         },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+        signal: rgb('--signal'),
+        ok: rgb('--ok'),
+        warn: rgb('--warn'),
+        fault: rgb('--fault'),
+        info: rgb('--info'),
+        /* Temporary bridges while pages migrate off shadcn class names */
+        background: rgb('--canvas'),
+        foreground: rgb('--ink'),
+        card: {
+          DEFAULT: rgb('--panel-bg'),
+          foreground: rgb('--ink'),
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
+          DEFAULT: rgb('--panel-bg'),
+          foreground: rgb('--ink'),
         },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
+        primary: {
+          DEFAULT: rgb('--signal'),
+          foreground: rgb('--btn-primary-fg'),
         },
+        secondary: {
+          DEFAULT: rgb('--btn-secondary-bg'),
+          foreground: rgb('--btn-secondary-fg'),
+        },
+        muted: {
+          DEFAULT: rgb('--raised'),
+          foreground: rgb('--ink-muted'),
+        },
+        accent: {
+          DEFAULT: rgb('--warn'),
+          foreground: rgb('--ink'),
+        },
+        destructive: {
+          DEFAULT: rgb('--fault'),
+          foreground: 'rgb(255 255 255 / <alpha-value>)',
+        },
+        border: rgb('--line'),
+        ring: rgb('--signal'),
+
         brand: {
-          DEFAULT: rgb('--brand'),
-          50: rgb('--brand-50'),
-          100: rgb('--brand-100'),
-          600: rgb('--brand-600'),
-          700: rgb('--brand-700'),
-          900: rgb('--brand-900'),
+          DEFAULT: rgb('--signal'),
+          700: rgb('--btn-primary-bg-hover'),
+          900: rgb('--btn-primary-fg'),
         },
         surface: {
-          DEFAULT: rgb('--surface'),
-          muted: rgb('--surface-muted'),
-          elevated: rgb('--surface-elevated'),
-        },
-        text: {
-          primary: rgb('--text-primary'),
-          secondary: rgb('--text-secondary'),
-          tertiary: rgb('--text-tertiary'),
-          inverse: rgb('--text-inverse'),
+          DEFAULT: rgb('--panel-bg'),
+          muted: rgb('--raised'),
+          elevated: rgb('--raised'),
         },
         success: {
-          DEFAULT: rgb('--success'),
-          50: rgb('--success-50'),
-          100: rgb('--success-100'),
-          700: rgb('--success-700'),
-          900: rgb('--success-900'),
+          DEFAULT: rgb('--ok'),
+          50: rgb('--raised'),
+          100: rgb('--raised'),
+          700: rgb('--ok'),
+          900: rgb('--ok'),
         },
         error: {
-          DEFAULT: rgb('--error'),
-          50: rgb('--error-50'),
-          100: rgb('--error-100'),
-          700: rgb('--error-700'),
-          900: rgb('--error-900'),
+          DEFAULT: rgb('--fault'),
+          50: rgb('--raised'),
+          100: rgb('--raised'),
+          700: rgb('--fault'),
+          900: rgb('--fault'),
         },
-        warning: {
-          DEFAULT: rgb('--warning'),
+        warning: rgb('--warn'),
+        'dark-surface': rgb('--panel-bg'),
+        'dark-surface-muted': rgb('--canvas'),
+        'dark-surface-elevated': rgb('--raised'),
+        'dark-border': rgb('--line'),
+        'dark-text-primary': rgb('--ink'),
+        'dark-text-secondary': rgb('--ink-muted'),
+        'dark-text-tertiary': rgb('--ink-dim'),
+        'dark-error': rgb('--fault'),
+        text: {
+          primary: rgb('--ink'),
+          secondary: rgb('--ink-muted'),
+          tertiary: rgb('--ink-dim'),
+          inverse: rgb('--canvas'),
         },
-        info: {
-          DEFAULT: rgb('--info'),
+        btn: {
+          primary: rgb('--btn-primary-bg'),
+          'primary-hover': rgb('--btn-primary-bg-hover'),
+          'primary-fg': rgb('--btn-primary-fg'),
+          'primary-border': rgb('--btn-primary-border'),
+          secondary: rgb('--btn-secondary-bg'),
+          'secondary-hover': rgb('--btn-secondary-bg-hover'),
+          'secondary-fg': rgb('--btn-secondary-fg'),
+          'secondary-border': rgb('--btn-secondary-border'),
+          ghost: rgb('--btn-ghost-bg'),
+          'ghost-hover': rgb('--btn-ghost-bg-hover'),
+          'ghost-fg': rgb('--btn-ghost-fg'),
+          danger: rgb('--btn-danger-bg'),
+          'danger-hover': rgb('--btn-danger-bg-hover'),
+          'danger-fg': rgb('--btn-danger-fg'),
+          'danger-border': rgb('--btn-danger-border'),
         },
-        'dark-surface': rgb('--dark-surface'),
-        'dark-surface-muted': rgb('--dark-surface-muted'),
-        'dark-surface-elevated': rgb('--dark-surface-elevated'),
-        'dark-border': rgb('--dark-border'),
-        'dark-text-primary': rgb('--dark-text-primary'),
-        'dark-text-secondary': rgb('--dark-text-secondary'),
-        'dark-text-tertiary': rgb('--dark-text-tertiary'),
-        'dark-error': rgb('--error'),
+        input: {
+          DEFAULT: rgb('--input-bg'),
+          border: rgb('--input-border'),
+          'border-hover': rgb('--input-border-hover'),
+          'border-focus': rgb('--input-border-focus'),
+          fg: rgb('--input-fg'),
+          placeholder: rgb('--input-placeholder'),
+          invalid: rgb('--input-invalid'),
+        },
+        hero: {
+          DEFAULT: rgb('--hero-bg'),
+          border: rgb('--hero-border'),
+        },
       },
       borderRadius: {
-        lg: 'var(--radius-lg)',
-        md: 'var(--radius-md)',
-        sm: 'var(--radius-sm)',
+        control: 'var(--radius-control)',
+        panel: 'var(--radius-panel)',
       },
+      height: {
+        'control-sm': 'var(--control-h-sm)',
+        'control-md': 'var(--control-h-md)',
+        'control-lg': 'var(--control-h-lg)',
+      },
+      width: {
+        'control-sm': 'var(--control-h-sm)',
+        'control-md': 'var(--control-h-md)',
+        'control-lg': 'var(--control-h-lg)',
+      },
+      minHeight: {
+        'control-sm': 'var(--control-h-sm)',
+        'control-md': 'var(--control-h-md)',
+        'control-lg': 'var(--control-h-lg)',
+      },
+
       fontSize: {
         display: ['var(--text-display)', { lineHeight: 'var(--text-display-lh)' }],
         kpi: ['var(--text-kpi)', { lineHeight: 'var(--text-kpi-lh)' }],
       },
-      boxShadow: {
-        glow: 'var(--glow-brand)',
-        'glow-soft': 'var(--glow-brand-soft)',
-        cockpit: 'var(--shadow-md)',
-      },
       backgroundImage: {
-        'cockpit-radial':
-          'radial-gradient(ellipse 80% 50% at 10% -10%, rgb(var(--brand) / 0.18), transparent 55%)',
+        'dot-grid':
+          'radial-gradient(rgb(var(--line) / 0.55) 1px, transparent 1px)',
+      },
+      backgroundSize: {
+        'dot-grid': '16px 16px',
       },
       keyframes: {
         'status-pulse': {
-          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-          '50%': { opacity: '0.55', transform: 'scale(0.92)' },
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.45' },
         },
       },
       animation: {
         'status-pulse': 'status-pulse 1.6s ease-in-out infinite',
       },
       zIndex: {
-        dropdown: 'var(--z-dropdown)',
         sticky: 'var(--z-sticky)',
         fixed: 'var(--z-fixed)',
         'modal-backdrop': 'var(--z-modal-backdrop)',
@@ -131,13 +185,12 @@ export default {
         tooltip: 'var(--z-tooltip)',
       },
       transitionDuration: {
-        fast: '150ms',
-        base: '200ms',
+        fast: '120ms',
       },
     },
   },
-  plugins: [animate],
+  plugins: [],
   corePlugins: {
-    preflight: false,
+    preflight: true,
   },
 };

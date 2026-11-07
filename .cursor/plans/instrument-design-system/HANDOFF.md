@@ -1,4 +1,7 @@
 # HANDOFF — Instrument design system
 
-Status: in progress. Start at current phase in CHECKLIST.md.
-Read `00_overview.md` then MATRIX at `.cursor/docs/matrices/design-system/MATRIX.md`.
+Status: **shipped core**. Temporary Tailwind bridges (`background`, `foreground`, …) remain until full className sweep.
+
+- Primitives: `frontend/src/ui`
+- Gallery: `/design` (DEV)
+- Matrix: `.cursor/docs/matrices/design-system/MATRIX.md`

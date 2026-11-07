@@ -13,8 +13,8 @@ export const AnomalyBadge = ({ isAnomaly }: AnomalyBadgeProps): JSX.Element => {
       className={cn(
         'rounded px-2.5 py-0.5 text-xs font-medium',
         isAnomaly
-          ? 'bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-100'
-          : 'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100',
+          ? 'bg-error-50 text-error-700'
+          : 'bg-success-50 text-success-700',
       )}
     >
       {isAnomaly ? t('heating.anomalyYes') : t('heating.anomalyNo')}

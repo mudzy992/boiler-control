@@ -1,14 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/components/ui/Button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
+import { Button, Modal } from '@/ui';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -35,41 +27,34 @@ export const ConfirmDialog = ({
 }: ConfirmDialogProps): React.JSX.Element => {
   const { t } = useTranslation();
 
-  const handleConfirm = async (): Promise<void> => {
-    await onConfirm();
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description ? (
-            <DialogDescription>{description}</DialogDescription>
-          ) : null}
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isConfirming}
-          >
-            {cancelLabel ?? t('common.cancel')}
-          </Button>
-          <Button
-            type="button"
-            variant={variant === 'destructive' ? 'destructive' : 'default'}
-            onClick={() => {
-              void handleConfirm();
-            }}
-            isLoading={isConfirming}
-            disabled={isConfirming}
-          >
-            {confirmLabel ?? t('common.confirm')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Modal
+      open={open}
+      onClose={() => onOpenChange(false)}
+      title={title}
+      description={description}
+    >
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onOpenChange(false)}
+          disabled={isConfirming}
+        >
+          {cancelLabel ?? t('common.cancel')}
+        </Button>
+        <Button
+          type="button"
+          variant={variant === 'destructive' ? 'danger' : 'primary'}
+          onClick={() => {
+            void onConfirm();
+          }}
+          isLoading={isConfirming}
+          disabled={isConfirming}
+        >
+          {confirmLabel ?? t('common.confirm')}
+        </Button>
+      </div>
+    </Modal>
   );
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SHELL_NAV_ITEMS } from './shell-nav-items';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/ui';
 
 interface ShellNavListProps {
   onNavigate?: () => void;
@@ -20,10 +20,10 @@ export const ShellNavList: React.FC<ShellNavListProps> = ({ onNavigate }) => {
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
-              'relative flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium no-underline transition-colors duration-base hover:no-underline',
+              'relative flex items-center gap-2 rounded-control px-2.5 py-2 text-sm font-medium no-underline transition-colors duration-fast hover:no-underline',
               isActive
-                ? 'bg-muted text-foreground'
-                : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
+                ? 'bg-raised text-ink'
+                : 'text-ink-muted hover:bg-raised/70 hover:text-ink',
             )
           }
         >
@@ -31,7 +31,7 @@ export const ShellNavList: React.FC<ShellNavListProps> = ({ onNavigate }) => {
             <>
               {isActive ? (
                 <span
-                  className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-brand"
+                  className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 bg-signal"
                   aria-hidden
                 />
               ) : null}

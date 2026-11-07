@@ -32,13 +32,13 @@ interface GasReadingProps {
 function badge(kind: 'reference' | 'standard' | 'image' | 'invoice') {
   const variants: Record<string, string> = {
     reference:
-      'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-100',
+      'bg-amber-50 text-amber-700',
     standard:
-      'bg-surface-muted text-text-tertiary dark:bg-dark-surface-muted dark:text-dark-text-tertiary',
+      'bg-surface-muted text-text-tertiary',
     image:
-      'bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-100',
+      'bg-brand-50 text-brand-700',
     invoice:
-      'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100',
+      'bg-success-50 text-success-700',
   };
   return `inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${variants[kind]}`;
 }
@@ -71,14 +71,14 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
   }
 
   return (
-    <div className="p-5 transition-shadow duration-200 rounded-xl border border-border bg-surface shadow-sm hover:shadow-md dark:border-dark-border dark:bg-dark-surface-elevated">
+    <div className="rounded-panel border border-panel-border bg-panel p-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h3 className="text-xl font-bold text-text-primary dark:text-dark-text-primary">
+          <h3 className="text-xl font-bold text-text-primary">
             {reading.counterValue} m³
           </h3>
-          <p className="text-sm text-text-secondary dark:text-dark-text-secondary">
+          <p className="text-sm text-text-secondary">
             {dayjs(reading.readingDate).format('MMM DD, YYYY HH:mm')}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -129,7 +129,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
 
         {reading.isInvoiceReference ? (
           <div className="border-t border-border pt-3 space-y-2">
-            <p className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
+            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
               {t('gas.invoiceActionsTitle')}
             </p>
             <div className="flex flex-wrap gap-3">
@@ -151,33 +151,33 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
             </div>
           </div>
         ) : (
-          <p className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+          <p className="text-xs text-text-tertiary">
             {t('gas.invoiceReferenceHint')}
           </p>
         )}
 
         {/* Consumption Info */}
         {consumption !== null && daysDiff > 0 && (
-          <div className="p-4 mt-3 rounded-lg border border-border bg-info-50 dark:border-dark-border dark:bg-info-900/20">
+          <div className="p-4 mt-3 rounded-lg border border-border bg-info-50">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   {t('gas.consumption')}
                 </p>
-                <p className="text-sm font-bold text-info-700 dark:text-info-100">
+                <p className="text-sm font-bold text-info-700">
                   +{consumption.toFixed(2)} m³
                 </p>
               </div>
               <div>
-                <p className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   {t('gas.dailyAverage')}
                 </p>
-                <p className="text-sm font-bold text-info-700 dark:text-info-100">
+                <p className="text-sm font-bold text-info-700">
                   {dailyConsumption.toFixed(2)} m³/day
                 </p>
               </div>
             </div>
-            <p className="mt-2 text-xs text-text-secondary dark:text-dark-text-secondary">
+            <p className="mt-2 text-xs text-text-secondary">
               {t('gas.period')}: {daysDiff}
             </p>
           </div>

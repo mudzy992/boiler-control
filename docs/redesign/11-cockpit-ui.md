@@ -1,39 +1,34 @@
-# Cockpit UI + Vercel density
+# Instrument UI system
 
 Datum: 2026-11-07. Nadograđuje `06-design-direction.md`.
 
 ## Smjer
 
-- Dark-first operator UI; brand `#ff6b3d`.
-- **Vercel density:** tight header, quiet borders, no nav underlines, Flame brand, quieter type.
-- Glow samo na heating-active / eksplicitnom CTA.
+- **Instrument panel** — hairline borders, no shadows, radius 2px/4px.
+- Brand signal `#ff6b3d` only for primary action, focus, live state.
+- Dark default; light = daylight mapping of the same tokens.
+- **No shadcn / Radix / cva.** Primitives live in `frontend/src/ui`.
 
-## Contrast
+## Tokens
 
-- Dark: foreground ~98% L, muted-foreground ~80% L, jasniji border/input, card odvojen od page bg.
-- Light: muted-foreground tamniji za AA secondary.
+Hex only in `frontend/src/design/tokens.css` (palette + button/input/panel tokens).
+Tailwind exposes semantic names (`bg-canvas`, `text-ink`, `bg-btn-primary`, …).
+Preflight ON.
 
-## Brand + shell
+## Components
 
-- `BrandMark` samo u headeru (ne i u desktop sidebaru).
-- Sidebar/drawer `w-60`; main/footer `lg:ml-60` + isti horizontalni padding kao header.
-- Header `h-12`/`h-14`, solid `bg-background`, icon `size="icon"`.
+Import from `@/ui`: Button, IconButton, Field, TextInput, NumberInput, Textarea, Select, Checkbox, Switch, Panel, HeroPanel, DataTable, Readout, GaugeBar, Badge, Banner, Skeleton, Led, Modal, Drawer, PageHeader, Stack, LogoMark.
 
-## Buttons (flat)
+Gallery (dev): `/design`.
 
-- Bez shadow/bevel/ring-offset — flat fill + border.
-- default: `bg-brand-700` + bijeli tekst (AA kontrast).
-- outline/ghost/secondary: border ili transparent, hover `bg-muted`.
-- sm `h-8`, default `h-9`, lg `h-10`, icon `h-8 w-8`.
+## Shell
 
-## Spacing
+- Brand mark in header only.
+- Sidebar `w-60` + `lg:ml-60`.
+- Dashboard hero = `HeroPanel` + current/target readout + `GaugeBar`.
 
-- Page root: `space-y-6`.
-- Card Header/Content/Footer: `p-4` / `sm:p-5`; CardTitle `text-base`.
-- Action rows: `flex flex-wrap items-center gap-2`.
+## Guardrails
 
-## Dashboard hero
-
-- KPI: room **current temp** (large) + subtitle **target**.
-- Progress bar while heating: elapsed / `expectedHeatTimeMin`; overtime = full bar + destructive label.
-- Flow temps ostaju u Boiler Status kartici, ne u hero.
+- ESLint: ban `@radix-ui/*`, `class-variance-authority`.
+- Features: warn on `shadow-*`, `rounded-xl`, `dark:`.
+- Matrix: `.cursor/docs/matrices/design-system/MATRIX.md`.

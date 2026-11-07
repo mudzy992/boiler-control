@@ -84,7 +84,7 @@ export const HeatingPage = (): JSX.Element => {
                     <TableCell>{record.roomCurrentTemp.toFixed(1)}°C</TableCell>
                     <TableCell>{record.roomTargetTemp.toFixed(1)}°C</TableCell>
                     <TableCell>
-                      <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-900/20 dark:text-brand-100">
+                      <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                         {record.hvacAction}
                       </span>
                     </TableCell>

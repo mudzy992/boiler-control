@@ -1,9 +1,7 @@
 import { useEffect, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/components/ui/Button';
-import { cn } from '@/shared/lib/utils';
+import { Button, GaugeBar, HeroPanel, Led, Readout } from '@/ui';
 import { computeHeatingProgress } from '../lib/compute-heating-progress';
-import { DashboardHeatingProgress } from './dashboard-heating-progress';
 
 interface DashboardStatusBandProps {
   isHeatingActive: boolean;
@@ -41,34 +39,16 @@ export const DashboardStatusBand = ({
   });
 
   return (
-    <section
-      className={cn(
-        'relative overflow-hidden rounded-lg border border-border bg-card p-4 sm:p-5',
-        isHeatingActive && 'shadow-glow',
-      )}
-      aria-live="polite"
-    >
-      <div
-        className="pointer-events-none absolute inset-0 bg-cockpit-radial opacity-80"
-        aria-hidden
-      />
-      <div className="relative space-y-5">
+    <HeroPanel aria-live="polite">
+      <div className="space-y-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
-            <span
-              className={cn(
-                'mt-1.5 h-3 w-3 shrink-0 rounded-full',
-                isHeatingActive
-                  ? 'bg-success animate-status-pulse shadow-[0_0_12px_rgb(var(--success)/0.8)]'
-                  : 'bg-muted-foreground/50',
-              )}
-              aria-hidden
-            />
+            <Led state={isHeatingActive ? 'on' : 'off'} />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
                 {t('dashboard.boilerStatus')}
               </p>
-              <h2 className="mt-1 text-display font-semibold tracking-tight text-foreground">
+              <h2 className="mt-1 text-display font-semibold tracking-tight text-ink">
                 {isHeatingActive
                   ? t('dashboard.heatingActive')
                   : t('dashboard.heatingIdle')}
@@ -76,29 +56,58 @@ export const DashboardStatusBand = ({
             </div>
           </div>
           <div className="flex flex-wrap items-end gap-6">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                {t('dashboard.currentTemp')}
-              </p>
-              <p className="mt-1 font-mono text-kpi font-semibold text-brand">
-                {Number.isFinite(currentTemp) ? currentTemp.toFixed(1) : '—'}
-                <span className="ml-1 text-lg text-muted-foreground">°C</span>
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+            <Readout
+              label={t('dashboard.currentTemp')}
+              value={
+                Number.isFinite(currentTemp) ? currentTemp.toFixed(1) : '—'
+              }
+              unit="°C"
+            />
+            <div className="pb-1">
+              <p className="text-sm text-ink-muted">
                 {t('dashboard.targetSubtitle', {
                   temp: Number.isFinite(targetTemp)
                     ? targetTemp.toFixed(1)
                     : '—',
                 })}
               </p>
+              <Button
+                type="button"
+                size="lg"
+                variant="secondary"
+                className="mt-2"
+                onClick={onSetTemp}
+              >
+                {t('dashboard.setCurrentTemp')}
+              </Button>
             </div>
-            <Button type="button" size="lg" variant="outline" onClick={onSetTemp}>
-              {t('dashboard.setCurrentTemp')}
-            </Button>
           </div>
         </div>
-        <DashboardHeatingProgress progress={progress} />
+        {progress.mode === 'no-estimate' ? (
+          <p className="text-sm text-ink-muted">
+            {t('dashboard.heatingNoEstimate', {
+              elapsed: Math.round(progress.elapsedMin),
+            })}
+          </p>
+        ) : null}
+        {progress.mode === 'running' || progress.mode === 'overtime' ? (
+          <GaugeBar
+            ratio={progress.ratio}
+            overtime={progress.mode === 'overtime'}
+            label={t('dashboard.heatingProgress', {
+              elapsed: Math.round(progress.elapsedMin),
+              expected: Math.round(progress.expectedMin),
+            })}
+            detail={
+              progress.mode === 'overtime'
+                ? t('dashboard.heatingOvertime', {
+                    minutes: Math.round(progress.overtimeMin),
+                  })
+                : `${Math.round(progress.ratio * 100)}%`
+            }
+          />
+        ) : null}
       </div>
-    </section>
+    </HeroPanel>
   );
 };

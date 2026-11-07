@@ -64,6 +64,44 @@ export default tseslint.config(
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'class-variance-authority',
+              message: 'Use frontend/src/ui primitives (instrument system).',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@radix-ui/*'],
+              message: 'Radix is removed — use frontend/src/ui.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "JSXAttribute[name.name='className'][value.value=/shadow-/]",
+          message: 'No shadows in features — instrument panels are flat.',
+        },
+        {
+          selector: "JSXAttribute[name.name='className'][value.value=/rounded-xl/]",
+          message: 'Use rounded-panel / rounded-control only.',
+        },
+        {
+          selector: "JSXAttribute[name.name='className'][value.value=/dark:/]",
+          message: 'No dark: overrides — tokens handle themes.',
+        },
+      ],
     },
   },
 

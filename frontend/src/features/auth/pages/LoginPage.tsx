@@ -2,18 +2,16 @@ import { useEffect, useState, type FormEvent, type JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
-import { BrandMark } from '@/shared/components/brand-mark';
 import { StatusBanner } from '@/shared/components/status-banner';
-import { Button } from '@/shared/components/ui/Button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/Card';
-import { Input } from '@/shared/components/ui/Input';
-import { Label } from '@/shared/components/ui/Label';
+  Button,
+  Field,
+  LogoMark,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  TextInput,
+} from '@/ui';
 
 export const LoginPage = (): JSX.Element => {
   const { t } = useTranslation();
@@ -49,25 +47,24 @@ export const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm border-border" variant="elevated">
-        <CardHeader className="space-y-3 text-center">
-          <BrandMark size="md" className="mx-auto" />
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
+      <Panel className="w-full max-w-sm">
+        <PanelHeader className="flex-col items-center gap-3 py-5 text-center">
+          <LogoMark size="md" />
           <div className="space-y-1">
-            <CardTitle className="text-xl font-semibold tracking-tight">
+            <h1 className="text-xl font-semibold tracking-tight text-ink">
               {t('shell.brand')}
-            </CardTitle>
-            <CardDescription>{t('auth.loginTitle')}</CardDescription>
+            </h1>
+            <p className="text-sm text-ink-muted">{t('auth.loginTitle')}</p>
           </div>
-        </CardHeader>
-        <CardContent>
+        </PanelHeader>
+        <PanelBody>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {submitError ? (
               <StatusBanner variant="error" message={submitError} />
             ) : null}
-            <div className="space-y-1.5">
-              <Label htmlFor="login-identifier">{t('auth.emailOrUsername')}</Label>
-              <Input
+            <Field id="login-identifier" label={t('auth.emailOrUsername')}>
+              <TextInput
                 id="login-identifier"
                 autoComplete="username"
                 placeholder={t('auth.emailOrUsernamePlaceholder')}
@@ -75,10 +72,9 @@ export const LoginPage = (): JSX.Element => {
                 onChange={(event) => setIdentifier(event.target.value)}
                 disabled={isLoading}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="login-password">{t('auth.password')}</Label>
-              <Input
+            </Field>
+            <Field id="login-password" label={t('auth.password')}>
+              <TextInput
                 id="login-password"
                 type="password"
                 autoComplete="current-password"
@@ -87,7 +83,7 @@ export const LoginPage = (): JSX.Element => {
                 onChange={(event) => setPassword(event.target.value)}
                 disabled={isLoading}
               />
-            </div>
+            </Field>
             <Button
               type="submit"
               className="w-full"
@@ -98,8 +94,8 @@ export const LoginPage = (): JSX.Element => {
               {t('auth.signIn')}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </div>
   );
 };

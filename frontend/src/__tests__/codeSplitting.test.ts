@@ -37,7 +37,7 @@ describe('FE2-4: App.tsx dijeli stranice po ruti', () => {
   });
 
   it('svaku stranicu iz features/*/pages/ učitava dinamički (React.lazy)', () => {
-    expect(pageNames.length, 'očekuje se 10 stranica').toBe(10);
+    expect(pageNames.length, 'očekuje se 11 stranica').toBe(11);
     const lazy = dynamicPageImports(appSource);
     const uncovered = pageNames
       .map((f) => pagePaths[f]!.replace(/\.tsx$/, '').replace(/^\.\.\//, './'))

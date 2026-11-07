@@ -45,6 +45,11 @@ const GasAnalyticsPage = lazy(() =>
 const NotificationsPage = lazy(() =>
   import('./features/notifications/pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage }))
 );
+const DesignGalleryPage = lazy(() =>
+  import('./features/design/pages/DesignGalleryPage').then((m) => ({
+    default: m.DesignGalleryPage,
+  })),
+);
 
 /**
  * Prikazuje se dok se čip stranice dohvaća. Bez antd-a (vidi komentar gore).
@@ -63,6 +68,9 @@ function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              {import.meta.env.DEV ? (
+                <Route path="/design" element={<DesignGalleryPage />} />
+              ) : null}
               <Route
                 path="/dashboard"
                 element={

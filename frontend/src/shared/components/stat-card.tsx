@@ -1,8 +1,6 @@
 import * as React from 'react';
-import { Card, CardContent } from '@/shared/components/ui/Card';
-import { cn } from '@/shared/lib/utils';
+import { Panel, PanelBody, cn } from '@/ui';
 
-/** Compact KPI card built on shadcn Card (token colors only). */
 export interface StatCardProps {
   title: string;
   value: number | string;
@@ -16,9 +14,9 @@ export interface StatCardProps {
 }
 
 const trendClasses: Record<NonNullable<StatCardProps['trend']>, string> = {
-  up: 'text-success',
-  down: 'text-error',
-  neutral: 'text-muted-foreground',
+  up: 'text-ok',
+  down: 'text-fault',
+  neutral: 'text-ink-muted',
 };
 
 export const StatCard = ({
@@ -32,43 +30,31 @@ export const StatCard = ({
   className,
   size = 'default',
 }: StatCardProps): React.JSX.Element => (
-  <Card
-    className={cn(
-      'border-border/80 bg-card/90 shadow-cockpit',
-      className,
-    )}
-    variant="elevated"
-  >
-    <CardContent className={cn('pt-5', size === 'hero' ? 'p-5' : 'p-4')}>
+  <Panel className={className}>
+    <PanelBody className={size === 'hero' ? 'p-5' : 'p-4'}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
             {title}
           </p>
           <div className="flex items-baseline gap-1">
             <span
               className={cn(
-                'font-mono font-semibold tracking-tight text-foreground',
+                'font-mono font-semibold tabular-nums tracking-tight text-ink',
                 size === 'hero' ? 'text-kpi' : 'text-2xl',
                 valueClassName,
               )}
             >
               {value}
             </span>
-            {suffix ? (
-              <span className="text-sm text-muted-foreground">{suffix}</span>
-            ) : null}
+            {suffix ? <span className="text-sm text-ink-muted">{suffix}</span> : null}
           </div>
           {trend && trendValue ? (
-            <span className={cn('text-xs font-medium', trendClasses[trend])}>
-              {trendValue}
-            </span>
+            <p className={cn('text-xs font-medium', trendClasses[trend])}>{trendValue}</p>
           ) : null}
         </div>
-        {prefix ? (
-          <div className="rounded-lg bg-brand/10 p-2.5 text-brand">{prefix}</div>
-        ) : null}
+        {prefix ? <div className="text-ink-muted">{prefix}</div> : null}
       </div>
-    </CardContent>
-  </Card>
+    </PanelBody>
+  </Panel>
 );

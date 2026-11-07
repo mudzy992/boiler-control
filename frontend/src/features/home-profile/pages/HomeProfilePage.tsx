@@ -275,7 +275,7 @@ export const HomeProfilePage: React.FC = () => {
             disabled={saving}
           />
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1">
+            <label className="block text-sm font-semibold text-text-secondary mb-1">
               {t('homeProfile.insulationType')}
             </label>
             <select
@@ -285,7 +285,7 @@ export const HomeProfilePage: React.FC = () => {
                 handleChange('insulationType', e.target.value as InsulationType)
               }
               disabled={saving}
-              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
             >
               {INSULATION_TYPE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -294,7 +294,7 @@ export const HomeProfilePage: React.FC = () => {
               ))}
             </select>
             {errors.insulationType && (
-              <p className="mt-1 text-sm text-error dark:text-dark-error">
+              <p className="mt-1 text-sm text-error">
                 {errors.insulationType}
               </p>
             )}
@@ -316,7 +316,7 @@ export const HomeProfilePage: React.FC = () => {
             disabled={saving}
           />
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1">
+            <label className="block text-sm font-semibold text-text-secondary mb-1">
               {t('homeProfile.windowType')}
             </label>
             <select
@@ -326,7 +326,7 @@ export const HomeProfilePage: React.FC = () => {
                 handleChange('windowType', e.target.value as WindowType)
               }
               disabled={saving}
-              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
             >
               {WINDOW_TYPE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -335,13 +335,13 @@ export const HomeProfilePage: React.FC = () => {
               ))}
             </select>
             {errors.windowType && (
-              <p className="mt-1 text-sm text-error dark:text-dark-error">
+              <p className="mt-1 text-sm text-error">
                 {errors.windowType}
               </p>
             )}
           </div>
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1">
+            <label className="block text-sm font-semibold text-text-secondary mb-1">
               {t('homeProfile.heatingType')}
             </label>
             <select
@@ -351,7 +351,7 @@ export const HomeProfilePage: React.FC = () => {
                 handleChange('heatingType', e.target.value as HeatingType)
               }
               disabled={saving}
-              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+              className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
             >
               {HEATING_TYPE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -360,7 +360,7 @@ export const HomeProfilePage: React.FC = () => {
               ))}
             </select>
             {errors.heatingType && (
-              <p className="mt-1 text-sm text-error dark:text-dark-error">
+              <p className="mt-1 text-sm text-error">
                 {errors.heatingType}
               </p>
             )}
@@ -391,7 +391,7 @@ export const HomeProfilePage: React.FC = () => {
             disabled={saving}
           />
           <div className="col-span-2 md:col-span-1 flex items-end">
-            <label className="mr-2 text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+            <label className="mr-2 text-sm font-semibold text-text-secondary">
               {t('homeProfile.hasFloorHeating')}
             </label>
             <input
@@ -400,7 +400,7 @@ export const HomeProfilePage: React.FC = () => {
               checked={form.hasFloorHeating}
               onChange={(e) => handleChange('hasFloorHeating', e.target.checked)}
               disabled={saving}
-              className="rounded border-border text-brand focus:ring-brand dark:border-dark-border dark:text-dark-text-primary"
+              className="rounded border-border text-brand focus:ring-brand"
             />
           </div>
           <InputNumber

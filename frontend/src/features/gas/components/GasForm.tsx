@@ -182,14 +182,14 @@ export const GasForm: React.FC<GasFormProps> = ({
       onKeyDown={handleKeyDown}
       className={`fixed inset-y-0 left-1/2 top-1/2 z-modal -translate-x-1/2 -translate-y-1/2 w-full max-w-lg transform transition-transform duration-300 ${
         open ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-      } rounded-xl border border-border bg-surface shadow-2xl p-6 dark:border-dark-border dark:bg-dark-surface-elevated`}
+      } rounded-panel border border-panel-border bg-panel p-6`}
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 id={DIALOG_TITLE_ID} className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">
+          <h2 id={DIALOG_TITLE_ID} className="text-lg font-semibold text-text-primary">
             {t('gas.addReading')}
           </h2>
-          <p className="text-sm text-text-secondary dark:text-dark-text-secondary">
+          <p className="text-sm text-text-secondary">
             {t('gas.recordSubtitle')}
           </p>
         </div>
@@ -203,7 +203,7 @@ export const GasForm: React.FC<GasFormProps> = ({
       </div>
 
       {apiError && (
-        <div className="mb-4 p-3 rounded-lg border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
+        <div className="mb-4 p-3 rounded-lg border border-error bg-error-50 text-error-700 text-sm">
           {apiError}
         </div>
       )}
@@ -235,17 +235,17 @@ export const GasForm: React.FC<GasFormProps> = ({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, useCurrentDateTime: e.target.checked }))
             }
-            className="rounded border-border text-brand focus:ring-brand dark:border-dark-border dark:text-dark-text-primary"
+            className="rounded border-border text-brand focus:ring-brand"
             disabled={isLoading}
           />
-          <label htmlFor="useCurrentDateTime" className="text-sm text-text-secondary dark:text-dark-text-secondary cursor-pointer select-none">
+          <label htmlFor="useCurrentDateTime" className="text-sm text-text-secondary cursor-pointer select-none">
             {t('gas.useCurrentDateTime')}
           </label>
         </div>
 
         {/* Meter Image */}
         <div className="mb-4">
-          <label htmlFor="gas-meter-image" className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+          <label htmlFor="gas-meter-image" className="block text-sm font-semibold text-text-secondary">
             {t('gas.meterImage')}
           </label>
           <input
@@ -253,11 +253,11 @@ export const GasForm: React.FC<GasFormProps> = ({
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={(e) => setMeterImage(e.target.files?.[0] || null)}
-            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
             disabled={isLoading}
           />
           {meterImage && (
-            <p className="mt-1 text-xs text-text-tertiary dark:text-dark-text-tertiary">
+            <p className="mt-1 text-xs text-text-tertiary">
               {meterImage.name}
             </p>
           )}
@@ -283,7 +283,7 @@ export const GasForm: React.FC<GasFormProps> = ({
             </div>
 
             <div className="mb-6">
-              <label htmlFor="gas-reading-time" className="block text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+              <label htmlFor="gas-reading-time" className="block text-sm font-semibold text-text-secondary">
                 {t('gas.time')} *
               </label>
               <input
@@ -293,7 +293,7 @@ export const GasForm: React.FC<GasFormProps> = ({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, readingTime: e.target.value }))
                 }
-                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary placeholder:text-text-tertiary dark:border-dark-border dark:bg-dark-surface-elevated dark:text-dark-text-primary"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary placeholder:text-text-tertiary"
                 disabled={isLoading}
               />
             </div>

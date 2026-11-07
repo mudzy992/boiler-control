@@ -1,62 +1,79 @@
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/shared/lib/utils';
-
-const inputVariants = cva(
-  'flex w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
-  {
-    variants: {
-      variant: {
-        default: '',
-        error: 'border-destructive focus-visible:ring-destructive',
-      },
-      inputSize: {
-        default: 'h-9 py-2',
-        sm: 'h-8 px-2.5 text-xs',
-        lg: 'h-10 px-3.5 text-base',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      inputSize: 'default',
-    },
-  },
-);
+import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
+import { Field, TextInput as UiTextInput, fieldAria } from '@/ui';
 
 export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
-    VariantProps<typeof inputVariants> {}
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
+  label?: string;
+  error?: string;
+  hint?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+}
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, variant, inputSize, ...props }, ref) => (
-    <input
-      type={type}
-      className={cn(inputVariants({ variant, inputSize }), className)}
-      ref={ref}
-      {...props}
-    />
-  ),
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, error, hint, id, className, prefix, suffix, ...props }, ref) => {
+    const inputId = id ?? props.name ?? 'input';
+    const control = (
+      <div className="relative">
+        {prefix ? (
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-dim">
+            {prefix}
+          </span>
+        ) : null}
+        <UiTextInput
+          ref={ref}
+          id={inputId}
+          invalid={Boolean(error)}
+          className={[prefix ? 'pl-9' : '', suffix ? 'pr-9' : '', className]
+            .filter(Boolean)
+            .join(' ')}
+          {...fieldAria(inputId, { hint, error })}
+          {...props}
+        />
+        {suffix ? (
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-dim">
+            {suffix}
+          </span>
+        ) : null}
+      </div>
+    );
+    if (!label) {
+      return control;
+    }
+    return (
+      <Field id={inputId} label={label} hint={hint} error={error}>
+        {control}
+      </Field>
+    );
+  },
 );
 Input.displayName = 'Input';
 
-export const InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex w-full items-center gap-2', className)} {...props} />
-  ),
-);
-InputGroup.displayName = 'InputGroup';
+export const InputWrapper = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => <div className={className}>{children}</div>;
 
-export const InputWrapper = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-col gap-1.5', className)} {...props} />
-  ),
-);
-InputWrapper.displayName = 'InputWrapper';
+export const FieldError = ({
+  children,
+  id,
+}: {
+  children?: ReactNode;
+  id?: string;
+}) =>
+  children ? (
+    <p id={id} className="text-xs text-fault" role="alert">
+      {children}
+    </p>
+  ) : null;
 
-export const FieldError = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-destructive', className)} role="alert" {...props} />
-));
-FieldError.displayName = 'FieldError';
+export const InputGroup = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => <div className={className}>{children}</div>;

@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { Label } from '@/shared/components/ui/Label';
 import { Input as SharedInput } from '@/shared/components/ui/Input';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/ui';
 
-/** Form field wrapper: label + shared Input + error/helper text. */
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -25,13 +24,13 @@ export const Input: React.FC<InputProps> = ({
       {label ? <Label htmlFor={inputId}>{label}</Label> : null}
       <SharedInput
         id={inputId}
-        variant={error ? 'error' : 'default'}
+        error={error}
         aria-invalid={Boolean(error)}
         {...props}
       />
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-sm text-fault">{error}</p> : null}
       {helperText && !error ? (
-        <p className="text-sm text-muted-foreground">{helperText}</p>
+        <p className="text-sm text-ink-muted">{helperText}</p>
       ) : null}
     </div>
   );

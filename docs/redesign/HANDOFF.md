@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-I0–I7 + cockpit + Vercel density + **shell/contrast/spacing** gotovi. Vidi `11-cockpit-ui.md`.
+I0–I7 + cockpit polish + **instrument design system** (`frontend/src/ui`, no Radix/shadcn).
 
 ---
 
@@ -10,26 +10,22 @@ I0–I7 + cockpit + Vercel density + **shell/contrast/spacing** gotovi. Vidi `11
 
 | Sloj | Status |
 |---|---|
-| I0–I7 implement | Gotovo |
-| Cockpit + Vercel density | Gotovo |
-| Shell / contrast / buttons / spacing | Gotovo |
+| I0–I7 | Gotovo |
+| Instrument tokens + `ui/` | Gotovo |
+| Shell/shared on `ui/` | Gotovo |
+| Feature migration | In progress (compat bridges remain for old class names) |
+| Radix/cva removed | Gotovo |
 
-CI: Frontend on `main`. Zadnji run zelen: `42398116287` (`54e8162`).
+CI: Frontend on `main`.
 
-## Shell polish sažetak
+## Next
 
-- Dark contrast max; sidebar `w-60` + `lg:ml-60` (bez max-w guttera).
-- Brand samo u headeru (ne duplo u sidebaru).
-- Buttons flat: `brand-700`, no shadow/ring-offset; Set temp = outline.
-- Hero: current/target + heating duration progress (overtime state).
-
-## Next (opcionalno)
-
-- Lighthouse protected ruta
-- A11y/SEO polish
+- Finish page-by-page className cleanup (drop TW bridge aliases).
+- Tighten ESLint restricted-syntax to error after cleanup.
+- Visual pass via `/design` gallery.
 
 ## Prompt
 
 ```
-Boiler-control: I0–I7 + cockpit + shell/contrast polish gotovi. Pročitaj docs/redesign/HANDOFF.md i 11-cockpit-ui.md.
+Boiler-control: instrument design system shipped. Read docs/redesign/HANDOFF.md, .cursor/plans/instrument-design-system/HANDOFF.md, and .cursor/docs/matrices/design-system/MATRIX.md.
 ```

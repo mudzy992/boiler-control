@@ -1,8 +1,8 @@
 # Checklist
 
-- [ ] P0 docs + MATRIX
-- [ ] P1 tokens + Tailwind
-- [ ] P2 ui primitives + gallery
-- [ ] P3 shell + shared
-- [ ] P4 all pages
-- [ ] P5 cleanup + ESLint + CI green
+- [x] P0 docs + MATRIX
+- [x] P1 tokens + Tailwind
+- [x] P2 ui primitives + gallery
+- [x] P3 shell + shared
+- [x] P4 pages (hero + surfaces; residual bridges OK)
+- [x] P5 cleanup + ESLint + CI

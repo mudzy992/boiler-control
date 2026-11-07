@@ -11,18 +11,18 @@ export const DeltaChip = ({ delta }: DeltaChipProps): JSX.Element => {
       ? {
           label: 'OK',
           className:
-            'bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-100',
+            'bg-success-50 text-success-700',
         }
       : delta > 0
         ? {
             label: 'HIGH',
             className:
-              'bg-warning-50 text-warning-700 dark:bg-warning-900/20 dark:text-warning-100',
+              'bg-warning-50 text-warning-700',
           }
         : {
             label: 'LOW',
             className:
-              'bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-100',
+              'bg-error-50 text-error-700',
           };
 
   return (

@@ -4,35 +4,29 @@
 @tailwind components;
 @tailwind utilities;
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
 html,
 body,
 #root {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
-  overflow-x: hidden;
+  min-height: 100%;
 }
 
 body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
-  line-height: var(--text-base-lh);
-  font-weight: var(--font-weight-normal);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: rgb(var(--bg));
-  color: rgb(var(--text-primary));
+  background-color: rgb(var(--canvas));
+  background-image: radial-gradient(rgb(var(--line) / 0.45) 1px, transparent 1px);
+  background-size: 16px 16px;
+  color: rgb(var(--ink));
 }
 
 *:focus-visible {
-  outline: 2px solid rgb(var(--brand));
+  outline: 2px solid rgb(var(--signal));
   outline-offset: 2px;
 }
 
@@ -42,11 +36,11 @@ body {
   left: 0;
   z-index: var(--z-tooltip);
   padding: var(--space-3) var(--space-4);
-  background: rgb(var(--brand));
-  color: rgb(var(--text-inverse));
-  border-radius: var(--radius-md);
+  background: rgb(var(--signal));
+  color: rgb(var(--btn-primary-fg));
+  border-radius: var(--radius-control);
   text-decoration: none;
-  font-weight: var(--font-weight-semibold);
+  font-weight: 600;
 }
 
 .skip-link:focus {
@@ -64,10 +58,7 @@ body {
     scroll-behavior: auto !important;
   }
 
-  .animate-status-pulse,
-  .shadow-glow,
-  .shadow-glow-soft {
+  .animate-status-pulse {
     animation: none !important;
-    box-shadow: none !important;
   }
 }

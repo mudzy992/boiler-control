@@ -6,16 +6,7 @@ import {
   MIN_CURRENT_FLOW_TEMP,
   validateFlowTempInput,
 } from '@/constants/boilerLimits';
-import { InputNumber } from '@/components/InputNumber';
-import { Button } from '@/shared/components/ui/Button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
+import { Button, Field, Modal, NumberInput, fieldAria } from '@/ui';
 
 export interface TempDialogProps {
   open: boolean;
@@ -33,18 +24,20 @@ export const TempDialog = ({
   isSubmitting = false,
 }: TempDialogProps): React.JSX.Element => {
   const { t } = useTranslation();
-  const [value, setValue] = React.useState<number | null>(initialValue);
+  const [value, setValue] = React.useState<number | undefined>(
+    typeof initialValue === 'number' ? initialValue : undefined,
+  );
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
-      setValue(typeof initialValue === 'number' ? initialValue : null);
+      setValue(typeof initialValue === 'number' ? initialValue : undefined);
       setError(null);
     }
   }, [open, initialValue]);
 
   const handleSubmit = async (): Promise<void> => {
-    const result = validateFlowTempInput(value);
+    const result = validateFlowTempInput(value ?? null);
     if (!result.ok) {
       setError(
         result.reason === 'required'
@@ -58,55 +51,51 @@ export const TempDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('tempDialog.title')}</DialogTitle>
-          <DialogDescription>
-            {t('tempDialog.range', {
-              min: MIN_CURRENT_FLOW_TEMP,
-              max: MAX_CURRENT_FLOW_TEMP,
-            })}
-          </DialogDescription>
-        </DialogHeader>
-        <InputNumber
+    <Modal
+      open={open}
+      onClose={() => onOpenChange(false)}
+      title={t('tempDialog.title')}
+      description={t('tempDialog.range', {
+        min: MIN_CURRENT_FLOW_TEMP,
+        max: MAX_CURRENT_FLOW_TEMP,
+      })}
+    >
+      <Field id="temp-dialog-value" label={t('tempDialog.label')} error={error ?? undefined}>
+        <NumberInput
           id="temp-dialog-value"
-          label={t('tempDialog.label')}
-          value={value}
+          value={value ?? ''}
           min={MIN_CURRENT_FLOW_TEMP}
           max={MAX_CURRENT_FLOW_TEMP}
           step={0.1}
-          precision={1}
-          addonAfter="°C"
-          error={error ?? undefined}
-          onChange={(next) => {
+          invalid={Boolean(error)}
+          onValueChange={(next) => {
             setValue(next);
             setError(null);
           }}
           disabled={isSubmitting}
+          {...fieldAria('temp-dialog-value', { error: error ?? undefined })}
         />
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              void handleSubmit();
-            }}
-            isLoading={isSubmitting}
-            loadingLabel={t('tempDialog.saving')}
-            disabled={isSubmitting}
-          >
-            {t('tempDialog.save')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </Field>
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onOpenChange(false)}
+          disabled={isSubmitting}
+        >
+          {t('common.cancel')}
+        </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            void handleSubmit();
+          }}
+          isLoading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          {t('tempDialog.save')}
+        </Button>
+      </div>
+    </Modal>
   );
 };

@@ -16,7 +16,7 @@ I0–I7 + cockpit polish + **instrument design system** (`frontend/src/ui`, no R
 | Feature migration | In progress (compat bridges remain for old class names) |
 | Radix/cva removed | Gotovo |
 
-CI: Frontend on `main`.
+CI: Frontend on `main`. Zadnji run zelen: `42401977361` (`ad181c8`).
 
 ## Next
 

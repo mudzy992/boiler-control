@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { ConfigProvider, theme as antdTheme } from 'antd';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -40,40 +39,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setMode((current) => (current === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  const algorithm = mode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
-
-  const antdConfig = useMemo(
-    () => ({
-      algorithm,
-      token: {
-        colorPrimary: '#ff6b3d',
-        colorInfo: '#ff6b3d',
-        colorBgBase: mode === 'dark' ? '#0b0f1a' : '#f6f7fb',
-        colorTextBase: mode === 'dark' ? '#e5e7eb' : '#111827',
-        colorBorder: mode === 'dark' ? '#1f2937' : '#e5e7eb',
-        borderRadius: 12,
-      },
-      components: {
-        Layout: {
-          headerBg: mode === 'dark' ? '#0f172a' : '#ffffff',
-          siderBg: mode === 'dark' ? '#0f172a' : '#ffffff',
-          bodyBg: mode === 'dark' ? '#0b0f1a' : '#f6f7fb',
-        },
-        Card: {
-          colorBgContainer: mode === 'dark' ? '#111827' : '#ffffff',
-        },
-      },
-    }),
-    [algorithm, mode]
-  );
-
   const value = useMemo(() => ({ mode, toggleMode, setMode }), [mode, toggleMode]);
 
-  return (
-    <ThemeContext.Provider value={value}>
-      <ConfigProvider theme={antdConfig}>{children}</ConfigProvider>
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useThemeMode = () => {

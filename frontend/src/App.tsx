@@ -10,18 +10,10 @@ import './index.css';
 /**
  * FE2-4 (FE-004): code-splitting po ruti.
  *
- * Prije ove izmjene `App.tsx` je statički importovao svih 10 stranica, pa je
- * `npm run build` proizvodio **jedan** JS čip od 2.975,35 kB (gzip 906,26 kB) —
- * izmjereno 2026-10-30. Posljedica: korisnik na `/login` preuzima cijelu
- * aplikaciju, uključujući `@ant-design/plots` (teška biblioteka za grafikone)
- * koju koristi **samo** `DashboardPage.tsx:6`.
- *
- * Sada je svaka stranica zaseban čip koji se dohvaća tek kad se ruta posjeti.
- * `Suspense` fallback je namjerno **bez antd-a** (običan `div` + CSS), da
- * početni čip ostane mali — antd ionako dolazi s prvom stranicom koja ga treba.
- *
- * Stranice koriste **imenovane** izvoze, pa `React.lazy` (koji traži default
- * izvoz) mora mapirati modul: `.then((m) => ({ default: m.X }))`.
+ * Svaka stranica je zaseban čip koji se dohvaća tek kad se ruta posjeti.
+ * `Suspense` fallback je `QueryState` loading (bez teških UI biblioteka).
+ * Stranice koriste imenovane izvoze, pa `React.lazy` mapira:
+ * `.then((m) => ({ default: m.X }))`.
  */
 const LoginPage = lazy(() =>
   import('./features/auth/pages/LoginPage').then((m) => ({ default: m.LoginPage }))

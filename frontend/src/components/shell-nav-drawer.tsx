@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './Button';
+import { Button } from '@/shared/components/ui/Button';
 import { ShellNavList } from './shell-nav-list';
 
 const FOCUSABLE =

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useThemeMode } from '../context/ThemeContext';
 import { SkipLink } from '../shared/components/SkipLink';
-import { Button } from './Button';
+import { Button } from '@/shared/components/ui/Button';
 import { ShellNavDrawer } from './shell-nav-drawer';
 import { ShellNavList } from './shell-nav-list';
 

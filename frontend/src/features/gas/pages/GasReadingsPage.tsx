@@ -1,81 +1,68 @@
-import React, { useState, useMemo } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 import dayjs from 'dayjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../../services/api';
-import { useGasReadingsQuery } from '../hooks/useGasQueries';
-import { queryKeys } from '../../../lib/queryKeys';
-import { GasReadingCard } from '../components/GasReadingCard';
-import { GasForm } from '../components/GasForm';
-import { message } from 'antd';
-import { Button } from '../../../components/Button';
-import { Card } from '../../../components/Card';
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '@/shared/components/page-header';
+import { QueryState } from '@/shared/components/query-state';
+import { StatusBanner } from '@/shared/components/status-banner';
+import { Button } from '@/shared/components/ui/Button';
+import { queryKeys } from '@/lib/queryKeys';
+import { apiClient } from '@/services/api';
+import { GasForm } from '../components/GasForm';
+import { GasReadingCard } from '../components/GasReadingCard';
+import { useGasReadingsQuery } from '../hooks/useGasQueries';
 
-export const GasReadingsPage: React.FC = () => {
+export const GasReadingsPage = (): JSX.Element => {
   const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { data: readings = [], isLoading, error, refetch } = useGasReadingsQuery();
 
-  // FE2-2: auth sloj je u `apiClient`; stranica više ne čita token direktno.
-  // FE2-3: shared gas readings cache with GasAnalyticsPage.
-  const { data: readings = [], isLoading, error } = useGasReadingsQuery();
+  const showError = (key: string) => {
+    setErrorMessage(t(key));
+  };
 
-  // Add reading mutation
   const addMutation = useMutation({
     mutationFn: async (data: {
       counterValue: number;
       readingDate: string;
       meterImage?: File;
-    }) => {
-      return apiClient.addGasReadingWithUpload(data);
-    },
+    }) => apiClient.addGasReadingWithUpload(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
       setShowAddModal(false);
     },
-    // FE2-12: mutacija je ranije tiho padala — korisnik nije dobijao nikakvu
-    // povratnu informaciju kad backend vrati grešku.
-    onError: () => {
-      message.error(t('gas.addReadingError'));
-    },
+    onError: () => showError('gas.addReadingError'),
   });
 
-  // Delete reading mutation
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiClient.deleteGasReading(id);
-    },
+    mutationFn: async (id: number) => apiClient.deleteGasReading(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
-    onError: () => {
-      message.error(t('gas.deleteError'));
-    },
+    onError: () => showError('gas.deleteError'),
   });
 
   const referenceMutation = useMutation({
     mutationFn: async (payload: { id: number; isReference: boolean }) =>
       apiClient.updateGasReference(payload.id, payload.isReference),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
-    onError: () => {
-      message.error(t('gas.referenceError'));
-    },
+    onError: () => showError('gas.referenceError'),
   });
 
   const meterImageUploadMutation = useMutation({
     mutationFn: async (payload: { id: number; meterImage: File }) =>
       apiClient.uploadGasMeterImage(payload.id, payload.meterImage),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
     },
-    onError: () => {
-      message.error(t('gas.meterImageUploadError'));
-    },
+    onError: () => showError('gas.meterImageUploadError'),
   });
 
   const invoiceUploadMutation = useMutation({
@@ -90,36 +77,22 @@ export const GasReadingsPage: React.FC = () => {
         payload.invoiceGasPriceExVat,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
-    onError: () => {
-      message.error(t('gas.invoiceUploadError'));
-    },
+    onError: () => showError('gas.invoiceUploadError'),
   });
 
   const invoiceDeleteMutation = useMutation({
     mutationFn: async (id: number) => apiClient.deleteGasInvoice(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
     },
-    onError: () => {
-      message.error(t('gas.invoiceDeleteError'));
-    },
+    onError: () => showError('gas.invoiceDeleteError'),
   });
 
   const openProtectedFile = async (url: string, fileName: string) => {
-    /**
-     * FE2-2: preuzimanje ide kroz `apiClient.downloadProtectedFile`, ne kroz
-     * ručni `fetch` s `Authorization: Bearer ${localStorage.getItem('token')}`.
-     *
-     * Stari kod je zaobilazio cijeli auth sloj: bez `withCredentials` (pa
-     * httpOnly cookie ne bi bio poslan), bez refresh-a na 401 (pa bi istekao
-     * access token značio trajni neuspjeh), i s tokenom koji u cookie toku
-     * više ne postoji u `localStorage` — otvaranje fakture i slike brojila bi
-     * prestalo raditi čim se zastavica uključi.
-     */
     const blob = await apiClient.downloadProtectedFile(url);
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -129,47 +102,39 @@ export const GasReadingsPage: React.FC = () => {
     window.URL.revokeObjectURL(blobUrl);
   };
 
-  const handleUploadInvoice = async (readingId: number) => {
+  const handleUploadInvoice = (readingId: number) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'application/pdf';
-    input.onchange = async () => {
+    input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
-      try {
-        await invoiceUploadMutation.mutateAsync({
-          id: readingId,
-          invoicePdf: file,
-        });
-      } catch {
-        message.error(t('gas.invoiceUploadError'));
-      }
+      void invoiceUploadMutation
+        .mutateAsync({ id: readingId, invoicePdf: file })
+        .catch(() => showError('gas.invoiceUploadError'));
     };
     input.click();
   };
 
-  const handleUploadMeterImage = async (readingId: number) => {
+  const handleUploadMeterImage = (readingId: number) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/jpeg,image/png,image/webp';
-    input.onchange = async () => {
+    input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
-      try {
-        await meterImageUploadMutation.mutateAsync({ id: readingId, meterImage: file });
-      } catch {
-        message.error(t('gas.meterImageUploadError'));
-      }
+      void meterImageUploadMutation
+        .mutateAsync({ id: readingId, meterImage: file })
+        .catch(() => showError('gas.meterImageUploadError'));
     };
     input.click();
   };
 
-  // Sort readings (newest first)
-  const sortedReadings = useMemo(() => {
-    return [...readings].sort((a, b) =>
-      dayjs(b.readingDate).diff(dayjs(a.readingDate)),
-    );
-  }, [readings]);
+  const sortedReadings = useMemo(
+    () =>
+      [...readings].sort((a, b) => dayjs(b.readingDate).diff(dayjs(a.readingDate))),
+    [readings],
+  );
 
   const handleExportCSV = () => {
     const headers = ['Counter Value (m³)', 'Reading Date', 'Created At'];
@@ -178,12 +143,7 @@ export const GasReadingsPage: React.FC = () => {
       dayjs(r.readingDate).format('YYYY-MM-DD HH:mm'),
       dayjs(r.createdAt).format('YYYY-MM-DD HH:mm'),
     ]);
-
-    const csv = [
-      headers.join(','),
-      ...rows.map((row) => row.join(',')),
-    ].join('\n');
-
+    const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -202,61 +162,45 @@ export const GasReadingsPage: React.FC = () => {
     invoiceUploadMutation.isPending ||
     invoiceDeleteMutation.isPending;
 
-  if (error) {
-    return (
-      <CardError>
-        {t('gas.loadError')} {t('gas.loadErrorDesc')}
-      </CardError>
-    );
-  }
+  const status = isLoading
+    ? 'loading'
+    : error
+      ? 'error'
+      : readings.length === 0
+        ? 'empty'
+        : 'success';
 
   return (
     <div className="space-y-6" id="content">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text-primary">
-            {t('gas.title')}
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            {t('gas.subtitle')} {readings.length} {t('gas.readingsRecorded')}.
-          </p>
-        </div>
-        <div className="flex items-end gap-3">
-          {readings.length > 0 && (
-            <Button variant="primary" size="sm" onClick={handleExportCSV}>
-              {t('gas.exportCsv')}
+      <PageHeader
+        title={t('gas.title')}
+        description={`${t('gas.subtitle')} ${readings.length} ${t('gas.readingsRecorded')}.`}
+        action={
+          <>
+            {readings.length > 0 ? (
+              <Button type="button" size="sm" onClick={handleExportCSV}>
+                {t('gas.exportCsv')}
+              </Button>
+            ) : null}
+            <Button type="button" onClick={() => setShowAddModal(true)}>
+              {t('gas.addReadingCta')}
             </Button>
-          )}
-          <Button variant="primary" onClick={() => setShowAddModal(true)}>
-            {t('gas.addReadingCta')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-border rounded-full animate-spin border-t-brand"></div>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!isLoading && readings.length === 0 && (
-        <Card padding="lg" elevated className="text-center">
-          <div className="flex flex-col items-center justify-center h-64">
-            <svg className="w-12 h-12 mb-3 text-text-tertiary dark:text-dark-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <p className="text-sm text-text-secondary dark:text-dark-text-secondary">
-              {t('gas.noReadingsYet')}
-            </p>
-            <p className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-1">
-              {t('gas.noReadingsAddFirst')}
-            </p>
-          </div>
-        </Card>
-      )}
-
-      {/* Readings list */}
-      {!isLoading && readings.length > 0 && (
+          </>
+        }
+      />
+      {errorMessage ? (
+        <StatusBanner
+          variant="error"
+          message={errorMessage}
+          onDismiss={() => setErrorMessage(null)}
+          dismissLabel={t('common.dismiss')}
+        />
+      ) : null}
+      <QueryState
+        status={status}
+        emptyMessage={t('gas.noReadingsYet')}
+        onRetry={() => void refetch()}
+      >
         <div className="space-y-3">
           {sortedReadings.map((reading, index) => (
             <GasReadingCard
@@ -274,21 +218,19 @@ export const GasReadingsPage: React.FC = () => {
                 void openProtectedFile(
                   apiClient.getGasMeterImageUrl(id),
                   `meter-${id}.jpg`,
-                ).catch(() => message.error(t('gas.meterImageOpenError')))
+                ).catch(() => showError('gas.meterImageOpenError'))
               }
               onOpenInvoice={(id) =>
                 void openProtectedFile(
                   apiClient.getGasInvoiceUrl(id),
                   `invoice-${id}.pdf`,
-                ).catch(() => message.error(t('gas.invoiceOpenError')))
+                ).catch(() => showError('gas.invoiceOpenError'))
               }
               isLoading={allPending}
             />
           ))}
         </div>
-      )}
-
-      {/* Add modal */}
+      </QueryState>
       <GasForm
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -298,13 +240,3 @@ export const GasReadingsPage: React.FC = () => {
     </div>
   );
 };
-
-function CardError({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="p-4 rounded-xl border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm">
-      {children}
-    </div>
-  );
-}
-
-GasReadingsPage.displayName = 'GasReadingsPage';

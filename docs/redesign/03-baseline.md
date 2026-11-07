@@ -83,7 +83,7 @@ Bundle veličina: **nema**. `dist/` iz ovog pokretanja ne postoji jer je lanac s
 
 ### 5. Lighthouse, Web Vitals, console
 
-**Nije mjereno.** Nema uspješnog builda i dev server nije podizan u ovoj sesiji. Nema broja console grešaka.
+**I7 update (2026-11-07):** login baseline — Perf 100 / A11y 88 / BP 96 / SEO 82. Vidi `10-lighthouse-i7.md`. Protected ruta nije mjerena (nema sesije).
 
 ## Poslije `npm ci` (isti dan)
 

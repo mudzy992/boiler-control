@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button';
-import { Card } from '../../../components/Card';
 import { Input } from '../../../components/Input';
 import { InputNumber } from '../../../components/InputNumber';
+import { Button } from '@/shared/components/ui/Button';
+import { Card, CardContent } from '@/shared/components/ui/Card';
 import { apiClient } from '../../../services/api';
 import { PageHeader } from '@/shared/components/page-header';
 import { QueryState } from '@/shared/components/query-state';
@@ -213,8 +213,8 @@ export const HomeProfilePage: React.FC = () => {
         <StatusBanner variant="error" message={t('homeProfile.saveError')} />
       ) : null}
 
-      <Card padding="md" elevated>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Card variant="elevated">
+        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2 lg:grid-cols-3">
           <Input
             label={t('homeProfile.homeName')}
             placeholder="My Home"
@@ -448,25 +448,35 @@ export const HomeProfilePage: React.FC = () => {
             }
             disabled={saving}
           />
-          <div className="col-span-full">
-            <Input
-              label={t('homeProfile.preferredScheduleNotes')}
-              placeholder="Optional notes about preferred schedule"
+          <div className="col-span-full space-y-1">
+            <label
+              htmlFor="home-profile-preferred-schedule-notes"
+              className="text-sm font-medium"
+            >
+              {t('homeProfile.preferredScheduleNotes')}
+            </label>
+            <textarea
               id="home-profile-preferred-schedule-notes"
+              placeholder="Optional notes about preferred schedule"
               value={form.preferredScheduleNotes}
-              error={errors.preferredScheduleNotes}
               onChange={(e) =>
                 handleChange('preferredScheduleNotes', e.target.value)
               }
               disabled={saving}
               rows={3}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
+            {errors.preferredScheduleNotes ? (
+              <p className="text-sm text-destructive">
+                {errors.preferredScheduleNotes}
+              </p>
+            ) : null}
           </div>
-        </div>
+        </CardContent>
 
-        <div className="mt-6 flex gap-3">
+        <div className="flex gap-3 px-6 pb-6">
           <Button
-            variant="primary"
+            type="button"
             onClick={onSubmit}
             isLoading={saving}
             disabled={saving || !isDirty}

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button';
 import { Input } from '../../../components/Input';
+import { Button } from '@/shared/components/ui/Button';
 
 /**
  * FE2-13: elementi između kojih Tab smije kružiti dok je dijalog otvoren.
@@ -304,7 +304,6 @@ export const GasForm: React.FC<GasFormProps> = ({
         <div className="flex flex-col sm:flex-row gap-3">
           <Button
             variant="secondary"
-            size="md"
             type="button"
             onClick={() => {
               resetForm();
@@ -315,8 +314,6 @@ export const GasForm: React.FC<GasFormProps> = ({
             {t('common.cancel')}
           </Button>
           <Button
-            variant="primary"
-            size="md"
             type="submit"
             isLoading={isLoading}
             disabled={isLoading}

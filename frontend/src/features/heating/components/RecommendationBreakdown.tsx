@@ -1,7 +1,7 @@
-import React from 'react';
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'antd';
-import { Card } from '../../../components/Card';
+import { StatusBanner } from '@/shared/components/status-banner';
+import { Card, CardContent } from '@/shared/components/ui/Card';
 import type { components } from '../../../types/api';
 
 export type RecommendationBreakdownData =
@@ -12,25 +12,20 @@ interface RecommendationBreakdownProps {
   title?: string;
 }
 
-function formatTemp(value: number): string {
-  return `${value.toFixed(1)}°C`;
-}
+const formatTemp = (value: number): string => `${value.toFixed(1)}°C`;
 
-function formatOffset(value: number): string {
+const formatOffset = (value: number): string => {
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}°C`;
-}
+};
 
 /**
  * FE2-10: prikaz ISKLJUČIVO iz backend breakdown snapshot-a.
- *
- * Komponenta ne rekonstruiše formulu, ne računa base curve i ne mijenja
- * preporuku. Ako backend nije poslao breakdown (stariji redovi), ne prikazuje
- * ništa umjesto da pogađa razlog.
  */
-export const RecommendationBreakdown: React.FC<
-  RecommendationBreakdownProps
-> = ({ breakdown, title }) => {
+export const RecommendationBreakdown = ({
+  breakdown,
+  title,
+}: RecommendationBreakdownProps): JSX.Element | null => {
   const { t } = useTranslation();
 
   if (!breakdown) return null;
@@ -71,57 +66,47 @@ export const RecommendationBreakdown: React.FC<
   }
 
   return (
-    <Card padding="md" elevated>
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="text-sm font-semibold text-text-primary dark:text-dark-text-primary">
+    <Card variant="elevated">
+      <CardContent className="space-y-3 pt-6">
+        <h3 className="text-sm font-semibold text-foreground">
           {title ?? t('recommendation.title')}
         </h3>
-      </div>
-      <Alert
-        type="info"
-        showIcon
-        message={t('recommendation.advisory')}
-        className="rounded-lg mb-3"
-      />
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <caption className="sr-only">{t('recommendation.caption')}</caption>
-          <thead>
-            <tr className="text-left text-xs text-text-secondary dark:text-dark-text-secondary">
-              <th scope="col" className="px-2 py-1">
-                {t('recommendation.item')}
-              </th>
-              <th scope="col" className="px-2 py-1">
-                {t('recommendation.value')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.label}
-                className="border-t border-border dark:border-dark-border"
-              >
-                <th
-                  scope="row"
-                  className="px-2 py-1 font-normal text-text-secondary dark:text-dark-text-secondary"
-                >
-                  {row.label}
+        <StatusBanner variant="info" message={t('recommendation.advisory')} />
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <caption className="sr-only">{t('recommendation.caption')}</caption>
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground">
+                <th scope="col" className="px-2 py-1">
+                  {t('recommendation.item')}
                 </th>
-                <td className="px-2 py-1 text-text-primary dark:text-dark-text-primary">
-                  {row.value}
-                </td>
+                <th scope="col" className="px-2 py-1">
+                  {t('recommendation.value')}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-2 text-xs text-text-secondary dark:text-dark-text-secondary">
-        {t('recommendation.mode')}: {breakdown.mode}
-        {breakdown.intervalKey ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}` : ''}
-      </p>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label} className="border-t border-border">
+                  <th
+                    scope="row"
+                    className="px-2 py-1 font-normal text-muted-foreground"
+                  >
+                    {row.label}
+                  </th>
+                  <td className="px-2 py-1 text-foreground">{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t('recommendation.mode')}: {breakdown.mode}
+          {breakdown.intervalKey
+            ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}`
+            : ''}
+        </p>
+      </CardContent>
     </Card>
   );
 };
-
-RecommendationBreakdown.displayName = 'RecommendationBreakdown';

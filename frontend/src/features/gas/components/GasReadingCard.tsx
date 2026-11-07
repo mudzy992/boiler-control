@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button';
+import { Button } from '@/shared/components/ui/Button';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 
 interface GasReadingProps {
@@ -94,7 +94,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
           </div>
         </div>
         <Button
-          variant="danger"
+          variant="destructive"
           size="sm"
           onClick={() => setConfirmOpen(true)}
           disabled={isLoading}
@@ -107,7 +107,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
         <div className="flex flex-wrap gap-3">
           {onToggleReference && (
             <Button
-              variant={reading.isInvoiceReference ? 'secondary' : 'primary'}
+              variant={reading.isInvoiceReference ? 'secondary' : 'default'}
               size="sm"
               onClick={() => onToggleReference(reading.id, !reading.isInvoiceReference)}
               disabled={isLoading}
@@ -134,7 +134,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
             </p>
             <div className="flex flex-wrap gap-3">
               {onUploadInvoice && (
-                <Button variant="primary" size="sm" onClick={() => onUploadInvoice(reading.id)} disabled={isLoading}>
+                <Button variant="default" size="sm" onClick={() => onUploadInvoice(reading.id)} disabled={isLoading}>
                   {reading.hasInvoicePdf ? t('gas.actionReplaceInvoice') : t('gas.actionAddInvoice')}
                 </Button>
               )}
@@ -144,7 +144,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
                 </Button>
               )}
               {reading.hasInvoicePdf && onDeleteInvoice && (
-                <Button variant="danger" size="sm" onClick={() => onDeleteInvoice(reading.id)} disabled={isLoading}>
+                <Button variant="destructive" size="sm" onClick={() => onDeleteInvoice(reading.id)} disabled={isLoading}>
                   {t('gas.actionDeleteInvoice')}
                 </Button>
               )}

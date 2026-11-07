@@ -1,28 +1,10 @@
 /**
- * FE2-4 (FE-004) — regresijski čuvar code-splittinga.
- *
- * Ovi testovi NE mjere bundle (to radi `npm run build`); oni čuvaju **uzrok**
- * malog početnog čipa, jer je regresija ovdje nevidljiva: ako neko doda
- * `import { NovaStranica } from './pages/NovaStranica'` u `App.tsx`, build i
- * dalje prođe, aplikacija i dalje radi — a početni čip ponovo naraste.
- *
- * Izmjereno 2026-10-30 (Vite build, 21 čip):
- *   - inicijalni JS (ono što `dist/index.html` referencira): 1.434,19 kB / gzip 451,87 kB
- *   - prije izmjene (jedan čip):                             2.975,35 kB / gzip 906,26 kB
- *   - `vendor-plots` (1.467,02 kB) se sada dohvaća tek na dashboardu.
- *
- * Sadržaj fajlova se čita preko Vite-ovog `?raw` sufiksa, a ne preko `node:fs`:
- * u jsdom okruženju `import.meta.url` nije `file:` URL, pa `new URL(…,
- * import.meta.url)` baca `TypeError: The URL must be of scheme file`.
+ * FE2-4 — regresijski čuvar code-splittinga.
  */
 import { describe, expect, it } from 'vitest';
 import appSource from '../App.tsx?raw';
 import viteConfig from '../../vite.config.ts?raw';
 
-/**
- * Sadržaj svih stranica, učitan pri kompilaciji. `import.meta.glob` je
- * Vite-ova transformacija — radi i u Vitest-u.
- */
 const pageModules = import.meta.glob('../features/*/pages/*.tsx', {
   query: '?raw',
   import: 'default',
@@ -31,32 +13,26 @@ const pageModules = import.meta.glob('../features/*/pages/*.tsx', {
 
 const pageNames = Object.keys(pageModules).map((p) => p.split('/').pop() as string);
 
-/** Mapira naziv stranice na puni glob ključ (npr. DashboardPage.tsx → ../features/dashboard/pages/DashboardPage.tsx). */
 const pagePaths = Object.fromEntries(
-  Object.keys(pageModules).map((p) => [p.split('/').pop() as string, p])
+  Object.keys(pageModules).map((p) => [p.split('/').pop() as string, p]),
 );
 
-/**
- * Statički import stranice: `… from './pages/X'` ili `… from './features/X/pages/X'`.
- * Dinamički import izgleda `import('./pages/X')` — bez `from`.
- */
 const staticPageImports = (source: string): string[] =>
   Array.from(
     source.matchAll(
-      /import\s+[^;]*?from\s+['"](\.\/(?:pages|features\/[^/]+\/pages)\/[^'"]+)['"]/g
-    )
+      /import\s+[^;]*?from\s+['"](\.\/(?:pages|features\/[^/]+\/pages)\/[^'"]+)['"]/g,
+    ),
   ).map((m) => m[1]);
 
 const dynamicPageImports = (source: string): string[] =>
   Array.from(
     source.matchAll(
-      /import\(\s*['"](\.\/(?:pages|features\/[^/]+\/pages)\/[^'"]+)['"]\s*\)/g
-    )
+      /import\(\s*['"](\.\/(?:pages|features\/[^/]+\/pages)\/[^'"]+)['"]\s*\)/g,
+    ),
   ).map((m) => m[1]);
 
 describe('FE2-4: App.tsx dijeli stranice po ruti', () => {
   it('ne importuje nijednu stranicu statički', () => {
-    // Ovo je srž nalaza FE-004: statički import stranice vraća je u početni čip.
     expect(staticPageImports(appSource)).toEqual([]);
   });
 
@@ -66,7 +42,6 @@ describe('FE2-4: App.tsx dijeli stranice po ruti', () => {
     const uncovered = pageNames
       .map((f) => pagePaths[f]!.replace(/\.tsx$/, '').replace(/^\.\.\//, './'))
       .filter((p) => !lazy.includes(p));
-    // Nova stranica bez lazy() tiho povećava početni čip — test mora pasti.
     expect(uncovered).toEqual([]);
   });
 
@@ -75,52 +50,47 @@ describe('FE2-4: App.tsx dijeli stranice po ruti', () => {
     expect(appSource).toContain('fallback=');
   });
 
-  it('Suspense fallback ne vuče antd (da početni čip ostane mali)', () => {
-    // Fallback je namjerno običan <div>; antd dolazi s prvom stranicom koja ga treba.
+  it('Suspense fallback ne vuče antd', () => {
     const fallback = appSource.match(/function RouteFallback[\s\S]*?\n}/);
     expect(fallback, 'RouteFallback mora postojati').not.toBeNull();
-    expect(fallback![0]).not.toMatch(/<(Spin|Skeleton|Button)\b/);
+    expect(fallback![0]).not.toMatch(/<(Spin|Skeleton)\b/);
+    expect(fallback![0]).not.toMatch(/from ['"]antd['"]/);
   });
 });
 
 describe('FE2-4: vite.config.ts grupiše vendor pakete u stabilne čipove', () => {
   it('definiše manualChunks', () => {
-    // Namjerno regex s granicom, ne `toContain`: podstring bi preživio
-    // preimenovanje u `manualChunksX` i test bi lažno prolazio.
     expect(viteConfig).toMatch(/manualChunks\s*[:(]/);
   });
 
   it.each([
-    // [naziv čipa koji funkcija vraća, citirani obrazac putanje koji ga bira]
-    ['vendor-plots', '@ant-design/plots'],
-    ['vendor-antd', '/antd/'],
     ['vendor-react', '/react/'],
-    // FE2-7: icons je NAMJERNO u istom čipu kao antd, ne u vlastitom. FE2-4 ga
-    // je izdvojio u `vendor-icons`, što je stvorilo kružan odnos među čipovima
-    // (antd → icons → rc-util → vendor-antd) i srušilo evaluaciju bundlea.
-    ['vendor-antd', '@ant-design/icons'],
+    ['vendor-router', '/react-router'],
+    ['vendor-query', '/@tanstack/'],
+    ['vendor-i18n', '/i18next/'],
+    ['vendor-utils', '/axios/'],
   ])('grupa %s se stvarno vraća za %s', (chunk, pattern) => {
-    // Citirani oblici: `toContain('react')` bi preživio i u `react-router`,
-    // pa bi asertcija bila prazna.
     expect(viteConfig).toContain(`return '${chunk}'`);
     expect(viteConfig).toContain(`'${pattern}'`);
   });
 
-  it('plots se provjerava PRIJE icons (oba počinju s @ant-design/)', () => {
-    // Tražimo `id.includes(...)` pozive, NE goli podstring: ime paketa se
-    // pojavljuje i u komentarima iznad, pa bi `indexOf` mjerio komentar.
-    const iPlots = viteConfig.indexOf("id.includes('@ant-design/plots')");
-    const iIcons = viteConfig.indexOf("id.includes('@ant-design/icons')");
-    expect(iPlots, 'mora postojati provjera za plots').toBeGreaterThan(-1);
-    expect(iIcons, 'mora postojati provjera za icons').toBeGreaterThan(-1);
-    expect(iPlots, 'plots mora biti ispred icons').toBeLessThan(iIcons);
+  it('ne sadrži antd/plots vendor chunk grane (I7)', () => {
+    expect(viteConfig).not.toContain('vendor-antd');
+    expect(viteConfig).not.toContain('vendor-plots');
+    expect(viteConfig).not.toContain('@ant-design/plots');
   });
 });
 
-describe('FE2-4: @ant-design/plots nije u page grafu (I6 SVG bar)', () => {
-  it('nijedna page ne importuje @ant-design/plots', () => {
-    // I6 Dashboard koristi SVG bar; plots ostaje u package.json do I7 cleanup-a.
-    const users = pageNames.filter((f) => pageModules[pagePaths[f]!].includes('@ant-design/plots'));
+describe('FE2-4: antd nije u page grafu (I7)', () => {
+  it('nijedna page ne importuje antd ni @ant-design/*', () => {
+    const users = pageNames.filter((f) => {
+      const src = pageModules[pagePaths[f]!];
+      return (
+        src.includes("from 'antd'") ||
+        src.includes('from "antd"') ||
+        src.includes('@ant-design/')
+      );
+    });
     expect(users).toEqual([]);
   });
 });

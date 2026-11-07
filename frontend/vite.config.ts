@@ -65,62 +65,12 @@ export default defineConfig({
     },
   },
   build: {
-    /**
-     * FE2-4 (FE-004): vendor čipovi odvojeni od koda aplikacije.
-     *
-     * Bez ovoga `npm run build` je proizvodio jedan čip od 2.975,35 kB
-     * (gzip 906,26 kB — izmjereno 2026-10-30). Razdvajanje po biblioteci znači
-     * da se promjena koda aplikacije NE poništava keš preglednika za antd,
-     * react i slično — oni ostaju isti fajl između deploya.
-     *
-     * Grupisanje je po **porodici** paketa, ne po pojedinačnom paketu: antd
-     * vuče `rc-*` / `@rc-component/*`, a `@ant-design/plots` vuče `@antv/*` i
-     * `d3-*`. Dijeliti roditelja od njegove zavisnosti u dva čipa rizikuje
-     * greške inicijalizacije pri pokretanju, pa idu zajedno.
-     *
-     * `@ant-design/plots` se provjerava PRIJE `@ant-design/icons` jer oba
-     * počinju s `@ant-design/`.
-     */
-    /** FE2-4 / FE2-15: bundle budžet — upozorava ako Assembly čip prelazi 800 kB. */
+    /** FE2-4 / FE2-15: bundle budžet — upozorava ako čip prelazi 800 kB. */
     chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id: string) {
           if (!id.includes('node_modules')) return
-
-          if (
-            id.includes('@ant-design/plots') ||
-            id.includes('@antv') ||
-            id.includes('/d3-')
-          ) {
-            return 'vendor-plots'
-          }
-          // FE2-7 (ispravka FE2-4): `@ant-design/icons` MORA biti u istom čipu
-          // kao antd.
-          //
-          // FE2-4 ga je izdvojio u `vendor-icons`, ali antd bezuslovno importuje
-          // icons, a icons importuje `rc-util` — koji ovaj isti manualChunks
-          // prepoznaje preko `/rc-/` i smješta u `vendor-antd`. Nastao je
-          // KRUŽAN odnos između čipova: vendor-antd ↔ vendor-icons.
-          //
-          // Posljedica, izmjerena 2026-10-30 evaluacijom sagradjenog entry čipa:
-          //   TypeError: Cannot read properties of undefined (reading 'primary')
-          //     at vendor-icons-*.js  (B(P.primary), gdje je P uvezen iz vendor-antd)
-          // tj. React se uopšte nije mountovao i aplikacija je prikazivala prazan
-          // ekran. Vitest to NIJE mogao uhvatiti (čita izvorni kod, ne bundle),
-          // a ni `curl /` (vraća 200 jer je HTML ispravan) — jedino evaluacija
-          // bundlea.
-          //
-          // Dijeljenje ovdje ionako nije imalo koristi: pošto antd uvijek vuče
-          // icons, oni se nikad ne bi učitavali nezavisno.
-          if (
-            id.includes('@ant-design/icons') ||
-            id.includes('/antd/') ||
-            id.includes('/rc-') ||
-            id.includes('@rc-component')
-          ) {
-            return 'vendor-antd'
-          }
           if (
             id.includes('/react-dom/') ||
             id.includes('/react/') ||

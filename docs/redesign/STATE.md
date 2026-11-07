@@ -4,18 +4,14 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I6 zatvoren.** Sve stranice migrirane (uključujući Dashboard full).
+**Faza 5 — I0–I7 zatvoreni.** Antd van produkcijskog grafa; Lighthouse Q8 login izmjereno.
 
-**Sljedeće:** I7 antd out + Lighthouse (Q8).
+## Završeno
 
-## Završeno (I6)
+- I0–I6 (stranice + Dashboard SVG)
+- I7: ThemeContext bez ConfigProvider; antd/plots/icons uklonjeni; lokalni Button/Card/StatCard obrisani; Lighthouse annex `10-lighthouse-i7.md`
 
-- Auth, Boiler, Heating, Reports
-- Gas readings ConfirmDialog; Gas analytics shells
-- Notifications, Profile (VAT 0.17), Home profile minimal
-- Dashboard full: PageHeader/QueryState/SVG bar/Sheets; DA-02/04/05
-- i18n: 353 keys EN=BS
+## Otvoreno (van implement plan faza)
 
-## Još nije
-
-- I7: ukloniti antd/`@ant-design/plots`/`icons` iz package grafa, ThemeContext, Lighthouse
+- Lighthouse protected ruta kad postoji sesija
+- A11y/SEO polish iznad baseline-a

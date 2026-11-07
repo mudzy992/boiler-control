@@ -2,9 +2,11 @@
 
 Faza 4. Datum: 2026-11-06. Izvor: Q2 u `decisions.md`, sinteza, Apple-linear pravilo projekta.
 
+**Override 2026-11-07:** vizuelni smjer je **dark-first cockpit** (brand glow, veliki KPI, živi heating status). Detalji: `11-cockpit-ui.md`. Ostatak ovog fajla i dalje važi za token mapu, i18n i strukturu; atmosfera je cockpit, ne flat Apple-linear.
+
 ## 1. Namjena
 
-Gust, miran operaterski dashboard. Referenca: Linear / Vercel gustoća + čist Apple-linear ritam. Desktop je primaran. Mobilni od ~360px. Navigacija ispod `lg` (1024px) je drawer/sheet, ne trajni sidebar.
+Gust, dramatičan operaterski **cockpit**. Referenca: Linear gustoća + instrument panel. Desktop je primaran. Mobilni od ~360px. Navigacija ispod `lg` (1024px) je drawer/sheet, ne trajni sidebar. Default tema: dark.
 
 ## 2. Paleta (semantička)
 

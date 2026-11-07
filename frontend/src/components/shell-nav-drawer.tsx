@@ -78,10 +78,10 @@ export const ShellNavDrawer: React.FC<ShellNavDrawerProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={t('shell.menu')}
-        className="fixed inset-y-0 left-0 z-popover flex w-64 flex-col border-r border-border bg-surface shadow-lg dark:border-dark-border dark:bg-dark-surface lg:hidden"
+        className="fixed inset-y-0 left-0 z-popover flex w-56 flex-col border-r border-border/80 bg-card/95 shadow-cockpit backdrop-blur-md lg:hidden"
       >
-        <div className="flex items-center justify-between border-b border-border p-4 dark:border-dark-border">
-          <span className="text-sm font-semibold text-text-primary">
+        <div className="flex items-center justify-between border-b border-border/80 p-4">
+          <span className="text-sm font-semibold tracking-tight text-foreground">
             {t('shell.menu')}
           </span>
           <Button

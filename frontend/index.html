@@ -31,12 +31,12 @@
     <script>
       (function () {
         try {
-          if (localStorage.getItem('boiler.theme') === 'dark') {
+          // Cockpit dark-first: dark unless user explicitly chose light.
+          if (localStorage.getItem('boiler.theme') !== 'light') {
             document.documentElement.classList.add('dark');
           }
         } catch (e) {
-          // localStorage nedostupan (npr. private mode) — ostaje svijetla tema,
-          // što je i zadano ponašanje ThemeContext-a.
+          document.documentElement.classList.add('dark');
         }
       })();
     </script>

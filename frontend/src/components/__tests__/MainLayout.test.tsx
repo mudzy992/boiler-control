@@ -50,7 +50,7 @@ describe('MainLayout shell (I2)', () => {
     const skip = screen.getByRole('link', { name: /skip to main content/i });
     expect(skip).toHaveAttribute('href', '#main-content');
     expect(document.getElementById('main-content')).not.toBeNull();
-    expect(screen.getByText(/Role: ADMIN/i)).toBeInTheDocument();
+    expect(screen.getByText(/^ADMIN$/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /open navigation/i }));
     const dialog = screen.getByRole('dialog', { name: /menu/i });

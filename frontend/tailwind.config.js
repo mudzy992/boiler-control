@@ -95,9 +95,31 @@ export default {
         'dark-error': rgb('--error'),
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        lg: 'var(--radius-lg)',
+        md: 'var(--radius-md)',
+        sm: 'var(--radius-sm)',
+      },
+      fontSize: {
+        display: ['var(--text-display)', { lineHeight: 'var(--text-display-lh)' }],
+        kpi: ['var(--text-kpi)', { lineHeight: 'var(--text-kpi-lh)' }],
+      },
+      boxShadow: {
+        glow: 'var(--glow-brand)',
+        'glow-soft': 'var(--glow-brand-soft)',
+        cockpit: 'var(--shadow-md)',
+      },
+      backgroundImage: {
+        'cockpit-radial':
+          'radial-gradient(ellipse 80% 50% at 10% -10%, rgb(var(--brand) / 0.18), transparent 55%)',
+      },
+      keyframes: {
+        'status-pulse': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.55', transform: 'scale(0.92)' },
+        },
+      },
+      animation: {
+        'status-pulse': 'status-pulse 1.6s ease-in-out infinite',
       },
       zIndex: {
         dropdown: 'var(--z-dropdown)',

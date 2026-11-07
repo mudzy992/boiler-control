@@ -11,19 +11,21 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 /**
- * FE2-13 (FE-021): izvezeno namjerno — inline skripta u `index.html` koja
- * sprječava dark-mode FOUC mora čitati ISTI ključ. Test
- * `src/components/__tests__/accessibility.test.tsx` uspoređuje ovu vrijednost s
- * onom u index.html, pa promjena ključa na jednom mjestu pada na CI umjesto da
- * tiho resetuje temu pri svakom reloadu.
+ * FE2-13: FOUC skripta u index.html čita ISTI ključ.
+ * Cockpit default: dark unless `boiler.theme` === 'light'.
  */
 export const THEME_STORAGE_KEY = 'boiler.theme';
 
+const readInitialMode = (): ThemeMode => {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'light' ? 'light' : 'dark';
+  } catch {
+    return 'dark';
+  }
+};
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return stored === 'dark' ? 'dark' : 'light';
-  });
+  const [mode, setMode] = useState<ThemeMode>(readInitialMode);
 
   useEffect(() => {
     const root = document.documentElement;

@@ -73,14 +73,14 @@ export const RecommendationBreakdown = ({
         </h3>
         <StatusBanner variant="info" message={t('recommendation.advisory')} />
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="w-full text-sm">
             <caption className="sr-only">{t('recommendation.caption')}</caption>
             <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th scope="col" className="px-2 py-1">
+              <tr className="text-xs text-muted-foreground">
+                <th scope="col" className="py-1 pr-3 text-left font-medium">
                   {t('recommendation.item')}
                 </th>
-                <th scope="col" className="px-2 py-1">
+                <th scope="col" className="py-1 pl-3 text-right font-medium">
                   {t('recommendation.value')}
                 </th>
               </tr>
@@ -90,11 +90,13 @@ export const RecommendationBreakdown = ({
                 <tr key={row.label} className="border-t border-border">
                   <th
                     scope="row"
-                    className="px-2 py-1 font-normal text-muted-foreground"
+                    className="py-1.5 pr-3 text-left font-normal text-muted-foreground"
                   >
                     {row.label}
                   </th>
-                  <td className="px-2 py-1 text-foreground">{row.value}</td>
+                  <td className="whitespace-nowrap py-1.5 pl-3 text-right font-mono tabular-nums text-foreground">
+                    {row.value}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -32,8 +32,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `d7fd13a` | STATE: I4 closed |
 | `b0e0a2c` | **I5** TempDialog + ConfirmDialog |
 | `c3d2b5f` | **I6 partial** Auth + Boiler + Dashboard TempDialog |
+| `db2c9e7` | **I6** Heating + Reports + gas ConfirmDialog |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I6 partial run zelen: `42377462514`.
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji run zelen: `42378305964`.
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 

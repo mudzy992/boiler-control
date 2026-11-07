@@ -44,9 +44,9 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 401 = prior 379 + WMO condition keys.
+    // Čuva i broj: 403 = prior 401 + profile.localeBs/localeEn.
     // Pad znači da je neko obrisao ključ ili dodao novi bez prijevoda.
-    expect(en.length).toBe(401);
+    expect(en.length).toBe(403);
   });
 });
 

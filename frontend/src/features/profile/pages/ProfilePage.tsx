@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '@/services/api';
 import { DEFAULT_GAS_PRICE_VAT_RATE } from '@/constants/gas-vat';
+import {
+  normalizeAppLocale,
+  setAppLanguage,
+  type AppLocale,
+} from '@/locales/config';
 import { PageHeader } from '@/shared/components/page-header';
 import { QueryState } from '@/shared/components/query-state';
 import { StatusBanner } from '@/shared/components/status-banner';
@@ -9,6 +14,7 @@ import { Button } from '@/shared/components/ui/Button';
 import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Input } from '@/shared/components/ui/Input';
 import { Label } from '@/shared/components/ui/Label';
+import { Select } from '@/shared/components/ui/select';
 import { InputNumber } from '@/components/InputNumber';
 
 interface UserProfile {
@@ -40,8 +46,14 @@ export const ProfilePage = (): JSX.Element => {
     setLoadError(false);
     try {
       const loaded = (await apiClient.getUserProfile()) as UserProfile;
+      const locale = normalizeAppLocale(loaded.locale);
       setProfile(loaded);
-      setForm({ ...loaded, gasPriceExVat: loaded.gasPriceExVat ?? undefined });
+      setForm({
+        ...loaded,
+        locale,
+        gasPriceExVat: loaded.gasPriceExVat ?? undefined,
+      });
+      await setAppLanguage(locale);
     } catch {
       setLoadError(true);
     } finally {
@@ -76,8 +88,13 @@ export const ProfilePage = (): JSX.Element => {
         gasPriceVatRate: _vat,
         ...updateData
       } = form;
-      await apiClient.updateUserProfile(updateData as Omit<UserProfile, 'email'>);
-      setProfile((prev) => (prev ? { ...prev, ...updateData } : prev));
+      const locale = normalizeAppLocale(form.locale);
+      await apiClient.updateUserProfile({
+        ...(updateData as Omit<UserProfile, 'email'>),
+        locale,
+      });
+      await setAppLanguage(locale);
+      setProfile((prev) => (prev ? { ...prev, ...updateData, locale } : prev));
       setSaveStatus('ok');
     } catch {
       setSaveStatus('error');
@@ -85,6 +102,15 @@ export const ProfilePage = (): JSX.Element => {
       setSaving(false);
     }
   }, [form, profile]);
+
+  const handleLocaleChange = useCallback(
+    (value: string) => {
+      const locale = normalizeAppLocale(value) as AppLocale;
+      handleChange('locale', locale);
+      void setAppLanguage(locale);
+    },
+    [handleChange],
+  );
 
   const vatRate = form.gasPriceVatRate ?? DEFAULT_GAS_PRICE_VAT_RATE;
   const gasPriceInclVat =
@@ -112,7 +138,6 @@ export const ProfilePage = (): JSX.Element => {
                 ['username', t('profile.username')],
                 ['homeLocation', t('profile.homeLocation')],
                 ['timezone', t('profile.timezone')],
-                ['locale', t('profile.locale')],
               ] as const
             ).map(([field, label]) => (
               <div key={field} className="space-y-2">
@@ -125,6 +150,18 @@ export const ProfilePage = (): JSX.Element => {
                 />
               </div>
             ))}
+            <div className="space-y-2">
+              <Label htmlFor="profile-locale">{t('profile.locale')}</Label>
+              <Select
+                id="profile-locale"
+                value={normalizeAppLocale(form.locale)}
+                onChange={(event) => handleLocaleChange(event.target.value)}
+                disabled={saving}
+              >
+                <option value="bs-BS">{t('profile.localeBs')}</option>
+                <option value="en-US">{t('profile.localeEn')}</option>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="profile-email">{t('profile.email')}</Label>
               <Input id="profile-email" value={form.email} disabled />

@@ -359,7 +359,9 @@ const enUS = {
     email: 'Email',
     homeLocation: 'Home location',
     timezone: 'Timezone',
-    locale: 'Locale',
+    locale: 'Language',
+    localeBs: 'Bosanski (bs-BS)',
+    localeEn: 'English (en-US)',
     gasPriceExVat: 'Gas price per m³ (ex VAT)',
     vatLine: 'VAT: {{rate}}% | Price incl VAT: {{price}}',
     saveOk: 'Profile updated.',
@@ -807,7 +809,9 @@ const bsBS = {
     email: 'Email',
     homeLocation: 'Lokacija doma',
     timezone: 'Vremenska zona',
-    locale: 'Jezik/lokal',
+    locale: 'Jezik',
+    localeBs: 'Bosanski (bs-BS)',
+    localeEn: 'English (en-US)',
     gasPriceExVat: 'Cijena plina po m³ (bez PDV-a)',
     vatLine: 'PDV: {{rate}}% | Cijena s PDV-om: {{price}}',
     saveOk: 'Profil je ažuriran.',
@@ -897,6 +901,32 @@ const bsBS = {
   },
 };
 
+export const APP_LOCALES = ['bs-BS', 'en-US'] as const;
+export type AppLocale = (typeof APP_LOCALES)[number];
+export const LOCALE_STORAGE_KEY = 'boiler.locale';
+
+export const isAppLocale = (value: string): value is AppLocale =>
+  (APP_LOCALES as readonly string[]).includes(value);
+
+export const normalizeAppLocale = (raw?: string | null): AppLocale => {
+  if (!raw) return 'bs-BS';
+  const lower = raw.toLowerCase();
+  if (lower.startsWith('en')) return 'en-US';
+  if (isAppLocale(raw)) return raw;
+  return 'bs-BS';
+};
+
+export const setAppLanguage = async (raw: string): Promise<AppLocale> => {
+  const locale = normalizeAppLocale(raw);
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    /* private mode */
+  }
+  await i18n.changeLanguage(locale);
+  return locale;
+};
+
 // Initialize i18n
 i18n.use(initReactI18next).init({
   resources: {
@@ -911,6 +941,12 @@ i18n.use(initReactI18next).init({
 });
 
 function getDefaultLanguage(): string {
+  try {
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored && isAppLocale(stored)) return stored;
+  } catch {
+    /* private mode */
+  }
   // Product default is Bosnian; honour explicit English browser prefs.
   const browserLang = navigator.language || 'bs-BS';
   if (browserLang.toLowerCase().startsWith('en')) {

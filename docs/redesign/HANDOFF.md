@@ -14,7 +14,7 @@ I0–I7 + cockpit + Vercel density + **shell/contrast/spacing** gotovi. Vidi `11
 | Cockpit + Vercel density | Gotovo |
 | Shell / contrast / buttons / spacing | Gotovo |
 
-CI: Frontend on `main`. Zadnji run zelen: `42393185224` (`eebbf4e`).
+CI: Frontend on `main`. Zadnji run zelen: `42398116287` (`54e8162`).
 
 ## Shell polish sažetak
 

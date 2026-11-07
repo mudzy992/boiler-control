@@ -46,14 +46,17 @@ export const GasAnalyticsMetrics = ({
         <StatCard
           title={t('gas.metricCostExVat')}
           value={(analysisData.costExVat as number | undefined) ?? 0}
+          suffix="KM"
         />
         <StatCard
           title={t('gas.metricVat')}
           value={(analysisData.vatAmount as number | undefined) ?? 0}
+          suffix="KM"
         />
         <StatCard
           title={t('gas.metricCostIncVat')}
           value={(analysisData.costIncVat as number | undefined) ?? 0}
+          suffix="KM"
         />
       </div>
     </div>

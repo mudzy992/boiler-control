@@ -134,7 +134,7 @@ export const GasAnalyticsPage = (): JSX.Element => {
                             : t('gas.priceCurrent')}
                         </TableCell>
                         <TableCell>{Number(row.consumptionM3 ?? 0).toFixed(2)} m³</TableCell>
-                        <TableCell>{Number(row.costExVat ?? 0).toFixed(2)}</TableCell>
+                        <TableCell>{Number(row.costExVat ?? 0).toFixed(2)} KM</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

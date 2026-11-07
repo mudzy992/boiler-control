@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { AlertTriangle, Home } from 'lucide-react';
+import { AlertTriangle, Home, Thermometer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { StatCard } from '@/shared/components/stat-card';
 
@@ -19,8 +19,9 @@ export const DashboardKpiRow = ({
   const { t } = useTranslation();
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <StatCard
+        size="hero"
         title={t('dashboard.healthScore')}
         value={Math.round(healthScore)}
         prefix={<Home className="h-4 w-4" aria-hidden />}
@@ -30,6 +31,7 @@ export const DashboardKpiRow = ({
         valueClassName={healthScore > 70 ? 'text-success' : 'text-warning'}
       />
       <StatCard
+        size="hero"
         title={t('dashboard.anomalyRate')}
         value={anomalyRate}
         prefix={<AlertTriangle className="h-4 w-4" aria-hidden />}
@@ -39,16 +41,20 @@ export const DashboardKpiRow = ({
         valueClassName={anomalyRate < 20 ? 'text-success' : 'text-destructive'}
       />
       <StatCard
+        size="hero"
         title={t('dashboard.currentTemp')}
         value={currentTemp}
+        prefix={<Thermometer className="h-4 w-4" aria-hidden />}
         suffix="°C"
         valueClassName="text-info"
       />
       <StatCard
+        size="hero"
         title={t('dashboard.targetTemp')}
         value={targetTemp}
+        prefix={<Thermometer className="h-4 w-4" aria-hidden />}
         suffix="°C"
-        valueClassName="text-primary"
+        valueClassName="text-brand"
       />
     </div>
   );

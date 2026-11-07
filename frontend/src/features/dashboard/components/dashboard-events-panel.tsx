@@ -44,7 +44,9 @@ export const DashboardEventsPanel = ({
     <Card variant="elevated">
       <CardContent className="space-y-4 pt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">{t('dashboard.eventsTitle')}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">
+            {t('dashboard.eventsTitle')}
+          </h2>
           <DashboardRangeBar
             from={from}
             to={to}

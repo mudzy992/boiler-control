@@ -13,6 +13,7 @@ import { DashboardKpiRow } from '../components/dashboard-kpi-row';
 import { DashboardNotificationsSheet } from '../components/dashboard-notifications-sheet';
 import { DashboardPrefsSheet } from '../components/dashboard-prefs-sheet';
 import { DashboardSchedule } from '../components/dashboard-schedule';
+import { DashboardStatusBand } from '../components/dashboard-status-band';
 import { DashboardSystemCards } from '../components/dashboard-system-cards';
 import { useDashboardPage } from '../hooks/use-dashboard-page';
 
@@ -21,29 +22,30 @@ export const DashboardPage = (): JSX.Element => {
   const d = useDashboardPage();
 
   return (
-    <div className="space-y-6" id="content">
+    <div className="space-y-6">
       <PageHeader
         title={t('dashboard.title')}
         description={t('dashboard.overview')}
         action={
           <>
-            <Button type="button" variant="outline" size="sm" onClick={() => d.setNotifOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => d.setNotifOpen(true)}
+            >
               <Bell className="h-4 w-4" aria-hidden />
               {t('notifications.title')}
             </Button>
-            <Button type="button" variant="secondary" size="sm" onClick={() => d.setPrefsOpen(true)}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => d.setPrefsOpen(true)}
+            >
               <Settings className="h-4 w-4" aria-hidden />
               {t('notifications.preferences')}
             </Button>
-            <span
-              className={`inline-flex rounded-md px-3 py-1 text-xs font-semibold ${
-                d.isHeatingActive
-                  ? 'bg-success/10 text-success'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {d.isHeatingActive ? t('dashboard.heatingActive') : t('dashboard.heatingIdle')}
-            </span>
           </>
         }
       />
@@ -62,6 +64,11 @@ export const DashboardPage = (): JSX.Element => {
       >
         {d.data ? (
           <>
+            <DashboardStatusBand
+              isHeatingActive={d.isHeatingActive}
+              boiler={d.data.boiler}
+              onSetTemp={d.openSetTemp}
+            />
             <DashboardKpiRow
               healthScore={d.healthScore}
               anomalyRate={d.data.anomalyRate}

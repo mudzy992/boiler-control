@@ -27,13 +27,14 @@ export const DashboardSystemCards = ({
     <div className="grid gap-4 md:grid-cols-2">
       <Card variant="elevated">
         <CardContent className="space-y-3 pt-6">
-          <p className="text-sm font-semibold text-muted-foreground">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {t('dashboard.outsideTemp')}
           </p>
-          <p className="text-lg font-bold">
+          <p className="font-mono text-3xl font-semibold tracking-tight text-foreground">
             {weather?.outsideTemp != null
-              ? `${Number(weather.outsideTemp).toFixed(1)}°C`
+              ? `${Number(weather.outsideTemp).toFixed(1)}`
               : '—'}
+            <span className="ml-1 text-base text-muted-foreground">°C</span>
           </p>
           {weather ? (
             <dl className="space-y-2 text-sm">
@@ -74,11 +75,12 @@ export const DashboardSystemCards = ({
 
       <Card variant="elevated">
         <CardContent className="space-y-3 pt-6">
-          <p className="text-sm font-semibold text-muted-foreground">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {t('dashboard.boilerStatus')}
           </p>
-          <p className="text-lg font-bold">
-            {actual != null ? `${actual.toFixed(1)}°C` : '—'}
+          <p className="font-mono text-3xl font-semibold tracking-tight text-brand">
+            {actual != null ? actual.toFixed(1) : '—'}
+            <span className="ml-1 text-base text-muted-foreground">°C</span>
           </p>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">

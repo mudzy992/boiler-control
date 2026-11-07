@@ -38,6 +38,16 @@ export const DashboardBucketChart = ({
         className="h-[228px] w-full max-w-full"
         preserveAspectRatio="xMidYMid meet"
       >
+        <defs>
+          <linearGradient id="bucketBrand" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="rgb(var(--brand) / 0.35)" />
+            <stop offset="100%" stopColor="rgb(var(--brand) / 0.95)" />
+          </linearGradient>
+          <linearGradient id="bucketMuted" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="rgb(var(--text-secondary) / 0.15)" />
+            <stop offset="100%" stopColor="rgb(var(--text-secondary) / 0.45)" />
+          </linearGradient>
+        </defs>
         {buckets.map((bucket, index) => {
           const barH = (bucket.totalDurationMin / maxDuration) * chartHeight;
           const x = index * (barWidth + gap) + gap / 2;
@@ -50,10 +60,11 @@ export const DashboardBucketChart = ({
                 y={y}
                 width={barWidth}
                 height={Math.max(barH, 2)}
-                rx={4}
+                rx={6}
+                fill={isActive ? 'url(#bucketBrand)' : 'url(#bucketMuted)'}
                 className={cn(
-                  isActive ? 'fill-accent' : 'fill-muted-foreground/40',
-                  'cursor-pointer transition-colors',
+                  'cursor-pointer transition-opacity',
+                  isActive && 'opacity-100',
                 )}
                 tabIndex={0}
                 role="button"

@@ -30,7 +30,9 @@ export const DashboardSchedule = ({
     <Card variant="elevated">
       <CardContent className="space-y-4 pt-6">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">{t('dashboard.scheduleTitle')}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">
+            {t('dashboard.scheduleTitle')}
+          </h2>
           {activeProgram ? (
             <span className="rounded bg-success/10 px-2 py-1 text-xs font-semibold text-success">
               {t('dashboard.activeProgram', {

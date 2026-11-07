@@ -28,8 +28,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `8ae15d7` | STATE: I2 closed |
 | `b496765` | **I3** shadcn primitives + native InputNumber |
 | `2ba7dac` | STATE: I3 closed |
+| `32beb33` | **I4** PageHeader / QueryState / StatCard / StatusBanner |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I3 run zelen: `42374502533` (I4 SHA/CI upisati nakon pusha).
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I4 run zelen: `42375291522`.
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 

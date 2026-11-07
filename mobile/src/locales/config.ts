@@ -115,6 +115,25 @@ const enUS = {
     trainingCoverage: 'Training Coverage',
     trainingDescription:
       'Data points in range: {{points}}. Keep schedules steady to improve predictions.',
+    // F3: eksplicitna tabela „vrijednost / prethodno" umjesto hardkodiranih strelica
+    avgDuration: 'Avg duration',
+    sessionsValue: '{{value}} sessions',
+    samplesValue: '{{value}} samples',
+    periodValue: 'Value',
+    periodPrevious: 'Previous',
+    periodSummary: 'Period summary',
+    noPreviousData: 'no data for previous period',
+    targetVsActual: 'Target vs actual',
+    targetDash: '{{actual}} / {{target}}',
+    modelSection: 'Learning model',
+    modelConfidenceLine: 'Confidence {{confidence}}% · {{samples}} samples',
+    modelHint: 'More data means better flow-temperature recommendations.',
+    dataSource: '/api/analytics',
+    dataSourceNote:
+      'All values come from /api/analytics. No comparison with other homes until the backend returns a real step-day normalization.',
+    chartMin: 'min {{value}}',
+    chartAvg: 'avg {{value}}',
+    chartMax: 'max {{value}}',
     // MO2-19: performanceComparison / vsSimilarHomes / better / improvement su
     // obrisani — služili su samo fiktivnom "Performance Comparison" bloku.
     // analytics.vsLastYear je zadržan jer ga koristi getVsLastLabel().
@@ -546,7 +565,6 @@ const enUS = {
     analysisAvgFlowTemp: 'Avg Flow Temp',
     analysisUsagePerHour: 'Usage/Hour',
     analysisMonthlyConsumption: 'Monthly Consumption',
-    analysisChartUnavailable: 'Charts not available. Install react-native-chart-kit.',
     analysisDailyStats: 'Daily Consumption Stats',
     analysisMinDaily: 'Minimum Daily',
     analysisMaxDaily: 'Maximum Daily',
@@ -977,6 +995,25 @@ const bsBS = {
     trainingCoverage: 'Pokrivanje obuke',
     trainingDescription:
       'Točka podataka u periodu: {{points}}. Održavajte rasporede stabilnim da poboljšate prognose.',
+    // F3: eksplicitna tabela „vrijednost / prethodno" umjesto hardkodiranih strelica
+    avgDuration: 'Prosj. trajanje',
+    sessionsValue: '{{value}} sesija',
+    samplesValue: '{{value}} uzoraka',
+    periodValue: 'Vrijednost',
+    periodPrevious: 'Prethodno',
+    periodSummary: 'Sažetak perioda',
+    noPreviousData: 'nema podataka za prethodni period',
+    targetVsActual: 'Cilj vs postignuto',
+    targetDash: '{{actual}} / {{target}}',
+    modelSection: 'Model učenja',
+    modelConfidenceLine: 'Pouzdanost {{confidence}}% · {{samples}} uzoraka',
+    modelHint: 'Više podataka = bolje preporuke polazne vode.',
+    dataSource: '/api/analytics',
+    dataSourceNote:
+      'Sve vrijednosti dolaze iz /api/analytics. Nema poređenja s drugim domovima dok backend ne vrati stvarnu normalizaciju po stepen-danima.',
+    chartMin: 'min {{value}}',
+    chartAvg: 'prosj. {{value}}',
+    chartMax: 'max {{value}}',
     // MO2-19: performanceComparison / vsSimilarHomes / better / improvement su
     // obrisani — služili su samo fiktivnom "Performance Comparison" bloku.
     // analytics.vsLastYear je zadržan jer ga koristi getVsLastLabel().
@@ -1408,7 +1445,6 @@ const bsBS = {
     analysisAvgFlowTemp: 'Prosjek polazne temp.',
     analysisUsagePerHour: 'Potrošnja/sat',
     analysisMonthlyConsumption: 'Mjesečna potrošnja',
-    analysisChartUnavailable: 'Grafik nije dostupan. Instaliraj react-native-chart-kit.',
     analysisDailyStats: 'Dnevna statistika potrošnje',
     analysisMinDaily: 'Minimalno dnevno',
     analysisMaxDaily: 'Maksimalno dnevno',

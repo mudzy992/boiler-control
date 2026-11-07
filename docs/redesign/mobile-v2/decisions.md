@@ -134,6 +134,43 @@ prije otvaranja i `getByText` bi našao dva elementa.
 Uklanjanje fiktivnih metrika i bloka „AI Insights", `react-native-chart-kit` → `react-native-svg`,
 tabela „vrijednost / prethodno", cilj-vs-postignuto.
 
+### Šta je F3 stvarno isporučio
+
+| Nalaz iz audita | Šta je urađeno | Dokaz |
+|---|---|---|
+| AN-01 fiktivne metrike („12 % bolji od sličnih domova", „18 % poboljšanje") | Ekran **ne sadrži** nijednu tvrdnju o poređenju sa drugim domovima; uklonjen i blok „AI Insights". Ključevi `analytics.better`/`improvement` su već bili obrisani iz `locales` (MO2-19), pa nema ni mrtvih stringova | `f3Analytics.test.tsx` (regex po UI stablu i po izvoru) |
+| AN-04 hardkodiran trend + „u odnosu na prošlu sedmicu" bez upita | Novi `analyticsApi.getPreviousSummary` sa rasponom pomaknutim unazad za tačno trajanje perioda; tabela prikazuje **stvarne** brojeve oba perioda i procentualnu razliku koja se računa iz njih | `getAllByText('-20.0%')`, a11y label reda, `getPreviousSummary` mock |
+| AN-03 `react-native-chart-kit` + `Dimensions.get('window')` | `react-native-chart-kit` **uklonjen iz `package.json`**; jedan `TrendChart` na `react-native-svg` (već instaliran), širina iz `onLayout`, isprekidana ciljna linija, tačka na zadnjoj vrijednosti. Isti graf koristi i analiza plina | `f3Analytics.test.tsx` (source contract), `gas-analysis-chart` |
+| Nedostatak tabele poređenja | `analytics-summary-table`: kolone „Vrijednost / Prethodno", delta u `MonoMeta` (zeleno = manje, žuto = više, sivo = bez promjene) | `analytics-summary-table` |
+| Cilj se ne vidi na grafovima | `TrendChart target` + prosječan cilj iz `avgTargetTemp`; „Cilj vs postignuto" sekcija sa `GaugeBar` po termostatu iz `getDashboard` | `analytics-target-panel` |
+| UX-18 tri vizuelna jezika grafova | Jedan komponent (`TrendChart` + `TrendSummary`) za oba ekrana; `TrendSummary` daje min/prosj./max u mono meta redu umjesto tooltipa | `src/ui/TrendChart.tsx` |
+
+Boje delte su namjerne: **manje sati grijanja je bolje** (zato `-20 %` zeleno),
+a tabela nikad ne boji procent ako prethodni period nema podataka — tada je
+ćelija `—` i sekcija nosi `analytics.noPreviousData`.
+
+Provjera poslije F3 (2026-11-08):
+
+```
+npm run type-check   → 0 grešaka
+npm test             → 30 suite-ova, 201 test, 32 snapshot-a — sve zeleno
+                       (29 postojećih + 1 novi: f3Analytics.test.tsx, 6 testova)
+npm run lint         → 0 grešaka
+```
+
+Snimci analitike su regenerisani (light + dark): ekran je u potpunosti
+prepisan, pa je razlika strukturna, ne kozmetička — KPI pločice umjesto
+kartica sa ikonama, `Segmented` umjesto selecta, jedan graf umjesto dva,
+tabela poređenja umjesto pasusa. Dvije asertacije u
+`analyticsNativeWind.test.tsx` su promijenjene jer tvrde upravo ono što faza
+mijenja: (1) period se bira klikom na `analytics-range-month` u `Segmented`
+traci, a ne `combobox` + tekst opcije; (2) prosječna sobna temperatura se traži
+po `testID`-u `kpi-avg-indoor`, jer se ista vrijednost sada legitimno pojavljuje
+i u tabeli poređenja — `getByText('21.5')` bi našao dva elementa. Umjesto
+`0 analytics.samples` (stari hardkodirani tekst) test traži `analytics-model`
+sekciju. `package-lock.json` je promijenjen isključivo uklanjanjem
+`react-native-chart-kit` i njegovih tranzitivnih paketa.
+
 ### F4 — Završnica
 
 Skeleton na svim ekranima, a11y labele i role, `hitSlop`, ispravke toastova, brisanje mrtvih stilova.
@@ -145,7 +182,7 @@ Skeleton na svim ekranima, a11y labele i role, `hitSlop`, ispravke toastova, bri
 | F0 Temelj | **završeno 2026-11-07** | `src/theme/tokens.ts`, `src/theme/fonts.ts`, `src/ui/*` (11 primitiva), 34 nova testa |
 | F1 Navigacija i jezik | **završeno 2026-11-07** | jedan tab bar, `Segmented` u Plinu, `ScreenHeader` na svim push ekranima, tri ekrana prevedena, 14 novih testova |
 | F2 Glavni ekrani | **završeno 2026-11-07** | Početna = hero + 3 KPI + liste; Grijanje red-po-uređaju; Plin red-po-očitanju; Postavke jedna lista; 11 novih testova |
-| F3 Analitika i grafovi | — | — |
+| F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
 | F4 Završnica | — | — |
 
 ### Šta je F0 stvarno isporučio

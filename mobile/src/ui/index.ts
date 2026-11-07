@@ -29,6 +29,7 @@ export {
   EmptyState,
 } from './AsyncState';
 export { Sheet } from './Sheet';
+export { TrendChart, TrendSummary } from './TrendChart';
 export { useTokens } from './theme';
 export type { BannerTone, BannerTone as InlineBannerTone } from './InlineBanner';
 export type { GaugeTone } from './GaugeBar';
@@ -36,3 +37,4 @@ export type { LedState } from './Led';
 export type { ButtonVariant } from './Button';
 export type { ReadoutSize } from './Readout';
 export type { SegmentedOption } from './Segmented';
+export type { TrendPoint } from './TrendChart';

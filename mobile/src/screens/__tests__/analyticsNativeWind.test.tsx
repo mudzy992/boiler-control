@@ -58,6 +58,9 @@ jest.mock('../../services/api/analytics.api', () => ({
     getHeatingStats: jest.fn(),
     getLearningTrends: jest.fn(),
     exportAnalytics: jest.fn(),
+    // F3 (UX-13): stvarni prethodni period — kartice više ne tvrde poređenje
+    // koje se ne izvršava.
+    getPreviousSummary: jest.fn(),
   },
 }));
 
@@ -66,7 +69,7 @@ jest.mock('../../services/api/homeProfile.api', () => ({
 }));
 
 jest.mock('../../services/api/client', () => ({
-  apiClient: { getGasReadings: jest.fn() },
+  apiClient: { getGasReadings: jest.fn(), getDashboard: jest.fn() },
 }));
 
 type Mode = 'light' | 'dark';
@@ -104,6 +107,16 @@ beforeEach(() => {
     },
   });
   jest.mocked(apiClient.getGasReadings).mockResolvedValue([]);
+  jest.mocked(apiClient.getDashboard).mockResolvedValue({ homes: [] });
+  jest.mocked(analyticsApi.getPreviousSummary).mockResolvedValue({
+    summary: {
+      totalCycles: 5,
+      totalDurationMin: 150,
+      avgDurationMin: 30,
+      avgIndoorTemp: 21.1,
+    },
+    buckets: [],
+  });
 });
 
 afterEach(() => {
@@ -133,9 +146,14 @@ async function screenTree(mode: Mode) {
         </AppThemeProvider>
     </QueryClientProvider>,
   );
-  await result.findByText('21.5');
-  await result.findByText('analytics.noTrendData');
-  await result.findByText('0 analytics.samples');
+  // F3: prosječna sobna temperatura je sada KPI pločica sa svojim testID-om
+  // (vrijednost se pojavljuje i u tabeli poređenja, pa tekst nije jedinstven).
+  await result.findByTestId('kpi-avg-indoor');
+  await result.findByText('analytics.noTempData');
+  // F3: bez uzoraka modela KPI pouzdanosti prikazuje stanje "nema podataka"
+  // umjesto izmišljenog procenta (AN-01); sekcija modela uvijek postoji.
+  await result.findByTestId('kpi-confidence');
+  await result.findByTestId('analytics-model');
   await result.findByText('analytics.noGasReadings');
   return { result, queryClient };
 }
@@ -151,8 +169,8 @@ describe('Analytics nativewind', () => {
 
 it('changes the NativeWind time range and refetches analytics', async () => {
   const { result, queryClient } = await screenTree('dark');
-  await fireEvent.press(result.getByRole('combobox'));
-  await fireEvent.press(result.getByText('analytics.thisMonth'));
+  // F3: vremenski period je `Segmented` traka (prototip §05), ne select.
+  await fireEvent.press(result.getByTestId('analytics-range-month'));
 
   await waitFor(() => expect(analyticsApi.getHeatingSummary).toHaveBeenCalledTimes(2));
   expect(jest.mocked(analyticsApi.getHeatingSummary).mock.calls[1][0]).toMatchObject({

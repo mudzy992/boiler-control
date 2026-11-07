@@ -1,35 +1,54 @@
 import { useMemo, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import { Platform, Share } from 'react-native';
-// MO2-22: top-level `expo-file-system` (19.x) NE izvozi documentDirectory /
-// cacheDirectory niti legacy metode — tamo su samo `Paths`, `File`, `Directory`
-// i throwing stubovi. Legacy API zivi na subpath-u `expo-file-system/legacy`.
+import { Share, Platform, View } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
+import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import Svg, { Polyline } from 'react-native-svg';
-import {
-  Box,
-  VStack,
-  HStack,
-  Heading,
-  Text,
-  useColorModeValue,
-  Button,
-  ScrollView,
-  Icon,
-  Select,
-  CheckIcon,
-  Skeleton,
-  Spinner,
-  useToast,
-} from '../../components/ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
-import { analyticsApi } from '../../services/api/analytics.api';
+
+import { analyticsApi, type HeatingStatsBucket } from '../../services/api/analytics.api';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
 import { apiClient } from '../../services/api/client';
+import { useTranslation } from '../../hooks/useTranslation';
+import { useToast } from '../../components/ui/nativewind';
 import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
-import { Screen, ScreenHeader } from '../../ui';
+import {
+  Button,
+  GaugeBar,
+  InlineBanner,
+  Kpi,
+  MonoLabel,
+  MonoMeta,
+  Panel,
+  PanelRow,
+  Readout,
+  Screen,
+  ScreenBody,
+  ScreenHeader,
+  Section,
+  Segmented,
+  Skeleton,
+  Text,
+  TrendChart,
+  TrendSummary,
+  type TrendPoint,
+} from '../../ui';
+import { space } from '../../theme/tokens';
+
+/**
+ * Analitika (prototip §05, nalazi UX-01 i UX-13).
+ *
+ * Prije:
+ *  - „12 % bolji od sličnih domova" i „18 % poboljšanje" bili su STRING LITERALI
+ *    u kodu, prikazani kao mjerenja (UX-01). U domenu grijanja i potrošnje plina
+ *    to može uticati na odluke o temperaturi polaza. Blok je uklonjen u MO2-19 i
+ *    ovdje se ne vraća; vraća se kad backend vrati stvarnu normalizaciju.
+ *  - Četiri kartice imale su hardkodiran `trend="up"|"down"` uz tekst „u odnosu
+ *    na prošlu sedmicu", a dohvatan je samo tekući raspon (UX-13).
+ *
+ * Sada: eksplicitna tabela „Vrijednost / Prethodno" (stvarni brojevi iz API-ja
+ * za OBA raspona), cilj-vs-postignuto po termostatu kao gauge redovi, jedan graf
+ * na `react-native-svg` (umjesto chart-kita, UX-18) i izvor podataka napisan na
+ * ekranu.
+ */
 
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
@@ -55,21 +74,46 @@ const getDateRange = (
   return {
     from: start.toISOString(),
     to: end.toISOString(),
-    bucket: timeRange === 'day' ? 'hour' : ('day' as const),
+    bucket: timeRange === 'day' ? 'hour' : 'day',
   };
 };
 
-const AnalyticsScreenContent = () => {
+/**
+ * Prethodni raspon iste dužine: pomak oba kraja unazad za trajanje perioda.
+ * Bez ovoga „u odnosu na prošlu sedmicu" nema šta da uporedi.
+ */
+const getPreviousDateRange = (
+  timeRange: TimeRange,
+): { from: string; to: string; bucket: 'hour' | 'day' } => {
+  const { from, to } = getDateRange(timeRange);
+  const fromMs = new Date(from).getTime();
+  const toMs = new Date(to).getTime();
+  const duration = toMs - fromMs;
+  return {
+    from: new Date(fromMs - duration).toISOString(),
+    to: new Date(fromMs).toISOString(),
+    bucket: timeRange === 'day' ? 'hour' : 'day',
+  };
+};
+
+/** Razlika u procentima, ili `null` kad prethodno nije bilo podataka. */
+const relativeDelta = (current: number | undefined, previous: number | undefined) => {
+  if (current === undefined || previous === undefined || previous === 0) return null;
+  return ((current - previous) / previous) * 100;
+};
+
+const bucketPoints = (buckets: HeatingStatsBucket[]): TrendPoint[] =>
+  buckets
+    .filter((bucket) => Number.isFinite(bucket.avgCurrentTemp))
+    .map((bucket) => ({ label: bucket.label, value: bucket.avgCurrentTemp }));
+
+export const AnalyticsScreen = () => {
   const { t } = useTranslation();
-  /**
-   * F1 (nalaz UX-02): ekran se otvara iz zaglavlja Početne sa
-   * `headerShown: false`, a prije nije imao NIJEDAN način da se vrati — na iOS-u
-   * je bio slijepa ulica. Sada ima `ScreenHeader` sa nazad strelicom.
-   */
   const navigation = useNavigation();
+  const toast = useToast();
+
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const [exporting, setExporting] = useState(false);
-  const toast = useToast();
 
   const { data: activeHome } = useQuery({
     queryKey: ['activeHomeProfile'],
@@ -77,21 +121,7 @@ const AnalyticsScreenContent = () => {
   });
 
   const dateRange = useMemo(() => getDateRange(timeRange), [timeRange]);
-
-  const getVsLastLabel = (range: TimeRange) => {
-    switch (range) {
-      case 'day':
-        return t('analytics.vsLastDay');
-      case 'week':
-        return t('analytics.vsLastWeek');
-      case 'month':
-        return t('analytics.vsLastMonth');
-      case 'year':
-        return t('analytics.vsLastYear');
-      default:
-        return t('analytics.vsLastWeek');
-    }
-  };
+  const previousRange = useMemo(() => getPreviousDateRange(timeRange), [timeRange]);
 
   const summaryQuery = useQuery({
     queryKey: ['analytics-summary', activeHome?.id, timeRange],
@@ -101,6 +131,22 @@ const AnalyticsScreenContent = () => {
         from: dateRange.from,
         to: dateRange.to,
         bucket: dateRange.bucket,
+      }),
+    enabled: Boolean(activeHome?.id),
+  });
+
+  /**
+   * F3 (UX-13): stvarni prethodni period. Ključ sadrži `previous` da se ne
+   * sudara sa tekućim rasponom istog imena.
+   */
+  const previousSummaryQuery = useQuery({
+    queryKey: ['analytics-summary', 'previous', activeHome?.id, timeRange],
+    queryFn: () =>
+      analyticsApi.getPreviousSummary({
+        homeProfileId: activeHome!.id,
+        from: previousRange.from,
+        to: previousRange.to,
+        bucket: previousRange.bucket,
       }),
     enabled: Boolean(activeHome?.id),
   });
@@ -133,8 +179,12 @@ const AnalyticsScreenContent = () => {
     queryFn: () => apiClient.getGasReadings(),
   });
 
-  // MO2-22: bez `as any`. Cast je potiskivao TypeScript provjeru, pa se
-  // nedostajuce konstante i metode nisu videle pri kompajliranju.
+  // Termostati dolaze iz dashboarda; koriste se za „cilj vs postignuto".
+  const dashboardQuery = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => apiClient.getDashboard(),
+  });
+
   const fileSystem = FileSystem;
 
   const ensureDirectory = async (dir: string) => {
@@ -177,8 +227,7 @@ const AnalyticsScreenContent = () => {
       const safeName = meta.filename.endsWith('.csv') ? meta.filename : `${meta.filename}.csv`;
       const sanitizedName = safeName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
-      // MO2-22: legacy API izvozi samo documentDirectory i cacheDirectory;
-      // temporaryDirectory ne postoji ni u top-level ni u legacy modulu.
+      // MO2-22: legacy API izvozi samo documentDirectory i cacheDirectory.
       const candidates = (
         [fileSystem.documentDirectory, fileSystem.cacheDirectory] as (
           | string
@@ -198,13 +247,11 @@ const AnalyticsScreenContent = () => {
           const targetDir = `${baseDir}analytics_exports/`;
           await ensureDirectory(targetDir);
           const candidateUri = `${targetDir}${sanitizedName}`;
-          await fileSystem.writeAsStringAsync(candidateUri, meta.content, {
-            encoding: 'utf8',
-          });
+          await fileSystem.writeAsStringAsync(candidateUri, meta.content, { encoding: 'utf8' });
           fileUri = candidateUri;
           break;
-        } catch (writeErr) {
-          // fall through to next directory
+        } catch {
+          // probaj sljedeći direktorij
         }
       }
 
@@ -219,542 +266,342 @@ const AnalyticsScreenContent = () => {
           : { url: fileUri, message: t('analytics.reportSaved', { path: fileUri }) };
 
       try {
-        await Share.share({
-          title: sanitizedName,
-          ...sharePayload,
-        });
+        await Share.share({ title: sanitizedName, ...sharePayload });
         toast.show({ description: t('analytics.exportSuccess'), placement: 'top' });
-      } catch (shareErr) {
+      } catch {
         toast.show({ description: t('analytics.shareAsText'), placement: 'top' });
         try {
-          await Share.share({
-            title: sanitizedName,
-            message: meta.content,
-          });
+          await Share.share({ title: sanitizedName, message: meta.content });
           toast.show({ description: t('analytics.exportSuccess'), placement: 'top' });
-        } catch (textErr) {
+        } catch {
           toast.show({ description: t('analytics.couldNotShare'), placement: 'top' });
         }
       }
-    } catch (err: any) {
-      toast.show({
-        description: t('analytics.exportFailed'),
-        placement: 'top',
-      });
+    } catch {
+      toast.show({ description: t('analytics.exportFailed'), placement: 'top' });
     } finally {
       setExporting(false);
     }
   };
 
-  const cardBg = useColorModeValue('white', 'dark.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const brandAccent = useColorModeValue('brand.500', 'brand.400');
-  const tempLineColor = useColorModeValue('#2563eb', '#63b3ed');
+  const summary = summaryQuery.data?.summary;
+  const previousSummary = previousSummaryQuery.data?.summary;
+  const buckets = statsQuery.data?.buckets ?? [];
+  const tempPoints = useMemo(() => bucketPoints(buckets), [buckets]);
 
-  const tempSeries = useMemo(() => statsQuery.data?.buckets ?? [], [statsQuery.data]);
-  const cyclesSeries = useMemo(() => statsQuery.data?.buckets ?? [], [statsQuery.data]);
+  const avgTarget = useMemo(() => {
+    const targets = buckets
+      .map((bucket) => bucket.avgTargetTemp)
+      .filter((value) => Number.isFinite(value) && value > 0);
+    if (!targets.length) return undefined;
+    return targets.reduce((sum, value) => sum + value, 0) / targets.length;
+  }, [buckets]);
 
-  const efficiency = useMemo(() => {
-    if (!statsQuery.data?.buckets?.length) return null;
-    const ratios = statsQuery.data.buckets
-      .map((b) => (b.avgTargetTemp ? (b.avgCurrentTemp / b.avgTargetTemp) * 100 : null))
-      .filter((v): v is number => v !== null && !Number.isNaN(v));
-    if (!ratios.length) return null;
-    return Math.min(
-      120,
-      Math.max(0, Number((ratios.reduce((a, b) => a + b, 0) / ratios.length).toFixed(1)))
+  const latestLearning = learningQuery.data?.points?.length
+    ? learningQuery.data.points[learningQuery.data.points.length - 1]
+    : undefined;
+
+  const thermostats = useMemo(() => {
+    const home = (dashboardQuery.data as { homes?: { thermostats?: unknown[] }[] } | undefined)
+      ?.homes?.[0];
+    const list = (home?.thermostats ?? []) as {
+      id: number;
+      alias?: string;
+      currentTemp?: number | null;
+      targetTemp?: number | null;
+    }[];
+    return list.filter(
+      (thermostat) =>
+        typeof thermostat.currentTemp === 'number' && typeof thermostat.targetTemp === 'number',
     );
-  }, [statsQuery.data]);
+  }, [dashboardQuery.data]);
 
-  const StatCard = ({
-    icon,
-    label,
-    value,
-    unit,
-    trend,
-    trendValue,
-  }: {
-    icon: string;
-    label: string;
-    value: string;
-    unit: string;
-    trend: 'up' | 'down';
-    trendValue: string;
-  }) => (
-    <Box bg={cardBg} rounded="xl" shadow={2} p={4} flex={1}>
-      <VStack space={2}>
-        <HStack alignItems="center" space={2}>
-          <Icon as={Ionicons} name={icon as any} size={5} color={brandAccent} />
-          <Text fontSize="xs" color={subtextColor} textTransform="uppercase">
-            {label}
-          </Text>
-        </HStack>
-        <HStack alignItems="baseline" space={1}>
-          <Text fontSize="2xl" fontWeight="bold" color={textColor}>
-            {value}
-          </Text>
-          <Text fontSize="sm" color={subtextColor}>
-            {unit}
-          </Text>
-        </HStack>
-        <VStack space={1}>
-          <HStack alignItems="center" space={1} flexWrap="wrap">
-            <Icon
-              as={Ionicons}
-              name={trend === 'up' ? 'arrow-up' : 'arrow-down'}
-              size={4}
-              color={trend === 'up' ? 'red.500' : 'green.500'}
-            />
-            <Text
-              fontSize="xs"
-              color={trend === 'up' ? 'red.500' : 'green.500'}
-              fontWeight="500"
-              flexShrink={1}
-            >
-              {trendValue}
-            </Text>
-          </HStack>
-          <Text fontSize="xs" color={subtextColor} numberOfLines={1} flexShrink={1}>
-            {getVsLastLabel(timeRange)}
-          </Text>
-        </VStack>
-      </VStack>
-    </Box>
-  );
+  const periodRows = [
+    {
+      key: 'heatingHours',
+      label: t('analytics.heatingHours'),
+      current: summary ? summary.totalDurationMin / 60 : undefined,
+      previous: previousSummary ? previousSummary.totalDurationMin / 60 : undefined,
+      format: (value: number) => value.toFixed(1),
+      unit: t('analytics.hrs'),
+    },
+    {
+      key: 'sessions',
+      label: t('analytics.sessions'),
+      current: summary?.totalCycles,
+      previous: previousSummary?.totalCycles,
+      format: (value: number) => String(Math.round(value)),
+      unit: '',
+    },
+    {
+      key: 'avgDuration',
+      label: t('analytics.avgDuration'),
+      current: summary?.avgDurationMin,
+      previous: previousSummary?.avgDurationMin,
+      format: (value: number) => value.toFixed(1),
+      unit: t('analytics.minutes'),
+    },
+    {
+      key: 'avgIndoor',
+      label: t('analytics.avgIndoor'),
+      current: summary?.avgIndoorTemp,
+      previous: previousSummary?.avgIndoorTemp,
+      format: (value: number) => value.toFixed(1),
+      unit: '°C',
+    },
+  ];
 
-  const InsightCard = ({
-    icon,
-    title,
-    description,
-    type,
-  }: {
-    icon: string;
-    title: string;
-    description: string;
-    type: 'success' | 'warning' | 'info';
-  }) => {
-    const iconColor =
-      type === 'success' ? 'green.500' : type === 'warning' ? 'orange.500' : 'blue.500';
-
-    return (
-      <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-        <HStack space={3} alignItems="flex-start">
-          <Icon as={Ionicons} name={icon as any} size={6} color={iconColor} />
-          <VStack flex={1} space={1}>
-            <Text fontSize="md" fontWeight="600" color={textColor}>
-              {title}
-            </Text>
-            <Text fontSize="sm" color={subtextColor}>
-              {description}
-            </Text>
-          </VStack>
-        </HStack>
-      </Box>
-    );
-  };
+  const rangeOptions = [
+    { value: 'day' as TimeRange, label: t('analytics.today') },
+    { value: 'week' as TimeRange, label: t('analytics.thisWeek') },
+    { value: 'month' as TimeRange, label: t('analytics.thisMonth') },
+    { value: 'year' as TimeRange, label: t('analytics.thisYear') },
+  ];
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top']} testID="analytics-screen">
       <ScreenHeader
         title={t('analytics.title')}
-        subtitle={t('analytics.subtitle')}
+        subtitle={t('analytics.dataSource')}
         onBack={() => (navigation as any).goBack()}
         backLabel={t('common.back')}
         testID="analytics-header"
       />
-      <ScrollView>
-        <VStack px={4} py={6} space={4} pb={8}>
-          {!activeHome && (
-            <Box bg={cardBg} rounded="xl" p={4}>
-              <Text color={textColor}>{t('analytics.noActiveHome')}</Text>
-            </Box>
-          )}
 
-          <HStack justifyContent="space-between" alignItems="center">
-            <VStack space={1}>
-              <Text fontSize="sm" color={subtextColor}>
-                {t('analytics.periodLabel')}
-              </Text>
-            </VStack>
-            <Select
-              selectedValue={timeRange}
-              minWidth="120"
-              accessibilityLabel={t('analytics.timeRange')}
-              placeholder={t('analytics.timeRange')}
-              _selectedItem={{
-                bg: 'brand.100',
-                endIcon: <CheckIcon size="5" />,
-              }}
-              onValueChange={(value: TimeRange) => setTimeRange(value)}
-            >
-              <Select.Item label={t('analytics.today')} value="day" />
-              <Select.Item label={t('analytics.thisWeek')} value="week" />
-              <Select.Item label={t('analytics.thisMonth')} value="month" />
-              <Select.Item label={t('analytics.thisYear')} value="year" />
-            </Select>
-          </HStack>
+      <ScreenBody>
+        {!activeHome ? (
+          <InlineBanner tone="info" title={t('analytics.noActiveHome')} />
+        ) : null}
 
-          <VStack space={3}>
-            <HStack space={3}>
-              <Skeleton flex={1} rounded="xl" isLoaded={!summaryQuery.isLoading}>
-                <StatCard
-                  icon="flame-outline"
-                  label={t('analytics.heatingHours')}
-                  value={
-                    summaryQuery.data
-                      ? (summaryQuery.data.summary.totalDurationMin / 60).toFixed(1)
-                      : '0'
-                  }
-                  unit={t('analytics.hrs')}
-                  trend="down"
-                  trendValue={
-                    summaryQuery.data
-                      ? `${summaryQuery.data.summary.totalCycles} ${t('analytics.cycles')}`
-                      : ''
-                  }
-                />
-              </Skeleton>
-              <Skeleton flex={1} rounded="xl" isLoaded={!summaryQuery.isLoading}>
-                <StatCard
-                  icon="thermometer-outline"
-                  label={t('analytics.avgIndoor')}
-                  value={
-                    summaryQuery.data ? summaryQuery.data.summary.avgIndoorTemp.toFixed(1) : '0'
-                  }
-                  unit="°C"
-                  trend="down"
-                  trendValue={
-                    summaryQuery.data
-                      ? t('analytics.avgMinutes', {
-                          value: summaryQuery.data.summary.avgDurationMin.toFixed(1),
-                        })
-                      : ''
-                  }
-                />
-              </Skeleton>
-            </HStack>
+        {/* Vremenski period je uvijek vidljiva traka, ne select u zaglavlju. */}
+        <Segmented<TimeRange>
+          options={rangeOptions}
+          value={timeRange}
+          onChange={setTimeRange}
+          accessibilityLabel={t('analytics.timeRange')}
+          testID="analytics-range"
+        />
 
-            <HStack space={3}>
-              <Skeleton flex={1} rounded="xl" isLoaded={!summaryQuery.isLoading}>
-                <StatCard
-                  icon="stats-chart-outline"
-                  label={t('analytics.sessions')}
-                  value={summaryQuery.data ? String(summaryQuery.data.summary.totalCycles) : '0'}
-                  unit=""
-                  trend="up"
-                  trendValue={
-                    summaryQuery.data
-                      ? t('analytics.totalMinutes', {
-                          value: summaryQuery.data.summary.totalDurationMin,
-                        })
-                      : ''
-                  }
-                />
-              </Skeleton>
-              <Skeleton flex={1} rounded="xl" isLoaded={!learningQuery.isLoading}>
-                <StatCard
-                  icon="pulse-outline"
-                  label={t('analytics.confidence')}
-                  value={
-                    learningQuery.data && learningQuery.data.points.length > 0
-                      ? learningQuery.data.points[
-                          learningQuery.data.points.length - 1
-                        ].avgConfidence.toFixed(2)
-                      : '0.0'
-                  }
-                  unit=""
-                  trend="up"
-                  trendValue={
-                    learningQuery.data
-                      ? `${learningQuery.data.points.length} ${t('analytics.samples')}`
-                      : ''
-                  }
-                />
-              </Skeleton>
-            </HStack>
-          </VStack>
-
-          {/* Heating Duration & Cycles */}
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-            <Heading size="sm" color={textColor} mb={1}>
-              {t('analytics.heatingTrends', { context: timeRange })}
-            </Heading>
-            <Text fontSize="xs" color={subtextColor} mb={3}>
-              {t('analytics.trendDescription')}
-            </Text>
-            {statsQuery.isLoading ? (
-              <VStack space={2}>
-                {Array.from({ length: 4 }).map((_, idx) => (
-                  <HStack key={idx} justifyContent="space-between" alignItems="center">
-                    <Skeleton.Text lines={1} w="24" />
-                    <Skeleton h={3} flex={1} rounded="full" ml={4} />
-                  </HStack>
-                ))}
-              </VStack>
-            ) : statsQuery.isError || !statsQuery.data || statsQuery.data.buckets.length === 0 ? (
-              <Text color={subtextColor}>{t('analytics.noTrendData')}</Text>
-            ) : (
-              <VStack space={3}>
-                {(() => {
-                  const buckets = statsQuery.data.buckets.slice(0, 8);
-                  const maxDuration = Math.max(...buckets.map((b) => b.totalDurationMin || 0), 1);
-                  const maxCycles = Math.max(...buckets.map((b) => b.cycles || 0), 1);
-                  return buckets.map((b) => {
-                    const durationWidth = Math.min(100, (b.totalDurationMin / maxDuration) * 100);
-                    const cyclesWidth = Math.min(100, (b.cycles / maxCycles) * 100);
-                    return (
-                      <VStack key={b.label} space={1}>
-                        <HStack justifyContent="space-between" alignItems="center">
-                          <Text color={textColor} fontWeight="600">
-                            {b.label}
-                          </Text>
-                          <HStack space={3} alignItems="center">
-                            <Text color={subtextColor}>{b.avgCurrentTemp.toFixed(1)}°C</Text>
-                            <Text color={subtextColor}>
-                              {b.totalDurationMin} {t('analytics.minutes')}
-                            </Text>
-                            <Text color={subtextColor}>
-                              {b.cycles} {t('analytics.cycles')}
-                            </Text>
-                          </HStack>
-                        </HStack>
-                        <VStack space={1}>
-                          <Box bg="gray.200" rounded="full" h={2} overflow="hidden">
-                            <Box bg="brand.500" h={2} width={`${durationWidth}%`} rounded="full" />
-                          </Box>
-                          <Box bg="gray.200" rounded="full" h={1.5} overflow="hidden">
-                            <Box bg="green.400" h={1.5} width={`${cyclesWidth}%`} rounded="full" />
-                          </Box>
-                        </VStack>
-                      </VStack>
-                    );
-                  });
-                })()}
-              </VStack>
-            )}
-          </Box>
-
-          {/* Temperature Trend */}
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-            <Heading size="sm" color={textColor} mb={1}>
-              {t('analytics.temperatureTrend')}
-            </Heading>
-            <Text fontSize="xs" color={subtextColor} mb={3}>
-              {t('analytics.tempDescription')}
-            </Text>
-            {statsQuery.isLoading ? (
-              <Skeleton h={24} rounded="xl" />
-            ) : !tempSeries.length ? (
-              <Text color={subtextColor}>{t('analytics.noTempData')}</Text>
-            ) : (
-              <VStack space={2}>
-                <Box h={32}>
-                  <Svg height="100%" width="100%" viewBox="0 0 100 100">
-                    <Polyline
-                      points={(() => {
-                        const series = tempSeries.slice(0, 24);
-                        const max = Math.max(...series.map((p) => p.avgCurrentTemp), 1);
-                        const min = Math.min(...series.map((p) => p.avgCurrentTemp), 0);
-                        const span = max - min || 1;
-                        const step = series.length > 1 ? 100 / (series.length - 1) : 100;
-                        return series
-                          .map((p, idx) => {
-                            const x = idx * step;
-                            const y = 100 - ((p.avgCurrentTemp - min) / span) * 100;
-                            return `${x},${y}`;
-                          })
-                          .join(' ');
-                      })()}
-                      fill="none"
-                      stroke={tempLineColor}
-                      strokeWidth="2.4"
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                    />
-                  </Svg>
-                </Box>
-                <HStack justifyContent="space-between" alignItems="center">
-                  <VStack>
-                    <Text fontSize="xs" color={subtextColor}>
-                      {t('analytics.start')}
-                    </Text>
-                    <Text fontSize="sm" color={textColor} fontWeight="600">
-                      {tempSeries[0]?.avgCurrentTemp.toFixed(1)}°C
-                    </Text>
-                  </VStack>
-                  <VStack alignItems="flex-end">
-                    <Text fontSize="xs" color={subtextColor}>
-                      {t('analytics.end')}
-                    </Text>
-                    <Text fontSize="sm" color={textColor} fontWeight="600">
-                      {tempSeries[tempSeries.length - 1]?.avgCurrentTemp.toFixed(1)}°C
-                    </Text>
-                  </VStack>
-                </HStack>
-              </VStack>
-            )}
-          </Box>
-
-          {/* Efficiency & Cycles */}
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
-            <Heading size="sm" color={textColor} mb={1}>
-              {t('analytics.efficiency')} & {t('analytics.cycleDensity')}
-            </Heading>
-            <Text fontSize="xs" color={subtextColor} mb={3}>
-              {`${t('analytics.efficiencyRatio')} • ${t('analytics.cycleDensityDesc')}`}
-            </Text>
-            <VStack space={3}>
-              <VStack space={1}>
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text color={textColor} fontWeight="600">
-                    {t('analytics.efficiency')}
-                  </Text>
-                  <Text color={subtextColor}>{efficiency !== null ? `${efficiency}%` : '—'}</Text>
-                </HStack>
-                <Box bg="gray.200" rounded="full" h={2} overflow="hidden">
-                  <Box
-                    bg={efficiency && efficiency < 90 ? 'orange.400' : 'green.500'}
-                    h={2}
-                    width={`${Math.min(100, Math.max(0, efficiency ?? 0))}%`}
-                    rounded="full"
-                  />
-                </Box>
-              </VStack>
-
-              <VStack space={2}>
-                <Text fontSize="xs" color={subtextColor}>
-                  {t('analytics.cycleDensity')}
-                </Text>
-                {cyclesSeries.length ? (
-                  <HStack space={1} alignItems="flex-end">
-                    {(() => {
-                      const maxCycles = Math.max(...cyclesSeries.map((c) => c.cycles), 1);
-                      return cyclesSeries.slice(0, 24).map((c, idx) => {
-                        const height = Math.min(100, (c.cycles / maxCycles) * 100);
-                        return (
-                          <Box
-                            key={`${c.label}-${idx}`}
-                            bg="purple.400"
-                            w={2}
-                            h={`${Math.max(6, height)}%`}
-                            rounded="sm"
-                          />
-                        );
-                      });
-                    })()}
-                  </HStack>
-                ) : (
-                  <Text color={subtextColor}>{t('analytics.noCycleData')}</Text>
-                )}
-              </VStack>
-            </VStack>
-          </Box>
-
-          {/* Gas Analytics */}
-          <Skeleton rounded="xl" isLoaded={!gasReadingsQuery.isLoading}>
-            <GasAnalyticsCard
-              readings={gasReadingsQuery.data}
-              isLoading={gasReadingsQuery.isLoading}
+        {summaryQuery.isLoading ? (
+          <Skeleton height={92} />
+        ) : (
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Kpi
+              label={t('analytics.avgIndoor')}
+              value={summary ? summary.avgIndoorTemp.toFixed(1) : '—'}
+              unit="°C"
+              testID="kpi-avg-indoor"
             />
-          </Skeleton>
+            <Kpi
+              label={t('analytics.heatingHours')}
+              value={summary ? (summary.totalDurationMin / 60).toFixed(1) : '—'}
+              unit={t('analytics.hrs')}
+              meta={
+                summary
+                  ? t('analytics.sessionsValue', { value: summary.totalCycles })
+                  : undefined
+              }
+              testID="kpi-heating-hours"
+            />
+            <Kpi
+              label={t('analytics.confidence')}
+              value={latestLearning ? latestLearning.avgConfidence.toFixed(2) : '—'}
+              meta={
+                latestLearning
+                  ? t('analytics.samplesValue', { value: latestLearning.samples })
+                  : t('analytics.noInsights')
+              }
+              tone={latestLearning ? 'ok' : 'neutral'}
+              testID="kpi-confidence"
+            />
+          </View>
+        )}
 
-          {/* AI Insights */}
-          <Box>
-            <Heading size="md" color={textColor} mb={1}>
-              {t('analytics.aiInsights')}
-            </Heading>
-            <Text fontSize="xs" color={subtextColor} mb={3}>
-              {t('analytics.insightsDescription')}
-            </Text>
-            {learningQuery.isLoading ? (
-              <HStack space={3} alignItems="center">
-                <Spinner
-                  accessibilityLabel={t('analytics.loadingInsights')}
-                  size="sm"
-                  color="brand.500"
-                />
-                <Text color={subtextColor}>{t('analytics.loadingInsights')}</Text>
-              </HStack>
-            ) : learningQuery.isError ||
-              !learningQuery.data ||
-              learningQuery.data.points.length === 0 ? (
-              <Text color={subtextColor}>{t('analytics.noInsights')}</Text>
+        {/* Jedan graf, hairline grid, brand linija. */}
+        <Section
+          label={t('analytics.temperatureTrend')}
+          meta={avgTarget !== undefined ? `cilj ${avgTarget.toFixed(1)}°C` : undefined}
+        >
+          <Panel padded={false} variant="flush">
+            <PanelRow divider={false}>
+              {statsQuery.isLoading ? (
+                <Skeleton height={140} />
+              ) : tempPoints.length === 0 ? (
+                <Text tone="muted" size="body">
+                  {t('analytics.noTempData')}
+                </Text>
+              ) : (
+                <View style={{ gap: space.sm }}>
+                  <TrendChart
+                    points={tempPoints}
+                    target={avgTarget}
+                    height={150}
+                    accessibilityLabel={t('analytics.temperatureTrend')}
+                    testID="analytics-chart"
+                  />
+                  <TrendSummary points={tempPoints} unit="°C" />
+                </View>
+              )}
+            </PanelRow>
+          </Panel>
+        </Section>
+
+        {/* Cilj vs postignuto — odluka koju korisnik traži. */}
+        <Section label={t('analytics.targetVsActual')}>
+          <Panel variant="flush" padded={false} testID="analytics-target-panel">
+            {thermostats.length === 0 ? (
+              <PanelRow divider={false}>
+                <Text tone="muted" size="body">
+                  {t('heating.noThermostats')}
+                </Text>
+              </PanelRow>
             ) : (
-              <VStack space={4}>
-                <VStack space={2}>
-                  <Text fontSize="xs" color={subtextColor}>
-                    {t('analytics.confidenceTrend')}
-                  </Text>
-                  <HStack space={1} alignItems="flex-end">
-                    {learningQuery.data.points.slice(-24).map((p, idx) => {
-                      const height = Math.min(100, Math.max(5, p.avgConfidence * 100));
-                      return (
-                        <Box
-                          key={`${p.date}-${idx}`}
-                          bg="brand.500"
-                          w={3}
-                          h={`${height}%`}
-                          rounded="sm"
-                        />
-                      );
-                    })}
-                  </HStack>
-                </VStack>
-
-                <InsightCard
-                  icon="bulb-outline"
-                  title={t('analytics.modelConfidence')}
-                  description={t('analytics.confidenceValue', {
-                    confidence:
-                      learningQuery.data.points[
-                        learningQuery.data.points.length - 1
-                      ].avgConfidence.toFixed(2),
-                    samples:
-                      learningQuery.data.points[learningQuery.data.points.length - 1].samples,
-                  })}
-                  type="success"
-                />
-                <InsightCard
-                  icon="alert-circle-outline"
-                  title={t('analytics.trainingCoverage')}
-                  description={t('analytics.trainingDescription', {
-                    points: learningQuery.data.points.length,
-                  })}
-                  type="info"
-                />
-              </VStack>
+              thermostats.map((thermostat, index) => {
+                const actual = thermostat.currentTemp as number;
+                const target = thermostat.targetTemp as number;
+                const ratio = target > 0 ? actual / target : 0;
+                return (
+                  <PanelRow
+                    key={thermostat.id}
+                    divider={index < thermostats.length - 1}
+                    accessibilityLabel={`${thermostat.alias ?? ''}: ${actual.toFixed(
+                      1,
+                    )} / ${target.toFixed(1)} °C`}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                      <Text size="body" weight="medium" style={{ flex: 1 }} numberOfLines={1}>
+                        {thermostat.alias ?? t('thermostat.title')}
+                      </Text>
+                      <Readout
+                        value={t('analytics.targetDash', {
+                          actual: actual.toFixed(1),
+                          target: target.toFixed(1),
+                        })}
+                        unit="°C"
+                        size="md"
+                        tone={ratio >= 1 ? 'ok' : 'warn'}
+                      />
+                    </View>
+                    <View style={{ marginTop: 6 }}>
+                      <GaugeBar
+                        value={Math.min(1, ratio)}
+                        target={1}
+                        tone={ratio >= 1 ? 'ok' : 'warn'}
+                        height={3}
+                        accessibilityLabel={`${thermostat.alias ?? ''} ${actual.toFixed(
+                          1,
+                        )} / ${target.toFixed(1)} °C`}
+                      />
+                    </View>
+                  </PanelRow>
+                );
+              })
             )}
-          </Box>
+          </Panel>
+        </Section>
 
-          {/*
-            MO2-19: ovdje je bio blok "Performance Comparison" koji je prikazivao
-            "12% better" i "18% improvement" kao hardkodovane stringove u JSX-u.
-            Nijedna od te dvije vrijednosti nije dolazila iz API odgovora — bile
-            su izmišljene konstante predstavljene kao činjenice, pa je korisnik
-            mogao donositi odluke na osnovu brojeva koji ne postoje.
+        {/* Tabela „Vrijednost / Prethodno" — eksplicitno poređenje. */}
+        <Section
+          label={t('analytics.periodSummary')}
+          meta={previousSummaryQuery.isSuccess ? undefined : t('analytics.noPreviousData')}
+        >
+          <Panel variant="flush" padded={false} testID="analytics-summary-table">
+            <PanelRow divider>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1 }} />
+                <MonoLabel style={{ width: 84, textAlign: 'right' }}>
+                  {t('analytics.periodValue')}
+                </MonoLabel>
+                <MonoLabel style={{ width: 84, textAlign: 'right' }}>
+                  {t('analytics.periodPrevious')}
+                </MonoLabel>
+              </View>
+            </PanelRow>
+            {periodRows.map((row, index) => {
+              const delta = relativeDelta(row.current, row.previous);
+              return (
+                <PanelRow
+                  key={row.key}
+                  divider={index < periodRows.length - 1}
+                  accessibilityLabel={`${row.label}: ${
+                    row.current !== undefined ? row.format(row.current) : '—'
+                  } ${row.unit}, ${t('analytics.periodPrevious')}: ${
+                    row.previous !== undefined ? row.format(row.previous) : '—'
+                  } ${row.unit}`}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Text size="body" style={{ flex: 1 }} numberOfLines={1}>
+                      {row.label}
+                    </Text>
+                    <View style={{ width: 84, alignItems: 'flex-end' }}>
+                      <Readout
+                        value={row.current !== undefined ? row.format(row.current) : '—'}
+                        unit={row.unit || undefined}
+                        size="md"
+                        tone="ink"
+                      />
+                    </View>
+                    <View style={{ width: 84, alignItems: 'flex-end' }}>
+                      <Readout
+                        value={row.previous !== undefined ? row.format(row.previous) : '—'}
+                        unit={row.unit || undefined}
+                        size="md"
+                        tone="dim"
+                      />
+                    </View>
+                  </View>
+                  {delta !== null ? (
+                    <MonoMeta tone={delta > 0 ? 'warn' : delta < 0 ? 'ok' : 'dim'}>
+                      {`${delta > 0 ? '+' : ''}${delta.toFixed(1)}%`}
+                    </MonoMeta>
+                  ) : null}
+                </PanelRow>
+              );
+            })}
+          </Panel>
+        </Section>
 
-            Uklonjeno dok backend ne servira stvarnu usporedbu (normalizacija po
-            stepen-danima, FEAT-5/FORM-1). Ključevi performanceComparison,
-            vsSimilarHomes, better i improvement su obrisani iz oba jezika;
-            analytics.vsLastYear je zadržan jer ga koristi getVsLastLabel().
-          */}
+        <GasAnalyticsCard
+          readings={gasReadingsQuery.data}
+          isLoading={gasReadingsQuery.isLoading}
+        />
 
-          {/* Export Button */}
-          <Button
-            variant="outline"
-            leftIcon={<Icon as={Ionicons} name="download-outline" />}
-            size="lg"
-            onPress={handleExport}
-            isLoading={exporting}
-            isDisabled={!activeHome || exporting}
-          >
-            {t('analytics.exportData')}
-          </Button>
-        </VStack>
-      </ScrollView>
+        {/* Model učenja — samo ono što backend stvarno vraća. */}
+        <Section label={t('analytics.modelSection')}>
+          <Panel variant="flush" padded={false} testID="analytics-model">
+            <PanelRow divider={false}>
+              {learningQuery.isLoading ? (
+                <Skeleton height={44} />
+              ) : !latestLearning ? (
+                <Text tone="muted" size="body">
+                  {t('analytics.noInsights')}
+                </Text>
+              ) : (
+                <View style={{ gap: 6 }}>
+                  <Text size="body" weight="medium">
+                    {t('analytics.modelConfidenceLine', {
+                      confidence: Math.round(latestLearning.avgConfidence * 100),
+                      samples: learningQuery.data?.points.length ?? 0,
+                    })}
+                  </Text>
+                  <MonoMeta>{t('analytics.modelHint')}</MonoMeta>
+                </View>
+              )}
+            </PanelRow>
+          </Panel>
+        </Section>
+
+        <MonoMeta>{t('analytics.dataSourceNote')}</MonoMeta>
+
+        <Button
+          label={t('analytics.exportData')}
+          variant="secondary"
+          block
+          loading={exporting}
+          disabled={!activeHome || exporting}
+          onPress={handleExport}
+        />
+      </ScreenBody>
     </Screen>
   );
 };
-
-export const AnalyticsScreen = AnalyticsScreenContent;

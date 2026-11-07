@@ -11,18 +11,10 @@ import {
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
-import { Screen, ScreenHeader } from '../../ui';
-
-let LineChart: any = null;
-try {
-  LineChart = require('react-native-chart-kit').LineChart;
-} catch (e) {
-  // Chart-kit not installed
-}
+import { Screen, ScreenHeader, TrendChart, TrendSummary, type TrendPoint } from '../../ui';
 
 interface GasAnalysisData {
   period?: {
@@ -179,13 +171,7 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const chartBg = useColorModeValue('white', '#1a202c');
   const spinnerColor = useColorModeValue('brand.500', 'brand.400');
-  const chartLabelColor = useColorModeValue('gray.600', 'gray.400');
-  const amberBg = useColorModeValue('amber.50', 'amber.900');
-  const amberBorder = useColorModeValue('amber.200', 'amber.700');
-  const amberIcon = useColorModeValue('amber.600', 'amber.300');
-  const amberText = useColorModeValue('amber.700', 'amber.200');
   const blueBg = useColorModeValue('blue.50', 'blue.900');
   const blueBorder = useColorModeValue('blue.200', 'blue.700');
   const blueIcon = useColorModeValue('blue.600', 'blue.300');
@@ -215,26 +201,16 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
     return readings ? calculateDailyConsumptionStats(readings) : null;
   }, [readings]);
 
-  const chartData = useMemo(() => {
-    if (!analysis?.monthlyTrends || analysis.monthlyTrends.length === 0) {
-      return null;
-    }
-
-    const labels = analysis.monthlyTrends.map((m) => {
-      const date = dayjs(m.month);
-      return date.format('MMM');
-    });
-
-    const datasets = [
-      {
-        data: analysis.monthlyTrends.map((m) => m.consumption),
-        color: () => '#3b82f6',
-        strokeWidth: 2,
-      },
-    ];
-
-    return { labels, datasets };
-  }, [analysis?.monthlyTrends]);
+  // F3 (AN-03): isti `TrendChart` kao na analitici — nema treće biblioteke za
+  // grafove, a širinu daje `onLayout` kontejnera (ne ekran).
+  const monthlyPoints = useMemo<TrendPoint[]>(
+    () =>
+      (analysis?.monthlyTrends ?? []).map((m) => ({
+        label: dayjs(m.month).format('MMM'),
+        value: m.consumption,
+      })),
+    [analysis?.monthlyTrends],
+  );
 
   if (isLoading) {
     return (
@@ -264,9 +240,6 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
       </Screen>
     );
   }
-
-  const screenWidth = Dimensions.get('window').width;
-  const chartWidth = screenWidth - 32;
 
   const periodStart = analysis.period?.startDate ?? analysis.period?.from;
   const periodEnd = analysis.period?.endDate ?? analysis.period?.to;
@@ -480,53 +453,21 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
             </Box>
           )}
 
-          {/* Chart */}
-          {LineChart && chartData && chartData.datasets[0].data.length > 0 && (
-            <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={2}>
-              <Text fontSize="md" fontWeight="600" color={textColor} px={4} pt={4}>
-                {t('gas.analysisMonthlyConsumption')}
-              </Text>
-              <LineChart
-                data={chartData}
-                width={chartWidth}
-                height={220}
-                chartConfig={{
-                  backgroundColor: chartBg,
-                  backgroundGradientFrom: chartBg,
-                  backgroundGradientTo: chartBg,
-                  decimalPlaces: 2,
-                  color: () => '#64748b',
-                  labelColor: () => chartLabelColor as any,
-                  style: {
-                    borderRadius: 16,
-                  },
-                  propsForDots: {
-                    r: '5',
-                    strokeWidth: '2',
-                    stroke: '#3b82f6',
-                  },
-                  propsForBackgroundLines: {
-                    strokeDasharray: '0',
-                    stroke: borderColor,
-                  },
-                }}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                }}
-              />
-            </Box>
-          )}
-
-          {!LineChart && (
-            <Box bg={amberBg} rounded="lg" p={4} borderWidth={1} borderColor={amberBorder}>
-              <HStack space={2} alignItems="center">
-                <Icon as={Ionicons} name="alert-circle-outline" size={5} color={amberIcon} />
-                <Text fontSize="sm" color={amberText}>
-                  {t('gas.analysisChartUnavailable')}
+          {/* Graf — jedan vizuelni jezik sa analitikom (F3, AN-03). */}
+          {monthlyPoints.length > 0 && (
+            <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
+              <VStack space={3}>
+                <Text fontSize="md" fontWeight="600" color={textColor}>
+                  {t('gas.analysisMonthlyConsumption')}
                 </Text>
-              </HStack>
+                <TrendChart
+                  points={monthlyPoints}
+                  height={200}
+                  accessibilityLabel={t('gas.analysisMonthlyConsumption')}
+                  testID="gas-analysis-chart"
+                />
+                <TrendSummary points={monthlyPoints} unit="m³" />
+              </VStack>
             </Box>
           )}
 

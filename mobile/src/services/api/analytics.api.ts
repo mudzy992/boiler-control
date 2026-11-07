@@ -62,6 +62,16 @@ export interface DateRangeParams {
   deviceId?: number;
 }
 
+/**
+ * F3 (nalaz UX-13): poređenje s prethodnim periodom.
+ *
+ * Prije: kartice su ispisivale „u odnosu na prošlu sedmicu" uz hardkodiranu
+ * strelicu, a dohvatan je SAMO tekući raspon — poređenje koje tekst tvrdi
+ * nikad se nije izvršilo. Sada se prethodni raspon dohvata istim pozivom
+ * (isti endpoint, isti ugovor), sa identičnom dužinom perioda.
+ */
+export type PreviousPeriodParams = DateRangeParams;
+
 export const analyticsApi = {
   getHeatingSummary: async (params: DateRangeParams): Promise<HeatingSummaryResponse> => {
     return await apiClient.getDashboardHeatingSummary(params);
@@ -77,5 +87,10 @@ export const analyticsApi = {
 
   exportAnalytics: async (params: DateRangeParams): Promise<ExportAnalyticsResponse> => {
     return await apiClient.getDashboardExport(params);
+  },
+
+  /** Isti endpoint i isti ugovor kao `getHeatingSummary`, za prethodni raspon. */
+  getPreviousSummary: async (params: PreviousPeriodParams): Promise<HeatingSummaryResponse> => {
+    return await apiClient.getDashboardHeatingSummary(params);
   },
 };

@@ -13,11 +13,12 @@ import { useNotificationsQuery, useNotificationPreferencesQuery } from '../../no
 import { useDashboardHeatingRange } from '../hooks/useDashboardHeatingRange';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
-import { InputNumber } from '../../../components/InputNumber';
 import {
   MIN_CURRENT_FLOW_TEMP,
   MAX_CURRENT_FLOW_TEMP,
 } from '../../../constants/boilerLimits';
+import { TempDialog } from '@/shared/components/temp-dialog';
+import { invalidateQueriesAfterTempSet } from '@/shared/lib/invalidate-after-temp-set';
 
 const { Text } = Typography;
 
@@ -291,34 +292,25 @@ export const DashboardPage: React.FC = () => {
   }, [data?.boiler]);
 
   const submitSetTemp = useCallback(
-    async () => {
-    if (typeof setTempValue !== 'number' || Number.isNaN(setTempValue)) {
-      return;
-    }
-
-    if (
-      setTempValue < MIN_CURRENT_FLOW_TEMP ||
-      setTempValue > MAX_CURRENT_FLOW_TEMP
-    ) {
-      return;
-    }
-
-    try {
-      setSetTempSubmitting(true);
-      await apiClient.setBoilerCurrentTemp(Number(setTempValue.toFixed(1)));
-      // FE2-15: refetch u transitionu da UI ostaje responsivan tokom re-fetch-a.
-      startTransition(async () => {
-        await dashboardQuery.refetch();
-      });
-
-      message.success('Current boiler temperature updated');
-      setSetTempModalOpen(false);
-    } catch (error) {
-      console.error('Failed to update current boiler temp:', error);
-    } finally {
-      setSetTempSubmitting(false);
-    }
-  }, [dashboardQuery, setTempValue]);
+    async (value: number) => {
+      try {
+        setSetTempSubmitting(true);
+        await apiClient.setBoilerCurrentTemp(value);
+        await invalidateQueriesAfterTempSet(queryClient);
+        // FE2-15: refetch u transitionu da UI ostaje responsivan tokom re-fetch-a.
+        startTransition(() => {
+          void dashboardQuery.refetch();
+        });
+        message.success('Current boiler temperature updated');
+        setSetTempModalOpen(false);
+      } catch (error) {
+        console.error('Failed to update current boiler temp:', error);
+      } finally {
+        setSetTempSubmitting(false);
+      }
+    },
+    [dashboardQuery, queryClient],
+  );
 
   const heatingRangeParams = {
     from: range[0].toISOString(),
@@ -1017,56 +1009,13 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Set temp modal */}
-      <div
-        className={`fixed inset-0 z-modal-backdrop bg-black/40 ${
-          setTempModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        } transition-opacity duration-200`}
-        onClick={() => setSetTempModalOpen(false)}
+      <TempDialog
+        open={setTempModalOpen}
+        onOpenChange={setSetTempModalOpen}
+        initialValue={setTempValue}
+        onSubmit={submitSetTemp}
+        isSubmitting={setTempSubmitting}
       />
-      <div
-        className={`fixed inset-y-0 left-1/2 top-1/2 z-modal -translate-x-1/2 -translate-y-1/2 w-full max-w-md transform transition-transform duration-300 ${
-          setTempModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        } bg-surface rounded-xl shadow-xl p-6 dark:bg-dark-surface`}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-text-primary">
-            Set Current Flow Temperature
-          </h3>
-          <Button variant="ghost" size="sm" onClick={() => setSetTempModalOpen(false)}>
-            <span className="sr-only">Close</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </Button>
-        </div>
-        <p className="text-sm text-text-secondary mb-6">
-          Allowed range: {MIN_CURRENT_FLOW_TEMP}°C - {MAX_CURRENT_FLOW_TEMP}°C
-        </p>
-        <InputNumber
-          value={setTempValue ?? undefined}
-          onChange={(value) =>
-            setSetTempValue(typeof value === 'number' ? value : null)
-          }
-          min={MIN_CURRENT_FLOW_TEMP}
-          max={MAX_CURRENT_FLOW_TEMP}
-          step={0.1}
-          precision={1}
-          className="w-full mb-4"
-          addonAfter="°C"
-        />
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => setSetTempModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={submitSetTemp}
-            isLoading={setTempSubmitting}
-            disabled={typeof setTempValue !== 'number'}
-          >
-            {setTempSubmitting ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };

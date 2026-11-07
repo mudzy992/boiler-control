@@ -4,16 +4,17 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I5 zatvoren.** Commit `b0e0a2c`, CI zelen (`42375986240`).
+**Faza 5 — I6 u toku.** Auth + Boiler migrirani; Dashboard TempDialog spojen. Ostale stranice još ne.
 
-**Sljedeće:** **I6** (stranice redom — Auth → … → Profile).
+**Sljedeće u I6:** Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile (+ Dashboard full redesign: SVG bars, QueryState, PageHeader).
 
 ## Završeno
 
-- Faze 1–4 dokumentacija + GATE 3
-- I0–I4 (vidi HANDOFF)
-- I5 dialogs (`b0e0a2c`)
+- I0–I5
+- I6 Auth: LoginPage → shadcn Card/Input/Label/Button + StatusBanner
+- I6 Boiler: PageHeader + QueryState + Table + TempDialog + invalidate helper
+- I6 Dashboard (parcijalno): TempDialog + invalidateQueriesAfterTempSet (antd plots još tu)
 
 ## Sljedeći korak
 
-I6 — migracija stranica na shadcn + TempDialog/ConfirmDialog (vidi `08-implementation-plan.md`).
+Nastavi I6 od Heating (ili dovrši Dashboard full pass). Preferiraj **novu sesiju** — ovaj chat je dug.

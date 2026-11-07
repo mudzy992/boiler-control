@@ -1,16 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useEffect, useState, type FormEvent, type JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../../components/Button';
-import { Card } from '../../../components/Card';
-import { Input } from '../../../components/Input';
+import { useAuth } from '../hooks/useAuth';
+import { StatusBanner } from '@/shared/components/status-banner';
+import { Button } from '@/shared/components/ui/Button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/Card';
+import { Input } from '@/shared/components/ui/Input';
+import { Label } from '@/shared/components/ui/Label';
 
-export const LoginPage: React.FC = () => {
+export const LoginPage = (): JSX.Element => {
   const { t } = useTranslation();
   const { login, isLoading, token, isInitializing } = useAuth();
   const navigate = useNavigate();
-
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
@@ -21,8 +28,8 @@ export const LoginPage: React.FC = () => {
     }
   }, [isInitializing, token, navigate]);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
     setSubmitError('');
     if (!identifier.trim()) {
       setSubmitError(t('auth.identifierRequired'));
@@ -41,55 +48,51 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
-      <Card padding="md" elevated className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-text-primary">
-            🔥 Boiler Control
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            {t('auth.loginTitle')}
-          </p>
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          {submitError ? (
-            <div
-              role="alert"
-              className="p-3 rounded-lg border border-error bg-error-50 text-error-700 dark:border-error dark:bg-error-900/20 dark:text-error-100 text-sm"
-            >
-              {submitError}
+    <div className="flex min-h-screen items-center justify-center bg-background px-6">
+      <Card className="w-full max-w-md" variant="elevated">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">{t('shell.brand')}</CardTitle>
+          <CardDescription>{t('auth.loginTitle')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {submitError ? (
+              <StatusBanner variant="error" message={submitError} />
+            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="login-identifier">{t('auth.emailOrUsername')}</Label>
+              <Input
+                id="login-identifier"
+                autoComplete="username"
+                placeholder={t('auth.emailOrUsernamePlaceholder')}
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                disabled={isLoading}
+              />
             </div>
-          ) : null}
-          <Input
-            label={t('auth.emailOrUsername')}
-            placeholder={t('auth.emailOrUsernamePlaceholder')}
-            id="login-identifier"
-            autoComplete="username"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            disabled={isLoading}
-          />
-          <Input
-            label={t('auth.password')}
-            placeholder={t('auth.password')}
-            type="password"
-            id="login-password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-          />
-          <Button
-            variant="primary"
-            type="submit"
-            isLoading={isLoading}
-            disabled={isLoading}
-            fullWidth
-          >
-            {t('auth.signIn')}
-          </Button>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="login-password">{t('auth.password')}</Label>
+              <Input
+                id="login-password"
+                type="password"
+                autoComplete="current-password"
+                placeholder={t('auth.password')}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              isLoading={isLoading}
+              loadingLabel={t('common.loading')}
+              disabled={isLoading}
+            >
+              {t('auth.signIn')}
+            </Button>
+          </form>
+        </CardContent>
       </Card>
     </div>
   );

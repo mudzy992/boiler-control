@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi sa **I6**. Ne počinji I0–I5 ispočetka.
+Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi **I6 od Heating** (Auth/Boiler gotovi; Dashboard samo TempDialog). Ne ponavljaj I0–I5.
 
 ---
 
@@ -14,7 +14,7 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | 2 Modules | Gotovo — `modules/*.md`, `gate-2.md` |
 | 3 Synthesis | Gotovo — `04-cross-module-synthesis.md` |
 | 4 Plan | Gotovo — `05`–`09`, `gate-3.md` (odobreno) |
-| 5 Implement | **I0–I5 gotovi.** Sljedeće: **I6** |
+| 5 Implement | **I0–I5 gotovi. I6 djelimično** (Auth, Boiler; Dashboard TempDialog). Sljedeće: Heating… |
 
 ### Recent commits (main)
 
@@ -92,12 +92,18 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 - `validateFlowTempInput` u `boilerLimits.ts` (48–55 inkluzivno, 1 decimal).
 - `invalidateQueriesAfterTempSet` → `boilerEvents` + `dashboard` + `dashboardHealth`.
 - Matrica: `.cursor/docs/matrices/temp-dialog/`.
-- Potrošači (dashboard/boiler/gas) se spajaju u **I6**.
+
+### I6 — Pages (in progress)
+- **Auth** ✅ `LoginPage` → shadcn Card/Input/Label/Button + StatusBanner; brand `t('shell.brand')`.
+- **Boiler** ✅ PageHeader + QueryState + shadcn Table + TempDialog + invalidate helper; `boiler.*` i18n.
+- **Dashboard** 🟡 samo TempDialog + invalidate (antd plots/List/icons još; full pass kasnije u I6).
+- **Heating → Profile** ❌ još ne.
+- Gas: `ConfirmDialog` umjesto `window.confirm` još nije spojen.
 
 ### Još nije
-- Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` i dalje u upotrebi na stranicama (brišu se u I7).
-- Antd i dalje u ThemeContext, plots, nekim stranicama.
-- UX stranica još “polovičan”; redizajn stranica = I6.
+- Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` i dalje na većini stranica (I7).
+- Antd u ThemeContext, plots, Dashboard, …
+- I7 antd out + Lighthouse.
 
 ---
 
@@ -105,7 +111,9 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 
 Strogo po `08-implementation-plan.md` + `09-implementation-rules.md`.
 
-### I6 (sljedeće) — Stranice redom: Auth → Dashboard → Boiler → Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile  
+### I6 (nastavak) — Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile  
+Zatim dovrši Dashboard (PageHeader/QueryState/SVG bar umjesto plots).  
+
 
 ### I7 — Ukloniti antd, obrisati mrtav lokalni set, Lighthouse (Q8)
 
@@ -160,7 +168,8 @@ frontend/tailwind.config.js
 ## 8. Prompt za novu sesiju (kopiraj)
 
 ```
-Nastavi boiler-control dashboard redesign Fazu 5 od I6.
+Nastavi boiler-control dashboard redesign I6 od Heating.
 Pročitaj docs/redesign/HANDOFF.md, STATE.md, 08-implementation-plan.md, 09-implementation-rules.md.
-Ne ponavljaj I0–I5. Implementiraj I6 stranice redom (Auth → … → Profile), commit + push + gh run watch po stranici/grupi. Stani prije I7 kad I6 završi ili na HANDOFF.
+Ne ponavljaj I0–I5 ni Auth/Boiler. Auth+Boiler gotovi; Dashboard ima samo TempDialog.
+Uradi Heating → … → Profile (+ Dashboard full), commit+push+gh run watch po grupi. Stani prije I7.
 ```

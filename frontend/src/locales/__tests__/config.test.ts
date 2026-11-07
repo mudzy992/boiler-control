@@ -44,9 +44,9 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 257 = I4 (250) + common.confirm + tempDialog.* (I5).
+    // Čuva i broj: 267 = I5 (257) + boiler.* (10 keys, I6).
     // Pad znači da je neko obrisao ključ ili dodao novi bez prijevoda.
-    expect(en.length).toBe(257);
+    expect(en.length).toBe(267);
   });
 });
 

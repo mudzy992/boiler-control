@@ -30,8 +30,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `2ba7dac` | STATE: I3 closed |
 | `32beb33` | **I4** PageHeader / QueryState / StatCard / StatusBanner |
 | `d7fd13a` | STATE: I4 closed |
+| `b0e0a2c` | **I5** TempDialog + ConfirmDialog |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. (I5 SHA/CI upisati nakon pusha).
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I5 run zelen: `42375986240`.
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 

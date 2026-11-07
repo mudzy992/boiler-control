@@ -4,7 +4,7 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I5 zatvoren.** TempDialog (48–55) + ConfirmDialog + invalidation helper.
+**Faza 5 — I5 zatvoren.** Commit `b0e0a2c`, CI zelen (`42375986240`).
 
 **Sljedeće:** **I6** (stranice redom — Auth → … → Profile).
 
@@ -12,7 +12,7 @@ Ažurirano: 2026-11-07.
 
 - Faze 1–4 dokumentacija + GATE 3
 - I0–I4 (vidi HANDOFF)
-- I5 dialogs (ovaj commit)
+- I5 dialogs (`b0e0a2c`)
 
 ## Sljedeći korak
 

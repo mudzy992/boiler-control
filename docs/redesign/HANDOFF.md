@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi sa **I3**. Ne počinji I0–I2 ispočetka.
+Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi sa **I4**. Ne počinji I0–I3 ispočetka.
 
 ---
 
@@ -14,7 +14,7 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | 2 Modules | Gotovo — `modules/*.md`, `gate-2.md` |
 | 3 Synthesis | Gotovo — `04-cross-module-synthesis.md` |
 | 4 Plan | Gotovo — `05`–`09`, `gate-3.md` (odobreno) |
-| 5 Implement | **I0–I2 gotovi.** Sljedeće: **I3** |
+| 5 Implement | **I0–I3 gotovi.** Sljedeće: **I4** |
 
 ### Recent commits (main)
 
@@ -69,10 +69,15 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 - Bez antd Layout/Menu/icons u shellu (emoji privremeno za menu/theme).
 - `RouteFallback` = skeleton (token klase), ne inline hex.
 
+### I3 — Primitives
+- Radix: dialog, select, checkbox, switch (+ postojeći slot); `lucide-react`; `tailwindcss-animate`.
+- `shared/components/ui`: Dialog, Sheet, Select, Checkbox, Table, Switch; Button/Card/Input/Label na I0 tokenima.
+- `components/InputNumber.tsx` — native brojčani unos (bez antd), isti props ugovor (`onChange(number|null)`, precision, addonAfter).
+- Testovi: `shared/components/ui/__tests__/primitives.test.tsx`.
+
 ### Još nije
-- Lokalni `frontend/src/components/{Button,Card,Input,InputNumber,StatCard}` i dalje u upotrebi na stranicama.
-- Antd i dalje u ThemeContext, plots, InputNumber wrapper, nekim stranicama.
-- shadcn set postoji djelimično (`Button`, `Card`, `Input`, `Label`) — nije usklađen kao jedini izvor na stranicama.
+- Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` i dalje u upotrebi na stranicama (brišu se u I7).
+- Antd i dalje u ThemeContext, plots, nekim stranicama.
 - UX stranica još “polovičan”; redizajn stranica = I6.
 
 ---
@@ -81,15 +86,8 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 
 Strogo po `08-implementation-plan.md` + `09-implementation-rules.md`.
 
-### I3 (sljedeće) — shadcn primitiv + lucide
-1. Dodati Radix pakete + `lucide-react` (obrazloženje u commit body).
-2. shadcn: Dialog, Sheet, Select, Checkbox, Table, Switch u `shared/components/ui`.
-3. Uskladiti postojeći Button/Card/Input/Label sa I0 tokenima.
-4. Zamjena antd `InputNumber` omotača (bez antd).
-5. Lokalno: type-check, lint, test, build → commit → push → `gh run watch`.
-6. Ažurirati `STATE.md`. Stani i javi prije I4.
+### I4 (sljedeće) — PageHeader, QueryState, StatCard, StatusBanner  
 
-### I4 — PageHeader, QueryState, StatCard, StatusBanner  
 ### I5 — TempDialog (48–55), ConfirmDialog  
 ### I6 — Stranice redom: Auth → Dashboard → Boiler → Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile  
 ### I7 — Ukloniti antd, obrisati mrtav lokalni set, Lighthouse (Q8)

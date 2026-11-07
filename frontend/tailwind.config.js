@@ -1,3 +1,5 @@
+import animate from 'tailwindcss-animate';
+
 /** @type {import('tailwindcss').Config} */
 const rgb = (name) => `rgb(var(${name}) / <alpha-value>)`;
 
@@ -112,7 +114,7 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [animate],
   corePlugins: {
     preflight: false,
   },

@@ -63,14 +63,13 @@ function RouteFallback() {
     <div
       role="status"
       aria-live="polite"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '16rem',
-      }}
+      className="flex min-h-64 items-center justify-center"
     >
-      <span className="route-fallback-text">Učitavanje…</span>
+      <div
+        className="h-8 w-48 animate-pulse rounded-md bg-surface-muted dark:bg-dark-surface-muted"
+        aria-hidden="true"
+      />
+      <span className="sr-only">Loading…</span>
     </div>
   );
 }

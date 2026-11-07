@@ -1,225 +1,107 @@
-import React, { useState } from 'react';
-import {
-  HomeOutlined,
-  FireOutlined,
-  FileTextOutlined,
-  UserOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  MoonOutlined,
-  SunOutlined,
-  BarChartOutlined,
-  DatabaseOutlined,
-  MenuOutlined,
-  BellOutlined,
-} from '@ant-design/icons';
+import React, { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useThemeMode } from '../context/ThemeContext';
 import { SkipLink } from '../shared/components/SkipLink';
 import { Button } from './Button';
+import { ShellNavDrawer } from './shell-nav-drawer';
+import { ShellNavList } from './shell-nav-list';
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-interface MenuItem {
-  key: string;
-  label: string;
-  icon: React.ReactNode;
-  href: string;
-  onClick?: () => void;
-}
-
-const MENU_ITEMS: MenuItem[] = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: <HomeOutlined />,
-  },
-  {
-    key: 'boiler',
-    label: 'Boiler Control',
-    href: '/boiler',
-    icon: <FireOutlined />,
-  },
-  {
-    key: 'heating',
-    label: 'Heating Events',
-    href: '/heating',
-    icon: <FireOutlined />,
-  },
-  {
-    key: 'gas-readings',
-    label: 'Gas Readings',
-    href: '/gas/readings',
-    icon: <DatabaseOutlined />,
-  },
-  {
-    key: 'gas-analytics',
-    label: 'Gas Analytics',
-    href: '/gas/analytics',
-    icon: <BarChartOutlined />,
-  },
-  {
-    key: 'reports',
-    label: 'Reports',
-    href: '/reports',
-    icon: <FileTextOutlined />,
-  },
-  {
-    key: 'home-profile',
-    label: 'Home Profile',
-    href: '/home-profile',
-    icon: <SettingOutlined />,
-  },
-  {
-    key: 'notifications',
-    label: 'Notifications',
-    href: '/notifications',
-    icon: <BellOutlined />,
-  },
-  {
-    key: 'profile',
-    label: 'Profile',
-    href: '/profile',
-    icon: <UserOutlined />,
-  },
-];
-
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const { mode, toggleMode } = useThemeMode();
-  const [collapsed, setCollapsed] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
-  const handleMenuClick = (href: string) => {
-    navigate(href);
-    setCollapsed(false);
-  };
+  const handleCloseNav = useCallback(() => setIsNavOpen(false), []);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const displayName = user?.name?.trim() || user?.email || t('shell.userFallback');
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-background text-foreground">
       <SkipLink href="#main-content" />
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+      <header className="sticky top-0 z-sticky flex items-center justify-between border-b border-border bg-surface px-4 py-3 dark:border-dark-border dark:bg-dark-surface sm:px-6">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setCollapsed((prev) => !prev)}
-            aria-label="Toggle navigation"
-            icon={<MenuOutlined />}
-          />
-          <span className="font-semibold text-text-primary tracking-tight">
-            🔥 Boiler Control
+            className="lg:hidden"
+            onClick={() => setIsNavOpen(true)}
+            aria-label={t('shell.openMenu')}
+            aria-expanded={isNavOpen}
+            aria-controls="shell-mobile-nav"
+          >
+            ☰
+          </Button>
+          <span className="font-semibold tracking-tight text-text-primary">
+            {t('shell.brand')}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden sm:block text-sm text-text-secondary dark:text-dark-text-secondary">
-            Welcome, {user?.name || 'User'}
-          </span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden text-right sm:block">
+            <p className="text-sm text-text-secondary">
+              {t('shell.welcome', { name: displayName })}
+            </p>
+            {user?.role ? (
+              <p className="text-xs text-text-tertiary">
+                {t('shell.role', { role: user.role })}
+              </p>
+            ) : null}
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleMode}
-            aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
-            icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
-          />
+            aria-label={
+              mode === 'dark'
+                ? t('shell.toggleThemeLight')
+                : t('shell.toggleThemeDark')
+            }
+          >
+            {mode === 'dark' ? '☀' : '☾'}
+          </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            aria-label="Logout"
-            icon={<LogoutOutlined />}
-          />
+            aria-label={t('common.logout')}
+          >
+            {t('common.logout')}
+          </Button>
         </div>
       </header>
 
-      {/* Sidebar — desktop only */}
-      <aside
-        className={`hidden lg:flex flex-col w-64 border-r border-border bg-surface dark:border-dark-border dark:bg-dark-surface transition-all duration-300`}
-      >
-        <div className="p-5">
-          <div className="flex items-center gap-2 mb-8">
-            <span className="text-xl">🔥</span>
-            <span className="font-semibold text-text-primary tracking-tight">
-              Boiler Control
-            </span>
-          </div>
-          <nav className="space-y-1">
-            {MENU_ITEMS.map((item) => (
-              <Button
-                key={item.key}
-                variant="ghost"
-                size="md"
-                fullWidth
-                className="flex items-center gap-3 text-left justify-start text-text-secondary hover:bg-surface-muted hover:text-text-primary dark:hover:bg-dark-surface-muted dark:hover:text-dark-text-primary border-transparent hover:border-transparent"
-                onClick={() => handleMenuClick(item.href)}
-              >
-                {item.icon}
-                <span className="flex-1">{item.label}</span>
-              </Button>
-            ))}
-          </nav>
-        </div>
+      <aside className="fixed bottom-0 left-0 top-14 z-0 hidden w-64 flex-col border-r border-border bg-surface p-5 dark:border-dark-border dark:bg-dark-surface lg:flex">
+        <ShellNavList />
       </aside>
 
-      {/* Mobile sidebar overlay */}
-      {collapsed && (
-        <div
-          className="fixed inset-0 z-fixed bg-black/50 lg:hidden"
-          onClick={() => setCollapsed(false)}
-          aria-hidden="true"
-        />
-      )}
-      {collapsed && (
-        <div
-          className={`fixed inset-y-0 left-0 z-popover w-64 bg-surface border-r border-border shadow-lg dark:border-dark-border dark:bg-dark-surface transform transition-transform duration-300 lg:hidden`}
-        >
-          <div className="p-4 border-b border-border dark:border-dark-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCollapsed(false)}
-              className="w-full justify-between"
-              aria-label="Close navigation"
-            >
-              <span>Menu</span>
-              <MenuOutlined />
-            </Button>
-          </div>
-          <nav className="p-4 space-y-1">
-            {MENU_ITEMS.map((item) => (
-              <Button
-                key={item.key}
-                variant="ghost"
-                size="md"
-                fullWidth
-                className="flex items-center gap-3 text-left justify-start text-text-secondary hover:bg-surface-muted hover:text-text-primary dark:hover:bg-dark-surface-muted dark:hover:text-dark-text-primary"
-                onClick={() => handleMenuClick(item.href)}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Button>
-            ))}
-          </nav>
-        </div>
-      )}
+      <div id="shell-mobile-nav">
+        <ShellNavDrawer isOpen={isNavOpen} onClose={handleCloseNav} />
+      </div>
 
-      <main id="main-content" className="lg:pl-64 pt-16 lg:pt-0 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="rounded-2xl border border-border bg-surface shadow-sm p-6 dark:border-dark-border dark:bg-dark-surface-elevated">
+      <main
+        id="main-content"
+        className="mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:pl-72 lg:pr-8"
+        tabIndex={-1}
+      >
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-sm dark:border-dark-border dark:bg-dark-surface-elevated">
           {children}
         </div>
       </main>
 
-      <footer className="border-t border-border bg-surface/80 px-4 py-4 text-xs text-text-tertiary dark:border-dark-border dark:bg-dark-surface/80 dark:text-dark-text-tertiary">
-        © 2026 Boiler Control System. All rights reserved.
+      <footer className="border-t border-border px-4 py-4 text-xs text-text-tertiary dark:border-dark-border lg:pl-72">
+        {t('shell.footer')}
       </footer>
     </div>
   );

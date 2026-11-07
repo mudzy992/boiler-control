@@ -1,25 +1,17 @@
 # Redesign state
 
-Ažurirano: 2026-11-06.
+Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I1 zatvoren (lokalno + push).** Sljedeće I2 čeka potvrdu nakon zelenog CI.
-
-## Odluke
-
-- GATE 1 + GATE 3 odobreni; pristup A
+**Faza 5 — I2 zatvoren (lokalno).** Shell rewrite. Push + CI u toku / čeka potvrdu za I3.
 
 ## Završeno
 
-- I0: tokeni / Tailwind / IBM Plex (`4106ee7`)
-- **I1:** 401 na `/auth/login` ne radi full reload; `AuthUser` sa `role`; login validacija + `role="alert"` + autoComplete; redirect ako token postoji
-
-## Otvoreno
-
-- Q8 Lighthouse (I7)
-- HP-04, RE-06
+- I0 tokeni
+- I1 auth 401 + role
+- **I2:** MainLayout bez antd Layout; NavLink; drawer Escape+focus trap; `#main-content`; prikaz role; i18n shell/nav; RouteFallback skeleton
 
 ## Sljedeći korak
 
-I2 — shell rewrite.
+I3 — shadcn Dialog/Sheet/Select/… + lucide.

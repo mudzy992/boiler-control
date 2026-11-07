@@ -44,11 +44,9 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 226 je izmjereno rekurzivnim flattenom (uključuje
-    // ugnijezdene `gas.units.m3` i `gas.units.m3h`, `recommendation.*` i
-    // `homeProfile.*` dodato pri pretradizajnu). Pad znači da je neko obrisao
-    // ključ ili dodao novi bez prijevoda.
-    expect(en.length).toBe(226);
+    // Čuva i broj: 247 uključuje shell.* + nav.* (I2). Pad znači da je neko
+    // obrisao ključ ili dodao novi bez prijevoda.
+    expect(en.length).toBe(247);
   });
 });
 

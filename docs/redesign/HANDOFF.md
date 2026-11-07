@@ -13,7 +13,7 @@ I0–I7 zatvoreni. Dodatni **cockpit UI** (dark-first) je implementiran — vidi
 | I0–I7 implement | Gotovo |
 | Cockpit visual override | Gotovo (tokens + shell + dashboard hero + shared surfaces) |
 
-CI: Frontend on `main`. Pre-cockpit zelen: `42383549705`.
+CI: Frontend on `main`. Zadnji run zelen: `42386468112` (`cee2db2`).
 
 ## Cockpit sažetak
 

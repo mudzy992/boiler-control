@@ -1,6 +1,5 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/shared/lib/utils';
 import type { HeatingBucket } from '../types';
 
 interface DashboardBucketChartProps {
@@ -40,12 +39,12 @@ export const DashboardBucketChart = ({
       >
         <defs>
           <linearGradient id="bucketBrand" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor="rgb(var(--brand) / 0.35)" />
-            <stop offset="100%" stopColor="rgb(var(--brand) / 0.95)" />
+            <stop offset="0%" stopColor="rgb(var(--signal) / 0.45)" />
+            <stop offset="100%" stopColor="rgb(var(--signal) / 1)" />
           </linearGradient>
           <linearGradient id="bucketMuted" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor="rgb(var(--text-secondary) / 0.15)" />
-            <stop offset="100%" stopColor="rgb(var(--text-secondary) / 0.45)" />
+            <stop offset="0%" stopColor="rgb(var(--ink-muted) / 0.35)" />
+            <stop offset="100%" stopColor="rgb(var(--ink-muted) / 0.8)" />
           </linearGradient>
         </defs>
         {buckets.map((bucket, index) => {
@@ -62,10 +61,13 @@ export const DashboardBucketChart = ({
                 height={Math.max(barH, 2)}
                 rx={6}
                 fill={isActive ? 'url(#bucketBrand)' : 'url(#bucketMuted)'}
-                className={cn(
-                  'cursor-pointer transition-opacity',
-                  isActive && 'opacity-100',
-                )}
+                stroke={
+                  isActive
+                    ? 'rgb(var(--signal))'
+                    : 'rgb(var(--line-strong))'
+                }
+                strokeWidth={isActive ? 1.5 : 1}
+                className="cursor-pointer transition-[fill,stroke,opacity] duration-150"
                 tabIndex={0}
                 role="button"
                 aria-label={`${bucket.label}: ${bucket.totalDurationMin} min, ${bucket.cycles} ${t('dashboard.cycles')}`}

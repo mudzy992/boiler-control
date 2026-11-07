@@ -248,20 +248,37 @@ const DashboardScreenContent = () => {
               </Text>
             </VStack>
             <HStack space={3} alignItems="center">
-              <Pressable bg={headerBtnBg} rounded="full" p={2}>
+              {/*
+                F1 (nalaz UX-12): plamen je prije bio `Pressable` BEZ `onPress` —
+                izgledao je kao dugme, a nije radio ništa. Sada je statusna
+                ikona bez pressed stanja: boja govori da li kotao grije, a
+                akciju nosi susjedno dugme.
+              */}
+              <Box
+                bg={headerBtnBg}
+                rounded="full"
+                p={2}
+                accessibilityRole="image"
+                accessibilityLabel={
+                  isHeating ? t('boiler.heating') : t('boiler.idle')
+                }
+                accessibilityState={{ selected: isHeating }}
+              >
                 <Icon
                   as={Ionicons}
                   name="flame"
                   size={6}
                   color={isHeating ? 'red.500' : mutedColor}
                 />
-              </Pressable>
+              </Box>
               <Pressable
                 onPress={() => (navigation as any).navigate('Analytics')}
                 _pressed={{ opacity: 0.6 }}
                 bg={headerBtnBg}
                 rounded="full"
                 p={2}
+                accessibilityRole="button"
+                accessibilityLabel={t('analytics.title')}
               >
                 <Icon as={Ionicons} name="bar-chart-outline" size={5} color="brand.400" />
               </Pressable>
@@ -275,6 +292,9 @@ const DashboardScreenContent = () => {
                 bg={headerBtnBg}
                 rounded="full"
                 p={2}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.retry')}
+                accessibilityState={{ busy: isFetching }}
               >
                 <MaterialCommunityIcons
                   name={isFetching ? 'loading' : 'refresh'}

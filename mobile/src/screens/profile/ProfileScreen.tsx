@@ -3,7 +3,6 @@ import {
   Box,
   VStack,
   HStack,
-  Heading,
   Text,
   useColorModeValue,
   Switch,
@@ -14,9 +13,12 @@ import {
   Spinner,
   ScrollView,
 } from '../../components/ui/nativewind';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import { FormInput } from '../../components/FormInput';
 import { apiClient } from '../../services/api/client';
+import { Screen, ScreenHeader } from '../../ui';
 
 const VAT_RATE = 0.17;
 
@@ -24,6 +26,8 @@ const ProfileScreenContent = () => {
   const { user, logout, setUser } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
   const toast = useToast();
+  const { t } = useTranslation();
+  const navigation = useNavigation();
 
   const [name, setName] = useState(user?.name || '');
   const [username, setUsername] = useState(user?.username || '');
@@ -34,7 +38,6 @@ const ProfileScreenContent = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -55,8 +58,9 @@ const ProfileScreenContent = () => {
         setGasPriceSource(profile?.gasPriceSource ?? null);
         setGasPriceLastUpdatedAt(profile?.gasPriceLastUpdatedAt ?? null);
       } catch (error) {
+        // F1: prije je ovdje bila engleska string konstanta.
         toast.show({
-          description: 'Failed to load profile',
+          description: t('profile.loadError'),
           placement: 'top',
         });
       } finally {
@@ -64,6 +68,11 @@ const ProfileScreenContent = () => {
       }
     };
     loadProfile();
+    // Namjerno bez `t` u zavisnostima: `useTranslation` vraća novu funkciju na
+    // svaki render tokom promjene jezika, pa bi `t` ovdje vrtio efekat u
+    // beskonačno (i ponavljao `getUserProfile`). Postoji test koji to čuva
+    // ("saves once without retriggering the toast-dependent profile effect").
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
 
   const handleSave = async () => {
@@ -91,12 +100,12 @@ const ProfileScreenContent = () => {
       });
 
       toast.show({
-        description: 'Profile updated',
+        description: t('profile.updateSuccess'),
         placement: 'top',
       });
     } catch (error: any) {
       toast.show({
-        description: error?.response?.data?.message || 'Failed to update profile',
+        description: error?.response?.data?.message || t('profile.updateError'),
         placement: 'top',
       });
     } finally {
@@ -119,82 +128,108 @@ const ProfileScreenContent = () => {
 
   if (loading) {
     return (
-      <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
-        <Spinner />
-      </Box>
+      <Screen edges={['top']}>
+        <ScreenHeader
+          title={t('profile.title')}
+          onBack={() => (navigation as any).goBack()}
+          backLabel={t('common.back')}
+          testID="profile-header"
+        />
+        <Box flex={1} alignItems="center" justifyContent="center">
+          <Spinner />
+        </Box>
+      </Screen>
     );
   }
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={t('profile.title')}
+        subtitle={user?.email ?? undefined}
+        onBack={() => (navigation as any).goBack()}
+        backLabel={t('common.back')}
+        testID="profile-header"
+      />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 24 }}
         keyboardShouldPersistTaps="handled"
       >
-        <VStack flex={1} px={4} py={6} space={4}>
-          <Heading size="xl" color={textColor}>
-            Profile
-          </Heading>
-
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
+        <VStack flex={1} px={4} py={4} space={4}>
+          <Box bg={cardBg} rounded="xl" p={4}>
             <VStack space={3}>
               <Text fontSize="md" fontWeight="semibold" color={textColor}>
-                Account
+                {t('profile.accountSection')}
               </Text>
               <Divider />
               <VStack space={3}>
                 <Box>
                   <Text fontSize="xs" color={subtextColor} mb={1}>
-                    Email
+                    {t('profile.email')}
                   </Text>
-                  <FormInput value={user?.email || ''} isDisabled />
+                  <FormInput
+                    value={user?.email || ''}
+                    isDisabled
+                    accessibilityLabel={t('profile.email')}
+                    accessibilityHint={t('profile.emailReadOnly')}
+                  />
                 </Box>
                 <Box>
                   <Text fontSize="xs" color={subtextColor} mb={1}>
-                    Name
+                    {t('profile.name')}
                   </Text>
-                  <FormInput value={name} onChangeText={setName} />
+                  <FormInput
+                    value={name}
+                    onChangeText={setName}
+                    accessibilityLabel={t('profile.name')}
+                  />
                 </Box>
                 <Box>
                   <Text fontSize="xs" color={subtextColor} mb={1}>
-                    Username
+                    {t('profile.username')}
                   </Text>
                   <FormInput
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
                     autoCorrect={false}
+                    accessibilityLabel={t('profile.username')}
                   />
                 </Box>
                 <Box>
                   <Text fontSize="xs" color={subtextColor} mb={1}>
-                    Home Location
+                    {t('profile.homeLocation')}
                   </Text>
-                  <FormInput value={homeLocation} onChangeText={setHomeLocation} />
+                  <FormInput
+                    value={homeLocation}
+                    onChangeText={setHomeLocation}
+                    accessibilityLabel={t('profile.homeLocation')}
+                  />
                 </Box>
               </VStack>
             </VStack>
           </Box>
 
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
+          <Box bg={cardBg} rounded="xl" p={4}>
             <VStack space={3}>
               <Text fontSize="md" fontWeight="semibold" color={textColor}>
-                Gas Price
+                {t('profile.gasPriceSection')}
               </Text>
               <Divider />
               <Box>
                 <Text fontSize="xs" color={subtextColor} mb={1}>
-                  Price per m³ (ex VAT)
+                  {t('profile.priceExVat')}
                 </Text>
                 <FormInput
                   value={gasPriceExVat}
                   onChangeText={setGasPriceExVat}
                   keyboardType="decimal-pad"
+                  accessibilityLabel={t('profile.priceExVat')}
                 />
               </Box>
               <HStack justifyContent="space-between">
                 <Text fontSize="sm" color={subtextColor}>
-                  VAT rate
+                  {t('profile.vatRate')}
                 </Text>
                 <Text fontSize="sm" color={textColor}>
                   17%
@@ -202,7 +237,7 @@ const ProfileScreenContent = () => {
               </HStack>
               <HStack justifyContent="space-between">
                 <Text fontSize="sm" color={subtextColor}>
-                  Price per m³ (inc VAT)
+                  {t('profile.priceIncVat')}
                 </Text>
                 <Text fontSize="sm" color={textColor} fontWeight="600">
                   {gasPriceIncVat !== null ? gasPriceIncVat.toFixed(4) : '—'}
@@ -210,7 +245,7 @@ const ProfileScreenContent = () => {
               </HStack>
               <HStack justifyContent="space-between">
                 <Text fontSize="sm" color={subtextColor}>
-                  Last update
+                  {t('profile.lastUpdate')}
                 </Text>
                 <Text fontSize="sm" color={textColor}>
                   {gasPriceLastUpdatedAt
@@ -220,7 +255,7 @@ const ProfileScreenContent = () => {
               </HStack>
               <HStack justifyContent="space-between">
                 <Text fontSize="sm" color={subtextColor}>
-                  Source
+                  {t('profile.source')}
                 </Text>
                 <Text fontSize="sm" color={textColor}>
                   {gasPriceSource || '—'}
@@ -229,35 +264,36 @@ const ProfileScreenContent = () => {
             </VStack>
           </Box>
 
-          <Box bg={cardBg} rounded="xl" shadow={2} p={4}>
+          <Box bg={cardBg} rounded="xl" p={4}>
             <VStack space={3}>
               <Text fontSize="md" fontWeight="semibold" color={textColor}>
-                Appearance
+                {t('profile.appearanceSection')}
               </Text>
               <Divider />
               <HStack alignItems="center" justifyContent="space-between">
                 <Text fontSize="md" color={textColor}>
-                  Dark Mode
+                  {t('profile.darkMode')}
                 </Text>
                 <Switch
                   isChecked={colorMode === 'dark'}
                   onToggle={toggleColorMode}
                   colorScheme="brand"
+                  accessibilityLabel={t('profile.darkMode')}
                 />
               </HStack>
             </VStack>
           </Box>
 
           <Button onPress={handleSave} isLoading={saving}>
-            Save Profile
+            {t('profile.saveProfile')}
           </Button>
 
           <Button onPress={handleLogout} colorScheme="red" variant="outline">
-            Sign Out
+            {t('profile.signOut')}
           </Button>
         </VStack>
       </ScrollView>
-    </Box>
+    </Screen>
   );
 };
 

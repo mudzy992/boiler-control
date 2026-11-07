@@ -4,7 +4,6 @@ import {
   VStack,
   HStack,
   Text,
-  Heading,
   useColorModeValue,
   Spinner,
   ScrollView,
@@ -16,6 +15,7 @@ import { Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
+import { Screen, ScreenHeader } from '../../ui';
 
 let LineChart: any = null;
 try {
@@ -162,7 +162,17 @@ const calculateDailyConsumptionStats = (readings: GasReading[]): DailyConsumptio
   };
 };
 
-const GasAnalysisScreenContent: React.FC = () => {
+type GasAnalysisScreenProps = {
+  /**
+   * F1 (nalaz UX-03 / UX-02): Analiza više nije zaseban tab, nego sekcija Plina.
+   * `onBack` je obavezan izlaz — prije ga nije bilo nigdje u ekranu.
+   */
+  onBack?: () => void;
+  /** Ista „Očitanja | Analiza" traka kao na Očitanjima — kontrola ne smije nestati. */
+  headerSlot?: React.ReactNode;
+};
+
+const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, headerSlot }) => {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
@@ -239,9 +249,19 @@ const GasAnalysisScreenContent: React.FC = () => {
 
   if (!analysis) {
     return (
-      <Box flex={1} bg={bgColor} safeArea p={4}>
-        <Text color={subtextColor}>{t('gas.analysisNoData')}</Text>
-      </Box>
+      <Screen edges={['top']}>
+        <ScreenHeader
+          title={t('gas.analyticsTitle')}
+          subtitle={t('gas.analyticsSubtitle')}
+          onBack={onBack}
+          backLabel={t('common.back') || 'Nazad'}
+          testID="gas-analysis-header"
+        />
+        {headerSlot ? <Box px={5} pt={2}>{headerSlot}</Box> : null}
+        <Box p={4}>
+          <Text color={subtextColor}>{t('gas.analysisNoData')}</Text>
+        </Box>
+      </Screen>
     );
   }
 
@@ -272,18 +292,17 @@ const GasAnalysisScreenContent: React.FC = () => {
         : t('gas.analysisModeExplicit');
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={t('gas.analyticsTitle')}
+        subtitle={t('gas.analyticsSubtitle')}
+        onBack={onBack}
+        backLabel={t('common.back') || 'Nazad'}
+        testID="gas-analysis-header"
+      />
+      {headerSlot ? <Box px={5} pt={2}>{headerSlot}</Box> : null}
       <ScrollView>
         <VStack px={5} py={5} space={4} pb={8}>
-          {/* Header */}
-          <VStack space={1}>
-            <Heading size="2xl" color={textColor} fontWeight="700">
-              {t('gas.analyticsTitle')}
-            </Heading>
-            <Text fontSize="sm" color={subtextColor}>
-              {t('gas.analyticsSubtitle')}
-            </Text>
-          </VStack>
 
           <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
             <VStack space={1}>
@@ -689,7 +708,7 @@ const GasAnalysisScreenContent: React.FC = () => {
           </Box>
         </VStack>
       </ScrollView>
-    </Box>
+    </Screen>
   );
 };
 

@@ -25,6 +25,11 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
+jest.mock('@react-navigation/native', () => ({
+  useRoute: () => ({ params: {} }),
+  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn(), setParams: jest.fn() }),
+}));
+
 jest.mock('react-native/Libraries/Modal/Modal', () => ({
   __esModule: true,
   default: ({ visible, children }: { visible: boolean; children: mockReact.ReactNode }) =>
@@ -136,9 +141,9 @@ describe('HomeManagement nativewind', () => {
 it('uses NativeWind select, checkbox and slider values when creating a home', async () => {
   const { result, queryClient } = await screenTree('dark');
 
-  await fireEvent.press(result.getByText('Add Home'));
+  await fireEvent.press(result.getByText('Add home'));
   expect(await result.findByText('Add New Home')).toBeTruthy();
-  await fireEvent.changeText(result.getByPlaceholderText('e.g., Main House'), 'Mountain House');
+  await fireEvent.changeText(result.getByPlaceholderText('Home Name'), 'Mountain House');
 
   const selects = result.getAllByRole('combobox');
   expect(selects).toHaveLength(5);
@@ -152,7 +157,7 @@ it('uses NativeWind select, checkbox and slider values when creating a home', as
     nativeEvent: { actionName: 'increment' },
   });
 
-  const addButtons = result.getAllByText('Add Home');
+  const addButtons = result.getAllByText('Add home');
   expect(addButtons).toHaveLength(2);
   await fireEvent.press(addButtons[1]);
 
@@ -164,7 +169,7 @@ it('uses NativeWind select, checkbox and slider values when creating a home', as
     targetMorningTemp: 22.5,
     constructionYear: 2026,
   });
-  expect(await result.findByText('Home added successfully')).toBeTruthy();
+  expect(await result.findByText('Home added')).toBeTruthy();
   await waitFor(() => expect(homeProfileApi.getAllHomeProfiles).toHaveBeenCalledTimes(2));
   await result.unmount();
   queryClient.clear();

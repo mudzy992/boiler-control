@@ -13,7 +13,6 @@ import {
   HStack,
   Text,
   Icon,
-  Heading,
   useColorModeValue,
   Spinner,
   ScrollView,
@@ -30,6 +29,7 @@ import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
 import { SecureStorage } from '../../services/storage/SecureStorage';
+import { Screen, ScreenHeader } from '../../ui';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
 // postavke i ovaj ekran čiste ISTU putanju.
 import {
@@ -51,7 +51,21 @@ interface GasReading {
   invoiceGasPriceExVat?: number | null;
 }
 
-const GasReadingsScreenContent: React.FC = () => {
+type GasReadingsScreenProps = {
+  /**
+   * F1 (nalaz UX-03): Plin više nije ugniježđeni tab navigator, pa traku
+   * „Očitanja | Analiza" ovdje prosljeđuje `GasScreen` i ona se renderuje u
+   * zaglavlju ekrana — jedna traka, jedan nivo navigacije.
+   */
+  headerSlot?: React.ReactNode;
+  /** Otvara Analizu iz zaglavlja (prije je to bio drugi tab bar). */
+  onOpenAnalysis?: () => void;
+};
+
+const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
+  headerSlot,
+  onOpenAnalysis,
+}) => {
   const route = useRoute<RouteProp<any, 'GasReadings'>>();
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,7 +110,6 @@ const GasReadingsScreenContent: React.FC = () => {
     });
   }, []);
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -618,21 +631,44 @@ const GasReadingsScreenContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box flex={1} bg={bgColor} safeArea>
+      <Screen edges={['top']}>
+        <ScreenHeader
+          title={t('gas.title')}
+          action={
+            onOpenAnalysis
+              ? {
+                  icon: 'stats-chart-outline',
+                  label: t('navigation.analysis'),
+                  onPress: onOpenAnalysis,
+                }
+              : undefined
+          }
+          testID="gas-readings-header"
+        />
         <Center flex={1}>
           <VStack space={4} alignItems="center">
             <Spinner size="lg" color={accentColor} />
             <Text fontSize="lg" color={mutedColor}>
-              {t('gas.loading') || 'Loading gas readings...'}
+              {t('gas.loading')}
             </Text>
           </VStack>
         </Center>
-      </Box>
+      </Screen>
     );
   }
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={t('gas.title')}
+        subtitle={t('gas.subtitle')}
+        action={
+          onOpenAnalysis
+            ? { icon: 'stats-chart-outline', label: t('navigation.analysis'), onPress: onOpenAnalysis }
+            : undefined
+        }
+        testID="gas-readings-header"
+      />
       <FlatList
         style={{ flex: 1 }}
         data={filteredReadings}
@@ -641,15 +677,8 @@ const GasReadingsScreenContent: React.FC = () => {
         ListHeaderComponent={
           <VStack space={4} mb={4}>
 
-          {/* Header */}
-          <VStack space={1}>
-            <Heading size="2xl" color={textColor} fontWeight="700">
-              {t('gas.title') || 'Gas Readings'}
-            </Heading>
-            <Text fontSize="sm" color={subtextColor}>
-              {t('gas.subtitle') || 'Track your gas meter readings and consumption'}
-            </Text>
-          </VStack>
+          {/* F1: sekcijska traka (Očitanja | Analiza) iz GasScreen-a */}
+          {headerSlot ? <Box px={4} pt={2}>{headerSlot}</Box> : null}
 
           {/* Date Filter Tabs */}
           <VStack space={2}>
@@ -1087,7 +1116,7 @@ const GasReadingsScreenContent: React.FC = () => {
           }}
         />
       )}
-    </Box>
+    </Screen>
   );
 };
 

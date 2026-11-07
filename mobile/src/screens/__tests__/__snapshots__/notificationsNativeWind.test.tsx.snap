@@ -5,24 +5,150 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#0b0f1a",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#05070b",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="notification-preferences-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="common.back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "minWidth": 44,
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+              ],
+              null,
+            ]
+          }
+          testID="notification-preferences-header-back"
+        >
+          <Text
+            accessibilityLabel="chevron-back"
+          >
+            chevron-back
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            notifications.preferences
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       contentContainerStyle={
         {
           "paddingHorizontal": 16,
-          "paddingVertical": 24,
+          "paddingVertical": 16,
         }
       }
       style={{}}
@@ -219,24 +345,150 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#f9fafb",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#f6f7fb",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="notification-preferences-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="common.back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "minWidth": 44,
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+              ],
+              null,
+            ]
+          }
+          testID="notification-preferences-header-back"
+        >
+          <Text
+            accessibilityLabel="chevron-back"
+          >
+            chevron-back
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            notifications.preferences
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       contentContainerStyle={
         {
           "paddingHorizontal": 16,
-          "paddingVertical": 24,
+          "paddingVertical": 16,
         }
       }
       style={{}}
@@ -433,19 +685,145 @@ exports[`Notifications before/after NativeWind nativewind matches the dark snaps
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#0b0f1a",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#05070b",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="notifications-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="common.back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "minWidth": 44,
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+              ],
+              null,
+            ]
+          }
+          testID="notifications-header-back"
+        >
+          <Text
+            accessibilityLabel="chevron-back"
+          >
+            chevron-back
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            notifications.title
+          </Text>
+        </View>
+      </View>
+    </View>
     <View
       className="flex flex-row"
       style={
@@ -456,7 +834,7 @@ exports[`Notifications before/after NativeWind nativewind matches the dark snaps
           "paddingBottom": 8,
           "paddingLeft": 16,
           "paddingRight": 16,
-          "paddingTop": 16,
+          "paddingTop": 8,
         }
       }
     >
@@ -965,19 +1343,145 @@ exports[`Notifications before/after NativeWind nativewind matches the light snap
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#f9fafb",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#f6f7fb",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="notifications-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="common.back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "minWidth": 44,
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+              ],
+              null,
+            ]
+          }
+          testID="notifications-header-back"
+        >
+          <Text
+            accessibilityLabel="chevron-back"
+          >
+            chevron-back
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            notifications.title
+          </Text>
+        </View>
+      </View>
+    </View>
     <View
       className="flex flex-row"
       style={
@@ -988,7 +1492,7 @@ exports[`Notifications before/after NativeWind nativewind matches the light snap
           "paddingBottom": 8,
           "paddingLeft": 16,
           "paddingRight": 16,
-          "paddingTop": 16,
+          "paddingTop": 8,
         }
       }
     >

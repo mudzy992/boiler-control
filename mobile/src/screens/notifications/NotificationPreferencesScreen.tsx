@@ -12,6 +12,8 @@ import {
   ScrollView,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { Screen, ScreenHeader } from '../../ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
@@ -33,10 +35,10 @@ const getTypeDescription = (type: string, t: (key: string) => string) =>
   t(`notifications.typeDescriptions.${type}`) || t('notifications.preferencesDefaultDesc');
 
 const NotificationPreferencesScreenContent: React.FC = () => {
+  const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -60,20 +62,33 @@ const NotificationPreferencesScreenContent: React.FC = () => {
     },
   });
 
+  const header = (
+    <ScreenHeader
+      title={t('notifications.preferences')}
+      onBack={() => (navigation as any).goBack()}
+      backLabel={t('common.back')}
+      testID="notification-preferences-header"
+    />
+  );
+
   if (isLoading) {
     return (
-      <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
-        <Spinner size="lg" color={loadingSpinnerColor} />
-        <Text mt={3} color={subtextColor}>
-          {t('notifications.preferencesLoading')}
-        </Text>
-      </Box>
+      <Screen edges={['top']}>
+        {header}
+        <Box flex={1} alignItems="center" justifyContent="center">
+          <Spinner size="lg" color={loadingSpinnerColor} />
+          <Text mt={3} color={subtextColor}>
+            {t('notifications.preferencesLoading')}
+          </Text>
+        </Box>
+      </Screen>
     );
   }
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}>
+    <Screen edges={['top']}>
+      {header}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}>
         <VStack space={4} pb={6}>
           <Box bg={infoBg} rounded="lg" p={4} borderWidth={1} borderColor={infoBorder}>
             <HStack space={2} alignItems="center">
@@ -127,7 +142,7 @@ const NotificationPreferencesScreenContent: React.FC = () => {
           ))}
         </VStack>
       </ScrollView>
-    </Box>
+    </Screen>
   );
 };
 

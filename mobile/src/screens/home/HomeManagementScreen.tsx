@@ -21,6 +21,7 @@ import {
   Slider,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
 import { FormInput } from '../../components/FormInput';
@@ -36,6 +37,39 @@ import {
 } from '../../constants/homeProfileEnums';
 import { AxiosError } from 'axios';
 import { homeProfileToForm } from './homeProfileForm';
+import { useTranslation } from '../../hooks/useTranslation';
+import { Screen, ScreenHeader } from '../../ui';
+
+
+/**
+ * F1: prije su `*_TYPE_OPTIONS` nosili engleske labele direktno iz
+ * `constants/homeProfileEnums.ts`. Enum vrijednosti su ugovor s backendom i ne
+ * mijenjaju se — mijenja se samo prikaz, preko ključa u `homeProfile.*`.
+ */
+const INSULATION_LABEL_KEY: Record<string, string> = {
+  STANDARD: 'standard',
+  EPS: 'eps',
+  MINERAL_WOOL: 'mineralWool',
+  ADVANCED: 'advanced',
+};
+
+const WINDOW_LABEL_KEY: Record<string, string> = {
+  SINGLE_GLAZED: 'singleGlazed',
+  DOUBLE_GLAZED: 'doubleGlazed',
+  TRIPLE_GLAZED: 'tripleGlazed',
+};
+
+const HEATING_LABEL_KEY: Record<string, string> = {
+  RADIATOR: 'radiator',
+  UNDERFLOOR: 'underfloor',
+  MIXED: 'mixed',
+};
+
+const SEASON_LABEL_KEY: Record<string, string> = {
+  WINTER: 'winter',
+  SUMMER: 'summer',
+  AUTO: 'summer',
+};
 
 interface HomeProfile {
   id: number;
@@ -48,11 +82,12 @@ interface HomeProfile {
 
 // Move all hooks to top level BEFORE any state initialization
 const useHomeManagementScreen = () => {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedHome, setSelectedHome] = useState<HomeProfile | null>(null);
 
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -61,13 +96,14 @@ const useHomeManagementScreen = () => {
   const toast = useToast();
 
   return {
+    t,
+    navigation,
     showAddModal,
     setShowAddModal,
     showEditModal,
     setShowEditModal,
     selectedHome,
     setSelectedHome,
-    bgColor,
     cardBg,
     textColor,
     subtextColor,
@@ -78,13 +114,14 @@ const useHomeManagementScreen = () => {
 
 const HomeManagementScreenContent = () => {
   const {
+    t,
+    navigation,
     showAddModal,
     setShowAddModal,
     showEditModal,
     setShowEditModal,
     selectedHome,
     setSelectedHome,
-    bgColor,
     cardBg,
     textColor,
     subtextColor,
@@ -132,21 +169,23 @@ const HomeManagementScreenContent = () => {
     });
 
   const validateForm = () => {
-    if (!formData.homeName.trim()) return 'Home name is required';
+    // F1: poruke su prije bile engleski literali; sada ključevi koje već ima
+    // `homeProfile.form` blok u oba jezika.
+    if (!formData.homeName.trim()) return t('homeProfile.form.homeNameRequired');
     if (formData.location && formData.location.length > 120)
-      return 'Location should be 120 characters or fewer';
+      return t('homeProfile.form.locationTooLong');
     if (formData.floorArea < 10 || formData.floorArea > 2000)
-      return 'Floor area must be between 10 and 2000 m²';
+      return t('homeProfile.form.floorAreaRange');
     if (formData.ceilingHeight < 1.8 || formData.ceilingHeight > 5)
-      return 'Ceiling height must be between 1.8 m and 5 m';
+      return t('homeProfile.form.ceilingHeightRange');
     if (formData.constructionYear < 1900 || formData.constructionYear > 2100)
-      return 'Built year must be between 1900 and 2100';
+      return t('homeProfile.form.constructionYearRange');
     if (formData.numberOfResidents < 1 || formData.numberOfResidents > 20)
-      return 'Residents must be between 1 and 20';
+      return t('homeProfile.form.residentsRange');
     if (formData.insulationThickness < 5 || formData.insulationThickness > 30)
-      return 'Insulation thickness must be between 5 and 30 cm';
+      return t('homeProfile.form.insulationThicknessRange');
     const temps = [formData.targetMorningTemp, formData.targetDayTemp, formData.targetNightTemp];
-    if (temps.some((t) => t < 5 || t > 30)) return 'Temperatures must be between 5°C and 30°C';
+    if (temps.some((v) => v < 5 || v > 30)) return t('homeProfile.form.temperatureRange');
     return null;
   };
 
@@ -158,7 +197,7 @@ const HomeManagementScreenContent = () => {
       if (typeof msg === 'string') return msg;
     }
     if (err instanceof Error) return err.message;
-    return 'Something went wrong. Please try again.';
+    return t('homeManagement.genericError');
   };
 
   // Fetch home profiles
@@ -199,7 +238,7 @@ const HomeManagementScreenContent = () => {
       queryClient.invalidateQueries({ queryKey: ['activeHomeProfile'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.show({
-        description: 'Home switched successfully',
+        description: t('homeManagement.homeSwitched'),
         placement: 'top',
       });
     },
@@ -243,7 +282,7 @@ const HomeManagementScreenContent = () => {
       setShowAddModal(false);
       resetForm();
       toast.show({
-        description: 'Home added successfully',
+        description: t('homeManagement.homeAdded'),
         placement: 'top',
       });
     },
@@ -287,7 +326,7 @@ const HomeManagementScreenContent = () => {
       setSelectedHome(null);
       resetForm();
       toast.show({
-        description: 'Home updated successfully',
+        description: t('homeManagement.homeUpdated'),
         placement: 'top',
       });
     },
@@ -318,7 +357,7 @@ const HomeManagementScreenContent = () => {
       queryClient.invalidateQueries({ queryKey: ['activeHomeProfile'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.show({
-        description: 'Home deleted successfully',
+        description: t('homeManagement.homeDeleted'),
         placement: 'top',
       });
     },
@@ -354,7 +393,7 @@ const HomeManagementScreenContent = () => {
   const handleDeleteHome = (home: HomeProfile) => {
     if (home.isActive) {
       toast.show({
-        description: 'Cannot delete the active home. Switch to another home first.',
+        description: t('homeManagement.cannotDeleteActive'),
         placement: 'top',
       });
       return;
@@ -395,7 +434,7 @@ const HomeManagementScreenContent = () => {
               </Heading>
               {home.isActive && (
                 <Badge colorScheme="success" variant="solid">
-                  Active
+                  {t('homeManagement.active')}
                 </Badge>
               )}
             </HStack>
@@ -408,17 +447,29 @@ const HomeManagementScreenContent = () => {
             <HStack alignItems="center" space={1} mt={1}>
               <Icon as={Ionicons} name="thermometer-outline" size={4} color={subtextColor} />
               <Text fontSize="sm" color={subtextColor}>
-                {home.thermostats} thermostat{home.thermostats !== 1 ? 's' : ''}
+                {t('homeManagement.thermostatCount', { count: home.thermostats })}
               </Text>
             </HStack>
           </VStack>
 
           <HStack space={2}>
-            <Pressable onPress={() => openEditModal(home)}>
+            <Pressable
+              onPress={() => openEditModal(home)}
+              accessibilityRole="button"
+              accessibilityLabel={`${t('homeManagement.edit')}: ${home.name ?? ''}`}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <Icon as={Ionicons} name="create-outline" size={6} color="blue.500" />
             </Pressable>
             {!home.isActive && (
-              <Pressable isDisabled={anyMutationPending} onPress={() => handleDeleteHome(home)}>
+              <Pressable
+                isDisabled={anyMutationPending}
+                onPress={() => handleDeleteHome(home)}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('homeManagement.delete')}: ${home.name ?? ''}`}
+                accessibilityState={{ disabled: Boolean(anyMutationPending) }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Icon as={Ionicons} name="trash-outline" size={6} color="red.500" />
               </Pressable>
             )}
@@ -429,7 +480,14 @@ const HomeManagementScreenContent = () => {
   );
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={t('homeManagement.title')}
+        subtitle={t('homeManagement.subtitle')}
+        onBack={() => (navigation as any).goBack()}
+        backLabel={t('common.back')}
+        testID="home-management-header"
+      />
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -442,11 +500,8 @@ const HomeManagementScreenContent = () => {
           />
         }
       >
-        <VStack px={4} py={6} space={4}>
-          <HStack justifyContent="space-between" alignItems="center">
-            <Heading size="xl" color={textColor}>
-              My Homes
-            </Heading>
+        <VStack px={4} py={4} space={4}>
+          <HStack justifyContent="flex-end" alignItems="center">
             <Button
               onPress={() => setShowAddModal(true)}
               leftIcon={<Icon as={Ionicons} name="add-circle-outline" />}
@@ -454,27 +509,23 @@ const HomeManagementScreenContent = () => {
               isDisabled={anyMutationPending}
               isLoading={isRefetching}
             >
-              Add Home
+              {t('homeManagement.addHome')}
             </Button>
           </HStack>
 
-          <Text fontSize="sm" color={subtextColor}>
-            Manage your home profiles. Tap a home to make it active.
-          </Text>
-
           {isLoading ? (
-            <Text color={subtextColor}>Loading homes...</Text>
+            <Text color={subtextColor}>{t('homeManagement.loading')}</Text>
           ) : isError ? (
             <Box bg={cardBg} rounded="xl" p={6} alignItems="center" justifyContent="center">
               <Icon as={Ionicons} name="alert-circle-outline" size={10} color="red.500" mb={2} />
               <Text fontSize="md" color={textColor} textAlign="center" mb={1}>
-                Failed to load homes
+                {t('homeManagement.loadErrorTitle')}
               </Text>
               <Text fontSize="sm" color={subtextColor} textAlign="center" mb={3}>
-                {error instanceof Error ? error.message : 'Please pull to refresh or try again.'}
+                {error instanceof Error ? error.message : t('homeManagement.loadErrorBody')}
               </Text>
               <Button onPress={() => refetch()} size="sm" variant="outline">
-                Retry
+                {t('homeManagement.retry')}
               </Button>
             </Box>
           ) : (
@@ -487,10 +538,10 @@ const HomeManagementScreenContent = () => {
                 <Box bg={cardBg} rounded="xl" p={8} alignItems="center" justifyContent="center">
                   <Icon as={Ionicons} name="home-outline" size={16} color={subtextColor} mb={2} />
                   <Text fontSize="md" color={textColor} textAlign="center">
-                    No homes yet
+                    {t('homeManagement.noHomesTitle')}
                   </Text>
                   <Text fontSize="sm" color={subtextColor} textAlign="center" mt={1}>
-                    Add your first home to get started
+                    {t('homeManagement.noHomesBody')}
                   </Text>
                 </Box>
               )}
@@ -503,35 +554,35 @@ const HomeManagementScreenContent = () => {
       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} size="full">
         <Modal.Content maxHeight="90%">
           <Modal.CloseButton />
-          <Modal.Header>Add New Home</Modal.Header>
+          <Modal.Header>{t('homeManagement.addTitle')}</Modal.Header>
           <Modal.Body>
             <ScrollView>
               <VStack space={4} pb={4}>
                 {/* Basic Information */}
                 <Heading size="sm" color={textColor}>
-                  Basic Information
+                  {t('homeManagement.sectionBasic')}
                 </Heading>
 
                 <FormControl>
-                  <FormControl.Label>Home Name</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldHomeName')}</FormControl.Label>
                   <FormInput
-                    placeholder="e.g., Main House"
+                    placeholder={t('homeProfile.form.homeName')}
                     value={formData.homeName}
                     onChangeText={(text) => setFormData({ ...formData, homeName: text })}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormControl.Label>Location</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldLocation')}</FormControl.Label>
                   <FormInput
-                    placeholder="e.g., Sarajevo"
+                    placeholder={t('homeProfile.form.location')}
                     value={formData.location}
                     onChangeText={(text) => setFormData({ ...formData, location: text })}
                   />
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Floor Area (m²)</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldFloorArea')}</FormControl.Label>
                   <FormInput
                     keyboardType="numeric"
                     placeholder="100"
@@ -544,7 +595,7 @@ const HomeManagementScreenContent = () => {
 
                 <HStack space={2}>
                   <FormControl flex={1}>
-                    <FormControl.Label>Ceiling Height (m)</FormControl.Label>
+                    <FormControl.Label>{t('homeManagement.fieldCeilingHeight')}</FormControl.Label>
                     <FormInput
                       keyboardType="decimal-pad"
                       placeholder="2.6"
@@ -556,7 +607,7 @@ const HomeManagementScreenContent = () => {
                   </FormControl>
 
                   <FormControl flex={1}>
-                    <FormControl.Label>Residents</FormControl.Label>
+                    <FormControl.Label>{t('homeManagement.fieldResidents')}</FormControl.Label>
                     <FormInput
                       keyboardType="numeric"
                       placeholder="2"
@@ -568,7 +619,7 @@ const HomeManagementScreenContent = () => {
                   </FormControl>
 
                   <FormControl flex={1}>
-                    <FormControl.Label>Built Year</FormControl.Label>
+                    <FormControl.Label>{t('homeManagement.fieldBuiltYear')}</FormControl.Label>
                     <FormInput
                       keyboardType="numeric"
                       placeholder="2020"
@@ -589,7 +640,7 @@ const HomeManagementScreenContent = () => {
                 </Heading>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Insulation Type</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldInsulationType')}</FormControl.Label>
                   <Select
                     selectedValue={formData.insulationType}
                     onValueChange={(value: string) =>
@@ -601,13 +652,17 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {INSULATION_TYPE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.insulation.${INSULATION_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Insulation Thickness (cm)</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldInsulationThickness')}</FormControl.Label>
                   <Select
                     selectedValue={String(formData.insulationThickness)}
                     onValueChange={(value: string) =>
@@ -626,7 +681,7 @@ const HomeManagementScreenContent = () => {
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Window Type</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldWindowType')}</FormControl.Label>
                   <Select
                     selectedValue={formData.windowType}
                     onValueChange={(value: string) =>
@@ -638,13 +693,17 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {WINDOW_TYPE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.window.${WINDOW_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Season Mode</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldSeasonMode')}</FormControl.Label>
                   <Select
                     selectedValue={formData.seasonMode}
                     onValueChange={(value: string) =>
@@ -656,18 +715,22 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {SEASON_MODE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.seasonMode.${SEASON_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
 
                 {/* Heating System */}
                 <Heading size="sm" color={textColor} mt={2}>
-                  Heating System
+                  {t('homeManagement.sectionHeating')}
                 </Heading>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Heating Type</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldHeatingType')}</FormControl.Label>
                   <Select
                     selectedValue={formData.heatingType}
                     onValueChange={(value: string) =>
@@ -679,7 +742,11 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {HEATING_TYPE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.heatingType.${HEATING_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
@@ -690,14 +757,14 @@ const HomeManagementScreenContent = () => {
                     isChecked={formData.hasFloorHeating}
                     onChange={(value: boolean) => setFormData({ ...formData, hasFloorHeating: value })}
                   >
-                    Has underfloor heating zones
+                    {t('homeManagement.floorHeating')}
                   </Checkbox>
                 </FormControl>
 
                 <FormControl>
-                  <FormControl.Label>Boiler Model (Optional)</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldBoilerModel')}</FormControl.Label>
                   <FormInput
-                    placeholder="e.g., Viessmann Vitodens 100"
+                    placeholder={t('homeManagement.boilerModelPlaceholder')}
                     value={formData.boilerModel ?? ''}
                     onChangeText={(text) => setFormData({ ...formData, boilerModel: text })}
                   />
@@ -705,12 +772,12 @@ const HomeManagementScreenContent = () => {
 
                 {/* Temperature Preferences */}
                 <Heading size="sm" color={textColor} mt={2}>
-                  Temperature Preferences
+                  {t('homeManagement.sectionTemperatures')}
                 </Heading>
 
                 <FormControl isRequired>
                   <FormControl.Label>
-                    Morning Target (6:00-10:00): {formData.targetMorningTemp}°C
+                    {t('homeManagement.tempMorning')}: {formData.targetMorningTemp}°C
                   </FormControl.Label>
                   <Slider
                     value={Number(formData.targetMorningTemp)}
@@ -728,7 +795,7 @@ const HomeManagementScreenContent = () => {
 
                 <FormControl isRequired>
                   <FormControl.Label>
-                    Day Target (10:00-18:00): {formData.targetDayTemp}°C
+                    {t('homeManagement.tempDay')}: {formData.targetDayTemp}°C
                   </FormControl.Label>
                   <Slider
                     value={Number(formData.targetDayTemp)}
@@ -746,7 +813,7 @@ const HomeManagementScreenContent = () => {
 
                 <FormControl isRequired>
                   <FormControl.Label>
-                    Night Target (22:00-6:00): {formData.targetNightTemp}°C
+                    {t('homeManagement.tempNight')}: {formData.targetNightTemp}°C
                   </FormControl.Label>
                   <Slider
                     value={Number(formData.targetNightTemp)}
@@ -773,14 +840,14 @@ const HomeManagementScreenContent = () => {
                   resetForm();
                 }}
               >
-                Cancel
+                {t('homeManagement.cancel')}
               </Button>
               <Button
                 onPress={handleAddHome}
                 isLoading={createHomeMutation.isPending}
                 isDisabled={createHomeMutation.isPending}
               >
-                Add Home
+                {t('homeManagement.addHome')}
               </Button>
             </Button.Group>
           </Modal.Footer>
@@ -791,26 +858,26 @@ const HomeManagementScreenContent = () => {
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} size="full">
         <Modal.Content maxHeight="90%">
           <Modal.CloseButton />
-          <Modal.Header>Edit Home</Modal.Header>
+          <Modal.Header>{t('homeManagement.editTitle')}</Modal.Header>
           <Modal.Body>
             <ScrollView>
               <VStack space={4} pb={4}>
                 {/* Basic Information */}
                 <Heading size="sm" color={textColor}>
-                  Basic Information
+                  {t('homeManagement.sectionBasic')}
                 </Heading>
 
                 <FormControl>
-                  <FormControl.Label>Home Name</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldHomeName')}</FormControl.Label>
                   <FormInput
-                    placeholder="e.g., Main House"
+                    placeholder={t('homeProfile.form.homeName')}
                     value={formData.homeName}
                     onChangeText={(text) => setFormData({ ...formData, homeName: text })}
                   />
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Floor Area (m²)</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldFloorArea')}</FormControl.Label>
                   <FormInput
                     keyboardType="numeric"
                     placeholder="100"
@@ -823,7 +890,7 @@ const HomeManagementScreenContent = () => {
 
                 <HStack space={2}>
                   <FormControl flex={1}>
-                    <FormControl.Label>Ceiling Height (m)</FormControl.Label>
+                    <FormControl.Label>{t('homeManagement.fieldCeilingHeight')}</FormControl.Label>
                     <FormInput
                       keyboardType="decimal-pad"
                       placeholder="2.6"
@@ -835,7 +902,7 @@ const HomeManagementScreenContent = () => {
                   </FormControl>
 
                   <FormControl flex={1}>
-                    <FormControl.Label>Residents</FormControl.Label>
+                    <FormControl.Label>{t('homeManagement.fieldResidents')}</FormControl.Label>
                     <FormInput
                       keyboardType="numeric"
                       placeholder="2"
@@ -847,7 +914,7 @@ const HomeManagementScreenContent = () => {
                   </FormControl>
 
                   <FormControl flex={1}>
-                    <FormControl.Label>Built Year</FormControl.Label>
+                    <FormControl.Label>{t('homeManagement.fieldBuiltYear')}</FormControl.Label>
                     <FormInput
                       keyboardType="numeric"
                       placeholder="2020"
@@ -868,7 +935,7 @@ const HomeManagementScreenContent = () => {
                 </Heading>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Insulation Type</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldInsulationType')}</FormControl.Label>
                   <Select
                     selectedValue={formData.insulationType}
                     onValueChange={(value: string) =>
@@ -880,13 +947,17 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {INSULATION_TYPE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.insulation.${INSULATION_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Insulation Thickness (cm)</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldInsulationThickness')}</FormControl.Label>
                   <Select
                     selectedValue={String(formData.insulationThickness)}
                     onValueChange={(value: string) =>
@@ -905,7 +976,7 @@ const HomeManagementScreenContent = () => {
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Window Type</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldWindowType')}</FormControl.Label>
                   <Select
                     selectedValue={formData.windowType}
                     onValueChange={(value: string) =>
@@ -917,13 +988,17 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {WINDOW_TYPE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.window.${WINDOW_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Season Mode</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldSeasonMode')}</FormControl.Label>
                   <Select
                     selectedValue={formData.seasonMode}
                     onValueChange={(value: string) =>
@@ -935,18 +1010,22 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {SEASON_MODE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.seasonMode.${SEASON_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
 
                 {/* Heating System */}
                 <Heading size="sm" color={textColor} mt={2}>
-                  Heating System
+                  {t('homeManagement.sectionHeating')}
                 </Heading>
 
                 <FormControl isRequired>
-                  <FormControl.Label>Heating Type</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldHeatingType')}</FormControl.Label>
                   <Select
                     selectedValue={formData.heatingType}
                     onValueChange={(value: string) =>
@@ -958,7 +1037,11 @@ const HomeManagementScreenContent = () => {
                     }}
                   >
                     {HEATING_TYPE_OPTIONS.map((option) => (
-                      <Select.Item key={option.value} label={option.label} value={option.value} />
+                      <Select.Item
+                        key={option.value}
+                        label={t(`homeProfile.heatingType.${HEATING_LABEL_KEY[option.value]}`)}
+                        value={option.value}
+                      />
                     ))}
                   </Select>
                 </FormControl>
@@ -969,14 +1052,14 @@ const HomeManagementScreenContent = () => {
                     isChecked={formData.hasFloorHeating}
                     onChange={(value: boolean) => setFormData({ ...formData, hasFloorHeating: value })}
                   >
-                    Has underfloor heating zones
+                    {t('homeManagement.floorHeating')}
                   </Checkbox>
                 </FormControl>
 
                 <FormControl>
-                  <FormControl.Label>Boiler Model (Optional)</FormControl.Label>
+                  <FormControl.Label>{t('homeManagement.fieldBoilerModel')}</FormControl.Label>
                   <FormInput
-                    placeholder="e.g., Viessmann Vitodens 100"
+                    placeholder={t('homeManagement.boilerModelPlaceholder')}
                     value={formData.boilerModel ?? ''}
                     onChangeText={(text) => setFormData({ ...formData, boilerModel: text })}
                   />
@@ -984,12 +1067,12 @@ const HomeManagementScreenContent = () => {
 
                 {/* Temperature Preferences */}
                 <Heading size="sm" color={textColor} mt={2}>
-                  Temperature Preferences
+                  {t('homeManagement.sectionTemperatures')}
                 </Heading>
 
                 <FormControl isRequired>
                   <FormControl.Label>
-                    Morning Target (6:00-10:00): {formData.targetMorningTemp}°C
+                    {t('homeManagement.tempMorning')}: {formData.targetMorningTemp}°C
                   </FormControl.Label>
                   <Slider
                     value={Number(formData.targetMorningTemp)}
@@ -1007,7 +1090,7 @@ const HomeManagementScreenContent = () => {
 
                 <FormControl isRequired>
                   <FormControl.Label>
-                    Day Target (10:00-18:00): {formData.targetDayTemp}°C
+                    {t('homeManagement.tempDay')}: {formData.targetDayTemp}°C
                   </FormControl.Label>
                   <Slider
                     value={Number(formData.targetDayTemp)}
@@ -1025,7 +1108,7 @@ const HomeManagementScreenContent = () => {
 
                 <FormControl isRequired>
                   <FormControl.Label>
-                    Night Target (22:00-6:00): {formData.targetNightTemp}°C
+                    {t('homeManagement.tempNight')}: {formData.targetNightTemp}°C
                   </FormControl.Label>
                   <Slider
                     value={Number(formData.targetNightTemp)}
@@ -1053,20 +1136,20 @@ const HomeManagementScreenContent = () => {
                   resetForm();
                 }}
               >
-                Cancel
+                {t('homeManagement.cancel')}
               </Button>
               <Button
                 onPress={handleEditHome}
                 isLoading={updateHomeMutation.isPending}
                 isDisabled={updateHomeMutation.isPending}
               >
-                Save Changes
+                {t('homeManagement.save')}
               </Button>
             </Button.Group>
           </Modal.Footer>
         </Modal.Content>
       </Modal>
-    </Box>
+    </Screen>
   );
 };
 

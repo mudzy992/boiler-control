@@ -21,6 +21,7 @@ jest.mock('@expo/vector-icons', () => {
 
 jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: {} }),
+  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn(), setParams: jest.fn() }),
 }));
 
 jest.mock('@react-native-community/datetimepicker', () => ({

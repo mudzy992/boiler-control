@@ -1,61 +1,86 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorModeValue } from '../../components/ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from '../../hooks/useTranslation';
+import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+
 import { GasReadingsScreen } from './GasReadingsScreen';
 import { GasAnalysisScreen } from './GasAnalysisScreen';
+import { Segmented } from '../../ui';
+import { useTranslation } from '../../hooks/useTranslation';
 
-const Tab = createBottomTabNavigator();
+type GasView = 'readings' | 'analysis';
 
-const GasScreenContent = () => {
+/**
+ * Plin — jedan ekran, dvije sekcije.
+ *
+ * F1 (nalaz UX-03): prije je ovdje bio `createBottomTabNavigator` sa rutama
+ * `Readings` / `Analysis`, dakle DRUGI tab bar ugniježđen u glavni. Dvije trake
+ * su trošile ~112px na 800px ekrana i tražile od korisnika da nauči koja šta
+ * mijenja. Sada je to `Segmented` kontrola u zaglavlju ekrana — ista traka,
+ * jedan nivo navigacije.
+ *
+ * Kompatibilnost (ne diramo `constants/routes.ts` ni instalirane verzije):
+ *  - screen ostaje dostupan pod istim imenom iz glavnog tab navigatora (`Gas`);
+ *  - `GAS_TAB_SCREENS.Readings` / `.Analysis` ostaju vrijednosti koje deep link
+ *    i push notifikacija prosljeđuju kao `params.screen`, pa se ovdje prevode u
+ *    početni `view`. Tako `myapp://gas/add-reading` i dalje otvara Očitanja.
+ */
+
+type GasScreenProps = {
+  route?: { params?: { screen?: string } };
+};
+
+const GasScreenContent: React.FC<GasScreenProps> = ({ route }) => {
   const { t } = useTranslation();
-  const headerBg = useColorModeValue('#ffffff', '#1a202c');
-  const headerTint = useColorModeValue('#000000', '#ffffff');
-  const tabBg = useColorModeValue('#ffffff', '#1a202c');
-  const inactiveTint = useColorModeValue('#9ca3af', '#6b7280');
-  const activeTint = useColorModeValue('#f97316', '#fb923c');
+  const navigation = useNavigation();
+  const requested = route?.params?.screen;
 
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: headerBg,
-        },
-        headerTintColor: headerTint,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-        tabBarStyle: {
-          backgroundColor: tabBg,
-          borderTopColor: useColorModeValue('#e5e7eb', '#374151'),
-        },
-        tabBarActiveTintColor: activeTint,
-        tabBarInactiveTintColor: inactiveTint,
+  const [view, setView] = useState<GasView>(requested === 'Analysis' ? 'analysis' : 'readings');
+
+  // Duboki link može stići dok je ekran već montiran — tada `nav state` mijenja
+  // parametre, a ne `mount`. Zato pratimo parametar, ne samo početno stanje.
+  React.useEffect(() => {
+    if (requested === 'Analysis') setView('analysis');
+    if (requested === 'Readings') setView('readings');
+  }, [requested]);
+
+  const currentLabel =
+    view === 'readings' ? t('navigation.readings') : t('navigation.analysis');
+
+  // Ista traka u obje sekcije: kontrola koja nestane kad je aktivna druga
+  // opcija ostavlja korisnika bez očiglednog puta nazad.
+  const segmented = (
+    <Segmented<GasView>
+      options={[
+        { value: 'readings', label: t('navigation.readings') },
+        { value: 'analysis', label: t('navigation.analysis') },
+      ]}
+      value={view}
+      onChange={(next) => {
+        setView(next);
+        (navigation as any)?.setParams?.({ screen: next === 'analysis' ? 'Analysis' : 'Readings' });
       }}
-    >
-      <Tab.Screen
-        name="Readings"
-        component={GasReadingsScreen}
-        options={{
-          headerShown: false,
-          tabBarLabel: t('navigation.readings'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="document-text-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Analysis"
-        component={GasAnalysisScreen}
-        options={{
-          headerShown: false,
-          tabBarLabel: t('navigation.analysis'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="analytics-outline" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+      accessibilityLabel={currentLabel}
+      testID="gas-segmented"
+    />
+  );
+
+  return view === 'readings' ? (
+    <GasReadingsScreen
+      headerSlot={segmented}
+      onOpenAnalysis={() => {
+        setView('analysis');
+        // Zadržavamo i navigacione parametre u sinhronizaciji, da `back`
+        // ili budući deep link ne vrate pogrešnu sekciju.
+        (navigation as any)?.setParams?.({ screen: 'Analysis' });
+      }}
+    />
+  ) : (
+    <GasAnalysisScreen
+      headerSlot={segmented}
+      onBack={() => {
+        setView('readings');
+        (navigation as any)?.setParams?.({ screen: 'Readings' });
+      }}
+    />
   );
 };
 

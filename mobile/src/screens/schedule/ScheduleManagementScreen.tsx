@@ -16,6 +16,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { thermostatApi } from '../../services/api/thermostat.api';
+import { useTranslation } from '../../hooks/useTranslation';
+import { useNavigation } from '@react-navigation/native';
+import { Screen, ScreenHeader } from '../../ui';
 
 /**
  * SCHEDULE MANAGEMENT SCREEN (VIEW-ONLY)
@@ -90,6 +93,13 @@ const getCurrentActiveInterval = (programs: ThermostatProgram[]): ThermostatProg
 };
 
 // Helper: Get next scheduled change
+/**
+ * F1: `dayLabel` iz helpera je ključ (`today` / `tomorrow`), ne prikazni tekst.
+ * Prijevod se radi na mjestu renderovanja, pa helper ne zavisi od i18n-a.
+ */
+const dayLabelKey = (day: string) =>
+  `schedule.day${day.charAt(0).toUpperCase()}${day.slice(1)}`;
+
 const getNextScheduledChange = (
   programs: ThermostatProgram[]
 ): { program: ThermostatProgram; time: string; dayLabel: string } | null => {
@@ -107,7 +117,7 @@ const getNextScheduledChange = (
   const nextToday = todayPrograms.find((p) => p.startMinute > currentMinutes);
 
   if (nextToday) {
-    return { program: nextToday, time: minutesToTime(nextToday.startMinute), dayLabel: 'Today' };
+    return { program: nextToday, time: minutesToTime(nextToday.startMinute), dayLabel: 'today' };
   }
 
   // Find first program tomorrow
@@ -126,7 +136,7 @@ const getNextScheduledChange = (
     return {
       program: tomorrowPrograms[0],
       time: minutesToTime(tomorrowPrograms[0].startMinute),
-      dayLabel: 'Tomorrow',
+      dayLabel: 'tomorrow',
     };
   }
 
@@ -135,6 +145,7 @@ const getNextScheduledChange = (
 
 // Program interval card component - MOVED OUTSIDE to avoid hooks ordering issues
 const ProgramIntervalCard = ({ program }: { program: ThermostatProgram }) => {
+  const { t } = useTranslation();
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -152,7 +163,7 @@ const ProgramIntervalCard = ({ program }: { program: ThermostatProgram }) => {
           <HStack alignItems="center" space={2}>
             <Icon as={Ionicons} name="thermometer-outline" size={4} color={subtextColor} />
             <Text fontSize="sm" color={subtextColor}>
-              Target: {program.targetTemp}°C
+              {t('schedule.targetTemp', { value: program.targetTemp })}
             </Text>
           </HStack>
         </VStack>
@@ -172,6 +183,7 @@ const DayGroupSection = ({
   programs: ThermostatProgram[];
   dayLabel: string;
 }) => {
+  const { t } = useTranslation();
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
 
@@ -182,7 +194,7 @@ const DayGroupSection = ({
       </Heading>
       {programs.length === 0 ? (
         <Text fontSize="sm" color={subtextColor} italic>
-          No programs scheduled for {dayLabel.toLowerCase()}
+          {t('schedule.noProgramsForDay', { day: dayLabel.toLowerCase() })}
         </Text>
       ) : (
         <VStack space={2}>
@@ -199,6 +211,8 @@ const DayGroupSection = ({
 };
 
 const ScheduleManagementScreenContent = () => {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
 
   // ALL HOOKS CALLED AT TOP LEVEL UNCONDITIONALLY
@@ -266,14 +280,20 @@ const ScheduleManagementScreenContent = () => {
 
   if (isLoading) {
     return (
-      <Box flex={1} bg={bgColor} safeArea>
+      <Screen edges={['top']}>
+        <ScreenHeader
+          title={t('schedule.title')}
+          onBack={() => (navigation as any).goBack()}
+          backLabel={t('common.back')}
+          testID="schedule-header"
+        />
         <Center flex={1}>
           <Spinner size="lg" color="brand.500" />
           <Text color={subtextColor} mt={4}>
-            Loading schedules...
+            {t('schedule.loading')}
           </Text>
         </Center>
-      </Box>
+      </Screen>
     );
   }
 
@@ -283,12 +303,12 @@ const ScheduleManagementScreenContent = () => {
         <Center flex={1} px={4}>
           <Icon as={Ionicons} name="alert-circle-outline" size={16} color="red.500" mb={4} />
           <Text color={textColor} fontSize="lg" fontWeight="bold" mb={2}>
-            Failed to Load Schedules
+            {t('schedule.loadErrorTitle')}
           </Text>
           <Text color={subtextColor} textAlign="center">
             {programsErrorObj instanceof Error
               ? programsErrorObj.message
-              : 'Unable to fetch heating programs from the thermostat.'}
+              : t('schedule.loadErrorBody')}
           </Text>
         </Center>
       </Box>
@@ -301,10 +321,10 @@ const ScheduleManagementScreenContent = () => {
         <Center flex={1} px={4}>
           <Icon as={Ionicons} name="thermometer-outline" size={16} color="gray.400" mb={4} />
           <Text color={textColor} fontSize="lg" fontWeight="bold" mb={2}>
-            No Thermostats Found
+            {t('schedule.noDevicesTitle')}
           </Text>
           <Text color={subtextColor} textAlign="center">
-            No thermostat devices are configured for your account.
+            {t('schedule.noDevicesBody')}
           </Text>
         </Center>
       </Box>
@@ -314,30 +334,28 @@ const ScheduleManagementScreenContent = () => {
   const selectedDevice = devices.find((d) => d.id === selectedDeviceId);
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={t('schedule.title')}
+        subtitle={t('schedule.subtitle')}
+        onBack={() => (navigation as any).goBack()}
+        backLabel={t('common.back')}
+        testID="schedule-header"
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack px={4} py={6} space={4}>
-          {/* Header */}
-          <VStack space={2}>
-            <Heading size="xl" color={textColor}>
-              Heating Schedule
-            </Heading>
-            <Text fontSize="sm" color={subtextColor}>
-              View current thermostat program intervals by day. Read-only display from device.
-            </Text>
-          </VStack>
+        <VStack px={4} py={4} space={4}>
 
           {/* Device Selector (if multiple devices) */}
           {devices && devices.length > 1 && (
             <Box>
               <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                Select Thermostat
+                {t('schedule.selectThermostat')}
               </Text>
               <Select
                 selectedValue={selectedDeviceId?.toString()}
                 minWidth="200"
-                accessibilityLabel="Choose Thermostat"
-                placeholder="Choose Thermostat"
+                accessibilityLabel={t('schedule.selectThermostat')}
+                placeholder={t('schedule.selectThermostat')}
                 bg={cardBg}
                 onValueChange={(itemValue: string) => setSelectedDeviceId(parseInt(itemValue))}
               >
@@ -362,11 +380,18 @@ const ScheduleManagementScreenContent = () => {
                     {selectedDevice.alias}
                   </Text>
                   <Text fontSize="xs" color={subtextColor}>
-                    {selectedDevice.vendor} • Mode: {selectedDevice.mode}
+                    {selectedDevice.vendor} ·{' '}
+                    {t('schedule.deviceMode', {
+                      mode: t(`schedule.mode.${selectedDevice.mode}`, {
+                        defaultValue: selectedDevice.mode,
+                      }),
+                    })}
                   </Text>
                 </VStack>
                 <Badge colorScheme={selectedDevice.mode === 'PROGRAM' ? 'success' : 'warning'}>
-                  {selectedDevice.mode}
+                  {t(`schedule.mode.${selectedDevice.mode}`, {
+                    defaultValue: selectedDevice.mode,
+                  })}
                 </Badge>
               </HStack>
             </Box>
@@ -378,11 +403,10 @@ const ScheduleManagementScreenContent = () => {
               <Icon as={Ionicons} name="information-circle" size={5} color="blue.500" mt={0.5} />
               <VStack flex={1} space={1}>
                 <Text fontSize="xs" fontWeight="bold" color="blue.700">
-                  Informational Display
+                  {t('schedule.readOnlyTitle')}
                 </Text>
                 <Text fontSize="xs" color="blue.600">
-                  This screen displays the current heating schedule from your thermostat. Schedule
-                  editing is not yet available.
+                  {t('schedule.readOnlyBody')}
                 </Text>
               </VStack>
             </HStack>
@@ -392,7 +416,7 @@ const ScheduleManagementScreenContent = () => {
             <Center py={10}>
               <Icon as={Ionicons} name="calendar-outline" size={16} color="gray.400" mb={3} />
               <Text color={subtextColor} fontSize="sm">
-                No heating programs found
+                {t('schedule.noPrograms')}
               </Text>
             </Center>
           ) : (
@@ -404,13 +428,13 @@ const ScheduleManagementScreenContent = () => {
                     <Icon as={Ionicons} name="checkmark-circle" size={6} color="green.500" />
                     <VStack flex={1} space={1}>
                       <Text fontSize="xs" fontWeight="bold" color={greenText}>
-                        Currently Active
+                        {t('schedule.currentlyActive')}
                       </Text>
                       <Text fontSize="sm" color={textColor} fontWeight="bold">
                         {minutesToTime(currentActive.startMinute)} • {currentActive.targetTemp}°C
                       </Text>
                       <Text fontSize="xs" color={subtextColor}>
-                        Active interval for today
+                        {t('schedule.activeIntervalToday')}
                       </Text>
                     </VStack>
                   </HStack>
@@ -431,13 +455,16 @@ const ScheduleManagementScreenContent = () => {
                     <Icon as={Ionicons} name="arrow-forward-circle" size={6} color="orange.500" />
                     <VStack flex={1} space={1}>
                       <Text fontSize="xs" fontWeight="bold" color={subtextColor}>
-                        Next Scheduled Change
+                        {t('schedule.nextChange')}
                       </Text>
                       <Text fontSize="sm" color={textColor} fontWeight="bold">
-                        {nextChange.dayLabel} at {nextChange.time}
+                        {t('schedule.nextChangeAt', {
+                          day: t(dayLabelKey(nextChange.dayLabel)),
+                          time: nextChange.time,
+                        })}
                       </Text>
                       <Text fontSize="xs" color={subtextColor}>
-                        Target: {nextChange.program.targetTemp}°C
+                        {t('schedule.targetTemp', { value: nextChange.program.targetTemp })}
                       </Text>
                     </VStack>
                   </HStack>
@@ -448,15 +475,15 @@ const ScheduleManagementScreenContent = () => {
               <VStack space={6}>
                 <DayGroupSection
                   programs={groupedPrograms.workday}
-                  dayLabel="Weekdays (Mon-Fri)"
+                  dayLabel={t('schedule.dayWorkdays')}
                 />
                 <DayGroupSection
                   programs={groupedPrograms.saturday}
-                  dayLabel="Saturday"
+                  dayLabel={t('schedule.daySaturday')}
                 />
                 <DayGroupSection
                   programs={groupedPrograms.sunday}
-                  dayLabel="Sunday"
+                  dayLabel={t('schedule.daySunday')}
                 />
               </VStack>
 
@@ -464,15 +491,13 @@ const ScheduleManagementScreenContent = () => {
               <Box bg={cardBg} rounded="lg" p={4} shadow={1} mt={2}>
                 <VStack space={2}>
                   <Text fontSize="xs" fontWeight="bold" color={textColor}>
-                    How This Works
+                    {t('schedule.howItWorks')}
                   </Text>
                   <Text fontSize="xs" color={subtextColor} lineHeight="sm">
-                    Your thermostat automatically switches between these temperature targets at the
-                    scheduled times. The display updates in real-time from your device.
+                    {t('schedule.howItWorksBody')}
                   </Text>
                   <Text fontSize="xs" color={subtextColor} lineHeight="sm" mt={2}>
-                    To modify schedules, use your thermostat's built-in controls or mobile app
-                    directly.
+                    {t('schedule.howToEditBody')}
                   </Text>
                 </VStack>
               </Box>
@@ -480,7 +505,7 @@ const ScheduleManagementScreenContent = () => {
           )}
         </VStack>
       </ScrollView>
-    </Box>
+    </Screen>
   );
 };
 

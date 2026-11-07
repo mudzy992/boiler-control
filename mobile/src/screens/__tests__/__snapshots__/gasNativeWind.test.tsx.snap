@@ -5,19 +5,101 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#0b0f1a",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#05070b",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="gas-analysis-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            gas.analyticsTitle
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#6b7788",
+                  "fontFamily": "monospace",
+                  "fontSize": 9.5,
+                  "letterSpacing": 0.8,
+                  "marginTop": 2,
+                  "textTransform": "uppercase",
+                },
+              ]
+            }
+          >
+            gas.analyticsSubtitle
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       style={{}}
     >
@@ -34,37 +116,6 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
             }
           }
         >
-          <View
-            className="flex flex-col"
-            style={
-              {
-                "gap": 4,
-              }
-            }
-          >
-            <Text
-              accessibilityRole="header"
-              style={
-                {
-                  "color": "#f3f4f6",
-                  "fontSize": 36,
-                  "fontWeight": "700",
-                }
-              }
-            >
-              gas.analyticsTitle
-            </Text>
-            <Text
-              style={
-                {
-                  "color": "#9ca3af",
-                  "fontSize": 14,
-                }
-              }
-            >
-              gas.analyticsSubtitle
-            </Text>
-          </View>
           <View
             style={
               {
@@ -657,19 +708,101 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#f9fafb",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#f6f7fb",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="gas-analysis-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            gas.analyticsTitle
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "monospace",
+                  "fontSize": 9.5,
+                  "letterSpacing": 0.8,
+                  "marginTop": 2,
+                  "textTransform": "uppercase",
+                },
+              ]
+            }
+          >
+            gas.analyticsSubtitle
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       style={{}}
     >
@@ -686,37 +819,6 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
             }
           }
         >
-          <View
-            className="flex flex-col"
-            style={
-              {
-                "gap": 4,
-              }
-            }
-          >
-            <Text
-              accessibilityRole="header"
-              style={
-                {
-                  "color": "#1f2937",
-                  "fontSize": 36,
-                  "fontWeight": "700",
-                }
-              }
-            >
-              gas.analyticsTitle
-            </Text>
-            <Text
-              style={
-                {
-                  "color": "#4b5563",
-                  "fontSize": 14,
-                }
-              }
-            >
-              gas.analyticsSubtitle
-            </Text>
-          </View>
           <View
             style={
               {
@@ -1309,19 +1411,101 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#0b0f1a",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#05070b",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="gas-readings-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            gas.title
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#6b7788",
+                  "fontFamily": "monospace",
+                  "fontSize": 9.5,
+                  "letterSpacing": 0.8,
+                  "marginTop": 2,
+                  "textTransform": "uppercase",
+                },
+              ]
+            }
+          >
+            gas.subtitle
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       ListEmptyComponent={
         <Box
@@ -1362,23 +1546,6 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
           mb={4}
           space={4}
         >
-          <VStack
-            space={1}
-          >
-            <Heading
-              color="gray.100"
-              fontWeight="700"
-              size="2xl"
-            >
-              gas.title
-            </Heading>
-            <Text
-              color="gray.400"
-              fontSize="sm"
-            >
-              gas.subtitle
-            </Text>
-          </VStack>
           <VStack
             space={2}
           >
@@ -1685,37 +1852,6 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               }
             }
           >
-            <View
-              className="flex flex-col"
-              style={
-                {
-                  "gap": 4,
-                }
-              }
-            >
-              <Text
-                accessibilityRole="header"
-                style={
-                  {
-                    "color": "#f3f4f6",
-                    "fontSize": 36,
-                    "fontWeight": "700",
-                  }
-                }
-              >
-                gas.title
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#9ca3af",
-                    "fontSize": 14,
-                  }
-                }
-              >
-                gas.subtitle
-              </Text>
-            </View>
             <View
               className="flex flex-col"
               style={
@@ -2586,19 +2722,101 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#f9fafb",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#f6f7fb",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="gas-readings-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            gas.title
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "monospace",
+                  "fontSize": 9.5,
+                  "letterSpacing": 0.8,
+                  "marginTop": 2,
+                  "textTransform": "uppercase",
+                },
+              ]
+            }
+          >
+            gas.subtitle
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       ListEmptyComponent={
         <Box
@@ -2639,23 +2857,6 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
           mb={4}
           space={4}
         >
-          <VStack
-            space={1}
-          >
-            <Heading
-              color="gray.800"
-              fontWeight="700"
-              size="2xl"
-            >
-              gas.title
-            </Heading>
-            <Text
-              color="gray.600"
-              fontSize="sm"
-            >
-              gas.subtitle
-            </Text>
-          </VStack>
           <VStack
             space={2}
           >
@@ -2962,37 +3163,6 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               }
             }
           >
-            <View
-              className="flex flex-col"
-              style={
-                {
-                  "gap": 4,
-                }
-              }
-            >
-              <Text
-                accessibilityRole="header"
-                style={
-                  {
-                    "color": "#1f2937",
-                    "fontSize": 36,
-                    "fontWeight": "700",
-                  }
-                }
-              >
-                gas.title
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#4b5563",
-                    "fontSize": 14,
-                  }
-                }
-              >
-                gas.subtitle
-              </Text>
-            </View>
             <View
               className="flex flex-col"
               style={

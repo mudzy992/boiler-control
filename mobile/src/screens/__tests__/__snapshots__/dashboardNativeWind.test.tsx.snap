@@ -94,44 +94,19 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
               }
             >
               <View
+                accessibilityLabel="boiler.idle"
+                accessibilityRole="image"
                 accessibilityState={
                   {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
+                    "selected": null,
                   }
                 }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
                 style={
-                  [
-                    {
-                      "backgroundColor": "#374151",
-                      "borderRadius": 9999,
-                      "padding": 8,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "backgroundColor": "#374151",
+                    "borderRadius": 9999,
+                    "padding": 8,
+                  }
                 }
               >
                 <Text
@@ -141,6 +116,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="analytics.title"
+                accessibilityRole="button"
                 accessibilityState={
                   {
                     "busy": undefined,
@@ -188,9 +165,11 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="common.retry"
+                accessibilityRole="button"
                 accessibilityState={
                   {
-                    "busy": undefined,
+                    "busy": false,
                     "checked": undefined,
                     "disabled": undefined,
                     "expanded": undefined,
@@ -2099,44 +2078,19 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
               }
             >
               <View
+                accessibilityLabel="boiler.idle"
+                accessibilityRole="image"
                 accessibilityState={
                   {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
+                    "selected": null,
                   }
                 }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
                 style={
-                  [
-                    {
-                      "backgroundColor": "#f3f4f6",
-                      "borderRadius": 9999,
-                      "padding": 8,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "backgroundColor": "#f3f4f6",
+                    "borderRadius": 9999,
+                    "padding": 8,
+                  }
                 }
               >
                 <Text
@@ -2146,6 +2100,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="analytics.title"
+                accessibilityRole="button"
                 accessibilityState={
                   {
                     "busy": undefined,
@@ -2193,9 +2149,11 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 </Text>
               </View>
               <View
+                accessibilityLabel="common.retry"
+                accessibilityRole="button"
                 accessibilityState={
                   {
-                    "busy": undefined,
+                    "busy": false,
                     "checked": undefined,
                     "disabled": undefined,
                     "expanded": undefined,

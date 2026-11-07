@@ -13,6 +13,8 @@ import {
   Divider,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { Screen, ScreenHeader } from '../../ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { apiClient } from '../../services/api/client';
@@ -60,11 +62,11 @@ const getTypeIcon = (type: string) => {
 };
 
 const NotificationsScreenContent: React.FC = () => {
+  const navigation = useNavigation();
   const queryClient = useQueryClient();
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -132,20 +134,33 @@ const NotificationsScreenContent: React.FC = () => {
     [markAsReadMutation]
   );
 
+  const header = (
+    <ScreenHeader
+      title={t('notifications.title')}
+      onBack={() => (navigation as any).goBack()}
+      backLabel={t('common.back')}
+      testID="notifications-header"
+    />
+  );
+
   if (isLoading) {
     return (
-      <Box flex={1} bg={bgColor} safeArea alignItems="center" justifyContent="center">
-        <Spinner size="lg" color={brandColor} />
-        <Text mt={3} color={subtextColor}>
-          {t('notifications.loading')}
-        </Text>
-      </Box>
+      <Screen edges={['top']}>
+        {header}
+        <Box flex={1} alignItems="center" justifyContent="center">
+          <Spinner size="lg" color={brandColor} />
+          <Text mt={3} color={subtextColor}>
+            {t('notifications.loading')}
+          </Text>
+        </Box>
+      </Screen>
     );
   }
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
-      <HStack space={3} px={4} pt={4} pb={2} alignItems="center" justifyContent="space-between">
+    <Screen edges={['top']}>
+      {header}
+      <HStack space={3} px={4} pt={2} pb={2} alignItems="center" justifyContent="space-between">
         <HStack space={2} alignItems="center">
           <Pressable onPress={() => setShowAll(false)}>
             <Box
@@ -255,7 +270,7 @@ const NotificationsScreenContent: React.FC = () => {
           </Box>
         )}
       />
-    </Box>
+    </Screen>
   );
 };
 

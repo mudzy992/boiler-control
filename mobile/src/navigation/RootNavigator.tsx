@@ -14,7 +14,6 @@ import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import {
   DEEP_LINK_PREFIXES,
-  GAS_TAB_SCREENS,
   MAIN_TAB_SCREENS,
   ROOT_SCREENS,
 } from '../constants/routes';
@@ -44,12 +43,10 @@ const linking: LinkingOptions<any> = {
     screens: {
       [ROOT_SCREENS.Main]: {
         screens: {
-          [MAIN_TAB_SCREENS.Gas]: {
-            screens: {
-              [GAS_TAB_SCREENS.Readings]: 'readings',
-              [GAS_TAB_SCREENS.Analysis]: 'analysis',
-            },
-          },
+          // F1: `Gas` je običan ekran sa `Segmented` kontrolom, ne ugniježđeni
+          // navigator, pa nema `screens` pod-stabla. Stare putanje ostaju
+          // mapirane na sam ekran da instalirane verzije i stari linkovi ne puknu.
+          [MAIN_TAB_SCREENS.Gas]: 'gas',
           [MAIN_TAB_SCREENS.Dashboard]: 'dashboard',
           [MAIN_TAB_SCREENS.Heating]: 'heating',
           [MAIN_TAB_SCREENS.Settings]: 'settings',

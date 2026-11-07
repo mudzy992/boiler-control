@@ -3,7 +3,6 @@ import {
   Box,
   VStack,
   HStack,
-  Heading,
   Text,
   useColorModeValue,
   Switch,
@@ -16,6 +15,7 @@ import {
   useToast,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
+import { Screen, ScreenHeader } from '../../ui';
 import { getAppVersion } from '../../config/version.config';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -311,7 +311,6 @@ const SettingsScreenContent = () => {
     }
   };
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -375,12 +374,10 @@ const SettingsScreenContent = () => {
   );
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader title={t('settings.title')} testID="settings-header" />
       <ScrollView>
-        <VStack px={4} py={6} space={4} pb={8}>
-          <Heading size="xl" color={textColor}>
-            {t('settings.title')}
-          </Heading>
+        <VStack px={4} py={4} space={4} pb={8}>
 
           {/* Account Section */}
           <Box bg={cardBg} rounded="xl" shadow={2} overflow="hidden">
@@ -695,7 +692,7 @@ const SettingsScreenContent = () => {
           </HStack>
         </VStack>
       </BottomSheetModal>
-    </Box>
+    </Screen>
   );
 };
 

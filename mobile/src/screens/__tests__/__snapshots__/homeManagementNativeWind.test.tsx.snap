@@ -5,19 +5,168 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#111827",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#05070b",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="home-management-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="Back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "minWidth": 44,
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+              ],
+              null,
+            ]
+          }
+          testID="home-management-header-back"
+        >
+          <Text
+            accessibilityLabel="chevron-back"
+          >
+            chevron-back
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            My Homes
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#e8edf4",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#6b7788",
+                  "fontFamily": "monospace",
+                  "fontSize": 9.5,
+                  "letterSpacing": 0.8,
+                  "marginTop": 2,
+                  "textTransform": "uppercase",
+                },
+              ]
+            }
+          >
+            Manage your home profiles. Tap a home to make it active.
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       refreshControl={
         <RefreshControlMock
@@ -34,10 +183,10 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
           style={
             {
               "gap": 16,
-              "paddingBottom": 24,
+              "paddingBottom": 16,
               "paddingLeft": 16,
               "paddingRight": 16,
-              "paddingTop": 24,
+              "paddingTop": 16,
             }
           }
         >
@@ -46,22 +195,10 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
             style={
               {
                 "alignItems": "center",
-                "justifyContent": "space-between",
+                "justifyContent": "flex-end",
               }
             }
           >
-            <Text
-              accessibilityRole="header"
-              style={
-                {
-                  "color": "#f3f4f6",
-                  "fontSize": 32,
-                  "fontWeight": "700",
-                }
-              }
-            >
-              My Homes
-            </Text>
             <View
               accessibilityRole="button"
               accessibilityState={
@@ -136,21 +273,11 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                     }
                   }
                 >
-                  Add Home
+                  Add home
                 </Text>
               </View>
             </View>
           </View>
-          <Text
-            style={
-              {
-                "color": "#9ca3af",
-                "fontSize": 14,
-              }
-            }
-          >
-            Manage your home profiles. Tap a home to make it active.
-          </Text>
           <View
             className="flex flex-col"
             style={
@@ -331,9 +458,7 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                           }
                         }
                       >
-                        2
-                         thermostat
-                        s
+                        2 thermostats
                       </Text>
                     </View>
                   </View>
@@ -346,6 +471,8 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                     }
                   >
                     <View
+                      accessibilityLabel="Edit home: Main House"
+                      accessibilityRole="button"
                       accessibilityState={
                         {
                           "busy": undefined,
@@ -366,6 +493,14 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       accessible={true}
                       collapsable={false}
                       focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 10,
+                          "left": 10,
+                          "right": 10,
+                          "top": 10,
+                        }
+                      }
                       onBlur={[Function]}
                       onClick={[Function]}
                       onFocus={[Function]}
@@ -536,8 +671,7 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                           }
                         }
                       >
-                        1
-                         thermostat
+                        1 thermostat
                       </Text>
                     </View>
                   </View>
@@ -550,6 +684,8 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                     }
                   >
                     <View
+                      accessibilityLabel="Edit home: Weekend House"
+                      accessibilityRole="button"
                       accessibilityState={
                         {
                           "busy": undefined,
@@ -570,6 +706,14 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       accessible={true}
                       collapsable={false}
                       focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 10,
+                          "left": 10,
+                          "right": 10,
+                          "top": 10,
+                        }
+                      }
                       onBlur={[Function]}
                       onClick={[Function]}
                       onFocus={[Function]}
@@ -593,6 +737,8 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       </Text>
                     </View>
                     <View
+                      accessibilityLabel="Delete home: Weekend House"
+                      accessibilityRole="button"
                       accessibilityState={
                         {
                           "busy": undefined,
@@ -613,6 +759,14 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       accessible={true}
                       collapsable={false}
                       focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 10,
+                          "left": 10,
+                          "right": 10,
+                          "top": 10,
+                        }
+                      }
                       onBlur={[Function]}
                       onClick={[Function]}
                       onFocus={[Function]}
@@ -676,19 +830,168 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
   <RNCSafeAreaView
     edges={
       {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
+        "bottom": "off",
+        "left": "off",
+        "right": "off",
         "top": "additive",
       }
     }
     style={
-      {
-        "backgroundColor": "#f9fafb",
-        "flex": 1,
-      }
+      [
+        {
+          "backgroundColor": "#f6f7fb",
+          "flex": 1,
+        },
+        undefined,
+      ]
     }
   >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+          "justifyContent": "space-between",
+          "paddingBottom": 12,
+          "paddingHorizontal": 16,
+          "paddingTop": 8,
+        }
+      }
+      testID="home-management-header"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="Back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 8,
+              "left": 8,
+              "right": 8,
+              "top": 8,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "minWidth": 44,
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+              ],
+              null,
+            ]
+          }
+          testID="home-management-header-back"
+        >
+          <Text
+            accessibilityLabel="chevron-back"
+          >
+            chevron-back
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flexShrink": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 18,
+                  "letterSpacing": -0.2,
+                },
+              ]
+            }
+          >
+            My Homes
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={
+              [
+                {
+                  "color": "#111827",
+                  "fontFamily": undefined,
+                  "fontSize": 13,
+                },
+                null,
+                {
+                  "color": "#6b7280",
+                  "fontFamily": "monospace",
+                  "fontSize": 9.5,
+                  "letterSpacing": 0.8,
+                  "marginTop": 2,
+                  "textTransform": "uppercase",
+                },
+              ]
+            }
+          >
+            Manage your home profiles. Tap a home to make it active.
+          </Text>
+        </View>
+      </View>
+    </View>
     <RCTScrollView
       refreshControl={
         <RefreshControlMock
@@ -705,10 +1008,10 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
           style={
             {
               "gap": 16,
-              "paddingBottom": 24,
+              "paddingBottom": 16,
               "paddingLeft": 16,
               "paddingRight": 16,
-              "paddingTop": 24,
+              "paddingTop": 16,
             }
           }
         >
@@ -717,22 +1020,10 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
             style={
               {
                 "alignItems": "center",
-                "justifyContent": "space-between",
+                "justifyContent": "flex-end",
               }
             }
           >
-            <Text
-              accessibilityRole="header"
-              style={
-                {
-                  "color": "#1f2937",
-                  "fontSize": 32,
-                  "fontWeight": "700",
-                }
-              }
-            >
-              My Homes
-            </Text>
             <View
               accessibilityRole="button"
               accessibilityState={
@@ -807,21 +1098,11 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                     }
                   }
                 >
-                  Add Home
+                  Add home
                 </Text>
               </View>
             </View>
           </View>
-          <Text
-            style={
-              {
-                "color": "#4b5563",
-                "fontSize": 14,
-              }
-            }
-          >
-            Manage your home profiles. Tap a home to make it active.
-          </Text>
           <View
             className="flex flex-col"
             style={
@@ -1002,9 +1283,7 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                           }
                         }
                       >
-                        2
-                         thermostat
-                        s
+                        2 thermostats
                       </Text>
                     </View>
                   </View>
@@ -1017,6 +1296,8 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                     }
                   >
                     <View
+                      accessibilityLabel="Edit home: Main House"
+                      accessibilityRole="button"
                       accessibilityState={
                         {
                           "busy": undefined,
@@ -1037,6 +1318,14 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       accessible={true}
                       collapsable={false}
                       focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 10,
+                          "left": 10,
+                          "right": 10,
+                          "top": 10,
+                        }
+                      }
                       onBlur={[Function]}
                       onClick={[Function]}
                       onFocus={[Function]}
@@ -1207,8 +1496,7 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                           }
                         }
                       >
-                        1
-                         thermostat
+                        1 thermostat
                       </Text>
                     </View>
                   </View>
@@ -1221,6 +1509,8 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                     }
                   >
                     <View
+                      accessibilityLabel="Edit home: Weekend House"
+                      accessibilityRole="button"
                       accessibilityState={
                         {
                           "busy": undefined,
@@ -1241,6 +1531,14 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       accessible={true}
                       collapsable={false}
                       focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 10,
+                          "left": 10,
+                          "right": 10,
+                          "top": 10,
+                        }
+                      }
                       onBlur={[Function]}
                       onClick={[Function]}
                       onFocus={[Function]}
@@ -1264,6 +1562,8 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       </Text>
                     </View>
                     <View
+                      accessibilityLabel="Delete home: Weekend House"
+                      accessibilityRole="button"
                       accessibilityState={
                         {
                           "busy": undefined,
@@ -1284,6 +1584,14 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       accessible={true}
                       collapsable={false}
                       focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 10,
+                          "left": 10,
+                          "right": 10,
+                          "top": 10,
+                        }
+                      }
                       onBlur={[Function]}
                       onClick={[Function]}
                       onFocus={[Function]}

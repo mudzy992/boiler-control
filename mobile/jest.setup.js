@@ -23,3 +23,10 @@ jest.mock(
   '@react-native-async-storage/async-storage',
   () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+
+// F1: `src/ui/index.ts` (barrel) uvozi `Sheet`, koji uvozi `@gorhom/bottom-sheet`.
+// Taj paket pri importu dodiruje react-native-worklets i pada u Jest-u
+// (`loadUnpackersWithCode`). Mock dolazi iz samog paketa, dakle ponašanje je
+// autorovo, a ne naše nagađanje — i sprječava da svaki test koji dotakne
+// `src/ui` mora ponavljati isti `jest.mock`.
+jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));

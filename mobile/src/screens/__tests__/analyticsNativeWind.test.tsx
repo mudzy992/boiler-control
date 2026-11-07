@@ -23,6 +23,11 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
+jest.mock('@react-navigation/native', () => ({
+  useRoute: () => ({ params: {} }),
+  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn(), setParams: jest.fn() }),
+}));
+
 jest.mock('react-native/Libraries/Modal/Modal', () => ({
   __esModule: true,
   default: ({ visible, children }: { visible: boolean; children: mockReact.ReactNode }) =>

@@ -51,6 +51,48 @@ Jedan tab bar (Plin bez ugniježđenog navigatora; `Segmented` u zaglavlju), `Sc
 push ekranima, naslovi iz `t()`, prijevod `HomeManagement` / `ScheduleManagement` / `Profile`,
 `userInterfaceStyle: "automatic"` u `app.json`.
 
+### Šta je F1 stvarno isporučio
+
+| Nalaz iz audita | Šta je urađeno | Dokaz |
+|---|---|---|
+| UX-03 dva tab bara | `GasScreen` više nije `createBottomTabNavigator`; sekcije mijenja `Segmented` u zaglavlju (`gas-segmented-readings` / `-analysis`), prisutan u OBJE sekcije | `f1Navigation.test.tsx` |
+| Deep link plina | `notificationService` šalje `params.screen` + `openAddModal` direktno na `Gas`; `linking.config` više nema pod-stablo za Gas | isti test + `routes.ts` napomena |
+| UX-02 slijepa ulica | `AnalyticsScreen`, `NotificationsScreen`, `NotificationPreferencesScreen`, `Profile`, `HomeManagement`, `ScheduleManagement`, `GasAnalysis` dobili `ScreenHeader` sa nazad strelicom | `analyticsNativeWind` snimci |
+| UX-05 neprevedeni naslovi | naslovi push ekrana dolaze iz `t()`, ne iz navigatora; `headerShown: false` tamo gdje ekran nosi svoj header (inače dva headera) | `SettingsStackNavigator.tsx` |
+| Odluka 5 prevodi | `Profile`, `HomeManagement`, `ScheduleManagement` u potpunosti na `t()` — uključujući validaciju, toastove, placeholder-e, `Select` opcije i helper `getNextScheduledChange` (vraća ključ, ne tekst) | `profile.*`, `schedule.*`, `homeManagement.*` u oba jezika |
+| UX-12 lažna dugmad | plamen na Početnoj je statusna ikona (`role="image"`), ne `Pressable` bez `onPress`; analytics/refresh dugmad imaju labelu | `dashboardNativeWind` snimci |
+| iOS tema | `app.json` → `userInterfaceStyle: "automatic"` — bez toga iOS ignoriše našu tamnu temu | `f1Navigation.test.tsx` |
+| 32 hardkodovane boje (dio) | `MainTabNavigator` više nema nijedan hex — boje, visina i font iz `useTokens()`, visina poštuje safe-area inset | isti test (regex na hex) |
+
+Dva popravka koja F1 nije tražio, ali su blokirala verifikaciju:
+
+1. **`jest.setup.js`** mockuje `@gorhom/bottom-sheet` mockom iz samog paketa. Barrel
+   `src/ui/index.ts` uvozi `Sheet`, a taj paket pri importu dodiruje
+   `react-native-worklets` i pada u Jest-u. Bez ovoga svaki test koji dotakne
+   `src/ui` mora ponavljati isti mock.
+2. **`compatibilityJSON: 'v3'` uklonjen** iz `src/locales/config.ts`. Uz i18next 23
+   v3 mapira bosanski ({1}, {2-4}, {5+}) na sufiks `_plural`, koji postoji samo za
+   dvojezične oblike — pa je `homeManagement.thermostatCount` vraćao goli ključ.
+   V4 oblici (`_one` / `_few` / `_other`) rade na Hermesu u RN 0.88.
+
+Provjera poslije F1 (2026-11-07):
+
+```
+npm run type-check   → 0 grešaka
+npm test             → 28 suite-ova, 184 testa, 32 snapshot-a — sve zeleno
+                       (26 postojećih + 2 nova: f1Navigation.test.tsx, locales/parity.test.ts)
+npm run lint         → 0 grešaka
+```
+
+Snimci su ažurirani za 9 ekrana. Razlog je legitiman, ne „da test prođe":
+svaki ekran sada ima `ScreenHeader` (drugi naslov, nazad strelica), Plin nema
+drugi tab bar, a Početna ima statusnu ikonu umjesto lažnog dugmeta. Asertacije
+na tekst su dirane samo tamo gdje se promijenio tekst: `Add Home` → `Add home`
+(ključ `homeManagement.addHome`), `Home added successfully` → `Home added`, i
+placeholder `e.g., Main House` → `Home Name`. Testovi su dobili
+`useNavigation` mock i `SafeAreaProvider`, jer ekrani sada čitaju navigaciju
+(nazad) i safe-area insete (visina tab bara).
+
 ### F2 — Glavni ekrani
 
 Početna (hero + 3 KPI + liste), Grijanje (red-po-uređaju), Plin (red-po-očitanju), Postavke (jedna lista).
@@ -69,8 +111,8 @@ Skeleton na svim ekranima, a11y labele i role, `hitSlop`, ispravke toastova, bri
 | Faza | Status | Dokaz |
 |---|---|---|
 | F0 Temelj | **završeno 2026-11-07** | `src/theme/tokens.ts`, `src/theme/fonts.ts`, `src/ui/*` (11 primitiva), 34 nova testa |
-| F1 Navigacija i jezik | sljedeće | — |
-| F2 Glavni ekrani | — | — |
+| F1 Navigacija i jezik | **završeno 2026-11-07** | jedan tab bar, `Segmented` u Plinu, `ScreenHeader` na svim push ekranima, tri ekrana prevedena, 14 novih testova |
+| F2 Glavni ekrani | sljedeće | — |
 | F3 Analitika i grafovi | — | — |
 | F4 Završnica | — | — |
 

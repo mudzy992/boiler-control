@@ -127,13 +127,14 @@ const handleDeepLink = (deepLink: string) => {
   // Parse deep link
   if (deepLink.includes('gas/add-reading')) {
     // Navigate to Gas tab, then to the Readings screen with the modal flag
+    // F1: `Gas` tab više nije ugniježđeni navigator (nalaz UX-03), pa nema
+    // `params.screen` nivoa — parametri idu direktno na `Gas` ekran, koji ih
+    // čita u `GasScreen` i prevodi u `view` / `openAddModal`.
     navigationRef.navigate(ROOT_SCREENS.Main, {
       screen: MAIN_TAB_SCREENS.Gas,
       params: {
         screen: GAS_TAB_SCREENS.Readings,
-        params: {
-          openAddModal: true, // Custom param to trigger modal opening
-        },
+        openAddModal: true,
       },
     });
   } else if (deepLink.includes('gas')) {

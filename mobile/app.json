@@ -4,7 +4,7 @@
     "slug": "boiler-control",
     "orientation": "portrait",
     "icon": "./assets/new/boiler-control-icon-master.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
     ],

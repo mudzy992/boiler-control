@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { Platform, Share } from 'react-native';
 // MO2-22: top-level `expo-file-system` (19.x) NE izvozi documentDirectory /
 // cacheDirectory niti legacy metode — tamo su samo `Paths`, `File`, `Directory`
@@ -28,6 +29,7 @@ import { analyticsApi } from '../../services/api/analytics.api';
 import { homeProfileApi } from '../../services/api/homeProfile.api';
 import { apiClient } from '../../services/api/client';
 import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
+import { Screen, ScreenHeader } from '../../ui';
 
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
@@ -59,6 +61,12 @@ const getDateRange = (
 
 const AnalyticsScreenContent = () => {
   const { t } = useTranslation();
+  /**
+   * F1 (nalaz UX-02): ekran se otvara iz zaglavlja Početne sa
+   * `headerShown: false`, a prije nije imao NIJEDAN način da se vrati — na iOS-u
+   * je bio slijepa ulica. Sada ima `ScreenHeader` sa nazad strelicom.
+   */
+  const navigation = useNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const [exporting, setExporting] = useState(false);
   const toast = useToast();
@@ -238,7 +246,6 @@ const AnalyticsScreenContent = () => {
     }
   };
 
-  const bgColor = useColorModeValue('gray.50', 'dark.900');
   const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -348,7 +355,14 @@ const AnalyticsScreenContent = () => {
   };
 
   return (
-    <Box flex={1} bg={bgColor} safeArea>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={t('analytics.title')}
+        subtitle={t('analytics.subtitle')}
+        onBack={() => (navigation as any).goBack()}
+        backLabel={t('common.back')}
+        testID="analytics-header"
+      />
       <ScrollView>
         <VStack px={4} py={6} space={4} pb={8}>
           {!activeHome && (
@@ -359,11 +373,8 @@ const AnalyticsScreenContent = () => {
 
           <HStack justifyContent="space-between" alignItems="center">
             <VStack space={1}>
-              <Heading size="2xl" color={textColor} fontWeight="700">
-                {t('analytics.title')}
-              </Heading>
               <Text fontSize="sm" color={subtextColor}>
-                {t('analytics.subtitle')}
+                {t('analytics.periodLabel')}
               </Text>
             </VStack>
             <Select
@@ -742,7 +753,7 @@ const AnalyticsScreenContent = () => {
           </Button>
         </VStack>
       </ScrollView>
-    </Box>
+    </Screen>
   );
 };
 

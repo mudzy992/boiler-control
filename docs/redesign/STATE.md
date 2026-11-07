@@ -4,7 +4,7 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I2 zatvoren (lokalno).** Shell rewrite. Push + CI u toku / čeka potvrdu za I3.
+**Faza 5 — I2 zatvoren.** Commit `26805b2`, CI zelen (`42372695265`). Sljedeće I3 čeka potvrdu.
 
 ## Završeno
 

@@ -44,9 +44,9 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 353 = prior I6 (297) + dashboard.* page keys.
+    // Čuva i broj: 358 = prior 353 + hero progress keys.
     // Pad znači da je neko obrisao ključ ili dodao novi bez prijevoda.
-    expect(en.length).toBe(353);
+    expect(en.length).toBe(358);
   });
 });
 

@@ -21,6 +21,7 @@ CI: Frontend on `main`. Zadnji run zelen: `42393185224` (`eebbf4e`).
 - Dark contrast max; sidebar `w-60` + `lg:ml-60` (bez max-w guttera).
 - Brand samo u headeru (ne duplo u sidebaru).
 - Buttons flat: `brand-700`, no shadow/ring-offset; Set temp = outline.
+- Hero: current/target + heating duration progress (overtime state).
 
 ## Next (opcionalno)
 

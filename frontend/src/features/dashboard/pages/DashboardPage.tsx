@@ -66,14 +66,15 @@ export const DashboardPage = (): JSX.Element => {
           <>
             <DashboardStatusBand
               isHeatingActive={d.isHeatingActive}
-              boiler={d.data.boiler}
+              currentTemp={d.data.currentTemp}
+              targetTemp={d.data.targetTemp}
+              expectedHeatTimeMin={d.expectedHeatTimeMin}
+              heatingStartedAt={d.heatingStartedAt}
               onSetTemp={d.openSetTemp}
             />
             <DashboardKpiRow
               healthScore={d.healthScore}
               anomalyRate={d.data.anomalyRate}
-              currentTemp={d.data.currentTemp}
-              targetTemp={d.data.targetTemp}
             />
             <DashboardSystemCards
               weather={d.weatherDisplay}

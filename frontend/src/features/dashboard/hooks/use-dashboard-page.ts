@@ -9,6 +9,10 @@ import {
   useNotificationsQuery,
 } from '../../notifications/hooks/useNotifications';
 import {
+  resolveExpectedHeatTimeMin,
+  resolveOpenHeatingStartedAt,
+} from '../lib/compute-heating-progress';
+import {
   buildWeatherDisplay,
   findActiveProgram,
   groupProgramsByDay,
@@ -106,6 +110,19 @@ export const useDashboardPage = () => {
     return ev.map((e) => ({ ...e, bucketLabel: getBucketLabel(e.startedAt) }));
   }, [heatingRangeQuery.data, getBucketLabel]);
 
+  const heatingStartedAt = useMemo(() => {
+    const fromRange = resolveOpenHeatingStartedAt(eventsWithBucket);
+    if (fromRange) {
+      return fromRange;
+    }
+    return resolveOpenHeatingStartedAt(data?.recentEvents ?? []);
+  }, [eventsWithBucket, data?.recentEvents]);
+
+  const expectedHeatTimeMin = useMemo(
+    () => resolveExpectedHeatTimeMin(data?.recommendation),
+    [data?.recommendation],
+  );
+
   const scheduleByDay = useMemo(
     () => groupProgramsByDay(data?.thermostatPrograms ?? []),
     [data?.thermostatPrograms],
@@ -153,6 +170,8 @@ export const useDashboardPage = () => {
     healthScore: healthQuery.data?.score ?? 0,
     warnings: healthQuery.data?.warnings ?? [],
     isHeatingActive: heatingRangeQuery.data?.isHeatingNow ?? false,
+    heatingStartedAt,
+    expectedHeatTimeMin,
     unread,
     notificationsLoading: notificationsQuery.isLoading,
     notificationsError: notificationsQuery.isError,

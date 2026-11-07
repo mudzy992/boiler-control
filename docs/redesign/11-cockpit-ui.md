@@ -31,3 +31,9 @@ Datum: 2026-11-07. Nadograđuje `06-design-direction.md`.
 - Page root: `space-y-6`.
 - Card Header/Content/Footer: `p-4` / `sm:p-5`; CardTitle `text-base`.
 - Action rows: `flex flex-wrap items-center gap-2`.
+
+## Dashboard hero
+
+- KPI: room **current temp** (large) + subtitle **target**.
+- Progress bar while heating: elapsed / `expectedHeatTimeMin`; overtime = full bar + destructive label.
+- Flow temps ostaju u Boiler Status kartici, ne u hero.

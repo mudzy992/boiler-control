@@ -7,7 +7,19 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { Appearance } from 'react-native';
 import type { ColorMode } from './palette';
+
+/** Sistemska tema; `null` (nepoznato) pada na dark, ne na light. */
+function systemColorMode(): ColorMode {
+  try {
+    return Appearance.getColorScheme() === 'light' ? 'light' : 'dark';
+  } catch {
+    return DEFAULT_COLOR_MODE;
+  }
+}
+
+export { DEFAULT_COLOR_MODE, systemColorMode };
 
 const STORAGE_KEY = 'boiler.color-mode';
 
@@ -17,8 +29,19 @@ interface AppColorModeContextValue {
   toggleColorMode: () => void;
 }
 
+/**
+ * Odluka vlasnika 2026-11-07: default tema je DARK, kao na webu
+ * (`frontend/src/design/tokens.css` je dark-first). Svijetla tema ostaje
+ * ravnopravna — korisnik je bira u Postavkama, a izbor se perzistira pod
+ * `boiler.color-mode`.
+ *
+ * Namjerno se NE čita sistemska tema na prvom startu: aplikacija je operaterski
+ * instrument i njen identitet je tamna podloga. „Sistem" je opcija, ne default.
+ */
+const DEFAULT_COLOR_MODE: ColorMode = 'dark';
+
 const AppColorModeContext = createContext<AppColorModeContextValue>({
-  colorMode: 'light',
+  colorMode: DEFAULT_COLOR_MODE,
   setColorMode: () => undefined,
   toggleColorMode: () => undefined,
 });
@@ -35,7 +58,7 @@ export function AppThemeProvider({
   colorMode: controlledMode,
   toggleColorMode: controlledToggle,
 }: AppThemeProviderProps) {
-  const [localMode, setLocalMode] = useState<ColorMode>('light');
+  const [localMode, setLocalMode] = useState<ColorMode>(DEFAULT_COLOR_MODE);
   const controlled = controlledMode !== undefined;
   const colorMode = controlledMode ?? localMode;
 
@@ -44,7 +67,14 @@ export function AppThemeProvider({
     let mounted = true;
     AsyncStorage.getItem(STORAGE_KEY)
       .then((saved) => {
-        if (mounted && (saved === 'light' || saved === 'dark')) setLocalMode(saved);
+        // `system` se razrješava u stvarnu vrijednost; nepoznata vrijednost
+        // (stari ključ, corrupt) pada na default, ne na 'light'.
+        if (!mounted) return;
+        if (saved === 'light' || saved === 'dark') {
+          setLocalMode(saved);
+        } else if (saved === 'system') {
+          setLocalMode(systemColorMode());
+        }
       })
       .catch(() => undefined);
     return () => {

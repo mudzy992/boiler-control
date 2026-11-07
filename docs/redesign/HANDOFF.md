@@ -2,7 +2,7 @@
 
 Datum: 2026-11-07. Repo: `mudzy992/boiler-control`, grana `main`.
 
-Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi **I6 od Heating** (Auth/Boiler gotovi; Dashboard samo TempDialog). Ne ponavljaj I0–I5.
+Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`. Nastavi **I6 od Gas analytics** (Heating/Reports/Gas confirm gotovi). Ne ponavljaj I0–I5 ni Auth/Boiler/Heating/Reports.
 
 ---
 
@@ -95,11 +95,13 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 - Matrica: `.cursor/docs/matrices/temp-dialog/`.
 
 ### I6 — Pages (in progress)
-- **Auth** ✅ `LoginPage` → shadcn Card/Input/Label/Button + StatusBanner; brand `t('shell.brand')`.
-- **Boiler** ✅ PageHeader + QueryState + shadcn Table + TempDialog + invalidate helper; `boiler.*` i18n.
-- **Dashboard** 🟡 samo TempDialog + invalidate (antd plots/List/icons još; full pass kasnije u I6).
-- **Heating → Profile** ❌ još ne.
-- Gas: `ConfirmDialog` umjesto `window.confirm` još nije spojen.
+- **Auth** ✅ LoginPage → shadcn + StatusBanner.
+- **Boiler** ✅ PageHeader + QueryState + Table + TempDialog.
+- **Heating** ✅ PageHeader + QueryState + Table + `anomaly-badge`.
+- **Reports** ✅ PageHeader + QueryState + Table + breakdown expand (`confidenceScore * 100` zadržan).
+- **Gas readings** ✅ `ConfirmDialog` umjesto `window.confirm` (formula potrošnje netaknuta).
+- **Dashboard** 🟡 samo TempDialog + invalidate.
+- **Gas analytics / Notifications / Home profile / Profile** ❌ još ne.
 
 ### Još nije
 - Lokalni `frontend/src/components/{Button,Card,Input,StatCard}` i dalje na većini stranica (I7).
@@ -112,8 +114,8 @@ Izvor: `decisions.md`, `07-decision-record.md`, `09-implementation-rules.md`.
 
 Strogo po `08-implementation-plan.md` + `09-implementation-rules.md`.
 
-### I6 (nastavak) — Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile  
-Zatim dovrši Dashboard (PageHeader/QueryState/SVG bar umjesto plots).  
+### I6 (nastavak) — Gas analytics → Notifications → Home profile → Profile → Dashboard full  
+
 
 
 ### I7 — Ukloniti antd, obrisati mrtav lokalni set, Lighthouse (Q8)
@@ -169,8 +171,8 @@ frontend/tailwind.config.js
 ## 8. Prompt za novu sesiju (kopiraj)
 
 ```
-Nastavi boiler-control dashboard redesign I6 od Heating.
+Nastavi boiler-control dashboard redesign I6 od Gas analytics.
 Pročitaj docs/redesign/HANDOFF.md, STATE.md, 08-implementation-plan.md, 09-implementation-rules.md.
-Ne ponavljaj I0–I5 ni Auth/Boiler. Auth+Boiler gotovi; Dashboard ima samo TempDialog.
-Uradi Heating → … → Profile (+ Dashboard full), commit+push+gh run watch po grupi. Stani prije I7.
+Ne ponavljaj gotove I6 stranice (Auth/Boiler/Heating/Reports/Gas confirm).
+Uradi Gas analytics → Notifications → Home profile → Profile → Dashboard full; commit+push+gh run watch. Stani prije I7.
 ```

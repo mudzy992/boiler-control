@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 
 interface GasReadingProps {
   reading: {
@@ -55,6 +56,7 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   let consumption = null;
   let daysDiff = 0;
@@ -67,12 +69,6 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
       dailyConsumption = Math.round((consumption / daysDiff) * 100) / 100;
     }
   }
-
-  const handleDelete = () => {
-    if (window.confirm(t('gas.deleteConfirm'))) {
-      onDelete(reading.id);
-    }
-  };
 
   return (
     <div className="p-5 transition-shadow duration-200 rounded-xl border border-border bg-surface shadow-sm hover:shadow-md dark:border-dark-border dark:bg-dark-surface-elevated">
@@ -97,7 +93,12 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
             )}
           </div>
         </div>
-        <Button variant="danger" size="sm" onClick={handleDelete} disabled={isLoading}>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => setConfirmOpen(true)}
+          disabled={isLoading}
+        >
           {isLoading ? t('gas.deleting') : t('common.delete')}
         </Button>
       </div>
@@ -182,6 +183,17 @@ export const GasReadingCard: React.FC<GasReadingProps> = ({
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t('gas.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        variant="destructive"
+        onConfirm={() => {
+          setConfirmOpen(false);
+          onDelete(reading.id);
+        }}
+      />
     </div>
   );
 };

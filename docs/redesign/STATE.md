@@ -4,17 +4,20 @@ Ažurirano: 2026-11-07.
 
 ## Trenutna faza
 
-**Faza 5 — I6 u toku.** Auth + Boiler migrirani; Dashboard TempDialog spojen. Ostale stranice još ne.
+**Faza 5 — I6 u toku.** Auth, Boiler, Heating, Reports gotovi; Dashboard TempDialog; Gas ConfirmDialog.
 
-**Sljedeće u I6:** Heating → Reports → Gas readings → Gas analytics → Notifications → Home profile → Profile (+ Dashboard full redesign: SVG bars, QueryState, PageHeader).
+**Sljedeće:** Gas analytics shells → Notifications → Home profile → Profile → Dashboard full (SVG/QueryState) → I7.
 
-## Završeno
+## Završeno (I6)
 
-- I0–I5
-- I6 Auth: LoginPage → shadcn Card/Input/Label/Button + StatusBanner
-- I6 Boiler: PageHeader + QueryState + Table + TempDialog + invalidate helper
-- I6 Dashboard (parcijalno): TempDialog + invalidateQueriesAfterTempSet (antd plots još tu)
+- Auth, Boiler
+- Heating + Reports (PageHeader/QueryState/Table)
+- Gas readings: ConfirmDialog umjesto `window.confirm`
+- Dashboard: TempDialog only
 
-## Sljedeći korak
+## Još nije (I6)
 
-Nastavi I6 od Heating (ili dovrši Dashboard full pass). Preferiraj **novu sesiju** — ovaj chat je dug.
+- Gas analytics page shells
+- Notifications (antd icons)
+- Home profile / Profile full migrate
+- Dashboard full redesign

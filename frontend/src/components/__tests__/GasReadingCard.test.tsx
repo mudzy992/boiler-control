@@ -1,6 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { MockInstance } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
 import { GasReadingCard } from '../../features/gas/components/GasReadingCard';
@@ -108,31 +107,25 @@ describe('GasReadingCard — kada se blok potrošnje NE prikazuje', () => {
 });
 
 describe('GasReadingCard — brisanje s potvrdom', () => {
-  let confirmSpy: MockInstance<(message?: string) => boolean>;
-
-  beforeEach(() => {
-    confirmSpy = vi.spyOn(window, 'confirm');
-  });
-
-  it('potvrda "da" zove onDelete s id-em očitanja', async () => {
+  it('potvrda u dijalogu zove onDelete s id-em očitanja', async () => {
     const user = userEvent.setup();
-    confirmSpy.mockReturnValue(true);
     const { onDelete } = renderCard();
 
     await user.click(screen.getByRole('button', { name: /^delete$/i }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: /^delete$/i }));
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
     expect(onDelete).toHaveBeenCalledWith(STARIJE.id);
   });
 
-  it('potvrda "ne" NE zove onDelete', async () => {
+  it('odustajanje u dijalogu NE zove onDelete', async () => {
     const user = userEvent.setup();
-    confirmSpy.mockReturnValue(false);
     const { onDelete } = renderCard();
 
     await user.click(screen.getByRole('button', { name: /^delete$/i }));
+    await screen.findByRole('dialog');
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
     expect(onDelete).not.toHaveBeenCalled();
   });
 

@@ -26,8 +26,9 @@ Nova sesija: pročitaj ovaj fajl, zatim `STATE.md` i `08-implementation-plan.md`
 | `f99a53b` | **I1** login 401 + `AuthUser.role` |
 | `26805b2` | **I2** shell rewrite (NavLink, drawer) |
 | `8ae15d7` | STATE: I2 closed |
+| `b496765` | **I3** shadcn primitives + native InputNumber |
 
-CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I2 run zelen: `42372695265`.
+CI: Frontend workflow `.github/workflows/frontend-ci.yml` on push to `main`. Zadnji I3 run zelen: `42374502533`.
 
 Dev: `frontend/` → `npm run dev` (port **80** zauzet često → Vite pada na **81**).
 

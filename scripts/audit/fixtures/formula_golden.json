@@ -1,0 +1,1473 @@
+{
+  "version": 1,
+  "generatedBy": "scripts/audit/formula_max_audit.cjs --write-golden",
+  "engine": "backend/src/modules/Heating/engine/flow-temperature.engine.ts",
+  "detector": "backend/src/common/anomaly-detection.service.ts",
+  "note": "Sintetički ulazi u stvarni kod. Snimak je ugovor o trenutnom ponašanju, ne tvrdnja da je ponašanje ispravno.",
+  "cases": {
+    "anonymous/ext_-25": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-24": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-23": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-22": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-21": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-20": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-19": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-18": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-17": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-16": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-15": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-14": {
+      "baseCurveTemp": 55.2,
+      "weightedExternalTemp": -14,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/ext_-13": {
+      "baseCurveTemp": 54.9,
+      "weightedExternalTemp": -13,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 54.9
+    },
+    "anonymous/ext_-12": {
+      "baseCurveTemp": 54.6,
+      "weightedExternalTemp": -11.999999999999998,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 54.6
+    },
+    "anonymous/ext_-11": {
+      "baseCurveTemp": 54.3,
+      "weightedExternalTemp": -11,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 54.3
+    },
+    "anonymous/ext_-10": {
+      "baseCurveTemp": 54,
+      "weightedExternalTemp": -10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 54
+    },
+    "anonymous/ext_-9": {
+      "baseCurveTemp": 53.7,
+      "weightedExternalTemp": -9,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 53.7
+    },
+    "anonymous/ext_-8": {
+      "baseCurveTemp": 53.4,
+      "weightedExternalTemp": -8,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 53.4
+    },
+    "anonymous/ext_-7": {
+      "baseCurveTemp": 53.1,
+      "weightedExternalTemp": -7,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 53.1
+    },
+    "anonymous/ext_-6": {
+      "baseCurveTemp": 52.8,
+      "weightedExternalTemp": -5.999999999999999,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 52.8
+    },
+    "anonymous/ext_-5": {
+      "baseCurveTemp": 52.5,
+      "weightedExternalTemp": -5,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 52.5
+    },
+    "anonymous/ext_-4": {
+      "baseCurveTemp": 52.2,
+      "weightedExternalTemp": -4,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 52.2
+    },
+    "anonymous/ext_-3": {
+      "baseCurveTemp": 51.9,
+      "weightedExternalTemp": -2.9999999999999996,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51.9
+    },
+    "anonymous/ext_-2": {
+      "baseCurveTemp": 51.6,
+      "weightedExternalTemp": -2,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51.6
+    },
+    "anonymous/ext_-1": {
+      "baseCurveTemp": 51.3,
+      "weightedExternalTemp": -1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51.3
+    },
+    "anonymous/ext_0": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51
+    },
+    "anonymous/ext_1": {
+      "baseCurveTemp": 50.7,
+      "weightedExternalTemp": 1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 50.7
+    },
+    "anonymous/ext_2": {
+      "baseCurveTemp": 50.4,
+      "weightedExternalTemp": 2,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 50.4
+    },
+    "anonymous/ext_3": {
+      "baseCurveTemp": 50.1,
+      "weightedExternalTemp": 2.9999999999999996,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 50.1
+    },
+    "anonymous/ext_4": {
+      "baseCurveTemp": 49.8,
+      "weightedExternalTemp": 4,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 49.8
+    },
+    "anonymous/ext_5": {
+      "baseCurveTemp": 49.5,
+      "weightedExternalTemp": 5,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 49.5
+    },
+    "anonymous/ext_6": {
+      "baseCurveTemp": 49.2,
+      "weightedExternalTemp": 5.999999999999999,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 49.2
+    },
+    "anonymous/ext_7": {
+      "baseCurveTemp": 48.9,
+      "weightedExternalTemp": 7,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 48.9
+    },
+    "anonymous/ext_8": {
+      "baseCurveTemp": 48.6,
+      "weightedExternalTemp": 8,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 48.6
+    },
+    "anonymous/ext_9": {
+      "baseCurveTemp": 48.3,
+      "weightedExternalTemp": 9,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 48.3
+    },
+    "anonymous/ext_10": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_11": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_12": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_13": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_14": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_15": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_16": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_17": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_18": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_19": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "anonymous/ext_20": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "boundary/cutoff10_minus_eps": {
+      "baseCurveTemp": 48.0000003,
+      "weightedExternalTemp": 9.999998999999999,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 48
+    },
+    "boundary/cutoff10": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "boundary/cutoff10_plus_eps": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "boundary/cutoffM15_minus_eps": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "boundary/cutoffM15": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "boundary/cutoffM15_plus_eps": {
+      "baseCurveTemp": 55.499999700000004,
+      "weightedExternalTemp": -14.999999,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "anonymous/mixed_min_max": {
+      "baseCurveTemp": 51.6,
+      "weightedExternalTemp": -2,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51.6
+    },
+    "profile/area_10": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 52.57
+    },
+    "profile/area_60": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 51.57
+    },
+    "profile/area_100": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 50.77
+    },
+    "profile/area_149": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 49.79
+    },
+    "profile/area_150": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 49.77
+    },
+    "profile/area_200": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 49.77
+    },
+    "profile/area_400": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 49.77
+    },
+    "profile/window_single": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 51.77
+    },
+    "profile/window_triple": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 48.77
+    },
+    "profile/heating_underfloor": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 47.77
+    },
+    "profile/insulation_advanced": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 49.77
+    },
+    "profile/insulation_standard": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 49.77
+    },
+    "profile/ceiling_320cm": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 51.57
+    },
+    "profile/ceiling_3_2_latent_unit_bug": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 46
+    },
+    "profile/offset_3_confidence_0": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 49.77
+    },
+    "profile/offset_2_confidence_1": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 1.6,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.8,
+      "finalTemp": 51.37
+    },
+    "full/weekday_morning/offset_-3": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.7999999999999998,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 47.97
+    },
+    "full/weekday_morning/offset_-1.7": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.02,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 48.75
+    },
+    "full/weekday_morning/offset_0": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 49.77
+    },
+    "full/weekday_morning/offset_2": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 1.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 50.97
+    },
+    "full/weekday_morning/offset_4": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 2.4,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 52.17
+    },
+    "full/weekday_late_morning/offset_-3": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.7999999999999998,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 47.97
+    },
+    "full/weekday_late_morning/offset_-1.7": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.02,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 48.75
+    },
+    "full/weekday_late_morning/offset_0": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 49.77
+    },
+    "full/weekday_late_morning/offset_2": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 1.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 50.97
+    },
+    "full/weekday_late_morning/offset_4": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 2.4,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 52.17
+    },
+    "full/weekday_afternoon/offset_-3": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -3,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 46.77
+    },
+    "full/weekday_afternoon/offset_-1.7": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.7,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 48.07
+    },
+    "full/weekday_afternoon/offset_0": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 49.77
+    },
+    "full/weekday_afternoon/offset_2": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.77
+    },
+    "full/weekday_afternoon/offset_4": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 4,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 53.77
+    },
+    "full/weekday_night/offset_-3": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -3,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 46.77
+    },
+    "full/weekday_night/offset_-1.7": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.7,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 48.07
+    },
+    "full/weekday_night/offset_0": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 49.77
+    },
+    "full/weekday_night/offset_2": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.77
+    },
+    "full/weekday_night/offset_4": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 4,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 53.77
+    },
+    "full/weekend_morning/offset_-3": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.7999999999999998,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 47.97
+    },
+    "full/weekend_morning/offset_-1.7": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.02,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 48.75
+    },
+    "full/weekend_morning/offset_0": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 49.77
+    },
+    "full/weekend_morning/offset_2": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 1.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 50.97
+    },
+    "full/weekend_morning/offset_4": {
+      "baseCurveTemp": 49.77,
+      "weightedExternalTemp": 4.1,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 2.4,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 52.17
+    },
+    "full/overshoot_0_reach_10": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.2
+    },
+    "full/overshoot_0_reach_30": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 51
+    },
+    "full/overshoot_0_reach_60": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -0.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 50.8
+    },
+    "full/overshoot_2_reach_10": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 1.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 52.2
+    },
+    "full/overshoot_2_reach_30": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 1,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 52
+    },
+    "full/overshoot_2_reach_60": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0.8,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.8
+    },
+    "full/overshoot_-2_reach_10": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -0.8,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 50.2
+    },
+    "full/overshoot_-2_reach_30": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 50
+    },
+    "full/overshoot_-2_reach_60": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": -1.2,
+        "events": 0
+      },
+      "confidence": 0.5,
+      "finalTemp": 49.8
+    },
+    "full/events_n1_delta2_active": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.3
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.3
+    },
+    "full/events_n1_delta2_closed": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.1
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.1
+    },
+    "full/events_n1_delta5_active": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.75
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.75
+    },
+    "full/events_n1_delta5_closed": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.25
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.25
+    },
+    "full/events_n5_delta2_active": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.9676732310089485
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.97
+    },
+    "full/events_n5_delta2_closed": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.32255774366964957
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.32
+    },
+    "full/events_n5_delta5_active": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 2.4191830775223715
+      },
+      "confidence": 0.5,
+      "finalTemp": 53.42
+    },
+    "full/events_n5_delta5_closed": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.8063943591741239
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.81
+    },
+    "full/events_n10_delta2_active": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 1.244916253486211
+      },
+      "confidence": 0.5,
+      "finalTemp": 52.24
+    },
+    "full/events_n10_delta2_closed": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0.41497208449540385
+      },
+      "confidence": 0.5,
+      "finalTemp": 51.41
+    },
+    "full/events_n10_delta5_active": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 3.112290633715528
+      },
+      "confidence": 0.5,
+      "finalTemp": 54.11
+    },
+    "full/events_n10_delta5_closed": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 1.0374302112385094
+      },
+      "confidence": 0.5,
+      "finalTemp": 52.04
+    },
+    "robust/tempMin_NaN": {
+      "baseCurveTemp": {
+        "$n": "NaN"
+      },
+      "weightedExternalTemp": {
+        "$n": "NaN"
+      },
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": {
+        "$n": "NaN"
+      }
+    },
+    "robust/tempMax_NaN": {
+      "baseCurveTemp": {
+        "$n": "NaN"
+      },
+      "weightedExternalTemp": {
+        "$n": "NaN"
+      },
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": {
+        "$n": "NaN"
+      }
+    },
+    "robust/temps_null": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51
+    },
+    "robust/temps_undefined": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 51
+    },
+    "robust/temp_Infinity": {
+      "baseCurveTemp": 45,
+      "weightedExternalTemp": 10,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 46
+    },
+    "robust/temp_neg_Infinity": {
+      "baseCurveTemp": 56,
+      "weightedExternalTemp": -15,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0,
+      "finalTemp": 55
+    },
+    "robust/confidence_NaN": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": {
+          "$n": "NaN"
+        },
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": {
+        "$n": "NaN"
+      },
+      "finalTemp": {
+        "$n": "NaN"
+      }
+    },
+    "robust/floorArea_NaN": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.08000000000000002,
+      "finalTemp": {
+        "$n": "NaN"
+      }
+    },
+    "robust/ceilingHeight_NaN": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.08000000000000002,
+      "finalTemp": {
+        "$n": "NaN"
+      }
+    },
+    "robust/learningOffset_NaN": {
+      "baseCurveTemp": 51,
+      "weightedExternalTemp": 0,
+      "appliedOffsets": {
+        "home": 0,
+        "interval": 0,
+        "events": 0
+      },
+      "confidence": 0.4,
+      "finalTemp": 51
+    },
+    "anomaly/n2_below_min": {
+      "isAnomaly": false,
+      "types": [],
+      "confidence": 0,
+      "proposedEndTime": null
+    },
+    "anomaly/sigma0_open_61": {
+      "isAnomaly": true,
+      "types": [
+        "overshoot"
+      ],
+      "confidence": 0.8,
+      "proposedEndTime": {
+        "$d": "2026-11-04T06:00:00.000Z"
+      }
+    },
+    "anomaly/sigma0_open_140": {
+      "isAnomaly": true,
+      "types": [
+        "overshoot",
+        "prolonged_idle"
+      ],
+      "confidence": 1,
+      "proposedEndTime": {
+        "$d": "2026-11-04T06:00:00.000Z"
+      }
+    },
+    "anomaly/sd1_6_closed_70": {
+      "isAnomaly": true,
+      "types": [
+        "overshoot"
+      ],
+      "confidence": 0.9,
+      "proposedEndTime": null
+    },
+    "anomaly/sd4_5_closed_70_selfincluded": {
+      "isAnomaly": false,
+      "types": [],
+      "confidence": 0,
+      "proposedEndTime": null
+    },
+    "anomaly/sd60_closed_200_selfincluded": {
+      "isAnomaly": true,
+      "types": [
+        "prolonged_idle"
+      ],
+      "confidence": 0.2,
+      "proposedEndTime": null
+    },
+    "anomaly/rapid_cycling_4": {
+      "isAnomaly": true,
+      "types": [
+        "early_stop",
+        "rapid_cycling"
+      ],
+      "confidence": 1,
+      "proposedEndTime": null
+    },
+    "anomaly/prolonged_200": {
+      "isAnomaly": true,
+      "types": [
+        "overshoot",
+        "prolonged_idle"
+      ],
+      "confidence": 1,
+      "proposedEndTime": null
+    }
+  }
+}

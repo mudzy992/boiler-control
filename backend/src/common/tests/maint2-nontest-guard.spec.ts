@@ -145,7 +145,10 @@ describe('MAINT-2: aplikacija u NE-testnom okruženju', () => {
     expect(gas).toBeDefined();
     expect(daily?.name).toBe('daily-recommendations');
     expect(gas?.name).toBe('gas-reading-reminder');
-    expect(daily?.cronTime).toBe('0 0 * * *');
+    // P0: `0 0 * * *` je bila PONOĆ UTC, ne 06:00, i bez zone — vidi
+    // `daily.recommendation.service.ts`. Posao sada kuca svakih pet minuta i
+    // pita svaku kuću koliko je sati kod nje.
+    expect(daily?.cronTime).toBe('*/5 * * * *');
     expect(daily?.disabled).toBe(false);
     expect(gas?.disabled).toBe(false);
   });

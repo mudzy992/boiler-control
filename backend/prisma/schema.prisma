@@ -41,6 +41,7 @@ model User {
   HomeProfile_User_activeHomeProfileIdToHomeProfile HomeProfile?             @relation("User_activeHomeProfileIdToHomeProfile", fields: [activeHomeProfileId], references: [id])
   devices                                           UserDevice[]
   refreshTokens                                     RefreshToken[]
+  dailyRecords                                      DailyRecord[]
 }
 
 model HomeProfile {
@@ -82,6 +83,7 @@ model HomeProfile {
   user                                       User                       @relation(fields: [userId], references: [id])
   thermostatDevices                          ThermostatDevice[]
   User_User_activeHomeProfileIdToHomeProfile User?                      @relation("User_activeHomeProfileIdToHomeProfile")
+  dailyRecords                               DailyRecord[]
 
   @@index([userId])
 }
@@ -339,6 +341,69 @@ enum SeasonMode {
   WINTER
   SUMMER
   AUTO
+}
+
+/// Odakle je polazna temperatura na snazi u 06:00 (`17` §5.2, `18` §0).
+/// `CARRIED` znači da vrijednost nije unesena danas nego važi od ranije,
+/// `UNKNOWN` da aplikacija u tom trenutku nije imala nikakav unos.
+enum FlowSetSource {
+  USER
+  CARRIED
+  UNKNOWN
+}
+
+/// Jedan red po kući i lokalnom danu (`17` §5.2). Piše ga ISKLJUČIVO
+/// `DailyRecordWriter`, jednom, i poslije se ne prepisuje — zato je
+/// `proposedAt` historija, a ne "zadnje viđeno".
+///
+/// Red postoji i kada predloga nema (`proposedFlowTemp = null`, `skipReason`
+/// objašnjava zašto). Tako se "procijenili smo i namjerno nismo predložili"
+/// razlikuje od "sistem nije radio", gdje reda uopšte nema.
+model DailyRecord {
+  id            Int    @id @default(autoincrement())
+  userId        Int
+  homeProfileId Int
+  /// `YYYY-MM-DD` u zoni kuće. Tekst, ne DATE: DATE bi se kroz UTC pomjerio.
+  localDate     String @db.VarChar(10)
+
+  proposedFlowTemp Float?
+  proposedAt       DateTime?
+  seasonMode       SeasonMode?
+  skipReason       String?
+
+  flowSetC               Float?
+  flowSetSince           DateTime?
+  flowSetSource          FlowSetSource?
+  flowSetChangedDuringDay Boolean      @default(false)
+
+  nightMinC   Float?
+  dayMeanC    Float?
+  dayMaxC     Float?
+  degreeHours Float?
+
+  modelVersion String?
+  slopeS       Float?
+  slopeCi      Float?
+  params       Json?
+
+  cycles         Int?
+  medianCycleMin Float?
+  dutyPercent    Float?
+  overshootC     Float?
+  comfortOk      Boolean?
+  undershootC    Float?
+
+  gasM3      Float?
+  degreeDays Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  homeProfile HomeProfile @relation(fields: [homeProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([homeProfileId, localDate])
+  @@index([userId, localDate])
 }
 
 enum NotificationType {

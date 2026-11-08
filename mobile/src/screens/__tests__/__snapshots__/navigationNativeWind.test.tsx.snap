@@ -48,6 +48,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
         }
         iosOrientationInheritanceFixEnabled={true}
         onGestureCancel={[Function]}
+        pointerEvents="box-none"
         sheetAllowedDetents={
           [
             1,
@@ -218,6 +219,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -387,6 +389,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -556,6 +559,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -725,6 +729,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -875,6 +880,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
         }
         iosOrientationInheritanceFixEnabled={true}
         onGestureCancel={[Function]}
+        pointerEvents="box-none"
         sheetAllowedDetents={
           [
             1,
@@ -1045,6 +1051,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -1214,6 +1221,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -1383,6 +1391,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },
@@ -1552,6 +1561,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                     "height": 28,
                     "width": 31,
                   },
+                  false,
                   {
                     "marginBottom": 0,
                   },

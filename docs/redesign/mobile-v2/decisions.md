@@ -220,14 +220,42 @@ Uz to: `nativewind` je pri prvom pokretanju generisao `nativewind-env.d.ts` i
 dopunio `tsconfig.json` — ta dva `className` tipa su sada commitovana, pa
 `npm run type-check` ne zavisi od toga da je neko lokalno pokrenuo Expo.
 
+### `InteractionManager` — druga runda (shim)
+
+Nakon nadogradnje navigacije greška se **vratila u Expo Go**, iako bundle
+građen iz istog koda nije sadržavao nijedno čitanje `InteractionManager`-a
+(provjereno `grep`-om po izvezenom dev bundle-u). Dva su moguća uzroka i oba
+su pokrivena:
+
+1. **Metro cache / stari bundle.** `expo start` drži transformisani modul;
+   `@react-navigation/stack` se učitava jednom i ostaje u kešu i poslije
+   `npm install`-a. Zato je potreban `npx expo start -c`.
+2. **Neka druga zavisnost** (koju ovaj sandbox bundle ne uključi, npr. drugi
+   lockfile na uređaju) čita `react-native.InteractionManager`.
+
+Da greška ne bi zavisila od toga ko je u pravu, `src/polyfills.ts` sada
+**zamjenjuje getter ispravnom implementacijom** istog API-ja
+(`runAfterInteractions` sa `cancel`, `createInteractionHandle`,
+`clearInteractionHandle`, `setDeadline`), umjesto da samo gasi poruku:
+
+- getter u RN 0.88 je `configurable: true`, pa se može zamijeniti; ako neka
+  buduća verzija vrati pravi `InteractionManager`, shim ga **ne dira**
+  (provjerava `typeof runAfterInteractions === 'function'`);
+- posao se izvršava kroz `requestIdleCallback` kad postoji, inače
+  `setTimeout(…, 0)` — dakle isto ponašanje koje RN 0.88 preporučuje;
+- greška u jednom pozivaocu ne prekida ostale, a `cancel()` uklanja posao.
+
+Ovo je jedina izmjena koja dira ponašanje biblioteke, i namjerno je minimalna:
+shim implementira API, ne potiskuje invariant.
+
 Provjera (2026-11-08):
 
 ```
 npm run type-check   → 0 grešaka
-npm test             → 32 suite-a, 228 testova, 32 snapshot-a — sve zeleno
-                       (31 postojeći + 1 novi: f5Runtime.test.ts, 6 testova)
+npm test             → 33 suite-a, 233 testa, 32 snapshot-a — sve zeleno
+                       (31 postojeći + f5Runtime.test.ts 6 + interactionManagerShim.test.ts 5)
 npm run lint         → 0 grešaka
-npx expo export --platform android → bundle se gradi (5.5 MB)
+npx expo export --platform android → bundle se gradi; dev bundle sadrži shim
 ```
 
 Regenerisan je jedan snapshot (`navigationNativeWind`): novija verzija

@@ -58,5 +58,5 @@ export const POLL_DEVICE_SELECT = {
   roomCurrentTemp: true,
   roomTargetTemp: true,
   lastSnapshotAt: true,
-  user: { select: { homeLocation: true } },
+  user: { select: { homeLocation: true, currentBoilerFlowTemp: true } },
 } as const;

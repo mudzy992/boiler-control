@@ -104,6 +104,7 @@ function makeHarness(
       setGauge: jest.fn(),
     },
     pollingWeather,
+    { isDue: () => true, record: jest.fn().mockResolvedValue('created') },
   ]) as ThermostatPollingService;
   return { service, weatherCache, boilerHistory, pollingWeather };
 }

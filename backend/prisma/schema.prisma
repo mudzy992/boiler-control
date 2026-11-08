@@ -103,6 +103,7 @@ model ThermostatDevice {
   roomTargetTemp    Float?
   lastSnapshotAt    DateTime?
   heatingEvents     HeatingEvent[]
+  observations      ThermostatObservation[]
   homeProfile       HomeProfile         @relation(fields: [homeProfileId], references: [id])
   user              User                @relation(fields: [userId], references: [id])
   thermostatProgram ThermostatProgram[]
@@ -350,6 +351,43 @@ enum FlowSetSource {
   USER
   CARRIED
   UNKNOWN
+}
+
+/// Odakle je zabilježeno stanje (`17` §5.1). `TUYA` je očitanje adaptera,
+/// `MANUAL` ručni unos; nova vrijednost se dodaje, postojeća ne mijenja.
+enum ObservationSource {
+  TUYA
+  MANUAL
+}
+
+/// Vremenska serija (`17` §5.1). Jedan red po uređaju i petominutnom bucketu.
+///
+/// `at` je POČETAK bucketa, ne trenutak upisa: tako dva očitanja iz istog
+/// bucketa (npr. ponovni ciklus poslije restarta) ne mogu oba ući, a serija
+/// ostaje poravnata na pet minuta bez obzira na to kad je upis stvarno pao.
+///
+/// Nijedno polje se ne izmišlja: ako uređaj nije poslao temperaturu, polje je
+/// `null`. Nula bi bila izmjeren podatak koji nije izmjeren.
+model ThermostatObservation {
+  id            Int      @id @default(autoincrement())
+  deviceId      Int
+  /// Denormalizovano iz uređaja: učenje radi po kući, a ne po uređaju.
+  homeProfileId Int
+  at            DateTime
+
+  roomTempC    Float?
+  targetTempC  Float?
+  isHeating    Boolean
+  outdoorTempC Float?
+  flowSetC     Float?
+
+  source    ObservationSource @default(TUYA)
+  createdAt DateTime          @default(now())
+
+  device ThermostatDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, at])
+  @@index([homeProfileId, at])
 }
 
 /// Jedan red po kući i lokalnom danu (`17` §5.2). Piše ga ISKLJUČIVO

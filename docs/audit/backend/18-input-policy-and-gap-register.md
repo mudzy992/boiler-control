@@ -144,20 +144,20 @@ Svih dvanaest nalaza odnosi se na **stari mehanizam** (bucket-i, overshoot, `con
 | I-5 | Prvi unos / nikad uneseno | ✅ | §0.5 |
 | I-6 | Nikad auto-ispravka unosa | ✅ | §0.1 |
 | I-7 | Sedmična potvrda, bez kazne u modelu | ❌ | §0.4 — nije nigdje implementirano ni projektovano do sada |
-| I-8 | Sezona: bez predloga u `SUMMER` | ❌ | cron danas **nema provjeru sezone** |
+| I-8 | Sezona: bez predloga u `SUMMER` | ✅ | `DailyRecordWriter` (`20` §4): `SUMMER` → `OUT_OF_SEASON`, `AUTO` po grijnoj granici |
 | I-9 | Raspon 30–55 u oba smjera | ⚠️ | odlučeno; **četiri mjesta + clamp motora** (`16` §4.5) |
 
 ### 1.5 Novi zahtjevi — dnevni zapis i vrijeme
 
 | ID | Zahtjev | Status | Napomena |
 |---|---|---|---|
-| T-01 | `localDate` po **zoni doma**, ne servera | ❌ | `User.timezone` i `weatherTimezone` postoje i **ne koriste se** |
-| T-02 | Cron u 06:00 `Europe/Sarajevo` | ❌ | danas `0 0 * * *` bez zone |
-| T-03 | Ljetnje/zimsko vrijeme (23/25 h dan) | ❌ | prosjeci po minuti, ne po `1440` konstanti |
-| T-04 | Propušten cron (server pao u 06:00) | ❌ | nadoknada pri prvom zahtjevu, `late=true` |
-| T-05 | Aktivni dom, ne `homeProfiles[0]` | ❌ | `User.activeHomeProfileId` postoji, **ne koristi se** |
+| T-01 | `localDate` po **zoni doma**, ne servera | ✅ | `resolveHomeTimeZone`, kuća → korisnik → fallback (`20` §4) |
+| T-02 | Cron u 06:00 `Europe/Sarajevo` | ✅ | `*/5` + lokalni sat po kući (`20` §3); `0 0 * * *` je bila **ponoć UTC** |
+| T-03 | Ljetnje/zimsko vrijeme (23/25 h dan) | ⚠️ | zona i DST rade (`20` §7); dnevni prosjeci još ne postoje |
+| T-04 | Propušten cron (server pao u 06:00) | ✅ | isti dan se nadoknađuje do 12:00; propušten **cijeli** dan se ne izmišlja (`20` §3) |
+| T-05 | Aktivni dom, ne `homeProfiles[0]` | ✅ | `selectDueHomes` (`20` §3) |
 | T-06 | Više uređaja u domu: koji daje seriju | ❌ | definisati primarni uređaj, upisati `deviceId` |
-| T-07 | Reproducibilnost: `modelVersion` + parametri | ❌ | bez toga se predlog ne može preračunati |
+| T-07 | Reproducibilnost: `modelVersion` + parametri | ✅ | `DailyRecord.modelVersion` + `params` (`20` §1) |
 
 ### 1.6 Novi zahtjevi — učenje i kontroler
 
@@ -186,11 +186,11 @@ Svih dvanaest nalaza odnosi se na **stari mehanizam** (bucket-i, overshoot, `con
 | S-1 | Prekidač za isključenje (bez deploya) | ❌ | `DAILY_PROPOSAL_ENABLED=false` → staro ponašanje |
 | S-2 | Shadow režim prije pravog predloga | ❌ | `17` §13, nije projektovano u detalje |
 | S-3 | Rollback plan | ❌ | uz S-1 |
-| S-4 | Retencija serije od 5 min | ❌ | ~105k redova/dom/godina; indeks + arhiviranje |
+| S-4 | Retencija serije od 5 min | ❌ | serija postoji (`21`), sažimanje **nije** — za sada se čuva sve |
 | S-5 | Golden gate i replay fixture za novu formulu | ⚠️ | gate postoji za **staru** formulu (133 slučaja) |
 | S-6 | Nijedan upis prema bojleru | ✅ | adapter je čitljiv (`16` §2.4) |
 
-**Zbir:** 75 stavki — ✅ 34 · ⚠️ 7 · ❌ 29 · 🔒 1 · ➖ 4 (van opsega). Provjereno mašinski (§4).
+**Zbir:** 75 stavki — ✅ 40 · ⚠️ 8 · ❌ 22 · 🔒 1 · ➖ 4 (van opsega). Provjereno mašinski (§4).
 
 ---
 
@@ -251,19 +251,21 @@ Skripta čita `13`, `15` i `18`, izvlači svaki `F-xx`, `L-xx`, `D-xx` i pada (e
 Trenutni rezultat:
 
 ```
-nalaza u 13 i 15:        38
-redova u registru:       75
-  ✅ zatvoreno   34
-  ⚠️ djelimično  7
-  ❌ praznina    29
-  🔒 blokada     1
-  ➖ van opsega  4
-nijedan nalaz iz 13/15 nije ispušten
-nema duplih ID-eva
-Registar potpun.          (exit 0)
+Provjera registra praznina (docs/audit/backend/18)
+  nalaza u 13 i 15:        38
+  redova u registru:       75
+    ✅ zatvoreno   40
+    ⚠️ djelimično  8
+    ❌ praznina    22
+    🔒 blokada     1
+    ➖ van opsega  4
+  nijedan nalaz iz 13/15 nije ispušten
+  nema duplih ID-eva
+  nema ID-a sa nepoznatim prefiksom
+Registar potpun.            (exit 0)
 ```
 
-**Ali registar nije plan.** Dvadeset devet praznina znači da je projekat iz `17` dobar, a realizacija još nije ni počela — i da se ne smije početi bez odgovora na §5.
+**Ali registar nije plan.** Dvadeset dvije praznine (poslije `20` i `21`) znači da su prva dva koraka iz `17` §13 urađena, a da učenje još ne postoji: `HomeModel`, identifikacija `a`/`b`/`s`, noćni minimum i kontroler su i dalje ispred.
 
 ---
 

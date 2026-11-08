@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Text as RNText } from 'react-native';
 
 import { AppThemeProvider } from '../../theme/AppTheme';
@@ -12,6 +12,7 @@ import { Led, StatusDot } from '../Led';
 import { Segmented } from '../Segmented';
 import { InlineBanner } from '../InlineBanner';
 import { AsyncState, ErrorState, EmptyState, SkeletonRows } from '../AsyncState';
+import { Sheet } from '../Sheet';
 
 // Ikonice se mockaju na `Text` da bi `accessibilityLabel` bio čitljiv u stablu.
 jest.mock('@expo/vector-icons', () => {
@@ -272,5 +273,47 @@ describe('AsyncState', () => {
     expect(err.getByText('Greška')).toBeTruthy();
     const empty = await wrap(<EmptyState title="Prazno" />);
     expect(empty.getByText('Prazno')).toBeTruthy();
+  });
+});
+
+/**
+ * F7 (SHEET-02): `Modal` se ne smije skloniti u istom trenutku kad `isOpen`
+ * padne na `false` — inače animacija zatvaranja nema gdje da se odigra, jer je
+ * cijeli list već izvan stabla. Redoslijed koji mora da važi:
+ *
+ *   1. `isOpen: true`  → list je montiran i vidljiv;
+ *   2. `isOpen: false` → list je JOŠ montiran (animacija teče);
+ *   3. index padne na -1 (ili istekne sigurnosni timer) → list se sklanja.
+ *
+ * Ovaj test je jedini koji pokriva korak 2; snapshotovi uvijek snimaju samo
+ * stabilno stanje, pa bi regresija ovdje prošla nezapaženo.
+ *
+ * Harness je na modulskom nivou (ne unutar testa): komponenta definisana unutar
+ * komponente bi se pri svakom rendeu pravila iznova i izgubila stanje —
+ * `react-hooks/static-components`.
+ */
+function SheetHarness({ startOpen }: { startOpen: boolean }) {
+  const [isOpen, setIsOpen] = React.useState(startOpen);
+  return (
+    <>
+      <RNText onPress={() => setIsOpen(false)}>zatvori-lista</RNText>
+      <Sheet isOpen={isOpen} onClose={() => setIsOpen(false)} title="Naslov">
+        <RNText>sadržaj-lista</RNText>
+      </Sheet>
+    </>
+  );
+}
+
+describe('Sheet — prozor za animaciju zatvaranja (SHEET-02)', () => {
+  it('drži sadržaj montiranim kratko nakon zatvaranja, pa ga skloni', async () => {
+    const { getByText, queryByText } = await wrap(<SheetHarness startOpen />);
+    expect(queryByText('sadržaj-lista')).toBeTruthy();
+
+    fireEvent.press(getByText('zatvori-lista'));
+    // Animacija još traje — sadržaj NIJE nestao u istom frejmu.
+    expect(queryByText('sadržaj-lista')).toBeTruthy();
+
+    // Sigurnosni timer (400 ms) sklanja `Modal` i kad gorhom ne javi `onChange`.
+    await waitFor(() => expect(queryByText('sadržaj-lista')).toBeNull(), { timeout: 2000 });
   });
 });

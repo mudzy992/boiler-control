@@ -412,6 +412,63 @@ asertacija u postojećim testovima nije ublažena; jedina izmijenjena asertacija
 (`tokens.test.ts`, `lightTokens.signal`) prati novu, izmjerenu boju uz
 obrazloženje u komentaru.
 
+### F7 — ono što se na uređaju nije otvaralo, i Gas kao glavni ekran
+
+Korisnik je poslije F6 prijavio dvije klase problema: (a) dodiri koji ne rade
+ništa („Set current temp", „+ " na Plinu, promjena jezika), i (b) ekrane koji
+se ne čitaju (Gas, alerti, „Recommendation reason" na dark temi). F7 je zato
+krenula od **uzroka**, ne od simptoma.
+
+**Korijen tri „mrtva" dodira — `src/ui/Sheet.tsx` (SHEET-01).** `BottomSheet` je
+bio dijete ekrana (unutar `ScreenStack` kartice), ne korijen, a otvaranje je
+zavisilo isključivo od imperativnog `snapToIndex(0)` uz fiksni `index={-1}`.
+`handleSnapToIndex` u gorhomu ima rani `return` dok `isLayoutCalculated` nije
+izračunat, pa je list tiho ostajao na `-1`: state se mijenjao, sheet se nije
+prikazivao. Popravka: RN `Modal` kao host (`transparent`, `animationType="none"`,
+`statusBarTranslucent`, `onRequestClose`) + **deklarativni** `index={isOpen ? 0 : -1}`.
+Isti popravak rješava i promjenu jezika, jer se do `changeLanguage` nije dolazilo
+— lista jezika se nije otvarala.
+
+| Nalaz | Prije | Sada | Dokaz |
+|---|---|---|---|
+| SHEET-01 | sheet se ne prikazuje (set temp, dodaj očitanje, jezik) | `Modal` + deklarativni `index` | `gasOpenSheets.test.tsx` (2), `primitives.test.tsx` 25/25 |
+| SET-LANG | F6a je tvrdila da radi; lista se nije otvarala | stvarna reprodukcija: otvori → izaberi → UI preveden → `app.language` sačuvan | `settings/__tests__/language.test.tsx` (2) |
+| HOME-05 | hero je isticao klijentsku vrijednost, 11 `dashboard.*` ključeva nije postojalo | istaknut `targetFlow` (`xl`, `signal`), polaz sekundaran, svi pozivi na `boiler.*` | `keys.test.ts` (3), dashboard snapshot |
+| I18N-KEYS | sirovi ključevi na Početnoj (`dashboard.outdoor`…) | source-contract test: svaki `t('…')` postoji u **oba** jezika, paritet 777/777 | `keys.test.ts` |
+| HOME-03 | nije postojala kartica potrošnje | `GasConsumptionCard`: ukupno m³ + cijena, riješena i nula (nema očitanja ⇒ nema tvrdnje „0") | `components/__tests__/GasConsumptionCard.test.tsx` (2) |
+| HOME-04 | alerti su bili soft ploče (`red.100`/`orange.100`) sa 9 parova boja | `Panel`/`PanelRow` + `Led` + semantički `fault`/`warn`/`info`, tekst nosi značenje | `AlertsCard.tsx` |
+| HOME-05b | „Recommendation reason" crni font na dark temi | `Panel`/`PanelRow`/`Readout`, jedinica u istom tekstualnom čvoru (`51,1 °C`) | `RecommendationBreakdown.test.tsx` (4) |
+| GAS-TABS | traka se nije prepoznavala kao tab meni; segment 36 px | `raised` traka, segment 44 px, aktivni: podloga + 2 px `signal` + semibold | snapshot +
+`Segmented.tsx` |
+| GAS-FILTER | pet pilula, izgledale kao drugi red tabova, ~150 px visine | `FilterMenuTrigger` (jedan red, „Period: Sve ⌄") + `Sheet` sa radio listom 48 px | `ui/__tests__/filterMenu.test.tsx` (2), `gasOpenSheets.test.tsx` |
+| GAS-LIST | redovi zalepljeni za ivicu, `borderBottom` bez boje (crna linija u obje teme) | kartica sa `marginHorizontal: space.lg`, radijus 4, hairline `line` | `GasReadingCard.tsx` |
+| GAS-ACTIONS | akcije u sheetu 16 px ikona / 13 px tekst | red 44 px, ikona 20 px, tekst `bodyLg` | `GasReadingCard.tsx` |
+| HEAT-01 | status grijanja bez okvira, tri signala u jednoj liniji | `StatusPill` (tekst + ivica), temperatura u svom redu | heating snapshot |
+| SHEET-02 | `Modal` bi sklonio list u istom frejmu kad `isOpen` padne — nema animacije zatvaranja | `visible={isOpen \|\| mounted}`; `mounted` pada na `onChange(-1)` ili poslije 400 ms | `primitives.test.tsx` (26) |
+
+**Test-infrastruktura (TEST-FONT).** `Readout` ide kroz `useTokens` →
+`useAppFonts` → `expo-font`, a `require('*.ttf')` u Jest-u nije asset nego broj
+(„Module 1 is missing from the asset registry"). `jest.setup.js` sada mocka
+`expo-font` sa `useFonts: () => [false, null]` — to je **isto** stanje koje je
+mock prije davao (fontovi nisu učitani ⇒ sistemski fallback), pa 22 snapshota
+ostaju nepromijenjena, a testovi koji renderuju primitives više ne padaju.
+
+**Verifikacija (2026-11-07):**
+
+```
+npx tsc --noEmit                        → 0 grešaka
+npx jest                                → 45 suite-ova, 300 testova, 32 snapshota — zeleno
+npx eslint src                          → 0 grešaka (38 postojećih warninga)
+CI=1 npx expo export --platform android --dev → bundle se gradi
+```
+
+`npx jest -u` je ažurirao 6 snimki: 3 ekrana (Početna: novi hero red + nova
+kartica potrošnje; Plin: meni umjesto pilula + kartice redova; Grijanje: status
+pilula) i 3 ekrana koja dijele `Segmented` (Analitika, Postavke, Obavijesti —
+novi `raised` izgled trake). Nijedna asertacija nije ublažena; dvije su
+**prevedene na novi tok** (period se sada bira iz menija, `f6Gas.test.tsx` i
+`gasNativeWind.test.tsx`), uz komentar na mjestu izmjene.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -423,6 +480,7 @@ obrazloženje u komentaru.
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
 | F6 Greške + šest dorada | **završeno 2026-11-08** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; reduced motion za splash; 55 novih testova |
+| F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 13 nalaza; 12 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

@@ -204,8 +204,12 @@ describe('GasReadings — prazno stanje ima akciju (GAS-10)', () => {
     ]);
     const { result, queryClient } = await renderUi(<GasReadingsScreen />);
 
-    await waitFor(() => expect(result.getByText('gas.filterLastWeek')).toBeTruthy());
-    await fireEvent.press(result.getAllByText('gas.filterLastWeek')[0]);
+    // F7 (GAS-FILTER): period se od sada bira iz menija (jedan red koji
+    // prikazuje izabrano), a ne iz reda pet pilula — zato se test penje kroz
+    // meni. Asertacije o ponašanju (prazno stanje + povratak na „Sve") su iste.
+    await waitFor(() => expect(result.getByTestId('gas-filter-menu')).toBeTruthy());
+    await fireEvent.press(result.getByTestId('gas-filter-menu'));
+    await fireEvent.press(await result.findByTestId('gas-filter-option-week'));
 
     await waitFor(() => expect(result.getByText('gas.noReadingsInPeriod')).toBeTruthy());
     const backToAll = result.getAllByText('gas.filterAll');

@@ -33,6 +33,20 @@ export type SegmentedProps<T extends string> = {
   testID?: string;
 };
 
+/**
+ * F7 (GAS-TABS): traka se NIJE prepoznavala kao tab meni.
+ *
+ * Prije: `borderWidth: 1` na `panel` podlozi, segment visok 36 px, tekst 10 px
+ * mono sa razmakom slova, i aktivni segment označen samo 2 px linijom ispod.
+ * Na ekranu je to izgledalo kao dvije labele u okviru — bez ijednog znaka koji
+ * kaže „ovo je prekidač". Dodatno je visina (36) bila ispod `MIN_TOUCH` (44),
+ * pa je i fizički bila pod WCAG 2.5.8.
+ *
+ * Sada: traka je `raised` (ista podloga kao segmenti u ostatku aplikacije),
+ * svaki segment je 44 px, aktivni ima `panel` podlogu + `signal` liniju 2 px +
+ * podebljan tekst u `ink`, a neaktivni je `inkDim`. Razlika između stanja je
+ * trostruka (boja podloge, linija, težina teksta), dakle vidljiva i bez boje.
+ */
 export function Segmented<T extends string>({
   options,
   value,
@@ -50,7 +64,7 @@ export function Segmented<T extends string>({
       testID={testID}
       style={[
         styles.container,
-        { backgroundColor: t.panel, borderColor: t.line },
+        { backgroundColor: t.raised, borderColor: t.line },
         style,
       ]}
     >
@@ -67,17 +81,16 @@ export function Segmented<T extends string>({
             testID={testID ? `${testID}-${option.value}` : undefined}
             style={[
               styles.segment,
-              selected
-                ? { backgroundColor: t.raised, borderBottomColor: t.signal, borderBottomWidth: 2 }
-                : null,
+              { borderBottomColor: selected ? t.signal : 'transparent' },
+              selected ? { backgroundColor: t.panel } : null,
             ]}
           >
             <Text
               numberOfLines={1}
               style={{
-                fontFamily: fonts.mono,
-                fontSize: 10,
-                letterSpacing: 0.9,
+                fontFamily: selected ? fonts.monoSemiBold : fonts.mono,
+                fontSize: 11,
+                letterSpacing: 1,
                 textTransform: 'uppercase',
                 color: selected ? t.ink : t.inkDim,
               }}
@@ -100,12 +113,11 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    minHeight: MIN_TOUCH - 8,
+    minHeight: MIN_TOUCH,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
   },
 });

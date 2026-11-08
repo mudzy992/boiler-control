@@ -273,6 +273,47 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                       Living Room
                     </Text>
                     <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "borderColor": "#ff6b3d",
+                          "borderRadius": 2,
+                          "borderWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 6,
+                          "paddingHorizontal": 8,
+                          "paddingVertical": 3,
+                        }
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#ff8a5f",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        heating.heating
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
                       accessible={false}
                       style={
                         [
@@ -408,22 +449,6 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                         />
                       </View>
                     </View>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#ff8a5f",
-                            "fontFamily": "monospace",
-                            "fontSize": 12,
-                            "lineHeight": 16,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      heating.heating
-                    </Text>
                     <Text
                       style={
                         [
@@ -809,6 +834,47 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                       Living Room
                     </Text>
                     <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "borderColor": "#c2410c",
+                          "borderRadius": 2,
+                          "borderWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 6,
+                          "paddingHorizontal": 8,
+                          "paddingVertical": 3,
+                        }
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#c1411c",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        heating.heating
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
                       accessible={false}
                       style={
                         [
@@ -944,22 +1010,6 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                         />
                       </View>
                     </View>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#c1411c",
-                            "fontFamily": "monospace",
-                            "fontSize": 12,
-                            "lineHeight": 16,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      heating.heating
-                    </Text>
                     <Text
                       style={
                         [

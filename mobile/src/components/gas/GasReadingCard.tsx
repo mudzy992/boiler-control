@@ -110,7 +110,14 @@ export const GasReadingCard = React.memo(function GasReadingCard({
           reading.readingDate,
         )} — ${t('gas.actionsMenuTitle')}`}
         accessibilityState={{ disabled: isBusy }}
-        style={[styles.row, { opacity: isBusy ? 0.5 : 1 }]}
+        style={[
+          styles.row,
+          {
+            opacity: isBusy ? 0.5 : 1,
+            backgroundColor: tokens.panel,
+            borderColor: tokens.line,
+          },
+        ]}
       >
         <View style={styles.left}>
           <Readout
@@ -253,8 +260,12 @@ function ActionRow({
   const { t: tokens } = useTokens();
   return (
     <View style={styles.actionRow}>
-      <Ionicons name={icon} size={16} color={destructive ? tokens.fault : tokens.ink} />
-      <Text size="body" weight={destructive ? 'semibold' : 'medium'} tone={destructive ? 'fault' : 'ink'}>
+      <Ionicons name={icon} size={20} color={destructive ? tokens.fault : tokens.ink} />
+      <Text
+        size="bodyLg"
+        weight={destructive ? 'semibold' : 'medium'}
+        tone={destructive ? 'fault' : 'ink'}
+      >
         {label}
       </Text>
     </View>
@@ -262,14 +273,32 @@ function ActionRow({
 }
 
 const styles = StyleSheet.create({
+  /**
+   * F7 (GAS-LIST): očitanje je sada KARTICA sa marginama ekrana, ne red
+   * zalepljen za ivicu.
+   *
+   * Prije: `paddingHorizontal: space.md` (12) i `borderBottomWidth` bez
+   * `borderBottomColor`, dok zaglavlje liste ima `paddingHorizontal: space.lg`
+   * (16). Rezultat je bio dvostruko pogrešan: sadržaj reda je počinjao 4 px
+   * lijevo od svakog drugog bloka na ekranu, a ivica reda je koristila RN
+   * default crnu — dakle na dark temi crna linija, a na light temi ista crna
+   * linija preko bijele ploče. Korisnik je to opisao kao „samo su nabacani".
+   *
+   * Sada: `marginHorizontal: space.lg` (isto kao zaglavlje), `borderRadius: 4`,
+   * hairline ivica u `tokens.line` (crta se inline, jer boja zavisi od teme) i
+   * 8 px razmaka između kartica — ritam koji već nose `Panel`/`PanelRow`.
+   */
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: space.sm,
-    paddingVertical: 10,
+    marginHorizontal: space.lg,
+    marginBottom: space.sm,
+    paddingVertical: 14,
     paddingHorizontal: space.md,
-    borderBottomWidth: StyleSheet.hairlineWidth * 2,
+    borderWidth: 1,
+    borderRadius: 4,
   },
   left: {
     flex: 1,
@@ -300,9 +329,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  /**
+   * F7 (GAS-ACTIONS): akcije u sheetu su bile „previše sitne" — 16 px ikona i
+   * 13 px tekst u redu visokom koliko i tekst (~20 px), dakle trećina
+   * preporučene mete. Sada je red visok `MIN_TOUCH` (44) sa 12 px razmaka,
+   * ikonom od 20 px i tekstom `bodyLg` (15) — dodirna meta i vizuelna težina
+   * iste kao dugmad u ostatku aplikacije.
+   */
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.sm,
+    gap: 12,
+    minHeight: 44,
   },
 });

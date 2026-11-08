@@ -37,6 +37,7 @@ import {
 } from '../../constants/boilerLimits';
 import { AlertsCard } from '../../components/AlertsCard';
 import { RecommendationBreakdown } from '../../components/RecommendationBreakdown';
+import { GasConsumptionCard } from '../../components/GasConsumptionCard';
 import { WeatherV2Card } from '../../components/weather/WeatherV2Card';
 import { TemperatureField, WeatherRow } from '../../components/WeatherRow';
 import { WEATHER_UI_V2 } from '../../config/weather.config';
@@ -246,6 +247,18 @@ export const DashboardScreen = () => {
 
   const healthTone = !health ? 'neutral' : health.score >= 80 ? 'ok' : health.score >= 60 ? 'warn' : 'fault';
 
+  /*
+   * F7 (HOME-05) — zašto `boiler.*` a ne `dashboard.*`.
+   *
+   * Ekran je tražio ključeve pod `dashboard.*` (`outdoor`, `health`, `flowGap`…),
+   * a tih ključeva u `locales/config.ts` NEMA — isti
+   * tekstovi žive u `boiler.*` (i u en i u bs). i18next tada vraća sam ključ, pa
+   * je Početna na uređaju ispisivala sirove ključeve umjesto teksta. Popravka je
+   * da pozivi pokazuju na
+   * stvarne ključeve (bez dupliranja iste rečenice na dva mjesta), a
+   * `locales/__tests__/keys.test.ts` sada pada ako ijedan `t('…')` literal u
+   * `src/` ne postoji u OBA jezika.
+   */
   return (
     <Screen edges={['top']} testID="dashboard-screen">
       {header}
@@ -276,22 +289,38 @@ export const DashboardScreen = () => {
                 }
               />
 
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.md }}>
+              {/*
+                F7 (HOME-02): istaknut broj je sada CILJ (flow target), a ne
+                trenutno izmjereni polaz. Razlog: ovo je jedini broj na koji
+                korisnik može uticati, i on je ono što kotao pokušava da
+                postigne — stvarni polaz je posljedica i mijenja se sam.
+                Čitač ekrana dobija oba broja u jednoj labeli, jer dva
+                `Readout`-a bez konteksta zvuče kao „52, 48" bez značenja.
+              */}
+              <View
+                style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.md }}
+                accessible
+                accessibilityLabel={`${t('boiler.flowSetpoint')}: ${
+                  targetFlow !== null ? targetFlow.toFixed(1) : '—'
+                } °C, ${t('boiler.flowLine')}: ${
+                  actualFlow !== null ? actualFlow.toFixed(1) : '—'
+                } °C`}
+              >
                 <Readout
-                  value={actualFlow !== null ? actualFlow.toFixed(1) : '—'}
+                  value={targetFlow !== null ? targetFlow.toFixed(1) : '—'}
                   unit="°C"
                   size="xl"
-                  tone={actualFlow === null ? 'dim' : 'ink'}
-                  accessibilityLabel={t('boiler.flowLine')}
-                  testID="dashboard-flow-actual"
+                  tone={targetFlow === null ? 'dim' : 'signal'}
+                  testID="dashboard-flow-target"
                 />
                 <View style={{ paddingBottom: 6, gap: 2 }}>
-                  <MonoLabel>{t('dashboard.flowTarget')}</MonoLabel>
+                  <MonoLabel>{t('boiler.flowLine')}</MonoLabel>
                   <Readout
-                    value={targetFlow !== null ? targetFlow.toFixed(1) : '—'}
+                    value={actualFlow !== null ? actualFlow.toFixed(1) : '—'}
                     unit="°C"
                     size="md"
                     tone="muted"
+                    testID="dashboard-flow-actual"
                   />
                 </View>
               </View>
@@ -308,16 +337,16 @@ export const DashboardScreen = () => {
                 <MonoMeta tone={flowGap === null ? 'dim' : withinTolerance ? 'ok' : 'warn'}>
                   {flowGap === null
                     ? t('boiler.actualNotSet')
-                    : `${t('dashboard.flowGap', {
+                    : `${t('boiler.flowGap', {
                         value: flowGap.toFixed(1),
                       })} · ${
                         withinTolerance
-                          ? t('dashboard.flowWithinTolerance')
-                          : t('dashboard.flowOutsideTolerance')
+                          ? t('boiler.flowWithinTolerance')
+                          : t('boiler.flowOutsideTolerance')
                       }`}
                 </MonoMeta>
                 <MonoMeta>
-                  {t('dashboard.flowScale', {
+                  {t('boiler.flowScale', {
                     min: MIN_CURRENT_FLOW_TEMP,
                     max: MAX_CURRENT_FLOW_TEMP,
                   })}
@@ -349,24 +378,24 @@ export const DashboardScreen = () => {
         {/* Tri KPI pločice u jednom redu — bez kartica i bez trećeg akcenta. */}
         <View style={{ flexDirection: 'row', gap: space.sm }}>
           <Kpi
-            label={t('dashboard.outdoor')}
+            label={t('boiler.outdoor')}
             value={boiler?.externalTemp != null ? boiler.externalTemp.toFixed(1) : '—'}
             unit="°C"
             meta={
               weather?.feelsLike != null
-                ? t('dashboard.outdoorFeels', { value: Number(weather.feelsLike).toFixed(0) })
+                ? t('boiler.outdoorFeels', { value: Number(weather.feelsLike).toFixed(0) })
                 : undefined
             }
             testID="kpi-outdoor"
           />
           <Kpi
-            label={t('dashboard.health')}
+            label={t('boiler.health')}
             value={health ? Math.round(health.score) : '—'}
             unit={health ? '/100' : undefined}
             tone={healthTone}
             meta={
               health
-                ? t('dashboard.healthMeta', {
+                ? t('boiler.healthMeta', {
                     value: Math.round(health.learningConfidence ?? 0),
                   })
                 : undefined
@@ -375,12 +404,12 @@ export const DashboardScreen = () => {
             testID="kpi-health"
           />
           <Kpi
-            label={t('dashboard.thermostatsKpi')}
+            label={t('boiler.thermostatsKpi')}
             value={thermostats.length === 0 ? '—' : `${onlineThermostats}/${thermostats.length}`}
             meta={
               thermostats.length === 0
                 ? t('heating.noThermostats')
-                : t('dashboard.thermostatsOnline', {
+                : t('boiler.thermostatsOnline', {
                     online: onlineThermostats,
                     total: thermostats.length,
                   })
@@ -396,6 +425,11 @@ export const DashboardScreen = () => {
           />
         </View>
 
+        {/* F7 (HOME-03): ukupna potrošnja gasa i cijena, odmah ispod KPI reda. */}
+        <Section label={t('gas.title')}>
+          <GasConsumptionCard />
+        </Section>
+
         {health?.warnings?.length ? (
           <Section label={t('dashboard.activeAlerts')} meta={String(health.warnings.length)}>
             <AlertsCard warnings={health.warnings} />
@@ -406,7 +440,7 @@ export const DashboardScreen = () => {
           label={t('thermostat.title')}
           meta={
             thermostats.length > 0
-              ? t('dashboard.thermostatsOnline', {
+              ? t('boiler.thermostatsOnline', {
                   online: onlineThermostats,
                   total: thermostats.length,
                 })
@@ -494,7 +528,7 @@ export const DashboardScreen = () => {
 
         {dashboardData?.homes && dashboardData.homes.length > 1 && (
           <MonoMeta>
-            {t('dashboard.moreHomes', { count: dashboardData.homes.length - 1 })}
+            {t('boiler.moreHomes', { count: dashboardData.homes.length - 1 })}
           </MonoMeta>
         )}
       </ScreenBody>

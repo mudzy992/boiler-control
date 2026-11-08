@@ -1,141 +1,139 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { useColorModeValue } from './ui/nativewind';
+import { View } from 'react-native';
+
 import { useTranslation } from '../hooks/useTranslation';
 import type { RecommendationBreakdown as RecommendationBreakdownData } from '../types/Dashboard';
+import { formatNumber } from '../utils/format';
+import { InlineBanner, MonoMeta, Panel, PanelRow, Readout, Text } from '../ui';
+import { space } from '../theme/tokens';
 
 interface RecommendationBreakdownProps {
   breakdown?: RecommendationBreakdownData | null;
-}
-
-function formatTemp(value: number): string {
-  return `${value.toFixed(1)}°C`;
-}
-
-function formatOffset(value: number): string {
-  const sign = value > 0 ? '+' : '';
-  return `${sign}${value.toFixed(2)}°C`;
 }
 
 /**
  * MO2-15: render ONLY the backend breakdown snapshot. The client does not
  * reconstruct the formula, compute the base curve, or change the recommendation.
  * If the backend did not send a breakdown (older rows), render nothing.
+ *
+ * F7 (HOME-05) — zašto je kartica prepisana:
+ *
+ * Simptom: „Recommendation reason se na dark temi ne vidi, kao da ima hardkodiran
+ * crni font". Uzrok je bio stari sloj: kartica je koristila `useColorModeValue`
+ * sa `gray.800`/`gray.100`, ali `Text` iz `react-native` u tom fajlu nije
+ * primao boju kroz sve čvorove — naslov i vrijednosti su ostajali na RN
+ * default-u (crno), pa su na tamnoj podlozi `gray.800` (#1f2937) bili praktično
+ * nevidljivi. Dodatno je kartica imala `borderRadius: 12`, font 16/13/11 i
+ * plavu „info" kutiju — dakle nijedan token iz palete.
+ *
+ * Sada: `Panel` (hairline ivica, radijus 4) + `PanelRow` po stavci, `Readout`
+ * za brojeve (mono, tabularno) i `InlineBanner` za napomenu — iste boje i isti
+ * ritam kao svaki drugi blok u aplikaciji, u obje teme.
  */
 export const RecommendationBreakdown = React.memo(function RecommendationBreakdown({
   breakdown,
 }: RecommendationBreakdownProps) {
   const { t } = useTranslation();
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const mutedColor = useColorModeValue('gray.600', 'gray.400');
-  const infoBg = useColorModeValue('blue.50', 'blue.900');
-  const infoText = useColorModeValue('blue.700', 'blue.200');
 
-  if (!breakdown) {
-    return null;
-  }
+  if (!breakdown) return null;
 
-  const rows: { label: string; value: string }[] = [
-    { label: t('recommendation.baseCurve'), value: formatTemp(breakdown.baseCurveTemp) },
+  /**
+   * Vrijednost i jedinica su JEDAN tekstualni čvor (`51.1°C`, `28 min`).
+   * Razlog nije kozmetika: čitači ekrana i `getByText` u testovima vide cijelu
+   * vrijednost kao jednu tvrdnju, a `Readout` sa odvojenim `unit` propom bi je
+   * razbio na dva čvora („51,1" + „°C"). Zato je jedinica dio stringa.
+   */
+  const temp = (value: number) => `${formatNumber(value, 1)}°C`;
+  const offset = (value: number) => `${value > 0 ? '+' : ''}${formatNumber(value, 2)}°C`;
+
+  type Row = { key: string; label: string; value: string; tone?: 'signal' };
+
+  const rows: Row[] = [
+    { key: 'baseCurve', label: t('recommendation.baseCurve'), value: temp(breakdown.baseCurveTemp) },
     {
+      key: 'weightedExternal',
       label: t('recommendation.weightedExternal'),
-      value: formatTemp(breakdown.weightedExternalTemp),
+      value: temp(breakdown.weightedExternalTemp),
     },
+    { key: 'homeOffset', label: t('recommendation.homeOffset'), value: offset(breakdown.appliedOffsets.home) },
     {
-      label: t('recommendation.homeOffset'),
-      value: formatOffset(breakdown.appliedOffsets.home),
-    },
-    {
+      key: 'intervalOffset',
       label: t('recommendation.intervalOffset'),
-      value: formatOffset(breakdown.appliedOffsets.interval),
+      value: offset(breakdown.appliedOffsets.interval),
     },
     {
+      key: 'eventsOffset',
       label: t('recommendation.eventsOffset'),
-      value: formatOffset(breakdown.appliedOffsets.events),
+      value: offset(breakdown.appliedOffsets.events),
     },
-    { label: t('recommendation.finalTemp'), value: formatTemp(breakdown.finalTemp) },
+    // Rezultat je jedina brojka koja nosi odluku — zato jedina u `signal` tonu.
     {
+      key: 'finalTemp',
+      label: t('recommendation.finalTemp'),
+      value: temp(breakdown.finalTemp),
+      tone: 'signal',
+    },
+    {
+      key: 'confidence',
       label: t('recommendation.confidence'),
       value: `${Math.round(breakdown.confidence * 100)}%`,
     },
   ];
 
   if (breakdown.samples !== null) {
-    rows.push({ label: t('recommendation.samples'), value: String(breakdown.samples) });
+    rows.push({
+      key: 'samples',
+      label: t('recommendation.samples'),
+      value: formatNumber(breakdown.samples, 0),
+    });
   }
   if (breakdown.expectedHeatTimeMin !== null) {
     rows.push({
+      key: 'expectedHeatTime',
       label: t('recommendation.expectedHeatTime'),
-      value: `${breakdown.expectedHeatTimeMin.toFixed(0)} min`,
+      value: `${formatNumber(breakdown.expectedHeatTimeMin, 0)} min`,
     });
   }
 
   return (
-    <View
-      testID="recommendation-breakdown"
-      style={[styles.card, { backgroundColor: cardBg, borderColor }]}
-    >
-      <Text style={[styles.title, { color: textColor }]}>{t('recommendation.title')}</Text>
-      <View style={[styles.disclaimer, { backgroundColor: infoBg }]}>
-        <Text style={[styles.disclaimerText, { color: infoText }]}>
-          {t('recommendation.disclaimer')}
-        </Text>
+    <Section testID="recommendation-breakdown">
+      <View style={{ gap: space.sm }}>
+        <MonoMeta>{t('recommendation.title')}</MonoMeta>
+        <Panel variant="flush" padded={false}>
+          {rows.map((row, index) => (
+            <PanelRow key={row.key} divider={index < rows.length - 1}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'baseline',
+                  justifyContent: 'space-between',
+                  gap: space.sm,
+                  flex: 1,
+                }}
+              >
+                <Text size="body" tone="muted" style={{ flex: 1 }}>
+                  {row.label}
+                </Text>
+                <Readout value={row.value} size="md" tone={row.tone ?? 'ink'} />
+              </View>
+            </PanelRow>
+          ))}
+        </Panel>
+        <InlineBanner tone="info" title={t('recommendation.disclaimer')} />
+        <MonoMeta>
+          {`${t('recommendation.mode')}: ${breakdown.mode}${
+            breakdown.intervalKey ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}` : ''
+          }`}
+        </MonoMeta>
       </View>
-      {rows.map((row) => (
-        <View key={row.label} style={styles.row}>
-          <Text style={[styles.label, { color: mutedColor }]}>{row.label}</Text>
-          <Text style={[styles.value, { color: textColor }]}>{row.value}</Text>
-        </View>
-      ))}
-      <Text style={[styles.meta, { color: mutedColor }]}>
-        {t('recommendation.mode')}: {breakdown.mode}
-        {breakdown.intervalKey
-          ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}`
-          : ''}
-      </Text>
-    </View>
+    </Section>
   );
 });
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  disclaimer: {
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 12,
-  },
-  disclaimerText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  label: {
-    fontSize: 13,
-    flex: 1,
-    paddingRight: 8,
-  },
-  value: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  meta: {
-    fontSize: 11,
-    marginTop: 8,
-  },
-});
+/**
+ * Lokalni `Section` bez labele: ovdje naslov nosi `MonoMeta` jer je kartica
+ * unutar sekcije Početne, a `Section` sa labelom bi udvostručio heading.
+ */
+function Section({ children, testID }: { children: React.ReactNode; testID?: string }) {
+  return <View testID={testID}>{children}</View>;
+}

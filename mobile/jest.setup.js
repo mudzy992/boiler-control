@@ -43,3 +43,19 @@ jest.mock('@gorhom/bottom-sheet', () => {
   const mock = require('@gorhom/bottom-sheet/mock');
   return { __esModule: true, ...mock, default: mock.default };
 });
+
+// F7 (TEST-FONT): `Readout`, `MonoLabel` i ostali primitivi idu kroz `useTokens`
+// → `useAppFonts` → `expo-font`, a `require('*.ttf')` u Jest-u nije asset nego
+// broj („Module 1 is missing from the asset registry"). Rezultat: svaki test
+// koji renderuje `Readout` pada na `FontLoader` prije nego dođe do asertacije.
+// Mock vraća `[false, null]` — dakle „još nisu učitani", pa `useAppFonts` javi
+// `fallback: true` i komponente koriste `systemFontFamily`. To je ISTO stanje
+// koje je do sada davalo `useFonts` bez mocka, pa 22 snapshota ostaju
+// nepromijenjena; razlika je samo što `require(ttf)` više ne ide u asset
+// registry. `[true, null]` je iskušano i pogrešno: snapshoti bi tvrdili da su
+// IBM Plex familije aktivne, a u Jest-u nijedan ttf nije učitan.
+jest.mock('expo-font', () => ({
+  useFonts: () => [false, null],
+  isLoaded: () => true,
+  loadAsync: () => Promise.resolve(),
+}));

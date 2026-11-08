@@ -701,6 +701,46 @@ Prilagođeni testovi (uz komentar na mjestu izmjene, bez slabljenja tvrdnji):
 ostaje u formi), `scheduleNativeWind` (sheet umjesto select-a + test za
 `textTransform`).
 
+### F11 — pad produkcijskog Android builda (AAR metadata)
+
+Korisnikov `eas build --profile production --platform android --local` pao je
+poslije 9 m 35 s, i to ne na našem kodu:
+
+```
+:react-native-screens:checkReleaseAarMetadata
+androidx.core:core:1.17.0 requires libraries and applications that depend on it
+to compile against version 36 or later of the Android APIs.
+:react-native-screens is currently compiled against android-35.
+```
+
+**Uzrok:** `app.config.js` je kroz `expo-build-properties` pinovao
+`compileSdkVersion: 35` i `targetSdkVersion: 35`. Komentar na tom mjestu je
+govorio „Expo 54 zadano je 36, pa pinujemo na 35" — vrijedilo je za Expo 54.
+Na SDK 58 / RN 0.88 isti pin je ispod praga koji nose AAR metapodaci
+(`androidx.core` 1.17), pa `checkReleaseAarMetadata` prekida build prije
+kompajliranja. To se ne rješava `exclude`-om ni dependency constraintom: prag
+je zapisan u samoj biblioteci.
+
+Pin je bio i ispod Play zahtjeva — od avgusta 2026 Play traži `targetSdk 36`.
+
+**Popravka:** vrijednosti se više ne pinuju, nego ih određuju Expo/RN defaulti
+(`compileSdk 37`, `targetSdk 36`, prema `ExpoRootProjectPlugin.kt`). Time
+`compileSdk` uvijek prati SDK i ne može ponovo zaostati za bibliotekama.
+`minSdkVersion` i dalje nije diran (Expo zadano 24 = Android 7.0), kao ni
+odluka vlasnika o R8 (`enableMinifyInReleaseBuilds: false`,
+`enableShrinkResourcesInReleaseBuilds: false`) i jedna ABI (`arm64-v8a`).
+
+Uzrok je uklonjen i iz `app.json`/`app.config.js` za `edgeToEdgeEnabled`:
+u SDK 58 plugin ispisuje da opcija više ne postoji jer Android 16 nameće
+edge-to-edge.
+
+**Dokaz:** `npx expo prebuild --platform android` više ne ispisuje upozorenje za
+`edgeToEdgeEnabled`; novi `src/__tests__/buildConfig.test.ts` (5 testova) čita
+`app.config.js` i tvrdi da `compileSdk`/`targetSdk` nisu pinovani ispod 36, da
+`minSdk` nije diran, da `edgeToEdgeEnabled` ne postoji i da su R8/ABI odluke
+netaknute. Native folderi nisu u repou (CNG), pa test čita konfiguraciju, a ne
+`android/gradle.properties`.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

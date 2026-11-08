@@ -57,6 +57,7 @@ module.exports = ({ config }) => {
     },
     scheme: config.scheme || 'myapp',
     plugins: config.plugins || [
+      'expo-sharing',
       'expo-font',
       'expo-updates',
       '@react-native-community/datetimepicker',

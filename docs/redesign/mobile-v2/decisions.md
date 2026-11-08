@@ -435,7 +435,7 @@ Isti popravak rješava i promjenu jezika, jer se do `changeLanguage` nije dolazi
 | SET-LANG | F6a je tvrdila da radi; lista se nije otvarala | stvarna reprodukcija: otvori → izaberi → UI preveden → `app.language` sačuvan | `settings/__tests__/language.test.tsx` (2) |
 | HOME-05 | hero je isticao klijentsku vrijednost, 11 `dashboard.*` ključeva nije postojalo | istaknut `targetFlow` (`xl`, `signal`), polaz sekundaran, svi pozivi na `boiler.*` | `keys.test.ts` (3), dashboard snapshot |
 | I18N-KEYS | sirovi ključevi na Početnoj (`dashboard.outdoor`…) | source-contract test: svaki `t('…')` postoji u **oba** jezika, paritet 777/777 | `keys.test.ts` |
-| HOME-03 | nije postojala kartica potrošnje | `GasConsumptionCard`: ukupno m³ + cijena, riješena i nula (nema očitanja ⇒ nema tvrdnje „0") | `GasConsumptionCard` + `gasSummary.*` |
+| HOME-03 | nije postojala kartica potrošnje | `GasConsumptionCard`: ukupno m³ + cijena, riješena i nula (nema očitanja ⇒ nema tvrdnje „0") | `components/__tests__/GasConsumptionCard.test.tsx` (2) |
 | HOME-04 | alerti su bili soft ploče (`red.100`/`orange.100`) sa 9 parova boja | `Panel`/`PanelRow` + `Led` + semantički `fault`/`warn`/`info`, tekst nosi značenje | `AlertsCard.tsx` |
 | HOME-05b | „Recommendation reason" crni font na dark temi | `Panel`/`PanelRow`/`Readout`, jedinica u istom tekstualnom čvoru (`51,1 °C`) | `RecommendationBreakdown.test.tsx` (4) |
 | GAS-TABS | traka se nije prepoznavala kao tab meni; segment 36 px | `raised` traka, segment 44 px, aktivni: podloga + 2 px `signal` + semibold | snapshot +
@@ -456,7 +456,7 @@ ostaju nepromijenjena, a testovi koji renderuju primitives više ne padaju.
 
 ```
 npx tsc --noEmit                        → 0 grešaka
-npx jest                                → 44 suite-a, 297 testova, 32 snapshota — zeleno
+npx jest                                → 45 suite-ova, 299 testova, 32 snapshota — zeleno
 npx eslint src                          → 0 grešaka (38 postojećih warninga)
 CI=1 npx expo export --platform android --dev → bundle se gradi
 ```
@@ -479,7 +479,7 @@ novi `raised` izgled trake). Nijedna asertacija nije ublažena; dvije su
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
 | F6 Greške + šest dorada | **završeno 2026-11-08** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; reduced motion za splash; 55 novih testova |
-| F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 12 nalaza; 9 novih testova |
+| F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 12 nalaza; 11 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

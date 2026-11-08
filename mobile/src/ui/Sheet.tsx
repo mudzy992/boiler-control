@@ -17,6 +17,7 @@
 import React from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   StyleSheet,
   View,
@@ -99,52 +100,86 @@ export function Sheet({
    * Namjerno se NE vraća `null` kad je `isOpen === false`: sheet treba da ostane
    * montiran da bi `close()` mogao da odigra animaciju, a `index` ga sklanja.
    * `enablePanDownToClose` i backdrop pozivaju isti `onClose`.
+   *
+   * F7: kad se koristi `scrollable`, `Content` je `BottomSheetScrollView` —
+   * dugi sadržaj (forme, liste akcija) tada skrola unutar lista, a ne izvan
+   * njega. Bez toga se na malim ekranima zadnja dugmad nisu mogla dohvatiti.
    */
   const Content = scrollable ? BottomSheetScrollView : BottomSheetView;
 
+  /*
+   * F7 (SHEET-01) — zašto `Modal` oko `BottomSheet`-a.
+   *
+   * Simptom na uređaju: „Set current temp ne otvara nikakav modul", „dodavanje
+   * novog očitanja ne otvara ništa", „promjena jezika ne radi". Sva tri (i još
+   * nekoliko ekrana) idu kroz OVAJ primitive, pa je uzrok bio zajednički.
+   *
+   * Uzrok: `BottomSheet` je bio dijete `SafeAreaView`-a ekrana, dakle unutar
+   * `ScreenStack` kartice. `@gorhom/bottom-sheet` računa svoju poziciju od
+   * „container"-a i očekuje da visi o korijenu; unutar `flex: 1` ekrana sa
+   * `overflow: hidden` list se otvori ispod sadržaja, iza drugih ekrana, ili se
+   * uopšte ne vidi — zavisno od toga šta je iznad njega u stablu. `Modal` ga
+   * montira u vlastiti root view iznad svega, pa je pozicija deterministicna
+   * bez obzira na to gdje se `Sheet` koristi.
+   *
+   * Druga posljedica: `index={-1}` je bio fiksan, a otvaranje se oslanjalo samo
+   * na imperativni `snapToIndex(0)` iz efekta. Ako taj efekat otrči prije nego
+   * što biblioteka izračuna layout (`isLayoutCalculated`), `snapToIndex` izađe
+   * bez greške i list NIKAD ne ode na 0. Zato sada `index` prati `isOpen`
+   * (deklarativno), a `useEffect` sa `snapToIndex` ostaje kao pojačanje.
+   */
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={-1}
-      snapPoints={points}
-      enablePanDownToClose
-      onClose={onClose}
-      backdropComponent={renderBackdrop}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-      android_keyboardInputMode="adjustResize"
-      backgroundStyle={{ backgroundColor: t.panel, borderRadius: radius.panel }}
-      handleIndicatorStyle={{ backgroundColor: t.lineStrong }}
-      style={{ zIndex: 10 }}
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={onClose}
+      testID={testID ? `${testID}-modal` : undefined}
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <BottomSheet
+        ref={sheetRef}
+        index={isOpen ? 0 : -1}
+        snapPoints={points}
+        enablePanDownToClose
+        onClose={onClose}
+        backdropComponent={renderBackdrop}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        backgroundStyle={{ backgroundColor: t.panel, borderRadius: radius.panel }}
+        handleIndicatorStyle={{ backgroundColor: t.lineStrong }}
+        style={{ zIndex: 10 }}
       >
-        {title ? (
-          <View style={[styles.header, { borderBottomColor: t.line }]}>
-            <Text
-              accessibilityRole="header"
-              style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: t.ink, flex: 1 }}
-            >
-              {title}
-            </Text>
-            <Pressable
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel={closeLabel}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              testID={testID ? `${testID}-close` : undefined}
-            >
-              <Ionicons name="close" size={18} color={t.inkMuted} />
-            </Pressable>
-          </View>
-        ) : null}
-        <Content style={{ flex: 1 }} contentContainerStyle={styles.content}>
-          {children}
-        </Content>
-      </KeyboardAvoidingView>
-    </BottomSheet>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          {title ? (
+            <View style={[styles.header, { borderBottomColor: t.line }]}>
+              <Text
+                accessibilityRole="header"
+                style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: t.ink, flex: 1 }}
+              >
+                {title}
+              </Text>
+              <Pressable
+                onPress={onClose}
+                accessibilityRole="button"
+                accessibilityLabel={closeLabel}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                testID={testID ? `${testID}-close` : undefined}
+              >
+                <Ionicons name="close" size={20} color={t.inkMuted} />
+              </Pressable>
+            </View>
+          ) : null}
+          <Content style={{ flex: 1 }} contentContainerStyle={styles.content}>
+            {children}
+          </Content>
+        </KeyboardAvoidingView>
+      </BottomSheet>
+    </Modal>
   );
 }
 

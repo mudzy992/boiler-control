@@ -25,6 +25,7 @@ import {
   Section,
   SkeletonRows,
   Text,
+  useTokens,
 } from '../../ui';
 import { useToast } from '../../components/ui/nativewind';
 import { SETTINGS_STACK_SCREENS } from '../../constants/routes';
@@ -98,6 +99,42 @@ function formatDuration(startIso: string, endIso: string | null): string {
 const formatTime = (iso: string, locale: string) =>
   new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 
+/**
+ * Status kao pilula: tekst + ivica, a ne samo boja. Boja sama ne smije nositi
+ * značenje (WCAG 1.4.1), pa pilula uvijek ima natpis.
+ */
+function StatusPill({ active, label }: { active: boolean; label: string }) {
+  const { t: tokens } = useTokens();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: active ? tokens.signal : tokens.line,
+      }}
+    >
+      <MonoMeta tone={active ? 'signal' : 'dim'}>{label}</MonoMeta>
+    </View>
+  );
+}
+
+/**
+ * F7 (HEAT-01): kartica statusa grijanja, „možda malo ljepše".
+ *
+ * Korisnik je rekao da nije blokada, ali je problem bio stvaran: red je imao
+ * tri različita signala u istoj liniji — `Led`, `GaugeBar` i dva `MonoMeta`
+ * natpisa („Grije"/„Miruje" i „Δ +1.2") — bez ijednog okvira koji ih drži na
+ * okupu, pa se uz više termostata nije vidjelo gdje jedan red prestaje.
+ *
+ * Sada: ime uređaja i status su u prvom redu (status je pilula sa ivicom u boji
+ * stanja — tako se čita i bez boje, po tekstu), a temperatura i traka su u
+ * drugom. Delta je pomjerena uz traku jer opisuje ISTO poređenje.
+ */
 function DeviceRow({
   thermostat,
   isHeating,
@@ -120,6 +157,9 @@ function DeviceRow({
           <Text size="body" weight="medium" style={{ flex: 1 }} numberOfLines={1}>
             {thermostat.alias || thermostat.name || `#${thermostat.id}`}
           </Text>
+          <StatusPill active={isHeating} label={isHeating ? t('heating.heating') : t('heating.standbyShort')} />
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
           <Readout
             value={`${current.toFixed(1)} → ${target.toFixed(1)}`}
             unit="°C"
@@ -141,9 +181,6 @@ function DeviceRow({
               )}, ${t('heating.target')} ${target.toFixed(1)}`}
             />
           </View>
-          <MonoMeta tone={isHeating ? 'signal' : 'dim'}>
-            {isHeating ? t('heating.heating') : t('heating.standbyShort')}
-          </MonoMeta>
           <MonoMeta tone={Math.abs(gap) < 0.05 ? 'ok' : 'dim'}>
             {`Δ ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}`}
           </MonoMeta>

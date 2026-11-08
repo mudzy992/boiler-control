@@ -19,6 +19,7 @@ export { Button, IconButton } from './Button';
 export { GaugeBar } from './GaugeBar';
 export { Led, StatusDot } from './Led';
 export { Segmented } from './Segmented';
+export { FilterMenuTrigger, FilterMenuOptions } from './FilterMenu';
 export { InlineBanner } from './InlineBanner';
 export {
   AsyncState,
@@ -37,4 +38,5 @@ export type { LedState } from './Led';
 export type { ButtonVariant } from './Button';
 export type { ReadoutSize } from './Readout';
 export type { SegmentedOption } from './Segmented';
+export type { FilterMenuOption } from './FilterMenu';
 export type { TrendPoint } from './TrendChart';

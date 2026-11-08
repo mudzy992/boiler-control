@@ -331,6 +331,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   </Text>
                 </View>
                 <View
+                  accessibilityLabel="boiler.flowSetpoint: 51.0 °C, boiler.flowLine: 50.0 °C"
+                  accessible={true}
                   style={
                     {
                       "alignItems": "flex-end",
@@ -340,8 +342,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   }
                 >
                   <View
-                    accessibilityLabel="boiler.flowLine"
-                    accessible={true}
+                    accessible={false}
                     style={
                       [
                         {
@@ -352,7 +353,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         undefined,
                       ]
                     }
-                    testID="dashboard-flow-actual"
+                    testID="dashboard-flow-target"
                   >
                     <Text
                       style={
@@ -365,7 +366,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           },
                           null,
                           {
-                            "color": "#e8edf4",
+                            "color": "#ff8a5f",
                             "fontFamily": "monospace",
                             "fontSize": 40,
                             "fontVariant": [
@@ -377,7 +378,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         ]
                       }
                     >
-                      50.0
+                      51.0
                     </Text>
                     <Text
                       style={
@@ -430,7 +431,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         ]
                       }
                     >
-                      dashboard.flowTarget
+                      boiler.flowLine
                     </Text>
                     <View
                       accessible={false}
@@ -444,6 +445,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           undefined,
                         ]
                       }
+                      testID="dashboard-flow-actual"
                     >
                       <Text
                         style={
@@ -468,7 +470,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           ]
                         }
                       >
-                        51.0
+                        50.0
                       </Text>
                       <Text
                         style={
@@ -574,7 +576,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       ]
                     }
                   >
-                    dashboard.flowGap · dashboard.flowWithinTolerance
+                    boiler.flowGap · boiler.flowWithinTolerance
                   </Text>
                   <Text
                     style={
@@ -590,7 +592,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       ]
                     }
                   >
-                    dashboard.flowScale
+                    boiler.flowScale
                   </Text>
                 </View>
                 <View
@@ -922,7 +924,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.outdoor
+                boiler.outdoor
               </Text>
               <View
                 accessible={false}
@@ -1016,12 +1018,12 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     ]
                   }
                 >
-                  dashboard.outdoorFeels
+                  boiler.outdoorFeels
                 </Text>
               </View>
             </View>
             <View
-              accessibilityLabel="dashboard.health: 85 /100"
+              accessibilityLabel="boiler.health: 85 /100"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -1111,7 +1113,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     ]
                   }
                 >
-                  dashboard.health
+                  boiler.health
                 </Text>
                 <View
                   accessible={false}
@@ -1219,7 +1221,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       ]
                     }
                   >
-                    dashboard.healthMeta
+                    boiler.healthMeta
                   </Text>
                 </View>
               </View>
@@ -1266,7 +1268,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.thermostatsKpi
+                boiler.thermostatsKpi
               </Text>
               <View
                 accessible={false}
@@ -1352,8 +1354,142 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     ]
                   }
                 >
-                  dashboard.thermostatsOnline
+                  boiler.thermostatsOnline
                 </Text>
+              </View>
+            </View>
+          </View>
+          <View
+            style={
+              [
+                {
+                  "gap": 8,
+                },
+                undefined,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "letterSpacing": 1.4,
+                      "textTransform": "uppercase",
+                    },
+                  ]
+                }
+              >
+                gas.title
+              </Text>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "overflow": "hidden",
+                  },
+                  {
+                    "backgroundColor": "#0b0f16",
+                    "borderColor": "#1f2733",
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+              testID="gas-consumption-card"
+            >
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "paddingHorizontal": 12,
+                      "paddingVertical": 10,
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  accessibilityLabel="gasSummary.noData"
+                  accessible={true}
+                  style={
+                    {
+                      "alignItems": "flex-end",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": 16,
+                    }
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "flex": 1,
+                        "gap": 2,
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#828d9e",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "lineHeight": 15,
+                          },
+                          null,
+                          {
+                            "letterSpacing": 1.4,
+                            "textTransform": "uppercase",
+                          },
+                        ]
+                      }
+                    >
+                      gasSummary.title
+                    </Text>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      gasSummary.noData
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
           </View>
@@ -1422,65 +1558,129 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
               </Text>
             </View>
             <View
-              className="flex flex-col"
+              accessible={false}
               style={
-                {
-                  "gap": 8,
-                  "marginBottom": 12,
-                }
+                [
+                  {
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "overflow": "hidden",
+                  },
+                  {
+                    "backgroundColor": "#0b0f16",
+                    "borderColor": "#1f2733",
+                  },
+                  null,
+                  undefined,
+                ]
               }
+              testID="dashboard-alerts"
             >
               <View
+                accessibilityLabel="health.severityWarning: healthWarnings.shortCycles. Short cycle warning"
+                accessible={true}
                 style={
-                  {
-                    "backgroundColor": "#7c2d12",
-                    "borderColor": "#c2410c",
-                    "borderRadius": 8,
-                    "borderWidth": 1,
-                    "padding": 12,
-                  }
+                  [
+                    {
+                      "paddingHorizontal": 12,
+                      "paddingVertical": 10,
+                    },
+                    null,
+                    undefined,
+                  ]
                 }
               >
                 <View
-                  className="flex flex-row"
                   style={
                     {
-                      "alignItems": "flex-start",
-                      "gap": 8,
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": 10,
                     }
                   }
                 >
-                  <Text
-                    accessibilityLabel="timer-alert-outline"
-                  >
-                    timer-alert-outline
-                  </Text>
                   <View
-                    className="flex flex-col"
+                    style={
+                      {
+                        "alignSelf": "stretch",
+                        "backgroundColor": "#f5a524",
+                        "borderRadius": 1,
+                        "width": 2,
+                      }
+                    }
+                  />
+                  <View
                     style={
                       {
                         "flex": 1,
-                        "gap": 0,
+                        "gap": 2,
                       }
                     }
                   >
-                    <Text
+                    <View
                       style={
                         {
-                          "color": "#fed7aa",
-                          "fontSize": 12,
-                          "fontWeight": "600",
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 6,
                         }
+                      }
+                    >
+                      <View
+                        style={
+                          {
+                            "backgroundColor": "#f5a524",
+                            "borderRadius": 999,
+                            "height": 6,
+                            "width": 6,
+                          }
+                        }
+                      />
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#f5a524",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        health.severityWarning
+                      </Text>
+                    </View>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#e8edf4",
+                            "fontFamily": undefined,
+                            "fontSize": 15,
+                            "lineHeight": 20,
+                          },
+                          null,
+                          undefined,
+                        ]
                       }
                     >
                       healthWarnings.shortCycles
                     </Text>
                     <Text
                       style={
-                        {
-                          "color": "#fed7aa",
-                          "fontSize": 12,
-                        }
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          undefined,
+                        ]
                       }
                     >
                       Short cycle warning
@@ -1551,7 +1751,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.thermostatsOnline
+                boiler.thermostatsOnline
               </Text>
             </View>
             <View
@@ -1803,819 +2003,902 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
             </View>
           </View>
           <View
-            style={
-              [
-                {
-                  "borderRadius": 12,
-                  "borderWidth": 1,
-                  "marginBottom": 12,
-                  "padding": 16,
-                },
-                {
-                  "backgroundColor": "gray.800",
-                  "borderColor": "gray.700",
-                },
-              ]
-            }
             testID="recommendation-breakdown"
           >
-            <Text
-              style={
-                [
-                  {
-                    "fontSize": 16,
-                    "fontWeight": "700",
-                    "marginBottom": 8,
-                  },
-                  {
-                    "color": "gray.100",
-                  },
-                ]
-              }
-            >
-              recommendation.title
-            </Text>
             <View
               style={
-                [
-                  {
-                    "borderRadius": 8,
-                    "marginBottom": 12,
-                    "padding": 8,
-                  },
-                  {
-                    "backgroundColor": "blue.900",
-                  },
-                ]
+                {
+                  "gap": 8,
+                }
               }
             >
               <Text
                 style={
                   [
                     {
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
                       "fontSize": 12,
-                      "fontWeight": "600",
+                      "lineHeight": 16,
                     },
-                    {
-                      "color": "blue.200",
-                    },
+                    null,
+                    undefined,
                   ]
                 }
               >
-                recommendation.disclaimer
+                recommendation.title
               </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
+              <View
+                accessible={false}
                 style={
                   [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#0b0f16",
+                      "borderColor": "#1f2733",
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.baseCurve
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        51.0°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.weightedExternal
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        4.5°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.homeOffset
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        +0.25°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.intervalOffset
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        -0.50°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.eventsOffset
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        +0.25°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.finalTemp
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#ff8a5f",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        51.0°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.confidence
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        72%
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#1f2733",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.samples
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        8
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.expectedHeatTime
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        28 min
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <View
+                accessibilityLabel="recommendation.disclaimer"
+                accessibilityRole="alert"
+                accessible={true}
+                style={
+                  [
+                    {
+                      "alignItems": "flex-start",
+                      "borderLeftWidth": 2,
+                      "borderRadius": 3,
+                      "borderWidth": 1,
+                      "flexDirection": "row",
+                      "gap": 8,
+                      "paddingHorizontal": 11,
+                      "paddingVertical": 9,
+                    },
+                    {
+                      "backgroundColor": "#111723",
+                      "borderColor": "#1f2733",
+                      "borderLeftColor": "#38bdf8",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <Text
+                  accessibilityLabel="information-circle-outline"
+                >
+                  information-circle-outline
+                </Text>
+                <View
+                  style={
                     {
                       "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.baseCurve
-              </Text>
+                      "gap": 2,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                        },
+                      ]
+                    }
+                  >
+                    recommendation.disclaimer
+                  </Text>
+                </View>
+              </View>
               <Text
                 style={
                   [
                     {
-                      "fontSize": 13,
-                      "fontWeight": "600",
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
+                      "fontSize": 12,
+                      "lineHeight": 16,
                     },
-                    {
-                      "color": "gray.100",
-                    },
+                    null,
+                    undefined,
                   ]
                 }
               >
-                51.0°C
+                recommendation.mode: FULL · recommendation.interval: weekday_morning
               </Text>
             </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.weightedExternal
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                4.5°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.homeOffset
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                +0.25°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.intervalOffset
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                -0.50°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.eventsOffset
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                +0.25°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.finalTemp
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                51.0°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.confidence
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                72%
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.samples
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                8
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.400",
-                    },
-                  ]
-                }
-              >
-                recommendation.expectedHeatTime
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.100",
-                    },
-                  ]
-                }
-              >
-                28 min
-              </Text>
-            </View>
-            <Text
-              style={
-                [
-                  {
-                    "fontSize": 11,
-                    "marginTop": 8,
-                  },
-                  {
-                    "color": "gray.400",
-                  },
-                ]
-              }
-            >
-              recommendation.mode
-              : 
-              FULL
-               · recommendation.interval: weekday_morning
-            </Text>
           </View>
         </View>
       </View>
     </RCTScrollView>
-    <View
-      onLayout={[Function]}
-      style={
-        [
-          {
-            "flex": 1,
-          },
-          {
-            "paddingBottom": 0,
-          },
-        ]
-      }
-    >
-      <View
-        style={
-          [
-            {
-              "alignItems": "center",
-              "borderBottomWidth": 1,
-              "flexDirection": "row",
-              "gap": 8,
-              "paddingBottom": 12,
-              "paddingHorizontal": 16,
-              "paddingTop": 8,
-            },
-            {
-              "borderBottomColor": "#1f2733",
-            },
-          ]
-        }
-      >
-        <Text
-          accessibilityRole="header"
-          style={
-            [
-              {
-                "color": "#e8edf4",
-                "fontFamily": undefined,
-                "fontSize": 15,
-                "lineHeight": 20,
-              },
-              null,
-              {
-                "color": "#e8edf4",
-                "flex": 1,
-                "fontFamily": undefined,
-                "fontSize": 14,
-              },
-            ]
-          }
-        >
-          boiler.setCurrentTemp
-        </Text>
-        <View
-          accessibilityLabel="Zatvori"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          hitSlop={
-            {
-              "bottom": 10,
-              "left": 10,
-              "right": 10,
-              "top": 10,
-            }
-          }
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            [
-              undefined,
-              null,
-            ]
-          }
-          testID="set-temp-sheet-close"
-        >
-          <Text
-            accessibilityLabel="close"
-          >
-            close
-          </Text>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "gap": 12,
-          }
-        }
-      >
-        <Text
-          style={
-            [
-              {
-                "color": "#9aa6b6",
-                "fontFamily": undefined,
-                "fontSize": 13,
-                "lineHeight": 18,
-              },
-              null,
-              undefined,
-            ]
-          }
-        >
-          boiler.currentTempRangeHint
-        </Text>
-        <TextInput
-          accessibilityLabel="boiler.setCurrentTemp"
-          editable={true}
-          keyboardType="decimal-pad"
-          onChangeText={[Function]}
-          placeholder="48 - 55"
-          placeholderTextColor="#828d9e"
-          style={
-            [
-              {
-                "borderRadius": 3,
-                "borderWidth": 1,
-                "fontSize": 18,
-                "paddingHorizontal": 12,
-                "paddingVertical": 10,
-              },
-              {
-                "backgroundColor": "#111723",
-                "borderColor": "#1f2733",
-                "color": "#e8edf4",
-                "fontFamily": "monospace",
-              },
-            ]
-          }
-          value=""
-        />
-        <View
-          style={
-            {
-              "flexDirection": "row",
-              "gap": 8,
-            }
-          }
-        >
-          <View
-            accessibilityLabel="common.cancel"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": false,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            hitSlop={
-              {
-                "bottom": 8,
-                "left": 8,
-                "right": 8,
-                "top": 8,
-              }
-            }
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              [
-                [
-                  {
-                    "alignItems": "center",
-                    "borderRadius": 3,
-                    "borderWidth": 1,
-                    "justifyContent": "center",
-                    "minHeight": 44,
-                    "paddingHorizontal": 16,
-                  },
-                  {
-                    "backgroundColor": "transparent",
-                    "borderColor": "#1f2733",
-                    "opacity": 1,
-                  },
-                  null,
-                  {
-                    "flex": 1,
-                  },
-                ],
-                null,
-              ]
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "gap": 6,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#e8edf4",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#9aa6b6",
-                      "fontFamily": undefined,
-                      "fontSize": 12.5,
-                    },
-                  ]
-                }
-              >
-                common.cancel
-              </Text>
-            </View>
-          </View>
-          <View
-            accessibilityLabel="boiler.saveCurrentTemp"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": false,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            hitSlop={
-              {
-                "bottom": 8,
-                "left": 8,
-                "right": 8,
-                "top": 8,
-              }
-            }
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              [
-                [
-                  {
-                    "alignItems": "center",
-                    "borderRadius": 3,
-                    "borderWidth": 1,
-                    "justifyContent": "center",
-                    "minHeight": 44,
-                    "paddingHorizontal": 16,
-                  },
-                  {
-                    "backgroundColor": "#ff6b3d",
-                    "borderColor": "#ff6b3d",
-                    "opacity": 1,
-                  },
-                  null,
-                  {
-                    "flex": 1,
-                  },
-                ],
-                null,
-              ]
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "gap": 6,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#e8edf4",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#0b0f16",
-                      "fontFamily": undefined,
-                      "fontSize": 12.5,
-                    },
-                  ]
-                }
-              >
-                boiler.saveCurrentTemp
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    </View>
   </RNCSafeAreaView>
   <View
     pointerEvents="box-none"
@@ -2975,6 +3258,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   </Text>
                 </View>
                 <View
+                  accessibilityLabel="boiler.flowSetpoint: 51.0 °C, boiler.flowLine: 50.0 °C"
+                  accessible={true}
                   style={
                     {
                       "alignItems": "flex-end",
@@ -2984,8 +3269,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   }
                 >
                   <View
-                    accessibilityLabel="boiler.flowLine"
-                    accessible={true}
+                    accessible={false}
                     style={
                       [
                         {
@@ -2996,7 +3280,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         undefined,
                       ]
                     }
-                    testID="dashboard-flow-actual"
+                    testID="dashboard-flow-target"
                   >
                     <Text
                       style={
@@ -3009,7 +3293,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           },
                           null,
                           {
-                            "color": "#111827",
+                            "color": "#c1411c",
                             "fontFamily": "monospace",
                             "fontSize": 40,
                             "fontVariant": [
@@ -3021,7 +3305,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         ]
                       }
                     >
-                      50.0
+                      51.0
                     </Text>
                     <Text
                       style={
@@ -3074,7 +3358,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         ]
                       }
                     >
-                      dashboard.flowTarget
+                      boiler.flowLine
                     </Text>
                     <View
                       accessible={false}
@@ -3088,6 +3372,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           undefined,
                         ]
                       }
+                      testID="dashboard-flow-actual"
                     >
                       <Text
                         style={
@@ -3112,7 +3397,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           ]
                         }
                       >
-                        51.0
+                        50.0
                       </Text>
                       <Text
                         style={
@@ -3218,7 +3503,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       ]
                     }
                   >
-                    dashboard.flowGap · dashboard.flowWithinTolerance
+                    boiler.flowGap · boiler.flowWithinTolerance
                   </Text>
                   <Text
                     style={
@@ -3234,7 +3519,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       ]
                     }
                   >
-                    dashboard.flowScale
+                    boiler.flowScale
                   </Text>
                 </View>
                 <View
@@ -3566,7 +3851,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.outdoor
+                boiler.outdoor
               </Text>
               <View
                 accessible={false}
@@ -3660,12 +3945,12 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     ]
                   }
                 >
-                  dashboard.outdoorFeels
+                  boiler.outdoorFeels
                 </Text>
               </View>
             </View>
             <View
-              accessibilityLabel="dashboard.health: 85 /100"
+              accessibilityLabel="boiler.health: 85 /100"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -3755,7 +4040,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     ]
                   }
                 >
-                  dashboard.health
+                  boiler.health
                 </Text>
                 <View
                   accessible={false}
@@ -3863,7 +4148,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       ]
                     }
                   >
-                    dashboard.healthMeta
+                    boiler.healthMeta
                   </Text>
                 </View>
               </View>
@@ -3910,7 +4195,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.thermostatsKpi
+                boiler.thermostatsKpi
               </Text>
               <View
                 accessible={false}
@@ -3996,8 +4281,142 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     ]
                   }
                 >
-                  dashboard.thermostatsOnline
+                  boiler.thermostatsOnline
                 </Text>
+              </View>
+            </View>
+          </View>
+          <View
+            style={
+              [
+                {
+                  "gap": 8,
+                },
+                undefined,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "letterSpacing": 1.4,
+                      "textTransform": "uppercase",
+                    },
+                  ]
+                }
+              >
+                gas.title
+              </Text>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "overflow": "hidden",
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#dce0e8",
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+              testID="gas-consumption-card"
+            >
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "paddingHorizontal": 12,
+                      "paddingVertical": 10,
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  accessibilityLabel="gasSummary.noData"
+                  accessible={true}
+                  style={
+                    {
+                      "alignItems": "flex-end",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": 16,
+                    }
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "flex": 1,
+                        "gap": 2,
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#59616e",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "lineHeight": 15,
+                          },
+                          null,
+                          {
+                            "letterSpacing": 1.4,
+                            "textTransform": "uppercase",
+                          },
+                        ]
+                      }
+                    >
+                      gasSummary.title
+                    </Text>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      gasSummary.noData
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
           </View>
@@ -4066,65 +4485,129 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
               </Text>
             </View>
             <View
-              className="flex flex-col"
+              accessible={false}
               style={
-                {
-                  "gap": 8,
-                  "marginBottom": 12,
-                }
+                [
+                  {
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "overflow": "hidden",
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#dce0e8",
+                  },
+                  null,
+                  undefined,
+                ]
               }
+              testID="dashboard-alerts"
             >
               <View
+                accessibilityLabel="health.severityWarning: healthWarnings.shortCycles. Short cycle warning"
+                accessible={true}
                 style={
-                  {
-                    "backgroundColor": "#ffedd5",
-                    "borderColor": "#fdba74",
-                    "borderRadius": 8,
-                    "borderWidth": 1,
-                    "padding": 12,
-                  }
+                  [
+                    {
+                      "paddingHorizontal": 12,
+                      "paddingVertical": 10,
+                    },
+                    null,
+                    undefined,
+                  ]
                 }
               >
                 <View
-                  className="flex flex-row"
                   style={
                     {
-                      "alignItems": "flex-start",
-                      "gap": 8,
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": 10,
                     }
                   }
                 >
-                  <Text
-                    accessibilityLabel="timer-alert-outline"
-                  >
-                    timer-alert-outline
-                  </Text>
                   <View
-                    className="flex flex-col"
+                    style={
+                      {
+                        "alignSelf": "stretch",
+                        "backgroundColor": "#b45309",
+                        "borderRadius": 1,
+                        "width": 2,
+                      }
+                    }
+                  />
+                  <View
                     style={
                       {
                         "flex": 1,
-                        "gap": 0,
+                        "gap": 2,
                       }
                     }
                   >
-                    <Text
+                    <View
                       style={
                         {
-                          "color": "#c2410c",
-                          "fontSize": 12,
-                          "fontWeight": "600",
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 6,
                         }
+                      }
+                    >
+                      <View
+                        style={
+                          {
+                            "backgroundColor": "#b45309",
+                            "borderRadius": 999,
+                            "height": 6,
+                            "width": 6,
+                          }
+                        }
+                      />
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#b45309",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        health.severityWarning
+                      </Text>
+                    </View>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#111827",
+                            "fontFamily": undefined,
+                            "fontSize": 15,
+                            "lineHeight": 20,
+                          },
+                          null,
+                          undefined,
+                        ]
                       }
                     >
                       healthWarnings.shortCycles
                     </Text>
                     <Text
                       style={
-                        {
-                          "color": "#c2410c",
-                          "fontSize": 12,
-                        }
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          undefined,
+                        ]
                       }
                     >
                       Short cycle warning
@@ -4195,7 +4678,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.thermostatsOnline
+                boiler.thermostatsOnline
               </Text>
             </View>
             <View
@@ -4447,819 +4930,902 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
             </View>
           </View>
           <View
-            style={
-              [
-                {
-                  "borderRadius": 12,
-                  "borderWidth": 1,
-                  "marginBottom": 12,
-                  "padding": 16,
-                },
-                {
-                  "backgroundColor": "white",
-                  "borderColor": "gray.200",
-                },
-              ]
-            }
             testID="recommendation-breakdown"
           >
-            <Text
-              style={
-                [
-                  {
-                    "fontSize": 16,
-                    "fontWeight": "700",
-                    "marginBottom": 8,
-                  },
-                  {
-                    "color": "gray.800",
-                  },
-                ]
-              }
-            >
-              recommendation.title
-            </Text>
             <View
               style={
-                [
-                  {
-                    "borderRadius": 8,
-                    "marginBottom": 12,
-                    "padding": 8,
-                  },
-                  {
-                    "backgroundColor": "blue.50",
-                  },
-                ]
+                {
+                  "gap": 8,
+                }
               }
             >
               <Text
                 style={
                   [
                     {
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
                       "fontSize": 12,
-                      "fontWeight": "600",
+                      "lineHeight": 16,
                     },
-                    {
-                      "color": "blue.700",
-                    },
+                    null,
+                    undefined,
                   ]
                 }
               >
-                recommendation.disclaimer
+                recommendation.title
               </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
+              <View
+                accessible={false}
                 style={
                   [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#ffffff",
+                      "borderColor": "#dce0e8",
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+              >
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.baseCurve
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        51.0°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.weightedExternal
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        4.5°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.homeOffset
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        +0.25°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.intervalOffset
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        -0.50°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.eventsOffset
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        +0.25°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.finalTemp
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#c1411c",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        51.0°C
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.confidence
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        72%
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      {
+                        "borderBottomColor": "#dce0e8",
+                        "borderBottomWidth": 1,
+                      },
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.samples
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        8
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "baseline",
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "justifyContent": "space-between",
+                      }
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                            "lineHeight": 18,
+                          },
+                          null,
+                          {
+                            "flex": 1,
+                          },
+                        ]
+                      }
+                    >
+                      recommendation.expectedHeatTime
+                    </Text>
+                    <View
+                      accessible={false}
+                      style={
+                        [
+                          {
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
+                          },
+                          null,
+                          undefined,
+                        ]
+                      }
+                    >
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#111827",
+                              "fontFamily": "monospace",
+                              "fontSize": 16,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 16.8,
+                            },
+                          ]
+                        }
+                      >
+                        28 min
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <View
+                accessibilityLabel="recommendation.disclaimer"
+                accessibilityRole="alert"
+                accessible={true}
+                style={
+                  [
+                    {
+                      "alignItems": "flex-start",
+                      "borderLeftWidth": 2,
+                      "borderRadius": 3,
+                      "borderWidth": 1,
+                      "flexDirection": "row",
+                      "gap": 8,
+                      "paddingHorizontal": 11,
+                      "paddingVertical": 9,
+                    },
+                    {
+                      "backgroundColor": "#f1f3f7",
+                      "borderColor": "#dce0e8",
+                      "borderLeftColor": "#0369a1",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                <Text
+                  accessibilityLabel="information-circle-outline"
+                >
+                  information-circle-outline
+                </Text>
+                <View
+                  style={
                     {
                       "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.baseCurve
-              </Text>
+                      "gap": 2,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                        },
+                      ]
+                    }
+                  >
+                    recommendation.disclaimer
+                  </Text>
+                </View>
+              </View>
               <Text
                 style={
                   [
                     {
-                      "fontSize": 13,
-                      "fontWeight": "600",
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
+                      "fontSize": 12,
+                      "lineHeight": 16,
                     },
-                    {
-                      "color": "gray.800",
-                    },
+                    null,
+                    undefined,
                   ]
                 }
               >
-                51.0°C
+                recommendation.mode: FULL · recommendation.interval: weekday_morning
               </Text>
             </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.weightedExternal
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                4.5°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.homeOffset
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                +0.25°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.intervalOffset
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                -0.50°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.eventsOffset
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                +0.25°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.finalTemp
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                51.0°C
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.confidence
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                72%
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.samples
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                8
-              </Text>
-            </View>
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "paddingVertical": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "flex": 1,
-                      "fontSize": 13,
-                      "paddingRight": 8,
-                    },
-                    {
-                      "color": "gray.600",
-                    },
-                  ]
-                }
-              >
-                recommendation.expectedHeatTime
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "fontSize": 13,
-                      "fontWeight": "600",
-                    },
-                    {
-                      "color": "gray.800",
-                    },
-                  ]
-                }
-              >
-                28 min
-              </Text>
-            </View>
-            <Text
-              style={
-                [
-                  {
-                    "fontSize": 11,
-                    "marginTop": 8,
-                  },
-                  {
-                    "color": "gray.600",
-                  },
-                ]
-              }
-            >
-              recommendation.mode
-              : 
-              FULL
-               · recommendation.interval: weekday_morning
-            </Text>
           </View>
         </View>
       </View>
     </RCTScrollView>
-    <View
-      onLayout={[Function]}
-      style={
-        [
-          {
-            "flex": 1,
-          },
-          {
-            "paddingBottom": 0,
-          },
-        ]
-      }
-    >
-      <View
-        style={
-          [
-            {
-              "alignItems": "center",
-              "borderBottomWidth": 1,
-              "flexDirection": "row",
-              "gap": 8,
-              "paddingBottom": 12,
-              "paddingHorizontal": 16,
-              "paddingTop": 8,
-            },
-            {
-              "borderBottomColor": "#dce0e8",
-            },
-          ]
-        }
-      >
-        <Text
-          accessibilityRole="header"
-          style={
-            [
-              {
-                "color": "#111827",
-                "fontFamily": undefined,
-                "fontSize": 15,
-                "lineHeight": 20,
-              },
-              null,
-              {
-                "color": "#111827",
-                "flex": 1,
-                "fontFamily": undefined,
-                "fontSize": 14,
-              },
-            ]
-          }
-        >
-          boiler.setCurrentTemp
-        </Text>
-        <View
-          accessibilityLabel="Zatvori"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          hitSlop={
-            {
-              "bottom": 10,
-              "left": 10,
-              "right": 10,
-              "top": 10,
-            }
-          }
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            [
-              undefined,
-              null,
-            ]
-          }
-          testID="set-temp-sheet-close"
-        >
-          <Text
-            accessibilityLabel="close"
-          >
-            close
-          </Text>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "gap": 12,
-          }
-        }
-      >
-        <Text
-          style={
-            [
-              {
-                "color": "#4b5563",
-                "fontFamily": undefined,
-                "fontSize": 13,
-                "lineHeight": 18,
-              },
-              null,
-              undefined,
-            ]
-          }
-        >
-          boiler.currentTempRangeHint
-        </Text>
-        <TextInput
-          accessibilityLabel="boiler.setCurrentTemp"
-          editable={true}
-          keyboardType="decimal-pad"
-          onChangeText={[Function]}
-          placeholder="48 - 55"
-          placeholderTextColor="#59616e"
-          style={
-            [
-              {
-                "borderRadius": 3,
-                "borderWidth": 1,
-                "fontSize": 18,
-                "paddingHorizontal": 12,
-                "paddingVertical": 10,
-              },
-              {
-                "backgroundColor": "#f1f3f7",
-                "borderColor": "#dce0e8",
-                "color": "#111827",
-                "fontFamily": "monospace",
-              },
-            ]
-          }
-          value=""
-        />
-        <View
-          style={
-            {
-              "flexDirection": "row",
-              "gap": 8,
-            }
-          }
-        >
-          <View
-            accessibilityLabel="common.cancel"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": false,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            hitSlop={
-              {
-                "bottom": 8,
-                "left": 8,
-                "right": 8,
-                "top": 8,
-              }
-            }
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              [
-                [
-                  {
-                    "alignItems": "center",
-                    "borderRadius": 3,
-                    "borderWidth": 1,
-                    "justifyContent": "center",
-                    "minHeight": 44,
-                    "paddingHorizontal": 16,
-                  },
-                  {
-                    "backgroundColor": "transparent",
-                    "borderColor": "#dce0e8",
-                    "opacity": 1,
-                  },
-                  null,
-                  {
-                    "flex": 1,
-                  },
-                ],
-                null,
-              ]
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "gap": 6,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#111827",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#4b5563",
-                      "fontFamily": undefined,
-                      "fontSize": 12.5,
-                    },
-                  ]
-                }
-              >
-                common.cancel
-              </Text>
-            </View>
-          </View>
-          <View
-            accessibilityLabel="boiler.saveCurrentTemp"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": false,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            hitSlop={
-              {
-                "bottom": 8,
-                "left": 8,
-                "right": 8,
-                "top": 8,
-              }
-            }
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              [
-                [
-                  {
-                    "alignItems": "center",
-                    "borderRadius": 3,
-                    "borderWidth": 1,
-                    "justifyContent": "center",
-                    "minHeight": 44,
-                    "paddingHorizontal": 16,
-                  },
-                  {
-                    "backgroundColor": "#c2410c",
-                    "borderColor": "#c2410c",
-                    "opacity": 1,
-                  },
-                  null,
-                  {
-                    "flex": 1,
-                  },
-                ],
-                null,
-              ]
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "gap": 6,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#111827",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#ffffff",
-                      "fontFamily": undefined,
-                      "fontSize": 12.5,
-                    },
-                  ]
-                }
-              >
-                boiler.saveCurrentTemp
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    </View>
   </RNCSafeAreaView>
   <View
     pointerEvents="box-none"

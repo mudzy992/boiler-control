@@ -1,101 +1,101 @@
 import React from 'react';
-import { Box, VStack, HStack, Text, useColorModeValue } from './ui/nativewind';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { HealthWarning } from '../types/Dashboard';
+import { View } from 'react-native';
+
 import { useTranslation } from '../hooks/useTranslation';
 import {
   mapHealthWarningsToAlerts,
   type HealthAlertSeverity,
 } from '../services/dashboard/healthAlerts';
+import type { HealthWarning } from '../types/Dashboard';
+import { MonoMeta, Panel, PanelRow, Text } from '../ui';
+import { useTokens } from '../ui/theme';
 
 interface AlertsCardProps {
   warnings?: HealthWarning[];
 }
 
 /**
- * MO2-12: alerts are rendered from `GET /api/dashboard/health`.
- * The client no longer recomputes flow/thermostat/confidence thresholds.
+ * Alerti sa Početne (F7, HOME-04).
+ *
+ * MO2-12 ostaje: prikazuje se samo `GET /api/dashboard/health`, klijent ne
+ * računa pragove.
+ *
+ * Šta je bilo pogrešno: kartica je bila naslijeđena iz starog sloja — tri
+ * „soft" nijanse (`red.100`, `orange.100`, `blue.100`) sa po tri boje u svakoj
+ * (9 `useColorModeValue` poziva), `rounded="lg"` (12 px) i font 12 naspram 13
+ * u ostatku aplikacije. Na dark temi `red.100`/`orange.100` su praktično bijele
+ * ploče sa svijetlim tekstom, pa se alert jedva čitao.
+ *
+ * Sada: isti `Panel`/`PanelRow` obrazac kao svaki drugi blok — hairline ivica,
+ * radijus 4, `Led` koji nosi boju ozbiljnosti, tekst koji nosi značenje. Boja
+ * se troši samo na točku i na lijevu ivicu, pa alert ne izgleda kao druga
+ * aplikacija unutar ekrana. Crvena/narandžasta/plava su sada semantički
+ * `fault`/`warn`/`info` tokeni, dakle u obje teme imaju AA kontrast.
  */
+const SEVERITY_LED: Record<HealthAlertSeverity, 'fault' | 'warn' | 'info'> = {
+  critical: 'fault',
+  warning: 'warn',
+  info: 'info',
+};
+
+const SEVERITY_LABEL: Record<HealthAlertSeverity, string> = {
+  critical: 'health.severityCritical',
+  warning: 'health.severityWarning',
+  info: 'health.severityInfo',
+};
+
 export const AlertsCard = React.memo(function AlertsCard({ warnings = [] }: AlertsCardProps) {
   const { t } = useTranslation();
-
-  // Hooks must be unconditional and stable across renders. The previous
-  // implementation called useColorModeValue inside a map callback, which
-  // changed the hook count with the number of alerts.
-  const criticalBg = useColorModeValue('red.100', 'red.900');
-  const criticalIcon = useColorModeValue('red.600', 'red.400');
-  const criticalText = useColorModeValue('red.700', 'red.200');
-  const criticalBorder = useColorModeValue('red.300', 'red.700');
-  const warningBg = useColorModeValue('orange.100', 'orange.900');
-  const warningIcon = useColorModeValue('orange.600', 'orange.400');
-  const warningText = useColorModeValue('orange.700', 'orange.200');
-  const warningBorder = useColorModeValue('orange.300', 'orange.700');
-  const infoBg = useColorModeValue('blue.100', 'blue.900');
-  const infoIcon = useColorModeValue('blue.600', 'blue.400');
-  const infoText = useColorModeValue('blue.700', 'blue.200');
-  const infoBorder = useColorModeValue('blue.300', 'blue.700');
+  const { t: tokens } = useTokens();
 
   const alerts = mapHealthWarningsToAlerts(warnings);
-  if (alerts.length === 0) {
-    return null;
-  }
-
-  const colorsBySeverity: Record<
-    HealthAlertSeverity,
-    { bg: string; icon: string; text: string; border: string }
-  > = {
-    critical: {
-      bg: criticalBg,
-      icon: criticalIcon,
-      text: criticalText,
-      border: criticalBorder,
-    },
-    warning: {
-      bg: warningBg,
-      icon: warningIcon,
-      text: warningText,
-      border: warningBorder,
-    },
-    info: {
-      bg: infoBg,
-      icon: infoIcon,
-      text: infoText,
-      border: infoBorder,
-    },
-  };
+  if (alerts.length === 0) return null;
 
   return (
-    <VStack space={2} mb={3}>
-      {alerts.map((alert) => {
-        const colors = colorsBySeverity[alert.severity];
+    <Panel variant="flush" padded={false} testID="dashboard-alerts">
+      {alerts.map((alert, index) => {
+        const tone = SEVERITY_LED[alert.severity];
+        const accent =
+          tone === 'fault' ? tokens.fault : tone === 'warn' ? tokens.warn : tokens.info;
         return (
-          <Box
+          <PanelRow
             key={alert.id}
-            bg={colors.bg}
-            borderWidth={1}
-            borderColor={colors.border}
-            rounded="lg"
-            p={3}
+            divider={index < alerts.length - 1}
+            accessibilityLabel={`${t(SEVERITY_LABEL[alert.severity])}: ${t(alert.titleKey)}. ${
+              alert.message
+            }`}
           >
-            <HStack space={2} alignItems="flex-start">
-              <MaterialCommunityIcons
-                name={alert.icon as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
-                size={20}
-                color={colors.icon}
-                style={{ marginTop: 2 }}
+            <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
+              <View
+                style={{
+                  width: 2,
+                  borderRadius: 1,
+                  backgroundColor: accent,
+                  alignSelf: 'stretch',
+                }}
               />
-              <VStack flex={1} space={0}>
-                <Text fontSize="xs" fontWeight="600" color={colors.text}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View
+                    style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: accent }}
+                  />
+                  <MonoMeta tone={tone === 'fault' ? 'fault' : tone === 'warn' ? 'warn' : 'info'}>
+                    {t(SEVERITY_LABEL[alert.severity])}
+                  </MonoMeta>
+                </View>
+                <Text size="bodyLg" weight="medium">
                   {t(alert.titleKey)}
                 </Text>
-                <Text fontSize="xs" color={colors.text}>
-                  {alert.message}
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
+                {alert.message ? (
+                  <Text size="body" tone="muted">
+                    {alert.message}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </PanelRow>
         );
       })}
-    </VStack>
+    </Panel>
   );
 });

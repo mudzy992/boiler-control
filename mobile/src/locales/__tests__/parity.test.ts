@@ -48,7 +48,16 @@ const SAME_IN_BOTH: Record<string, readonly string[]> = {
   schedule: ['mode.PROGRAM', 'mode.MANUAL', 'mode.OFF'],
   // F4: izmjereno u oba jezika — jedinice i međunarodne oznake se ne prevode,
   // a šabloni bez teksta (`{{value}} / m³`) su identični po definiciji.
-  gas: ['badgeStandard', 'currencyKM', 'analysisPriceExVatValue', 'units.m3', 'units.m3h'],
+  // F7: „Period" je u bosanskom ista riječ kao u engleskom (latinski korijen),
+  // pa je jedina dozvoljena identična vrijednost iz `FilterMenu` reda.
+  gas: [
+    'badgeStandard',
+    'currencyKM',
+    'analysisPriceExVatValue',
+    'units.m3',
+    'units.m3h',
+    'period',
+  ],
   // F4: isto — „Period", „Min"/„Max" i putanja API-ja su iste u oba jezika;
   // `targetDash`/`chartMin`/`chartMax` su čisti šabloni brojeva.
   analytics: [

@@ -138,9 +138,12 @@ describe('GasReadings nativewind', () => {
       mode,
     );
     await result.findByText('gas.title');
-    // F6 (GAS-11): podrazumijevani filter je sada „Sve", pa „Sve" postoji i kao
-    // aktivna traka i u sažetku — bira se prva pojava (traka filtera).
-    await fireEvent.press(result.getAllByText('gas.filterAll')[0]);
+    // F7 (GAS-FILTER): period se bira iz menija, ne iz reda pilula. Umjesto
+    // pet paralelnih dugmadi na ekranu sada postoji JEDAN red koji prikazuje
+    // izabrano (default „Sve") i otvara listu — zato test ide kroz meni.
+    // Lista se puni asinhrono, pa se meni čeka (ne pretpostavlja).
+    await fireEvent.press(await result.findByTestId('gas-filter-menu'));
+    await fireEvent.press(await result.findByTestId('gas-filter-option-all'));
     // F2: red očitanja razdvaja broj i jedinicu (Readout), pa se vrijednost
     // provjerava kroz labelu reda — ista informacija, jedan a11y čvor.
     await waitFor(() =>

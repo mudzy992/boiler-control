@@ -27,7 +27,7 @@ import { GasForm } from '../../components/gas/GasForm';
 
 import { useTokens } from '../../ui/theme';
 import { formatDate, formatInteger, formatNumber, formatShortDate } from '../../utils/format';
-import { HIT_SLOP, MIN_TOUCH, radius, space } from '../../theme/tokens';
+import { space } from '../../theme/tokens';
 import { SecureStorage } from '../../services/storage/SecureStorage';
 import {
   Button,
@@ -40,6 +40,8 @@ import {
   Screen,
   ScreenHeader,
   Sheet,
+  FilterMenuTrigger,
+  FilterMenuOptions,
   SkeletonRows,
 } from '../../ui';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
@@ -92,6 +94,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     'all'
   );
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
   // F4 (UX-19): izbor akcije za sliku brojila ide kroz sheet, ne kroz sistemski dijalog.
   const [meterImageReading, setMeterImageReading] = useState<GasReading | null>(null);
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
@@ -131,6 +134,19 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       /* best-effort */
     });
   }, []);
+
+  /**
+   * F7 (GAS-FILTER): opcije filtera na jednom mjestu — troše ih i meni i
+   * sažetak iznad liste. Ranije su bile duplirane (pet pilula + pet `if`
+   * grana u sažetku), pa se labela mogla razići između dva mjesta.
+   */
+  const filterOptions = [
+    { value: 'week' as const, label: t('gas.filterLastWeek') },
+    { value: 'month' as const, label: t('gas.filterMonth') },
+    { value: 'year' as const, label: t('gas.filterYear') },
+    { value: 'all' as const, label: t('gas.filterAll') },
+    { value: 'custom' as const, label: t('gas.filterCustom') },
+  ];
 
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
@@ -736,59 +752,20 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             </Panel>
 
             {/*
-              F6 (GAS-09): filter je imao `paddingVertical: 6` — ukupna visina
-              oko 27 px, dakle ispod WCAG 2.2 SC 2.5.8 (24 px minimum) i daleko
-              ispod `MIN_TOUCH` 44 px koji ostatak aplikacije poštuje. Sada je
-              svaka opcija visoka 44 px, sa `hitSlop`-om 8.
+              F7 (GAS-FILTER): pet pilula je zamijenjeno jednim menijem.
+              Razlozi su u `ui/FilterMenu.tsx`: pilule su izgledale kao drugi
+              red tabova, tražile su ~150 px visine prije prvog očitanja i
+              nijedna nije izgledala kao kontrola koja otvara listu. Sada red
+              kaže IZABRANI period („Period: Sve ⌄") i otvara `Sheet` sa radio
+              listom. „Raspon" je i dalje opcija u listi i otvara birač datuma.
             */}
-            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-              {(
-                [
-                  { key: 'week', label: t('gas.filterLastWeek') },
-                  { key: 'month', label: t('gas.filterMonth') },
-                  { key: 'year', label: t('gas.filterYear') },
-                  { key: 'all', label: t('gas.filterAll') },
-                  { key: 'custom', label: t('gas.filterCustom') },
-                ] as const
-              ).map((filter) => {
-                const active = dateFilter === filter.key;
-                return (
-                  <Pressable
-                    key={filter.key}
-                    onPress={() => {
-                      if (filter.key === 'custom') {
-                        setDateFilter('custom');
-                        setShowDateRangePicker(true);
-                        return;
-                      }
-                      setDateFilter(filter.key);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={filter.label}
-                    accessibilityState={{ selected: active }}
-                    hitSlop={HIT_SLOP}
-                    style={{
-                      minHeight: MIN_TOUCH,
-                      justifyContent: 'center',
-                      paddingHorizontal: 12,
-                      borderRadius: radius.tag,
-                      borderWidth: 1,
-                      borderColor: active ? tokens.signal : tokens.line,
-                      backgroundColor: active ? tokens.signalSoft : 'transparent',
-                    }}
-                  >
-                    <Text
-                      size="label"
-                      weight="monoMedium"
-                      tone={active ? 'signal' : 'dim'}
-                      style={{ letterSpacing: 0.9 }}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <FilterMenuTrigger
+              label={t('gas.period')}
+              value={dateFilter}
+              options={filterOptions}
+              onPress={() => setShowFilterMenu(true)}
+              testID="gas-filter-menu"
+            />
 
             <View
               style={{
@@ -839,6 +816,34 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         maxToRenderPerBatch={10}
         windowSize={5}
       />
+
+      {/*
+        F7 (GAS-FILTER): lista filtera kao `Sheet` — isti primitiv kao svaka
+        druga odluka u aplikaciji, sa 48 px visokim radio redovima.
+      */}
+      <Sheet
+        isOpen={showFilterMenu}
+        onClose={() => setShowFilterMenu(false)}
+        title={t('gas.period')}
+        closeLabel={t('common.close')}
+        snapPoints={['45%', '70%']}
+        scrollable
+        testID="gas-filter-sheet"
+      >
+        <FilterMenuOptions
+          value={dateFilter}
+          options={filterOptions}
+          onSelect={(next) => {
+            setShowFilterMenu(false);
+            if (next === 'custom') {
+              setDateFilter('custom');
+              setShowDateRangePicker(true);
+              return;
+            }
+            setDateFilter(next);
+          }}
+        />
+      </Sheet>
 
       {/* Add Reading Modal */}
       {/* F4 (UX-14): isti `Sheet` primitiv kao na Početnoj — naslov u zaglavlju,

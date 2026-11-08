@@ -16,7 +16,7 @@ import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { radius, space } from '../theme/tokens';
+import { fontSize as fs, radius, space } from '../theme/tokens';
 import { useTokens } from './theme';
 import { Text } from './Text';
 import { Button } from './Button';
@@ -123,7 +123,7 @@ export function ErrorState({
       */}
       <View accessible accessibilityRole="alert" style={styles.alertBlock}>
         <Ionicons name="alert-circle-outline" size={variant === 'full' ? 26 : 16} color={t.inkDim} />
-        <Text style={{ fontFamily: fonts.sansMedium, fontSize: 13, color: t.ink, marginTop: 6, textAlign: 'center' }}>
+        <Text style={{ fontFamily: fonts.sansMedium, fontSize: fs.bodyLg, color: t.ink, marginTop: 6, textAlign: 'center' }}>
           {title}
         </Text>
         {message ? (
@@ -134,7 +134,7 @@ export function ErrorState({
               color: t.inkDim,
               marginTop: 4,
               textAlign: 'center',
-              lineHeight: 15,
+              lineHeight: fs.body * 1.35,
             }}
           >
             {message}
@@ -171,19 +171,19 @@ export function EmptyState({ title, message, action, icon = 'file-tray-outline',
   return (
     <View style={[styles.stateFull, style]}>
       <Ionicons name={icon} size={26} color={t.lineStrong} />
-      <Text style={{ fontFamily: fonts.sansMedium, fontSize: 13, color: t.ink, marginTop: 10, textAlign: 'center' }}>
+      <Text style={{ fontFamily: fonts.sansMedium, fontSize: fs.bodyLg, color: t.ink, marginTop: 10, textAlign: 'center' }}>
         {title}
       </Text>
       {message ? (
         <Text
           style={{
             fontFamily: fonts.sans,
-            fontSize: 12,
+            fontSize: fs.body,
             color: t.inkMuted,
             marginTop: 4,
             textAlign: 'center',
             maxWidth: 260,
-            lineHeight: 17,
+            lineHeight: fs.body * 1.35,
           }}
         >
           {message}

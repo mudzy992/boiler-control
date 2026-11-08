@@ -352,11 +352,38 @@ Provjera: `npx jest` 38 suite-ova, **281 test**, 32 snapshot-a zeleno;
 `npx tsc --noEmit` 0; `npx eslint src` 0 grešaka; `CI=1 npx expo export
 --platform android --dev` prolazi.
 
+
+**Tipografija i spacing (TYPO-01, A11Y-14).** Skala je imala `label: 9` i
+`meta: 10` px. `MonoLabel`/`MonoMeta` su najčešći elementi u aplikaciji (svaki
+panel, svaki KPI, svaki red liste), pa su mikro-labele bile najveći pojedinačni
+problem čitljivosti — a WCAG 2.2 1.4.4 (Resize text) na 9 px praktično nije
+zadovoljen.
+
+| Token | Prije | Sada |
+|---|---|---|
+| `label` | 9 | 11 |
+| `meta` | 10 | 12 |
+| `body` | 12 | 13 |
+| `bodyLg` | 13 | 15 |
+| `section` | 14 | 16 |
+| `title` | 21 | 22 |
+| `readoutLg` | 26 | 28 |
+| `readoutXl` | 40 | 40 |
+
+Odnosi su ostali isti (skala nije linearna), pa se hijerarhija ne mijenja —
+samo je osnova podignuta. Uveden je `lineHeightFor()` (1,35 × veličina) i
+`Text` ga sada primjenjuje uvijek: bez eksplicitne visine reda tekst pri 200%
+uvećanja se preklapa u uskim kolonama. Ručni `fontSize: 9` u `Screen.tsx`,
+`InlineBanner.tsx` i `AsyncState.tsx` zamijenjen je tokenima, da sljedeća
+izmjena skale ne zaobiđe te fajlove. `typography.test.ts` (5 testova) drži
+minimalnu veličinu 11 px, strogo rastuću skalu, odnos visine reda ≥ 1,3 i
+razmake 4/8/12/16/24/32.
+
 **Verifikacija (2026-11-08):**
 
 ```
 npx tsc --noEmit                        → 0 grešaka
-npx jest                                → 38 suite-ova, 281 test, 32 snapshot-a — zeleno
+npx jest                                → 39 suite-ova, 286 testova, 32 snapshot-a — zeleno
 npx eslint src App.tsx index.js         → 0 grešaka (49 postojećih warninga)
 CI=1 npx expo export --platform android → bundle se gradi
 ```
@@ -377,7 +404,7 @@ obrazloženje u komentaru.
 | F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
-| F6 Greške + šest dorada | **u toku** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); 48 novih testova |
+| F6 Greške + šest dorada | **u toku** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; 53 nova testa |
 
 ### Šta je F0 stvarno isporučio
 

@@ -61,7 +61,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -82,13 +83,14 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
                   "color": "#828d9e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -230,13 +232,14 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -310,7 +313,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -356,7 +360,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -380,7 +385,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -410,7 +416,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -444,7 +451,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -468,7 +476,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -557,7 +566,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#22c55e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -572,7 +582,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#828d9e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -663,7 +674,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -736,7 +748,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#828d9e",
                           "fontFamily": "monospace",
-                          "fontSize": 9,
+                          "fontSize": 11,
+                          "lineHeight": 15,
                         },
                         null,
                         [
@@ -771,7 +784,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -795,7 +809,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -827,7 +842,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 12,
+                          "fontSize": 13,
+                          "lineHeight": 18,
                         },
                         null,
                         undefined,
@@ -842,7 +858,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#828d9e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -889,7 +906,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -927,18 +945,19 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "color": "#e8edf4",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
                         "color": "#e8edf4",
                         "fontFamily": "monospace",
-                        "fontSize": 26,
+                        "fontSize": 28,
                         "fontVariant": [
                           "tabular-nums",
                         ],
                         "letterSpacing": -0.5,
-                        "lineHeight": 27.3,
+                        "lineHeight": 29.400000000000002,
                       },
                     ]
                   }
@@ -951,7 +970,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "color": "#e8edf4",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
@@ -983,7 +1003,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "color": "#e8edf4",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
@@ -1074,7 +1095,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "color": "#828d9e",
                         "fontFamily": "monospace",
-                        "fontSize": 9,
+                        "fontSize": 11,
+                        "lineHeight": 15,
                       },
                       null,
                       [
@@ -1112,18 +1134,19 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
                           "color": "#e8edf4",
                           "fontFamily": "monospace",
-                          "fontSize": 26,
+                          "fontSize": 28,
                           "fontVariant": [
                             "tabular-nums",
                           ],
                           "letterSpacing": -0.5,
-                          "lineHeight": 27.3,
+                          "lineHeight": 29.400000000000002,
                         },
                       ]
                     }
@@ -1136,7 +1159,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -1182,7 +1206,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -1225,7 +1250,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -1263,18 +1289,19 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "color": "#e8edf4",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
                         "color": "#e8edf4",
                         "fontFamily": "monospace",
-                        "fontSize": 26,
+                        "fontSize": 28,
                         "fontVariant": [
                           "tabular-nums",
                         ],
                         "letterSpacing": -0.5,
-                        "lineHeight": 27.3,
+                        "lineHeight": 29.400000000000002,
                       },
                     ]
                   }
@@ -1312,7 +1339,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "color": "#e8edf4",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
@@ -1354,13 +1382,14 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -1375,13 +1404,14 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#9aa6b6",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.1,
                       "textTransform": "uppercase",
                     },
@@ -1485,13 +1515,14 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -1506,13 +1537,14 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#9aa6b6",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.1,
                       "textTransform": "uppercase",
                     },
@@ -1603,7 +1635,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 12,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             undefined,
@@ -1632,7 +1665,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -1656,7 +1690,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -1752,7 +1787,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
@@ -2258,7 +2294,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#e8edf4",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -2340,7 +2377,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#9aa6b6",
                 "fontFamily": undefined,
-                "fontSize": 12,
+                "fontSize": 13,
+                "lineHeight": 18,
               },
               null,
               undefined,
@@ -2463,7 +2501,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
@@ -2558,7 +2597,8 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
@@ -2665,7 +2705,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -2686,13 +2727,14 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
                   "color": "#59616e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -2834,13 +2876,14 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -2914,7 +2957,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -2960,7 +3004,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -2984,7 +3029,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -3014,7 +3060,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -3048,7 +3095,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -3072,7 +3120,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -3161,7 +3210,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#15803d",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -3176,7 +3226,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#59616e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -3267,7 +3318,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -3340,7 +3392,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#59616e",
                           "fontFamily": "monospace",
-                          "fontSize": 9,
+                          "fontSize": 11,
+                          "lineHeight": 15,
                         },
                         null,
                         [
@@ -3375,7 +3428,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -3399,7 +3453,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           {
@@ -3431,7 +3486,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 12,
+                          "fontSize": 13,
+                          "lineHeight": 18,
                         },
                         null,
                         undefined,
@@ -3446,7 +3502,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#59616e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -3493,7 +3550,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -3531,18 +3589,19 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "color": "#111827",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
                         "color": "#111827",
                         "fontFamily": "monospace",
-                        "fontSize": 26,
+                        "fontSize": 28,
                         "fontVariant": [
                           "tabular-nums",
                         ],
                         "letterSpacing": -0.5,
-                        "lineHeight": 27.3,
+                        "lineHeight": 29.400000000000002,
                       },
                     ]
                   }
@@ -3555,7 +3614,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "color": "#111827",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
@@ -3587,7 +3647,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "color": "#111827",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
@@ -3678,7 +3739,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "color": "#59616e",
                         "fontFamily": "monospace",
-                        "fontSize": 9,
+                        "fontSize": 11,
+                        "lineHeight": 15,
                       },
                       null,
                       [
@@ -3716,18 +3778,19 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
                           "color": "#111827",
                           "fontFamily": "monospace",
-                          "fontSize": 26,
+                          "fontSize": 28,
                           "fontVariant": [
                             "tabular-nums",
                           ],
                           "letterSpacing": -0.5,
-                          "lineHeight": 27.3,
+                          "lineHeight": 29.400000000000002,
                         },
                       ]
                     }
@@ -3740,7 +3803,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -3786,7 +3850,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -3829,7 +3894,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -3867,18 +3933,19 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "color": "#111827",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
                         "color": "#111827",
                         "fontFamily": "monospace",
-                        "fontSize": 26,
+                        "fontSize": 28,
                         "fontVariant": [
                           "tabular-nums",
                         ],
                         "letterSpacing": -0.5,
-                        "lineHeight": 27.3,
+                        "lineHeight": 29.400000000000002,
                       },
                     ]
                   }
@@ -3916,7 +3983,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "color": "#111827",
                         "fontFamily": undefined,
-                        "fontSize": 13,
+                        "fontSize": 15,
+                        "lineHeight": 20,
                       },
                       null,
                       {
@@ -3958,13 +4026,14 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -3979,13 +4048,14 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#4b5563",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.1,
                       "textTransform": "uppercase",
                     },
@@ -4089,13 +4159,14 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -4110,13 +4181,14 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#4b5563",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.1,
                       "textTransform": "uppercase",
                     },
@@ -4207,7 +4279,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 12,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             undefined,
@@ -4236,7 +4309,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -4260,7 +4334,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -4356,7 +4431,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
@@ -4862,7 +4938,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
               {
                 "color": "#111827",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -4944,7 +5021,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
               {
                 "color": "#4b5563",
                 "fontFamily": undefined,
-                "fontSize": 12,
+                "fontSize": 13,
+                "lineHeight": 18,
               },
               null,
               undefined,
@@ -5067,7 +5145,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
@@ -5162,7 +5241,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {

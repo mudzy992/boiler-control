@@ -13,7 +13,7 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { radius, space } from '../theme/tokens';
+import { fontSize as fs, radius, space } from '../theme/tokens';
 import { useTokens } from './theme';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
@@ -72,9 +72,9 @@ export function InlineBanner({
     >
       <Ionicons name={icon} size={14} color={accent} style={{ marginTop: 1 }} />
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={{ fontFamily: fonts.sansMedium, fontSize: 12.5, color: t.ink }}>{title}</Text>
+        <Text style={{ fontFamily: fonts.sansMedium, fontSize: fs.bodyLg, color: t.ink }}>{title}</Text>
         {message ? (
-          <Text style={{ fontFamily: fonts.sans, fontSize: 11.5, color: t.inkMuted, lineHeight: 16 }}>
+          <Text style={{ fontFamily: fonts.sans, fontSize: fs.body, color: t.inkMuted, lineHeight: fs.body * 1.35 }}>
             {message}
           </Text>
         ) : null}
@@ -82,7 +82,7 @@ export function InlineBanner({
           <Text
             style={{
               fontFamily: fonts.mono,
-              fontSize: 9,
+              fontSize: fs.label,
               letterSpacing: 0.5,
               color: t.inkDim,
               marginTop: 1,
@@ -100,7 +100,7 @@ export function InlineBanner({
           accessibilityLabel={action.label}
           style={[styles.action, { borderColor: t.lineStrong }]}
         >
-          <Text style={{ fontFamily: fonts.sansMedium, fontSize: 11, color: t.ink }}>
+          <Text style={{ fontFamily: fonts.sansMedium, fontSize: fs.body, color: t.ink }}>
             {action.label}
           </Text>
         </Pressable>

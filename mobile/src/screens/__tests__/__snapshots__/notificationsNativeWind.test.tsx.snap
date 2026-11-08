@@ -128,7 +128,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -219,13 +220,14 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 12.5,
+                      "fontSize": 15,
                     },
                   ]
                 }
@@ -289,7 +291,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         undefined,
@@ -304,7 +307,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                         {
                           "color": "#9aa6b6",
                           "fontFamily": undefined,
-                          "fontSize": 12,
+                          "fontSize": 13,
+                          "lineHeight": 18,
                         },
                         null,
                         undefined,
@@ -319,7 +323,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                         {
                           "color": "#828d9e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -514,7 +519,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -605,13 +611,14 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 12.5,
+                      "fontSize": 15,
                     },
                   ]
                 }
@@ -675,7 +682,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         undefined,
@@ -690,7 +698,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                         {
                           "color": "#4b5563",
                           "fontFamily": undefined,
-                          "fontSize": 12,
+                          "fontSize": 13,
+                          "lineHeight": 18,
                         },
                         null,
                         undefined,
@@ -705,7 +714,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                         {
                           "color": "#59616e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
@@ -899,7 +909,8 @@ exports[`Notifications before/after NativeWind nativewind matches the dark snaps
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -1590,7 +1601,8 @@ exports[`Notifications before/after NativeWind nativewind matches the light snap
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {

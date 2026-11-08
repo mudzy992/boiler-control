@@ -61,7 +61,8 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -138,13 +139,14 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -159,13 +161,14 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#9aa6b6",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.1,
                       "textTransform": "uppercase",
                     },
@@ -257,7 +260,8 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 12,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -288,7 +292,8 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -312,7 +317,8 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -408,7 +414,8 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#ff8a5f",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
@@ -423,7 +430,8 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
@@ -481,13 +489,14 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 12.5,
+                      "fontSize": 15,
                     },
                   ]
                 }
@@ -588,7 +597,8 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -665,13 +675,14 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -686,13 +697,14 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#4b5563",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.1,
                       "textTransform": "uppercase",
                     },
@@ -784,7 +796,8 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 12,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -815,7 +828,8 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -839,7 +853,8 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -935,7 +950,8 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#c1411c",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
@@ -950,7 +966,8 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
@@ -1008,13 +1025,14 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 12.5,
+                      "fontSize": 15,
                     },
                   ]
                 }

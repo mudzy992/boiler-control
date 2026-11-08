@@ -173,24 +173,45 @@ export const systemFontFamily = {
   monoSemiBold: 'monospace',
 } as const;
 
+/**
+ * Tipografska skala.
+ *
+ * F6 (A11Y-14): minimalna veličina je podignuta sa 9 na 11 px.
+ *
+ * Prije: `label` 9 px i `meta` 10 px — mikro-labele su bile ispod svake granice
+ * čitljivosti, a pošto su `MonoLabel`/`MonoMeta` najčešći elementi u
+ * aplikaciji (svaki panel, svaki KPI, svaki red), to je bio najveći
+ * pojedinačni problem pristupačnosti u UI-ju. WCAG 2.2 1.4.4 traži da se tekst
+ * može uvećati do 200% bez gubitka sadržaja; na 9 px to praktično nije moguće.
+ *
+ * Sada: 11 / 12 / 13 / 15 / 16 / 22 / 28 / 40. Skala ostaje ne-linearna (isti
+ * odnos kao prije), pa se hijerarhija ne mijenja — samo je osnova podignuta.
+ * Kod koji je pisao `fontSize: 9` ručno sada koristi `fontSize.label`, da
+ * sljedeća izmjena skale ne zaobiđe taj fajl.
+ */
 export const fontSize = {
   /** Mono mikro-labela (uppercase, tracking). */
-  label: 9,
+  label: 11,
   /** Mala meta. */
-  meta: 10,
+  meta: 12,
   /** Tijelo — sekundarno. */
-  body: 12,
+  body: 13,
   /** Tijelo — primarno. */
-  bodyLg: 13,
+  bodyLg: 15,
   /** Naslov ekrana. */
-  title: 21,
+  title: 22,
   /** Naslov sekcije. */
-  section: 14,
+  section: 16,
   /** Readout L. */
-  readoutLg: 26,
+  readoutLg: 28,
   /** Readout XL. */
   readoutXl: 40,
 } as const;
+
+/** Visina reda po veličini — 1,35 × veličina, za tekst tijela. */
+export function lineHeightFor(size: number): number {
+  return Math.round(size * 1.35);
+}
 
 /** Trajanja animacija — 150–200 ms, `ease-out`. */
 export const motion = {

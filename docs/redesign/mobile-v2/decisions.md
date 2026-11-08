@@ -321,11 +321,42 @@ Ukinuto je i **36 mrtvih** `|| 'English fallback'` izraza u
 `GasReadingsScreen` — svi ključevi postoje u oba jezika, pa je fallback bio
 kod koji nikad ne radi, a sakriva pravi nedostatak prijevoda.
 
+
+**Postavke — detaljan prolaz (SET-02…SET-13).** Prošao sam kroz glavni ekran
+Postavki i kroz svih šest ekrana koje otvara (Profil, Upravljanje domovima,
+Rasporedi, Obavijesti, Postavke obavijesti, te sheete za jezik, lozinku i
+odjavu).
+
+| ID | Nalaz | Popravka |
+|---|---|---|
+| SET-02 | `SettingRow` je bila komponenta **definirana unutar** `SettingsScreenContent` — svaki render je stvarao novi tip, pa je React remountovao cijelu listu; prekidači su gubili stanje, animacija je kretala iz početka | `SettingRow` je sada na nivou modula, sa `SettingRowProps` |
+| SET-03 | Dodirna zona je bila `minHeight: 44` na unutrašnjem `View`-u, dok je `PanelRow` imao svoj padding — stvarna zona je zavisila od sadržaja | cijeli red nosi `minHeight: MIN_TOUCH` |
+| SET-04 | Boje su bile hardkodirane (`#8a93a3`, `#6b7788`) — nisu pratile temu ni AA paletu iz F6c | `useTokens()` |
+| SET-05 | Redovi „Pomoć i podrška" i „Uslovi i privatnost" bili su **inertni** (bez `onPress`), a izgledali su kao navigacija (ikona + chevron). U repou ne postoji nijedna takva stranica, ni na webu | redovi **uklonjeni** umjesto linkovanja na izmišljeni URL; vraćaju se kad stranice postoje, kao `Linking.openURL` sa obrađenom greškom |
+| SET-06 | Odjava je bila jedan dodir, bez potvrde | `Sheet` sa potvrdom (`settings.logoutTitle`/`logoutBody`), isti obrazac kao sve destruktivne radnje (bez sistemskog `Alert`-a) |
+| SET-07 | Tokom izvoza red je gubio `onPress` — izgledao je kao običan red bez chevrona, pa korisnik nije znao da je dodir namjerno blokiran | eksplicitan `isDisabled` (0,5 opacity + `accessibilityState`) uz postojeći podnaslov „Pripremam izvoz…" |
+| SET-08 | `NotificationPreferencesScreen`: 12 `useColorModeValue` poziva i šest nijansi van palete | `Panel`, `InlineBanner`, `MonoLabel` |
+| SET-09 | Prekidači u Postavkama obavijesti **nisu imali `accessibilityLabel`** — šest identičnih prekidača, čitač ekrana izgovara samo „uključeno/isključeno" | labela je naziv tipa obavijesti + `testID` po tipu |
+| SET-10 | Greška učitavanja i greška `PATCH`-a bile su nevidljive: prekidač se vrati na staro stanje i korisnik ne zna je li dodir promašio | `InlineBanner tone="fault"` sa „Pokušaj" + toast na `onError` |
+| SET-11 | Datum „zadnje promjene" hardkodiran (`DD.MM.YYYY HH:mm`) | `utils/format` |
+| SET-12 | Profil: `toFixed(4)` za cijenu i `toLocaleDateString()` **bez argumenta** (jezik sistema, ne aplikacije) | `formatNumber(x, 4)` / `formatDate()` |
+| SET-13 | Obavijesti: `dayjs(...).format('HH:mm')` | `formatTime()` |
+
+Stavke iz listinga koje nisu bile greške, ali su provjerene: `languageLabel` i
+`handleLanguageChange` (popravljeni u F6a), `handleDailyGasReminderToggle`
+(optimistično stanje + rollback), `handleClearCache` i `handleExportData`
+(stvarni pozivi sa obradom svih ishoda), `version` (stvarna vrijednost iz
+`expo-application`, sa fallbackom). Nijedna od njih nije dirana.
+
+Provjera: `npx jest` 38 suite-ova, **281 test**, 32 snapshot-a zeleno;
+`npx tsc --noEmit` 0; `npx eslint src` 0 grešaka; `CI=1 npx expo export
+--platform android --dev` prolazi.
+
 **Verifikacija (2026-11-08):**
 
 ```
 npx tsc --noEmit                        → 0 grešaka
-npx jest                                → 37 suite-ova, 276 testova, 32 snapshot-a — zeleno
+npx jest                                → 38 suite-ova, 281 test, 32 snapshot-a — zeleno
 npx eslint src App.tsx index.js         → 0 grešaka (49 postojećih warninga)
 CI=1 npx expo export --platform android → bundle se gradi
 ```
@@ -346,7 +377,7 @@ obrazloženje u komentaru.
 | F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
-| F6 Greške + šest dorada | **u toku** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin; 42 nova testa |
+| F6 Greške + šest dorada | **u toku** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); 48 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

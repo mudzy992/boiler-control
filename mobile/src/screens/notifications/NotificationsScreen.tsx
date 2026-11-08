@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Screen, ScreenHeader, SkeletonRows } from '../../ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { formatTime } from '../../utils/format';
 import { apiClient } from '../../services/api/client';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -274,7 +275,9 @@ const NotificationsScreenContent: React.FC = () => {
                       {getTypeLabel(item.type, t)}
                     </Text>
                     <Text fontSize="xs" color={subtextColor}>
-                      {dayjs(item.sentAt || item.createdAt).format('HH:mm')}
+                      {/* F6 (SET-13): vrijeme kroz `utils/format` — 24-časovni
+                          zapis po jeziku, ne hardkodiran `HH:mm`. */}
+                      {formatTime(item.sentAt || item.createdAt)}
                     </Text>
                   </HStack>
                 </VStack>

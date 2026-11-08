@@ -1,22 +1,25 @@
 import React from 'react';
-import {
-  Box,
-  VStack,
-  HStack,
-  Text,
-  Switch,
-  useColorModeValue,
-  Icon,
-  Divider,
-  ScrollView,
-} from '../../components/ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Screen, ScreenHeader, SkeletonPanel, SkeletonRows } from '../../ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { Switch, useToast } from '../../components/ui/nativewind';
 import { apiClient } from '../../services/api/client';
-import dayjs from 'dayjs';
+import { formatDateRange } from '../../utils/format';
 import { useTranslation } from '../../hooks/useTranslation';
+import {
+  InlineBanner,
+  MonoLabel,
+  MonoMeta,
+  Panel,
+  PanelRow,
+  Screen,
+  ScreenBody,
+  ScreenHeader,
+  SkeletonPanel,
+  SkeletonRows,
+  Text,
+} from '../../ui';
 
 interface NotificationPreference {
   id: number;
@@ -27,27 +30,34 @@ interface NotificationPreference {
   updatedAt: string;
 }
 
-const getTypeLabel = (type: string, t: (key: string) => string) =>
-  t(`notifications.types.${type}`) || type;
-
-const getTypeDescription = (type: string, t: (key: string) => string) =>
-  t(`notifications.typeDescriptions.${type}`) || t('notifications.preferencesDefaultDesc');
-
+/**
+ * Detaljni prolaz kroz Postavke obavijesti (F6, SET-08…SET-11).
+ *
+ * Šta je bilo pogrešno:
+ *
+ *  SET-08 · Ekran je koristio **12** `useColorModeValue` poziva i šest nijansi
+ *    (`blue.50`, `dark.800`, `gray.600`…) — boje koje ne postoje u semantičkoj
+ *    paleti i koje ne prate AA kontrast koji je uveden u F6. Sada `Panel`,
+ *    `InlineBanner`, `MonoLabel`.
+ *  SET-09 · Prekidač NIJE imao `accessibilityLabel`, pa je čitač ekrana
+ *    izgovarao samo „uključeno/isključeno" bez ijedne riječi o tome šta se
+ *    uključuje — šest identičnih prekidača u listi.
+ *  SET-10 · Greška upita i greška spremanja nisu bile prikazane nikako: kad
+ *    `PATCH` padne, prekidač se vrati na staro stanje i korisnik ne zna je li
+ *    dodir promašio ili server odbio. Sada oba slučaja imaju poruku.
+ *  SET-11 · `dayjs(updatedAt).format('DD.MM.YYYY HH:mm')` — hardkodiran format,
+ *    isti razlog kao GAS-02; sada `utils/format`.
+ *
+ * Uz to: svaki red je dobio `PanelRow` okvir umjesto obojene kartice sa
+ * `Divider`-om, pa lista ima isti ritam kao Postavke i Plin.
+ */
 const NotificationPreferencesScreenContent: React.FC = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const toast = useToast();
 
-  const cardBg = useColorModeValue('white', 'dark.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const infoBg = useColorModeValue('blue.50', 'blue.900');
-  const infoBorder = useColorModeValue('blue.200', 'blue.700');
-  const infoIconColor = useColorModeValue('blue.600', 'blue.300');
-  const infoTextColor = useColorModeValue('blue.700', 'blue.200');
-
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['notification-preferences'],
     queryFn: () => apiClient.getNotificationPreferences() as Promise<NotificationPreference[]>,
   });
@@ -57,6 +67,14 @@ const NotificationPreferencesScreenContent: React.FC = () => {
       apiClient.updateNotificationPreference(payload.type, payload.enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+    },
+    /*
+     * SET-10: greška se prijavljuje. Bez ovoga `useMutation` tiho proguta
+     * odbijanje, prekidač se vrati na staro stanje, a korisnik pomisli da je
+     * pogrešno dodirnuo.
+     */
+    onError: () => {
+      toast.show({ description: t('settings.preferenceSaveFailed'), placement: 'top' });
     },
   });
 
@@ -74,71 +92,85 @@ const NotificationPreferencesScreenContent: React.FC = () => {
       <Screen edges={['top']}>
         {header}
         {/* F4 (UX-07): skeleton u obliku liste prekidača. */}
-        <Box px={4} pt={3} style={{ gap: 12 }}>
+        <ScreenBody>
           <SkeletonPanel lines={1} height={64} />
           <SkeletonRows count={4} />
-        </Box>
+        </ScreenBody>
+      </Screen>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Screen edges={['top']}>
+        {header}
+        <ScreenBody>
+          <InlineBanner
+            tone="fault"
+            title={t('notifications.preferencesLoadError')}
+            message={t('notifications.preferencesLoadErrorBody')}
+            action={{ label: t('common.retry'), onPress: () => void refetch() }}
+            testID="notification-preferences-error"
+          />
+        </ScreenBody>
       </Screen>
     );
   }
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top']} testID="notification-preferences-screen">
       {header}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}>
-        <VStack space={4} pb={6}>
-          <Box bg={infoBg} rounded="lg" p={4} borderWidth={1} borderColor={infoBorder}>
-            <HStack space={2} alignItems="center">
-              <Icon
-                as={Ionicons}
-                name="information-circle-outline"
-                size={5}
-                color={infoIconColor}
-              />
-              <Text fontSize="sm" color={infoTextColor}>
-                {t('notifications.preferencesInfo')}
-              </Text>
-            </HStack>
-          </Box>
+      <ScreenBody testID="notification-preferences-body">
+        <InlineBanner
+          tone="info"
+          title={t('notifications.preferencesInfo')}
+          testID="notification-preferences-info"
+        />
 
-          {data?.map((pref) => (
-            <Box
-              key={pref.id}
-              bg={cardBg}
-              rounded="lg"
-              borderWidth={1}
-              borderColor={borderColor}
-              p={4}
-            >
-              <HStack space={3} alignItems="center" justifyContent="space-between">
-                <VStack flex={1} space={1}>
-                  <Text fontSize="md" fontWeight="600" color={textColor}>
-                    {getTypeLabel(pref.type, t)}
+        <Panel variant="flush" padded={false}>
+          {(data ?? []).map((pref, index) => (
+            <PanelRow key={pref.id} divider={index < (data?.length ?? 0) - 1}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text size="bodyLg" weight="medium">
+                    {t(`notifications.types.${pref.type}`, { defaultValue: pref.type })}
                   </Text>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {getTypeDescription(pref.type, t)}
+                  <Text size="body" tone="muted">
+                    {t(`notifications.typeDescriptions.${pref.type}`, {
+                      defaultValue: t('notifications.preferencesDefaultDesc'),
+                    })}
                   </Text>
-                  {pref.updatedAt && (
-                    <Text fontSize="xs" color={subtextColor}>
+                  {pref.updatedAt ? (
+                    <MonoMeta>
                       {t('notifications.lastUpdated', {
-                        date: dayjs(pref.updatedAt).format('DD.MM.YYYY HH:mm'),
+                        date: formatDateRange(pref.updatedAt, pref.updatedAt).split(' – ')[0],
                       })}
-                    </Text>
-                  )}
-                </VStack>
+                    </MonoMeta>
+                  ) : null}
+                </View>
                 <Switch
                   isChecked={pref.enabled}
                   onToggle={() =>
                     updateMutation.mutate({ type: pref.type, enabled: !pref.enabled })
                   }
-                  size="sm"
+                  accessibilityLabel={`${t(`notifications.types.${pref.type}`, {
+                    defaultValue: pref.type,
+                  })}`}
+                  testID={`notification-preference-${pref.type}`}
                 />
-              </HStack>
-              <Divider mt={3} bg={borderColor} />
-            </Box>
+              </View>
+            </PanelRow>
           ))}
-        </VStack>
-      </ScrollView>
+        </Panel>
+
+        {!data?.length ? (
+          <Panel variant="flush" padded={false}>
+            <PanelRow divider={false}>
+              <MonoLabel>{t('notifications.preferencesEmpty')}</MonoLabel>
+            </PanelRow>
+          </Panel>
+        ) : null}
+      </ScreenBody>
     </Screen>
   );
 };

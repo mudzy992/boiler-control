@@ -18,6 +18,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { FormInput } from '../../components/FormInput';
 import { apiClient } from '../../services/api/client';
 import { Screen, ScreenHeader, SkeletonPanel } from '../../ui';
+import { formatDate, formatNumber } from '../../utils/format';
 
 const VAT_RATE = 0.17;
 
@@ -243,7 +244,9 @@ const ProfileScreenContent = () => {
                   {t('profile.priceIncVat')}
                 </Text>
                 <Text fontSize="sm" color={textColor} fontWeight="600">
-                  {gasPriceIncVat !== null ? gasPriceIncVat.toFixed(4) : '—'}
+                  {/* F6 (SET-12): `toFixed(4)` daje tačku i nema razdvajač
+                      hiljada — isti razlog kao GAS-02, sada `utils/format`. */}
+                  {gasPriceIncVat !== null ? formatNumber(gasPriceIncVat, 4) : '—'}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between">
@@ -251,9 +254,10 @@ const ProfileScreenContent = () => {
                   {t('profile.lastUpdate')}
                 </Text>
                 <Text fontSize="sm" color={textColor}>
-                  {gasPriceLastUpdatedAt
-                    ? new Date(gasPriceLastUpdatedAt).toLocaleDateString()
-                    : '—'}
+                  {/* F6 (SET-12): `toLocaleDateString()` bez argumenta uzima
+                      jezik SISTEMA, ne jezik aplikacije, pa je datum mogao biti
+                      na trećem jeziku. Sada format pravi `utils/format`. */}
+                  {formatDate(gasPriceLastUpdatedAt)}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between">

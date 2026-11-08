@@ -666,6 +666,9 @@ const enUS = {
       SYSTEM_ALERT: 'System Alert',
       GAS_READING_REMINDER: 'Gas Reading Reminder',
     },
+    preferencesLoadError: 'Preferences could not be loaded',
+    preferencesLoadErrorBody: 'Check your connection and try again.',
+    preferencesEmpty: 'No notification types are available',
     typeDescriptions: {
       DAILY_RECOMMENDATION: 'Recommendations for optimizing heating every day.',
       FLOW_TEMP_CHANGED: 'Alerts when the flow temperature changes.',
@@ -750,6 +753,14 @@ const enUS = {
     helpSupport: 'Help & Support',
     termsPrivacy: 'Terms & Privacy',
     developer: 'Developer',
+    // F6 (SET-05): ova dva reda su bila inertna (bez `onPress`) — izgledala su
+    // kao navigacija, a dodir nije radio ništa. Sada vode na stvarne stranice
+    // sajta; isti URL-ovi su i u web aplikaciji.
+    developerDesc: 'Built by the Boiler Control team',
+    // F6 (SET-06): odjava je bila jedan dodir, bez potvrde.
+    logoutTitle: 'Log out?',
+    logoutBody: 'You will need to sign in again to see your boiler.',
+
   },
   profile: {
     title: 'Profile',
@@ -1526,6 +1537,10 @@ const bsBS = {
     preferencesInfo:
       'Odaberite koje tipove obavijesti želite primati. Sve promjene se odmah primjenjuju.',
     preferencesDefaultDesc: 'Primaj obavijesti za ovaj tip događaja.',
+    // F6 (SET-10): greška učitavanja i prazna lista su prije bile tišina.
+    preferencesLoadError: 'Postavke obavijesti nije moguće učitati',
+    preferencesLoadErrorBody: 'Provjeri vezu i pokušaj ponovo.',
+    preferencesEmpty: 'Nema dostupnih tipova obavijesti',
     lastUpdated: 'Posljednja izmjena: {{date}}',
     types: {
       DAILY_RECOMMENDATION: 'Dnevne preporuke',
@@ -1619,6 +1634,11 @@ const bsBS = {
     helpSupport: 'Pomoć i podrška',
     termsPrivacy: 'Uslovi i privatnost',
     developer: 'Razvojni tim',
+    // F6 (SET-05/SET-06): vidi komentare uz engleske ključeve.
+    developerDesc: 'Razvio tim Boiler Control',
+    logoutTitle: 'Odjaviti se?',
+    logoutBody: 'Za pregled kotla bit će potrebna ponovna prijava.',
+
   },
   profile: {
     title: 'Profil',

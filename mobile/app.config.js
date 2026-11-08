@@ -102,13 +102,34 @@ module.exports = ({ config }) => {
         "expo-build-properties",
         {
           android: {
-            // Android 15 = API 35. Expo 54 zadano je compileSdk/targetSdk 36,
-            // pa se ovdje eksplicitno pinuje na 35.
-            compileSdkVersion: 35,
-            targetSdkVersion: 35,
-            // minSdkVersion NAMJERNO nije diran (Expo zadano 24 = Android 7.0),
-            // jer bi minSdk 35 onemogućio instalaciju na svim uređajima ispod
-            // Androida 15. Ako to želiš, dodaj `minSdkVersion: 35` ovdje.
+            /*
+             * F11 (BUILD-AAR-METADATA) — zašto compileSdk/targetSdk NISU pinovani.
+             *
+             * Ovdje je stajalo `compileSdkVersion: 35` i `targetSdkVersion: 35`
+             * („Expo 54 zadano je 36, pa pinujemo na 35"). To je vrijedilo za
+             * Expo 54. Na SDK 58 / RN 0.88 build PADA, i to ne na našem kodu:
+             *
+             *   :react-native-screens:checkReleaseAarMetadata
+             *   Dependency 'androidx.core:core:1.17.0' requires libraries and
+             *   applications that depend on it to compile against version 36 or
+             *   later of the Android APIs.
+             *   :react-native-screens is currently compiled against android-35.
+             *
+             * `checkReleaseAarMetadata` poredi compileSdk SVAKE biblioteke sa
+             * zahtjevom iz AAR metapodataka. Pošto je `compileSdk` bio 35, a
+             * `androidx.core` 1.17 (koju povlači RN 0.88) traži 36+, build se
+             * prekida prije kompajliranja ijedne naše linije. To se NE može
+             * riješiti `exclude`-om ni SPLOM: prag je u biblioteci.
+             *
+             * Rješenje: pustiti Expo/RN da odrede vrijednosti. SDK 58 zadaje
+             * `compileSdk 37` i `targetSdk 36` (vidi
+             * `expo-modules-autolinking/.../ExpoRootProjectPlugin.kt`, defaulti
+             * `compileSdk=37`, `targetSdk=36`), što je i ono što Play traži od
+             * avgusta 2026. Pinovanje na 35 je bilo i ispod Play zahtjeva.
+             *
+             * `minSdkVersion` i dalje NIJE diran (Expo zadano 24 = Android 7.0),
+             * jer bi viši minSdk onemogućio instalaciju na starijim uređajima.
+             */
 
             // Najveća pojedinačna ušteda na veličini .apk-a: samo jedna ABI.
             buildArchs: ["arm64-v8a"],
@@ -147,7 +168,12 @@ module.exports = ({ config }) => {
         backgroundColor:
           config.android?.adaptiveIcon?.backgroundColor || '#ffffff',
       },
-      edgeToEdgeEnabled: config.android?.edgeToEdgeEnabled ?? true,
+      /*
+       * `edgeToEdgeEnabled` je UKLONJEN: u SDK 58 plugin ispisuje
+       * „`edgeToEdgeEnabled` customization is no longer available — Android 16
+       * makes edge-to-edge mandatory". Android 16 nameće edge-to-edge, pa je
+       * opcija mrtva i samo pravi šum u `prebuild` logu builda.
+       */
       predictiveBackGestureEnabled: config.android?.predictiveBackGestureEnabled ?? false,
       googleServicesFile: config.android?.googleServicesFile || './assets/google-services.json',
     },

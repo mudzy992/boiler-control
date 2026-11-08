@@ -25,7 +25,6 @@
         "monochromeImage": "./assets/new/ic_launcher_monochrome.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "extra": {

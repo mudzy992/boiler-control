@@ -65,15 +65,48 @@ export function Sheet({
   const { height } = useWindowDimensions();
   const sheetRef = React.useRef<BottomSheet>(null);
 
+  /**
+   * F7: `snapPoints` se na svakom rendeu zadaje kao novi inline niz
+   * (`snapPoints={['45%', '65%']}`), pa bi `useMemo` sa samim nizom u
+   * zavisnostima pravio novi `points` niz svaki put i tjerao `BottomSheet` da
+   * ponovo računa snap tačke. Zavisnost je zato stabilan string.
+   */
+  const snapPointsKey = snapPoints.join('|');
+
   const points = React.useMemo(
     () =>
-      snapPoints.map((point) => {
+      snapPointsKey.split('|').map((rawPoint) => {
+        const point = rawPoint as number | `${number}%`;
         if (typeof point === 'number') return point;
         const percent = Number(point.replace('%', ''));
         return Number.isFinite(percent) ? Math.max(1, (height * percent) / 100) : height * 0.5;
       }),
-    [snapPoints, height],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ključ je stabilan izraz niza
+    [snapPointsKey, height],
   );
+
+  /**
+   * F7 (SHEET-02): `Modal` se NE smije skloniti u istom trenutku kad `isOpen`
+   * padne na `false`, jer bi to presjeklo animaciju zatvaranja — a F0 je
+   * obećao da se list zatvara animirano, ne da nestane.
+   *
+   * Zato postoji `mounted`: kad se sheet zatvori, `Modal` ostaje vidljiv dok
+   * gorhom ne javi da je list sišao na `-1` (`onChange`). Timer od 400 ms je
+   * sigurnosna mreža — ako iz bilo kog razloga `onChange` ne stigne (npr. list
+   * je već bio na `-1`), `Modal` se ipak sklanja umjesto da ostane kao nevidljiv
+   * sloj preko ekrana koji „jede" dodire.
+   */
+  const [mounted, setMounted] = React.useState(isOpen);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      return undefined;
+    }
+    if (!mounted) return undefined;
+    const timer = setTimeout(() => setMounted(false), 400);
+    return () => clearTimeout(timer);
+  }, [isOpen, mounted]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -82,6 +115,10 @@ export function Sheet({
       sheetRef.current?.close();
     }
   }, [isOpen]);
+
+  const handleChange = React.useCallback((index: number) => {
+    if (index === -1) setMounted(false);
+  }, []);
 
   const renderBackdrop = React.useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -130,7 +167,9 @@ export function Sheet({
    */
   return (
     <Modal
-      visible={isOpen}
+      // `isOpen || mounted`: otvaranje je trenutno (bez čekanja na efekat), a
+      // `mounted` drži list u stablu dok traje animacija zatvaranja.
+      visible={isOpen || mounted}
       transparent
       animationType="none"
       statusBarTranslucent
@@ -143,6 +182,7 @@ export function Sheet({
         snapPoints={points}
         enablePanDownToClose
         onClose={onClose}
+        onChange={handleChange}
         backdropComponent={renderBackdrop}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"

@@ -444,6 +444,7 @@ Isti popravak rješava i promjenu jezika, jer se do `changeLanguage` nije dolazi
 | GAS-LIST | redovi zalepljeni za ivicu, `borderBottom` bez boje (crna linija u obje teme) | kartica sa `marginHorizontal: space.lg`, radijus 4, hairline `line` | `GasReadingCard.tsx` |
 | GAS-ACTIONS | akcije u sheetu 16 px ikona / 13 px tekst | red 44 px, ikona 20 px, tekst `bodyLg` | `GasReadingCard.tsx` |
 | HEAT-01 | status grijanja bez okvira, tri signala u jednoj liniji | `StatusPill` (tekst + ivica), temperatura u svom redu | heating snapshot |
+| SHEET-02 | `Modal` bi sklonio list u istom frejmu kad `isOpen` padne — nema animacije zatvaranja | `visible={isOpen \|\| mounted}`; `mounted` pada na `onChange(-1)` ili poslije 400 ms | `primitives.test.tsx` (26) |
 
 **Test-infrastruktura (TEST-FONT).** `Readout` ide kroz `useTokens` →
 `useAppFonts` → `expo-font`, a `require('*.ttf')` u Jest-u nije asset nego broj
@@ -456,7 +457,7 @@ ostaju nepromijenjena, a testovi koji renderuju primitives više ne padaju.
 
 ```
 npx tsc --noEmit                        → 0 grešaka
-npx jest                                → 45 suite-ova, 299 testova, 32 snapshota — zeleno
+npx jest                                → 45 suite-ova, 300 testova, 32 snapshota — zeleno
 npx eslint src                          → 0 grešaka (38 postojećih warninga)
 CI=1 npx expo export --platform android --dev → bundle se gradi
 ```
@@ -479,7 +480,7 @@ novi `raised` izgled trake). Nijedna asertacija nije ublažena; dvije su
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
 | F6 Greške + šest dorada | **završeno 2026-11-08** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; reduced motion za splash; 55 novih testova |
-| F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 12 nalaza; 11 novih testova |
+| F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 13 nalaza; 12 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

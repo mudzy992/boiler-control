@@ -263,6 +263,79 @@ Regenerisan je jedan snapshot (`navigationNativeWind`): novija verzija
 `ScreenStack` i po jedan `false` u `style` nizu tab ikone. To je izlaz
 biblioteke, ne naša promjena stilova — nijedna asertacija nije dirana.
 
+### F6 — ono što Expo Go još prijavljuje, i šest dorada
+
+Pokretanje u Expo Go dalo je još dvije greške, a uz njih je traženo šest
+dorada: jezik u Postavkama, WCAG 2.2 AA audit, redoslijed na Početnoj,
+tipografija i spacing, te **detaljan** prolaz kroz Plin i sve ekrane Postavki.
+
+| Simptom / zahtjev | Dokazani uzrok | Šta je urađeno |
+|---|---|---|
+| `ERROR Text strings must be rendered within a <Text> component.` | `createTextInstance` u `ReactFabric-dev.js` baca kad `hostContext.isInAParentText` nije postavljen — dakle goli string je dijete `View`-a. Locirano brace-aware AST skeniranjem `src/` (babel parser, ne regex): `Badge` (`src/components/ui/controls.tsx`) je u `<Text>` omotavao sadržaj **samo kad je `children` primitiv**, a `#{program.orderIndex + 1}` je niz od tri čvora (string, broj, ništa) | `isPlainContent()` u `Badge`-u propušta kroz `<Text>` i nizove primitiva; poziv u `ScheduleManagementScreen` je uz to eksplicitan (`{\`#${…}\`}`), da se ista klasa greške ne vrati kroz isti poziv |
+| `WARN [Reanimated] Dependencies should only be used on the web…` | `react-native-reanimated` 4.7.1, `hook/*.native.js`: `logger.warnOnce` kad se proslijedi `deps`. Naš `src/` nema nijedan `useAnimatedStyle`/`useDerivedValue`/`useAnimatedReaction` (`grep` = 0) → pozivalac je `@gorhom/bottom-sheet` | Provjereno i na **5.2.14** (`npm pack` + `grep`): `useAnimatedReaction(..., [_providedAnimatedPosition, topInset])` je i dalje tu, pa upgrade **ne** rješava upozorenje i nije urađen. Tekst je dodan u postojeći `IGNORED_WARNINGS` filter, uz komentar koji imenuje biblioteku i kaže da je upozorenje tačno |
+| Jezik se ne mijenja u Postavkama | `i18n.init` je imao `lng` + `fallbackLng` bez `supportedLngs`, pa su `bs`, `en`, `en-GB` prolazili kao podržani i tiho padali na engleski; uz to je `handleLanguageChange` prvo pisao u storage, pa mijenjao jezik, bez ijedne povratne informacije | `supportedLngs: ['en-US','bs-BS']`, `load: 'currentOnly'`, `returnEmptyString: false`; redoslijed obrnut (prvo UI, pa perzistencija), a neuspjelo spremanje se prijavi toastom `settings.languageChangeFailed` |
+| Trenutno vrijeme mora biti **ispod** statusa kotla | Vrijeme je stajalo na dnu Početne, ispod preporuke i liste termostata | Blok premješten direktno poslije `boiler.status`; `RecommendationBreakdown` (objašnjenje preporuke) sada je ispod liste termostata. Čuva ga test redoslijeda u stabilu (`dashboard-hero` prije `weather-row`), ne snimka |
+
+**WCAG 2.2 AA (cijeli mobilni UI).** Prvi i najvažniji korak je paleta, jer se
+kroz nju provlači svaki ekran. Izmjereno na sve tri podloge (`panel`, `canvas`,
+`raised`):
+
+| Token | Prije | Odnos | Sada | Odnos |
+|---|---|---|---|---|
+| dark `inkDim` | `#6b7788` | 4,22 / 4,43 / 3,95 ✗ | `#828d9e` | 5,71 / 6,00 / 5,34 |
+| light `signal` | `#e85223` | 3,71 / 3,46 / 3,34 ✗ | `#c2410c` | 5,18 / 4,84 / 4,66 |
+| light `ok` | `#16a34a` | 3,30 / 3,08 / 2,97 ✗ | `#15803d` | 5,02 / 4,69 / 4,51 |
+| light `fault` | `#dc2626` | 4,83 / 4,51 / 4,35 ✗ | `#b91c1c` | 6,47 / 6,04 / 5,82 |
+| light `info` | `#0284c7` | 4,10 / 3,83 / 3,69 ✗ | `#0369a1` | 5,93 / 5,54 / 5,34 |
+| light `inkDim` | `#6b7280` | 4,83 / 4,52 / 4,35 ✗ | `#59616e` | 6,25 / 5,84 / 5,63 |
+
+`ink` i `inkMuted` su već bili AAA (≥ 7:1) i nisu dirani; `dark.signal` ostaje
+web brand `#ff6b3d` (6,78:1). Kontrast se više ne mjeri ručno — čuva ga
+`src/ui/__tests__/a11yContrast.test.ts` (24 testa: svaki tekstualni token ×
+svaka podloga ≥ 4,5:1, `onSignal` na boji ≥ 4,5:1, `ink` ≥ 7:1, `MIN_TOUCH` ≥
+44 pt po SC 2.5.8, razmaci djeljivi sa 4).
+
+**Tipografija i spacing.** Novi `src/utils/format.ts` je jedina tačka za brojeve
+i datume: `formatNumber`/`formatInteger`/`formatDate`/`formatShortDate`/
+`formatTime`/`formatDateRange`, svi kroz `Intl` po jeziku iz i18n-a. Prije je
+`toFixed(2)` svuda davao tačku i bez razdvajača hiljada, a datumi su u **istom
+ekranu** bili i `dayjs.format('DD.MM.YYYY')` i `toLocaleDateString('en-US', …)`.
+
+**Plin — detaljan prolaz (GAS-01…GAS-11).**
+
+| ID | Nalaz | Popravka |
+|---|---|---|
+| GAS-01 | Isti period ispisan dvaput („Analysis Window" na vrhu i „Analysis Period" na dnu) | jedan `AnalysisPeriodRow` u sažetku |
+| GAS-02 | `toFixed` + hardkodiran `en-US` datum | `utils/format.ts`, test `src/utils/__tests__/format.test.ts` (9 testova) |
+| GAS-03 | Četiri obojene kutije, 13 `useColorModeValue` poziva, boje van palete | `Panel`/`InlineBanner`/`Led` iz `src/ui` |
+| GAS-04 | Tri metrike u `HStack` bez `flex` — treća kolona se lomila na 360 dp | `Kpi` pločice i `flush` panel sa redovima |
+| GAS-05 | Rast potrošnje obojen **zeleno** (`bg="green.500"`) — najgorši scenario izgledao kao dobra vijest | `Led state={warn}` za rast, `ok` za pad, `off` za stabilno |
+| GAS-06 | „min/avg/max" bez definicije uzorka | podnaslovi `analysisDailyStatsHint` / `analysisEfficiencyHint` / `analysisCostHint` |
+| GAS-07 | `px={5} py={5}` ručno, drugi ritam od Očitanja | `ScreenBody` (16 px, isti svuda) |
+| GAS-08 | Mrežna greška padala na „nema podataka" → savjet „dodaj dva očitanja" iako očitanja postoje | `InlineBanner tone="fault"` sa „Pokušaj" (`gas.analysisLoadError*`) |
+| GAS-09 | Filter chipovi visoki ~27 px (ispod SC 2.5.8 i `MIN_TOUCH`) | `minHeight: MIN_TOUCH` + `HIT_SLOP` |
+| GAS-10 | Prazno stanje samo tekst, bez ijedne akcije | `EmptyState` sa „Dodaj očitanje", a kad filter sakrije sve — „Sve" |
+| GAS-11 | Podrazumijevani filter „zadnja sedmica" skriva sva očitanja korisniku koji brojilo mjeri mjesečno | default je `all`; test u `f6Gas.test.tsx` |
+
+Ukinuto je i **36 mrtvih** `|| 'English fallback'` izraza u
+`GasReadingsScreen` — svi ključevi postoje u oba jezika, pa je fallback bio
+kod koji nikad ne radi, a sakriva pravi nedostatak prijevoda.
+
+**Verifikacija (2026-11-08):**
+
+```
+npx tsc --noEmit                        → 0 grešaka
+npx jest                                → 37 suite-ova, 276 testova, 32 snapshot-a — zeleno
+npx eslint src App.tsx index.js         → 0 grešaka (49 postojećih warninga)
+CI=1 npx expo export --platform android → bundle se gradi
+```
+
+Snimke: `npx jest -u` je ažurirao 22 snimke. Razlika je posljedica (a) novih
+vrijednosti tokena i (b) prelaska Gas ekrana na `src/ui` primitive — nijedna
+asertacija u postojećim testovima nije ublažena; jedina izmijenjena asertacija
+(`tokens.test.ts`, `lightTokens.signal`) prati novu, izmjerenu boju uz
+obrazloženje u komentaru.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -273,6 +346,7 @@ biblioteke, ne naša promjena stilova — nijedna asertacija nije dirana.
 | F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
+| F6 Greške + šest dorada | **u toku** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin; 42 nova testa |
 
 ### Šta je F0 stvarno isporučio
 

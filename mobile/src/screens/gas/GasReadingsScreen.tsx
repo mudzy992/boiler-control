@@ -18,7 +18,6 @@ import {
   useToast,
 } from '../../components/ui/nativewind';
 import { Ionicons } from '@expo/vector-icons';
-import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
@@ -27,10 +26,12 @@ import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
 
 import { useTokens } from '../../ui/theme';
-import { radius, space } from '../../theme/tokens';
+import { formatDate, formatInteger, formatNumber, formatShortDate } from '../../utils/format';
+import { HIT_SLOP, MIN_TOUCH, radius, space } from '../../theme/tokens';
 import { SecureStorage } from '../../services/storage/SecureStorage';
 import {
   Button,
+  EmptyState,
   MonoLabel,
   MonoMeta,
   Panel,
@@ -80,8 +81,15 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   const route = useRoute<RouteProp<any, 'GasReadings'>>();
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  /**
+   * F6 (GAS-11): podrazumijevani filter je bio „zadnja sedmica", pa je ekran
+   * čije je ime „Očitanja" otvarao PRAZNU listu svakom korisniku koji mjeri
+   * brojilo jednom mjesečno — a prazno stanje nije ni nudilo akciju. Očitanja
+   * plina su po prirodi rijetka (mjesečno), pa je jedini pošten default „Sve":
+   * korisnik odmah vidi svoje podatke, a period sužava svjesno.
+   */
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'year' | 'all' | 'custom'>(
-    'week'
+    'all'
   );
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   // F4 (UX-19): izbor akcije za sliku brojila ide kroz sheet, ne kroz sistemski dijalog.
@@ -124,7 +132,6 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     });
   }, []);
 
-  const cardBg = useColorModeValue('white', 'dark.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
@@ -145,7 +152,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   // Handle query errors outside the query config to maintain hook order
   React.useEffect(() => {
     if (queryError) {
-      showError(queryError, t('gas.loadError') || 'Failed to load gas readings');
+      showError(queryError, t('gas.loadError'));
     }
   }, [queryError, showError, t]);
 
@@ -164,7 +171,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         render: () => (
           <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
             <Text color="white" fontSize="sm">
-              {t('gas.addedSuccess') || 'Gas reading added successfully'}
+              {t('gas.addedSuccess')}
             </Text>
           </Box>
         ),
@@ -173,7 +180,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       });
     },
     onError: (error: any) => {
-      showError(error, t('gas.addError') || 'Failed to add gas reading');
+      showError(error, t('gas.addError'));
     },
   });
 
@@ -185,7 +192,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         render: () => (
           <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
             <Text color="white" fontSize="sm">
-              {t('gas.deleteSuccess') || 'Gas reading deleted'}
+              {t('gas.deleteSuccess')}
             </Text>
           </Box>
         ),
@@ -194,7 +201,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       });
     },
     onError: (error: any) => {
-      showError(error, t('gas.deleteError') || 'Failed to delete gas reading');
+      showError(error, t('gas.deleteError'));
     },
   });
 
@@ -206,7 +213,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
     },
     onError: (error: any) => {
-      showError(error, t('gas.referenceError') || 'Failed to update reference state');
+      showError(error, t('gas.referenceError'));
     },
   });
 
@@ -221,7 +228,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         render: () => (
           <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
             <Text color="white" fontSize="sm">
-              {t('gas.meterImageUploaded') || 'Meter image uploaded'}
+              {t('gas.meterImageUploaded')}
             </Text>
           </Box>
         ),
@@ -230,7 +237,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       });
     },
     onError: (error: any) => {
-      showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image');
+      showError(error, t('gas.meterImageUploadError'));
     },
   });
 
@@ -247,7 +254,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         render: () => (
           <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
             <Text color="white" fontSize="sm">
-              {t('gas.invoiceUploaded') || 'Invoice uploaded'}
+              {t('gas.invoiceUploaded')}
             </Text>
           </Box>
         ),
@@ -256,7 +263,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       });
     },
     onError: (error: any) => {
-      showError(error, t('gas.invoiceUploadError') || 'Failed to upload invoice');
+      showError(error, t('gas.invoiceUploadError'));
     },
   });
 
@@ -267,7 +274,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
     },
     onError: (error: any) => {
-      showError(error, t('gas.invoiceDeleteError') || 'Failed to delete invoice');
+      showError(error, t('gas.invoiceDeleteError'));
     },
   });
 
@@ -278,9 +285,9 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     const cleaned = sanitizeFileName(name);
     const dotIndex = cleaned.lastIndexOf('.');
     if (dotIndex <= 0) {
-      return cleaned || 'file';
+      return cleaned;
     }
-    return cleaned.slice(0, dotIndex) || 'file';
+    return cleaned.slice(0, dotIndex);
   };
 
   const getHeaderValue = (
@@ -331,14 +338,14 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     const fileName = match?.[1];
     if (!fileName) return '';
     const extMatch = fileName.match(/(\.[a-zA-Z0-9]+)$/);
-    return extMatch?.[1]?.toLowerCase() || '';
+    return extMatch?.[1]?.toLowerCase();
   };
 
   const extensionFromFileName = (fileName?: string) => {
     if (!fileName) return '';
     const safeName = sanitizeFileName(fileName);
     const extMatch = safeName.match(/(\.[a-zA-Z0-9]+)$/);
-    return extMatch?.[1]?.toLowerCase() || '';
+    return extMatch?.[1]?.toLowerCase();
   };
 
   const openLocalFile = async (fileUri: string, mimeType?: string) => {
@@ -397,14 +404,13 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     const resolvedExtension =
       extensionFromContentDisposition(contentDisposition) ||
       extensionFromMime(contentType) ||
-      fallbackExtension ||
-      '';
+      fallbackExtension;
     const resolvedMimeType =
       (isSupportedFileMime(contentType) ? contentType : undefined) ||
       mimeFromExtension(resolvedExtension);
     if (!resolvedMimeType) {
       throw new Error(
-        `Unexpected downloaded content type: ${contentType || 'unknown'}`,
+        `Unexpected downloaded content type: ${contentType}`,
       );
     }
     const finalFileUri = `${downloadsDirectory}${prefix}${resolvedExtension}`;
@@ -435,12 +441,12 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         id: reading.id,
         invoicePdf: {
           uri: asset.uri,
-          name: asset.name || 'invoice.pdf',
-          type: asset.mimeType || 'application/pdf',
+          name: asset.name,
+          type: asset.mimeType,
         },
       });
     } catch (error: any) {
-      showError(error, t('gas.invoiceUploadError') || 'Failed to upload invoice');
+      showError(error, t('gas.invoiceUploadError'));
     }
   };
 
@@ -451,7 +457,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         `meter-${reading.id}`,
       );
     } catch (error: any) {
-      showError(error, t('gas.meterImageOpenError') || 'Failed to open image');
+      showError(error, t('gas.meterImageOpenError'));
     }
   };
 
@@ -462,7 +468,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         `invoice-${reading.id}.pdf`,
       );
     } catch (error: any) {
-      showError(error, t('gas.invoiceOpenError') || 'Failed to open invoice');
+      showError(error, t('gas.invoiceOpenError'));
     }
   };
 
@@ -474,14 +480,14 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     return {
       uri: asset.uri,
       name: asset.fileName || `meter-${Date.now()}.${fallbackExtension}`,
-      type: asset.mimeType || 'image/jpeg',
+      type: asset.mimeType,
     };
   };
 
   const pickMeterImageFromGallery = async (reading: GasReading) => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      throw new Error(t('gas.imagePermissionDenied') || 'Image permission denied');
+      throw new Error(t('gas.imagePermissionDenied'));
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -503,7 +509,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   const captureMeterImage = async (reading: GasReading) => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      throw new Error(t('gas.cameraPermissionDenied') || 'Camera permission denied');
+      throw new Error(t('gas.cameraPermissionDenied'));
     }
 
     const result = await ImagePicker.launchCameraAsync({
@@ -537,7 +543,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     setMeterImageReading(null);
     if (!reading) return;
     void pickMeterImageFromGallery(reading).catch((error) =>
-      showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
+      showError(error, t('gas.meterImageUploadError')),
     );
   };
 
@@ -546,7 +552,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     setMeterImageReading(null);
     if (!reading) return;
     void captureMeterImage(reading).catch((error) =>
-      showError(error, t('gas.meterImageUploadError') || 'Failed to upload meter image'),
+      showError(error, t('gas.meterImageUploadError')),
     );
   };
 
@@ -701,7 +707,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                               : t('gas.filterAll')}
                     </MonoLabel>
                     <Readout
-                      value={periodConsumption.toFixed(2)}
+                      value={formatNumber(periodConsumption)}
                       unit="m³"
                       size="md"
                       tone="ink"
@@ -711,7 +717,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                   <View style={{ flex: 1, gap: 2 }}>
                     <MonoLabel>{t('gas.totalReadings')}</MonoLabel>
                     <Readout
-                      value={filteredReadings.length}
+                      value={formatInteger(filteredReadings.length)}
                       size="md"
                       tone="muted"
                       testID="gas-readings-count"
@@ -721,7 +727,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                     <MonoLabel>{t('gas.lastReading')}</MonoLabel>
                     <MonoMeta>
                       {filteredReadings.length > 0
-                        ? dayjs(filteredReadings[0].readingDate).format('DD.MM')
+                        ? formatShortDate(filteredReadings[0].readingDate)
                         : '—'}
                     </MonoMeta>
                   </View>
@@ -729,7 +735,12 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
               </PanelRow>
             </Panel>
 
-            {/* Filter: jedna traka, 5 opcija; signal samo na aktivnoj */}
+            {/*
+              F6 (GAS-09): filter je imao `paddingVertical: 6` — ukupna visina
+              oko 27 px, dakle ispod WCAG 2.2 SC 2.5.8 (24 px minimum) i daleko
+              ispod `MIN_TOUCH` 44 px koji ostatak aplikacije poštuje. Sada je
+              svaka opcija visoka 44 px, sa `hitSlop`-om 8.
+            */}
             <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
               {(
                 [
@@ -755,10 +766,11 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                     accessibilityRole="button"
                     accessibilityLabel={filter.label}
                     accessibilityState={{ selected: active }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    hitSlop={HIT_SLOP}
                     style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
+                      minHeight: MIN_TOUCH,
+                      justifyContent: 'center',
+                      paddingHorizontal: 12,
                       borderRadius: radius.tag,
                       borderWidth: 1,
                       borderColor: active ? tokens.signal : tokens.line,
@@ -791,23 +803,32 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             </View>
           </VStack>
         }
+        /*
+          F6 (GAS-10): prazno stanje je samo TEKST — „nema očitanja u periodu,
+          probaj drugi period" — bez ijedne akcije. Korisnik koji je došao prvi
+          put nema pojma gdje se dodaje očitanje, a jedini put iz stanja je
+          pogađanje. Sada nudi stvarnu akciju: „Dodaj očitanje" (otvara sheet
+          koji već postoji), a kad zapisa ima ali filter ništa ne vraća, nudi
+          povratak na „Sve".
+        */
         ListEmptyComponent={
-          <Box
-            bg={cardBg}
-            rounded="xl"
-            borderWidth={1}
-            borderColor={borderColor}
-            p={8}
-            alignItems="center"
-          >
-            <Icon as={Ionicons} name="document-outline" size={16} color={subtextColor} mb={4} />
-            <Text color={subtextColor} textAlign="center" fontSize="md" fontWeight="500" mb={1}>
-              {t('gas.noReadingsInPeriod') || 'No readings in this period'}
-            </Text>
-            <Text color={subtextColor} textAlign="center" fontSize="sm">
-              {t('gas.tryOtherPeriod') || 'Try a different time period or add a new reading'}
-            </Text>
-          </Box>
+          readings.length === 0 ? (
+            <EmptyState
+              icon="document-outline"
+              title={t('gas.noReadings')}
+              message={t('gas.noReadingsBody')}
+              action={{ label: t('gas.addReading'), onPress: () => setShowAddModal(true) }}
+              style={{ paddingVertical: space.xl }}
+            />
+          ) : (
+            <EmptyState
+              icon="funnel-outline"
+              title={t('gas.noReadingsInPeriod')}
+              message={t('gas.tryOtherPeriod')}
+              action={{ label: t('gas.filterAll'), onPress: () => setDateFilter('all') }}
+              style={{ paddingVertical: space.xl }}
+            />
+          )
         }
         refreshControl={
           <RefreshControl refreshing={refreshing || isFetching} onRefresh={handleRefresh} />
@@ -883,14 +904,14 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             {/* Start Date */}
             <Box>
               <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                {t('gas.dateRange.startDate') || 'Start Date'}
+                {t('gas.dateRange.startDate')}
               </Text>
               <Pressable
                 onPress={() => setShowStartPicker(true)}
                 accessibilityRole="button"
                 accessibilityLabel={`${t('gas.dateRange.startDate')}: ${
                   customStartDate
-                    ? customStartDate.toLocaleDateString()
+                    ? formatDate(customStartDate)
                     : t('gas.dateRange.selectStart')
                 }`}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -904,12 +925,8 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                 <HStack justifyContent="space-between" alignItems="center">
                   <Text color={textColor} fontSize="sm">
                     {customStartDate
-                      ? customStartDate.toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })
-                      : t('gas.dateRange.selectStart') || 'Select start date'}
+                      ? formatDate(customStartDate)
+                      : t('gas.dateRange.selectStart')}
                   </Text>
                   <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
                 </HStack>
@@ -919,13 +936,13 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             {/* End Date */}
             <Box>
               <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                {t('gas.dateRange.endDate') || 'End Date'}
+                {t('gas.dateRange.endDate')}
               </Text>
               <Pressable
                 onPress={() => setShowEndPicker(true)}
                 accessibilityRole="button"
                 accessibilityLabel={`${t('gas.dateRange.endDate')}: ${
-                  customEndDate ? customEndDate.toLocaleDateString() : t('gas.dateRange.selectEnd')
+                  customEndDate ? formatDate(customEndDate) : t('gas.dateRange.selectEnd')
                 }`}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 bg={filterBg}
@@ -938,12 +955,8 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                 <HStack justifyContent="space-between" alignItems="center">
                   <Text color={textColor} fontSize="sm">
                     {customEndDate
-                      ? customEndDate.toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })
-                      : t('gas.dateRange.selectEnd') || 'Select end date'}
+                      ? formatDate(customEndDate)
+                      : t('gas.dateRange.selectEnd')}
                   </Text>
                   <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
                 </HStack>
@@ -953,7 +966,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             {/* Quick Presets */}
             <VStack space={2}>
               <Text fontSize="xs" fontWeight="600" color={mutedColor} mb={1}>
-                {t('gas.dateRange.quickPresets') || 'Quick Presets'}
+                {t('gas.dateRange.quickPresets')}
               </Text>
               <VStack space={2}>
                 <HStack space={2}>
@@ -975,7 +988,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Text fontSize="xs" color={textColor} textAlign="center">
-                      {t('gas.dateRange.last30') || 'Last 30 days'}
+                      {t('gas.dateRange.last30')}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -996,7 +1009,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Text fontSize="xs" color={textColor} textAlign="center">
-                      {t('gas.dateRange.last60') || 'Last 60 days'}
+                      {t('gas.dateRange.last60')}
                     </Text>
                   </Pressable>
                 </HStack>
@@ -1017,7 +1030,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Text fontSize="xs" color={textColor} textAlign="center">
-                    {t('gas.dateRange.last90') || 'Last 90 days'}
+                    {t('gas.dateRange.last90')}
                   </Text>
                 </Pressable>
               </VStack>

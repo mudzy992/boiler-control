@@ -491,6 +491,10 @@ const enUS = {
     useCurrentDateTime: 'Use current date & time',
     noReadings: 'No readings recorded',
     noReadingsInPeriod: 'No readings in this period',
+    // F6 (GAS-10): prazno stanje je prije bilo bez akcije — sada ima dugme.
+    // F6 (GAS-10): prazno stanje dobija tijelo poruke i akciju, uz postojeći
+    // naslov `noReadings` („No readings recorded") — bez dupliranja ključa.
+    noReadingsBody: 'Add your first reading to start tracking consumption.',
     tryOtherPeriod: 'Try a different time period or add a new reading',
     readingsRecorded: 'readings recorded',
     enterMeterValue: 'Enter meter reading (m³)',
@@ -563,6 +567,16 @@ const enUS = {
     analysisNoData: 'No analysis data available.',
     analysisNoDataBody: 'Add at least two gas readings so consumption can be calculated.',
     analysisNoDataAction: 'Go to readings',
+    // F6 (GAS-06): objašnjenje uzorka — bez ovoga brojevi „min/avg/max" izgledaju
+    // kao da ih je neko izmislio, a ne kao statistika razlika između očitanja.
+    analysisEfficiencyHint: 'Measured over the analysis period',
+    analysisCostHint: 'Price windows applied to this period',
+    analysisDailyStatsHint: 'Sample: difference between consecutive readings',
+    analysisPeriodUnknown: 'Period not available',
+    analysisUpdatedAt: 'Updated {{value}}',
+    // F6 (GAS-08): mrežna greška je prije izgledala kao „nema podataka".
+    analysisLoadError: 'Analysis could not be loaded',
+    analysisLoadErrorBody: 'Your readings are still there — the analysis request failed.',
     analysisTotalUse: 'Total Use',
     analysisAvgDaily: 'Avg Daily',
     analysisHeatingEfficiency: 'Heating Efficiency',
@@ -1355,6 +1369,9 @@ const bsBS = {
     useCurrentDateTime: 'Koristi trenutno vrijeme i datum',
     noReadings: 'Nema zabilježenih očitanja',
     noReadingsInPeriod: 'Nema očitanja u ovom periodu',
+    // F6 (GAS-10): vidi komentar uz engleske ključeve.
+    // F6 (GAS-10): vidi komentar uz engleski ključ.
+    noReadingsBody: 'Dodaj prvo očitanje da bi počelo praćenje potrošnje.',
     tryOtherPeriod: 'Pokušaj drugi vremenski period ili dodaj novo očitanje',
     readingsRecorded: 'zabilježena očitanja',
     enterMeterValue: 'Unesi očitanje brojača (m³)',
@@ -1427,6 +1444,14 @@ const bsBS = {
     analysisNoData: 'Nema dostupnih podataka.',
     analysisNoDataBody: 'Dodaj najmanje dva očitanja plina da bi se potrošnja mogla izračunati.',
     analysisNoDataAction: 'Idi na očitanja',
+    // F6 (GAS-06/GAS-08): vidi komentar uz engleske ključeve.
+    analysisEfficiencyHint: 'Mjereno kroz period analize',
+    analysisCostHint: 'Cjenovni periodi primijenjeni na ovaj period',
+    analysisDailyStatsHint: 'Uzorak: razlika između uzastopnih očitanja',
+    analysisPeriodUnknown: 'Period nije dostupan',
+    analysisUpdatedAt: 'Ažurirano {{value}}',
+    analysisLoadError: 'Analizu nije moguće učitati',
+    analysisLoadErrorBody: 'Očitanja su i dalje tu — zahtjev za analizu nije uspio.',
     analysisTotalUse: 'Ukupna potrošnja',
     analysisAvgDaily: 'Prosjek dnevno',
     analysisHeatingEfficiency: 'Efikasnost grijanja',

@@ -1,24 +1,28 @@
 import React, { useMemo } from 'react';
-import {
-  Box,
-  VStack,
-  HStack,
-  Text,
-  useColorModeValue,
-  ScrollView,
-  Icon,
-} from '../../components/ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { apiClient } from '../../services/api/client';
 import dayjs from 'dayjs';
+
+import { apiClient } from '../../services/api/client';
+import { useTranslation } from '../../hooks/useTranslation';
+import { formatDate, formatDateRange, formatNumber } from '../../utils/format';
+import { space } from '../../theme/tokens';
 import {
   EmptyState,
+  InlineBanner,
+  Kpi,
+  Led,
+  MonoLabel,
+  MonoMeta,
+  Panel,
+  PanelRow,
+  Readout,
   Screen,
+  ScreenBody,
   ScreenHeader,
   Skeleton,
   SkeletonRows,
+  Text,
   TrendChart,
   TrendSummary,
   type TrendPoint,
@@ -46,25 +50,25 @@ interface GasAnalysisData {
     readingDate: string;
     counterValue: number;
   } | null;
-  priceBreakdown?: Array<{
+  priceBreakdown?: {
     priceExVat: number;
     consumptionM3: number;
     costExVat: number;
     source?: string;
     effectiveFrom?: string | null;
     effectiveTo?: string | null;
-  }>;
+  }[];
   efficiency?: {
     heatingHours?: number;
     averageFlowTemp?: number;
     gasUsagePerHeatingHour?: number;
     m3PerHour?: number;
   };
-  monthlyTrends?: Array<{
+  monthlyTrends?: {
     month: string;
     consumption: number;
     heatingHours: number;
-  }>;
+  }[];
 }
 
 interface GasReading {
@@ -172,28 +176,77 @@ type GasAnalysisScreenProps = {
   headerSlot?: React.ReactNode;
 };
 
+/**
+ * Detaljni prolaz kroz Analizu (F6, GAS-01…GAS-07).
+ *
+ * Šta je bilo pogrešno i zašto je promijenjeno:
+ *
+ *  GAS-01 · Ista informacija je bila ispisana DVA puta — „Analysis Window"
+ *    (plava kutija na vrhu) i „Analysis Period" (plava kutija na dnu) imale su
+ *    identičan period i istu referentnu očitanje. Sada postoji jedno mjesto:
+ *    `AnalysisPeriodRow` u sažetku.
+ *  GAS-02 · Brojevi su išli kroz `toFixed(2)`, dakle uvijek tačka i bez
+ *    razdvajača hiljada, a datumi kroz `dayjs.format('DD.MM.YYYY')` i
+ *    `toLocaleDateString('en-US')` u istom ekranu. Sada `utils/format` po jeziku.
+ *  GAS-03 · Četiri obojene kutije (`blue.50`, `green.50`, `purple.50`,
+ *    `gray.50`) sa po tri nijanse u svakoj — 13 `useColorModeValue` poziva i
+ *    boje koje ne postoje u paleti. Sada `Panel` + `InlineBanner` + `Led`; boja
+ *    nosi značenje (ok/warn/fault/info), ne ukras.
+ *  GAS-04 · Tri metrike „efikasnosti" i tri stavke cijene stajale su u
+ *    `HStack`-u bez `flex`, pa se na 360 dp treća kolona lomila u dva reda.
+ *    Sada `Kpi` pločice koje se same prelamaju u mrežu.
+ *  GAS-05 · Trend je bio obojena značka sa `bg="green.500"` za RAST potrošnje —
+ *    zelena je u ostatku aplikacije „u redu", pa je najgorši scenario izgledao
+ *    kao dobra vijest. Sada `Led` sa semantičkim stanjem (rast = `warn`).
+ *  GAS-06 · Kalkulacija je bila bez ikakvog objašnjenja: brojevi „min/avg/max"
+ *    su se pojavljivali bez definicije šta je uzorak. Sada sekcija ima
+ *    podnaslov koji kaže da je uzorak razlika između uzastopnih očitanja.
+ *  GAS-07 · Zaglavlje bez `ScrollView` paddinga i bez `ScreenBody`: analiza je
+ *    imala `px={5}` i `py={5}` ručno, pa se horizontalni ritam razlikovao od
+ *    Očitanja. Sada `ScreenBody` (16 px, isti kao svuda).
+ */
+/**
+ * Jedan red „labela → vrijednost" za liste metrika.
+ *
+ * Izvan komponente namjerno: komponenta definirana unutar `render`-a se pri
+ * svakom renderu smatra novim tipom i React je remountuje, što gubi fokus i
+ * stanje (i ESLint to prijavljuje kao `react-hooks/static-components`).
+ */
+function MetricRow({
+  label,
+  value,
+  unit,
+  tone = 'ink',
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  tone?: 'ink' | 'signal' | 'ok' | 'warn' | 'fault';
+}) {
+  return (
+    <PanelRow>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          gap: space.sm,
+          flex: 1,
+        }}
+      >
+        <Text size="body" tone="muted">
+          {label}
+        </Text>
+        <Readout value={value} unit={unit} size="md" tone={tone} />
+      </View>
+    </PanelRow>
+  );
+}
+
 const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, headerSlot }) => {
   const { t } = useTranslation();
-  const cardBg = useColorModeValue('white', 'dark.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const blueBg = useColorModeValue('blue.50', 'blue.900');
-  const blueBorder = useColorModeValue('blue.200', 'blue.700');
-  const blueIcon = useColorModeValue('blue.600', 'blue.300');
-  const blueText = useColorModeValue('blue.700', 'blue.200');
-  const greenBg = useColorModeValue('green.50', 'green.900');
-  const greenBorder = useColorModeValue('green.200', 'green.700');
-  const greenIcon = useColorModeValue('green.600', 'green.300');
-  const greenText = useColorModeValue('green.700', 'green.200');
-  const purpleBg = useColorModeValue('purple.50', 'purple.900');
-  const purpleBorder = useColorModeValue('purple.200', 'purple.700');
-  const purpleIcon = useColorModeValue('purple.600', 'purple.300');
-  const purpleText = useColorModeValue('purple.700', 'purple.200');
-  const slateBg = useColorModeValue('gray.50', 'dark.700');
-  const slateBorder = useColorModeValue('gray.200', 'dark.600');
 
-  const { data: analysis, isLoading } = useQuery({
+  const { data: analysis, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['gas-analysis'],
     queryFn: () => apiClient.getGasAnalysis() as Promise<GasAnalysisData>,
   });
@@ -218,22 +271,50 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
     [analysis?.monthlyTrends],
   );
 
+  const currency = t('gas.currencyKM');
+
+  const header = (
+    <ScreenHeader
+      title={t('gas.analyticsTitle')}
+      subtitle={t('gas.analyticsSubtitle')}
+      onBack={onBack}
+      backLabel={t('common.back')}
+      testID="gas-analysis-header"
+    />
+  );
+
   if (isLoading) {
     // F4 (UX-07): isti okvir (zaglavlje + nazad) i skeleton umjesto spinnera,
     // pa ekran ne „nestane" i ne izgubi način za nazad dok se podaci čitaju.
     return (
       <Screen edges={['top']}>
-        <ScreenHeader
-          title={t('gas.analyticsTitle')}
-          subtitle={t('gas.analyticsSubtitle')}
-          onBack={onBack}
-          backLabel={t('common.back') || 'Nazad'}
-          testID="gas-analysis-header"
-        />
-        <Box p={4} style={{ gap: 12 }}>
-          <SkeletonRows count={3} />
+        {header}
+        {headerSlot ? <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm }}>{headerSlot}</View> : null}
+        <ScreenBody>
+          <SkeletonRows count={2} />
           <Skeleton height={200} />
-        </Box>
+        </ScreenBody>
+      </Screen>
+    );
+  }
+
+  // F6 (GAS-08): greška mreže je prije padala na „nema podataka", pa je
+  // korisnik dobijao savjet „dodaj dva očitanja" iako očitanja postoje — samo
+  // analiza nije stigla. Sada se greška i prazno stanje razlikuju.
+  if (isError) {
+    return (
+      <Screen edges={['top']}>
+        {header}
+        {headerSlot ? <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm }}>{headerSlot}</View> : null}
+        <ScreenBody>
+          <InlineBanner
+            tone="fault"
+            title={t('gas.analysisLoadError')}
+            message={t('gas.analysisLoadErrorBody')}
+            action={{ label: t('common.retry'), onPress: () => void refetch(), loading: isFetching }}
+            testID="gas-analysis-error"
+          />
+        </ScreenBody>
       </Screen>
     );
   }
@@ -241,14 +322,8 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
   if (!analysis) {
     return (
       <Screen edges={['top']}>
-        <ScreenHeader
-          title={t('gas.analyticsTitle')}
-          subtitle={t('gas.analyticsSubtitle')}
-          onBack={onBack}
-          backLabel={t('common.back') || 'Nazad'}
-          testID="gas-analysis-header"
-        />
-        {headerSlot ? <Box px={5} pt={2}>{headerSlot}</Box> : null}
+        {header}
+        {headerSlot ? <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm }}>{headerSlot}</View> : null}
         {/* F4 (UX-24): analiza bez podataka nudi prelazak na očitanja, jer je
            jedini put do podataka — novo očitanje. */}
         <EmptyState
@@ -265,10 +340,7 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
   const periodEnd = analysis.period?.endDate ?? analysis.period?.to;
   const periodMode = analysis.period?.mode;
   const totalConsumption =
-    analysis.consumptionFromReferenceM3 ??
-    analysis.totalConsumption ??
-    analysis.totalGas ??
-    0;
+    analysis.consumptionFromReferenceM3 ?? analysis.totalConsumption ?? analysis.totalGas ?? 0;
   const daysInPeriod =
     periodStart && periodEnd ? Math.max(1, dayjs(periodEnd).diff(dayjs(periodStart), 'day')) : 0;
   const averageDaily =
@@ -284,391 +356,205 @@ const GasAnalysisScreenContent: React.FC<GasAnalysisScreenProps> = ({ onBack, he
         ? t('gas.analysisModeLast30')
         : t('gas.analysisModeExplicit');
 
+  const referenceReading = analysis.referenceReading;
+
   return (
-    <Screen edges={['top']}>
-      <ScreenHeader
-        title={t('gas.analyticsTitle')}
-        subtitle={t('gas.analyticsSubtitle')}
-        onBack={onBack}
-        backLabel={t('common.back') || 'Nazad'}
-        testID="gas-analysis-header"
-      />
-      {headerSlot ? <Box px={5} pt={2}>{headerSlot}</Box> : null}
-      <ScrollView>
-        <VStack px={5} py={5} space={4} pb={8}>
-
-          <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
-            <VStack space={1}>
-              <HStack alignItems="center" space={2}>
-                <Icon as={Ionicons} name="git-compare-outline" size={5} color={blueIcon} />
-                <Text fontSize="sm" fontWeight="700" color={blueText}>
-                  {t('gas.analysisWindowTitle')}
-                </Text>
-              </HStack>
-              <Text fontSize="xs" color={blueIcon}>
-                {periodModeLabel}
+    <Screen edges={['top']} testID="gas-analysis-screen">
+      {header}
+      {headerSlot ? <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm }}>{headerSlot}</View> : null}
+      <ScreenBody testID="gas-analysis-body">
+        {/*
+          Sažetak: period na JEDNOM mjestu (GAS-01), dvije glavne brojke kao KPI
+          (GAS-04), pa metrike kao redovi u `flush` panelu.
+        */}
+        <Panel variant="flush" padded={false} testID="gas-analysis-period">
+          <PanelRow divider={false}>
+            <View style={{ gap: 2 }}>
+              <MonoLabel>{t('gas.analysisWindowTitle')}</MonoLabel>
+              <Text size="bodyLg" weight="medium">
+                {periodStart || periodEnd
+                  ? formatDateRange(periodStart, periodEnd)
+                  : t('gas.analysisPeriodUnknown')}
               </Text>
-              <Text fontSize="xs" color={blueIcon}>
-                {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
-                {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
-              </Text>
-              {analysis.referenceReading && (
-                <Text fontSize="xs" color={blueIcon}>
-                  {t('gas.analysisReferenceReading')}:{' '}
-                  {dayjs(analysis.referenceReading.readingDate).format('DD.MM.YYYY')} (
-                  {analysis.referenceReading.counterValue.toFixed(2)} m³)
-                </Text>
-              )}
-            </VStack>
-          </Box>
+              <MonoMeta>{periodModeLabel}</MonoMeta>
+              {referenceReading ? (
+                <MonoMeta>
+                  {`${t('gas.analysisReferenceReading')}: ${formatDate(referenceReading.readingDate)} · ${formatNumber(referenceReading.counterValue)} m³`}
+                </MonoMeta>
+              ) : null}
+            </View>
+          </PanelRow>
+        </Panel>
 
-          {/* Summary Stats */}
-          <HStack space={3}>
-            <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-              <VStack space={2}>
-                <HStack alignItems="center" space={2}>
-                  <Icon as={Ionicons} name="flame-outline" size={5} color="orange.500" />
-                  <Text
-                    fontSize="xs"
-                    fontWeight="600"
-                    color={subtextColor}
-                    textTransform="uppercase"
-                  >
-                    {periodMode === 'reference_to_current'
-                      ? t('gas.analysisTotalUseReference')
-                      : t('gas.analysisTotalUse')}
-                  </Text>
-                </HStack>
-                <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                  {totalConsumption.toFixed(2)} m³
-                </Text>
-              </VStack>
-            </Box>
+        <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+          <Kpi
+            label={
+              periodMode === 'reference_to_current'
+                ? t('gas.analysisTotalUseReference')
+                : t('gas.analysisTotalUse')
+            }
+            value={formatNumber(totalConsumption)}
+            unit="m³"
+            testID="gas-kpi-total"
+          />
+          <Kpi
+            label={t('gas.analysisAvgDaily')}
+            value={formatNumber(averageDaily)}
+            unit="m³"
+            testID="gas-kpi-daily"
+          />
+        </View>
 
-            <Box flex={1} bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-              <VStack space={2}>
-                <HStack alignItems="center" space={2}>
-                  <Icon as={Ionicons} name="calculator-outline" size={5} color="blue.500" />
-                  <Text
-                    fontSize="xs"
-                    fontWeight="600"
-                    color={subtextColor}
-                    textTransform="uppercase"
-                  >
-                    {t('gas.analysisAvgDaily')}
-                  </Text>
-                </HStack>
-                <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                  {averageDaily.toFixed(2)} m³
-                </Text>
-              </VStack>
-            </Box>
-          </HStack>
+        <Panel variant="flush" padded={false} testID="gas-analysis-efficiency">
+          <PanelRow divider>
+            <View style={{ gap: 2 }}>
+              <MonoLabel>{t('gas.analysisHeatingEfficiency')}</MonoLabel>
+              {/* GAS-06: uzorak je eksplicitan, pa broj nije „iz vedra neba". */}
+              <MonoMeta>{t('gas.analysisEfficiencyHint')}</MonoMeta>
+            </View>
+          </PanelRow>
+          <MetricRow label={t('gas.analysisHeatingHours')} value={formatNumber(heatingHours, 1)} unit="h" />
+          <MetricRow label={t('gas.analysisAvgFlowTemp')} value={formatNumber(averageFlowTemp, 1)} unit="°C" />
+          <MetricRow
+            label={t('gas.analysisUsagePerHour')}
+            value={formatNumber(gasUsagePerHeatingHour, 3)}
+            unit="m³"
+          />
+        </Panel>
 
-          {/* Efficiency Stats */}
-          <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-            <VStack space={3}>
-              <Text fontSize="md" fontWeight="600" color={textColor}>
-                {t('gas.analysisHeatingEfficiency')}
-              </Text>
-              <HStack
-                justifyContent="space-between"
-                alignItems="center"
-                pb={3}
-                borderBottomWidth={1}
-                borderBottomColor={borderColor}
-              >
-                <VStack>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {t('gas.analysisHeatingHours')}
-                  </Text>
-                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                    {heatingHours.toFixed(1)} h
-                  </Text>
-                </VStack>
-                <VStack>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {t('gas.analysisAvgFlowTemp')}
-                  </Text>
-                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                    {averageFlowTemp.toFixed(1)}°C
-                  </Text>
-                </VStack>
-                <VStack>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {t('gas.analysisUsagePerHour')}
-                  </Text>
-                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                    {gasUsagePerHeatingHour.toFixed(3)} m³
-                  </Text>
-                </VStack>
-              </HStack>
-            </VStack>
-          </Box>
+        <Panel variant="flush" padded={false} testID="gas-analysis-cost">
+          <PanelRow divider>
+            <View style={{ gap: 2 }}>
+              <MonoLabel>{t('gas.analysisCostBreakdown')}</MonoLabel>
+              <MonoMeta>{t('gas.analysisCostHint')}</MonoMeta>
+            </View>
+          </PanelRow>
+          <MetricRow label={t('gas.analysisCostExVat')} value={formatNumber(analysis.costExVat ?? 0)} unit={currency} />
+          <MetricRow label={t('gas.analysisCostVat')} value={formatNumber(analysis.vatAmount ?? 0)} unit={currency} />
+          {/* Ukupno je jedina brojka koja nosi odluku — zato `signal`. */}
+          <MetricRow
+            label={t('gas.analysisCostIncVat')}
+            value={formatNumber(analysis.costIncVat ?? 0)}
+            unit={currency}
+            tone="signal"
+          />
+        </Panel>
 
-          <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-            <VStack space={3}>
-              <Text fontSize="md" fontWeight="600" color={textColor}>
-                {t('gas.analysisCostBreakdown')}
-              </Text>
-              <HStack justifyContent="space-between" alignItems="center">
-                <VStack>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {t('gas.analysisCostExVat')}
+        {analysis.priceBreakdown?.length ? (
+          <Panel variant="flush" padded={false} testID="gas-analysis-price-windows">
+            <PanelRow divider>
+              <MonoLabel>{t('gas.analysisPriceWindows')}</MonoLabel>
+            </PanelRow>
+            {analysis.priceBreakdown.map((row, index) => (
+              <PanelRow key={`${row.priceExVat}-${index}`} divider={index < analysis.priceBreakdown!.length - 1}>
+                <View style={{ gap: 2, flex: 1 }}>
+                  <Text size="bodyLg" weight="medium">
+                    {t('gas.analysisPriceExVatValue', { value: formatNumber(row.priceExVat, 4) })}
                   </Text>
-                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                    {(analysis.costExVat ?? 0).toFixed(2)}
-                  </Text>
-                </VStack>
-                <VStack>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {t('gas.analysisCostVat')}
-                  </Text>
-                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                    {(analysis.vatAmount ?? 0).toFixed(2)}
-                  </Text>
-                </VStack>
-                <VStack>
-                  <Text fontSize="sm" color={subtextColor}>
-                    {t('gas.analysisCostIncVat')}
-                  </Text>
-                  <Text fontSize="lg" fontWeight="bold" color={textColor}>
-                    {(analysis.costIncVat ?? 0).toFixed(2)}
-                  </Text>
-                </VStack>
-              </HStack>
-            </VStack>
-          </Box>
+                  <MonoMeta>
+                    {`${formatDate(row.effectiveFrom)} – ${
+                      row.effectiveTo ? formatDate(row.effectiveTo) : t('gas.analysisPriceCurrent')
+                    }`}
+                  </MonoMeta>
+                  <MonoMeta>
+                    {t('gas.analysisPriceConsumptionCost', {
+                      consumption: formatNumber(row.consumptionM3),
+                      costExVat: formatNumber(row.costExVat ?? 0),
+                    })}
+                  </MonoMeta>
+                </View>
+                <MonoMeta>{String(row.source || t('gas.analysisPriceSourceManual')).toUpperCase()}</MonoMeta>
+              </PanelRow>
+            ))}
+          </Panel>
+        ) : null}
 
-          {!!analysis.priceBreakdown?.length && (
-            <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-              <VStack space={3}>
-                <Text fontSize="md" fontWeight="600" color={textColor}>
-                  {t('gas.analysisPriceWindows')}
-                </Text>
-                {analysis.priceBreakdown.map((row, idx) => (
-                  <Box key={`${row.priceExVat}-${idx}`} bg={slateBg} borderWidth={1} borderColor={slateBorder} rounded="md" p={3}>
-                    <HStack justifyContent="space-between" alignItems="center" mb={1}>
-                      <Text fontSize="sm" color={textColor} fontWeight="600">
-                        {t('gas.analysisPriceExVatValue', { value: row.priceExVat.toFixed(4) })}
-                      </Text>
-                      <Text fontSize="xs" color={subtextColor}>
-                        {(row.source || t('gas.analysisPriceSourceManual')).toUpperCase()}
-                      </Text>
-                    </HStack>
-                    <Text fontSize="xs" color={subtextColor}>
-                      {(row.effectiveFrom && dayjs(row.effectiveFrom).format('DD.MM.YYYY')) || '—'} -{' '}
-                      {(row.effectiveTo && dayjs(row.effectiveTo).format('DD.MM.YYYY')) ||
-                        t('gas.analysisPriceCurrent')}
-                    </Text>
-                    <Text fontSize="xs" color={subtextColor}>
-                      {t('gas.analysisPriceConsumptionCost', {
-                        consumption: row.consumptionM3.toFixed(2),
-                        costExVat: (row.costExVat ?? 0).toFixed(2),
-                      })}
-                    </Text>
-                  </Box>
-                ))}
-              </VStack>
-            </Box>
-          )}
-
-          {/* Graf — jedan vizuelni jezik sa analitikom (F3, AN-03). */}
-          {monthlyPoints.length > 0 && (
-            <Box bg={cardBg} rounded="lg" borderWidth={1} borderColor={borderColor} p={4}>
-              <VStack space={3}>
-                <Text fontSize="md" fontWeight="600" color={textColor}>
-                  {t('gas.analysisMonthlyConsumption')}
-                </Text>
-                <TrendChart
-                  points={monthlyPoints}
-                  height={200}
-                  accessibilityLabel={t('gas.analysisMonthlyConsumption')}
-                  testID="gas-analysis-chart"
-                />
-                <TrendSummary points={monthlyPoints} unit="m³" />
-              </VStack>
-            </Box>
-          )}
-
-          {/* Daily Consumption Stats */}
-          {dailyStats ? (
-            <Box bg={greenBg} rounded="lg" borderWidth={1} borderColor={greenBorder} p={4}>
-              <VStack space={3}>
-                <HStack alignItems="center" space={2}>
-                  <Icon as={Ionicons} name="stats-chart-outline" size={5} color={greenIcon} />
-                  <Text fontSize="md" fontWeight="600" color={greenText}>
-                    {t('gas.analysisDailyStats')}
-                  </Text>
-                </HStack>
-
-                <VStack space={2} divider={<Box h="1" bg={greenBorder} />}>
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="sm" color={greenText}>
-                      {t('gas.analysisMinDaily')}
-                    </Text>
-                    <Text fontSize="md" fontWeight="bold" color={greenText}>
-                      {dailyStats.minDaily.toFixed(2)} m³
-                    </Text>
-                  </HStack>
-
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="sm" color={greenText}>
-                      {t('gas.analysisMaxDaily')}
-                    </Text>
-                    <Text fontSize="md" fontWeight="bold" color={greenText}>
-                      {dailyStats.maxDaily.toFixed(2)} m³
-                    </Text>
-                  </HStack>
-
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="sm" color={greenText}>
-                      {t('gas.analysisAvgDailyLabel')}
-                    </Text>
-                    <Text fontSize="md" fontWeight="bold" color={greenText}>
-                      {dailyStats.meanDaily.toFixed(2)} m³
-                    </Text>
-                  </HStack>
-
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="sm" color={greenText}>
-                      {t('gas.analysisMedianDaily')}
-                    </Text>
-                    <Text fontSize="md" fontWeight="bold" color={greenText}>
-                      {dailyStats.medianDaily.toFixed(2)} m³
-                    </Text>
-                  </HStack>
-
-                  {dailyStats.stdDev !== null && (
-                    <HStack justifyContent="space-between" alignItems="center">
-                      <Text fontSize="sm" color={greenText}>
-                        {t('gas.analysisStdDev')}
-                      </Text>
-                      <Text fontSize="md" fontWeight="bold" color={greenText}>
-                        {dailyStats.stdDev.toFixed(2)}
-                      </Text>
-                    </HStack>
-                  )}
-                </VStack>
-              </VStack>
-            </Box>
-          ) : (
-            <Box bg={purpleBg} rounded="lg" borderWidth={1} borderColor={purpleBorder} p={4}>
-              <HStack space={2} alignItems="center">
-                <Icon as={Ionicons} name="information-circle-outline" size={5} color={purpleIcon} />
-                <Text fontSize="sm" color={purpleText} flex={1}>
-                  {t('gas.analysisNeedTwoReadings')}
-                </Text>
-              </HStack>
-            </Box>
-          )}
-
-          {/* Consumption Trend */}
-          {dailyStats && (
-            <Box bg={blueBg} rounded="lg" borderWidth={1} borderColor={blueBorder} p={4}>
-              <VStack space={3}>
-                <HStack alignItems="center" space={2}>
-                  <Icon
-                    as={Ionicons}
-                    name={
-                      dailyStats.trend === 'increasing'
-                        ? 'trending-up-outline'
-                        : dailyStats.trend === 'decreasing'
-                          ? 'trending-down-outline'
-                          : 'swap-horizontal-outline'
-                    }
-                    size={5}
-                    color={blueIcon}
-                  />
-                  <Text fontSize="md" fontWeight="600" color={blueText}>
-                    {t('gas.analysisTrend')}
-                  </Text>
-                </HStack>
-
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize="sm" color={blueText}>
-                    {t('gas.analysisDirection')}
-                  </Text>
-                  <HStack
-                    bg={
-                      dailyStats.trend === 'increasing'
-                        ? 'green.500'
-                        : dailyStats.trend === 'decreasing'
-                          ? 'blue.500'
-                          : 'amber.500'
-                    }
-                    rounded="md"
-                    px={3}
-                    py={1}
-                    alignItems="center"
-                    space={1}
-                  >
-                    <Icon
-                      as={Ionicons}
-                      name={
-                        dailyStats.trend === 'increasing'
-                          ? 'arrow-up'
-                          : dailyStats.trend === 'decreasing'
-                            ? 'arrow-down'
-                            : 'remove'
-                      }
-                      size={4}
-                      color="white"
-                    />
-                    <Text fontSize="sm" fontWeight="bold" color="white" textTransform="capitalize">
-                      {dailyStats.trend === 'increasing'
-                        ? t('gas.analysisTrendIncreasing')
-                        : dailyStats.trend === 'decreasing'
-                          ? t('gas.analysisTrendDecreasing')
-                          : t('gas.analysisTrendStable')}
-                    </Text>
-                  </HStack>
-                </HStack>
-
-                <Text fontSize="xs" color={blueText} mt={2}>
-                  {dailyStats.trend === 'increasing'
-                    ? t('gas.analysisTrendMessageIncreasing')
-                    : dailyStats.trend === 'decreasing'
-                      ? t('gas.analysisTrendMessageDecreasing')
-                      : t('gas.analysisTrendMessageStable')}
-                </Text>
-              </VStack>
-            </Box>
-          )}
-
-          {/* Period Info */}
-          <Box bg={blueBg} rounded="lg" p={4} borderWidth={1} borderColor={blueBorder}>
-            <HStack space={2} alignItems="flex-start">
-              <Icon
-                as={Ionicons}
-                name="information-circle-outline"
-                size={5}
-                color={blueIcon}
-                mt={1}
+        {/* Graf — jedan vizuelni jezik sa analitikom (F3, AN-03). */}
+        {monthlyPoints.length > 0 ? (
+          <Panel testID="gas-analysis-chart-panel">
+            <View style={{ gap: space.sm }}>
+              <MonoLabel>{t('gas.analysisMonthlyConsumption')}</MonoLabel>
+              <TrendChart
+                points={monthlyPoints}
+                height={200}
+                accessibilityLabel={t('gas.analysisMonthlyConsumption')}
+                testID="gas-analysis-chart"
               />
-              <VStack flex={1} space={1}>
-                <Text fontSize="sm" fontWeight="600" color={blueText}>
-                  {t('gas.analysisPeriod')}
-                </Text>
-                <Text fontSize="xs" color={blueIcon}>
-                  {periodStart ? dayjs(periodStart).format('DD.MM.YYYY') : '—'} -{' '}
-                  {periodEnd ? dayjs(periodEnd).format('DD.MM.YYYY') : '—'}
-                </Text>
-                <Text fontSize="xs" color={blueIcon}>
-                  {periodModeLabel}
-                </Text>
-                {analysis.referenceReading && (
-                  <Text fontSize="xs" color={blueIcon}>
-                    {t('gas.analysisReferenceReading')}:{' '}
-                    {dayjs(analysis.referenceReading.readingDate).format('DD.MM.YYYY')} (
-                    {analysis.referenceReading.counterValue.toFixed(2)} m³)
+              <TrendSummary points={monthlyPoints} unit="m³" />
+            </View>
+          </Panel>
+        ) : null}
+
+        {/* Dnevna statistika: uzorak je eksplicitan (GAS-06). */}
+        {dailyStats ? (
+          <Panel variant="flush" padded={false} testID="gas-analysis-daily-stats">
+            <PanelRow divider>
+              <View style={{ gap: 2 }}>
+                <MonoLabel>{t('gas.analysisDailyStats')}</MonoLabel>
+                <MonoMeta>{t('gas.analysisDailyStatsHint')}</MonoMeta>
+              </View>
+            </PanelRow>
+            <MetricRow label={t('gas.analysisMinDaily')} value={formatNumber(dailyStats.minDaily)} unit="m³" />
+            <MetricRow label={t('gas.analysisMaxDaily')} value={formatNumber(dailyStats.maxDaily)} unit="m³" />
+            <MetricRow
+              label={t('gas.analysisAvgDailyLabel')}
+              value={formatNumber(dailyStats.meanDaily)}
+              unit="m³"
+            />
+            <MetricRow
+              label={t('gas.analysisMedianDaily')}
+              value={formatNumber(dailyStats.medianDaily)}
+              unit="m³"
+            />
+            {dailyStats.stdDev !== null ? (
+              <MetricRow label={t('gas.analysisStdDev')} value={formatNumber(dailyStats.stdDev)} unit="m³" />
+            ) : null}
+            <PanelRow divider={false}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flex: 1 }}>
+                {/*
+                  GAS-05: rast potrošnje je prije bio zelena značka. Zelena u
+                  ostatku aplikacije znači „u redu", pa je najgorši scenario
+                  izgledao kao dobra vijest. Sada boju nosi `Led`, a značenje
+                  tekst: rast = `warn`, pad = `ok`, stabilno = `off`.
+                */}
+                <Led
+                  state={
+                    dailyStats.trend === 'increasing'
+                      ? 'warn'
+                      : dailyStats.trend === 'decreasing'
+                        ? 'ok'
+                        : 'off'
+                  }
+                />
+                <View style={{ flex: 1, gap: 1 }}>
+                  <Text size="body" weight="medium">
+                    {dailyStats.trend === 'increasing'
+                      ? t('gas.analysisTrendIncreasing')
+                      : dailyStats.trend === 'decreasing'
+                        ? t('gas.analysisTrendDecreasing')
+                        : t('gas.analysisTrendStable')}
                   </Text>
-                )}
-              </VStack>
-            </HStack>
-          </Box>
-        </VStack>
-      </ScrollView>
+                  <MonoMeta>
+                    {dailyStats.trend === 'increasing'
+                      ? t('gas.analysisTrendMessageIncreasing')
+                      : dailyStats.trend === 'decreasing'
+                        ? t('gas.analysisTrendMessageDecreasing')
+                        : t('gas.analysisTrendMessageStable')}
+                  </MonoMeta>
+                </View>
+              </View>
+            </PanelRow>
+          </Panel>
+        ) : (
+          <InlineBanner
+            tone="info"
+            title={t('gas.analysisNeedTwoReadings')}
+            testID="gas-analysis-need-readings"
+          />
+        )}
+
+        <MonoMeta>{t('gas.analysisUpdatedAt', { value: formatDate(new Date()) })}</MonoMeta>
+      </ScreenBody>
     </Screen>
   );
 };

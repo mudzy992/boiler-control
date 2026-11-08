@@ -42,10 +42,21 @@ export type SegmentedProps<T extends string> = {
  * kaže „ovo je prekidač". Dodatno je visina (36) bila ispod `MIN_TOUCH` (44),
  * pa je i fizički bila pod WCAG 2.5.8.
  *
- * Sada: traka je `raised` (ista podloga kao segmenti u ostatku aplikacije),
- * svaki segment je 44 px, aktivni ima `panel` podlogu + `signal` liniju 2 px +
- * podebljan tekst u `ink`, a neaktivni je `inkDim`. Razlika između stanja je
- * trostruka (boja podloge, linija, težina teksta), dakle vidljiva i bez boje.
+ * F9 (GAS-TABS-3) — druga popravka, poslije korisnikove snimke ekrana.
+ *
+ * Na snimci su „OČITANJA" i „ANALIZA" bili SLEPLJENI u jedan niz slova bez
+ * ikakvog razmaka („OČITANJAANALIZA"), sa bledom pozadinom i bez vidljive
+ * granice između opcija. Dva uzroka:
+ *
+ *  1. segment nije imao `flexBasis: 0`, pa je `flex: 1` dijelio širinu po
+ *     sadržaju — dvije riječi su se sabile jedan uz drugi;
+ *  2. `textTransform: 'uppercase'` na 13 px mono sa `letterSpacing` u punoj
+ *     širini daje najduži mogući oblik riječi, pa se niz „zalijepi".
+ *
+ * Sada: svaki segment ima `flexBasis: 0` (jednake polovine), aktivni je
+ * `panel` sa `signal` podvlakom 3 px i podebljanim tekstom, neaktivni je
+ * `inkMuted`, a između njih je hairline razdjelnik — tri nezavisna signala
+ * stanja (podloga, linija, težina), pa se vidi i bez boje (WCAG 1.4.1).
  */
 export function Segmented<T extends string>({
   options,
@@ -64,11 +75,11 @@ export function Segmented<T extends string>({
       testID={testID}
       style={[
         styles.container,
-        { backgroundColor: t.raised, borderColor: t.line },
+        { backgroundColor: t.panel, borderColor: t.lineStrong },
         style,
       ]}
     >
-      {options.map((option) => {
+      {options.map((option, index) => {
         const selected = option.value === value;
         return (
           <Pressable
@@ -81,6 +92,8 @@ export function Segmented<T extends string>({
             testID={testID ? `${testID}-${option.value}` : undefined}
             style={[
               styles.segment,
+              // Razdjelnik samo IZMEĐU segmenata, ne i na lijevoj ivici trake.
+              index > 0 ? { borderLeftWidth: StyleSheet.hairlineWidth * 2, borderLeftColor: t.line } : null,
               { borderBottomColor: selected ? t.signal : 'transparent' },
               selected ? { backgroundColor: t.panel } : null,
             ]}
@@ -90,9 +103,12 @@ export function Segmented<T extends string>({
               style={{
                 fontFamily: selected ? fonts.monoSemiBold : fonts.mono,
                 fontSize: 13,
-                letterSpacing: 0.8,
+                // Razmak slova je smanjen: na 13 px mono veliko slovo + 0.8 px
+                // razmaka je razvlačilo riječ do same ivice segmenta, pa su se
+                // susjedne opcije stapale u jedan niz.
+                letterSpacing: 0.4,
                 textTransform: 'uppercase',
-                color: selected ? t.ink : t.inkDim,
+                color: selected ? t.ink : t.inkMuted,
               }}
             >
               {option.label}
@@ -118,12 +134,15 @@ const styles = StyleSheet.create({
    * ima svjetliju podlogu — pa se prepoznaje i kao tab i kao izbor.
    */
   segment: {
+    // `flexBasis: 0` (ne samo `flex: 1`): bez njega se širina dijeli po
+    // sadržaju, pa se dvije riječi slepe jedna uz drugu.
     flex: 1,
+    flexBasis: 0,
     minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 14,
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
   },
 });

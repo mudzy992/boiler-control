@@ -553,6 +553,72 @@ snapshota · `eslint src` 0 grešaka (45 warninga) · `expo export --platform
 android --dev` prolazi.
 
 
+### F9 — drugi krug: šta su korisnikove snimke stvarno pokazale
+
+Korisnik je poslao tri snimke (lista očitanja, sheet „Dodaj očitanje", sheet „Akcije
+očitanja") i rekao „pa ti vidi je li to uredu". Defekti su izgledali kao tri
+nepovezana problema na Plinu; zapravo su bila **dva kvara u primitivima** i jedan
+u i18n resursima. Zato je popravka otišla u `src/ui`, a ne u ekran.
+
+**1. `Pressable` je gubio stil na uređaju (PRESS-01) — glavni uzrok.**
+`style` se predavao kao funkcija (`({ pressed }) => [...]`) da bi se dobilo stanje
+pritiska. NativeWind 4 preslikava `style` kroz `cssInterop`, a funkcijski stil se
+ne može izračunati pri preslikavanju, pa je na Androidu propadao **cijeli** stil:
+`flexDirection: 'row'`, `minHeight`, `backgroundColor`, `borderWidth`, `padding`,
+`marginHorizontal`. Posljedice vidljive na snimkama:
+
+| Snimka | Simptom | Objašnjenje |
+|---|---|---|
+| Dodaj očitanje | „Izaberi sliku"/„Uslikaj" kao goli tekst, bez okvira i visine | `Button` je `Pressable` → nestali `minHeight`, `borderWidth`, `backgroundColor` |
+| Dodaj očitanje | nema dugmeta „Dodaj očitanje" | isto, dugme je bilo tu ali bez pozadine i bez visine (nije se videlo) |
+| Akcije očitanja | ikona, pa tekst, pa `›` — svaki u svom redu | nestao `flexDirection: 'row'` na roditelju, `chevron` je pao u novi red |
+| Lista očitanja | broj i chipovi odsječeni lijevo, kartica izlazi iz ekrana | nestali `marginHorizontal`/`padding`/`borderRadius` + nema `minWidth: 0` na lijevoj koloni |
+
+Popravka: `cssInterop={false}` na RN `Pressable` (zvanični izlaz iz NativeWind-a
+za element koji ne koristi `className`) i zadržan funkcijski stil radi `pressed`
+stanja. Ekran Plina nije dobio nijedan „layout hack". Uz to: širinu u redovima
+sada nosi `View` sa `flex: 1`/`minWidth: 0`, a dugme je `block` — dakle raspored
+ne zavisi od toga kako se `style` preslikava.
+
+**2. Traka Očitanja | Analiza (GAS-TABS-3).** Na snimci se čitalo
+„OČITANJAANALIZA" bez razmaka. Uzrok nije bio razmak između segmenata, nego
+`flex: 1` bez `flexBasis: 0` (širina se dijelila po sadržaju riječi) uz
+`letterSpacing: 0.8` na 13 px mono velikim slovima. Sada: `flexBasis: 0`,
+`letterSpacing: 0.4`, aktivni segment `panel` + podvlaka 3 px + semibold,
+neaktivni `inkMuted`, hairline razdjelnik između segmenata. Tri nezavisna
+signala stanja (podloga, linija, težina) → vidljivo i bez boje.
+
+**3. `gas.readingCount` kao sirovi ključ (I18N-PLURAL).** i18next u runtime-u
+bez plural pravila za dati broj traži **bazni** ključ; postojali su samo
+`_one`/`_few`/`_other`, pa je vraćen sam ključ. Dodat bazni `readingCount` u oba
+jezika kao sigurnosna mreža (i18next uvijek pada na bazni ključ). i18n test to
+nije hvatao jer je provjeravao samo sufiksirane oblike — sada to pokriva
+`gasDeviceLayout.test.tsx`.
+
+**4. Forma i sheet.**
+- Primarna akcija „Dodaj očitanje" je sada puna širina, 52 px, iznad „Otkaži"
+  (prije je bila u tijesnom redu pored „Otkaži" i gubila se).
+- „Izaberi sliku"/„Uslikaj" i par datum/vrijeme: širina na `View`, dugme `block`.
+- `snapPoints` za dodavanje: `['62%', '88%']` umjesto `['85%']` — prije je ispod
+  kratke forme ostajalo ~40% prazne površine, a sada sheet kreće nisko i može se
+  povući kad je tastatura otvorena.
+
+**5. Kartice očitanja (GAS-ROW).** Lijeva kolona dobila `minWidth: 0` (bez toga
+`flex: 1` u redu sa `space-between` ne dopušta djetetu da se skupi ispod svoje
+intrinsic širine i sadržaj izlazi van kartice), desna `flexShrink: 0`, cijena
+prebačena na `size="meta"` sa `numberOfLines={1}`.
+
+**Nalaz za ostatak aplikacije.** Budući da je kvar bio u `src/ui/Pressable`, isti
+simptom su imali svi ekrani koji koriste taj primitiv. Popravka je centralna, pa
+su 18 snapshotova ažurirani (`jest -u`) — to nije novo ponašanje, to je prvi put
+ispravno prenesen stil.
+
+**Testovi.** `src/screens/gas/__tests__/gasDeviceLayout.test.tsx` (4 testa) tvrdi
+uzroke, ne piksele: `style` na `Pressable` nije funkcija i `flatten` vidi
+`minHeight`/`flexDirection`/`borderWidth`; `Button` ima okvir, visinu ≥ 44 i
+netransparentnu podlogu; segment ima `flexBasis: 0`; `gas.readingCount` nikad ne
+vraća ključ i bazni ključ postoji u resursima.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

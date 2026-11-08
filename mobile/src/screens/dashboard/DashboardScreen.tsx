@@ -336,6 +336,16 @@ export const DashboardScreen = () => {
           </Panel>
         </Section>
 
+        {/* F6 (DASH-01): vrijeme je prije stajalo NA DNU ekrana, ispod preporuke i
+            KPI pločica, iako je „trenutno vrijeme" kontekst za broj iz hero bloka.
+            Sada je prvi blok poslije statusa kotla — tačno tamo gdje korisnik
+            traži objašnjenje za vanjsku temperaturu. */}
+        {WEATHER_UI_V2 && primaryHome?.profile?.id ? (
+          <WeatherV2Card homeProfileId={primaryHome.profile.id} />
+        ) : (
+          <WeatherRow weather={weather} isFetching={isFetching} />
+        )}
+
         {/* Tri KPI pločice u jednom redu — bez kartica i bez trećeg akcenta. */}
         <View style={{ flexDirection: 'row', gap: space.sm }}>
           <Kpi
@@ -481,12 +491,6 @@ export const DashboardScreen = () => {
 
         {/* MO2-15: samo backend snapshot; klijent ne rekonstruiše formulu. */}
         <RecommendationBreakdown breakdown={dashboardData?.system?.recommendation?.breakdown} />
-
-        {WEATHER_UI_V2 && primaryHome?.profile?.id ? (
-          <WeatherV2Card homeProfileId={primaryHome.profile.id} />
-        ) : (
-          <WeatherRow weather={weather} isFetching={isFetching} />
-        )}
 
         {dashboardData?.homes && dashboardData.homes.length > 1 && (
           <MonoMeta>

@@ -682,6 +682,180 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
             </View>
           </View>
           <View
+            accessible={false}
+            style={
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+                null,
+                undefined,
+              ]
+            }
+            testID="weather-row"
+          >
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": 12,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "gap": 2,
+                      "minWidth": 84,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#6b7788",
+                          "fontFamily": "monospace",
+                          "fontSize": 9,
+                        },
+                        null,
+                        [
+                          {
+                            "letterSpacing": 1.4,
+                            "textTransform": "uppercase",
+                          },
+                          undefined,
+                        ],
+                      ]
+                    }
+                  >
+                    weather.current
+                  </Text>
+                  <View
+                    accessibilityLabel="weather.current: 8.5 °C"
+                    accessible={true}
+                    style={
+                      [
+                        {
+                          "alignItems": "flex-end",
+                          "flexDirection": "row",
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#e8edf4",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                          },
+                          null,
+                          {
+                            "color": "#e8edf4",
+                            "fontFamily": "monospace",
+                            "fontSize": 16,
+                            "fontVariant": [
+                              "tabular-nums",
+                            ],
+                            "letterSpacing": -0.5,
+                            "lineHeight": 16.8,
+                          },
+                        ]
+                      }
+                    >
+                      9
+                    </Text>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#e8edf4",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                          },
+                          null,
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "marginBottom": 2,
+                            "marginLeft": 3,
+                          },
+                        ]
+                      }
+                    >
+                      °C
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={
+                    {
+                      "flex": 1,
+                      "gap": 2,
+                    }
+                  }
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 12,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    Cloudy
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#6b7788",
+                          "fontFamily": "monospace",
+                          "fontSize": 10,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    70% · 12.0 weather.windUnit · 1012 weather.pressureUnit
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
             style={
               {
                 "flexDirection": "row",
@@ -2043,180 +2217,6 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                · recommendation.interval: weekday_morning
             </Text>
           </View>
-          <View
-            accessible={false}
-            style={
-              [
-                {
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "overflow": "hidden",
-                },
-                {
-                  "backgroundColor": "#0b0f16",
-                  "borderColor": "#1f2733",
-                },
-                null,
-                undefined,
-              ]
-            }
-            testID="weather-row"
-          >
-            <View
-              accessible={false}
-              style={
-                [
-                  {
-                    "paddingHorizontal": 12,
-                    "paddingVertical": 10,
-                  },
-                  null,
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "gap": 12,
-                  }
-                }
-              >
-                <View
-                  style={
-                    {
-                      "gap": 2,
-                      "minWidth": 84,
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#6b7788",
-                          "fontFamily": "monospace",
-                          "fontSize": 9,
-                        },
-                        null,
-                        [
-                          {
-                            "letterSpacing": 1.4,
-                            "textTransform": "uppercase",
-                          },
-                          undefined,
-                        ],
-                      ]
-                    }
-                  >
-                    weather.current
-                  </Text>
-                  <View
-                    accessibilityLabel="weather.current: 8.5 °C"
-                    accessible={true}
-                    style={
-                      [
-                        {
-                          "alignItems": "flex-end",
-                          "flexDirection": "row",
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                  >
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#e8edf4",
-                            "fontFamily": undefined,
-                            "fontSize": 13,
-                          },
-                          null,
-                          {
-                            "color": "#e8edf4",
-                            "fontFamily": "monospace",
-                            "fontSize": 16,
-                            "fontVariant": [
-                              "tabular-nums",
-                            ],
-                            "letterSpacing": -0.5,
-                            "lineHeight": 16.8,
-                          },
-                        ]
-                      }
-                    >
-                      9
-                    </Text>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#e8edf4",
-                            "fontFamily": undefined,
-                            "fontSize": 13,
-                          },
-                          null,
-                          {
-                            "color": "#9aa6b6",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "marginBottom": 2,
-                            "marginLeft": 3,
-                          },
-                        ]
-                      }
-                    >
-                      °C
-                    </Text>
-                  </View>
-                </View>
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <Text
-                    numberOfLines={1}
-                    style={
-                      [
-                        {
-                          "color": "#e8edf4",
-                          "fontFamily": undefined,
-                          "fontSize": 12,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                  >
-                    Cloudy
-                  </Text>
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#6b7788",
-                          "fontFamily": "monospace",
-                          "fontSize": 10,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                  >
-                    70% · 12.0 weather.windUnit · 1012 weather.pressureUnit
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
         </View>
       </View>
     </RCTScrollView>
@@ -3281,6 +3281,180 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       boiler.setCurrentTemp
                     </Text>
                   </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessible={false}
+            style={
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+                null,
+                undefined,
+              ]
+            }
+            testID="weather-row"
+          >
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": 12,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "gap": 2,
+                      "minWidth": 84,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#6b7280",
+                          "fontFamily": "monospace",
+                          "fontSize": 9,
+                        },
+                        null,
+                        [
+                          {
+                            "letterSpacing": 1.4,
+                            "textTransform": "uppercase",
+                          },
+                          undefined,
+                        ],
+                      ]
+                    }
+                  >
+                    weather.current
+                  </Text>
+                  <View
+                    accessibilityLabel="weather.current: 8.5 °C"
+                    accessible={true}
+                    style={
+                      [
+                        {
+                          "alignItems": "flex-end",
+                          "flexDirection": "row",
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#111827",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                          },
+                          null,
+                          {
+                            "color": "#111827",
+                            "fontFamily": "monospace",
+                            "fontSize": 16,
+                            "fontVariant": [
+                              "tabular-nums",
+                            ],
+                            "letterSpacing": -0.5,
+                            "lineHeight": 16.8,
+                          },
+                        ]
+                      }
+                    >
+                      9
+                    </Text>
+                    <Text
+                      style={
+                        [
+                          {
+                            "color": "#111827",
+                            "fontFamily": undefined,
+                            "fontSize": 13,
+                          },
+                          null,
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "marginBottom": 2,
+                            "marginLeft": 3,
+                          },
+                        ]
+                      }
+                    >
+                      °C
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={
+                    {
+                      "flex": 1,
+                      "gap": 2,
+                    }
+                  }
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 12,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    Cloudy
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#6b7280",
+                          "fontFamily": "monospace",
+                          "fontSize": 10,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    70% · 12.0 weather.windUnit · 1012 weather.pressureUnit
+                  </Text>
                 </View>
               </View>
             </View>
@@ -4646,180 +4820,6 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
               FULL
                · recommendation.interval: weekday_morning
             </Text>
-          </View>
-          <View
-            accessible={false}
-            style={
-              [
-                {
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "overflow": "hidden",
-                },
-                {
-                  "backgroundColor": "#ffffff",
-                  "borderColor": "#dce0e8",
-                },
-                null,
-                undefined,
-              ]
-            }
-            testID="weather-row"
-          >
-            <View
-              accessible={false}
-              style={
-                [
-                  {
-                    "paddingHorizontal": 12,
-                    "paddingVertical": 10,
-                  },
-                  null,
-                  undefined,
-                ]
-              }
-            >
-              <View
-                style={
-                  {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "gap": 12,
-                  }
-                }
-              >
-                <View
-                  style={
-                    {
-                      "gap": 2,
-                      "minWidth": 84,
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#6b7280",
-                          "fontFamily": "monospace",
-                          "fontSize": 9,
-                        },
-                        null,
-                        [
-                          {
-                            "letterSpacing": 1.4,
-                            "textTransform": "uppercase",
-                          },
-                          undefined,
-                        ],
-                      ]
-                    }
-                  >
-                    weather.current
-                  </Text>
-                  <View
-                    accessibilityLabel="weather.current: 8.5 °C"
-                    accessible={true}
-                    style={
-                      [
-                        {
-                          "alignItems": "flex-end",
-                          "flexDirection": "row",
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                  >
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#111827",
-                            "fontFamily": undefined,
-                            "fontSize": 13,
-                          },
-                          null,
-                          {
-                            "color": "#111827",
-                            "fontFamily": "monospace",
-                            "fontSize": 16,
-                            "fontVariant": [
-                              "tabular-nums",
-                            ],
-                            "letterSpacing": -0.5,
-                            "lineHeight": 16.8,
-                          },
-                        ]
-                      }
-                    >
-                      9
-                    </Text>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#111827",
-                            "fontFamily": undefined,
-                            "fontSize": 13,
-                          },
-                          null,
-                          {
-                            "color": "#4b5563",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "marginBottom": 2,
-                            "marginLeft": 3,
-                          },
-                        ]
-                      }
-                    >
-                      °C
-                    </Text>
-                  </View>
-                </View>
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <Text
-                    numberOfLines={1}
-                    style={
-                      [
-                        {
-                          "color": "#111827",
-                          "fontFamily": undefined,
-                          "fontSize": 12,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                  >
-                    Cloudy
-                  </Text>
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#6b7280",
-                          "fontFamily": "monospace",
-                          "fontSize": 10,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                  >
-                    70% · 12.0 weather.windUnit · 1012 weather.pressureUnit
-                  </Text>
-                </View>
-              </View>
-            </View>
           </View>
         </View>
       </View>

@@ -192,3 +192,33 @@ it('submits a valid NativeWind current temperature and refreshes dashboard data'
   await result.unmount();
   queryClient.clear();
 });
+
+/**
+ * F6 (DASH-01): redoslijed blokova na Početnoj.
+ *
+ * Zahtjev: **trenutno vrijeme mora biti ispod statusa kotla**. Test ne gleda
+ * snimku nego stvarni redoslijed djece u renderovanom stablu, pa ne može
+ * proći slučajno — traži se da `dashboard-hero` prethodi `weather-row`.
+ */
+it('renders current weather immediately below boiler status', async () => {
+  const { result, queryClient } = await screenTree('dark');
+  const body = result.getByTestId('dashboard-body');
+
+  const order: string[] = [];
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== 'object') return;
+    const element = node as { props?: Record<string, unknown>; children?: unknown[] };
+    const testID = element.props?.testID;
+    if (typeof testID === 'string' && ['dashboard-hero', 'weather-row'].includes(testID)) {
+      order.push(testID);
+    }
+    for (const child of element.children ?? []) walk(child);
+  };
+  walk(body);
+
+  expect(order[0]).toBe('dashboard-hero');
+  expect(order[1]).toBe('weather-row');
+
+  await result.unmount();
+  queryClient.clear();
+});

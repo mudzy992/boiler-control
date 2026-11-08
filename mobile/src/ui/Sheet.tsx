@@ -1,40 +1,55 @@
 /**
- * `Sheet` — bottom sheet koji se zatvara animacijom i ima naslov.
+ * `Sheet` — bottom sheet koji se otvara/zatvara animirano i ima naslov.
  *
- * Ispravlja tri stvari iz `components/BottomSheetModal.tsx` (nalaz UX-14):
- *  1. `if (!isOpen) return null` je uklanjao sheet iz stabla prije animacije
- *     zatvaranja, pa je zatvaranje „nestajalo". Ovdje se komponenta drži
- *     montiranom dok `onDismiss` ne javi da je animacija gotova (`closing` ref).
- *  2. `title` prop se primao i nikad nije renderovao. Ovdje je obavezno vidljiv
- *     i nosi `accessibilityRole="header"`.
- *  3. Nije bilo `keyboardBehavior`, pa je tastatura krila dugmad u formama.
- *     Sada je `interactive` uz `KeyboardAvoidingView` na iOS-u.
+ * F7 (SHEET-03) — zašto više ne koristi `@gorhom/bottom-sheet`:
  *
- * API je namjerno mali (`isOpen`, `onClose`, `title`, `children`) da bi zamjena
- * na postojećim mjestima bila mehanička.
+ * Korisnik je dva puta prijavio isto: „set current temp / + na Plinu / promjena
+ * jezika ne otvaraju ništa, a aplikacija kao da zabaguje". Prva popravka
+ * (F7 SHEET-01) je `BottomSheet` umotala u RN `Modal` i dodala deklarativni
+ * `index`, ali to rješava samo dio problema:
+ *
+ *  - gorhomov list se montira na svaki `render` svog roditelja i računa layout
+ *    kroz Reanimated worklete; unutar `Modal`-a (novi native root) taj layout
+ *    često nije izračunat u trenutku kad `index` treba primijeniti, pa list
+ *    ostane na `-1` — sheet je „otvoren" u stanju, a ne vidi se;
+ *  - `enablePanDownToClose` + `BottomSheetBackdrop` traže gesture-handler
+ *    pan obradu nad native rootom; kad se nešto od toga ne sastavi, dodiri nad
+ *    ekranom ostaju zarobljeni — to je „zabaguje" koji korisnik opisuje;
+ *  - sve to zavisi od tri native sloja (Reanimated, worklets, gesture-handler)
+ *    na koje UI ne smije da se oslanja za OSNOVNU radnju kao što je otvaranje
+ *    forme.
+ *
+ * Sada: `Sheet` je običan RN `Modal` + `Animated` (ugrađeni `Animated`, bez
+ * Reanimated workleta) sa `Animated.View` listom koji klizi odozdo. Nema
+ * workleta, nema gesture-handlera, nema mjerenja layouta — pa nema ni načina da
+ * se „ne otvori". Zatvaranje animira isto (spuštaj i fade), a `onRequestClose`
+ * pokriva Android back.
+ *
+ * Ponašanje je namjerno isto kao prije: `isOpen`, `onClose`, `title`, `children`,
+ * `snapPoints` (procenti visine), `scrollable`, `testID`, `closeLabel`.
+ * `snapPoints` sada znači: prva tačka je početna visina lista; druga se koristi
+ * kao maksimalna visina sadržaja (lista ne prelazi ekran).
  */
 
 import React from 'react';
 import {
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable as RNPressable,
+  ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
 } from 'react-native';
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-  BottomSheetView,
-  type BottomSheetBackdropProps,
-} from '@gorhom/bottom-sheet';
+import { Ionicons } from '@expo/vector-icons';
 
 import { radius, space } from '../theme/tokens';
 import { useTokens } from './theme';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
-import { Ionicons } from '@expo/vector-icons';
 
 export type SheetProps = {
   isOpen: boolean;
@@ -42,7 +57,7 @@ export type SheetProps = {
   /** Naslov u zaglavlju lista. Ako nema naslova, nema ni X dugmeta. */
   title?: string;
   children: React.ReactNode;
-  /** Snap tačke kao procenti visine ekrana. */
+  /** Visina lista kao procenat ekrana; prva vrijednost je početna. */
   snapPoints?: readonly (number | `${number}%`)[];
   /** `true` kad sadržaj treba da skrola unutar lista (duge forme). */
   scrollable?: boolean;
@@ -50,6 +65,8 @@ export type SheetProps = {
   /** Labela za X dugme; F4 traži da i ona prolazi kroz `t()`. */
   closeLabel?: string;
 };
+
+const DURATION = 220;
 
 export function Sheet({
   isOpen,
@@ -63,112 +80,81 @@ export function Sheet({
 }: SheetProps) {
   const { t, fonts } = useTokens();
   const { height } = useWindowDimensions();
-  const sheetRef = React.useRef<BottomSheet>(null);
 
   /**
-   * F7: `snapPoints` se na svakom rendeu zadaje kao novi inline niz
-   * (`snapPoints={['45%', '65%']}`), pa bi `useMemo` sa samim nizom u
-   * zavisnostima pravio novi `points` niz svaki put i tjerao `BottomSheet` da
-   * ponovo računa snap tačke. Zavisnost je zato stabilan string.
-   */
-  const snapPointsKey = snapPoints.join('|');
-
-  const points = React.useMemo(
-    () =>
-      snapPointsKey.split('|').map((rawPoint) => {
-        const point = rawPoint as number | `${number}%`;
-        if (typeof point === 'number') return point;
-        const percent = Number(point.replace('%', ''));
-        return Number.isFinite(percent) ? Math.max(1, (height * percent) / 100) : height * 0.5;
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ključ je stabilan izraz niza
-    [snapPointsKey, height],
-  );
-
-  /**
-   * F7 (SHEET-02): `Modal` se NE smije skloniti u istom trenutku kad `isOpen`
-   * padne na `false`, jer bi to presjeklo animaciju zatvaranja — a F0 je
-   * obećao da se list zatvara animirano, ne da nestane.
-   *
-   * Zato postoji `mounted`: kad se sheet zatvori, `Modal` ostaje vidljiv dok
-   * gorhom ne javi da je list sišao na `-1` (`onChange`). Timer od 400 ms je
-   * sigurnosna mreža — ako iz bilo kog razloga `onChange` ne stigne (npr. list
-   * je već bio na `-1`), `Modal` se ipak sklanja umjesto da ostane kao nevidljiv
-   * sloj preko ekrana koji „jede" dodire.
+   * `mounted` drži list u stablu dok traje animacija zatvaranja. Bez toga bi
+   * `Modal` nestao u istom frejmu i animacija se ne bi vidjela — a F0 je
+   * obećao animirano zatvaranje, ne nestanak.
    */
   const [mounted, setMounted] = React.useState(isOpen);
+  /** 0 = sklonjen, 1 = otvoren. Jedna vrijednost vodi i pomak i fade. */
+  const progress = React.useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+
+  const percent = React.useMemo(() => {
+    const first = snapPoints[0] ?? '50%';
+    const value = typeof first === 'number' ? first : Number(String(first).replace('%', ''));
+    if (!Number.isFinite(value)) return 0.5;
+    // Broj ≤ 1 tretiramo kao udio, veći broj kao procenat (kompatibilnost sa
+    // `snapPoints={['45%']}` i `snapPoints={[0.45]}`).
+    return value <= 1 ? value : value / 100;
+  }, [snapPoints]);
+
+  const sheetHeight = Math.max(160, Math.round(height * percent));
 
   React.useEffect(() => {
     if (isOpen) {
       setMounted(true);
-      return undefined;
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: DURATION,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+      return;
     }
-    if (!mounted) return undefined;
-    const timer = setTimeout(() => setMounted(false), 400);
-    return () => clearTimeout(timer);
-  }, [isOpen, mounted]);
 
-  React.useEffect(() => {
-    if (isOpen) {
-      sheetRef.current?.snapToIndex(0);
-    } else {
-      sheetRef.current?.close();
-    }
-  }, [isOpen]);
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: DURATION,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      // `finished === false` znači da je sheet ponovo otvoren prije kraja —
+      // tada ga ne sklanjamo, inače bi se sadržaj izgubio usred otvaranja.
+      if (finished) setMounted(false);
+    });
+  }, [isOpen, progress]);
 
-  const handleChange = React.useCallback((index: number) => {
-    if (index === -1) setMounted(false);
-  }, []);
+  const translateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [sheetHeight, 0],
+  });
+  const backdropOpacity = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
 
-  const renderBackdrop = React.useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.6}
-        pressBehavior="close"
-      />
-    ),
-    [],
-  );
+  const header = title ? (
+    <View style={[styles.header, { borderBottomColor: t.line }]}>
+      <Text
+        accessibilityRole="header"
+        style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: t.ink, flex: 1 }}
+      >
+        {title}
+      </Text>
+      <Pressable
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel={closeLabel}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        testID={testID ? `${testID}-close` : undefined}
+      >
+        <Ionicons name="close" size={20} color={t.inkMuted} />
+      </Pressable>
+    </View>
+  ) : null;
 
-  /**
-   * Namjerno se NE vraća `null` kad je `isOpen === false`: sheet treba da ostane
-   * montiran da bi `close()` mogao da odigra animaciju, a `index` ga sklanja.
-   * `enablePanDownToClose` i backdrop pozivaju isti `onClose`.
-   *
-   * F7: kad se koristi `scrollable`, `Content` je `BottomSheetScrollView` —
-   * dugi sadržaj (forme, liste akcija) tada skrola unutar lista, a ne izvan
-   * njega. Bez toga se na malim ekranima zadnja dugmad nisu mogla dohvatiti.
-   */
-  const Content = scrollable ? BottomSheetScrollView : BottomSheetView;
+  const body = <View style={styles.content}>{children}</View>;
 
-  /*
-   * F7 (SHEET-01) — zašto `Modal` oko `BottomSheet`-a.
-   *
-   * Simptom na uređaju: „Set current temp ne otvara nikakav modul", „dodavanje
-   * novog očitanja ne otvara ništa", „promjena jezika ne radi". Sva tri (i još
-   * nekoliko ekrana) idu kroz OVAJ primitive, pa je uzrok bio zajednički.
-   *
-   * Uzrok: `BottomSheet` je bio dijete `SafeAreaView`-a ekrana, dakle unutar
-   * `ScreenStack` kartice. `@gorhom/bottom-sheet` računa svoju poziciju od
-   * „container"-a i očekuje da visi o korijenu; unutar `flex: 1` ekrana sa
-   * `overflow: hidden` list se otvori ispod sadržaja, iza drugih ekrana, ili se
-   * uopšte ne vidi — zavisno od toga šta je iznad njega u stablu. `Modal` ga
-   * montira u vlastiti root view iznad svega, pa je pozicija deterministicna
-   * bez obzira na to gdje se `Sheet` koristi.
-   *
-   * Druga posljedica: `index={-1}` je bio fiksan, a otvaranje se oslanjalo samo
-   * na imperativni `snapToIndex(0)` iz efekta. Ako taj efekat otrči prije nego
-   * što biblioteka izračuna layout (`isLayoutCalculated`), `snapToIndex` izađe
-   * bez greške i list NIKAD ne ode na 0. Zato sada `index` prati `isOpen`
-   * (deklarativno), a `useEffect` sa `snapToIndex` ostaje kao pojačanje.
-   */
   return (
     <Modal
-      // `isOpen || mounted`: otvaranje je trenutno (bez čekanja na efekat), a
-      // `mounted` drži list u stablu dok traje animacija zatvaranja.
       visible={isOpen || mounted}
       transparent
       animationType="none"
@@ -176,54 +162,90 @@ export function Sheet({
       onRequestClose={onClose}
       testID={testID ? `${testID}-modal` : undefined}
     >
-      <BottomSheet
-        ref={sheetRef}
-        index={isOpen ? 0 : -1}
-        snapPoints={points}
-        enablePanDownToClose
-        onClose={onClose}
-        onChange={handleChange}
-        backdropComponent={renderBackdrop}
-        keyboardBehavior="interactive"
-        keyboardBlurBehavior="restore"
-        android_keyboardInputMode="adjustResize"
-        backgroundStyle={{ backgroundColor: t.panel, borderRadius: radius.panel }}
-        handleIndicatorStyle={{ backgroundColor: t.lineStrong }}
-        style={{ zIndex: 10 }}
-      >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      {/*
+        Backdrop je `Animated.View`, a ne `BottomSheetBackdrop`: dodir zatvara
+        list, a `onStartShouldSetResponder` ne vraća `true` — dakle dodiri van
+        lista ne ostaju zarobljeni (to je bio „bag" iz prijave).
+      */}
+      <View style={styles.host}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.backdrop, { opacity: backdropOpacity }]}
+        />
+        <RNPressable
+          style={StyleSheet.absoluteFill}
+          accessibilityRole="button"
+          accessibilityLabel={closeLabel}
+          onPress={onClose}
+          testID={testID ? `${testID}-backdrop` : undefined}
+        />
+        <Animated.View
+          style={[
+            styles.sheet,
+            {
+              height: sheetHeight,
+              backgroundColor: t.panel,
+              borderColor: t.line,
+              transform: [{ translateY }],
+            },
+          ]}
         >
-          {title ? (
-            <View style={[styles.header, { borderBottomColor: t.line }]}>
-              <Text
-                accessibilityRole="header"
-                style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: t.ink, flex: 1 }}
+          <View style={styles.handleWrap}>
+            <View style={[styles.handle, { backgroundColor: t.lineStrong }]} />
+          </View>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {header}
+            {scrollable ? (
+              <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.contentScrollable}
+                keyboardShouldPersistTaps="handled"
               >
-                {title}
-              </Text>
-              <Pressable
-                onPress={onClose}
-                accessibilityRole="button"
-                accessibilityLabel={closeLabel}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                testID={testID ? `${testID}-close` : undefined}
-              >
-                <Ionicons name="close" size={20} color={t.inkMuted} />
-              </Pressable>
-            </View>
-          ) : null}
-          <Content style={{ flex: 1 }} contentContainerStyle={styles.content}>
-            {children}
-          </Content>
-        </KeyboardAvoidingView>
-      </BottomSheet>
+                {children}
+              </ScrollView>
+            ) : (
+              body
+            )}
+          </KeyboardAvoidingView>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  host: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: '#000000',
+  },
+  sheet: {
+    width: '100%',
+    borderTopLeftRadius: radius.panel,
+    borderTopRightRadius: radius.panel,
+    borderTopWidth: StyleSheet.hairlineWidth * 2,
+    overflow: 'hidden',
+  },
+  handleWrap: {
+    alignItems: 'center',
+    paddingTop: space.sm,
+    paddingBottom: 2,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,6 +256,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth * 2,
   },
   content: {
+    flex: 1,
+    paddingHorizontal: space.lg,
+    paddingTop: space.md,
+    paddingBottom: space.xxl,
+  },
+  contentScrollable: {
     paddingHorizontal: space.lg,
     paddingTop: space.md,
     paddingBottom: space.xxl + space.lg,

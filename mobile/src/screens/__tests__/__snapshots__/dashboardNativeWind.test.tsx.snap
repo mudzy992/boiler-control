@@ -694,6 +694,146 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
             </View>
+            <View
+              style={
+                {
+                  "marginTop": 8,
+                }
+              }
+            >
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#0b0f16",
+                      "borderColor": "#1f2733",
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+                testID="dashboard-alerts"
+              >
+                <View
+                  accessibilityLabel="health.severityWarning: healthWarnings.shortCycles. Short cycle warning"
+                  accessible={true}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 10,
+                      }
+                    }
+                  >
+                    <View
+                      style={
+                        {
+                          "alignSelf": "stretch",
+                          "backgroundColor": "#f5a524",
+                          "borderRadius": 1,
+                          "width": 2,
+                        }
+                      }
+                    />
+                    <View
+                      style={
+                        {
+                          "flex": 1,
+                          "gap": 2,
+                        }
+                      }
+                    >
+                      <View
+                        style={
+                          {
+                            "alignItems": "center",
+                            "flexDirection": "row",
+                            "gap": 6,
+                          }
+                        }
+                      >
+                        <View
+                          style={
+                            {
+                              "backgroundColor": "#f5a524",
+                              "borderRadius": 999,
+                              "height": 6,
+                              "width": 6,
+                            }
+                          }
+                        />
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#f5a524",
+                                "fontFamily": "monospace",
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          health.severityWarning
+                        </Text>
+                      </View>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        healthWarnings.shortCycles
+                      </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#9aa6b6",
+                              "fontFamily": undefined,
+                              "fontSize": 13,
+                              "lineHeight": 18,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        Short cycle warning
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
           <View
             accessible={false}
@@ -852,7 +992,23 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       ]
                     }
                   >
-                    Cloudy
+                    weather.conditionCloudy
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#828d9e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    weather.feelsLike
                   </Text>
                   <Text
                     style={
@@ -900,7 +1056,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   undefined,
                 ]
               }
-              testID="kpi-outdoor"
+              testID="kpi-thermostat"
             >
               <Text
                 style={
@@ -924,7 +1080,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   ]
                 }
               >
-                boiler.outdoor
+                boiler.thermostatKpi
               </Text>
               <View
                 accessible={false}
@@ -964,7 +1120,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     ]
                   }
                 >
-                  4.5
+                  21.5
                 </Text>
                 <Text
                   style={
@@ -1018,7 +1174,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     ]
                   }
                 >
-                  boiler.outdoorFeels
+                  Living Room
                 </Text>
               </View>
             </View>
@@ -1532,203 +1688,6 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.activeAlerts
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#e8edf4",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#9aa6b6",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "letterSpacing": 1.1,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
-                1
-              </Text>
-            </View>
-            <View
-              accessible={false}
-              style={
-                [
-                  {
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "overflow": "hidden",
-                  },
-                  {
-                    "backgroundColor": "#0b0f16",
-                    "borderColor": "#1f2733",
-                  },
-                  null,
-                  undefined,
-                ]
-              }
-              testID="dashboard-alerts"
-            >
-              <View
-                accessibilityLabel="health.severityWarning: healthWarnings.shortCycles. Short cycle warning"
-                accessible={true}
-                style={
-                  [
-                    {
-                      "paddingHorizontal": 12,
-                      "paddingVertical": 10,
-                    },
-                    null,
-                    undefined,
-                  ]
-                }
-              >
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "flexDirection": "row",
-                      "gap": 10,
-                    }
-                  }
-                >
-                  <View
-                    style={
-                      {
-                        "alignSelf": "stretch",
-                        "backgroundColor": "#f5a524",
-                        "borderRadius": 1,
-                        "width": 2,
-                      }
-                    }
-                  />
-                  <View
-                    style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
-                    }
-                  >
-                    <View
-                      style={
-                        {
-                          "alignItems": "center",
-                          "flexDirection": "row",
-                          "gap": 6,
-                        }
-                      }
-                    >
-                      <View
-                        style={
-                          {
-                            "backgroundColor": "#f5a524",
-                            "borderRadius": 999,
-                            "height": 6,
-                            "width": 6,
-                          }
-                        }
-                      />
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#f5a524",
-                              "fontFamily": "monospace",
-                              "fontSize": 12,
-                              "lineHeight": 16,
-                            },
-                            null,
-                            undefined,
-                          ]
-                        }
-                      >
-                        health.severityWarning
-                      </Text>
-                    </View>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#e8edf4",
-                            "fontFamily": undefined,
-                            "fontSize": 15,
-                            "lineHeight": 20,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      healthWarnings.shortCycles
-                    </Text>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#9aa6b6",
-                            "fontFamily": undefined,
-                            "fontSize": 13,
-                            "lineHeight": 18,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      Short cycle warning
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              [
-                {
-                  "gap": 8,
-                },
-                undefined,
-              ]
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#e8edf4",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#828d9e",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "letterSpacing": 1.4,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
                 thermostat.title
               </Text>
               <Text
@@ -1995,7 +1954,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         ]
                       }
                     >
-                      thermostat.mode.program
+                      thermostat.mode.program · recommendation.mode: FULL · recommendation.interval: weekday_morning
                     </Text>
                   </View>
                 </View>
@@ -3621,6 +3580,146 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
             </View>
+            <View
+              style={
+                {
+                  "marginTop": 8,
+                }
+              }
+            >
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#ffffff",
+                      "borderColor": "#dce0e8",
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+                testID="dashboard-alerts"
+              >
+                <View
+                  accessibilityLabel="health.severityWarning: healthWarnings.shortCycles. Short cycle warning"
+                  accessible={true}
+                  style={
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "flex": 1,
+                        "flexDirection": "row",
+                        "gap": 10,
+                      }
+                    }
+                  >
+                    <View
+                      style={
+                        {
+                          "alignSelf": "stretch",
+                          "backgroundColor": "#b45309",
+                          "borderRadius": 1,
+                          "width": 2,
+                        }
+                      }
+                    />
+                    <View
+                      style={
+                        {
+                          "flex": 1,
+                          "gap": 2,
+                        }
+                      }
+                    >
+                      <View
+                        style={
+                          {
+                            "alignItems": "center",
+                            "flexDirection": "row",
+                            "gap": 6,
+                          }
+                        }
+                      >
+                        <View
+                          style={
+                            {
+                              "backgroundColor": "#b45309",
+                              "borderRadius": 999,
+                              "height": 6,
+                              "width": 6,
+                            }
+                          }
+                        />
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#b45309",
+                                "fontFamily": "monospace",
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          health.severityWarning
+                        </Text>
+                      </View>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        healthWarnings.shortCycles
+                      </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#4b5563",
+                              "fontFamily": undefined,
+                              "fontSize": 13,
+                              "lineHeight": 18,
+                            },
+                            null,
+                            undefined,
+                          ]
+                        }
+                      >
+                        Short cycle warning
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
           <View
             accessible={false}
@@ -3779,7 +3878,23 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       ]
                     }
                   >
-                    Cloudy
+                    weather.conditionCloudy
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#59616e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    weather.feelsLike
                   </Text>
                   <Text
                     style={
@@ -3827,7 +3942,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   undefined,
                 ]
               }
-              testID="kpi-outdoor"
+              testID="kpi-thermostat"
             >
               <Text
                 style={
@@ -3851,7 +3966,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   ]
                 }
               >
-                boiler.outdoor
+                boiler.thermostatKpi
               </Text>
               <View
                 accessible={false}
@@ -3891,7 +4006,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     ]
                   }
                 >
-                  4.5
+                  21.5
                 </Text>
                 <Text
                   style={
@@ -3945,7 +4060,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     ]
                   }
                 >
-                  boiler.outdoorFeels
+                  Living Room
                 </Text>
               </View>
             </View>
@@ -4459,203 +4574,6 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   ]
                 }
               >
-                dashboard.activeAlerts
-              </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#111827",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#4b5563",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "letterSpacing": 1.1,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
-                1
-              </Text>
-            </View>
-            <View
-              accessible={false}
-              style={
-                [
-                  {
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "overflow": "hidden",
-                  },
-                  {
-                    "backgroundColor": "#ffffff",
-                    "borderColor": "#dce0e8",
-                  },
-                  null,
-                  undefined,
-                ]
-              }
-              testID="dashboard-alerts"
-            >
-              <View
-                accessibilityLabel="health.severityWarning: healthWarnings.shortCycles. Short cycle warning"
-                accessible={true}
-                style={
-                  [
-                    {
-                      "paddingHorizontal": 12,
-                      "paddingVertical": 10,
-                    },
-                    null,
-                    undefined,
-                  ]
-                }
-              >
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "flexDirection": "row",
-                      "gap": 10,
-                    }
-                  }
-                >
-                  <View
-                    style={
-                      {
-                        "alignSelf": "stretch",
-                        "backgroundColor": "#b45309",
-                        "borderRadius": 1,
-                        "width": 2,
-                      }
-                    }
-                  />
-                  <View
-                    style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
-                    }
-                  >
-                    <View
-                      style={
-                        {
-                          "alignItems": "center",
-                          "flexDirection": "row",
-                          "gap": 6,
-                        }
-                      }
-                    >
-                      <View
-                        style={
-                          {
-                            "backgroundColor": "#b45309",
-                            "borderRadius": 999,
-                            "height": 6,
-                            "width": 6,
-                          }
-                        }
-                      />
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#b45309",
-                              "fontFamily": "monospace",
-                              "fontSize": 12,
-                              "lineHeight": 16,
-                            },
-                            null,
-                            undefined,
-                          ]
-                        }
-                      >
-                        health.severityWarning
-                      </Text>
-                    </View>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#111827",
-                            "fontFamily": undefined,
-                            "fontSize": 15,
-                            "lineHeight": 20,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      healthWarnings.shortCycles
-                    </Text>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#4b5563",
-                            "fontFamily": undefined,
-                            "fontSize": 13,
-                            "lineHeight": 18,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      Short cycle warning
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              [
-                {
-                  "gap": 8,
-                },
-                undefined,
-              ]
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-            >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#111827",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#59616e",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "letterSpacing": 1.4,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
                 thermostat.title
               </Text>
               <Text
@@ -4922,7 +4840,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         ]
                       }
                     >
-                      thermostat.mode.program
+                      thermostat.mode.program · recommendation.mode: FULL · recommendation.interval: weekday_morning
                     </Text>
                   </View>
                 </View>

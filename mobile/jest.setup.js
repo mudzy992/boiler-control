@@ -31,14 +31,11 @@ jest.mock(
   () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
-// F1: `src/ui/index.ts` (barrel) uvozi `Sheet`, koji uvozi `@gorhom/bottom-sheet`.
-// Taj paket pri importu dodiruje react-native-worklets i pada u Jest-u
-// (`loadUnpackersWithCode`). Mock dolazi iz samog paketa, dakle ponašanje je
-// autorovo, a ne naše nagađanje — i sprječava da svaki test koji dotakne
-// `src/ui` mora ponavljati isti `jest.mock`.
-// Namjerno se NE vraća `require('.../mock')` direktno: taj modul nema
-// `__esModule`, pa bi Babel interop postavio `default` na CIJELI objekat i
-// `<BottomSheet />` bi pao kao „Element type is invalid: got object".
+// F7 (SHEET-03): `src/ui/Sheet.tsx` više ne uvozi `@gorhom/bottom-sheet` —
+// primitiv je RN `Modal` + ugrađeni `Animated`, pa mock tog paketa nije
+// potreban. Ostaje samo zato što ga `src/components/ui/overlays.tsx` (stari
+// sloj, još u upotrebi za `Actionsheet`) i dalje dodiruje pri importu; bez
+// mocka taj import pada na `react-native-worklets` (`loadUnpackersWithCode`).
 jest.mock('@gorhom/bottom-sheet', () => {
   const mock = require('@gorhom/bottom-sheet/mock');
   return { __esModule: true, ...mock, default: mock.default };

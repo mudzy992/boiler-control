@@ -231,6 +231,24 @@ export const DashboardScreen = () => {
   const boiler = dashboardData?.system?.boiler;
   const weather = dashboardData?.system?.weather;
   const thermostats = primaryHome?.thermostats ?? [];
+
+  /**
+   * F8 (HOME-06): jedan termostat za KPI pločicu — prvi sa poznatom
+   * temperaturom. Ako nijedan nema očitanje, KPI prikazuje „—" umjesto da
+   * izmišlja broj.
+   */
+  const primaryThermostat =
+    thermostats.find((thermostat) => typeof thermostat.currentTemp === 'number') ??
+    thermostats[0] ??
+    null;
+  const recommendation = dashboardData?.system?.recommendation;
+  const recommendationMode = recommendation?.breakdown?.mode ?? null;
+  const recommendationInterval = recommendation?.breakdown?.intervalKey ?? null;
+
+  const primaryThermostatTemp =
+    primaryThermostat && typeof primaryThermostat.currentTemp === 'number'
+      ? Number(primaryThermostat.currentTemp)
+      : null;
   const health = healthQuery.data;
 
   const isHeating = Boolean(boiler?.heatingStart && !boiler?.heatingEnd);
@@ -363,6 +381,18 @@ export const DashboardScreen = () => {
               />
             </View>
           </Panel>
+
+          {/*
+            F8 (HOME-04): aktivni alerti pripadaju KOTLU, ne cijeloj Početnoj —
+            govore o polazu, povratnom vodu i datumu preporuke. Zato su sada
+            unutar sekcije „Status kotla", odmah ispod hero ploče, a ne kao
+            zaseban blok između KPI pločica i liste termostata.
+          */}
+          {health?.warnings?.length ? (
+            <View style={{ marginTop: space.sm }}>
+              <AlertsCard warnings={health.warnings} />
+            </View>
+          ) : null}
         </Section>
 
         {/* F6 (DASH-01): vrijeme je prije stajalo NA DNU ekrana, ispod preporuke i
@@ -377,16 +407,22 @@ export const DashboardScreen = () => {
 
         {/* Tri KPI pločice u jednom redu — bez kartica i bez trećeg akcenta. */}
         <View style={{ flexDirection: 'row', gap: space.sm }}>
+          {/*
+            F8 (HOME-06): umjesto vanjske temperature (koja sada stoji u kartici
+            vremenske prognoze sa „osjećajem") ovdje je TRENUTNA temperatura
+            termostata — vrijednost koju korisnik poredi sa ciljem, a ne može je
+            naći nigdje drugdje u tom redu.
+          */}
           <Kpi
-            label={t('boiler.outdoor')}
-            value={boiler?.externalTemp != null ? boiler.externalTemp.toFixed(1) : '—'}
+            label={t('boiler.thermostatKpi')}
+            value={primaryThermostatTemp !== null ? primaryThermostatTemp.toFixed(1) : '—'}
             unit="°C"
             meta={
-              weather?.feelsLike != null
-                ? t('boiler.outdoorFeels', { value: Number(weather.feelsLike).toFixed(0) })
-                : undefined
+              primaryThermostat
+                ? primaryThermostat.alias
+                : t('heating.noThermostats')
             }
-            testID="kpi-outdoor"
+            testID="kpi-thermostat"
           />
           <Kpi
             label={t('boiler.health')}
@@ -429,12 +465,6 @@ export const DashboardScreen = () => {
         <Section label={t('gas.title')}>
           <GasConsumptionCard />
         </Section>
-
-        {health?.warnings?.length ? (
-          <Section label={t('dashboard.activeAlerts')} meta={String(health.warnings.length)}>
-            <AlertsCard warnings={health.warnings} />
-          </Section>
-        ) : null}
 
         <Section
           label={t('thermostat.title')}
@@ -509,10 +539,27 @@ export const DashboardScreen = () => {
                             )} ${current ?? '—'}, ${t('thermostat.target')} ${target ?? '—'}`}
                           />
                         </View>
+                        {/*
+                          F8 (HOME-07): „Mode: FULL · interval: weekend_afternoon"
+                          je prije bio u zasebnom bloku na dnu ekrana (u
+                          `RecommendationBreakdown`). To je kontekst ODLUKE koja
+                          važi za termostat, pa stoji uz termostat — u istom redu
+                          sa trakom, gdje korisnik već gleda cilj i stanje.
+                        */}
                         <MonoMeta>
-                          {t(`thermostat.mode.${thermostat.mode.toLowerCase()}`, {
-                            defaultValue: thermostat.mode,
-                          })}
+                          {[
+                            t(`thermostat.mode.${thermostat.mode.toLowerCase()}`, {
+                              defaultValue: thermostat.mode,
+                            }),
+                            recommendationMode
+                              ? `${t('recommendation.mode')}: ${recommendationMode}`
+                              : null,
+                            recommendationInterval
+                              ? `${t('recommendation.interval')}: ${recommendationInterval}`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
                         </MonoMeta>
                       </View>
                     </View>

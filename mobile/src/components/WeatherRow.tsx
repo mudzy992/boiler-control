@@ -18,8 +18,56 @@ type WeatherRowProps = {
   isFetching?: boolean;
 };
 
+/**
+ * F8 (HOME-05): stanje vremena dolazi sa backenda na ENGLESKOM („Cloudy",
+ * „Light rain", „Clear"), pa je u bosanskom UI-ju stajalo engleski — korisnik
+ * je tražio „prevode adekvatne". Umjesto prevođenja proizvoljnog teksta
+ * (što bi bilo pogađanje), prevode se POZNATA stanja po ključu; sve nepoznato
+ * se prikazuje kako je stiglo, bez izmišljanja.
+ *
+ * Vrijednost se normalizuje (mala slova, bez razmaka) da bi „Partly cloudy",
+ * „PARTLY_CLOUDY" i „partlyCloudy" pogodili isti ključ.
+ */
+const CONDITION_KEYS: Record<string, string> = {
+  clear: 'weather.conditionClear',
+  sunny: 'weather.conditionClear',
+  clouds: 'weather.conditionCloudy',
+  cloudy: 'weather.conditionCloudy',
+  overcast: 'weather.conditionOvercast',
+  partlycloudy: 'weather.conditionPartlyCloudy',
+  fewclouds: 'weather.conditionPartlyCloudy',
+  scatteredclouds: 'weather.conditionPartlyCloudy',
+  brokenclouds: 'weather.conditionPartlyCloudy',
+  rain: 'weather.conditionRain',
+  lightrain: 'weather.conditionLightRain',
+  moderaterain: 'weather.conditionRain',
+  heavyintensityrain: 'weather.conditionHeavyRain',
+  showerrain: 'weather.conditionShowers',
+  drizzling: 'weather.conditionDrizzle',
+  drizzle: 'weather.conditionDrizzle',
+  thunderstorm: 'weather.conditionThunderstorm',
+  snow: 'weather.conditionSnow',
+  lightsnow: 'weather.conditionLightSnow',
+  mist: 'weather.conditionMist',
+  fog: 'weather.conditionFog',
+  haze: 'weather.conditionHaze',
+  smoky: 'weather.conditionHaze',
+  windy: 'weather.conditionWindy',
+};
+
+function conditionKey(condition: string | undefined): string | null {
+  if (!condition) return null;
+  const normalized = condition.toLowerCase().replace(/[\s_-]+/g, '');
+  return CONDITION_KEYS[normalized] ?? null;
+}
+
 export function WeatherRow({ weather, isFetching = false }: WeatherRowProps) {
   const { t } = useTranslation();
+
+  const translatedConditionKey = conditionKey(weather?.condition);
+  const translatedCondition = translatedConditionKey
+    ? t(translatedConditionKey)
+    : (weather?.condition ?? '');
 
   if (!weather) {
     return (
@@ -49,8 +97,15 @@ export function WeatherRow({ weather, isFetching = false }: WeatherRowProps) {
           </View>
           <View style={styles.meta}>
             <Text size="body" weight="medium" numberOfLines={1}>
-              {weather.condition}
+              {translatedCondition}
             </Text>
+            {/* F8 (HOME-05): „osjećaj" uz trenutnu temperaturu — isti podatak
+                koji je ranije stajao u KPI pločici „Vani". */}
+            {weather.feelsLike != null ? (
+              <MonoMeta>
+                {t('weather.feelsLike', { value: Number(weather.feelsLike).toFixed(0) })}
+              </MonoMeta>
+            ) : null}
             <MonoMeta>
               {`${weather.humidity}% · ${Number(weather.windSpeed).toFixed(1)} ${t(
                 'weather.windUnit',

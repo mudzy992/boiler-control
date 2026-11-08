@@ -150,7 +150,9 @@ describe('Početna — instrument panel', () => {
 
     expect(await result.findByTestId('dashboard-hero')).toBeTruthy();
     expect(result.getByTestId('dashboard-flow-actual')).toBeTruthy();
-    expect(result.getByTestId('kpi-outdoor')).toBeTruthy();
+    // F8 (HOME-06): treća KPI pločica više nije „Vani" (vanjska temperatura je
+    // sada u kartici vremena) nego trenutna temperatura termostata.
+    expect(result.getByTestId('kpi-thermostat')).toBeTruthy();
     expect(result.getByTestId('kpi-health')).toBeTruthy();
     expect(result.getByTestId('kpi-thermostats')).toBeTruthy();
     expect(result.queryByTestId('kpi-fourth')).toBeNull();
@@ -163,7 +165,9 @@ describe('Početna — instrument panel', () => {
     const { result, queryClient } = await renderWithProviders(<DashboardScreen />);
 
     expect(await result.findByTestId('thermostat-panel')).toBeTruthy();
-    expect(result.getByText('Living Room')).toBeTruthy();
+    // F8 (HOME-06): ime termostata sada postoji i u KPI pločici („Termostat
+    // sada"), pa se traži u redu termostata, a ne bilo gdje na ekranu.
+    expect(result.getAllByText('Living Room').length).toBeGreaterThan(0);
     // Jedan a11y čvor nosi cijelu relaciju, umjesto tri odvojena broja.
     expect(result.getByLabelText('Living Room: 21.5 → 23.0 °C')).toBeTruthy();
 

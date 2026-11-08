@@ -469,6 +469,57 @@ novi `raised` izgled trake). Nijedna asertacija nije ublažena; dvije su
 **prevedene na novi tok** (period se sada bira iz menija, `f6Gas.test.tsx` i
 `gasNativeWind.test.tsx`), uz komentar na mjestu izmjene.
 
+### F8 — Sheet bez gorhom-a, i Početna po korisnikovom rasporedu
+
+Korisnik poslije F7: „i dalje — set current temp, + na Plin, promjena jezika ne
+otvaraju ništa (čak mi se čini da aplikacija zabaguje)". F7 je popravila
+deklarativni `index`, ali primitiv je i dalje zavisio od tri native sloja.
+F8 zato **uklanja** tu zavisnost.
+
+**SHEET-03 — `Sheet` je sada RN `Modal` + ugrađeni `Animated`.** Nema
+`@gorhom/bottom-sheet`, nema Reanimated workleta, nema gesture-handler pan
+obrade, nema mjerenja layouta. List klizi odozdo (`translateY` + fade) preko
+`Animated.Value`, `onRequestClose` pokriva Android back, backdrop je
+`Animated.View` + puni `Pressable` koji zatvara. Zatvaranje se animira
+(`mounted` se sklanja tek kad animacija javi `finished`). Time nestaju oba
+načina da se pojavi prijavljeni simptom: tiho odustajanje snap-a i zarobljeni
+dodiri nad ekranom.
+
+**BUG-CRASH — greška više ne ruši ekran.** `showError` je za 401 bez
+`customMessage` predavao `description: undefined` toastu, a NativeWind je tada
+padao iznad ekrana — korisnik to vidi kao „zabaguje". Poruka sada nikad nije
+prazna (pada na prevedeni status), a cijeli poziv je u `try/catch`.
+
+| Nalaz | Prije | Sada | Dokaz |
+|---|---|---|---|
+| SHEET-03 | sheet zavisi od gorhom + Reanimated + gesture-handler; tiho se ne otvori ili zarobi dodire | RN `Modal` + `Animated`, bez tih zavisnosti | `primitives.test.tsx` (27, uključujući otvaranje iz state-a i zatvaranje na backdrop) |
+| BUG-CRASH | 401 bez poruke ⇒ toast sa `undefined` ⇒ pad ekrana | poruka nikad prazna + `try/catch` | `error.handler.test.ts` (19) |
+| GAS-TABS-2 | traka 44 px, tekst 11 px — „treba malo veći format" | 52 px, tekst 13 px semibold, aktivna opcija sa svjetlijom podlogom | gas snapshot |
+| GAS-LIST-2 | očitanja uz samu ivicu ekrana | kartica sa `marginHorizontal: space.lg` i 10 px razmaka između | gas snapshot |
+| HOME-04 | alerti kao zaseban blok između KPI pločica i termostata | unutar sekcije „Status kotla", ispod hero ploče | dashboard snapshot |
+| HOME-05 | stanje vremena sa backenda („Cloudy") stajalo engleski u bs UI | mapa poznatih stanja → `weather.condition*`; nepoznato se prikazuje kako je stiglo | `weatherCondition.test.tsx` (3) |
+| HOME-05b | — | „osjećaj" uz trenutnu temperaturu u kartici vremena | `weatherCondition.test.tsx` |
+| HOME-06 | treća KPI pločica bila „Vani" (duplikat vremena) | trenutna temperatura termostata + ime uređaja | `f2Screens.test.tsx`, dashboard snapshot |
+| HOME-07 | „Mode: FULL · interval: …" u zasebnom bloku na dnu | u redu termostata, uz traku | `dashboardNativeWind.test.tsx` |
+
+**Redoslijed Početne (korisnikov zahtjev, F8):**
+1. Status kotla (unutar njega aktivni alerti)
+2. Trenutno vrijeme (sa „osjećajem", prevedeno stanje)
+3. Tri pločice: termostat sada · zdravlje · termostati
+4. Termostati (sa mode/interval kontekstom)
+5. Očitanja plina
+6. Razlog preporuke
+
+**Verifikacija (2026-11-07):**
+
+```
+npx tsc --noEmit                              → 0 grešaka
+npx jest                                      → 46 suite-ova, 306 testova, 32 snapshota — zeleno
+npx eslint src                                → 0 grešaka (38 warninga)
+CI=1 npx expo export --platform android --dev → bundle se gradi
+```
+
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -480,6 +531,7 @@ novi `raised` izgled trake). Nijedna asertacija nije ublažena; dvije su
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
 | F6 Greške + šest dorada | **završeno 2026-11-08** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; reduced motion za splash; 55 novih testova |
+| F8 Sheet bez gorhom-a + raspored | **završeno 2026-11-07** | `Sheet` = RN `Modal` + `Animated` (nema gorhoma, Reanimated workleta ni gesture-handlera); greška više ne ruši ekran (`undefined` toast); Početna po korisnikovom redoslijedu, alerti u status kotla, termostat-mode u kartici termostata, prevedena stanja vremena; 5 novih testova |
 | F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 13 nalaza; 12 novih testova |
 
 ### Šta je F0 stvarno isporučio

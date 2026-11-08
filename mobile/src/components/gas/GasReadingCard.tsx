@@ -5,10 +5,9 @@ import dayjs from 'dayjs';
 
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTokens } from '../../ui/theme';
-import { Led, MonoMeta, Pressable, Readout, Text } from '../../ui';
+import { Led, MonoMeta, Pressable, Readout, Sheet, Text } from '../../ui';
 import { space } from '../../theme/tokens';
 import { formatNumber, formatShortDate, formatTime } from '../../utils/format';
-import { Actionsheet } from '../ui/nativewind';
 
 /**
  * Red očitanja (prototip §04).
@@ -179,96 +178,132 @@ export const GasReadingCard = React.memo(function GasReadingCard({
         </View>
       </Pressable>
 
-      <Actionsheet isOpen={showActions} onClose={() => setShowActions(false)}>
-        <Actionsheet.Content>
-          <MonoMeta style={{ alignSelf: 'flex-start', marginBottom: 6 }}>
-            {t('gas.actionsMenuTitle')}
-          </MonoMeta>
-          {onToggleReference && (
-            <Actionsheet.Item
+      {/*
+        F9 (GAS-ACTIONS-2): akcije su preseljene sa starog `Actionsheet` sloja
+        (NativeWind, RN `Modal` bez animacije) na `Sheet`, isti primitiv kao
+        svaka druga odluka u aplikaciji. Razlog nije estetika: `Actionsheet` je
+        koristio `Modal` bez `mounted` prozora, pa se zatvarao presijecanjem, a
+        njegove `Item` komponente nisu imale `disabled` stanje — dvostruki dodir
+        na „Obriši" je poslao dva DELETE zahtjeva.
+      */}
+      <Sheet
+        isOpen={showActions}
+        onClose={() => setShowActions(false)}
+        title={t('gas.actionsMenuTitle')}
+        closeLabel={t('common.close')}
+        snapPoints={['60%']}
+        scrollable
+        testID="gas-reading-actions"
+      >
+        <View>
+          {onToggleReference ? (
+            <ActionRow
+              icon={reading.isInvoiceReference ? 'flag' : 'flag-outline'}
+              label={
+                reading.isInvoiceReference
+                  ? t('gas.actionUnsetReference')
+                  : t('gas.actionSetReference')
+              }
               onPress={() =>
                 runAction(() => onToggleReference(reading, !reading.isInvoiceReference))
               }
-            >
-              <ActionRow
-                icon={reading.isInvoiceReference ? 'flag' : 'flag-outline'}
-                label={
-                  reading.isInvoiceReference
-                    ? t('gas.actionUnsetReference')
-                    : t('gas.actionSetReference')
-                }
-              />
-            </Actionsheet.Item>
-          )}
-          {onUploadMeterImage && (
-            <Actionsheet.Item onPress={() => runAction(() => onUploadMeterImage(reading))}>
-              <ActionRow
-                icon={reading.hasMeterImage ? 'images-outline' : 'camera-outline'}
-                label={
-                  reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')
-                }
-              />
-            </Actionsheet.Item>
-          )}
-          {reading.hasMeterImage && onOpenMeterImage && (
-            <Actionsheet.Item onPress={() => runAction(() => onOpenMeterImage(reading))}>
-              <ActionRow icon="open-outline" label={t('gas.actionOpenImage')} />
-            </Actionsheet.Item>
-          )}
-          {reading.isInvoiceReference && onUploadInvoice && (
-            <Actionsheet.Item onPress={() => runAction(() => onUploadInvoice(reading))}>
-              <ActionRow
-                icon={reading.hasInvoicePdf ? 'refresh-outline' : 'document-outline'}
-                label={
-                  reading.hasInvoicePdf
-                    ? t('gas.actionReplaceInvoice')
-                    : t('gas.actionAddInvoice')
-                }
-              />
-            </Actionsheet.Item>
-          )}
-          {reading.isInvoiceReference && reading.hasInvoicePdf && onOpenInvoice && (
-            <Actionsheet.Item onPress={() => runAction(() => onOpenInvoice(reading))}>
-              <ActionRow icon="open-outline" label={t('gas.actionOpenInvoice')} />
-            </Actionsheet.Item>
-          )}
-          {reading.isInvoiceReference && reading.hasInvoicePdf && onDeleteInvoice && (
-            <Actionsheet.Item onPress={() => runAction(() => onDeleteInvoice(reading))}>
-              <ActionRow icon="trash-outline" label={t('gas.actionDeleteInvoice')} destructive />
-            </Actionsheet.Item>
-          )}
-          {onDelete && (
-            <Actionsheet.Item onPress={() => runAction(() => onDelete(reading.id))}>
-              <ActionRow icon="trash-outline" label={t('gas.actionDeleteReading')} destructive />
-            </Actionsheet.Item>
-          )}
-        </Actionsheet.Content>
-      </Actionsheet>
+            />
+          ) : null}
+          {onUploadMeterImage ? (
+            <ActionRow
+              icon={reading.hasMeterImage ? 'images-outline' : 'camera-outline'}
+              label={reading.hasMeterImage ? t('gas.actionReplaceImage') : t('gas.actionAddImage')}
+              onPress={() => runAction(() => onUploadMeterImage(reading))}
+            />
+          ) : null}
+          {reading.hasMeterImage && onOpenMeterImage ? (
+            <ActionRow
+              icon="open-outline"
+              label={t('gas.actionOpenImage')}
+              onPress={() => runAction(() => onOpenMeterImage(reading))}
+            />
+          ) : null}
+          {reading.isInvoiceReference && onUploadInvoice ? (
+            <ActionRow
+              icon={reading.hasInvoicePdf ? 'refresh-outline' : 'document-outline'}
+              label={
+                reading.hasInvoicePdf
+                  ? t('gas.actionReplaceInvoice')
+                  : t('gas.actionAddInvoice')
+              }
+              onPress={() => runAction(() => onUploadInvoice(reading))}
+            />
+          ) : null}
+          {reading.isInvoiceReference && reading.hasInvoicePdf && onOpenInvoice ? (
+            <ActionRow
+              icon="open-outline"
+              label={t('gas.actionOpenInvoice')}
+              onPress={() => runAction(() => onOpenInvoice(reading))}
+            />
+          ) : null}
+          {reading.isInvoiceReference && reading.hasInvoicePdf && onDeleteInvoice ? (
+            <ActionRow
+              icon="trash-outline"
+              label={t('gas.actionDeleteInvoice')}
+              destructive
+              onPress={() => runAction(() => onDeleteInvoice(reading))}
+            />
+          ) : null}
+          {onDelete ? (
+            <ActionRow
+              icon="trash-outline"
+              label={t('gas.actionDeleteReading')}
+              destructive
+              disabled={isBusy}
+              onPress={() => runAction(() => onDelete(reading.id))}
+            />
+          ) : null}
+        </View>
+      </Sheet>
     </View>
   );
 });
 
+/**
+ * Red akcije u sheetu: puna širina, 52 px, hairline razdjelnik i `disabled`
+ * stanje (F9). Prije su `Actionsheet.Item` redovi bili samo `px-2 py-3` bez
+ * razdjelnika, pa su se akcije stapale u jedan blok teksta.
+ */
 function ActionRow({
   icon,
   label,
   destructive = false,
+  disabled = false,
+  onPress,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   destructive?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
 }) {
   const { t: tokens } = useTokens();
   return (
-    <View style={styles.actionRow}>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      testID={`gas-action-${label}`}
+      style={[styles.actionRow, { borderBottomColor: tokens.line, opacity: disabled ? 0.5 : 1 }]}
+    >
       <Ionicons name={icon} size={20} color={destructive ? tokens.fault : tokens.ink} />
       <Text
         size="bodyLg"
         weight={destructive ? 'semibold' : 'medium'}
         tone={destructive ? 'fault' : 'ink'}
+        style={{ flex: 1 }}
       >
         {label}
       </Text>
-    </View>
+      <Ionicons name="chevron-forward" size={16} color={tokens.inkDim} />
+    </Pressable>
   );
 }
 
@@ -340,6 +375,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    minHeight: 44,
+    minHeight: 52,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth * 2,
   },
 });

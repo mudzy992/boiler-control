@@ -520,6 +520,39 @@ CI=1 npx expo export --platform android --dev → bundle se gradi
 ```
 
 
+### F9 — Plin, cijeli ekran iznova (samo taj ekran)
+
+Korisnik: „Sada je sve u redu osim ekrana GAS (Plin). Posveti se samo tom ekranu
+i refaktoriši ga da sve funkcioniše kako treba." Plin je bio jedini ekran koji je
+još miješao **dva UI sloja**: `src/ui` primitive i stari NativeWind sloj
+(`FormControl`, `Switch`, `Spinner`, `Actionsheet`, `useColorModeValue`,
+`brand.*` boje). Zato je izgledao i ponašao se drugačije od ostatka aplikacije.
+
+**Zajednički uzrok većine prijava** nije bio izgled: stari sloj je imao drugu
+semantiku stanja. `Actionsheet.Item` nije primao `disabled`, `Switch` je mijenjao
+`brand` boju koja ne postoji u tokenima, a `FormInput` je vraćao tekst koji je
+parser čitao samo sa tačkom.
+
+| Nalaz | Prije | Sada | Dokaz |
+|---|---|---|---|
+| GAS-12 unos | „1234,56" (bosanski zarez) padao kao neispravan broj | `parseFloat(value.replace(',', '.'))` + `inputMode="decimal"`, `GasNumberField` (24 px mono) | `gasRefactor.test.tsx` |
+| GAS-13 duplikat | provjera je čekala mrežni krug, pa se poruka gubila u toastu | provjera PRIJE mreže, poruka u `InlineBanner` iznad polja | `gasRefactor.test.tsx` |
+| GAS-14 forma | stari sloj: `FormControl`/`Switch`/`brand.*`, dvije labelе za datum | `Panel`/`PanelRow`/`Button`: datum i vrijeme su jedno pitanje („Sada" / „Izaberi") | `GasForm.tsx` |
+| GAS-15 akcije | `Actionsheet` bez animacije, bez `disabled`, 20 px redovi | `Sheet` + redovi 52 px sa razdjelnikom, strelicom i `disabled` stanjem | `gasRefactor.test.tsx` |
+| GAS-16 raspon | „Sačuvaj" nije primjenjivao raspon, a filter je već bio aktivan | „Sačuvaj" primjenjuje raspon i onemogućen je dok raspon nije potpun; „Očisti" vraća na „Sve" | `GasReadingsScreen.tsx` |
+| GAS-17 sažetak | tri kolone istog ranga, nije se vidjelo koji broj je glavni | potrošnja kao `Readout` lg u signalnoj boji, broj i datum kao meta; upozorenje kad je samo jedno očitanje | `gasRefactor.test.tsx` |
+| GAS-18 toastovi | četiri ručno sastavljene zelene kutije | `toast.show({ description })` — ista gramatika kao Početna | `GasReadingsScreen.tsx` |
+| SHEET-04 | `setMounted` iz callbacka animacije ⇒ `act(...)` upozorenja i nedeterminističko stanje | sklanjanje preko `setTimeout` iste dužine, briše se pri svakoj promjeni | `primitives.test.tsx` |
+
+Tokovi koji su sada pokriveni testovima: otvaranje forme preko „+" u zaglavlju,
+unos sa zarezom, odbijanje duplikata, akcije očitanja u sheetu, promjena perioda
+kroz meni i prikaz potrošnje u periodu.
+
+**Verifikacija (2026-11-07):** `tsc` 0 · `jest` 47 suite-ova / 310 testova / 32
+snapshota · `eslint src` 0 grešaka (45 warninga) · `expo export --platform
+android --dev` prolazi.
+
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -531,6 +564,7 @@ CI=1 npx expo export --platform android --dev → bundle se gradi
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
 | F6 Greške + šest dorada | **završeno 2026-11-08** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; reduced motion za splash; 55 novih testova |
+| F9 Plin iznova | **završeno 2026-11-07** | Plin više ne miješa dva UI sloja: `GasForm` i akcioni meni na `src/ui`; unos sa decimalnim zarezom, duplikat prije mreže, funkcionalan raspon datuma, sažetak sa istaknutom potrošnjom; 4 nova testa |
 | F8 Sheet bez gorhom-a + raspored | **završeno 2026-11-07** | `Sheet` = RN `Modal` + `Animated` (nema gorhoma, Reanimated workleta ni gesture-handlera); greška više ne ruši ekran (`undefined` toast); Početna po korisnikovom redoslijedu, alerti u status kotla, termostat-mode u kartici termostata, prevedena stanja vremena; 5 novih testova |
 | F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 13 nalaza; 12 novih testova |
 

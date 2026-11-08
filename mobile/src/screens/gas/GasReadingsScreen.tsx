@@ -7,17 +7,7 @@ import * as FileSystemLegacy from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Linking from 'expo-linking';
-import {
-  Box,
-  VStack,
-  HStack,
-  Text,
-  Icon,
-  useColorModeValue,
-  Pressable,
-  useToast,
-} from '../../components/ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
+import { useToast } from '../../components/ui/nativewind';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
@@ -25,7 +15,6 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { GasReadingCard } from '../../components/gas/GasReadingCard';
 import { GasForm } from '../../components/gas/GasForm';
 
-import { useTokens } from '../../ui/theme';
 import { formatDate, formatInteger, formatNumber, formatShortDate } from '../../utils/format';
 import { space } from '../../theme/tokens';
 import { SecureStorage } from '../../services/storage/SecureStorage';
@@ -42,7 +31,9 @@ import {
   Sheet,
   FilterMenuTrigger,
   FilterMenuOptions,
+  InlineBanner,
   SkeletonRows,
+  Text,
 } from '../../ui';
 // MO2-16 (MO-020): dijeljeni servis za direktorij preuzetih dokumenata, da
 // postavke i ovaj ekran čiste ISTU putanju.
@@ -105,7 +96,6 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
   const toast = useToast();
   const { showError } = useErrorHandler();
   const { t } = useTranslation();
-  const { t: tokens } = useTokens();
 
   // Handle deep link to open add modal
   React.useEffect(() => {
@@ -148,12 +138,6 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     { value: 'custom' as const, label: t('gas.filterCustom') },
   ];
 
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const mutedColor = useColorModeValue('gray.600', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'dark.700');
-  const filterBg = useColorModeValue('gray.200', 'gray.700');
-
   const {
     data: readings = [],
     isLoading,
@@ -183,17 +167,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
       setShowAddModal(false);
-      toast.show({
-        render: () => (
-          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('gas.addedSuccess')}
-            </Text>
-          </Box>
-        ),
-        duration: 2000,
-        placement: 'top',
-      });
+      toast.show({ description: t('gas.addedSuccess'), placement: 'top' });
     },
     onError: (error: any) => {
       showError(error, t('gas.addError'));
@@ -204,17 +178,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     mutationFn: (id: number) => apiClient.deleteGasReading(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      toast.show({
-        render: () => (
-          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('gas.deleteSuccess')}
-            </Text>
-          </Box>
-        ),
-        duration: 2000,
-        placement: 'top',
-      });
+      toast.show({ description: t('gas.deleteSuccess'), placement: 'top' });
     },
     onError: (error: any) => {
       showError(error, t('gas.deleteError'));
@@ -240,17 +204,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     }) => apiClient.uploadGasMeterImage(payload.id, payload.meterImage),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
-      toast.show({
-        render: () => (
-          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('gas.meterImageUploaded')}
-            </Text>
-          </Box>
-        ),
-        duration: 2000,
-        placement: 'top',
-      });
+      toast.show({ description: t('gas.meterImageUploaded'), placement: 'top' });
     },
     onError: (error: any) => {
       showError(error, t('gas.meterImageUploadError'));
@@ -266,17 +220,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gas-readings'] });
       queryClient.invalidateQueries({ queryKey: ['gas-analysis'] });
-      toast.show({
-        render: () => (
-          <Box bg="green.500" px={3} py={2} rounded="md" mb={2}>
-            <Text color="white" fontSize="sm">
-              {t('gas.invoiceUploaded')}
-            </Text>
-          </Box>
-        ),
-        duration: 2000,
-        placement: 'top',
-      });
+      toast.show({ description: t('gas.invoiceUploaded'), placement: 'top' });
     },
     onError: (error: any) => {
       showError(error, t('gas.invoiceUploadError'));
@@ -702,51 +646,40 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         keyExtractor={(item) => String(item.id)}
         renderItem={renderReadingItem}
         ListHeaderComponent={
-          <VStack space={4} mb={4} px={4} pt={2}>
+          <View style={{ gap: space.md, paddingHorizontal: space.lg, paddingTop: space.sm }}>
             {/* F1: sekcijska traka (Očitanja | Analiza) iz GasScreen-a */}
             {headerSlot}
 
-            {/* Sažetak iznad liste (prototip §04): mjesec, potrošnja, broj zapisa */}
+            {/*
+              F9 (GAS-SUMMARY): sažetak je prije bio tri kolone istog ranga —
+              potrošnja, broj, datum — pa se nije vidjelo koji broj je glavni, a
+              labele su bile 11 px. Sada je potrošnja istaknuta (`Readout` lg,
+              signalna boja), a broj očitanja i zadnji datum su meta ispod nje.
+              Isti obrazac kao hero blok na Početnoj.
+            */}
             <Panel variant="flush" padded={false} testID="gas-summary">
               <PanelRow divider={false}>
-                <View style={{ flexDirection: 'row', gap: space.md }}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <MonoLabel>
-                      {dateFilter === 'week'
-                        ? t('gas.filterLastWeek')
-                        : dateFilter === 'month'
-                          ? t('gas.summaryMonth')
-                          : dateFilter === 'year'
-                            ? t('gas.filterYear')
-                            : dateFilter === 'custom'
-                              ? t('gas.filterCustom')
-                              : t('gas.filterAll')}
-                    </MonoLabel>
-                    <Readout
-                      value={formatNumber(periodConsumption)}
-                      unit="m³"
-                      size="md"
-                      tone="ink"
-                      testID="gas-period-consumption"
-                    />
-                  </View>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <MonoLabel>{t('gas.totalReadings')}</MonoLabel>
-                    <Readout
-                      value={formatInteger(filteredReadings.length)}
-                      size="md"
-                      tone="muted"
-                      testID="gas-readings-count"
-                    />
-                  </View>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <MonoLabel>{t('gas.lastReading')}</MonoLabel>
-                    <MonoMeta>
-                      {filteredReadings.length > 0
+                <View style={{ gap: 4, flex: 1 }}>
+                  <MonoLabel>{t('gas.consumptionInPeriod')}</MonoLabel>
+                  <Readout
+                    value={formatNumber(periodConsumption)}
+                    unit="m³"
+                    size="lg"
+                    tone={periodConsumption > 0 ? 'signal' : 'muted'}
+                    testID="gas-period-consumption"
+                  />
+                  <MonoMeta>
+                    {`${t('gas.totalReadings')}: ${formatInteger(filteredReadings.length)} · ${
+                      t('gas.lastReading')
+                    }: ${
+                      filteredReadings.length > 0
                         ? formatShortDate(filteredReadings[0].readingDate)
-                        : '—'}
-                    </MonoMeta>
-                  </View>
+                        : '—'
+                    }`}
+                  </MonoMeta>
+                  {filteredReadings.length === 1 ? (
+                    <MonoMeta tone="dim">{t('gas.needTwoReadingsForConsumption')}</MonoMeta>
+                  ) : null}
                 </View>
               </PanelRow>
             </Panel>
@@ -759,26 +692,24 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
               kaže IZABRANI period („Period: Sve ⌄") i otvara `Sheet` sa radio
               listom. „Raspon" je i dalje opcija u listi i otvara birač datuma.
             */}
-            <FilterMenuTrigger
-              label={t('gas.period')}
-              value={dateFilter}
-              options={filterOptions}
-              onPress={() => setShowFilterMenu(true)}
-              testID="gas-filter-menu"
-            />
-
             <View
               style={{
                 flexDirection: 'row',
-                justifyContent: 'space-between',
                 alignItems: 'center',
-                marginTop: 4,
+                justifyContent: 'space-between',
+                gap: space.sm,
               }}
             >
-              <MonoLabel>{t('gas.readings')}</MonoLabel>
+              <FilterMenuTrigger
+                label={t('gas.period')}
+                value={dateFilter}
+                options={filterOptions}
+                onPress={() => setShowFilterMenu(true)}
+                testID="gas-filter-menu"
+              />
               <MonoMeta>{t('gas.readingCount', { count: filteredReadings.length })}</MonoMeta>
             </View>
-          </VStack>
+          </View>
         }
         /*
           F6 (GAS-10): prazno stanje je samo TEKST — „nema očitanja u periodu,
@@ -853,7 +784,7 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         onClose={() => setShowAddModal(false)}
         title={t('gas.addReading')}
         closeLabel={t('common.close')}
-        snapPoints={['75%', '95%']}
+        snapPoints={['85%']}
         scrollable
         testID="gas-add-sheet"
       >
@@ -874,16 +805,23 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         snapPoints={['40%']}
         testID="gas-meter-image-sheet"
       >
-        <VStack space={3}>
-          <Text fontSize="sm" color={textColor}>
+        <View style={{ gap: space.md }}>
+          <Text size="body" tone="muted">
             {t('gas.meterImageActionPrompt')}
           </Text>
-          <Button label={t('gas.selectImage')} block onPress={handlePickFromGallery} />
+          <Button
+            label={t('gas.selectImage')}
+            variant="secondary"
+            block
+            onPress={handlePickFromGallery}
+            style={{ minHeight: 48 }}
+          />
           <Button
             label={t('gas.takePhoto')}
             variant="secondary"
             block
             onPress={handleTakePhoto}
+            style={{ minHeight: 48 }}
           />
           <Button
             label={t('common.cancel')}
@@ -891,195 +829,113 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
             block
             onPress={() => setMeterImageReading(null)}
           />
-        </VStack>
+        </View>
       </Sheet>
 
-      {/* Date Range Picker Modal */}
+      {/*
+        F9 (GAS-DATERANGE): birač raspona je bio najveći ostatak starog sloja —
+        `Box`/`VStack`/`HStack` + `bg={filterBg}` + `rounded="lg"` + 12 px tekst
+        i tri „brza" dugmeta bez ikakve veze sa tokenima. Sada: `PanelRow` za
+        svaku stavku, `Button` za svaku akciju, datum kroz `formatDate` (isti
+        format kao lista) i `InlineBanner` koji objašnjava šta „Sačuvaj" radi —
+        prije je dugme samo zatvaralo sheet, a filter je već bio primijenjen,
+        pa je korisnik čekao potvrdu koja nije postojala.
+      */}
       <Sheet
         isOpen={showDateRangePicker}
         onClose={() => setShowDateRangePicker(false)}
         title={t('gas.dateRange.title')}
         closeLabel={t('common.close')}
-        snapPoints={['60%', '85%']}
+        snapPoints={['62%', '85%']}
         scrollable
         testID="gas-date-range-sheet"
       >
-        <VStack space={4}>
-          <VStack space={4}>
-            {/* Start Date */}
-            <Box>
-              <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                {t('gas.dateRange.startDate')}
-              </Text>
-              <Pressable
-                onPress={() => setShowStartPicker(true)}
-                accessibilityRole="button"
-                accessibilityLabel={`${t('gas.dateRange.startDate')}: ${
-                  customStartDate
-                    ? formatDate(customStartDate)
-                    : t('gas.dateRange.selectStart')
-                }`}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                bg={filterBg}
-                px={4}
-                py={3}
-                rounded="lg"
-                borderWidth={1}
-                borderColor={borderColor}
-              >
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text color={textColor} fontSize="sm">
-                    {customStartDate
+        <View style={{ gap: space.lg }}>
+          <Panel variant="flush" padded={false}>
+            <PanelRow divider>
+              <View style={{ flex: 1, gap: space.sm }}>
+                <MonoLabel>{t('gas.dateRange.startDate')}</MonoLabel>
+                <Button
+                  label={
+                    customStartDate
                       ? formatDate(customStartDate)
-                      : t('gas.dateRange.selectStart')}
-                  </Text>
-                  <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
-                </HStack>
-              </Pressable>
-            </Box>
+                      : t('gas.dateRange.selectStart')
+                  }
+                  variant="secondary"
+                  block
+                  onPress={() => setShowStartPicker(true)}
+                  testID="gas-range-start"
+                />
+              </View>
+            </PanelRow>
+            <PanelRow divider={false}>
+              <View style={{ flex: 1, gap: space.sm }}>
+                <MonoLabel>{t('gas.dateRange.endDate')}</MonoLabel>
+                <Button
+                  label={
+                    customEndDate ? formatDate(customEndDate) : t('gas.dateRange.selectEnd')
+                  }
+                  variant="secondary"
+                  block
+                  onPress={() => setShowEndPicker(true)}
+                  testID="gas-range-end"
+                />
+              </View>
+            </PanelRow>
+          </Panel>
 
-            {/* End Date */}
-            <Box>
-              <Text fontSize="sm" fontWeight="600" color={textColor} mb={2}>
-                {t('gas.dateRange.endDate')}
-              </Text>
-              <Pressable
-                onPress={() => setShowEndPicker(true)}
-                accessibilityRole="button"
-                accessibilityLabel={`${t('gas.dateRange.endDate')}: ${
-                  customEndDate ? formatDate(customEndDate) : t('gas.dateRange.selectEnd')
-                }`}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                bg={filterBg}
-                px={4}
-                py={3}
-                rounded="lg"
-                borderWidth={1}
-                borderColor={borderColor}
-              >
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text color={textColor} fontSize="sm">
-                    {customEndDate
-                      ? formatDate(customEndDate)
-                      : t('gas.dateRange.selectEnd')}
-                  </Text>
-                  <Icon as={Ionicons} name="calendar" size={5} color={subtextColor} />
-                </HStack>
-              </Pressable>
-            </Box>
-
-            {/* Quick Presets */}
-            <VStack space={2}>
-              <Text fontSize="xs" fontWeight="600" color={mutedColor} mb={1}>
-                {t('gas.dateRange.quickPresets')}
-              </Text>
-              <VStack space={2}>
-                <HStack space={2}>
-                  <Pressable
-                    onPress={() => {
-                      const end = new Date();
-                      const start = new Date();
-                      start.setDate(end.getDate() - 30);
-                      setCustomStartDate(start);
-                      setCustomEndDate(end);
-                    }}
-                    bg={filterBg}
-                    px={3}
-                    py={2}
-                    rounded="md"
-                    flex={1}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('gas.dateRange.last30')}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Text fontSize="xs" color={textColor} textAlign="center">
-                      {t('gas.dateRange.last30')}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => {
-                      const end = new Date();
-                      const start = new Date();
-                      start.setDate(end.getDate() - 60);
-                      setCustomStartDate(start);
-                      setCustomEndDate(end);
-                    }}
-                    bg={filterBg}
-                    px={3}
-                    py={2}
-                    rounded="md"
-                    flex={1}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('gas.dateRange.last60')}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Text fontSize="xs" color={textColor} textAlign="center">
-                      {t('gas.dateRange.last60')}
-                    </Text>
-                  </Pressable>
-                </HStack>
-                <Pressable
+          <View style={{ gap: space.sm }}>
+            <MonoLabel>{t('gas.dateRange.quickPresets')}</MonoLabel>
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              {[30, 60, 90].map((days) => (
+                <Button
+                  key={days}
+                  label={t(`gas.dateRange.last${days}`)}
+                  variant="ghost"
+                  style={{ flex: 1 }}
                   onPress={() => {
                     const end = new Date();
                     const start = new Date();
-                    start.setDate(end.getDate() - 90);
+                    start.setDate(end.getDate() - days);
                     setCustomStartDate(start);
                     setCustomEndDate(end);
                   }}
-                  bg={filterBg}
-                  px={3}
-                  py={2}
-                  rounded="md"
-                  accessibilityRole="button"
-                  accessibilityLabel={t('gas.dateRange.last90')}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text fontSize="xs" color={textColor} textAlign="center">
-                    {t('gas.dateRange.last90')}
-                  </Text>
-                </Pressable>
-              </VStack>
-            </VStack>
-          </VStack>
+                />
+              ))}
+            </View>
+          </View>
 
-          {/* Button group for date range modal */}
-          <HStack space={3} w="full" mt={4}>
-            <Pressable
-              flex={1}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.clear')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          <InlineBanner tone="info" title={t('gas.dateRangeApplyHint')} />
+
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Button
+              label={t('common.clear')}
+              variant="ghost"
+              style={{ flex: 1 }}
               onPress={() => {
                 setCustomStartDate(null);
                 setCustomEndDate(null);
+                setDateFilter('all');
                 setShowDateRangePicker(false);
               }}
-              bg={filterBg}
-              py={3}
-              rounded="lg"
-              alignItems="center"
-            >
-              <Text fontSize="sm" fontWeight="600" color={textColor}>
-                {t('common.clear')}
-              </Text>
-            </Pressable>
-            <Pressable
-              flex={1}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.save')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              onPress={() => setShowDateRangePicker(false)}
-              bg={tokens.signal}
-              py={3}
-              rounded="lg"
-              alignItems="center"
-            >
-              <Text fontSize="sm" fontWeight="600" color={tokens.onSignal}>
-                {t('common.save')}
-              </Text>
-            </Pressable>
-          </HStack>
-        </VStack>
+            />
+            <Button
+              label={t('common.save')}
+              variant="primary"
+              style={{ flex: 1 }}
+              onPress={() => {
+                // „Sačuvaj" ima smisla samo kad je raspon potpun; inače filter
+                // ostaje na prethodnom stanju umjesto da tiho pokaže sve.
+                if (customStartDate && customEndDate) {
+                  setDateFilter('custom');
+                }
+                setShowDateRangePicker(false);
+              }}
+              disabled={!customStartDate || !customEndDate}
+              testID="gas-range-save"
+            />
+          </View>
+        </View>
       </Sheet>
 
       {/* Start Date Picker */}

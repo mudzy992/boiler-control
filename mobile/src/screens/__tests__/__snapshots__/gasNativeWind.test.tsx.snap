@@ -2918,11 +2918,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
         />
       }
       ListHeaderComponent={
-        <VStack
-          mb={4}
-          pt={2}
-          px={4}
-          space={4}
+        <View
+          style={
+            {
+              "gap": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            }
+          }
         >
           <Panel
             padded={false}
@@ -2935,114 +2938,77 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               <View
                 style={
                   {
-                    "flexDirection": "row",
-                    "gap": 12,
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
+                <MonoLabel>
+                  gas.consumptionInPeriod
+                </MonoLabel>
+                <Readout
+                  size="lg"
+                  testID="gas-period-consumption"
+                  tone="muted"
+                  unit="m³"
+                  value="0.00"
+                />
+                <MonoMeta>
+                  gas.totalReadings: 1 · gas.lastReading: 01/15
+                </MonoMeta>
+                <MonoMeta
+                  tone="dim"
                 >
-                  <MonoLabel>
-                    gas.filterAll
-                  </MonoLabel>
-                  <Readout
-                    size="md"
-                    testID="gas-period-consumption"
-                    tone="ink"
-                    unit="m³"
-                    value="0.00"
-                  />
-                </View>
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <MonoLabel>
-                    gas.totalReadings
-                  </MonoLabel>
-                  <Readout
-                    size="md"
-                    testID="gas-readings-count"
-                    tone="muted"
-                    value="1"
-                  />
-                </View>
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <MonoLabel>
-                    gas.lastReading
-                  </MonoLabel>
-                  <MonoMeta>
-                    01/15
-                  </MonoMeta>
-                </View>
+                  gas.needTwoReadingsForConsumption
+                </MonoMeta>
               </View>
             </PanelRow>
           </Panel>
-          <FilterMenuTrigger
-            label="gas.period"
-            onPress={[Function]}
-            options={
-              [
-                {
-                  "label": "gas.filterLastWeek",
-                  "value": "week",
-                },
-                {
-                  "label": "gas.filterMonth",
-                  "value": "month",
-                },
-                {
-                  "label": "gas.filterYear",
-                  "value": "year",
-                },
-                {
-                  "label": "gas.filterAll",
-                  "value": "all",
-                },
-                {
-                  "label": "gas.filterCustom",
-                  "value": "custom",
-                },
-              ]
-            }
-            testID="gas-filter-menu"
-            value="all"
-          />
           <View
             style={
               {
                 "alignItems": "center",
                 "flexDirection": "row",
+                "gap": 8,
                 "justifyContent": "space-between",
-                "marginTop": 4,
               }
             }
           >
-            <MonoLabel>
-              gas.readings
-            </MonoLabel>
+            <FilterMenuTrigger
+              label="gas.period"
+              onPress={[Function]}
+              options={
+                [
+                  {
+                    "label": "gas.filterLastWeek",
+                    "value": "week",
+                  },
+                  {
+                    "label": "gas.filterMonth",
+                    "value": "month",
+                  },
+                  {
+                    "label": "gas.filterYear",
+                    "value": "year",
+                  },
+                  {
+                    "label": "gas.filterAll",
+                    "value": "all",
+                  },
+                  {
+                    "label": "gas.filterCustom",
+                    "value": "custom",
+                  },
+                ]
+              }
+              testID="gas-filter-menu"
+              value="all"
+            />
             <MonoMeta>
               gas.readingCount
             </MonoMeta>
           </View>
-        </VStack>
+        </View>
       }
       contentContainerStyle={
         {
@@ -3098,13 +3064,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
           onLayout={[Function]}
         >
           <View
-            className="flex flex-col"
             style={
               {
-                "gap": 16,
-                "marginBottom": 16,
-                "paddingLeft": 16,
-                "paddingRight": 16,
+                "gap": 12,
+                "paddingHorizontal": 16,
                 "paddingTop": 8,
               }
             }
@@ -3144,222 +3107,127 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 <View
                   style={
                     {
-                      "flexDirection": "row",
-                      "gap": 12,
+                      "flex": 1,
+                      "gap": 4,
                     }
                   }
                 >
-                  <View
+                  <Text
                     style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
+                      [
+                        {
+                          "color": "#828d9e",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "lineHeight": 15,
+                        },
+                        null,
+                        [
+                          {
+                            "letterSpacing": 1.4,
+                            "textTransform": "uppercase",
+                          },
+                          undefined,
+                        ],
+                      ]
                     }
+                  >
+                    gas.consumptionInPeriod
+                  </Text>
+                  <View
+                    accessible={false}
+                    style={
+                      [
+                        {
+                          "alignItems": "flex-end",
+                          "flexDirection": "row",
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                    testID="gas-period-consumption"
                   >
                     <Text
                       style={
                         [
                           {
-                            "color": "#828d9e",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "lineHeight": 15,
+                            "color": "#e8edf4",
+                            "fontFamily": undefined,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
-                          [
-                            {
-                              "letterSpacing": 1.4,
-                              "textTransform": "uppercase",
-                            },
-                            undefined,
-                          ],
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": "monospace",
+                            "fontSize": 28,
+                            "fontVariant": [
+                              "tabular-nums",
+                            ],
+                            "letterSpacing": -0.5,
+                            "lineHeight": 29.400000000000002,
+                          },
                         ]
                       }
                     >
-                      gas.filterAll
+                      0.00
                     </Text>
-                    <View
-                      accessible={false}
+                    <Text
                       style={
                         [
                           {
-                            "alignItems": "flex-end",
-                            "flexDirection": "row",
+                            "color": "#e8edf4",
+                            "fontFamily": undefined,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
-                          undefined,
+                          {
+                            "color": "#9aa6b6",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "marginBottom": 2,
+                            "marginLeft": 3,
+                          },
                         ]
                       }
-                      testID="gas-period-consumption"
                     >
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#e8edf4",
-                              "fontFamily": undefined,
-                              "fontSize": 15,
-                              "lineHeight": 20,
-                            },
-                            null,
-                            {
-                              "color": "#e8edf4",
-                              "fontFamily": "monospace",
-                              "fontSize": 16,
-                              "fontVariant": [
-                                "tabular-nums",
-                              ],
-                              "letterSpacing": -0.5,
-                              "lineHeight": 16.8,
-                            },
-                          ]
-                        }
-                      >
-                        0.00
-                      </Text>
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#e8edf4",
-                              "fontFamily": undefined,
-                              "fontSize": 15,
-                              "lineHeight": 20,
-                            },
-                            null,
-                            {
-                              "color": "#9aa6b6",
-                              "fontFamily": "monospace",
-                              "fontSize": 11,
-                              "marginBottom": 2,
-                              "marginLeft": 3,
-                            },
-                          ]
-                        }
-                      >
-                        m³
-                      </Text>
-                    </View>
+                      m³
+                    </Text>
                   </View>
-                  <View
+                  <Text
                     style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
+                      [
+                        {
+                          "color": "#828d9e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
                     }
                   >
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#828d9e",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "lineHeight": 15,
-                          },
-                          null,
-                          [
-                            {
-                              "letterSpacing": 1.4,
-                              "textTransform": "uppercase",
-                            },
-                            undefined,
-                          ],
-                        ]
-                      }
-                    >
-                      gas.totalReadings
-                    </Text>
-                    <View
-                      accessible={false}
-                      style={
-                        [
-                          {
-                            "alignItems": "flex-end",
-                            "flexDirection": "row",
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                      testID="gas-readings-count"
-                    >
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#e8edf4",
-                              "fontFamily": undefined,
-                              "fontSize": 15,
-                              "lineHeight": 20,
-                            },
-                            null,
-                            {
-                              "color": "#9aa6b6",
-                              "fontFamily": "monospace",
-                              "fontSize": 16,
-                              "fontVariant": [
-                                "tabular-nums",
-                              ],
-                              "letterSpacing": -0.5,
-                              "lineHeight": 16.8,
-                            },
-                          ]
-                        }
-                      >
-                        1
-                      </Text>
-                    </View>
-                  </View>
-                  <View
+                    gas.totalReadings: 1 · gas.lastReading: 01/15
+                  </Text>
+                  <Text
                     style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
+                      [
+                        {
+                          "color": "#828d9e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
                     }
                   >
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#828d9e",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "lineHeight": 15,
-                          },
-                          null,
-                          [
-                            {
-                              "letterSpacing": 1.4,
-                              "textTransform": "uppercase",
-                            },
-                            undefined,
-                          ],
-                        ]
-                      }
-                    >
-                      gas.lastReading
-                    </Text>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#828d9e",
-                            "fontFamily": "monospace",
-                            "fontSize": 12,
-                            "lineHeight": 16,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      01/15
-                    </Text>
-                  </View>
+                    gas.needTwoReadingsForConsumption
+                  </Text>
                 </View>
               </View>
             </View>
@@ -3369,135 +3237,113 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   "alignItems": "center",
                   "flexDirection": "row",
                   "gap": 8,
+                  "justifyContent": "space-between",
                 }
               }
             >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#828d9e",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "lineHeight": 15,
-                    },
-                    null,
-                    {
-                      "letterSpacing": 1.2,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
-                gas.period:
-              </Text>
               <View
-                accessibilityHint="gas.filterMenuHint"
-                accessibilityLabel="gas.period: gas.filterAll"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": false,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
                 style={
                   {
                     "alignItems": "center",
-                    "backgroundColor": "#0b0f16",
-                    "borderColor": "#1f2733",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
                     "flexDirection": "row",
                     "gap": 8,
-                    "minHeight": 44,
-                    "paddingHorizontal": 12,
                   }
                 }
-                testID="gas-filter-menu"
               >
                 <Text
-                  numberOfLines={1}
                   style={
                     [
                       {
-                        "color": "#e8edf4",
-                        "fontFamily": undefined,
-                        "fontSize": 15,
-                        "lineHeight": 20,
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
                       },
                       null,
                       {
-                        "color": "#e8edf4",
-                        "fontFamily": undefined,
+                        "letterSpacing": 1.2,
+                        "textTransform": "uppercase",
                       },
                     ]
                   }
                 >
-                  gas.filterAll
+                  gas.period:
                 </Text>
-                <Text
-                  accessibilityLabel="chevron-down"
-                >
-                  chevron-down
-                </Text>
-              </View>
-            </View>
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "marginTop": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
+                <View
+                  accessibilityHint="gas.filterMenuHint"
+                  accessibilityLabel="gas.period: gas.filterAll"
+                  accessibilityRole="button"
+                  accessibilityState={
                     {
-                      "color": "#828d9e",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "lineHeight": 15,
-                    },
-                    null,
-                    [
-                      {
-                        "letterSpacing": 1.4,
-                        "textTransform": "uppercase",
-                      },
-                      undefined,
-                    ],
-                  ]
-                }
-              >
-                gas.readings
-              </Text>
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": false,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#0b0f16",
+                      "borderColor": "#1f2733",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "flexDirection": "row",
+                      "gap": 8,
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
+                    }
+                  }
+                  testID="gas-filter-menu"
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    gas.filterAll
+                  </Text>
+                  <Text
+                    accessibilityLabel="chevron-down"
+                  >
+                    chevron-down
+                  </Text>
+                </View>
+              </View>
               <Text
                 style={
                   [
@@ -4007,11 +3853,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
         />
       }
       ListHeaderComponent={
-        <VStack
-          mb={4}
-          pt={2}
-          px={4}
-          space={4}
+        <View
+          style={
+            {
+              "gap": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            }
+          }
         >
           <Panel
             padded={false}
@@ -4024,114 +3873,77 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               <View
                 style={
                   {
-                    "flexDirection": "row",
-                    "gap": 12,
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
+                <MonoLabel>
+                  gas.consumptionInPeriod
+                </MonoLabel>
+                <Readout
+                  size="lg"
+                  testID="gas-period-consumption"
+                  tone="muted"
+                  unit="m³"
+                  value="0.00"
+                />
+                <MonoMeta>
+                  gas.totalReadings: 1 · gas.lastReading: 01/15
+                </MonoMeta>
+                <MonoMeta
+                  tone="dim"
                 >
-                  <MonoLabel>
-                    gas.filterAll
-                  </MonoLabel>
-                  <Readout
-                    size="md"
-                    testID="gas-period-consumption"
-                    tone="ink"
-                    unit="m³"
-                    value="0.00"
-                  />
-                </View>
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <MonoLabel>
-                    gas.totalReadings
-                  </MonoLabel>
-                  <Readout
-                    size="md"
-                    testID="gas-readings-count"
-                    tone="muted"
-                    value="1"
-                  />
-                </View>
-                <View
-                  style={
-                    {
-                      "flex": 1,
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <MonoLabel>
-                    gas.lastReading
-                  </MonoLabel>
-                  <MonoMeta>
-                    01/15
-                  </MonoMeta>
-                </View>
+                  gas.needTwoReadingsForConsumption
+                </MonoMeta>
               </View>
             </PanelRow>
           </Panel>
-          <FilterMenuTrigger
-            label="gas.period"
-            onPress={[Function]}
-            options={
-              [
-                {
-                  "label": "gas.filterLastWeek",
-                  "value": "week",
-                },
-                {
-                  "label": "gas.filterMonth",
-                  "value": "month",
-                },
-                {
-                  "label": "gas.filterYear",
-                  "value": "year",
-                },
-                {
-                  "label": "gas.filterAll",
-                  "value": "all",
-                },
-                {
-                  "label": "gas.filterCustom",
-                  "value": "custom",
-                },
-              ]
-            }
-            testID="gas-filter-menu"
-            value="all"
-          />
           <View
             style={
               {
                 "alignItems": "center",
                 "flexDirection": "row",
+                "gap": 8,
                 "justifyContent": "space-between",
-                "marginTop": 4,
               }
             }
           >
-            <MonoLabel>
-              gas.readings
-            </MonoLabel>
+            <FilterMenuTrigger
+              label="gas.period"
+              onPress={[Function]}
+              options={
+                [
+                  {
+                    "label": "gas.filterLastWeek",
+                    "value": "week",
+                  },
+                  {
+                    "label": "gas.filterMonth",
+                    "value": "month",
+                  },
+                  {
+                    "label": "gas.filterYear",
+                    "value": "year",
+                  },
+                  {
+                    "label": "gas.filterAll",
+                    "value": "all",
+                  },
+                  {
+                    "label": "gas.filterCustom",
+                    "value": "custom",
+                  },
+                ]
+              }
+              testID="gas-filter-menu"
+              value="all"
+            />
             <MonoMeta>
               gas.readingCount
             </MonoMeta>
           </View>
-        </VStack>
+        </View>
       }
       contentContainerStyle={
         {
@@ -4187,13 +3999,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
           onLayout={[Function]}
         >
           <View
-            className="flex flex-col"
             style={
               {
-                "gap": 16,
-                "marginBottom": 16,
-                "paddingLeft": 16,
-                "paddingRight": 16,
+                "gap": 12,
+                "paddingHorizontal": 16,
                 "paddingTop": 8,
               }
             }
@@ -4233,222 +4042,127 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 <View
                   style={
                     {
-                      "flexDirection": "row",
-                      "gap": 12,
+                      "flex": 1,
+                      "gap": 4,
                     }
                   }
                 >
-                  <View
+                  <Text
                     style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
+                      [
+                        {
+                          "color": "#59616e",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "lineHeight": 15,
+                        },
+                        null,
+                        [
+                          {
+                            "letterSpacing": 1.4,
+                            "textTransform": "uppercase",
+                          },
+                          undefined,
+                        ],
+                      ]
                     }
+                  >
+                    gas.consumptionInPeriod
+                  </Text>
+                  <View
+                    accessible={false}
+                    style={
+                      [
+                        {
+                          "alignItems": "flex-end",
+                          "flexDirection": "row",
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                    testID="gas-period-consumption"
                   >
                     <Text
                       style={
                         [
                           {
-                            "color": "#59616e",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "lineHeight": 15,
+                            "color": "#111827",
+                            "fontFamily": undefined,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
-                          [
-                            {
-                              "letterSpacing": 1.4,
-                              "textTransform": "uppercase",
-                            },
-                            undefined,
-                          ],
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": "monospace",
+                            "fontSize": 28,
+                            "fontVariant": [
+                              "tabular-nums",
+                            ],
+                            "letterSpacing": -0.5,
+                            "lineHeight": 29.400000000000002,
+                          },
                         ]
                       }
                     >
-                      gas.filterAll
+                      0.00
                     </Text>
-                    <View
-                      accessible={false}
+                    <Text
                       style={
                         [
                           {
-                            "alignItems": "flex-end",
-                            "flexDirection": "row",
+                            "color": "#111827",
+                            "fontFamily": undefined,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
-                          undefined,
+                          {
+                            "color": "#4b5563",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "marginBottom": 2,
+                            "marginLeft": 3,
+                          },
                         ]
                       }
-                      testID="gas-period-consumption"
                     >
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#111827",
-                              "fontFamily": undefined,
-                              "fontSize": 15,
-                              "lineHeight": 20,
-                            },
-                            null,
-                            {
-                              "color": "#111827",
-                              "fontFamily": "monospace",
-                              "fontSize": 16,
-                              "fontVariant": [
-                                "tabular-nums",
-                              ],
-                              "letterSpacing": -0.5,
-                              "lineHeight": 16.8,
-                            },
-                          ]
-                        }
-                      >
-                        0.00
-                      </Text>
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#111827",
-                              "fontFamily": undefined,
-                              "fontSize": 15,
-                              "lineHeight": 20,
-                            },
-                            null,
-                            {
-                              "color": "#4b5563",
-                              "fontFamily": "monospace",
-                              "fontSize": 11,
-                              "marginBottom": 2,
-                              "marginLeft": 3,
-                            },
-                          ]
-                        }
-                      >
-                        m³
-                      </Text>
-                    </View>
+                      m³
+                    </Text>
                   </View>
-                  <View
+                  <Text
                     style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
+                      [
+                        {
+                          "color": "#59616e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
                     }
                   >
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#59616e",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "lineHeight": 15,
-                          },
-                          null,
-                          [
-                            {
-                              "letterSpacing": 1.4,
-                              "textTransform": "uppercase",
-                            },
-                            undefined,
-                          ],
-                        ]
-                      }
-                    >
-                      gas.totalReadings
-                    </Text>
-                    <View
-                      accessible={false}
-                      style={
-                        [
-                          {
-                            "alignItems": "flex-end",
-                            "flexDirection": "row",
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                      testID="gas-readings-count"
-                    >
-                      <Text
-                        style={
-                          [
-                            {
-                              "color": "#111827",
-                              "fontFamily": undefined,
-                              "fontSize": 15,
-                              "lineHeight": 20,
-                            },
-                            null,
-                            {
-                              "color": "#4b5563",
-                              "fontFamily": "monospace",
-                              "fontSize": 16,
-                              "fontVariant": [
-                                "tabular-nums",
-                              ],
-                              "letterSpacing": -0.5,
-                              "lineHeight": 16.8,
-                            },
-                          ]
-                        }
-                      >
-                        1
-                      </Text>
-                    </View>
-                  </View>
-                  <View
+                    gas.totalReadings: 1 · gas.lastReading: 01/15
+                  </Text>
+                  <Text
                     style={
-                      {
-                        "flex": 1,
-                        "gap": 2,
-                      }
+                      [
+                        {
+                          "color": "#59616e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
                     }
                   >
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#59616e",
-                            "fontFamily": "monospace",
-                            "fontSize": 11,
-                            "lineHeight": 15,
-                          },
-                          null,
-                          [
-                            {
-                              "letterSpacing": 1.4,
-                              "textTransform": "uppercase",
-                            },
-                            undefined,
-                          ],
-                        ]
-                      }
-                    >
-                      gas.lastReading
-                    </Text>
-                    <Text
-                      style={
-                        [
-                          {
-                            "color": "#59616e",
-                            "fontFamily": "monospace",
-                            "fontSize": 12,
-                            "lineHeight": 16,
-                          },
-                          null,
-                          undefined,
-                        ]
-                      }
-                    >
-                      01/15
-                    </Text>
-                  </View>
+                    gas.needTwoReadingsForConsumption
+                  </Text>
                 </View>
               </View>
             </View>
@@ -4458,135 +4172,113 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "alignItems": "center",
                   "flexDirection": "row",
                   "gap": 8,
+                  "justifyContent": "space-between",
                 }
               }
             >
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#59616e",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "lineHeight": 15,
-                    },
-                    null,
-                    {
-                      "letterSpacing": 1.2,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
-                gas.period:
-              </Text>
               <View
-                accessibilityHint="gas.filterMenuHint"
-                accessibilityLabel="gas.period: gas.filterAll"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": false,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
                 style={
                   {
                     "alignItems": "center",
-                    "backgroundColor": "#ffffff",
-                    "borderColor": "#dce0e8",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
                     "flexDirection": "row",
                     "gap": 8,
-                    "minHeight": 44,
-                    "paddingHorizontal": 12,
                   }
                 }
-                testID="gas-filter-menu"
               >
                 <Text
-                  numberOfLines={1}
                   style={
                     [
                       {
-                        "color": "#111827",
-                        "fontFamily": undefined,
-                        "fontSize": 15,
-                        "lineHeight": 20,
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
                       },
                       null,
                       {
-                        "color": "#111827",
-                        "fontFamily": undefined,
+                        "letterSpacing": 1.2,
+                        "textTransform": "uppercase",
                       },
                     ]
                   }
                 >
-                  gas.filterAll
+                  gas.period:
                 </Text>
-                <Text
-                  accessibilityLabel="chevron-down"
-                >
-                  chevron-down
-                </Text>
-              </View>
-            </View>
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                  "marginTop": 4,
-                }
-              }
-            >
-              <Text
-                style={
-                  [
+                <View
+                  accessibilityHint="gas.filterMenuHint"
+                  accessibilityLabel="gas.period: gas.filterAll"
+                  accessibilityRole="button"
+                  accessibilityState={
                     {
-                      "color": "#59616e",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "lineHeight": 15,
-                    },
-                    null,
-                    [
-                      {
-                        "letterSpacing": 1.4,
-                        "textTransform": "uppercase",
-                      },
-                      undefined,
-                    ],
-                  ]
-                }
-              >
-                gas.readings
-              </Text>
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": false,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "backgroundColor": "#ffffff",
+                      "borderColor": "#dce0e8",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "flexDirection": "row",
+                      "gap": 8,
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
+                    }
+                  }
+                  testID="gas-filter-menu"
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    gas.filterAll
+                  </Text>
+                  <Text
+                    accessibilityLabel="chevron-down"
+                  >
+                    chevron-down
+                  </Text>
+                </View>
+              </View>
               <Text
                 style={
                   [

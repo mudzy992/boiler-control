@@ -1,29 +1,16 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  VStack,
-  FormControl,
-  Button,
-  useColorModeValue,
-  Text,
-  Pressable,
-  HStack,
-  Icon,
-  Spinner,
-  Switch,
-  useToast,
-} from '../ui/nativewind';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { Platform, View } from 'react-native';
 import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import dayjs from 'dayjs';
-import { FormInput } from '../FormInput';
+import * as ImagePicker from 'expo-image-picker';
+
 import { useTranslation } from '../../hooks/useTranslation';
-import { AxiosError } from 'axios';
+import { Button, InlineBanner, Panel, PanelRow, Text, useTokens } from '../../ui';
+import { radius, space } from '../../theme/tokens';
+import { formatDate, formatTime } from '../../utils/format';
+import { GasNumberField } from './GasNumberField';
 
 interface GasFormProps {
   onSubmit: (data: {
@@ -36,12 +23,31 @@ interface GasFormProps {
   existingReadings?: Array<{ id: number; readingDate: string }>;
 }
 
+/**
+ * Forma za novo očitanje plina.
+ *
+ * F9 (GAS-REFACTOR): forma je bila jedini ekran koji je ostao na STAROM sloju
+ * (`components/ui/nativewind`: `FormControl`, `Switch`, `Spinner`, `Box`,
+ * `useColorModeValue`). Zbog toga je izgledala kao druga aplikacija: drugi
+ * radijusi, druge boje (`brand.*` umjesto semantičkih tokena), a na dark temi
+ * `gray.50`/`white` podloge su bile svjetlije od svega oko njih. Sada je ista
+ * gramatika kao ostatak Plina: `Panel`/`PanelRow`, `Button`, `InlineBanner`,
+ * `GasNumberField` (jedno polje za brojilo sa validacijom u toku kucanja).
+ *
+ * Ponašanje je namjerno isto, uključujući i pravila koja su bila dobra:
+ *  - „sada" je podrazumijevano, datum/vrijeme se biraju samo ako se isključe;
+ *  - duplikat na isti dan se odbija PRIJE mrežnog poziva, sa objašnjenjem;
+ *  - greška backenda se prikazuje u formi (ne samo kao toast), da ne nestane.
+ */
 export const GasForm: React.FC<GasFormProps> = ({
   onSubmit,
   isLoading,
   onCancel,
   existingReadings = [],
 }) => {
+  const { t } = useTranslation();
+  const { t: tokens } = useTokens();
+
   const [counterValue, setCounterValue] = useState('');
   const [useCurrentDateTime, setUseCurrentDateTime] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -54,19 +60,6 @@ export const GasForm: React.FC<GasFormProps> = ({
     type?: string;
   } | null>(null);
   const [error, setError] = useState('');
-  const toast = useToast();
-  const { t } = useTranslation();
-
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const errorBg = useColorModeValue('red.50', 'red.900');
-  const errorBorder = useColorModeValue('red.200', 'red.700');
-  const errorText = useColorModeValue('red.700', 'red.200');
-  const switchTrackColor = useColorModeValue('brand.300', 'brand.500');
-  // F4 (UX-16): tri hooka su bila pozvana unutar JSX-a (uslovno, u grani
-  // `!useCurrentDateTime`) — sada su na vrhu komponente, kao svi ostali.
-  const sectionBg = useColorModeValue('gray.50', 'dark.700');
-  const fieldBg = useColorModeValue('white', 'dark.700');
 
   const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
     if (event.type === 'set' && date) {
@@ -121,8 +114,7 @@ export const GasForm: React.FC<GasFormProps> = ({
   const pickMeterImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      const errorMsg = t('gas.imagePermissionDenied') || 'Image permission denied';
-      setError(errorMsg);
+      setError(t('gas.imagePermissionDenied'));
       return;
     }
 
@@ -140,8 +132,7 @@ export const GasForm: React.FC<GasFormProps> = ({
   const takeMeterPhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      const errorMsg = t('gas.cameraPermissionDenied') || 'Camera permission denied';
-      setError(errorMsg);
+      setError(t('gas.cameraPermissionDenied'));
       return;
     }
 
@@ -160,8 +151,8 @@ export const GasForm: React.FC<GasFormProps> = ({
   const handleSubmit = async () => {
     setError('');
 
-    const value = parseFloat(counterValue);
-    if (!counterValue || isNaN(value) || value < 0) {
+    const value = parseFloat(counterValue.replace(',', '.'));
+    if (!counterValue || Number.isNaN(value) || value < 0) {
       setError(t('gas.invalidValue'));
       return;
     }
@@ -170,23 +161,15 @@ export const GasForm: React.FC<GasFormProps> = ({
       ? new Date()
       : combineDateTime(selectedDate, selectedTime);
 
-    // Check if a reading already exists for this date
+    // Duplikat se provjerava prije mreže: backend bi ga odbio, ali korisnik
+    // tada čeka cijeli krug da bi saznao isto što se moglo reći odmah.
     const readingDateString = readingDate.toDateString();
-    const hasTodayReading = existingReadings.some((reading) => {
-      const existingDate = new Date(reading.readingDate).toDateString();
-      return existingDate === readingDateString;
-    });
+    const hasSameDayReading = existingReadings.some(
+      (reading) => new Date(reading.readingDate).toDateString() === readingDateString,
+    );
 
-    if (hasTodayReading) {
-      const errorMsg = t('gas.duplicateDate');
-      setError(errorMsg);
-      toast.show({
-        title: t('gas.duplicateEntry'),
-        description: errorMsg,
-        duration: 5000,
-        placement: 'top',
-        bg: 'orange.500',
-      });
+    if (hasSameDayReading) {
+      setError(t('gas.duplicateDate'));
       return;
     }
 
@@ -197,231 +180,170 @@ export const GasForm: React.FC<GasFormProps> = ({
         meterImage: meterImage ?? undefined,
       });
 
-      // Reset form on success
       setCounterValue('');
       setUseCurrentDateTime(true);
       setSelectedDate(new Date());
       setSelectedTime(new Date());
       setMeterImage(null);
-    } catch (err: any) {
-      // Extract backend validation message
-      const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message;
-
-      const errorMessage = backendMessage || err.message || t('common.error');
-
-      // Display in both toast and form error
-      setError(errorMessage);
-      toast.show({
-        title: t('gas.error'),
-        description: errorMessage,
-        duration: 5000,
-        placement: 'top',
-        bg: 'red.500',
-      });
+    } catch (submitError) {
+      // Backend poruka je konkretnija od generičke, pa ima prednost; forma je
+      // prikazuje iznad polja, da ne nestane sa toastom.
+      const message =
+        (submitError as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ||
+        (submitError as Error)?.message ||
+        t('common.error');
+      setError(message);
     }
   };
 
+  const dateLabel = formatDate(useCurrentDateTime ? new Date() : combineDateTime(selectedDate, selectedTime));
+  const timeLabel = formatTime(useCurrentDateTime ? new Date() : combineDateTime(selectedDate, selectedTime));
+
   return (
-    <VStack space={4} flex={1}>
-      {error && (
-        <Box bg={errorBg} borderWidth={1} borderColor={errorBorder} rounded="lg" p={3}>
-          <HStack space={2} alignItems="center">
-            <Icon as={Ionicons} name="alert-circle" size={5} color={errorText} />
-            <Text fontSize="sm" color={errorText} flex={1}>
-              {error}
-            </Text>
-          </HStack>
-        </Box>
-      )}
+    <View style={{ gap: space.lg }}>
+      {error ? <InlineBanner tone="fault" title={error} testID="gas-form-error" /> : null}
 
-      <FormControl isRequired>
-        <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-          {t('gas.counterValueLabel')}
-        </FormControl.Label>
-        <FormInput
-          placeholder={t('gas.counterValuePlaceholder')}
-          keyboardType="decimal-pad"
-          value={counterValue}
-          onChangeText={setCounterValue}
-          isDisabled={isLoading}
-        />
-      </FormControl>
+      <GasNumberField
+        value={counterValue}
+        onChangeText={setCounterValue}
+        label={t('gas.counterValueLabel')}
+        placeholder={t('gas.counterValuePlaceholder')}
+        editable={!isLoading}
+      />
 
-      {/* Toggle for current date/time */}
-      <FormControl>
-        <HStack
-          justifyContent="space-between"
-          alignItems="center"
-          bg={sectionBg}
-          p={3}
-          rounded="md"
-        >
-          <HStack space={2} alignItems="center">
-            <Icon as={Ionicons} name="time-outline" size={5} color="brand.500" />
-            <Text fontSize="sm" fontWeight="500" color={textColor}>
-              {t('gas.useCurrentDateTime')}
-            </Text>
-          </HStack>
-          <Switch
-            size="sm"
-            isChecked={useCurrentDateTime}
-            onToggle={setUseCurrentDateTime}
-            onTrackColor={switchTrackColor}
-            isDisabled={isLoading}
-          />
-        </HStack>
-      </FormControl>
-
-      {/* Manual date & time selection */}
-      {!useCurrentDateTime && (
-        <>
-          <FormControl isRequired>
-            <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-              {t('gas.readingDate')}
-            </FormControl.Label>
-            <Pressable
-              onPress={() =>
-                Platform.OS === 'android' ? openAndroidDatePicker() : setShowDatePicker(true)
-              }
-              disabled={isLoading}
-              accessibilityRole="button"
-              accessibilityLabel={`${t('gas.readingDate')}: ${dayjs(selectedDate).format('DD.MM.YYYY')}`}
-              accessibilityState={{ disabled: isLoading }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      {/*
+        Datum i vrijeme su jedno pitanje („kada je očitano?"), pa su jedan red:
+        prekidač „sada" i, kad je isključen, dva dugmeta koja otvaraju birače.
+        Prije su to bila dva odvojena `FormControl` bloka sa svojim labelama.
+      */}
+      <Panel variant="flush" padded={false}>
+        <PanelRow divider={false}>
+          <View style={{ gap: space.sm, flex: 1 }}>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm }}
             >
-              <Box
-                borderWidth={1}
-                borderColor={borderColor}
-                rounded="md"
-                px={3}
-                py={2}
-                bg={fieldBg}
-              >
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text color={textColor}>{dayjs(selectedDate).format('DD.MM.YYYY')}</Text>
-                  <Icon as={Ionicons} name="calendar-outline" size={5} color="brand.500" />
-                </HStack>
-              </Box>
-            </Pressable>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-              {t('gas.readingTime')}
-            </FormControl.Label>
-            <Pressable
-              onPress={() =>
-                Platform.OS === 'android' ? openAndroidTimePicker() : setShowTimePicker(true)
-              }
-              disabled={isLoading}
-              accessibilityRole="button"
-              accessibilityLabel={`${t('gas.readingTime')}: ${dayjs(selectedDate).format('HH:mm')}`}
-              accessibilityState={{ disabled: isLoading }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Box
-                borderWidth={1}
-                borderColor={borderColor}
-                rounded="md"
-                px={3}
-                py={2}
-                bg={fieldBg}
-              >
-                <HStack justifyContent="space-between" alignItems="center">
-                  <Text color={textColor}>{dayjs(selectedTime).format('HH:mm')}</Text>
-                  <Icon as={Ionicons} name="time-outline" size={5} color="brand.500" />
-                </HStack>
-              </Box>
-            </Pressable>
-          </FormControl>
-        </>
-      )}
-
-      <FormControl>
-        <FormControl.Label _text={{ fontSize: 'sm', fontWeight: '600', color: textColor }}>
-          {t('gas.meterImage') || 'Meter Image (optional)'}
-        </FormControl.Label>
-        <VStack space={2}>
-          <HStack space={2}>
-            <Button
-              flex={1}
-              variant="outline"
-              onPress={pickMeterImage}
-              isDisabled={isLoading}
-              leftIcon={<Icon as={Ionicons} name="image-outline" size={4} color="brand.500" />}
-            >
-              {t('gas.selectImage') || 'Select Image'}
-            </Button>
-            <Button
-              flex={1}
-              variant="outline"
-              onPress={takeMeterPhoto}
-              isDisabled={isLoading}
-              leftIcon={<Icon as={Ionicons} name="camera-outline" size={4} color="brand.500" />}
-            >
-              {t('gas.takePhoto') || 'Take Photo'}
-            </Button>
-          </HStack>
-          {meterImage && (
-            <HStack space={2} alignItems="center">
-              <Text flex={1} fontSize="xs" color={textColor}>
-                {meterImage.name || meterImage.uri}
-              </Text>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text size="bodyLg" weight="medium">
+                  {t('gas.useCurrentDateTime')}
+                </Text>
+                <Text size="body" tone="muted">
+                  {`${dateLabel} · ${timeLabel}`}
+                </Text>
+              </View>
               <Button
-                variant="ghost"
-                colorScheme="red"
-                onPress={() => setMeterImage(null)}
-                isDisabled={isLoading}
-              >
-                {t('common.clear')}
-              </Button>
-            </HStack>
-          )}
-        </VStack>
-      </FormControl>
+                label={useCurrentDateTime ? t('gas.useCurrentDateTimeOn') : t('gas.useCurrentDateTimeOff')}
+                variant={useCurrentDateTime ? 'primary' : 'secondary'}
+                onPress={() => setUseCurrentDateTime((previous) => !previous)}
+                disabled={isLoading}
+                testID="gas-form-now-toggle"
+              />
+            </View>
 
-      {/* iOS Date Picker */}
-      {Platform.OS === 'ios' && showDatePicker && (
+            {!useCurrentDateTime ? (
+              <View style={{ flexDirection: 'row', gap: space.sm }}>
+                <Button
+                  label={`${t('gas.readingDate')}: ${dateLabel}`}
+                  variant="secondary"
+                  style={{ flex: 1 }}
+                  onPress={() =>
+                    Platform.OS === 'android' ? openAndroidDatePicker() : setShowDatePicker(true)
+                  }
+                  disabled={isLoading}
+                  testID="gas-form-date"
+                />
+                <Button
+                  label={`${t('gas.readingTime')}: ${timeLabel}`}
+                  variant="secondary"
+                  style={{ flex: 1 }}
+                  onPress={() =>
+                    Platform.OS === 'android' ? openAndroidTimePicker() : setShowTimePicker(true)
+                  }
+                  disabled={isLoading}
+                  testID="gas-form-time"
+                />
+              </View>
+            ) : null}
+          </View>
+        </PanelRow>
+      </Panel>
+
+      <View style={{ gap: space.sm }}>
+        <Text size="bodyLg" weight="medium">
+          {t('gas.meterImage')}
+        </Text>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <Button
+            label={t('gas.selectImage')}
+            variant="secondary"
+            style={{ flex: 1 }}
+            onPress={() => void pickMeterImage()}
+            disabled={isLoading}
+          />
+          <Button
+            label={t('gas.takePhoto')}
+            variant="secondary"
+            style={{ flex: 1 }}
+            onPress={() => void takeMeterPhoto()}
+            disabled={isLoading}
+          />
+        </View>
+        {meterImage ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <Text size="body" tone="muted" numberOfLines={1} style={{ flex: 1 }}>
+              {meterImage.name || meterImage.uri}
+            </Text>
+            <Button
+              label={t('common.clear')}
+              variant="ghost"
+              onPress={() => setMeterImage(null)}
+              disabled={isLoading}
+            />
+          </View>
+        ) : null}
+      </View>
+
+      {Platform.OS === 'ios' && showDatePicker ? (
         <DateTimePicker
           value={selectedDate}
           mode="date"
           display="spinner"
+          themeVariant={tokens.canvas === '#05070b' ? 'dark' : 'light'}
           onChange={handleDateChange}
         />
-      )}
+      ) : null}
 
-      {/* iOS Time Picker */}
-      {Platform.OS === 'ios' && showTimePicker && (
+      {Platform.OS === 'ios' && showTimePicker ? (
         <DateTimePicker
           value={selectedTime}
           mode="time"
           display="spinner"
+          themeVariant={tokens.canvas === '#05070b' ? 'dark' : 'light'}
           onChange={handleTimeChange}
         />
-      )}
+      ) : null}
 
-      <HStack space={2} mt={4}>
-        {onCancel && (
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        {onCancel ? (
           <Button
-            flex={1}
-            variant="outline"
-            _text={{ color: 'gray.600' }}
+            label={t('common.cancel')}
+            variant="ghost"
+            style={{ flex: 1 }}
             onPress={onCancel}
             disabled={isLoading}
-          >
-            {t('common.cancel')}
-          </Button>
-        )}
+            testID="gas-form-cancel"
+          />
+        ) : null}
         <Button
-          flex={1}
-          backgroundColor="brand.500"
-          onPress={handleSubmit}
-          isDisabled={isLoading || !counterValue}
-          _text={{ fontWeight: 'bold' }}
-        >
-          {isLoading ? <Spinner size="sm" color="white" /> : t('gas.addReading')}
-        </Button>
-      </HStack>
-    </VStack>
+          label={t('gas.addReading')}
+          variant="primary"
+          style={{ flex: 1, minHeight: 48, borderRadius: radius.control }}
+          onPress={() => void handleSubmit()}
+          loading={isLoading}
+          disabled={isLoading || !counterValue}
+          testID="gas-form-submit"
+        />
+      </View>
+    </View>
   );
 };

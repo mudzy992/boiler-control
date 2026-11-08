@@ -11,7 +11,7 @@
 
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { radius, MIN_TOUCH } from '../theme/tokens';
+import { radius } from '../theme/tokens';
 import { useTokens } from './theme';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
@@ -89,8 +89,8 @@ export function Segmented<T extends string>({
               numberOfLines={1}
               style={{
                 fontFamily: selected ? fonts.monoSemiBold : fonts.mono,
-                fontSize: 11,
-                letterSpacing: 1,
+                fontSize: 13,
+                letterSpacing: 0.8,
                 textTransform: 'uppercase',
                 color: selected ? t.ink : t.inkDim,
               }}
@@ -111,13 +111,19 @@ const styles = StyleSheet.create({
     borderRadius: radius.control,
     overflow: 'hidden',
   },
+  /**
+   * F7 (GAS-TABS-2): korisnik traži „malo veći format" za traku Očitanja/Analiza.
+   * Traka je bila 44 px (minimum za dodir), ali vizuelno mala: 11 px mono tekst
+   * u punoj širini ekrana. Sada je 52 px, tekst 13 px semibold, a aktivna opcija
+   * ima svjetliju podlogu — pa se prepoznaje i kao tab i kao izbor.
+   */
   segment: {
     flex: 1,
-    minHeight: MIN_TOUCH,
+    minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
     borderBottomWidth: 2,
   },
 });

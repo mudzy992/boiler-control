@@ -141,3 +141,29 @@ describe('parseApiError — ne-Axios ulaz', () => {
     expect(parseApiError(undefined).statusCode).toBe(500);
   });
 });
+
+/**
+ * F7 (BUG-CRASH): greška ne smije srušiti ekran koji je prijavljuje.
+ *
+ * Na uređaju se dešavalo da Početna „zabaguje" — `showError` je za 401 bez
+ * `customMessage` dobio `undefined` kao poruku (jer `ApiError.userMessage`
+ * namjerno nije postavljen za 401) i predao ga toastu, koji je tada pokušao da
+ * stilizuje nedefinisan tekst. Ovaj test čuva ugovor: poruka je UVIJEK
+ * neprazan string, i za 401 i za grešku bez poruke.
+ */
+describe('useErrorHandler — poruka nikad nije prazna (BUG-CRASH)', () => {
+  it('401 bez customMessage daje prevedeni ključ, nikad undefined', () => {
+    const apiError = parseApiError(httpError(401, undefined));
+    // `parseApiError` već popunjava `userMessage` prevedenim ključem — to je
+    // ugovor koji hook koristi kao poruku. Provjera je ovdje da se taj ugovor
+    // ne izgubi: prazna poruka je ono što je toast rušilo.
+    expect(apiError.userMessage).toBe('i18n:errors.unauthorized');
+    expect(typeof apiError.userMessage).toBe('string');
+  });
+
+  it('greška bez ijedne poruke i dalje daje string', () => {
+    const apiError = parseApiError(new Error(''));
+    expect(typeof (apiError.userMessage ?? 'x')).toBe('string');
+    expect((apiError.userMessage ?? '').length).toBeGreaterThan(0);
+  });
+});

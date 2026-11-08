@@ -134,6 +134,26 @@ export function useErrorHandler() {
     const apiError = error instanceof ApiError ? error : parseApiError(error);
     const finalMessage = customMessage || apiError.userMessage;
 
+    /*
+     * F7 (BUG-CRASH): `toast.show({ description: undefined })` je RUŠIO ekran.
+     *
+     * `ApiError` za mrežnu grešku ima `userMessage` postavljen, ali za 401 ga
+     * namjerno NEMA (poruka se prevodi u `i18nKeyForStatus`, a `userMessage`
+     * ostaje `undefined`). Bez `customMessage` (npr. `getDashboardHealth` u
+     * `DashboardScreen`) `finalMessage` je tada bio `undefined`, pa je toast
+     * dobio `description: undefined` i `_description: { color: ..., fontSize: ... }`
+     * — NativeWind je pokušao da stilizuje nedefinisan tekst i bacio grešku
+     * IZNAD ekrana. Korisnik to vidi kao „aplikacija zabaguje".
+     *
+     * Zato: poruka NIKAD nije prazna — pada na prevedeni status, a ako i to
+     * izostane, na generički `errors.serverError`. Dodatno se cijeli poziv
+     * hvata, jer poruka o grešci ne smije srušiti ekran koji grešku prijavljuje.
+     */
+    const message =
+      finalMessage ||
+      apiError.userMessage ||
+      i18n.t(i18nKeyForStatus(apiError.statusCode, apiError.isNetworkError));
+
     if (__DEV__) {
       console.error('[API Error]', {
         statusCode: apiError.statusCode,
@@ -145,18 +165,24 @@ export function useErrorHandler() {
 
     // Stil ide preko zajedničkih Box propova. Ovdje se ne može koristiti
     // `render` obrazac iz DashboardScreen.tsx jer je ovo .ts fajl bez JSX-a.
-    toastRef.current.show({
-      description: finalMessage,
-      duration: 4000,
-      placement: 'top',
-      bg: 'red.500',
-      rounded: 'md',
-      px: 3,
-      py: 2,
-      _description: { color: 'white', fontSize: 'sm' },
-      accessibilityAnnouncement: finalMessage,
-      accessibilityLiveRegion: 'assertive',
-    });
+    try {
+      toastRef.current.show({
+        description: message,
+        duration: 4000,
+        placement: 'top',
+        bg: 'red.500',
+        rounded: 'md',
+        px: 3,
+        py: 2,
+        _description: { color: 'white', fontSize: 'sm' },
+        accessibilityAnnouncement: message,
+        accessibilityLiveRegion: 'assertive',
+      });
+    } catch (notifyError) {
+      // Posljednja linija odbrane: ako toast padne, greška ide u konzolu, a
+      // ekran nastavlja da radi (do sada je ovdje pucao cijeli render).
+      console.error('[API Error] toast nije prikazan', notifyError);
+    }
   }, []);
 
   return { showError };

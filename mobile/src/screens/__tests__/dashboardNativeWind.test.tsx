@@ -160,7 +160,21 @@ async function screenTree(mode: Mode) {
         </AppThemeProvider>
     </QueryClientProvider>,
   );
-  await result.findByText('Living Room');
+  // F8 (HOME-06): ime primarnog termostata sada postoji i u KPI pločici, pa se
+  // ekran čeka po stabilnom `testID`-u liste, ne po tekstu koji se ponavlja.
+  await result.findByTestId('thermostat-panel');
+  // F8 (HOME-07): „Mode: FULL · interval: weekday_morning" je sada u redu
+  // termostata, a ne u zasebnom bloku na dnu ekrana. Isti podatak, drugo mjesto.
+  await result.findByTestId('thermostat-panel');
+  // Testovi u ovom fajlu mockaju `t` na `t(key) => key`, pa se provjerava
+  // sastav reda (koji ključevi i koja vrijednost), a ne prevedeni tekst.
+  // Dva termostata (Living Room, Kitchen) => dva reda sa istim kontekstom.
+  expect(
+    result.getAllByText(
+      /recommendation\.mode: FULL · recommendation\.interval: weekday_morning/,
+    ).length,
+  ).toBe(2);
+
   await result.findByTestId('recommendation-breakdown');
   await result.findByText('Short cycle warning');
   return { result, queryClient };

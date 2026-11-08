@@ -297,7 +297,13 @@ function SheetHarness({ startOpen }: { startOpen: boolean }) {
   return (
     <>
       <RNText onPress={() => setIsOpen(false)}>zatvori-lista</RNText>
-      <Sheet isOpen={isOpen} onClose={() => setIsOpen(false)} title="Naslov">
+      <RNText onPress={() => setIsOpen(true)}>otvori-lista</RNText>
+      <Sheet
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Naslov"
+        testID="sheet-harness"
+      >
         <RNText>sadržaj-lista</RNText>
       </Sheet>
     </>
@@ -315,5 +321,36 @@ describe('Sheet — prozor za animaciju zatvaranja (SHEET-02)', () => {
 
     // Sigurnosni timer (400 ms) sklanja `Modal` i kad gorhom ne javi `onChange`.
     await waitFor(() => expect(queryByText('sadržaj-lista')).toBeNull(), { timeout: 2000 });
+  });
+});
+
+/**
+ * F7 (SHEET-03): `Sheet` više ne koristi `@gorhom/bottom-sheet` ni Reanimated,
+ * pa nema mjerenja layouta koje može tiho otkazati, ni gesture-handler pan
+ * obrade koja može zarobiti dodire nad ekranom (to je korisnik opisao kao
+ * „aplikacija zabaguje").
+ *
+ * Ovaj test čuva dvije stvari koje su bile uzrok:
+ *  1. sheet se otvara ODMah iz state-a (bez imperativnog `snapToIndex`);
+ *  2. backdrop zatvara list i NIJE `pointerEvents="none"` — dakle dodir van
+ *     lista radi, a ne ostaje zarobljen.
+ */
+describe('Sheet — otvaranje bez imperativnog poziva (SHEET-03)', () => {
+  it('otvara list iz state-a i zatvara ga dodirom na pozadinu', async () => {
+    const { getByText, getByTestId, queryByText, rerender } = await wrap(
+      <SheetHarness startOpen={false} />,
+    );
+    expect(queryByText('sadržaj-lista')).toBeNull();
+
+    // Otvaranje ide kroz `isOpen`, a ne kroz ref/metodu — isti obrazac koji
+    // koriste svi ekrani (`setShowAddModal(true)`).
+    fireEvent.press(getByText('otvori-lista'));
+    // `mounted` se postavlja u efektu (isti prolaz kao `Animated.timing`), pa
+    // se sadržaj čeka umjesto da se pretpostavi da je tu u istom frejmu.
+    expect(await waitFor(() => getByText('sadržaj-lista'))).toBeTruthy();
+
+    fireEvent.press(getByTestId('sheet-harness-backdrop'));
+    await waitFor(() => expect(queryByText('sadržaj-lista')).toBeNull());
+    rerender(<SheetHarness startOpen={false} />);
   });
 });

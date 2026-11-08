@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: space.sm,
     marginHorizontal: space.lg,
-    marginBottom: space.sm,
+    marginBottom: 10,
     paddingVertical: 14,
     paddingHorizontal: space.md,
     borderWidth: 1,

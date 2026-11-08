@@ -3439,6 +3439,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   {
                     "flex": 1,
                     "gap": 3,
+                    "minWidth": 0,
                   }
                 }
               >
@@ -3451,7 +3452,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                       },
                       null,
-                      undefined,
+                      {
+                        "flexShrink": 1,
+                      },
                     ]
                   }
                 >
@@ -3578,7 +3581,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 style={
                   {
                     "alignItems": "flex-end",
+                    "flexShrink": 0,
                     "gap": 3,
+                    "justifyContent": "flex-start",
                   }
                 }
               >
@@ -4374,6 +4379,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   {
                     "flex": 1,
                     "gap": 3,
+                    "minWidth": 0,
                   }
                 }
               >
@@ -4386,7 +4392,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                       },
                       null,
-                      undefined,
+                      {
+                        "flexShrink": 1,
+                      },
                     ]
                   }
                 >
@@ -4513,7 +4521,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 style={
                   {
                     "alignItems": "flex-end",
+                    "flexShrink": 0,
                     "gap": 3,
+                    "justifyContent": "flex-start",
                   }
                 }
               >

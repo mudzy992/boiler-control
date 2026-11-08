@@ -579,6 +579,17 @@ const enUS = {
     addedSuccess: 'Gas reading added successfully',
     deleteSuccess: 'Gas reading deleted',
     currencyKM: 'KM',
+    /**
+     * F9 (I18N-PLURAL): bazni ključ je SIGURNOSNA MREŽA, ne duplikat.
+     *
+     * Na uređaju je umjesto „131 zapisa" stajao sirovi `gas.readingCount`. To
+     * znači da u runtime-u nije bilo plural pravilo za dati broj (Hermes bez
+     * ICU podataka za `bs`), pa je i18next tražio `gas.readingCount` bez
+     * sufiksa — a njega nije bilo, pa je vratio sam ključ. i18next UVIJEK pada
+     * sa `_one`/`_few`/`_other` na bazni ključ, pa ovaj unos garantuje da
+     * korisnik nikad ne vidi ključ, čak i ako plural pravilo zakaže.
+     */
+    readingCount: '{{count}} records',
     readingCount_one: '{{count}} record',
     readingCount_other: '{{count}} records',
     summaryMonth: 'This month',
@@ -1503,6 +1514,8 @@ const bsBS = {
     addedSuccess: 'Očitanje plina je uspješno dodano',
     deleteSuccess: 'Očitanje plina je obrisano',
     currencyKM: 'KM',
+    /** Vidi komentar u en-US bloku (F9, I18N-PLURAL). */
+    readingCount: '{{count}} zapisa',
     readingCount_one: '{{count}} zapis',
     readingCount_few: '{{count}} zapisa',
     readingCount_other: '{{count}} zapisa',

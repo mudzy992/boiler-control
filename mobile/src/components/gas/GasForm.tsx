@@ -8,7 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { useTranslation } from '../../hooks/useTranslation';
 import { Button, InlineBanner, Panel, PanelRow, Text, useTokens } from '../../ui';
-import { radius, space } from '../../theme/tokens';
+import { space } from '../../theme/tokens';
 import { formatDate, formatTime } from '../../utils/format';
 import { GasNumberField } from './GasNumberField';
 
@@ -242,26 +242,30 @@ export const GasForm: React.FC<GasFormProps> = ({
 
             {!useCurrentDateTime ? (
               <View style={{ flexDirection: 'row', gap: space.sm }}>
-                <Button
-                  label={`${t('gas.readingDate')}: ${dateLabel}`}
-                  variant="secondary"
-                  style={{ flex: 1 }}
-                  onPress={() =>
-                    Platform.OS === 'android' ? openAndroidDatePicker() : setShowDatePicker(true)
-                  }
-                  disabled={isLoading}
-                  testID="gas-form-date"
-                />
-                <Button
-                  label={`${t('gas.readingTime')}: ${timeLabel}`}
-                  variant="secondary"
-                  style={{ flex: 1 }}
-                  onPress={() =>
-                    Platform.OS === 'android' ? openAndroidTimePicker() : setShowTimePicker(true)
-                  }
-                  disabled={isLoading}
-                  testID="gas-form-time"
-                />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Button
+                    label={`${t('gas.readingDate')}: ${dateLabel}`}
+                    variant="secondary"
+                    block
+                    onPress={() =>
+                      Platform.OS === 'android' ? openAndroidDatePicker() : setShowDatePicker(true)
+                    }
+                    disabled={isLoading}
+                    testID="gas-form-date"
+                  />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Button
+                    label={`${t('gas.readingTime')}: ${timeLabel}`}
+                    variant="secondary"
+                    block
+                    onPress={() =>
+                      Platform.OS === 'android' ? openAndroidTimePicker() : setShowTimePicker(true)
+                    }
+                    disabled={isLoading}
+                    testID="gas-form-time"
+                  />
+                </View>
               </View>
             ) : null}
           </View>
@@ -272,21 +276,35 @@ export const GasForm: React.FC<GasFormProps> = ({
         <Text size="bodyLg" weight="medium">
           {t('gas.meterImage')}
         </Text>
+        {/*
+          F9 (GAS-FORM-LAYOUT): na snimci su „Odaberi sliku" i „Uslikaj" stajali
+          kao goli tekst jedan uz drugi — bez okvira, bez visine. Uzrok je isti
+          kao kod `Pressable` primitiva (vidi `ui/Pressable.tsx`, PRESS-01):
+          `style={{ flex: 1 }}` na `Button` je prolazio kroz NativeWind omotač.
+          Sada širinu nosi `View` sa `flex: 1` (običan raspored), a dugme je
+          `block` — dakle okvir i visina dolaze iz primitiva, ne iz fleksa.
+        */}
         <View style={{ flexDirection: 'row', gap: space.sm }}>
-          <Button
-            label={t('gas.selectImage')}
-            variant="secondary"
-            style={{ flex: 1 }}
-            onPress={() => void pickMeterImage()}
-            disabled={isLoading}
-          />
-          <Button
-            label={t('gas.takePhoto')}
-            variant="secondary"
-            style={{ flex: 1 }}
-            onPress={() => void takeMeterPhoto()}
-            disabled={isLoading}
-          />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Button
+              label={t('gas.selectImage')}
+              variant="secondary"
+              block
+              onPress={() => void pickMeterImage()}
+              disabled={isLoading}
+              testID="gas-form-pick-image"
+            />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Button
+              label={t('gas.takePhoto')}
+              variant="secondary"
+              block
+              onPress={() => void takeMeterPhoto()}
+              disabled={isLoading}
+              testID="gas-form-take-photo"
+            />
+          </View>
         </View>
         {meterImage ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
@@ -323,26 +341,33 @@ export const GasForm: React.FC<GasFormProps> = ({
         />
       ) : null}
 
-      <View style={{ flexDirection: 'row', gap: space.sm }}>
+      {/*
+        F9 (GAS-FORM-CTA): na snimci u sheetu NIJE bilo dugmeta „Dodaj očitanje"
+        — samo „Otkaži" kao goli tekst. Glavna akcija forme mora biti vidljiva i
+        iznad preklopljene tastature, pa je sada puna širina, 52 px, primarna
+        boja, i stoji iznad „Otkaži" (a ne pored njega u tesnom redu).
+      */}
+      <View style={{ gap: space.sm }}>
+        <Button
+          label={t('gas.addReading')}
+          variant="primary"
+          block
+          onPress={() => void handleSubmit()}
+          loading={isLoading}
+          disabled={isLoading || !counterValue}
+          style={{ minHeight: 52 }}
+          testID="gas-form-submit"
+        />
         {onCancel ? (
           <Button
             label={t('common.cancel')}
             variant="ghost"
-            style={{ flex: 1 }}
+            block
             onPress={onCancel}
             disabled={isLoading}
             testID="gas-form-cancel"
           />
         ) : null}
-        <Button
-          label={t('gas.addReading')}
-          variant="primary"
-          style={{ flex: 1, minHeight: 48, borderRadius: radius.control }}
-          onPress={() => void handleSubmit()}
-          loading={isLoading}
-          disabled={isLoading || !counterValue}
-          testID="gas-form-submit"
-        />
       </View>
     </View>
   );

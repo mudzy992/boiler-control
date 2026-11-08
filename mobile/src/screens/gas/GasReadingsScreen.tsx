@@ -779,12 +779,18 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
       {/* Add Reading Modal */}
       {/* F4 (UX-14): isti `Sheet` primitiv kao na Početnoj — naslov u zaglavlju,
           animirano zatvaranje i X sa labelom iz `t()`. */}
+      {/*
+        F9 (GAS-SHEET-SIZE): sheet je bio fiksno 85% visine za formu od pet
+        polja, pa je ispod dugmadi ostajalo ~40% prazne površine — na snimci se
+        vidi kao „prazan ekran ispod forme". Sada kreće na 62% (dovoljno za
+        formu bez tastature) i može se povući do 85% kad je tastatura otvorena.
+      */}
       <Sheet
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         title={t('gas.addReading')}
         closeLabel={t('common.close')}
-        snapPoints={['85%']}
+        snapPoints={['62%', '88%']}
         scrollable
         testID="gas-add-sheet"
       >

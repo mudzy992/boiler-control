@@ -119,11 +119,21 @@ export const GasReadingCard = React.memo(function GasReadingCard({
         ]}
       >
         <View style={styles.left}>
+          {/*
+            F9 (GAS-ROW): broj je bio `Readout size="md"` sa jedinicom, a red je
+            imao `justifyContent: 'space-between'` i desnu kolonu. Na uskom
+            ekranu (snimka korisnika) sadržaj reda je bio širi od raspoložive
+            širine, pa se broj ODSJEKAO s lijeve strane — „2,180.64" umjesto
+            „2180.64". Sada je broj u `numberOfLines={1}` kontejneru sa
+            `flexShrink`, a jedinica i potrošnja su u istom redu metе ispod —
+            dakle nema tri kolone koje se takmiče za istu širinu.
+          */}
           <Readout
             value={formatNumber(reading.counterValue)}
             unit="m³"
             size="md"
             tone={reading.isInvoiceReference ? 'signal' : 'ink'}
+            style={{ flexShrink: 1 }}
           />
           <View style={styles.metaRow}>
             <MonoMeta>
@@ -164,7 +174,7 @@ export const GasReadingCard = React.memo(function GasReadingCard({
             <MonoMeta>{`+${formatNumber(consumption)} m³`}</MonoMeta>
           ) : null}
           {cost !== null ? (
-            <Text size="body" weight="medium">
+            <Text size="meta" tone="muted" numberOfLines={1}>
               {`${formatNumber(cost)} ${t('gas.currencyKM')}`}
             </Text>
           ) : null}
@@ -337,6 +347,10 @@ const styles = StyleSheet.create({
   },
   left: {
     flex: 1,
+    // `minWidth: 0` je ono što stvarno sprječava odsijecanje: bez njega
+    // `flex: 1` u redu sa `space-between` ne dopušta djetetu da se skupi ispod
+    // svoje intrinsic širine, pa sadržaj izlazi van kartice.
+    minWidth: 0,
     gap: 3,
   },
   metaRow: {
@@ -357,7 +371,9 @@ const styles = StyleSheet.create({
   },
   right: {
     alignItems: 'flex-end',
+    justifyContent: 'flex-start',
     gap: 3,
+    flexShrink: 0,
   },
   chevron: {
     flexDirection: 'row',

@@ -619,6 +619,88 @@ uzroke, ne piksele: `style` na `Pressable` nije funkcija i `flatten` vidi
 netransparentnu podlogu; segment ima `flexBasis: 0`; `gas.readingCount` nikad ne
 vraća ključ i bazni ključ postoji u resursima.
 
+### F10 — Moji domovi, forma doma, Raspored grijanja, Analitika, tranzicija Plina
+
+Korisnik je poslije F9 tražio pet stvari: (1) „Moji domovi", izmjenu doma i
+„Raspored grijanja" prilagoditi temi; (2) naziv uređaja **obavezno velikim
+slovima**; (3) tranzicija Očitanja ↔ Analiza nije fluidna; (4) karticu
+„Potrošnja plina" na Analitici podesiti temi. Sve četiri su bile isti korijen:
+ti ekrani nikad nisu prešli na `src/ui` sloj.
+
+**1. Nova tri primitiva (`src/ui/Field.tsx`).** Forma doma nije imala čime da
+se sastavi bez starog sloja, pa su dodati `Field` (tekstualno polje, 52 px,
+`raised` podloga, hairline ivica), `FieldGroup` (labela + obavezno + greška) i
+`Toggle` (52 px red sa `role="switch"`). Uz njih `SliderField` — klizač sa
+vidljivom vrijednošću, min/maks oznakama i `accessibilityRole="adjustable"`.
+Nijedna hex vrijednost nije u ekranu; sve dolazi iz `useTokens()`.
+
+**2. `HomeManagementScreen` prepisan (23 KB → jedna forma).** Prije: dva gotovo
+identična `Modal`-a („Dodaj" i „Uredi") sa po ~330 linija JSX-a, razlika dva
+polja — i zato je polje „Lokacija" nedostajalo u formi za izmjenu, iako ga
+backend prima. Sada je jedna `Sheet` forma za oba režima. Uz to:
+- greška validacije je `InlineBanner` **u formi** (`home-form-error`), ne toast
+  koji nestane za 3 s i nije vezan za polje;
+- `NumberField` čuva lokalni tekst, pa kucanje „2," ne briše zarez (isti kvar
+  kao GAS-02 na Plinu);
+- `ChoiceField`: do 3 opcije `Segmented`, više od 3 `Sheet` sa radio listom —
+  umjesto `Select`-a koji je na 360 px bio siva kutija bez oznake;
+- akcije („Uredi", „Obriši") su u svom redu ispod hairline-a. Prije su visjele
+  uz desnu ivicu kartice, 10 px od glavnog dodira koji **mijenja aktivan dom** —
+  dva suprotna ishoda jedan uz drugi;
+- prazno stanje ima akciju („Dodaj dom"), a „Dodaj" je i u zaglavlju.
+
+**3. `ScheduleManagementScreen` prepisan.** `gray.50`/`dark.900` podloga,
+`blue.50` info kutija, `green.50` „aktivno" kutija i `orange.400` ivica su
+zamijenjeni `Panel`/`PanelRow`, `InlineBanner`-om i `Readout`-om. Izbor
+termostata je red koji otvara `Sheet` (prije `Select` koji nije imao mjesta za
+„Boiler Living Room (Tuya)"). Logika (`getCurrentActiveInterval`,
+`getNextScheduledChange`, grupisanje po danu) je **nepromijenjena**.
+
+**4. Naziv uređaja velikim slovima (`src/ui/DeviceName.tsx`).** Traženo je
+„obavezno", pa je pravilo jedno, na jednom mjestu, i primijenjeno na Početnoj,
+Grijanju, Analitici, Rasporedu i karticama domova. Koristi se
+`textTransform: 'uppercase'`, **ne** `toUpperCase()`: podatak ostaje netaknut,
+čitač ekrana izgovara „Boiler Living Room" (a ne slovkanje), pretraga radi bez
+obzira na veličinu slova, a kopiranje daje ono što piše u bazi. `numberOfLines`
++ `flexShrink` sprječavaju da dug naziv razbije red.
+
+**5. `GasAnalyticsCard` („Potrošnja plina" na Analitici).** Bila je jedina
+kartica na tom ekranu sa starim slojem: `shadow={2}`, `rounded="xl"`,
+`orange.500` ikona i četiri sive pločice (`gray.50`/`dark.700`). Sada `Panel`
+bez sjene, `Kpi` za četiri brojke, `PanelRow` sa hairline-om za listu i
+`formatNumber` (decimalni zarez u bs-BS). Računanje potrošnje nepromijenjeno.
+
+**6. Tranzicija Očitanja ↔ Analiza (`GasScreen`).** Prije se cijelo stablo
+**zamjenjivalo** u istom frame-u (`view === 'readings' ? <A/> : <B/>`). Dvije
+posljedice, obje vidljive kao skok: (a) `GasAnalysisScreen` u tom frame-u
+učitava svoje upite, pa se prvo vidi skeleton pa sadržaj — dva skoka; (b)
+`Segmented` je bio dio `headerSlot`-a svakog ekrana, pa se pri zamjeni
+demontirao i montirao iznova (treptanje, gubitak fokusa, kratka promjena
+visine na Androidu).
+
+Sada su **oba panela stalno u stablu**, a `display: 'none'` bira vidljivi — pa
+upiti počinju pri prvom otvaranju ekrana, ne pri prelasku. Panel koji ulazi
+animira se 180 ms (`opacity` 0→1 i 8 px pomak u smjeru kretanja,
+`useNativeDriver`); panel koji izlazi je već skriven, pa ne učestvuje u layout-u.
+Poštuje se `AccessibilityInfo.isReduceMotionEnabled` (bez pomaka, trenutna
+zamjena). Skriveni panel je `accessibilityElementsHidden` +
+`importantForAccessibility="no-hide-descendants"`, a traku dobija **samo
+vidljivi** panel — da je dobiju oba, u stablu bi bila dva elementa sa istim
+`testID`-om i istom a11y labelom.
+
+**Testovi.** `src/screens/__tests__/f10Theme.test.tsx` (11 testova): naziv
+velikim slovima u oba režima i nepromijenjen podatak; `Field` uzima **tačno**
+`raised` iz `tokensFor(mode)` i različit je u light/dark; `Toggle` je
+`role="switch"` sa 52 px; `SliderField` reaguje na akciju čitača ekrana;
+Raspored ne sadrži nijednu paletu starog sloja (`#e2e8f0`, `gray.50`,
+`dark.900`, `blue.50`, `brand.500`, `orange.400`); oba Plin panela su u stablu
+prije dodira i prelazak ne montira ekran iznova.
+
+Prilagođeni testovi (uz komentar na mjestu izmjene, bez slabljenja tvrdnji):
+`homeManagementNativeWind` (novi `testID`-ovi kontrola + novi test da greška
+ostaje u formi), `scheduleNativeWind` (sheet umjesto select-a + test za
+`textTransform`).
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

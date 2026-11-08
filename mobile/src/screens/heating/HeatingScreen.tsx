@@ -15,6 +15,7 @@ import {
   InlineBanner,
   Led,
   MonoLabel,
+  DeviceName,
   MonoMeta,
   Panel,
   PanelRow,
@@ -154,9 +155,11 @@ function DeviceRow({
       <View style={{ gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
           <Led state={isHeating ? 'on' : 'off'} />
-          <Text size="body" weight="medium" style={{ flex: 1 }} numberOfLines={1}>
-            {thermostat.alias || thermostat.name || `#${thermostat.id}`}
-          </Text>
+          <DeviceName
+            name={thermostat.alias || thermostat.name}
+            fallback={`#${thermostat.id}`}
+            style={{ flex: 1 }}
+          />
           <StatusPill active={isHeating} label={isHeating ? t('heating.heating') : t('heating.standbyShort')} />
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>

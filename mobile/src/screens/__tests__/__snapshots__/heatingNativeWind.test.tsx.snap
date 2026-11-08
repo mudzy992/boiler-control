@@ -264,9 +264,16 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                             "lineHeight": 18,
                           },
                           null,
-                          {
-                            "flex": 1,
-                          },
+                          [
+                            {
+                              "flexShrink": 1,
+                              "letterSpacing": 0.3,
+                              "textTransform": "uppercase",
+                            },
+                            {
+                              "flex": 1,
+                            },
+                          ],
                         ]
                       }
                     >
@@ -825,9 +832,16 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                             "lineHeight": 18,
                           },
                           null,
-                          {
-                            "flex": 1,
-                          },
+                          [
+                            {
+                              "flexShrink": 1,
+                              "letterSpacing": 0.3,
+                              "textTransform": "uppercase",
+                            },
+                            {
+                              "flex": 1,
+                            },
+                          ],
                         ]
                       }
                     >

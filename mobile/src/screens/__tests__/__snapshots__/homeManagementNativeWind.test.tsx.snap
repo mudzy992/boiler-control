@@ -20,6 +20,7 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
         undefined,
       ]
     }
+    testID="home-management-screen"
   >
     <View
       style={
@@ -168,123 +169,115 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
           </Text>
         </View>
       </View>
+      <View
+        accessibilityLabel="Add home"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        hitSlop={
+          {
+            "bottom": 8,
+            "left": 8,
+            "right": 8,
+            "top": 8,
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 3,
+                "borderWidth": 1,
+                "justifyContent": "center",
+                "minHeight": 44,
+                "minWidth": 44,
+              },
+              {
+                "backgroundColor": "#0b0f16",
+                "borderColor": "#1f2733",
+                "opacity": 1,
+              },
+            ],
+            null,
+          ]
+        }
+        testID="home-management-header-action"
+      >
+        <Text
+          accessibilityLabel="add"
+        >
+          add
+        </Text>
+      </View>
     </View>
     <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControlMock
           onRefresh={[Function]}
           refreshing={false}
         />
       }
-      style={{}}
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="home-management-body"
     >
       <RCTRefreshControl />
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 16,
-              "paddingLeft": 16,
-              "paddingRight": 16,
-              "paddingTop": 16,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
-            className="flex flex-row"
             style={
               {
-                "alignItems": "center",
-                "justifyContent": "flex-end",
-              }
-            }
-          >
-            <View
-              accessibilityRole="button"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": false,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                [
-                  {
-                    "alignItems": "center",
-                    "backgroundColor": "#e85223",
-                    "borderColor": "#e85223",
-                    "borderRadius": 6,
-                    "borderWidth": 1,
-                    "color": "#ffffff",
-                    "justifyContent": "center",
-                    "paddingBottom": 6,
-                    "paddingLeft": 12,
-                    "paddingRight": 12,
-                    "paddingTop": 6,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "gap": 8,
-                    "justifyContent": "center",
-                  }
-                }
-              >
-                <Text
-                  accessibilityLabel="add-circle-outline"
-                >
-                  add-circle-outline
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#ffffff",
-                      "fontSize": 14,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  Add home
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            className="flex flex-col"
-            style={
-              {
-                "gap": 12,
+                "gap": 8,
               }
             }
           >
@@ -312,6 +305,14 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
               accessible={true}
               collapsable={false}
               focusable={true}
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
+                }
+              }
               onBlur={[Function]}
               onClick={[Function]}
               onFocus={[Function]}
@@ -323,57 +324,88 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
               onStartShouldSetResponder={[Function]}
               style={
                 [
-                  {},
-                  undefined,
+                  {
+                    "opacity": 1,
+                  },
+                  null,
                 ]
               }
+              testID="home-card-1"
             >
               <View
+                accessible={false}
                 style={
-                  {
-                    "backgroundColor": "#1f2937",
-                    "borderColor": "#e85223",
-                    "borderRadius": 12,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  }
+                  [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#0b0f16",
+                      "borderColor": "#2c3746",
+                      "borderLeftColor": "#ff6b3d",
+                      "borderLeftWidth": 2,
+                    },
+                    null,
+                    undefined,
+                  ]
                 }
+                testID="home-card-panel-1"
               >
                 <View
-                  className="flex flex-row"
+                  accessible={false}
                   style={
-                    {
-                      "alignItems": "flex-start",
-                      "justifyContent": "space-between",
-                    }
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
                   <View
-                    className="flex flex-col"
                     style={
                       {
                         "flex": 1,
                         "gap": 4,
+                        "minWidth": 0,
                       }
                     }
                   >
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 8,
                         }
                       }
                     >
                       <Text
-                        accessibilityRole="header"
+                        numberOfLines={1}
                         style={
-                          {
-                            "color": "#f3f4f6",
-                            "fontSize": 24,
-                            "fontWeight": "700",
-                          }
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 16,
+                              "lineHeight": 22,
+                            },
+                            null,
+                            [
+                              {
+                                "flexShrink": 1,
+                                "letterSpacing": 0.3,
+                                "textTransform": "uppercase",
+                              },
+                              {
+                                "flex": 1,
+                              },
+                            ],
+                          ]
                         }
                       >
                         Main House
@@ -381,37 +413,39 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       <View
                         style={
                           {
-                            "alignSelf": "flex-start",
-                            "backgroundColor": "#22c55e",
                             "borderColor": "#22c55e",
-                            "borderRadius": 6,
+                            "borderRadius": 2,
                             "borderWidth": 1,
-                            "color": "#ffffff",
-                            "paddingBottom": 4,
-                            "paddingLeft": 8,
-                            "paddingRight": 8,
-                            "paddingTop": 4,
+                            "paddingHorizontal": 4,
+                            "paddingVertical": 2,
                           }
                         }
                       >
                         <Text
                           style={
-                            {
-                              "color": "#ffffff",
-                              "fontSize": 12,
-                              "fontWeight": "600",
-                            }
+                            [
+                              {
+                                "color": "#22c55e",
+                                "fontFamily": "monospace",
+                                "fontSize": 11,
+                                "lineHeight": 15,
+                              },
+                              null,
+                              {
+                                "letterSpacing": 0.8,
+                              },
+                            ]
                           }
                         >
-                          Active
+                          ACTIVE
                         </Text>
                       </View>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
                         }
                       }
@@ -423,22 +457,27 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#9ca3af",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#828d9e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         Sarajevo
                       </Text>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
-                          "marginTop": 4,
                         }
                       }
                     >
@@ -449,76 +488,109 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#9ca3af",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#828d9e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         2 thermostats
                       </Text>
                     </View>
-                  </View>
-                  <View
-                    className="flex flex-row"
-                    style={
-                      {
-                        "gap": 8,
-                      }
-                    }
-                  >
                     <View
-                      accessibilityLabel="Edit home: Main House"
-                      accessibilityRole="button"
-                      accessibilityState={
-                        {
-                          "busy": undefined,
-                          "checked": undefined,
-                          "disabled": undefined,
-                          "expanded": undefined,
-                          "selected": undefined,
-                        }
-                      }
-                      accessibilityValue={
-                        {
-                          "max": undefined,
-                          "min": undefined,
-                          "now": undefined,
-                          "text": undefined,
-                        }
-                      }
-                      accessible={true}
-                      collapsable={false}
-                      focusable={true}
-                      hitSlop={
-                        {
-                          "bottom": 10,
-                          "left": 10,
-                          "right": 10,
-                          "top": 10,
-                        }
-                      }
-                      onBlur={[Function]}
-                      onClick={[Function]}
-                      onFocus={[Function]}
-                      onResponderGrant={[Function]}
-                      onResponderMove={[Function]}
-                      onResponderRelease={[Function]}
-                      onResponderTerminate={[Function]}
-                      onResponderTerminationRequest={[Function]}
-                      onStartShouldSetResponder={[Function]}
                       style={
-                        [
-                          {},
-                          undefined,
-                        ]
+                        {
+                          "alignItems": "center",
+                          "borderTopColor": "#1f2733",
+                          "borderTopWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "marginTop": 4,
+                          "paddingTop": 8,
+                        }
                       }
                     >
-                      <Text
-                        accessibilityLabel="create-outline"
+                      <View
+                        accessibilityLabel="Edit home: Main House"
+                        accessibilityRole="button"
+                        accessibilityState={
+                          {
+                            "busy": undefined,
+                            "checked": undefined,
+                            "disabled": undefined,
+                            "expanded": undefined,
+                            "selected": undefined,
+                          }
+                        }
+                        accessibilityValue={
+                          {
+                            "max": undefined,
+                            "min": undefined,
+                            "now": undefined,
+                            "text": undefined,
+                          }
+                        }
+                        accessible={true}
+                        collapsable={false}
+                        focusable={true}
+                        hitSlop={
+                          {
+                            "bottom": 8,
+                            "left": 8,
+                            "right": 8,
+                            "top": 8,
+                          }
+                        }
+                        onBlur={[Function]}
+                        onClick={[Function]}
+                        onFocus={[Function]}
+                        onResponderGrant={[Function]}
+                        onResponderMove={[Function]}
+                        onResponderRelease={[Function]}
+                        onResponderTerminate={[Function]}
+                        onResponderTerminationRequest={[Function]}
+                        onStartShouldSetResponder={[Function]}
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "minHeight": 32,
+                            },
+                            null,
+                          ]
+                        }
+                        testID="home-edit-1"
                       >
-                        create-outline
-                      </Text>
+                        <Text
+                          accessibilityLabel="create-outline"
+                        >
+                          create-outline
+                        </Text>
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#9aa6b6",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          Edit home
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -548,6 +620,14 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
               accessible={true}
               collapsable={false}
               focusable={true}
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
+                }
+              }
               onBlur={[Function]}
               onClick={[Function]}
               onFocus={[Function]}
@@ -559,67 +639,96 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
               onStartShouldSetResponder={[Function]}
               style={
                 [
-                  {},
-                  undefined,
+                  {
+                    "opacity": 1,
+                  },
+                  null,
                 ]
               }
+              testID="home-card-2"
             >
               <View
+                accessible={false}
                 style={
-                  {
-                    "backgroundColor": "#1f2937",
-                    "borderColor": "#374151",
-                    "borderRadius": 12,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  }
+                  [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#0b0f16",
+                      "borderColor": "#1f2733",
+                    },
+                    null,
+                    undefined,
+                  ]
                 }
+                testID="home-card-panel-2"
               >
                 <View
-                  className="flex flex-row"
+                  accessible={false}
                   style={
-                    {
-                      "alignItems": "flex-start",
-                      "justifyContent": "space-between",
-                    }
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
                   <View
-                    className="flex flex-col"
                     style={
                       {
                         "flex": 1,
                         "gap": 4,
+                        "minWidth": 0,
                       }
                     }
                   >
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 8,
                         }
                       }
                     >
                       <Text
-                        accessibilityRole="header"
+                        numberOfLines={1}
                         style={
-                          {
-                            "color": "#f3f4f6",
-                            "fontSize": 24,
-                            "fontWeight": "700",
-                          }
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 16,
+                              "lineHeight": 22,
+                            },
+                            null,
+                            [
+                              {
+                                "flexShrink": 1,
+                                "letterSpacing": 0.3,
+                                "textTransform": "uppercase",
+                              },
+                              {
+                                "flex": 1,
+                              },
+                            ],
+                          ]
                         }
                       >
                         Weekend House
                       </Text>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
                         }
                       }
@@ -631,22 +740,27 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#9ca3af",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#828d9e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         Bjelašnica
                       </Text>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
-                          "marginTop": 4,
                         }
                       }
                     >
@@ -657,129 +771,184 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#9ca3af",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#828d9e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         1 thermostat
                       </Text>
                     </View>
-                  </View>
-                  <View
-                    className="flex flex-row"
-                    style={
-                      {
-                        "gap": 8,
-                      }
-                    }
-                  >
                     <View
-                      accessibilityLabel="Edit home: Weekend House"
-                      accessibilityRole="button"
-                      accessibilityState={
-                        {
-                          "busy": undefined,
-                          "checked": undefined,
-                          "disabled": undefined,
-                          "expanded": undefined,
-                          "selected": undefined,
-                        }
-                      }
-                      accessibilityValue={
-                        {
-                          "max": undefined,
-                          "min": undefined,
-                          "now": undefined,
-                          "text": undefined,
-                        }
-                      }
-                      accessible={true}
-                      collapsable={false}
-                      focusable={true}
-                      hitSlop={
-                        {
-                          "bottom": 10,
-                          "left": 10,
-                          "right": 10,
-                          "top": 10,
-                        }
-                      }
-                      onBlur={[Function]}
-                      onClick={[Function]}
-                      onFocus={[Function]}
-                      onResponderGrant={[Function]}
-                      onResponderMove={[Function]}
-                      onResponderRelease={[Function]}
-                      onResponderTerminate={[Function]}
-                      onResponderTerminationRequest={[Function]}
-                      onStartShouldSetResponder={[Function]}
                       style={
-                        [
-                          {},
-                          undefined,
-                        ]
+                        {
+                          "alignItems": "center",
+                          "borderTopColor": "#1f2733",
+                          "borderTopWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "marginTop": 4,
+                          "paddingTop": 8,
+                        }
                       }
                     >
-                      <Text
-                        accessibilityLabel="create-outline"
+                      <View
+                        accessibilityLabel="Edit home: Weekend House"
+                        accessibilityRole="button"
+                        accessibilityState={
+                          {
+                            "busy": undefined,
+                            "checked": undefined,
+                            "disabled": undefined,
+                            "expanded": undefined,
+                            "selected": undefined,
+                          }
+                        }
+                        accessibilityValue={
+                          {
+                            "max": undefined,
+                            "min": undefined,
+                            "now": undefined,
+                            "text": undefined,
+                          }
+                        }
+                        accessible={true}
+                        collapsable={false}
+                        focusable={true}
+                        hitSlop={
+                          {
+                            "bottom": 8,
+                            "left": 8,
+                            "right": 8,
+                            "top": 8,
+                          }
+                        }
+                        onBlur={[Function]}
+                        onClick={[Function]}
+                        onFocus={[Function]}
+                        onResponderGrant={[Function]}
+                        onResponderMove={[Function]}
+                        onResponderRelease={[Function]}
+                        onResponderTerminate={[Function]}
+                        onResponderTerminationRequest={[Function]}
+                        onStartShouldSetResponder={[Function]}
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "minHeight": 32,
+                            },
+                            null,
+                          ]
+                        }
+                        testID="home-edit-2"
                       >
-                        create-outline
-                      </Text>
-                    </View>
-                    <View
-                      accessibilityLabel="Delete home: Weekend House"
-                      accessibilityRole="button"
-                      accessibilityState={
-                        {
-                          "busy": undefined,
-                          "checked": undefined,
-                          "disabled": false,
-                          "expanded": undefined,
-                          "selected": undefined,
+                        <Text
+                          accessibilityLabel="create-outline"
+                        >
+                          create-outline
+                        </Text>
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#9aa6b6",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          Edit home
+                        </Text>
+                      </View>
+                      <View
+                        accessibilityLabel="Delete home: Weekend House"
+                        accessibilityRole="button"
+                        accessibilityState={
+                          {
+                            "busy": undefined,
+                            "checked": undefined,
+                            "disabled": false,
+                            "expanded": undefined,
+                            "selected": undefined,
+                          }
                         }
-                      }
-                      accessibilityValue={
-                        {
-                          "max": undefined,
-                          "min": undefined,
-                          "now": undefined,
-                          "text": undefined,
+                        accessibilityValue={
+                          {
+                            "max": undefined,
+                            "min": undefined,
+                            "now": undefined,
+                            "text": undefined,
+                          }
                         }
-                      }
-                      accessible={true}
-                      collapsable={false}
-                      focusable={true}
-                      hitSlop={
-                        {
-                          "bottom": 10,
-                          "left": 10,
-                          "right": 10,
-                          "top": 10,
+                        accessible={true}
+                        collapsable={false}
+                        focusable={true}
+                        hitSlop={
+                          {
+                            "bottom": 8,
+                            "left": 8,
+                            "right": 8,
+                            "top": 8,
+                          }
                         }
-                      }
-                      onBlur={[Function]}
-                      onClick={[Function]}
-                      onFocus={[Function]}
-                      onResponderGrant={[Function]}
-                      onResponderMove={[Function]}
-                      onResponderRelease={[Function]}
-                      onResponderTerminate={[Function]}
-                      onResponderTerminationRequest={[Function]}
-                      onStartShouldSetResponder={[Function]}
-                      style={
-                        [
-                          {},
-                          undefined,
-                        ]
-                      }
-                    >
-                      <Text
-                        accessibilityLabel="trash-outline"
+                        onBlur={[Function]}
+                        onClick={[Function]}
+                        onFocus={[Function]}
+                        onResponderGrant={[Function]}
+                        onResponderMove={[Function]}
+                        onResponderRelease={[Function]}
+                        onResponderTerminate={[Function]}
+                        onResponderTerminationRequest={[Function]}
+                        onStartShouldSetResponder={[Function]}
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "minHeight": 32,
+                            },
+                            null,
+                          ]
+                        }
+                        testID="home-delete-2"
                       >
-                        trash-outline
-                      </Text>
+                        <Text
+                          accessibilityLabel="trash-outline"
+                        >
+                          trash-outline
+                        </Text>
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#ef4444",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          Delete home
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -837,6 +1006,7 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
         undefined,
       ]
     }
+    testID="home-management-screen"
   >
     <View
       style={
@@ -985,123 +1155,115 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
           </Text>
         </View>
       </View>
+      <View
+        accessibilityLabel="Add home"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        hitSlop={
+          {
+            "bottom": 8,
+            "left": 8,
+            "right": 8,
+            "top": 8,
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 3,
+                "borderWidth": 1,
+                "justifyContent": "center",
+                "minHeight": 44,
+                "minWidth": 44,
+              },
+              {
+                "backgroundColor": "#ffffff",
+                "borderColor": "#dce0e8",
+                "opacity": 1,
+              },
+            ],
+            null,
+          ]
+        }
+        testID="home-management-header-action"
+      >
+        <Text
+          accessibilityLabel="add"
+        >
+          add
+        </Text>
+      </View>
     </View>
     <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControlMock
           onRefresh={[Function]}
           refreshing={false}
         />
       }
-      style={{}}
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="home-management-body"
     >
       <RCTRefreshControl />
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 16,
-              "paddingLeft": 16,
-              "paddingRight": 16,
-              "paddingTop": 16,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
-            className="flex flex-row"
             style={
               {
-                "alignItems": "center",
-                "justifyContent": "flex-end",
-              }
-            }
-          >
-            <View
-              accessibilityRole="button"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": false,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                [
-                  {
-                    "alignItems": "center",
-                    "backgroundColor": "#e85223",
-                    "borderColor": "#e85223",
-                    "borderRadius": 6,
-                    "borderWidth": 1,
-                    "color": "#ffffff",
-                    "justifyContent": "center",
-                    "paddingBottom": 6,
-                    "paddingLeft": 12,
-                    "paddingRight": 12,
-                    "paddingTop": 6,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "gap": 8,
-                    "justifyContent": "center",
-                  }
-                }
-              >
-                <Text
-                  accessibilityLabel="add-circle-outline"
-                >
-                  add-circle-outline
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#ffffff",
-                      "fontSize": 14,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  Add home
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            className="flex flex-col"
-            style={
-              {
-                "gap": 12,
+                "gap": 8,
               }
             }
           >
@@ -1129,6 +1291,14 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
               accessible={true}
               collapsable={false}
               focusable={true}
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
+                }
+              }
               onBlur={[Function]}
               onClick={[Function]}
               onFocus={[Function]}
@@ -1140,57 +1310,88 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
               onStartShouldSetResponder={[Function]}
               style={
                 [
-                  {},
-                  undefined,
+                  {
+                    "opacity": 1,
+                  },
+                  null,
                 ]
               }
+              testID="home-card-1"
             >
               <View
+                accessible={false}
                 style={
-                  {
-                    "backgroundColor": "#ffffff",
-                    "borderColor": "#e85223",
-                    "borderRadius": 12,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  }
+                  [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#ffffff",
+                      "borderColor": "#c3cad6",
+                      "borderLeftColor": "#c2410c",
+                      "borderLeftWidth": 2,
+                    },
+                    null,
+                    undefined,
+                  ]
                 }
+                testID="home-card-panel-1"
               >
                 <View
-                  className="flex flex-row"
+                  accessible={false}
                   style={
-                    {
-                      "alignItems": "flex-start",
-                      "justifyContent": "space-between",
-                    }
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
                   <View
-                    className="flex flex-col"
                     style={
                       {
                         "flex": 1,
                         "gap": 4,
+                        "minWidth": 0,
                       }
                     }
                   >
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 8,
                         }
                       }
                     >
                       <Text
-                        accessibilityRole="header"
+                        numberOfLines={1}
                         style={
-                          {
-                            "color": "#1f2937",
-                            "fontSize": 24,
-                            "fontWeight": "700",
-                          }
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 16,
+                              "lineHeight": 22,
+                            },
+                            null,
+                            [
+                              {
+                                "flexShrink": 1,
+                                "letterSpacing": 0.3,
+                                "textTransform": "uppercase",
+                              },
+                              {
+                                "flex": 1,
+                              },
+                            ],
+                          ]
                         }
                       >
                         Main House
@@ -1198,37 +1399,39 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       <View
                         style={
                           {
-                            "alignSelf": "flex-start",
-                            "backgroundColor": "#22c55e",
-                            "borderColor": "#22c55e",
-                            "borderRadius": 6,
+                            "borderColor": "#15803d",
+                            "borderRadius": 2,
                             "borderWidth": 1,
-                            "color": "#ffffff",
-                            "paddingBottom": 4,
-                            "paddingLeft": 8,
-                            "paddingRight": 8,
-                            "paddingTop": 4,
+                            "paddingHorizontal": 4,
+                            "paddingVertical": 2,
                           }
                         }
                       >
                         <Text
                           style={
-                            {
-                              "color": "#ffffff",
-                              "fontSize": 12,
-                              "fontWeight": "600",
-                            }
+                            [
+                              {
+                                "color": "#15803d",
+                                "fontFamily": "monospace",
+                                "fontSize": 11,
+                                "lineHeight": 15,
+                              },
+                              null,
+                              {
+                                "letterSpacing": 0.8,
+                              },
+                            ]
                           }
                         >
-                          Active
+                          ACTIVE
                         </Text>
                       </View>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
                         }
                       }
@@ -1240,22 +1443,27 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#4b5563",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#59616e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         Sarajevo
                       </Text>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
-                          "marginTop": 4,
                         }
                       }
                     >
@@ -1266,76 +1474,109 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#4b5563",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#59616e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         2 thermostats
                       </Text>
                     </View>
-                  </View>
-                  <View
-                    className="flex flex-row"
-                    style={
-                      {
-                        "gap": 8,
-                      }
-                    }
-                  >
                     <View
-                      accessibilityLabel="Edit home: Main House"
-                      accessibilityRole="button"
-                      accessibilityState={
-                        {
-                          "busy": undefined,
-                          "checked": undefined,
-                          "disabled": undefined,
-                          "expanded": undefined,
-                          "selected": undefined,
-                        }
-                      }
-                      accessibilityValue={
-                        {
-                          "max": undefined,
-                          "min": undefined,
-                          "now": undefined,
-                          "text": undefined,
-                        }
-                      }
-                      accessible={true}
-                      collapsable={false}
-                      focusable={true}
-                      hitSlop={
-                        {
-                          "bottom": 10,
-                          "left": 10,
-                          "right": 10,
-                          "top": 10,
-                        }
-                      }
-                      onBlur={[Function]}
-                      onClick={[Function]}
-                      onFocus={[Function]}
-                      onResponderGrant={[Function]}
-                      onResponderMove={[Function]}
-                      onResponderRelease={[Function]}
-                      onResponderTerminate={[Function]}
-                      onResponderTerminationRequest={[Function]}
-                      onStartShouldSetResponder={[Function]}
                       style={
-                        [
-                          {},
-                          undefined,
-                        ]
+                        {
+                          "alignItems": "center",
+                          "borderTopColor": "#dce0e8",
+                          "borderTopWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "marginTop": 4,
+                          "paddingTop": 8,
+                        }
                       }
                     >
-                      <Text
-                        accessibilityLabel="create-outline"
+                      <View
+                        accessibilityLabel="Edit home: Main House"
+                        accessibilityRole="button"
+                        accessibilityState={
+                          {
+                            "busy": undefined,
+                            "checked": undefined,
+                            "disabled": undefined,
+                            "expanded": undefined,
+                            "selected": undefined,
+                          }
+                        }
+                        accessibilityValue={
+                          {
+                            "max": undefined,
+                            "min": undefined,
+                            "now": undefined,
+                            "text": undefined,
+                          }
+                        }
+                        accessible={true}
+                        collapsable={false}
+                        focusable={true}
+                        hitSlop={
+                          {
+                            "bottom": 8,
+                            "left": 8,
+                            "right": 8,
+                            "top": 8,
+                          }
+                        }
+                        onBlur={[Function]}
+                        onClick={[Function]}
+                        onFocus={[Function]}
+                        onResponderGrant={[Function]}
+                        onResponderMove={[Function]}
+                        onResponderRelease={[Function]}
+                        onResponderTerminate={[Function]}
+                        onResponderTerminationRequest={[Function]}
+                        onStartShouldSetResponder={[Function]}
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "minHeight": 32,
+                            },
+                            null,
+                          ]
+                        }
+                        testID="home-edit-1"
                       >
-                        create-outline
-                      </Text>
+                        <Text
+                          accessibilityLabel="create-outline"
+                        >
+                          create-outline
+                        </Text>
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#4b5563",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          Edit home
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -1365,6 +1606,14 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
               accessible={true}
               collapsable={false}
               focusable={true}
+              hitSlop={
+                {
+                  "bottom": 8,
+                  "left": 8,
+                  "right": 8,
+                  "top": 8,
+                }
+              }
               onBlur={[Function]}
               onClick={[Function]}
               onFocus={[Function]}
@@ -1376,67 +1625,96 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
               onStartShouldSetResponder={[Function]}
               style={
                 [
-                  {},
-                  undefined,
+                  {
+                    "opacity": 1,
+                  },
+                  null,
                 ]
               }
+              testID="home-card-2"
             >
               <View
+                accessible={false}
                 style={
-                  {
-                    "backgroundColor": "#ffffff",
-                    "borderColor": "#e5e7eb",
-                    "borderRadius": 12,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  }
+                  [
+                    {
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "overflow": "hidden",
+                    },
+                    {
+                      "backgroundColor": "#ffffff",
+                      "borderColor": "#dce0e8",
+                    },
+                    null,
+                    undefined,
+                  ]
                 }
+                testID="home-card-panel-2"
               >
                 <View
-                  className="flex flex-row"
+                  accessible={false}
                   style={
-                    {
-                      "alignItems": "flex-start",
-                      "justifyContent": "space-between",
-                    }
+                    [
+                      {
+                        "paddingHorizontal": 12,
+                        "paddingVertical": 10,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
                   <View
-                    className="flex flex-col"
                     style={
                       {
                         "flex": 1,
                         "gap": 4,
+                        "minWidth": 0,
                       }
                     }
                   >
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 8,
                         }
                       }
                     >
                       <Text
-                        accessibilityRole="header"
+                        numberOfLines={1}
                         style={
-                          {
-                            "color": "#1f2937",
-                            "fontSize": 24,
-                            "fontWeight": "700",
-                          }
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 16,
+                              "lineHeight": 22,
+                            },
+                            null,
+                            [
+                              {
+                                "flexShrink": 1,
+                                "letterSpacing": 0.3,
+                                "textTransform": "uppercase",
+                              },
+                              {
+                                "flex": 1,
+                              },
+                            ],
+                          ]
                         }
                       >
                         Weekend House
                       </Text>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
                         }
                       }
@@ -1448,22 +1726,27 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#4b5563",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#59616e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         Bjelašnica
                       </Text>
                     </View>
                     <View
-                      className="flex flex-row"
                       style={
                         {
                           "alignItems": "center",
+                          "flexDirection": "row",
                           "gap": 4,
-                          "marginTop": 4,
                         }
                       }
                     >
@@ -1474,129 +1757,184 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       </Text>
                       <Text
                         style={
-                          {
-                            "color": "#4b5563",
-                            "fontSize": 14,
-                          }
+                          [
+                            {
+                              "color": "#59616e",
+                              "fontFamily": "monospace",
+                              "fontSize": 12,
+                              "lineHeight": 16,
+                            },
+                            null,
+                            undefined,
+                          ]
                         }
                       >
                         1 thermostat
                       </Text>
                     </View>
-                  </View>
-                  <View
-                    className="flex flex-row"
-                    style={
-                      {
-                        "gap": 8,
-                      }
-                    }
-                  >
                     <View
-                      accessibilityLabel="Edit home: Weekend House"
-                      accessibilityRole="button"
-                      accessibilityState={
-                        {
-                          "busy": undefined,
-                          "checked": undefined,
-                          "disabled": undefined,
-                          "expanded": undefined,
-                          "selected": undefined,
-                        }
-                      }
-                      accessibilityValue={
-                        {
-                          "max": undefined,
-                          "min": undefined,
-                          "now": undefined,
-                          "text": undefined,
-                        }
-                      }
-                      accessible={true}
-                      collapsable={false}
-                      focusable={true}
-                      hitSlop={
-                        {
-                          "bottom": 10,
-                          "left": 10,
-                          "right": 10,
-                          "top": 10,
-                        }
-                      }
-                      onBlur={[Function]}
-                      onClick={[Function]}
-                      onFocus={[Function]}
-                      onResponderGrant={[Function]}
-                      onResponderMove={[Function]}
-                      onResponderRelease={[Function]}
-                      onResponderTerminate={[Function]}
-                      onResponderTerminationRequest={[Function]}
-                      onStartShouldSetResponder={[Function]}
                       style={
-                        [
-                          {},
-                          undefined,
-                        ]
+                        {
+                          "alignItems": "center",
+                          "borderTopColor": "#dce0e8",
+                          "borderTopWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "marginTop": 4,
+                          "paddingTop": 8,
+                        }
                       }
                     >
-                      <Text
-                        accessibilityLabel="create-outline"
+                      <View
+                        accessibilityLabel="Edit home: Weekend House"
+                        accessibilityRole="button"
+                        accessibilityState={
+                          {
+                            "busy": undefined,
+                            "checked": undefined,
+                            "disabled": undefined,
+                            "expanded": undefined,
+                            "selected": undefined,
+                          }
+                        }
+                        accessibilityValue={
+                          {
+                            "max": undefined,
+                            "min": undefined,
+                            "now": undefined,
+                            "text": undefined,
+                          }
+                        }
+                        accessible={true}
+                        collapsable={false}
+                        focusable={true}
+                        hitSlop={
+                          {
+                            "bottom": 8,
+                            "left": 8,
+                            "right": 8,
+                            "top": 8,
+                          }
+                        }
+                        onBlur={[Function]}
+                        onClick={[Function]}
+                        onFocus={[Function]}
+                        onResponderGrant={[Function]}
+                        onResponderMove={[Function]}
+                        onResponderRelease={[Function]}
+                        onResponderTerminate={[Function]}
+                        onResponderTerminationRequest={[Function]}
+                        onStartShouldSetResponder={[Function]}
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "minHeight": 32,
+                            },
+                            null,
+                          ]
+                        }
+                        testID="home-edit-2"
                       >
-                        create-outline
-                      </Text>
-                    </View>
-                    <View
-                      accessibilityLabel="Delete home: Weekend House"
-                      accessibilityRole="button"
-                      accessibilityState={
-                        {
-                          "busy": undefined,
-                          "checked": undefined,
-                          "disabled": false,
-                          "expanded": undefined,
-                          "selected": undefined,
+                        <Text
+                          accessibilityLabel="create-outline"
+                        >
+                          create-outline
+                        </Text>
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#4b5563",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          Edit home
+                        </Text>
+                      </View>
+                      <View
+                        accessibilityLabel="Delete home: Weekend House"
+                        accessibilityRole="button"
+                        accessibilityState={
+                          {
+                            "busy": undefined,
+                            "checked": undefined,
+                            "disabled": false,
+                            "expanded": undefined,
+                            "selected": undefined,
+                          }
                         }
-                      }
-                      accessibilityValue={
-                        {
-                          "max": undefined,
-                          "min": undefined,
-                          "now": undefined,
-                          "text": undefined,
+                        accessibilityValue={
+                          {
+                            "max": undefined,
+                            "min": undefined,
+                            "now": undefined,
+                            "text": undefined,
+                          }
                         }
-                      }
-                      accessible={true}
-                      collapsable={false}
-                      focusable={true}
-                      hitSlop={
-                        {
-                          "bottom": 10,
-                          "left": 10,
-                          "right": 10,
-                          "top": 10,
+                        accessible={true}
+                        collapsable={false}
+                        focusable={true}
+                        hitSlop={
+                          {
+                            "bottom": 8,
+                            "left": 8,
+                            "right": 8,
+                            "top": 8,
+                          }
                         }
-                      }
-                      onBlur={[Function]}
-                      onClick={[Function]}
-                      onFocus={[Function]}
-                      onResponderGrant={[Function]}
-                      onResponderMove={[Function]}
-                      onResponderRelease={[Function]}
-                      onResponderTerminate={[Function]}
-                      onResponderTerminationRequest={[Function]}
-                      onStartShouldSetResponder={[Function]}
-                      style={
-                        [
-                          {},
-                          undefined,
-                        ]
-                      }
-                    >
-                      <Text
-                        accessibilityLabel="trash-outline"
+                        onBlur={[Function]}
+                        onClick={[Function]}
+                        onFocus={[Function]}
+                        onResponderGrant={[Function]}
+                        onResponderMove={[Function]}
+                        onResponderRelease={[Function]}
+                        onResponderTerminate={[Function]}
+                        onResponderTerminationRequest={[Function]}
+                        onStartShouldSetResponder={[Function]}
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "minHeight": 32,
+                            },
+                            null,
+                          ]
+                        }
+                        testID="home-delete-2"
                       >
-                        trash-outline
-                      </Text>
+                        <Text
+                          accessibilityLabel="trash-outline"
+                        >
+                          trash-outline
+                        </Text>
+                        <Text
+                          style={
+                            [
+                              {
+                                "color": "#b91c1c",
+                                "fontFamily": undefined,
+                                "fontSize": 12,
+                                "lineHeight": 16,
+                              },
+                              null,
+                              undefined,
+                            ]
+                          }
+                        >
+                          Delete home
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>

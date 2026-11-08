@@ -647,8 +647,11 @@ const GasReadingsScreenContent: React.FC<GasReadingsScreenProps> = ({
         renderItem={renderReadingItem}
         ListHeaderComponent={
           <View style={{ gap: space.md, paddingHorizontal: space.lg, paddingTop: space.sm }}>
-            {/* F1: sekcijska traka (Očitanja | Analiza) iz GasScreen-a */}
-            {headerSlot}
+            {/* F1: sekcijska traka (Očitanja | Analiza) iz GasScreen-a.
+                F10 (GAS-TRANSITION): traka je često `null` — vidi `GasScreen`,
+                gdje je dobija samo vidljivi panel. Zato se renderuje uslovno;
+                inače bi prazan `View` pravio 0 px visine i pomjerao sadržaj. */}
+            {headerSlot ?? null}
 
             {/*
               F9 (GAS-SUMMARY): sažetak je prije bio tri kolone istog ranga —

@@ -1,5 +1,5 @@
 import mockReact from 'react';
-import { Text as mockNativeText } from 'react-native';
+import { StyleSheet, Text as mockNativeText } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../../components/ui/nativewind';
@@ -88,16 +88,36 @@ describe('Schedule nativewind', () => {
   });
 });
 
-it('changes the selected thermostat through the NativeWind select', async () => {
+/**
+ * F10 (SCHED-THEME): izbor termostata je preveden sa `Select`-a starog sloja na
+ * red koji otvara `Sheet` sa radio listom (`role="combobox"` → `radio`).
+ * Tvrdnje o ponašanju su iste: promjena uređaja mora ponovo da učita programe
+ * i prikaže novi naziv.
+ */
+it('changes the selected thermostat through the device sheet', async () => {
   const { result, queryClient } = await screenTree('dark');
-  const select = await result.findByRole('combobox');
+  const select = await result.findByTestId('schedule-device-select');
   await waitFor(() => expect(thermostatApi.getDevicePrograms).toHaveBeenCalledWith(1));
 
   await fireEvent.press(select);
-  await fireEvent.press(result.getByText('Boiler Upstairs (Tuya)'));
+  await fireEvent.press(await result.findByTestId('schedule-device-option-2'));
 
   await waitFor(() => expect(thermostatApi.getDevicePrograms).toHaveBeenCalledWith(2));
   expect(await result.findByText('Boiler Upstairs')).toBeTruthy();
+  await result.unmount();
+  queryClient.clear();
+});
+
+it('prikazuje naziv uređaja velikim slovima, bez mijenjanja podatka', async () => {
+  const { result, queryClient } = await screenTree('dark');
+  const title = await result.findByText('Boiler Living Room');
+  // `textTransform` je stil, ne izmijenjen string — čitač ekrana i pretraga
+  // i dalje dobijaju prirodan naziv.
+  // `DeviceName` slaže stilove u niz (transform + pozivaočev `flex`), pa se
+  // čita kroz `StyleSheet.flatten`, isto kao u `gasDeviceLayout` testu.
+  const flat = StyleSheet.flatten(title.props.style);
+  expect(flat.textTransform).toBe('uppercase');
+  expect(title.props.children).toBe('Boiler Living Room');
   await result.unmount();
   queryClient.clear();
 });

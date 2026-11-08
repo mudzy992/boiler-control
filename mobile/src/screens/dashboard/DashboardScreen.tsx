@@ -14,6 +14,7 @@ import {
   Kpi,
   Led,
   MonoLabel,
+  DeviceName,
   MonoMeta,
   Panel,
   PanelRow,
@@ -419,7 +420,7 @@ export const DashboardScreen = () => {
             unit="°C"
             meta={
               primaryThermostat
-                ? primaryThermostat.alias
+                ? primaryThermostat.alias.toUpperCase()
                 : t('heating.noThermostats')
             }
             testID="kpi-thermostat"
@@ -514,9 +515,7 @@ export const DashboardScreen = () => {
                           style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}
                         >
                           <Led state={heating ? 'on' : 'off'} />
-                          <Text size="body" weight="medium" numberOfLines={1}>
-                            {thermostat.alias}
-                          </Text>
+                          <DeviceName name={thermostat.alias} style={{ flex: 1 }} />
                         </View>
                         <Readout
                           value={`${current !== null ? current.toFixed(1) : '—'} → ${

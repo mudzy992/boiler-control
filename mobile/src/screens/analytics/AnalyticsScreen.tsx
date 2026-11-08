@@ -16,6 +16,7 @@ import {
   InlineBanner,
   Kpi,
   MonoLabel,
+  DeviceName,
   MonoMeta,
   Panel,
   PanelRow,
@@ -469,9 +470,11 @@ export const AnalyticsScreen = () => {
                     )} / ${target.toFixed(1)} °C`}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-                      <Text size="body" weight="medium" style={{ flex: 1 }} numberOfLines={1}>
-                        {thermostat.alias ?? t('thermostat.title')}
-                      </Text>
+                      <DeviceName
+                        name={thermostat.alias}
+                        fallback={t('thermostat.title')}
+                        style={{ flex: 1 }}
+                      />
                       <Readout
                         value={t('analytics.targetDash', {
                           actual: actual.toFixed(1),

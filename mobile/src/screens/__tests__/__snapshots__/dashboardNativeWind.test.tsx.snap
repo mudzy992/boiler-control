@@ -1174,7 +1174,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     ]
                   }
                 >
-                  Living Room
+                  LIVING ROOM
                 </Text>
               </View>
             </View>
@@ -1798,7 +1798,16 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                               "lineHeight": 18,
                             },
                             null,
-                            undefined,
+                            [
+                              {
+                                "flexShrink": 1,
+                                "letterSpacing": 0.3,
+                                "textTransform": "uppercase",
+                              },
+                              {
+                                "flex": 1,
+                              },
+                            ],
                           ]
                         }
                       >
@@ -4060,7 +4069,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     ]
                   }
                 >
-                  Living Room
+                  LIVING ROOM
                 </Text>
               </View>
             </View>
@@ -4684,7 +4693,16 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                               "lineHeight": 18,
                             },
                             null,
-                            undefined,
+                            [
+                              {
+                                "flexShrink": 1,
+                                "letterSpacing": 0.3,
+                                "textTransform": "uppercase",
+                              },
+                              {
+                                "flex": 1,
+                              },
+                            ],
                           ]
                         }
                       >

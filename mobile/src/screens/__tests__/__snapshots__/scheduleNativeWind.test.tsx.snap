@@ -20,6 +20,7 @@ exports[`Schedule nativewind matches the dark snapshot 1`] = `
         undefined,
       ]
     }
+    testID="schedule-screen"
   >
     <View
       style={
@@ -170,268 +171,247 @@ exports[`Schedule nativewind matches the dark snapshot 1`] = `
       </View>
     </View>
     <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
-      style={{}}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="schedule-body"
     >
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 16,
-              "paddingLeft": 16,
-              "paddingRight": 16,
-              "paddingTop": 16,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
-            style={{}}
-          >
-            <Text
-              style={
-                {
-                  "color": "#f3f4f6",
-                  "fontSize": 14,
-                  "fontWeight": "600",
-                  "marginBottom": 8,
-                }
-              }
-            >
-              Select thermostat
-            </Text>
-            <View
-              accessibilityLabel="Select thermostat"
-              accessibilityRole="combobox"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": false,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                [
-                  {
-                    "backgroundColor": "#0f172a",
-                    "borderColor": "#d1d5db",
-                    "borderRadius": 6,
-                    "borderWidth": 1,
-                    "minWidth": 200,
-                    "paddingBottom": 12,
-                    "paddingLeft": 12,
-                    "paddingRight": 12,
-                    "paddingTop": 12,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "gap": 8,
-                    "justifyContent": "space-between",
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#f3f4f6",
-                      "flex": 1,
-                    }
-                  }
-                >
-                  Boiler Living Room (Tuya)
-                </Text>
-                <Text
-                  accessibilityLabel="chevron-down"
-                >
-                  chevron-down
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
+            accessibilityLabel="Select thermostat: Boiler Living Room"
+            accessibilityRole="combobox"
+            accessibilityState={
               {
-                "backgroundColor": "#0f172a",
-                "borderLeftColor": "#e85223",
-                "borderLeftWidth": 3,
-                "borderRadius": 8,
-                "padding": 12,
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
               }
             }
-          >
-            <View
-              className="flex flex-row"
-              style={
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 8,
+                "left": 8,
+                "right": 8,
+                "top": 8,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
                 {
                   "alignItems": "center",
-                  "gap": 8,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="thermometer"
-              >
-                thermometer
-              </Text>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#f3f4f6",
-                      "fontSize": 16,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  Boiler Living Room
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#9ca3af",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  Tuya
-                   ·
-                   
-                  Mode: Program
-                </Text>
-              </View>
-              <View
-                style={
-                  {
-                    "alignSelf": "flex-start",
-                    "backgroundColor": "#14532d",
-                    "borderColor": "transparent",
-                    "borderRadius": 6,
-                    "borderWidth": 0,
-                    "color": "#86efac",
-                    "paddingBottom": 4,
-                    "paddingLeft": 8,
-                    "paddingRight": 8,
-                    "paddingTop": 4,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#86efac",
-                      "fontSize": 12,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  Program
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#1e293b",
-                "borderColor": "#1d4ed8",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 12,
-              }
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 12,
+                  "minHeight": 56,
+                  "paddingHorizontal": 12,
+                },
+                null,
+              ]
             }
+            testID="schedule-device-select"
           >
+            <Text
+              accessibilityLabel="thermometer"
+            >
+              thermometer
+            </Text>
             <View
-              className="flex flex-row"
               style={
                 {
-                  "alignItems": "flex-start",
-                  "gap": 8,
+                  "flex": 1,
+                  "gap": 2,
+                  "minWidth": 0,
                 }
               }
             >
               <Text
-                accessibilityLabel="information-circle"
-              >
-                information-circle
-              </Text>
-              <View
-                className="flex flex-col"
+                numberOfLines={1}
                 style={
-                  {
-                    "flex": 1,
-                    "gap": 4,
-                  }
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 16,
+                      "lineHeight": 22,
+                    },
+                    null,
+                    [
+                      {
+                        "flexShrink": 1,
+                        "letterSpacing": 0.3,
+                        "textTransform": "uppercase",
+                      },
+                      undefined,
+                    ],
+                  ]
                 }
               >
-                <Text
-                  style={
+                Boiler Living Room
+              </Text>
+              <Text
+                style={
+                  [
                     {
-                      "color": "#1d4ed8",
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
                       "fontSize": 12,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  Read-only display
-                </Text>
-                <Text
-                  style={
+                      "lineHeight": 16,
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+              >
+                Tuya · Program
+              </Text>
+            </View>
+            <Text
+              accessibilityLabel="chevron-down"
+            >
+              chevron-down
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="Read-only display. This screen shows the current heating program from your thermostat. Editing schedules is not available yet."
+            accessibilityRole="alert"
+            accessible={true}
+            style={
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#111723",
+                  "borderColor": "#1f2733",
+                  "borderLeftColor": "#38bdf8",
+                },
+                undefined,
+              ]
+            }
+            testID="schedule-readonly-banner"
+          >
+            <Text
+              accessibilityLabel="information-circle-outline"
+            >
+              information-circle-outline
+            </Text>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "gap": 2,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
                     {
-                      "color": "#2563eb",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  This screen shows the current heating program from your thermostat. Editing schedules is not available yet.
-                </Text>
-              </View>
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                    },
+                  ]
+                }
+              >
+                Read-only display
+              </Text>
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#9aa6b6",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                      "lineHeight": 17.55,
+                    },
+                  ]
+                }
+              >
+                This screen shows the current heating program from your thermostat. Editing schedules is not available yet.
+              </Text>
             </View>
           </View>
           <View
             style={
-              {
-                "alignItems": "center",
-                "justifyContent": "center",
-                "paddingBottom": 40,
-                "paddingTop": 40,
-              }
+              [
+                {
+                  "alignItems": "center",
+                  "gap": 2,
+                  "justifyContent": "center",
+                  "paddingHorizontal": 16,
+                  "paddingVertical": 24,
+                },
+                undefined,
+              ]
             }
           >
             <Text
@@ -441,10 +421,22 @@ exports[`Schedule nativewind matches the dark snapshot 1`] = `
             </Text>
             <Text
               style={
-                {
-                  "color": "#9ca3af",
-                  "fontSize": 14,
-                }
+                [
+                  {
+                    "color": "#e8edf4",
+                    "fontFamily": undefined,
+                    "fontSize": 15,
+                    "lineHeight": 20,
+                  },
+                  null,
+                  {
+                    "color": "#e8edf4",
+                    "fontFamily": undefined,
+                    "fontSize": 15,
+                    "marginTop": 10,
+                    "textAlign": "center",
+                  },
+                ]
               }
             >
               No heating programs found
@@ -501,6 +493,7 @@ exports[`Schedule nativewind matches the light snapshot 1`] = `
         undefined,
       ]
     }
+    testID="schedule-screen"
   >
     <View
       style={
@@ -651,268 +644,247 @@ exports[`Schedule nativewind matches the light snapshot 1`] = `
       </View>
     </View>
     <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
-      style={{}}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="schedule-body"
     >
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 16,
-              "paddingLeft": 16,
-              "paddingRight": 16,
-              "paddingTop": 16,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
-            style={{}}
-          >
-            <Text
-              style={
-                {
-                  "color": "#1f2937",
-                  "fontSize": 14,
-                  "fontWeight": "600",
-                  "marginBottom": 8,
-                }
-              }
-            >
-              Select thermostat
-            </Text>
-            <View
-              accessibilityLabel="Select thermostat"
-              accessibilityRole="combobox"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": false,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                [
-                  {
-                    "backgroundColor": "#ffffff",
-                    "borderColor": "#d1d5db",
-                    "borderRadius": 6,
-                    "borderWidth": 1,
-                    "minWidth": 200,
-                    "paddingBottom": 12,
-                    "paddingLeft": 12,
-                    "paddingRight": 12,
-                    "paddingTop": 12,
-                  },
-                  undefined,
-                ]
-              }
-            >
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "gap": 8,
-                    "justifyContent": "space-between",
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#1f2937",
-                      "flex": 1,
-                    }
-                  }
-                >
-                  Boiler Living Room (Tuya)
-                </Text>
-                <Text
-                  accessibilityLabel="chevron-down"
-                >
-                  chevron-down
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
+            accessibilityLabel="Select thermostat: Boiler Living Room"
+            accessibilityRole="combobox"
+            accessibilityState={
               {
-                "backgroundColor": "#ffffff",
-                "borderLeftColor": "#e85223",
-                "borderLeftWidth": 3,
-                "borderRadius": 8,
-                "padding": 12,
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
               }
             }
-          >
-            <View
-              className="flex flex-row"
-              style={
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 8,
+                "left": 8,
+                "right": 8,
+                "top": 8,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
                 {
                   "alignItems": "center",
-                  "gap": 8,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="thermometer"
-              >
-                thermometer
-              </Text>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "flex": 1,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#1f2937",
-                      "fontSize": 16,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  Boiler Living Room
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#4b5563",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  Tuya
-                   ·
-                   
-                  Mode: Program
-                </Text>
-              </View>
-              <View
-                style={
-                  {
-                    "alignSelf": "flex-start",
-                    "backgroundColor": "#dcfce7",
-                    "borderColor": "transparent",
-                    "borderRadius": 6,
-                    "borderWidth": 0,
-                    "color": "#15803d",
-                    "paddingBottom": 4,
-                    "paddingLeft": 8,
-                    "paddingRight": 8,
-                    "paddingTop": 4,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#15803d",
-                      "fontSize": 12,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  Program
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#eff6ff",
-                "borderColor": "#bfdbfe",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 12,
-              }
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 12,
+                  "minHeight": 56,
+                  "paddingHorizontal": 12,
+                },
+                null,
+              ]
             }
+            testID="schedule-device-select"
           >
+            <Text
+              accessibilityLabel="thermometer"
+            >
+              thermometer
+            </Text>
             <View
-              className="flex flex-row"
               style={
                 {
-                  "alignItems": "flex-start",
-                  "gap": 8,
+                  "flex": 1,
+                  "gap": 2,
+                  "minWidth": 0,
                 }
               }
             >
               <Text
-                accessibilityLabel="information-circle"
-              >
-                information-circle
-              </Text>
-              <View
-                className="flex flex-col"
+                numberOfLines={1}
                 style={
-                  {
-                    "flex": 1,
-                    "gap": 4,
-                  }
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 16,
+                      "lineHeight": 22,
+                    },
+                    null,
+                    [
+                      {
+                        "flexShrink": 1,
+                        "letterSpacing": 0.3,
+                        "textTransform": "uppercase",
+                      },
+                      undefined,
+                    ],
+                  ]
                 }
               >
-                <Text
-                  style={
+                Boiler Living Room
+              </Text>
+              <Text
+                style={
+                  [
                     {
-                      "color": "#1d4ed8",
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
                       "fontSize": 12,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  Read-only display
-                </Text>
-                <Text
-                  style={
+                      "lineHeight": 16,
+                    },
+                    null,
+                    undefined,
+                  ]
+                }
+              >
+                Tuya · Program
+              </Text>
+            </View>
+            <Text
+              accessibilityLabel="chevron-down"
+            >
+              chevron-down
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="Read-only display. This screen shows the current heating program from your thermostat. Editing schedules is not available yet."
+            accessibilityRole="alert"
+            accessible={true}
+            style={
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#f1f3f7",
+                  "borderColor": "#dce0e8",
+                  "borderLeftColor": "#0369a1",
+                },
+                undefined,
+              ]
+            }
+            testID="schedule-readonly-banner"
+          >
+            <Text
+              accessibilityLabel="information-circle-outline"
+            >
+              information-circle-outline
+            </Text>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "gap": 2,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
                     {
-                      "color": "#2563eb",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  This screen shows the current heating program from your thermostat. Editing schedules is not available yet.
-                </Text>
-              </View>
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                    },
+                  ]
+                }
+              >
+                Read-only display
+              </Text>
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#4b5563",
+                      "fontFamily": undefined,
+                      "fontSize": 13,
+                      "lineHeight": 17.55,
+                    },
+                  ]
+                }
+              >
+                This screen shows the current heating program from your thermostat. Editing schedules is not available yet.
+              </Text>
             </View>
           </View>
           <View
             style={
-              {
-                "alignItems": "center",
-                "justifyContent": "center",
-                "paddingBottom": 40,
-                "paddingTop": 40,
-              }
+              [
+                {
+                  "alignItems": "center",
+                  "gap": 2,
+                  "justifyContent": "center",
+                  "paddingHorizontal": 16,
+                  "paddingVertical": 24,
+                },
+                undefined,
+              ]
             }
           >
             <Text
@@ -922,10 +894,22 @@ exports[`Schedule nativewind matches the light snapshot 1`] = `
             </Text>
             <Text
               style={
-                {
-                  "color": "#4b5563",
-                  "fontSize": 14,
-                }
+                [
+                  {
+                    "color": "#111827",
+                    "fontFamily": undefined,
+                    "fontSize": 15,
+                    "lineHeight": 20,
+                  },
+                  null,
+                  {
+                    "color": "#111827",
+                    "fontFamily": undefined,
+                    "fontSize": 15,
+                    "marginTop": 10,
+                    "textAlign": "center",
+                  },
+                ]
               }
             >
               No heating programs found

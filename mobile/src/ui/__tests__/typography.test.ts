@@ -10,7 +10,7 @@ import { fontSize, lineHeightFor, radius, space } from '../../theme/tokens';
 
 describe('tipografska skala', () => {
   it('nijedna veličina nije manja od 11 px', () => {
-    for (const [name, value] of Object.entries(fontSize)) {
+    for (const value of Object.values(fontSize)) {
       expect(value).toBeGreaterThanOrEqual(11);
     }
   });

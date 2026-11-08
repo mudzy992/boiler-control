@@ -379,11 +379,29 @@ izmjena skale ne zaobiđe te fajlove. `typography.test.ts` (5 testova) drži
 minimalnu veličinu 11 px, strogo rastuću skalu, odnos visine reda ≥ 1,3 i
 razmake 4/8/12/16/24/32.
 
+
+**WCAG 2.2 AA — ostatak audita (A11Y-15, A11Y-16).** Uz paletu (F6c) i
+tipografiju (F6f) provjereno je ostalo iz listinga:
+
+| Kri­terij (WCAG 2.2) | Stanje prije | Sada |
+|---|---|---|
+| 2.3.3 Animation from Interactions / 2.2.2 | Splash (`AnimatedSplash`, jedina animacija u aplikaciji: 650 + 350 + 300 ms) puštao se bez obzira na sistemsku postavku | `AccessibilityInfo.isReduceMotionEnabled()` + `reduceMotionChanged` listener; kad je uključeno, splash se prikaže statično i odmah preda dalje (`f6A11y.test.tsx`, 2 testa) |
+| 1.3.1 Info and Relationships | Naslovi sekcija u Obavijestima („Danas", „Jučer", „Ranije") bili su samo podebljani tekst | `accessibilityRole="header"` |
+| 4.1.2 Name, Role, Value | Postavke obavijesti: prekidači bez labele (SET-09) | labela = naziv tipa |
+| 2.5.8 Target Size (Minimum) | Filter chipovi na Plinu ~27 px (GAS-09) | `minHeight: MIN_TOUCH` |
+| 1.4.3 Contrast (Minimum) | šest tokena ispod 4,5:1 (F6c) | svi ≥ 4,5:1, primarni tekst ≥ 7:1 |
+| 1.4.4 Resize Text | mikro-labele 9/10 px (F6f) | minimum 11 px, visina reda iz skale |
+
+Provjereno i **u redu**: touch targeti definirani u `src/ui` (>= 44 pt), role na
+svim `Pressable` elementima iz `src/ui` (default `button`), `accessibilityState`
+na prekidačima i tabovima, `accessibilityLiveRegion="polite"` na toastovima,
+`hitSlop` na svim malim ikonama, kontrast svih tokena u obje teme.
+
 **Verifikacija (2026-11-08):**
 
 ```
 npx tsc --noEmit                        → 0 grešaka
-npx jest                                → 39 suite-ova, 286 testova, 32 snapshot-a — zeleno
+npx jest                                → 40 suite-ova, 288 testova, 32 snapshot-a — zeleno
 npx eslint src App.tsx index.js         → 0 grešaka (49 postojećih warninga)
 CI=1 npx expo export --platform android → bundle se gradi
 ```
@@ -404,7 +422,7 @@ obrazloženje u komentaru.
 | F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
 | F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
-| F6 Greške + šest dorada | **u toku** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; 53 nova testa |
+| F6 Greške + šest dorada | **završeno 2026-11-08** | „Text strings" (`Badge`), Reanimated `deps` filter, jezik u Postavkama, WCAG AA paleta + `a11yContrast.test.ts`, vrijeme ispod statusa, `utils/format.ts`, detaljan prolaz kroz Plin (GAS-01…GAS-11) i Postavke (SET-02…SET-13); tipografska skala ≥ 11 px; reduced motion za splash; 55 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

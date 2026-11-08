@@ -1229,6 +1229,7 @@ exports[`Notifications before/after NativeWind nativewind matches the dark snaps
           style={null}
         >
           <Text
+            accessibilityRole="header"
             style={
               {
                 "color": "#9ca3af",
@@ -1921,6 +1922,7 @@ exports[`Notifications before/after NativeWind nativewind matches the light snap
           style={null}
         >
           <Text
+            accessibilityRole="header"
             style={
               {
                 "color": "#4b5563",

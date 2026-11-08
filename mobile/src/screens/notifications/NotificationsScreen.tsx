@@ -233,8 +233,19 @@ const NotificationsScreenContent: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
         refreshing={isRefetching}
+        /*
+         * F6 (A11Y-16): naslov sekcije („Danas", „Jučer", „Ranije") je bio samo
+         * podebljani tekst — čitač ekrana ga nije najavljivao kao naslov, pa se
+         * u dugoj listi nije znalo gdje počinje koji dan. Sada `accessibilityRole`.
+         */
         renderSectionHeader={({ section }) => (
-          <Text fontSize="sm" fontWeight="700" color={subtextColor} mb={2}>
+          <Text
+            accessibilityRole="header"
+            fontSize="sm"
+            fontWeight="700"
+            color={subtextColor}
+            mb={2}
+          >
             {section.title}
           </Text>
         )}

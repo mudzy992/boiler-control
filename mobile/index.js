@@ -1,5 +1,10 @@
 import { registerRootComponent } from 'expo';
 
+// Mora prije `App`-a: `Intl.PluralRules` mora postojati prije prvog i18n
+// poziva, a LogBox filter mora biti postavljen prije prvog JSX render-a
+// (NativeWind uvozi `runtime/components` tek pri prvom render-u).
+import './src/polyfills';
+
 import App from './App';
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);

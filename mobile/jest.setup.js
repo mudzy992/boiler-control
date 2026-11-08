@@ -17,6 +17,13 @@
 
 process.env.EXPO_PUBLIC_API_URL = 'https://test.invalid/api';
 
+// F5: isti startup polyfills kao u `index.js`, da testovi i uređaj vide isti
+// `Intl.PluralRules` (Node ima svoj, pa razlika ne bi bila vidljiva — ali bez
+// locale podataka za `bs` test bi mjerio Node, ne ono što se šalje korisniku).
+require('@formatjs/intl-pluralrules/polyfill-force');
+require('@formatjs/intl-pluralrules/locale-data/en');
+require('@formatjs/intl-pluralrules/locale-data/bs');
+
 // Native modules are unavailable in Jest. Use the package-maintained mock so
 // theme persistence and existing auth/storage tests share the same behavior.
 jest.mock(

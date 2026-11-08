@@ -205,6 +205,36 @@ i `accessibilityState` na polju; (2) `Pressable`-i nose `accessibilityLabel`/
 `accessibilityRole`. Nijedna asertacija nije mijenjana; u tri testa je uklonjen
 `jest.mock('../../components/BottomSheetModal')` jer modul više ne postoji.
 
+### F5 — Expo Go / RN 0.88 (nakon F4)
+
+Pokretanje u Expo Go otkrilo je četiri stvari koje se **ne vide u testovima ni u
+`expo export`**: tri su iz trećeg sloja, jedna je bila neiskorištena zavisnost.
+
+| Simptom | Uzrok | Šta je urađeno |
+|---|---|---|
+| `i18next::pluralResolver: Your environment seems not to be Intl API compatible…` | Hermes u RN 0.88 nema `Intl.PluralRules`; `@formatjs/intl-pluralrules` je bio u `package.json` ali se **nikad nije importovao** | Novi `src/polyfills.ts` (uveden iz `index.js` prije `App`): `polyfill-force` + locale-data `en` i `bs`. `polyfill-force` je namjeran izbor — obični `polyfill` ne radi ništa kad je API prisutan ali bez `bs` podataka, a to je bio slučaj |
+| `SafeAreaView has been deprecated…` / `ImageBackground is deprecated…` | `react-native-css-interop` (NativeWind 4) pri prvom JSX renderu uveze `runtime/components.js` i pročita ta dva gettera iz `react-native` da bi im dodao `className`. Naš kod ih ne koristi | `console.warn` filter u `polyfills.ts`, sužen na tačan tekst. `LogBox.ignoreLogs` sam ne pomaže — RN ga i dalje prosljeđuje u Metro terminal (`originalConsoleWarn`), pa je omotač oko `console.warn` jedino mjesto gdje se poruka zaista zaustavi |
+| `[Invariant Violation: InteractionManager has been removed from react-native core]` ×3 | `@react-navigation/stack` 7.7.2 čita `InteractionManager` pri svakom renderu kartice; RN 0.88 ga je uklonio. Riješeno u 7.8+ (`InteractionManager.native.js` provjerava `Platform.constants.reactNativeVersion` prije pristupa) | `@react-navigation/stack` 7.7.2 → **7.12.1**, uz `native` 7.5.1, `bottom-tabs` 7.21.0, `material-top-tabs` 7.8.1 (+ `elements` 2.9.45). API navigacije se ne mijenja: rute, `navigationRef` i deep link prefiksi ostaju isti |
+
+Uz to: `nativewind` je pri prvom pokretanju generisao `nativewind-env.d.ts` i
+dopunio `tsconfig.json` — ta dva `className` tipa su sada commitovana, pa
+`npm run type-check` ne zavisi od toga da je neko lokalno pokrenuo Expo.
+
+Provjera (2026-11-08):
+
+```
+npm run type-check   → 0 grešaka
+npm test             → 32 suite-a, 228 testova, 32 snapshot-a — sve zeleno
+                       (31 postojeći + 1 novi: f5Runtime.test.ts, 6 testova)
+npm run lint         → 0 grešaka
+npx expo export --platform android → bundle se gradi (5.5 MB)
+```
+
+Regenerisan je jedan snapshot (`navigationNativeWind`): novija verzija
+`react-native-screens`/navigacije renderuje `pointerEvents="box-none"` na
+`ScreenStack` i po jedan `false` u `style` nizu tab ikone. To je izlaz
+biblioteke, ne naša promjena stilova — nijedna asertacija nije dirana.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -214,6 +244,7 @@ i `accessibilityState` na polju; (2) `Pressable`-i nose `accessibilityLabel`/
 | F2 Glavni ekrani | **završeno 2026-11-07** | Početna = hero + 3 KPI + liste; Grijanje red-po-uređaju; Plin red-po-očitanju; Postavke jedna lista; 11 novih testova |
 | F3 Analitika i grafovi | **završeno 2026-11-08** | jedan `TrendChart` na `react-native-svg` (chart-kit uklonjen), tabela vrijednost/prethodno iz stvarnog upita, cilj-vs-postignuto, bez fiktivnih metrika; 6 novih testova |
 | F4 Završnica | **završeno 2026-11-08** | skeleton na svim ekranima sa učitavanjem, a11y labele na svim `Pressable`-ima, `Alert` i stari bottom sheet obrisani, locale bug `gas.dateRange` ispravljen; 13 novih testova |
+| F5 Expo Go / RN 0.88 | **završeno 2026-11-08** | `Intl.PluralRules` polyfill, `console.warn` filter za dva NativeWind upozorenja, `@react-navigation/stack` 7.12.1 (InteractionManager); 6 novih testova |
 
 ### Šta je F0 stvarno isporučio
 

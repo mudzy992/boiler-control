@@ -38,6 +38,11 @@ import '@formatjs/intl-pluralrules/locale-data/bs';
 const IGNORED_WARNINGS = [
   'SafeAreaView has been deprecated and will be removed in a future release',
   'ImageBackground is deprecated and will be removed in a future release',
+  // @gorhom/bottom-sheet 5.x prosljeđuje `deps` u `useAnimatedReaction`, što
+  // Reanimated 4 na native-u ignoriše (i sam kaže da je relevantno samo za web).
+  // Upozorenje je tačno i bezopasno, ali se ponavlja pri svakom montiranju
+  // sheeta; nema načina da se popravi bez patcha biblioteke.
+  'Dependencies should only be used on the web and are always ignored on native',
 ] as const;
 
 const originalWarn = console.warn.bind(console);

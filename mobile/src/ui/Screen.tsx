@@ -22,7 +22,7 @@ import {
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { HIT_SLOP, MIN_TOUCH, radius, space } from '../theme/tokens';
+import { HIT_SLOP, MIN_TOUCH, fontSize as fs, radius, space } from '../theme/tokens';
 import { useTokens } from './theme';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
@@ -156,7 +156,7 @@ export function ScreenHeader({
             numberOfLines={1}
             style={{
               fontFamily: fonts.sansSemiBold,
-              fontSize: 18,
+              fontSize: fs.title - 4,
               color: t.ink,
               letterSpacing: -0.2,
             }}
@@ -169,7 +169,7 @@ export function ScreenHeader({
               style={{
                 marginTop: 2,
                 fontFamily: fonts.mono,
-                fontSize: 9.5,
+                fontSize: fs.label,
                 letterSpacing: 0.8,
                 textTransform: 'uppercase',
                 color: t.inkDim,
@@ -232,7 +232,7 @@ export function Section({ label, meta, children, gap = space.sm, style }: Sectio
           <Text
             style={{
               fontFamily: fonts.mono,
-              fontSize: 9,
+              fontSize: fs.label,
               letterSpacing: 1.4,
               textTransform: 'uppercase',
               color: t.inkDim,
@@ -244,7 +244,7 @@ export function Section({ label, meta, children, gap = space.sm, style }: Sectio
             <Text
               style={{
                 fontFamily: fonts.mono,
-                fontSize: 9,
+                fontSize: fs.label,
                 letterSpacing: 1.1,
                 textTransform: 'uppercase',
                 color: t.inkMuted,

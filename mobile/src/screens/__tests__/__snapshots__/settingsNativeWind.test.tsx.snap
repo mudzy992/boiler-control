@@ -61,7 +61,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -131,13 +132,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -166,8 +168,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="Test User. owner@example.com"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -184,13 +185,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 testID="settings-profile"
               >
                 <View
-                  accessibilityLabel="Test User"
+                  accessibilityLabel="Test User. owner@example.com"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -238,6 +239,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -259,7 +261,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -274,7 +277,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -295,8 +299,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.changePassword"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -319,7 +322,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -367,6 +370,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -388,7 +392,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -433,13 +438,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -479,9 +485,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "borderBottomColor": "#1f2733",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
                 testID="settings-dark-mode"
@@ -494,6 +498,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
@@ -515,7 +520,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
@@ -530,7 +536,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#9aa6b6",
                             "fontFamily": undefined,
-                            "fontSize": 10,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -576,8 +583,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.language. settings.languageEnglish"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -594,13 +600,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 testID="settings-language"
               >
                 <View
-                  accessibilityLabel="settings.language"
+                  accessibilityLabel="settings.language. settings.languageEnglish"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -648,6 +654,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -669,7 +676,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -684,7 +692,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -731,13 +740,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -766,8 +776,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="settings.notificationsEnabled. settings.notificationPermissionGranted"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -783,13 +792,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.notificationsEnabled"
+                  accessibilityLabel="settings.notificationsEnabled. settings.notificationPermissionGranted"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -837,6 +846,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -858,7 +868,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -873,7 +884,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -894,8 +906,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.notifications. settings.notificationsDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -911,13 +922,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.notifications"
+                  accessibilityLabel="settings.notifications. settings.notificationsDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -965,6 +976,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -986,7 +998,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -1001,7 +1014,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -1022,8 +1036,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.notificationPreferences. settings.notificationPreferencesDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -1039,13 +1052,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.notificationPreferences"
+                  accessibilityLabel="settings.notificationPreferences. settings.notificationPreferencesDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -1093,6 +1106,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -1114,7 +1128,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -1129,7 +1144,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -1161,9 +1177,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "borderBottomColor": "#1f2733",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
               >
@@ -1175,6 +1189,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
@@ -1196,7 +1211,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
@@ -1211,7 +1227,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#9aa6b6",
                             "fontFamily": undefined,
-                            "fontSize": 10,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -1284,13 +1301,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -1319,8 +1337,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="settings.manageHomes. settings.manageHomesDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -1336,13 +1353,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.manageHomes"
+                  accessibilityLabel="settings.manageHomes. settings.manageHomesDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -1390,6 +1407,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -1411,7 +1429,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -1426,7 +1445,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -1447,8 +1467,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.heatingSchedules. settings.heatingSchedulesDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -1464,13 +1483,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.heatingSchedules"
+                  accessibilityLabel="settings.heatingSchedules. settings.heatingSchedulesDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -1518,6 +1537,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -1539,7 +1559,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -1554,7 +1575,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -1601,13 +1623,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -1636,8 +1659,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="settings.exportData. settings.exportDataDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -1653,13 +1675,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.exportData"
+                  accessibilityLabel="settings.exportData. settings.exportDataDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -1707,6 +1729,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -1728,7 +1751,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -1743,7 +1767,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -1764,8 +1789,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.clearCache. settings.clearCacheDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -1781,13 +1805,13 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.clearCache"
+                  accessibilityLabel="settings.clearCache. settings.clearCacheDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -1835,6 +1859,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -1856,7 +1881,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -1871,7 +1897,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#9aa6b6",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -1918,13 +1945,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -1964,9 +1992,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "borderBottomColor": "#1f2733",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
               >
@@ -1978,6 +2004,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
@@ -1999,7 +2026,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
@@ -2014,7 +2042,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#9aa6b6",
                             "fontFamily": undefined,
-                            "fontSize": 10,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -2040,9 +2069,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "borderBottomColor": "#1f2733",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
               >
@@ -2054,13 +2081,14 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
                   <Text
-                    accessibilityLabel="help-circle-outline"
+                    accessibilityLabel="code-slash-outline"
                   >
-                    help-circle-outline
+                    code-slash-outline
                   </Text>
                   <View
                     style={
@@ -2075,73 +2103,33 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                           {
                             "color": "#e8edf4",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
                         ]
                       }
                     >
-                      settings.helpSupport
+                      settings.developer
                     </Text>
-                  </View>
-                </View>
-              </View>
-              <View
-                accessible={false}
-                style={
-                  [
-                    {
-                      "paddingHorizontal": 12,
-                      "paddingVertical": 10,
-                    },
-                    {
-                      "borderBottomColor": "#1f2733",
-                      "borderBottomWidth": 1,
-                    },
-                    {
-                      "opacity": 0.85,
-                    },
-                  ]
-                }
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flex": 1,
-                      "flexDirection": "row",
-                      "gap": 12,
-                      "minHeight": 44,
-                    }
-                  }
-                >
-                  <Text
-                    accessibilityLabel="document-text-outline"
-                  >
-                    document-text-outline
-                  </Text>
-                  <View
-                    style={
-                      {
-                        "flex": 1,
-                      }
-                    }
-                  >
                     <Text
                       style={
                         [
                           {
-                            "color": "#e8edf4",
+                            "color": "#9aa6b6",
                             "fontFamily": undefined,
                             "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
-                          undefined,
+                          {
+                            "marginTop": 1,
+                          },
                         ]
                       }
                     >
-                      settings.termsPrivacy
+                      settings.developerDesc
                     </Text>
                   </View>
                 </View>
@@ -2212,6 +2200,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 null,
               ]
             }
+            testID="settings-logout"
           >
             <View
               style={
@@ -2228,7 +2217,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     {
                       "color": "#e8edf4",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
@@ -2284,7 +2274,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#e8edf4",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -2440,7 +2431,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                   {
                     "color": "#e8edf4",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -2536,7 +2528,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                   {
                     "color": "#e8edf4",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -2591,7 +2584,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#e8edf4",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -2692,9 +2686,10 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -2758,9 +2753,10 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -2824,9 +2820,10 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -2968,7 +2965,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -3063,7 +3061,8 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -3082,6 +3081,340 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
           </View>
         </View>
       </RCTScrollView>
+    </View>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#1f2733",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#e8edf4",
+                "fontFamily": undefined,
+                "fontSize": 15,
+                "lineHeight": 20,
+              },
+              null,
+              {
+                "color": "#e8edf4",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          settings.logoutTitle
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="settings-logout-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "color": "#9aa6b6",
+                "fontFamily": undefined,
+                "fontSize": 15,
+                "lineHeight": 20,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          settings.logoutBody
+        </Text>
+        <View
+          style={
+            {
+              "gap": 8,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="common.logout"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": false,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 8,
+                "left": 8,
+                "right": 8,
+                "top": 8,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
+                [
+                  {
+                    "alignItems": "center",
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "justifyContent": "center",
+                    "minHeight": 44,
+                    "paddingHorizontal": 16,
+                  },
+                  {
+                    "backgroundColor": "transparent",
+                    "borderColor": "#2c3746",
+                    "opacity": 1,
+                  },
+                  {
+                    "alignSelf": "stretch",
+                  },
+                  undefined,
+                ],
+                null,
+              ]
+            }
+            testID="settings-logout-confirm"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 6,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#ef4444",
+                      "fontFamily": undefined,
+                      "fontSize": 12.5,
+                    },
+                  ]
+                }
+              >
+                common.logout
+              </Text>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="common.cancel"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": false,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 8,
+                "left": 8,
+                "right": 8,
+                "top": 8,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
+                [
+                  {
+                    "alignItems": "center",
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "justifyContent": "center",
+                    "minHeight": 44,
+                    "paddingHorizontal": 16,
+                  },
+                  {
+                    "backgroundColor": "transparent",
+                    "borderColor": "#1f2733",
+                    "opacity": 1,
+                  },
+                  {
+                    "alignSelf": "stretch",
+                  },
+                  undefined,
+                ],
+                null,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 6,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#9aa6b6",
+                      "fontFamily": undefined,
+                      "fontSize": 12.5,
+                    },
+                  ]
+                }
+              >
+                common.cancel
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
     </View>
   </RNCSafeAreaView>
   <View
@@ -3172,7 +3505,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -3242,13 +3576,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -3277,8 +3612,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="Test User. owner@example.com"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -3295,13 +3629,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 testID="settings-profile"
               >
                 <View
-                  accessibilityLabel="Test User"
+                  accessibilityLabel="Test User. owner@example.com"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -3349,6 +3683,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -3370,7 +3705,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -3385,7 +3721,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -3406,8 +3743,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.changePassword"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -3430,7 +3766,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -3478,6 +3814,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -3499,7 +3836,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -3544,13 +3882,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -3590,9 +3929,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "borderBottomColor": "#dce0e8",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
                 testID="settings-dark-mode"
@@ -3605,6 +3942,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
@@ -3626,7 +3964,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
@@ -3641,7 +3980,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#4b5563",
                             "fontFamily": undefined,
-                            "fontSize": 10,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -3687,8 +4027,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.language. settings.languageEnglish"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -3705,13 +4044,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 testID="settings-language"
               >
                 <View
-                  accessibilityLabel="settings.language"
+                  accessibilityLabel="settings.language. settings.languageEnglish"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -3759,6 +4098,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -3780,7 +4120,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -3795,7 +4136,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -3842,13 +4184,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -3877,8 +4220,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="settings.notificationsEnabled. settings.notificationPermissionGranted"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -3894,13 +4236,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.notificationsEnabled"
+                  accessibilityLabel="settings.notificationsEnabled. settings.notificationPermissionGranted"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -3948,6 +4290,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -3969,7 +4312,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -3984,7 +4328,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -4005,8 +4350,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.notifications. settings.notificationsDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -4022,13 +4366,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.notifications"
+                  accessibilityLabel="settings.notifications. settings.notificationsDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -4076,6 +4420,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -4097,7 +4442,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -4112,7 +4458,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -4133,8 +4480,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.notificationPreferences. settings.notificationPreferencesDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -4150,13 +4496,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.notificationPreferences"
+                  accessibilityLabel="settings.notificationPreferences. settings.notificationPreferencesDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -4204,6 +4550,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -4225,7 +4572,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -4240,7 +4588,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -4272,9 +4621,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "borderBottomColor": "#dce0e8",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
               >
@@ -4286,6 +4633,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
@@ -4307,7 +4655,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
@@ -4322,7 +4671,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#4b5563",
                             "fontFamily": undefined,
-                            "fontSize": 10,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -4395,13 +4745,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -4430,8 +4781,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="settings.manageHomes. settings.manageHomesDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -4447,13 +4797,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.manageHomes"
+                  accessibilityLabel="settings.manageHomes. settings.manageHomesDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -4501,6 +4851,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -4522,7 +4873,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -4537,7 +4889,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -4558,8 +4911,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.heatingSchedules. settings.heatingSchedulesDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -4575,13 +4927,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.heatingSchedules"
+                  accessibilityLabel="settings.heatingSchedules. settings.heatingSchedulesDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -4629,6 +4981,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -4650,7 +5003,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -4665,7 +5019,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -4712,13 +5067,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -4747,8 +5103,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
               }
             >
               <View
-                accessibilityLabel="settings.exportData. settings.exportDataDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -4764,13 +5119,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.exportData"
+                  accessibilityLabel="settings.exportData. settings.exportDataDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -4818,6 +5173,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -4839,7 +5195,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -4854,7 +5211,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -4875,8 +5233,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="settings.clearCache. settings.clearCacheDesc"
-                accessible={true}
+                accessible={false}
                 style={
                   [
                     {
@@ -4892,13 +5249,13 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 }
               >
                 <View
-                  accessibilityLabel="settings.clearCache"
+                  accessibilityLabel="settings.clearCache. settings.clearCacheDesc"
                   accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
                       "checked": undefined,
-                      "disabled": undefined,
+                      "disabled": false,
                       "expanded": undefined,
                       "selected": undefined,
                     }
@@ -4946,6 +5303,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "flexDirection": "row",
                         "gap": 12,
                         "minHeight": 44,
+                        "opacity": 1,
                       }
                     }
                   >
@@ -4967,7 +5325,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             undefined,
@@ -4982,7 +5341,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#4b5563",
                               "fontFamily": undefined,
-                              "fontSize": 10,
+                              "fontSize": 13,
+                              "lineHeight": 18,
                             },
                             null,
                             {
@@ -5029,13 +5389,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
                       "letterSpacing": 1.4,
                       "textTransform": "uppercase",
                     },
@@ -5075,9 +5436,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "borderBottomColor": "#dce0e8",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
               >
@@ -5089,6 +5448,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
@@ -5110,7 +5470,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
@@ -5125,7 +5486,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#4b5563",
                             "fontFamily": undefined,
-                            "fontSize": 10,
+                            "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
                           {
@@ -5151,9 +5513,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "borderBottomColor": "#dce0e8",
                       "borderBottomWidth": 1,
                     },
-                    {
-                      "opacity": 0.85,
-                    },
+                    undefined,
                   ]
                 }
               >
@@ -5165,13 +5525,14 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                       "flexDirection": "row",
                       "gap": 12,
                       "minHeight": 44,
+                      "opacity": 1,
                     }
                   }
                 >
                   <Text
-                    accessibilityLabel="help-circle-outline"
+                    accessibilityLabel="code-slash-outline"
                   >
-                    help-circle-outline
+                    code-slash-outline
                   </Text>
                   <View
                     style={
@@ -5186,73 +5547,33 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                           {
                             "color": "#111827",
                             "fontFamily": undefined,
-                            "fontSize": 13,
+                            "fontSize": 15,
+                            "lineHeight": 20,
                           },
                           null,
                           undefined,
                         ]
                       }
                     >
-                      settings.helpSupport
+                      settings.developer
                     </Text>
-                  </View>
-                </View>
-              </View>
-              <View
-                accessible={false}
-                style={
-                  [
-                    {
-                      "paddingHorizontal": 12,
-                      "paddingVertical": 10,
-                    },
-                    {
-                      "borderBottomColor": "#dce0e8",
-                      "borderBottomWidth": 1,
-                    },
-                    {
-                      "opacity": 0.85,
-                    },
-                  ]
-                }
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flex": 1,
-                      "flexDirection": "row",
-                      "gap": 12,
-                      "minHeight": 44,
-                    }
-                  }
-                >
-                  <Text
-                    accessibilityLabel="document-text-outline"
-                  >
-                    document-text-outline
-                  </Text>
-                  <View
-                    style={
-                      {
-                        "flex": 1,
-                      }
-                    }
-                  >
                     <Text
                       style={
                         [
                           {
-                            "color": "#111827",
+                            "color": "#4b5563",
                             "fontFamily": undefined,
                             "fontSize": 13,
+                            "lineHeight": 18,
                           },
                           null,
-                          undefined,
+                          {
+                            "marginTop": 1,
+                          },
                         ]
                       }
                     >
-                      settings.termsPrivacy
+                      settings.developerDesc
                     </Text>
                   </View>
                 </View>
@@ -5323,6 +5644,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 null,
               ]
             }
+            testID="settings-logout"
           >
             <View
               style={
@@ -5339,11 +5661,12 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     {
                       "color": "#111827",
                       "fontFamily": undefined,
-                      "fontSize": 13,
+                      "fontSize": 15,
+                      "lineHeight": 20,
                     },
                     null,
                     {
-                      "color": "#dc2626",
+                      "color": "#b91c1c",
                       "fontFamily": undefined,
                       "fontSize": 12.5,
                     },
@@ -5395,7 +5718,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
               {
                 "color": "#111827",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -5522,8 +5846,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                   "paddingHorizontal": 16,
                 },
                 {
-                  "backgroundColor": "#e85223",
-                  "borderColor": "#e85223",
+                  "backgroundColor": "#c2410c",
+                  "borderColor": "#c2410c",
                   "opacity": 1,
                 },
                 {
@@ -5551,7 +5875,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                   {
                     "color": "#111827",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -5647,7 +5972,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                   {
                     "color": "#111827",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -5702,7 +6028,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
               {
                 "color": "#111827",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -5803,9 +6130,10 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -5869,9 +6197,10 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -5935,9 +6264,10 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -6079,7 +6409,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -6146,8 +6477,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "paddingHorizontal": 16,
                       },
                       {
-                        "backgroundColor": "#e85223",
-                        "borderColor": "#e85223",
+                        "backgroundColor": "#c2410c",
+                        "borderColor": "#c2410c",
                         "opacity": 1,
                       },
                       null,
@@ -6174,7 +6505,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -6193,6 +6525,340 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
           </View>
         </View>
       </RCTScrollView>
+    </View>
+    <View
+      onLayout={[Function]}
+      style={
+        [
+          {
+            "flex": 1,
+          },
+          {
+            "paddingBottom": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "paddingBottom": 12,
+              "paddingHorizontal": 16,
+              "paddingTop": 8,
+            },
+            {
+              "borderBottomColor": "#dce0e8",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="header"
+          style={
+            [
+              {
+                "color": "#111827",
+                "fontFamily": undefined,
+                "fontSize": 15,
+                "lineHeight": 20,
+              },
+              null,
+              {
+                "color": "#111827",
+                "flex": 1,
+                "fontFamily": undefined,
+                "fontSize": 14,
+              },
+            ]
+          }
+        >
+          settings.logoutTitle
+        </Text>
+        <View
+          accessibilityLabel="common.close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 10,
+              "left": 10,
+              "right": 10,
+              "top": 10,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              undefined,
+              null,
+            ]
+          }
+          testID="settings-logout-sheet-close"
+        >
+          <Text
+            accessibilityLabel="close"
+          >
+            close
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "color": "#4b5563",
+                "fontFamily": undefined,
+                "fontSize": 15,
+                "lineHeight": 20,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          settings.logoutBody
+        </Text>
+        <View
+          style={
+            {
+              "gap": 8,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="common.logout"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": false,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 8,
+                "left": 8,
+                "right": 8,
+                "top": 8,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
+                [
+                  {
+                    "alignItems": "center",
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "justifyContent": "center",
+                    "minHeight": 44,
+                    "paddingHorizontal": 16,
+                  },
+                  {
+                    "backgroundColor": "transparent",
+                    "borderColor": "#c3cad6",
+                    "opacity": 1,
+                  },
+                  {
+                    "alignSelf": "stretch",
+                  },
+                  undefined,
+                ],
+                null,
+              ]
+            }
+            testID="settings-logout-confirm"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 6,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#b91c1c",
+                      "fontFamily": undefined,
+                      "fontSize": 12.5,
+                    },
+                  ]
+                }
+              >
+                common.logout
+              </Text>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="common.cancel"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": false,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 8,
+                "left": 8,
+                "right": 8,
+                "top": 8,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
+                [
+                  {
+                    "alignItems": "center",
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "justifyContent": "center",
+                    "minHeight": 44,
+                    "paddingHorizontal": 16,
+                  },
+                  {
+                    "backgroundColor": "transparent",
+                    "borderColor": "#dce0e8",
+                    "opacity": 1,
+                  },
+                  {
+                    "alignSelf": "stretch",
+                  },
+                  undefined,
+                ],
+                null,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 6,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#4b5563",
+                      "fontFamily": undefined,
+                      "fontSize": 12.5,
+                    },
+                  ]
+                }
+              >
+                common.cancel
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
     </View>
   </RNCSafeAreaView>
   <View

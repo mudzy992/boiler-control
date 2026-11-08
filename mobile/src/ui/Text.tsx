@@ -10,7 +10,7 @@
 import React from 'react';
 import { StyleSheet, Text as RNText, type TextProps as RNTextProps } from 'react-native';
 
-import { fontSize as fs } from '../theme/tokens';
+import { fontSize as fs, lineHeightFor } from '../theme/tokens';
 import { useTokens } from './theme';
 
 export type TextProps = RNTextProps & {
@@ -58,7 +58,14 @@ export function Text({
   return (
     <RNText
       style={[
-        { fontFamily: family, fontSize: fs[size], color },
+        {
+          fontFamily: family,
+          fontSize: fs[size],
+          // F6 (A11Y-14): visina reda iz skale, ne RN default — pri 200%
+          // uvećanju teksta redovi se inače preklapaju u uskim kolonama.
+          lineHeight: lineHeightFor(fs[size]),
+          color,
+        },
         align ? { textAlign: align } : null,
         style,
       ]}

@@ -42,8 +42,13 @@ describe('design tokens', () => {
   it('signal je brand narandžasta u obje teme', () => {
     // Ista familija boje kao web `--signal: 255 107 61`; svijetla varijanta je
     // zatamnjeni signal zbog kontrasta na bijelom.
+    //
+    // F6 (A11Y-01): svijetla varijanta je zatamnjena sa #e85223 na #c2410c.
+    // #e85223 je davao 3,71:1 na panelu i 3,46:1 na `canvas` — pada AA za
+    // normalan tekst, a pošto je signal i podloga primarnog dugmeta, i bijeli
+    // tekst na njemu je bio ispod granice. Nova vrijednost je 5,18 / 4,84.
     expect(darkTokens.signal).toBe('#ff6b3d');
-    expect(lightTokens.signal).toBe('#e85223');
+    expect(lightTokens.signal).toBe('#c2410c');
   });
 
   it('`tokensFor` vraća dark za nepoznatu vrijednost (fail-safe na default)', () => {

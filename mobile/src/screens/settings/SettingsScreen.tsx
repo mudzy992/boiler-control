@@ -27,8 +27,9 @@ import {
   Section,
   Sheet,
   Text,
+  useTokens,
 } from '../../ui';
-import { space } from '../../theme/tokens';
+import { MIN_TOUCH, space } from '../../theme/tokens';
 
 /**
  * MO2-6 (MO-008): tip preferencije za dnevni podsjetnik o plinu.
@@ -56,6 +57,97 @@ const GAS_READING_REMINDER_TYPE = 'GAS_READING_REMINDER';
  * Sada: `Section` labela + `Panel variant="flush"` sa `PanelRow` redovima, bez
  * ijedne sjene i bez ijednog hooka u uslovnom izrazu.
  */
+type SettingRowProps = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  subtitle?: string;
+  onPress?: () => void;
+  rightElement?: React.ReactNode;
+  testID?: string;
+  /** Red postoji, ali trenutno nije moguć (npr. izvoz u toku). */
+  isDisabled?: boolean;
+};
+
+/**
+ * Red postavke.
+ *
+ * F6 (SET-02): komponenta je bila definirana UNUTAR `SettingsScreenContent`.
+ * Svaki render je stvarao novi tip komponente, pa je React cijelu listu
+ * remountovao — prekidači su gubili stanje, a `Switch` animacija je kretala iz
+ * početka pri svakoj promjeni bilo koje postavke. Sada je izvan komponente.
+ *
+ * F6 (SET-03): dodirna zona je bila `minHeight: 44` samo na unutrašnjem
+ * `View`-u, dok je `PanelRow` imao svoj padding — pa je stvarna zona zavisila od
+ * sadržaja. Sada cijeli red nosi `minHeight: MIN_TOUCH`.
+ *
+ * F6 (SET-04): boje su bile hardkodirane (`#8a93a3`, `#6b7788`), dakle nisu
+ * pratile temu ni novu AA paletu. Sada `useTokens()`.
+ */
+function SettingRow({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  rightElement,
+  testID,
+  isDisabled = false,
+}: SettingRowProps) {
+  const { t } = useTokens();
+  const content = (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: space.md,
+        flex: 1,
+        minHeight: MIN_TOUCH,
+        opacity: isDisabled ? 0.5 : 1,
+      }}
+    >
+      <Ionicons name={icon} size={17} color={t.inkDim} />
+      <View style={{ flex: 1 }}>
+        <Text size="bodyLg" weight="medium">
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text size="body" tone="muted" style={{ marginTop: 1 }}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      {rightElement}
+      {onPress ? <Ionicons name="chevron-forward" size={14} color={t.inkDim} /> : null}
+    </View>
+  );
+
+  /*
+   * Čitač ekrana treba JEDAN čvor po redu. Prije je `PanelRow` dobio
+   * `accessible`+`accessibilityLabel` (spajajući djecu), a `Pressable` unutra
+   * je imao svoju labelu — pa je TalkBack najavljivao red dvaput, a prekidač
+   * unutar reda nije bio dostupan kao zasebna kontrola.
+   */
+  return (
+    <PanelRow
+      divider
+      testID={testID}
+    >
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          disabled={isDisabled}
+          accessibilityRole="button"
+          accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
+          accessibilityState={{ disabled: isDisabled }}
+        >
+          {content}
+        </Pressable>
+      ) : (
+        content
+      )}
+    </PanelRow>
+  );
+}
+
 const SettingsScreenContent = () => {
   const { user, logout } = useAuth();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -67,6 +159,7 @@ const SettingsScreenContent = () => {
   const [dailyGasReminder, setDailyGasReminder] = useState(false);
   const [isLoadingGasReminder, setIsLoadingGasReminder] = useState(true);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showLogoutSheet, setShowLogoutSheet] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -77,10 +170,27 @@ const SettingsScreenContent = () => {
   const languageLabel =
     i18n.language === 'bs-BS' ? t('settings.languageBosnian') : t('settings.languageEnglish');
 
+  /**
+   * F6 (SET-01): jezik se mijenja odmah i vidljivo.
+   *
+   * Prije: `AppStorage.set` pa `changeLanguage`, bez ikakve povratne
+   * informacije — ako spremanje padne, ekran zatvori sheet, a jezik ostane
+   * isti, pa korisnik ne zna da promjena nije prošla. Sada se redoslijed
+   * obrće (prvo UI, pa perzistencija) da promjena bude trenutna, a greška se
+   * prijavi toastom na jeziku na koji je korisnik prešao.
+   */
   const handleLanguageChange = async (language: 'en-US' | 'bs-BS') => {
-    await AppStorage.set('app.language', language);
+    if (i18n.language === language) {
+      setShowLanguageModal(false);
+      return;
+    }
     await i18n.changeLanguage(language);
     setShowLanguageModal(false);
+    try {
+      await AppStorage.set('app.language', language);
+    } catch {
+      toast.show({ description: t('settings.languageChangeFailed'), placement: 'top' });
+    }
   };
 
   /**
@@ -263,59 +373,6 @@ const SettingsScreenContent = () => {
     }
   };
 
-  type RowProps = {
-    icon: React.ComponentProps<typeof Ionicons>['name'];
-    title: string;
-    subtitle?: string;
-    onPress?: () => void;
-    rightElement?: React.ReactNode;
-    testID?: string;
-  };
-
-  const SettingRow = ({ icon, title, subtitle, onPress, rightElement, testID }: RowProps) => {
-    const content = (
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: space.md,
-          flex: 1,
-          minHeight: 44,
-        }}
-      >
-        <Ionicons name={icon} size={17} color="#8a93a3" />
-        <View style={{ flex: 1 }}>
-          <Text size="bodyLg" weight="medium">
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text size="meta" tone="muted" style={{ marginTop: 1 }}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
-        {rightElement}
-        {onPress ? <Ionicons name="chevron-forward" size={14} color="#6b7788" /> : null}
-      </View>
-    );
-
-    return (
-      <PanelRow
-        divider
-        testID={testID}
-        accessibilityLabel={onPress ? `${title}${subtitle ? `. ${subtitle}` : ''}` : undefined}
-        style={onPress ? undefined : { opacity: 0.85 }}
-      >
-        {onPress ? (
-          <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title}>
-            {content}
-          </Pressable>
-        ) : (
-          content
-        )}
-      </PanelRow>
-    );
-  };
 
   return (
     <Screen edges={['top']} testID="settings-screen">
@@ -440,7 +497,14 @@ const SettingsScreenContent = () => {
               subtitle={
                 isExportingAccount ? t('settings.exportPreparing') : t('settings.exportDataDesc')
               }
-              onPress={isExportingAccount ? undefined : handleExportData}
+              /*
+                F6 (SET-07): tokom izvoza red je gubio `onPress`, pa je izgledao
+                kao običan red bez chevrona — korisnik nije znao da je dodir
+                namjerno blokiran, a ni da nešto traje. Sada je eksplicitno
+                onemogućen i to piše u podnaslovu.
+              */
+              isDisabled={isExportingAccount}
+              onPress={handleExportData}
             />
             <SettingRow
               icon="trash-outline"
@@ -458,12 +522,37 @@ const SettingsScreenContent = () => {
               title={t('settings.version')}
               subtitle={getAppVersion()}
             />
-            <SettingRow icon="help-circle-outline" title={t('settings.helpSupport')} />
-            <SettingRow icon="document-text-outline" title={t('settings.termsPrivacy')} />
+            {/*
+              F6 (SET-05): ovdje su bila dva reda — „Pomoć i podrška" i „Uslovi
+              i privatnost" — bez `onPress`. Izgledala su kao navigacija
+              (ikona, chevron, naslov), a dodir nije radio ništa. U repou ne
+              postoji nijedna stranica podrške, uslova ni politike privatnosti
+              (ni u mobilnoj aplikaciji ni na webu), pa linkovanje na izmišljeni
+              URL ne bi bilo popravka nego druga vrsta laži. Redovi su uklonjeni;
+              kad stranice budu postojale, vraćaju se kao pravi `Linking.openURL`
+              sa obrađenom greškom.
+            */}
+            <SettingRow
+              icon="code-slash-outline"
+              title={t('settings.developer')}
+              subtitle={t('settings.developerDesc')}
+            />
           </Panel>
         </Section>
 
-        <Button label={t('common.logout')} variant="danger" block onPress={handleLogout} />
+        {/*
+          F6 (SET-06): odjava je bila jedan dodir, bez potvrde — a vraćanje na
+          prijavu izgubi i stanje ekrana i lokalni kontekst. Sada ide kroz
+          `Sheet`, isti obrazac kao sve ostale destruktivne radnje u aplikaciji
+          (nema sistemskog `Alert`-a, nalaz F4).
+        */}
+        <Button
+          label={t('common.logout')}
+          variant="danger"
+          block
+          onPress={() => setShowLogoutSheet(true)}
+          testID="settings-logout"
+        />
       </ScreenBody>
 
       <Sheet
@@ -541,6 +630,39 @@ const SettingsScreenContent = () => {
               style={{ flex: 1 }}
               loading={isChangingPassword}
               onPress={handleChangePassword}
+            />
+          </View>
+        </View>
+      </Sheet>
+
+      <Sheet
+        isOpen={showLogoutSheet}
+        onClose={() => setShowLogoutSheet(false)}
+        title={t('settings.logoutTitle')}
+        closeLabel={t('common.close')}
+        snapPoints={['38%']}
+        testID="settings-logout-sheet"
+      >
+        <View style={{ gap: space.md }}>
+          <Text size="bodyLg" tone="muted">
+            {t('settings.logoutBody')}
+          </Text>
+          <View style={{ gap: space.sm }}>
+            <Button
+              label={t('common.logout')}
+              variant="danger"
+              block
+              onPress={() => {
+                setShowLogoutSheet(false);
+                void handleLogout();
+              }}
+              testID="settings-logout-confirm"
+            />
+            <Button
+              label={t('common.cancel')}
+              variant="ghost"
+              block
+              onPress={() => setShowLogoutSheet(false)}
             />
           </View>
         </View>

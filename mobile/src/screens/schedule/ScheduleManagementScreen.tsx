@@ -166,8 +166,11 @@ const ProgramIntervalCard = ({ program }: { program: ThermostatProgram }) => {
             </Text>
           </HStack>
         </VStack>
+        {/* F6: sadržaj je izričito jedan string — miješani čvorovi su prije
+            završavali kao goli tekst u `<Box>`-u („Text strings must be rendered
+            within a <Text> component"). */}
         <Badge colorScheme="coolGray" variant="subtle">
-          #{program.orderIndex + 1}
+          {`#${program.orderIndex + 1}`}
         </Badge>
       </HStack>
     </Box>

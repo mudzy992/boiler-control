@@ -7,6 +7,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useTokens } from '../../ui/theme';
 import { Led, MonoMeta, Pressable, Readout, Text } from '../../ui';
 import { space } from '../../theme/tokens';
+import { formatNumber, formatShortDate, formatTime } from '../../utils/format';
 import { Actionsheet } from '../ui/nativewind';
 
 /**
@@ -105,28 +106,26 @@ export const GasReadingCard = React.memo(function GasReadingCard({
         onPress={() => setShowActions(true)}
         disabled={isBusy}
         accessibilityRole="button"
-        accessibilityLabel={`${reading.counterValue.toFixed(2)} m³, ${dayjs(
+        accessibilityLabel={`${formatNumber(reading.counterValue)} m³, ${formatShortDate(
           reading.readingDate,
-        ).format('DD.MM')} — ${t('gas.actionsMenuTitle')}`}
+        )} — ${t('gas.actionsMenuTitle')}`}
         accessibilityState={{ disabled: isBusy }}
         style={[styles.row, { opacity: isBusy ? 0.5 : 1 }]}
       >
         <View style={styles.left}>
           <Readout
-            value={reading.counterValue.toFixed(2)}
+            value={formatNumber(reading.counterValue)}
             unit="m³"
             size="md"
             tone={reading.isInvoiceReference ? 'signal' : 'ink'}
           />
           <View style={styles.metaRow}>
             <MonoMeta>
-              {`${dayjs(reading.readingDate).format('DD.MM')} · ${dayjs(
-                reading.readingDate,
-              ).format('HH:mm')}`}
+              {`${formatShortDate(reading.readingDate)} · ${formatTime(reading.readingDate)}`}
             </MonoMeta>
             {dailyConsumption !== null ? (
               <MonoMeta>
-                {t('gas.dailyValue', { value: dailyConsumption.toFixed(2) })}
+                {t('gas.dailyValue', { value: formatNumber(dailyConsumption) })}
               </MonoMeta>
             ) : null}
           </View>
@@ -156,11 +155,11 @@ export const GasReadingCard = React.memo(function GasReadingCard({
 
         <View style={styles.right}>
           {consumption !== null ? (
-            <MonoMeta>{`+${consumption.toFixed(2)} m³`}</MonoMeta>
+            <MonoMeta>{`+${formatNumber(consumption)} m³`}</MonoMeta>
           ) : null}
           {cost !== null ? (
             <Text size="body" weight="medium">
-              {`${cost.toFixed(2)} ${t('gas.currencyKM')}`}
+              {`${formatNumber(cost)} ${t('gas.currencyKM')}`}
             </Text>
           ) : null}
           <View style={styles.chevron}>

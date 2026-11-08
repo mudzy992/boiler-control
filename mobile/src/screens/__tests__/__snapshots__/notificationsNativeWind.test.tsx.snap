@@ -20,6 +20,7 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
         undefined,
       ]
     }
+    testID="notification-preferences-screen"
   >
     <View
       style={
@@ -127,7 +128,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -147,53 +149,87 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
     <RCTScrollView
       contentContainerStyle={
         {
-          "paddingHorizontal": 16,
-          "paddingVertical": 16,
+          "flexGrow": 1,
         }
       }
-      style={{}}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="notification-preferences-body"
     >
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 24,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
+            accessibilityLabel="notifications.preferencesInfo"
+            accessibilityRole="alert"
+            accessible={true}
             style={
-              {
-                "backgroundColor": "#1e3a8a",
-                "borderColor": "#1d4ed8",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#111723",
+                  "borderColor": "#1f2733",
+                  "borderLeftColor": "#38bdf8",
+                },
+                undefined,
+              ]
             }
+            testID="notification-preferences-info"
           >
+            <Text
+              accessibilityLabel="information-circle-outline"
+            >
+              information-circle-outline
+            </Text>
             <View
-              className="flex flex-row"
               style={
                 {
-                  "alignItems": "center",
-                  "gap": 8,
+                  "flex": 1,
+                  "gap": 2,
                 }
               }
             >
               <Text
-                accessibilityLabel="information-circle-outline"
-              >
-                information-circle-outline
-              </Text>
-              <Text
                 style={
-                  {
-                    "color": "#bfdbfe",
-                    "fontSize": 14,
-                  }
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                    },
+                  ]
                 }
               >
                 notifications.preferencesInfo
@@ -201,113 +237,128 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
             </View>
           </View>
           <View
+            accessible={false}
             style={
-              {
-                "backgroundColor": "#0f172a",
-                "borderColor": "#374151",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+                null,
+                undefined,
+              ]
             }
           >
             <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "center",
-                  "gap": 12,
-                  "justifyContent": "space-between",
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "flex": 1,
-                    "gap": 4,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#f3f4f6",
-                      "fontSize": 16,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  notifications.types.SYSTEM_ALERT
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#9ca3af",
-                      "fontSize": 14,
-                    }
-                  }
-                >
-                  notifications.typeDescriptions.SYSTEM_ALERT
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#9ca3af",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  notifications.lastUpdated
-                </Text>
-              </View>
-              <RCTSwitch
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#ff8c6f"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    [
-                      {
-                        "transform": [
-                          {
-                            "scaleX": 0.85,
-                          },
-                          {
-                            "scaleY": 0.85,
-                          },
-                        ],
-                      },
-                      undefined,
-                    ],
-                  ]
-                }
-                thumbTintColor="#e85223"
-                tintColor="#d1d5db"
-                value={true}
-              />
-            </View>
-            <View
+              accessible={false}
               style={
                 [
                   {
-                    "backgroundColor": "#e5e7eb",
-                    "height": 1,
-                    "width": "100%",
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
                   },
-                  {
-                    "backgroundColor": "#374151",
-                    "marginTop": 12,
-                  },
+                  null,
+                  undefined,
                 ]
               }
-            />
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 12,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "flex": 1,
+                      "gap": 2,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    notifications.types.SYSTEM_ALERT
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": undefined,
+                          "fontSize": 13,
+                          "lineHeight": 18,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    notifications.typeDescriptions.SYSTEM_ALERT
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#828d9e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    notifications.lastUpdated
+                  </Text>
+                </View>
+                <RCTSwitch
+                  accessibilityLabel="notifications.types.SYSTEM_ALERT"
+                  accessibilityRole="switch"
+                  onChange={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  onTintColor="#ff8c6f"
+                  style={
+                    [
+                      {
+                        "alignSelf": "flex-start",
+                      },
+                      [
+                        undefined,
+                        undefined,
+                      ],
+                    ]
+                  }
+                  testID="notification-preference-SYSTEM_ALERT"
+                  thumbTintColor="#e85223"
+                  tintColor="#d1d5db"
+                  value={true}
+                />
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -360,6 +411,7 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
         undefined,
       ]
     }
+    testID="notification-preferences-screen"
   >
     <View
       style={
@@ -467,7 +519,8 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -487,53 +540,87 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
     <RCTScrollView
       contentContainerStyle={
         {
-          "paddingHorizontal": 16,
-          "paddingVertical": 16,
+          "flexGrow": 1,
         }
       }
-      style={{}}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="notification-preferences-body"
     >
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 24,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
+            accessibilityLabel="notifications.preferencesInfo"
+            accessibilityRole="alert"
+            accessible={true}
             style={
-              {
-                "backgroundColor": "#eff6ff",
-                "borderColor": "#bfdbfe",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#f1f3f7",
+                  "borderColor": "#dce0e8",
+                  "borderLeftColor": "#0369a1",
+                },
+                undefined,
+              ]
             }
+            testID="notification-preferences-info"
           >
+            <Text
+              accessibilityLabel="information-circle-outline"
+            >
+              information-circle-outline
+            </Text>
             <View
-              className="flex flex-row"
               style={
                 {
-                  "alignItems": "center",
-                  "gap": 8,
+                  "flex": 1,
+                  "gap": 2,
                 }
               }
             >
               <Text
-                accessibilityLabel="information-circle-outline"
-              >
-                information-circle-outline
-              </Text>
-              <Text
                 style={
-                  {
-                    "color": "#1d4ed8",
-                    "fontSize": 14,
-                  }
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                    },
+                  ]
                 }
               >
                 notifications.preferencesInfo
@@ -541,113 +628,128 @@ exports[`NotificationPreferences before/after NativeWind nativewind matches the 
             </View>
           </View>
           <View
+            accessible={false}
             style={
-              {
-                "backgroundColor": "#ffffff",
-                "borderColor": "#e5e7eb",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+                null,
+                undefined,
+              ]
             }
           >
             <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "center",
-                  "gap": 12,
-                  "justifyContent": "space-between",
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "flex": 1,
-                    "gap": 4,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#1f2937",
-                      "fontSize": 16,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  notifications.types.SYSTEM_ALERT
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#4b5563",
-                      "fontSize": 14,
-                    }
-                  }
-                >
-                  notifications.typeDescriptions.SYSTEM_ALERT
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#4b5563",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  notifications.lastUpdated
-                </Text>
-              </View>
-              <RCTSwitch
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#ff8c6f"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    [
-                      {
-                        "transform": [
-                          {
-                            "scaleX": 0.85,
-                          },
-                          {
-                            "scaleY": 0.85,
-                          },
-                        ],
-                      },
-                      undefined,
-                    ],
-                  ]
-                }
-                thumbTintColor="#e85223"
-                tintColor="#d1d5db"
-                value={true}
-              />
-            </View>
-            <View
+              accessible={false}
               style={
                 [
                   {
-                    "backgroundColor": "#e5e7eb",
-                    "height": 1,
-                    "width": "100%",
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
                   },
-                  {
-                    "backgroundColor": "#e5e7eb",
-                    "marginTop": 12,
-                  },
+                  null,
+                  undefined,
                 ]
               }
-            />
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 12,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "flex": 1,
+                      "gap": 2,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    notifications.types.SYSTEM_ALERT
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": undefined,
+                          "fontSize": 13,
+                          "lineHeight": 18,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    notifications.typeDescriptions.SYSTEM_ALERT
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#59616e",
+                          "fontFamily": "monospace",
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                  >
+                    notifications.lastUpdated
+                  </Text>
+                </View>
+                <RCTSwitch
+                  accessibilityLabel="notifications.types.SYSTEM_ALERT"
+                  accessibilityRole="switch"
+                  onChange={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  onTintColor="#ff8c6f"
+                  style={
+                    [
+                      {
+                        "alignSelf": "flex-start",
+                      },
+                      [
+                        undefined,
+                        undefined,
+                      ],
+                    ]
+                  }
+                  testID="notification-preference-SYSTEM_ALERT"
+                  thumbTintColor="#e85223"
+                  tintColor="#d1d5db"
+                  value={true}
+                />
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -807,7 +909,8 @@ exports[`Notifications before/after NativeWind nativewind matches the dark snaps
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -1126,6 +1229,7 @@ exports[`Notifications before/after NativeWind nativewind matches the dark snaps
           style={null}
         >
           <Text
+            accessibilityRole="header"
             style={
               {
                 "color": "#9ca3af",
@@ -1498,7 +1602,8 @@ exports[`Notifications before/after NativeWind nativewind matches the light snap
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -1817,6 +1922,7 @@ exports[`Notifications before/after NativeWind nativewind matches the light snap
           style={null}
         >
           <Text
+            accessibilityRole="header"
             style={
               {
                 "color": "#4b5563",

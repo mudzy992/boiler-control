@@ -20,6 +20,7 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
         undefined,
       ]
     }
+    testID="gas-analysis-screen"
   >
     <View
       style={
@@ -60,7 +61,8 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -81,13 +83,14 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -101,570 +104,123 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
       </View>
     </View>
     <RCTScrollView
-      style={{}}
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="gas-analysis-body"
     >
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 20,
-              "paddingLeft": 20,
-              "paddingRight": 20,
-              "paddingTop": 20,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
+            accessible={false}
             style={
-              {
-                "backgroundColor": "#1e3a8a",
-                "borderColor": "#1d4ed8",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+                null,
+                undefined,
+              ]
             }
+            testID="gas-analysis-period"
           >
             <View
-              className="flex flex-col"
+              accessible={false}
               style={
-                {
-                  "gap": 4,
-                }
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  null,
+                  undefined,
+                ]
               }
             >
               <View
-                className="flex flex-row"
                 style={
                   {
-                    "alignItems": "center",
-                    "gap": 8,
+                    "gap": 2,
                   }
                 }
               >
                 <Text
-                  accessibilityLabel="git-compare-outline"
-                >
-                  git-compare-outline
-                </Text>
-                <Text
                   style={
-                    {
-                      "color": "#bfdbfe",
-                      "fontSize": 14,
-                      "fontWeight": "700",
-                    }
+                    [
+                      {
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
+                      },
+                      null,
+                      [
+                        {
+                          "letterSpacing": 1.4,
+                          "textTransform": "uppercase",
+                        },
+                        undefined,
+                      ],
+                    ]
                   }
                 >
                   gas.analysisWindowTitle
                 </Text>
-              </View>
-              <Text
-                style={
-                  {
-                    "color": "#93c5fd",
-                    "fontSize": 12,
-                  }
-                }
-              >
-                gas.analysisModeExplicit
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#93c5fd",
-                    "fontSize": 12,
-                  }
-                }
-              >
-                01.01.2026
-                 -
-                 
-                31.01.2026
-              </Text>
-            </View>
-          </View>
-          <View
-            className="flex flex-row"
-            style={
-              {
-                "gap": 12,
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "backgroundColor": "#0f172a",
-                  "borderColor": "#374151",
-                  "borderRadius": 8,
-                  "borderWidth": 1,
-                  "flex": 1,
-                  "padding": 16,
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "gap": 8,
-                  }
-                }
-              >
-                <View
-                  className="flex flex-row"
+                <Text
                   style={
-                    {
-                      "alignItems": "center",
-                      "gap": 8,
-                    }
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
-                  <Text
-                    accessibilityLabel="flame-outline"
-                  >
-                    flame-outline
-                  </Text>
-                  <Text
-                    style={
+                  01/01/2026 – 01/31/2026
+                </Text>
+                <Text
+                  style={
+                    [
                       {
-                        "color": "#9ca3af",
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
                         "fontSize": 12,
-                        "fontWeight": "600",
-                        "textTransform": "uppercase",
-                      }
-                    }
-                  >
-                    gas.analysisTotalUse
-                  </Text>
-                </View>
-                <Text
-                  style={
-                    {
-                      "color": "#f3f4f6",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  12.50
-                   m³
-                </Text>
-              </View>
-            </View>
-            <View
-              style={
-                {
-                  "backgroundColor": "#0f172a",
-                  "borderColor": "#374151",
-                  "borderRadius": 8,
-                  "borderWidth": 1,
-                  "flex": 1,
-                  "padding": 16,
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "gap": 8,
-                  }
-                }
-              >
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "center",
-                      "gap": 8,
-                    }
-                  }
-                >
-                  <Text
-                    accessibilityLabel="calculator-outline"
-                  >
-                    calculator-outline
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 12,
-                        "fontWeight": "600",
-                        "textTransform": "uppercase",
-                      }
-                    }
-                  >
-                    gas.analysisAvgDaily
-                  </Text>
-                </View>
-                <Text
-                  style={
-                    {
-                      "color": "#f3f4f6",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  0.42
-                   m³
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#0f172a",
-                "borderColor": "#374151",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-col"
-              style={
-                {
-                  "gap": 12,
-                }
-              }
-            >
-              <Text
-                style={
-                  {
-                    "color": "#f3f4f6",
-                    "fontSize": 16,
-                    "fontWeight": "600",
-                  }
-                }
-              >
-                gas.analysisHeatingEfficiency
-              </Text>
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "borderBottomColor": "#374151",
-                    "borderBottomWidth": 1,
-                    "justifyContent": "space-between",
-                    "paddingBottom": 12,
-                  }
-                }
-              >
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisHeatingHours
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    100.0
-                     h
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisAvgFlowTemp
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    45.0
-                    °C
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisUsagePerHour
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    0.000
-                     m³
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#0f172a",
-                "borderColor": "#374151",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-col"
-              style={
-                {
-                  "gap": 12,
-                }
-              }
-            >
-              <Text
-                style={
-                  {
-                    "color": "#f3f4f6",
-                    "fontSize": 16,
-                    "fontWeight": "600",
-                  }
-                }
-              >
-                gas.analysisCostBreakdown
-              </Text>
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "justifyContent": "space-between",
-                  }
-                }
-              >
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisCostExVat
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    10.00
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisCostVat
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    1.70
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#9ca3af",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisCostIncVat
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#f3f4f6",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    11.70
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#581c87",
-                "borderColor": "#7e22ce",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "center",
-                  "gap": 8,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="information-circle-outline"
-              >
-                information-circle-outline
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#e9d5ff",
-                    "flex": 1,
-                    "fontSize": 14,
-                  }
-                }
-              >
-                gas.analysisNeedTwoReadings
-              </Text>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#1e3a8a",
-                "borderColor": "#1d4ed8",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "flex-start",
-                  "gap": 8,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="information-circle-outline"
-              >
-                information-circle-outline
-              </Text>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "flex": 1,
-                    "gap": 4,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#bfdbfe",
-                      "fontSize": 14,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  gas.analysisPeriod
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#93c5fd",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  01.01.2026
-                   -
-                   
-                  31.01.2026
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#93c5fd",
-                      "fontSize": 12,
-                    }
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
                   gas.analysisModeExplicit
@@ -672,6 +228,1111 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
               </View>
             </View>
           </View>
+          <View
+            style={
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "flex": 1,
+                    "gap": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 9,
+                  },
+                  {
+                    "backgroundColor": "#111723",
+                    "borderColor": "#1f2733",
+                  },
+                  undefined,
+                ]
+              }
+              testID="gas-kpi-total"
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "lineHeight": 15,
+                    },
+                    null,
+                    [
+                      {
+                        "letterSpacing": 1.4,
+                        "textTransform": "uppercase",
+                      },
+                      {
+                        "letterSpacing": 1.2,
+                      },
+                    ],
+                  ]
+                }
+              >
+                gas.analysisTotalUse
+              </Text>
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "alignItems": "flex-end",
+                      "flexDirection": "row",
+                    },
+                    null,
+                    {
+                      "marginTop": 4,
+                    },
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": "monospace",
+                        "fontSize": 28,
+                        "fontVariant": [
+                          "tabular-nums",
+                        ],
+                        "letterSpacing": -0.5,
+                        "lineHeight": 29.400000000000002,
+                      },
+                    ]
+                  }
+                >
+                  12.50
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "marginBottom": 2,
+                        "marginLeft": 3,
+                      },
+                    ]
+                  }
+                >
+                  m³
+                </Text>
+              </View>
+            </View>
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "flex": 1,
+                    "gap": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 9,
+                  },
+                  {
+                    "backgroundColor": "#111723",
+                    "borderColor": "#1f2733",
+                  },
+                  undefined,
+                ]
+              }
+              testID="gas-kpi-daily"
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "lineHeight": 15,
+                    },
+                    null,
+                    [
+                      {
+                        "letterSpacing": 1.4,
+                        "textTransform": "uppercase",
+                      },
+                      {
+                        "letterSpacing": 1.2,
+                      },
+                    ],
+                  ]
+                }
+              >
+                gas.analysisAvgDaily
+              </Text>
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "alignItems": "flex-end",
+                      "flexDirection": "row",
+                    },
+                    null,
+                    {
+                      "marginTop": 4,
+                    },
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": "monospace",
+                        "fontSize": 28,
+                        "fontVariant": [
+                          "tabular-nums",
+                        ],
+                        "letterSpacing": -0.5,
+                        "lineHeight": 29.400000000000002,
+                      },
+                    ]
+                  }
+                >
+                  0.42
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "marginBottom": 2,
+                        "marginLeft": 3,
+                      },
+                    ]
+                  }
+                >
+                  m³
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View
+            accessible={false}
+            style={
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+                null,
+                undefined,
+              ]
+            }
+            testID="gas-analysis-efficiency"
+          >
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "gap": 2,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
+                      },
+                      null,
+                      [
+                        {
+                          "letterSpacing": 1.4,
+                          "textTransform": "uppercase",
+                        },
+                        undefined,
+                      ],
+                    ]
+                  }
+                >
+                  gas.analysisHeatingEfficiency
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisEfficiencyHint
+                </Text>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisHeatingHours
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    100.0
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    h
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisAvgFlowTemp
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    45.0
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    °C
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisUsagePerHour
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    0.000
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    m³
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessible={false}
+            style={
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#0b0f16",
+                  "borderColor": "#1f2733",
+                },
+                null,
+                undefined,
+              ]
+            }
+            testID="gas-analysis-cost"
+          >
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "gap": 2,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
+                      },
+                      null,
+                      [
+                        {
+                          "letterSpacing": 1.4,
+                          "textTransform": "uppercase",
+                        },
+                        undefined,
+                      ],
+                    ]
+                  }
+                >
+                  gas.analysisCostBreakdown
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostHint
+                </Text>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostExVat
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    10.00
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    gas.currencyKM
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostVat
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    1.70
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    gas.currencyKM
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#1f2733",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostIncVat
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#ff8a5f",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    11.70
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#e8edf4",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    gas.currencyKM
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="gas.analysisNeedTwoReadings"
+            accessibilityRole="alert"
+            accessible={true}
+            style={
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#111723",
+                  "borderColor": "#1f2733",
+                  "borderLeftColor": "#38bdf8",
+                },
+                undefined,
+              ]
+            }
+            testID="gas-analysis-need-readings"
+          >
+            <Text
+              accessibilityLabel="information-circle-outline"
+            >
+              information-circle-outline
+            </Text>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "gap": 2,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                    },
+                  ]
+                }
+              >
+                gas.analysisNeedTwoReadings
+              </Text>
+            </View>
+          </View>
+          <Text
+            style={
+              [
+                {
+                  "color": "#828d9e",
+                  "fontFamily": "monospace",
+                  "fontSize": 12,
+                  "lineHeight": 16,
+                },
+                null,
+                undefined,
+              ]
+            }
+          >
+            gas.analysisUpdatedAt
+          </Text>
         </View>
       </View>
     </RCTScrollView>
@@ -723,6 +1384,7 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
         undefined,
       ]
     }
+    testID="gas-analysis-screen"
   >
     <View
       style={
@@ -763,7 +1425,8 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -784,13 +1447,14 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -804,570 +1468,123 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
       </View>
     </View>
     <RCTScrollView
-      style={{}}
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="gas-analysis-body"
     >
       <View>
         <View
-          className="flex flex-col"
           style={
-            {
-              "gap": 16,
-              "paddingBottom": 20,
-              "paddingLeft": 20,
-              "paddingRight": 20,
-              "paddingTop": 20,
-            }
+            [
+              {
+                "gap": 16,
+                "paddingBottom": 24,
+                "paddingHorizontal": 16,
+                "paddingTop": 12,
+              },
+              undefined,
+            ]
           }
         >
           <View
+            accessible={false}
             style={
-              {
-                "backgroundColor": "#eff6ff",
-                "borderColor": "#bfdbfe",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+                null,
+                undefined,
+              ]
             }
+            testID="gas-analysis-period"
           >
             <View
-              className="flex flex-col"
+              accessible={false}
               style={
-                {
-                  "gap": 4,
-                }
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  null,
+                  undefined,
+                ]
               }
             >
               <View
-                className="flex flex-row"
                 style={
                   {
-                    "alignItems": "center",
-                    "gap": 8,
+                    "gap": 2,
                   }
                 }
               >
                 <Text
-                  accessibilityLabel="git-compare-outline"
-                >
-                  git-compare-outline
-                </Text>
-                <Text
                   style={
-                    {
-                      "color": "#1d4ed8",
-                      "fontSize": 14,
-                      "fontWeight": "700",
-                    }
+                    [
+                      {
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
+                      },
+                      null,
+                      [
+                        {
+                          "letterSpacing": 1.4,
+                          "textTransform": "uppercase",
+                        },
+                        undefined,
+                      ],
+                    ]
                   }
                 >
                   gas.analysisWindowTitle
                 </Text>
-              </View>
-              <Text
-                style={
-                  {
-                    "color": "#2563eb",
-                    "fontSize": 12,
-                  }
-                }
-              >
-                gas.analysisModeExplicit
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#2563eb",
-                    "fontSize": 12,
-                  }
-                }
-              >
-                01.01.2026
-                 -
-                 
-                31.01.2026
-              </Text>
-            </View>
-          </View>
-          <View
-            className="flex flex-row"
-            style={
-              {
-                "gap": 12,
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "backgroundColor": "#ffffff",
-                  "borderColor": "#e5e7eb",
-                  "borderRadius": 8,
-                  "borderWidth": 1,
-                  "flex": 1,
-                  "padding": 16,
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "gap": 8,
-                  }
-                }
-              >
-                <View
-                  className="flex flex-row"
+                <Text
                   style={
-                    {
-                      "alignItems": "center",
-                      "gap": 8,
-                    }
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
-                  <Text
-                    accessibilityLabel="flame-outline"
-                  >
-                    flame-outline
-                  </Text>
-                  <Text
-                    style={
+                  01/01/2026 – 01/31/2026
+                </Text>
+                <Text
+                  style={
+                    [
                       {
-                        "color": "#4b5563",
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
                         "fontSize": 12,
-                        "fontWeight": "600",
-                        "textTransform": "uppercase",
-                      }
-                    }
-                  >
-                    gas.analysisTotalUse
-                  </Text>
-                </View>
-                <Text
-                  style={
-                    {
-                      "color": "#1f2937",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  12.50
-                   m³
-                </Text>
-              </View>
-            </View>
-            <View
-              style={
-                {
-                  "backgroundColor": "#ffffff",
-                  "borderColor": "#e5e7eb",
-                  "borderRadius": 8,
-                  "borderWidth": 1,
-                  "flex": 1,
-                  "padding": 16,
-                }
-              }
-            >
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "gap": 8,
-                  }
-                }
-              >
-                <View
-                  className="flex flex-row"
-                  style={
-                    {
-                      "alignItems": "center",
-                      "gap": 8,
-                    }
-                  }
-                >
-                  <Text
-                    accessibilityLabel="calculator-outline"
-                  >
-                    calculator-outline
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 12,
-                        "fontWeight": "600",
-                        "textTransform": "uppercase",
-                      }
-                    }
-                  >
-                    gas.analysisAvgDaily
-                  </Text>
-                </View>
-                <Text
-                  style={
-                    {
-                      "color": "#1f2937",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                    }
-                  }
-                >
-                  0.42
-                   m³
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#ffffff",
-                "borderColor": "#e5e7eb",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-col"
-              style={
-                {
-                  "gap": 12,
-                }
-              }
-            >
-              <Text
-                style={
-                  {
-                    "color": "#1f2937",
-                    "fontSize": 16,
-                    "fontWeight": "600",
-                  }
-                }
-              >
-                gas.analysisHeatingEfficiency
-              </Text>
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "borderBottomColor": "#e5e7eb",
-                    "borderBottomWidth": 1,
-                    "justifyContent": "space-between",
-                    "paddingBottom": 12,
-                  }
-                }
-              >
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisHeatingHours
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    100.0
-                     h
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisAvgFlowTemp
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    45.0
-                    °C
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisUsagePerHour
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    0.000
-                     m³
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#ffffff",
-                "borderColor": "#e5e7eb",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-col"
-              style={
-                {
-                  "gap": 12,
-                }
-              }
-            >
-              <Text
-                style={
-                  {
-                    "color": "#1f2937",
-                    "fontSize": 16,
-                    "fontWeight": "600",
-                  }
-                }
-              >
-                gas.analysisCostBreakdown
-              </Text>
-              <View
-                className="flex flex-row"
-                style={
-                  {
-                    "alignItems": "center",
-                    "justifyContent": "space-between",
-                  }
-                }
-              >
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisCostExVat
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    10.00
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisCostVat
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    1.70
-                  </Text>
-                </View>
-                <View
-                  className="flex flex-col"
-                  style={{}}
-                >
-                  <Text
-                    style={
-                      {
-                        "color": "#4b5563",
-                        "fontSize": 14,
-                      }
-                    }
-                  >
-                    gas.analysisCostIncVat
-                  </Text>
-                  <Text
-                    style={
-                      {
-                        "color": "#1f2937",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                      }
-                    }
-                  >
-                    11.70
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#faf5ff",
-                "borderColor": "#e9d5ff",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "center",
-                  "gap": 8,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="information-circle-outline"
-              >
-                information-circle-outline
-              </Text>
-              <Text
-                style={
-                  {
-                    "color": "#7e22ce",
-                    "flex": 1,
-                    "fontSize": 14,
-                  }
-                }
-              >
-                gas.analysisNeedTwoReadings
-              </Text>
-            </View>
-          </View>
-          <View
-            style={
-              {
-                "backgroundColor": "#eff6ff",
-                "borderColor": "#bfdbfe",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 16,
-              }
-            }
-          >
-            <View
-              className="flex flex-row"
-              style={
-                {
-                  "alignItems": "flex-start",
-                  "gap": 8,
-                }
-              }
-            >
-              <Text
-                accessibilityLabel="information-circle-outline"
-              >
-                information-circle-outline
-              </Text>
-              <View
-                className="flex flex-col"
-                style={
-                  {
-                    "flex": 1,
-                    "gap": 4,
-                  }
-                }
-              >
-                <Text
-                  style={
-                    {
-                      "color": "#1d4ed8",
-                      "fontSize": 14,
-                      "fontWeight": "600",
-                    }
-                  }
-                >
-                  gas.analysisPeriod
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#2563eb",
-                      "fontSize": 12,
-                    }
-                  }
-                >
-                  01.01.2026
-                   -
-                   
-                  31.01.2026
-                </Text>
-                <Text
-                  style={
-                    {
-                      "color": "#2563eb",
-                      "fontSize": 12,
-                    }
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
                   }
                 >
                   gas.analysisModeExplicit
@@ -1375,6 +1592,1111 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
               </View>
             </View>
           </View>
+          <View
+            style={
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "flex": 1,
+                    "gap": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 9,
+                  },
+                  {
+                    "backgroundColor": "#f1f3f7",
+                    "borderColor": "#dce0e8",
+                  },
+                  undefined,
+                ]
+              }
+              testID="gas-kpi-total"
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "lineHeight": 15,
+                    },
+                    null,
+                    [
+                      {
+                        "letterSpacing": 1.4,
+                        "textTransform": "uppercase",
+                      },
+                      {
+                        "letterSpacing": 1.2,
+                      },
+                    ],
+                  ]
+                }
+              >
+                gas.analysisTotalUse
+              </Text>
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "alignItems": "flex-end",
+                      "flexDirection": "row",
+                    },
+                    null,
+                    {
+                      "marginTop": 4,
+                    },
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#111827",
+                        "fontFamily": "monospace",
+                        "fontSize": 28,
+                        "fontVariant": [
+                          "tabular-nums",
+                        ],
+                        "letterSpacing": -0.5,
+                        "lineHeight": 29.400000000000002,
+                      },
+                    ]
+                  }
+                >
+                  12.50
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "marginBottom": 2,
+                        "marginLeft": 3,
+                      },
+                    ]
+                  }
+                >
+                  m³
+                </Text>
+              </View>
+            </View>
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "flex": 1,
+                    "gap": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 9,
+                  },
+                  {
+                    "backgroundColor": "#f1f3f7",
+                    "borderColor": "#dce0e8",
+                  },
+                  undefined,
+                ]
+              }
+              testID="gas-kpi-daily"
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "lineHeight": 15,
+                    },
+                    null,
+                    [
+                      {
+                        "letterSpacing": 1.4,
+                        "textTransform": "uppercase",
+                      },
+                      {
+                        "letterSpacing": 1.2,
+                      },
+                    ],
+                  ]
+                }
+              >
+                gas.analysisAvgDaily
+              </Text>
+              <View
+                accessible={false}
+                style={
+                  [
+                    {
+                      "alignItems": "flex-end",
+                      "flexDirection": "row",
+                    },
+                    null,
+                    {
+                      "marginTop": 4,
+                    },
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#111827",
+                        "fontFamily": "monospace",
+                        "fontSize": 28,
+                        "fontVariant": [
+                          "tabular-nums",
+                        ],
+                        "letterSpacing": -0.5,
+                        "lineHeight": 29.400000000000002,
+                      },
+                    ]
+                  }
+                >
+                  0.42
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "marginBottom": 2,
+                        "marginLeft": 3,
+                      },
+                    ]
+                  }
+                >
+                  m³
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View
+            accessible={false}
+            style={
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+                null,
+                undefined,
+              ]
+            }
+            testID="gas-analysis-efficiency"
+          >
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "gap": 2,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
+                      },
+                      null,
+                      [
+                        {
+                          "letterSpacing": 1.4,
+                          "textTransform": "uppercase",
+                        },
+                        undefined,
+                      ],
+                    ]
+                  }
+                >
+                  gas.analysisHeatingEfficiency
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisEfficiencyHint
+                </Text>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisHeatingHours
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    100.0
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    h
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisAvgFlowTemp
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    45.0
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    °C
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisUsagePerHour
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    0.000
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    m³
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessible={false}
+            style={
+              [
+                {
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "overflow": "hidden",
+                },
+                {
+                  "backgroundColor": "#ffffff",
+                  "borderColor": "#dce0e8",
+                },
+                null,
+                undefined,
+              ]
+            }
+            testID="gas-analysis-cost"
+          >
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "gap": 2,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 11,
+                        "lineHeight": 15,
+                      },
+                      null,
+                      [
+                        {
+                          "letterSpacing": 1.4,
+                          "textTransform": "uppercase",
+                        },
+                        undefined,
+                      ],
+                    ]
+                  }
+                >
+                  gas.analysisCostBreakdown
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostHint
+                </Text>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostExVat
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    10.00
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    gas.currencyKM
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostVat
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#111827",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    1.70
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    gas.currencyKM
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={false}
+              style={
+                [
+                  {
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 10,
+                  },
+                  {
+                    "borderBottomColor": "#dce0e8",
+                    "borderBottomWidth": 1,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "baseline",
+                    "flex": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 18,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  gas.analysisCostIncVat
+                </Text>
+                <View
+                  accessible={false}
+                  style={
+                    [
+                      {
+                        "alignItems": "flex-end",
+                        "flexDirection": "row",
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#c1411c",
+                          "fontFamily": "monospace",
+                          "fontSize": 16,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "letterSpacing": -0.5,
+                          "lineHeight": 16.8,
+                        },
+                      ]
+                    }
+                  >
+                    11.70
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#111827",
+                          "fontFamily": undefined,
+                          "fontSize": 15,
+                          "lineHeight": 20,
+                        },
+                        null,
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": "monospace",
+                          "fontSize": 11,
+                          "marginBottom": 2,
+                          "marginLeft": 3,
+                        },
+                      ]
+                    }
+                  >
+                    gas.currencyKM
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="gas.analysisNeedTwoReadings"
+            accessibilityRole="alert"
+            accessible={true}
+            style={
+              [
+                {
+                  "alignItems": "flex-start",
+                  "borderLeftWidth": 2,
+                  "borderRadius": 3,
+                  "borderWidth": 1,
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingHorizontal": 11,
+                  "paddingVertical": 9,
+                },
+                {
+                  "backgroundColor": "#f1f3f7",
+                  "borderColor": "#dce0e8",
+                  "borderLeftColor": "#0369a1",
+                },
+                undefined,
+              ]
+            }
+            testID="gas-analysis-need-readings"
+          >
+            <Text
+              accessibilityLabel="information-circle-outline"
+            >
+              information-circle-outline
+            </Text>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "gap": 2,
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                    },
+                  ]
+                }
+              >
+                gas.analysisNeedTwoReadings
+              </Text>
+            </View>
+          </View>
+          <Text
+            style={
+              [
+                {
+                  "color": "#59616e",
+                  "fontFamily": "monospace",
+                  "fontSize": 12,
+                  "lineHeight": 16,
+                },
+                null,
+                undefined,
+              ]
+            }
+          >
+            gas.analysisUpdatedAt
+          </Text>
         </View>
       </View>
     </RCTScrollView>
@@ -1466,7 +2788,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -1487,13 +2810,14 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -1576,38 +2900,22 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
     </View>
     <RCTScrollView
       ListEmptyComponent={
-        <Box
-          alignItems="center"
-          bg="dark.800"
-          borderColor="dark.700"
-          borderWidth={1}
-          p={8}
-          rounded="xl"
-        >
-          <Icon
-            as={[Function]}
-            color="gray.400"
-            mb={4}
-            name="document-outline"
-            size={16}
-          />
-          <Text
-            color="gray.400"
-            fontSize="md"
-            fontWeight="500"
-            mb={1}
-            textAlign="center"
-          >
-            gas.noReadingsInPeriod
-          </Text>
-          <Text
-            color="gray.400"
-            fontSize="sm"
-            textAlign="center"
-          >
-            gas.tryOtherPeriod
-          </Text>
-        </Box>
+        <EmptyState
+          action={
+            {
+              "label": "gas.filterAll",
+              "onPress": [Function],
+            }
+          }
+          icon="funnel-outline"
+          message="gas.tryOtherPeriod"
+          style={
+            {
+              "paddingVertical": 24,
+            }
+          }
+          title="gas.noReadingsInPeriod"
+        />
       }
       ListHeaderComponent={
         <VStack
@@ -1666,7 +2974,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                     size="md"
                     testID="gas-readings-count"
                     tone="muted"
-                    value={1}
+                    value="1"
                   />
                 </View>
                 <View
@@ -1681,7 +2989,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                     gas.lastReading
                   </MonoLabel>
                   <MonoMeta>
-                    15.01
+                    01/15
                   </MonoMeta>
                 </View>
               </View>
@@ -1719,8 +3027,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   "borderColor": "#1f2733",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -1760,8 +3069,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   "borderColor": "#1f2733",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -1801,8 +3111,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   "borderColor": "#1f2733",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -1842,8 +3153,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   "borderColor": "#ff6b3d",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -1883,8 +3195,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   "borderColor": "#1f2733",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -2038,9 +3351,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -2075,7 +3389,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -2099,7 +3414,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -2128,9 +3444,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -2165,7 +3482,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                             {
                               "color": "#e8edf4",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -2197,9 +3515,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -2218,16 +3537,17 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
                         ]
                       }
                     >
-                      15.01
+                      01/15
                     </Text>
                   </View>
                 </View>
@@ -2289,8 +3609,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       "borderColor": "#1f2733",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -2356,8 +3677,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       "borderColor": "#1f2733",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -2423,8 +3745,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       "borderColor": "#1f2733",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -2490,8 +3813,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       "borderColor": "#ff6b3d",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -2557,8 +3881,9 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       "borderColor": "#1f2733",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -2592,9 +3917,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -2613,9 +3939,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
-                      "fontSize": 10,
+                      "fontSize": 12,
+                      "lineHeight": 16,
                     },
                     null,
                     undefined,
@@ -2634,7 +3961,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
         >
           <View>
             <View
-              accessibilityLabel="123.45 m³, 15.01 — gas.actionsMenuTitle"
+              accessibilityLabel="123.45 m³, 01/15 — gas.actionsMenuTitle"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -2720,7 +4047,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -2744,7 +4072,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                         {
                           "color": "#e8edf4",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -2773,16 +4102,17 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
                       ]
                     }
                   >
-                    15.01 · 12:00
+                    01/15 · 12:00
                   </Text>
                 </View>
                 <View
@@ -2813,9 +4143,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           {
@@ -2869,9 +4200,10 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": undefined,
-                          "fontSize": 9,
+                          "fontSize": 11,
+                          "lineHeight": 15,
                         },
                         null,
                         {
@@ -2927,7 +4259,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#e8edf4",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -3556,7 +4889,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#e8edf4",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -3723,7 +5057,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   {
                     "color": "#e8edf4",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -3818,7 +5153,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   {
                     "color": "#e8edf4",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -3913,7 +5249,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                   {
                     "color": "#e8edf4",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -3968,7 +5305,8 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
               {
                 "color": "#e8edf4",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -4739,7 +6077,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -4760,13 +6099,14 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -4849,38 +6189,22 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
     </View>
     <RCTScrollView
       ListEmptyComponent={
-        <Box
-          alignItems="center"
-          bg="white"
-          borderColor="gray.200"
-          borderWidth={1}
-          p={8}
-          rounded="xl"
-        >
-          <Icon
-            as={[Function]}
-            color="gray.600"
-            mb={4}
-            name="document-outline"
-            size={16}
-          />
-          <Text
-            color="gray.600"
-            fontSize="md"
-            fontWeight="500"
-            mb={1}
-            textAlign="center"
-          >
-            gas.noReadingsInPeriod
-          </Text>
-          <Text
-            color="gray.600"
-            fontSize="sm"
-            textAlign="center"
-          >
-            gas.tryOtherPeriod
-          </Text>
-        </Box>
+        <EmptyState
+          action={
+            {
+              "label": "gas.filterAll",
+              "onPress": [Function],
+            }
+          }
+          icon="funnel-outline"
+          message="gas.tryOtherPeriod"
+          style={
+            {
+              "paddingVertical": 24,
+            }
+          }
+          title="gas.noReadingsInPeriod"
+        />
       }
       ListHeaderComponent={
         <VStack
@@ -4939,7 +6263,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                     size="md"
                     testID="gas-readings-count"
                     tone="muted"
-                    value={1}
+                    value="1"
                   />
                 </View>
                 <View
@@ -4954,7 +6278,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                     gas.lastReading
                   </MonoLabel>
                   <MonoMeta>
-                    15.01
+                    01/15
                   </MonoMeta>
                 </View>
               </View>
@@ -4992,8 +6316,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "borderColor": "#dce0e8",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -5033,8 +6358,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "borderColor": "#dce0e8",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -5074,8 +6400,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "borderColor": "#dce0e8",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -5112,11 +6439,12 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               style={
                 {
                   "backgroundColor": "rgba(232, 82, 35, 0.10)",
-                  "borderColor": "#e85223",
+                  "borderColor": "#c2410c",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -5156,8 +6484,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "borderColor": "#dce0e8",
                   "borderRadius": 2,
                   "borderWidth": 1,
-                  "paddingHorizontal": 10,
-                  "paddingVertical": 6,
+                  "justifyContent": "center",
+                  "minHeight": 44,
+                  "paddingHorizontal": 12,
                 }
               }
             >
@@ -5311,9 +6640,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -5348,7 +6678,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -5372,7 +6703,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -5401,9 +6733,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -5438,7 +6771,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                             {
                               "color": "#111827",
                               "fontFamily": undefined,
-                              "fontSize": 13,
+                              "fontSize": 15,
+                              "lineHeight": 20,
                             },
                             null,
                             {
@@ -5470,9 +6804,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           [
@@ -5491,16 +6826,17 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 10,
+                            "fontSize": 12,
+                            "lineHeight": 16,
                           },
                           null,
                           undefined,
                         ]
                       }
                     >
-                      15.01
+                      01/15
                     </Text>
                   </View>
                 </View>
@@ -5562,8 +6898,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       "borderColor": "#dce0e8",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -5629,8 +6966,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       "borderColor": "#dce0e8",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -5696,8 +7034,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       "borderColor": "#dce0e8",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -5760,11 +7099,12 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   [
                     {
                       "backgroundColor": "rgba(232, 82, 35, 0.10)",
-                      "borderColor": "#e85223",
+                      "borderColor": "#c2410c",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -5830,8 +7170,9 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       "borderColor": "#dce0e8",
                       "borderRadius": 2,
                       "borderWidth": 1,
-                      "paddingHorizontal": 10,
-                      "paddingVertical": 6,
+                      "justifyContent": "center",
+                      "minHeight": 44,
+                      "paddingHorizontal": 12,
                     },
                     undefined,
                   ]
@@ -5865,9 +7206,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 9,
+                      "fontSize": 11,
+                      "lineHeight": 15,
                     },
                     null,
                     [
@@ -5886,9 +7228,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
-                      "fontSize": 10,
+                      "fontSize": 12,
+                      "lineHeight": 16,
                     },
                     null,
                     undefined,
@@ -5907,7 +7250,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
         >
           <View>
             <View
-              accessibilityLabel="123.45 m³, 15.01 — gas.actionsMenuTitle"
+              accessibilityLabel="123.45 m³, 01/15 — gas.actionsMenuTitle"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -5993,7 +7336,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -6017,7 +7361,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                         {
                           "color": "#111827",
                           "fontFamily": undefined,
-                          "fontSize": 13,
+                          "fontSize": 15,
+                          "lineHeight": 20,
                         },
                         null,
                         {
@@ -6046,16 +7391,17 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
-                          "fontSize": 10,
+                          "fontSize": 12,
+                          "lineHeight": 16,
                         },
                         null,
                         undefined,
                       ]
                     }
                   >
-                    15.01 · 12:00
+                    01/15 · 12:00
                   </Text>
                 </View>
                 <View
@@ -6086,9 +7432,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
-                            "fontSize": 9,
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
                           {
@@ -6142,9 +7489,10 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": undefined,
-                          "fontSize": 9,
+                          "fontSize": 11,
+                          "lineHeight": 15,
                         },
                         null,
                         {
@@ -6200,7 +7548,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               {
                 "color": "#111827",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -6829,7 +8178,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               {
                 "color": "#111827",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -6968,8 +8318,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "paddingHorizontal": 16,
                 },
                 {
-                  "backgroundColor": "#e85223",
-                  "borderColor": "#e85223",
+                  "backgroundColor": "#c2410c",
+                  "borderColor": "#c2410c",
                   "opacity": 1,
                 },
                 {
@@ -6996,7 +8346,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   {
                     "color": "#111827",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -7091,7 +8442,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   {
                     "color": "#111827",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -7186,7 +8538,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   {
                     "color": "#111827",
                     "fontFamily": undefined,
-                    "fontSize": 13,
+                    "fontSize": 15,
+                    "lineHeight": 20,
                   },
                   null,
                   {
@@ -7241,7 +8594,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               {
                 "color": "#111827",
                 "fontFamily": undefined,
-                "fontSize": 13,
+                "fontSize": 15,
+                "lineHeight": 20,
               },
               null,
               {
@@ -7897,7 +9251,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   [
                     {
                       "alignItems": "center",
-                      "backgroundColor": "#e85223",
+                      "backgroundColor": "#c2410c",
                       "borderRadius": 8,
                       "flex": 1,
                       "paddingBottom": 12,

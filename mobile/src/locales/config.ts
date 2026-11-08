@@ -491,6 +491,10 @@ const enUS = {
     useCurrentDateTime: 'Use current date & time',
     noReadings: 'No readings recorded',
     noReadingsInPeriod: 'No readings in this period',
+    // F6 (GAS-10): prazno stanje je prije bilo bez akcije — sada ima dugme.
+    // F6 (GAS-10): prazno stanje dobija tijelo poruke i akciju, uz postojeći
+    // naslov `noReadings` („No readings recorded") — bez dupliranja ključa.
+    noReadingsBody: 'Add your first reading to start tracking consumption.',
     tryOtherPeriod: 'Try a different time period or add a new reading',
     readingsRecorded: 'readings recorded',
     enterMeterValue: 'Enter meter reading (m³)',
@@ -563,6 +567,16 @@ const enUS = {
     analysisNoData: 'No analysis data available.',
     analysisNoDataBody: 'Add at least two gas readings so consumption can be calculated.',
     analysisNoDataAction: 'Go to readings',
+    // F6 (GAS-06): objašnjenje uzorka — bez ovoga brojevi „min/avg/max" izgledaju
+    // kao da ih je neko izmislio, a ne kao statistika razlika između očitanja.
+    analysisEfficiencyHint: 'Measured over the analysis period',
+    analysisCostHint: 'Price windows applied to this period',
+    analysisDailyStatsHint: 'Sample: difference between consecutive readings',
+    analysisPeriodUnknown: 'Period not available',
+    analysisUpdatedAt: 'Updated {{value}}',
+    // F6 (GAS-08): mrežna greška je prije izgledala kao „nema podataka".
+    analysisLoadError: 'Analysis could not be loaded',
+    analysisLoadErrorBody: 'Your readings are still there — the analysis request failed.',
     analysisTotalUse: 'Total Use',
     analysisAvgDaily: 'Avg Daily',
     analysisHeatingEfficiency: 'Heating Efficiency',
@@ -652,6 +666,9 @@ const enUS = {
       SYSTEM_ALERT: 'System Alert',
       GAS_READING_REMINDER: 'Gas Reading Reminder',
     },
+    preferencesLoadError: 'Preferences could not be loaded',
+    preferencesLoadErrorBody: 'Check your connection and try again.',
+    preferencesEmpty: 'No notification types are available',
     typeDescriptions: {
       DAILY_RECOMMENDATION: 'Recommendations for optimizing heating every day.',
       FLOW_TEMP_CHANGED: 'Alerts when the flow temperature changes.',
@@ -709,6 +726,7 @@ const enUS = {
     // stanje dozvole. Prije su prekidači bili useState(true) bez ijednog poziva.
     preferenceSaved: 'Preference saved',
     preferenceSaveFailed: 'Could not save preference',
+    languageChangeFailed: 'Could not change language',
     openSystemSettingsFailed: 'Could not open system settings',
     notificationPermissionGranted: 'Allowed — tap to change in system settings',
     notificationPermissionDenied: 'Blocked — tap to enable in system settings',
@@ -735,6 +753,14 @@ const enUS = {
     helpSupport: 'Help & Support',
     termsPrivacy: 'Terms & Privacy',
     developer: 'Developer',
+    // F6 (SET-05): ova dva reda su bila inertna (bez `onPress`) — izgledala su
+    // kao navigacija, a dodir nije radio ništa. Sada vode na stvarne stranice
+    // sajta; isti URL-ovi su i u web aplikaciji.
+    developerDesc: 'Built by the Boiler Control team',
+    // F6 (SET-06): odjava je bila jedan dodir, bez potvrde.
+    logoutTitle: 'Log out?',
+    logoutBody: 'You will need to sign in again to see your boiler.',
+
   },
   profile: {
     title: 'Profile',
@@ -1354,6 +1380,9 @@ const bsBS = {
     useCurrentDateTime: 'Koristi trenutno vrijeme i datum',
     noReadings: 'Nema zabilježenih očitanja',
     noReadingsInPeriod: 'Nema očitanja u ovom periodu',
+    // F6 (GAS-10): vidi komentar uz engleske ključeve.
+    // F6 (GAS-10): vidi komentar uz engleski ključ.
+    noReadingsBody: 'Dodaj prvo očitanje da bi počelo praćenje potrošnje.',
     tryOtherPeriod: 'Pokušaj drugi vremenski period ili dodaj novo očitanje',
     readingsRecorded: 'zabilježena očitanja',
     enterMeterValue: 'Unesi očitanje brojača (m³)',
@@ -1426,6 +1455,14 @@ const bsBS = {
     analysisNoData: 'Nema dostupnih podataka.',
     analysisNoDataBody: 'Dodaj najmanje dva očitanja plina da bi se potrošnja mogla izračunati.',
     analysisNoDataAction: 'Idi na očitanja',
+    // F6 (GAS-06/GAS-08): vidi komentar uz engleske ključeve.
+    analysisEfficiencyHint: 'Mjereno kroz period analize',
+    analysisCostHint: 'Cjenovni periodi primijenjeni na ovaj period',
+    analysisDailyStatsHint: 'Uzorak: razlika između uzastopnih očitanja',
+    analysisPeriodUnknown: 'Period nije dostupan',
+    analysisUpdatedAt: 'Ažurirano {{value}}',
+    analysisLoadError: 'Analizu nije moguće učitati',
+    analysisLoadErrorBody: 'Očitanja su i dalje tu — zahtjev za analizu nije uspio.',
     analysisTotalUse: 'Ukupna potrošnja',
     analysisAvgDaily: 'Prosjek dnevno',
     analysisHeatingEfficiency: 'Efikasnost grijanja',
@@ -1500,6 +1537,10 @@ const bsBS = {
     preferencesInfo:
       'Odaberite koje tipove obavijesti želite primati. Sve promjene se odmah primjenjuju.',
     preferencesDefaultDesc: 'Primaj obavijesti za ovaj tip događaja.',
+    // F6 (SET-10): greška učitavanja i prazna lista su prije bile tišina.
+    preferencesLoadError: 'Postavke obavijesti nije moguće učitati',
+    preferencesLoadErrorBody: 'Provjeri vezu i pokušaj ponovo.',
+    preferencesEmpty: 'Nema dostupnih tipova obavijesti',
     lastUpdated: 'Posljednja izmjena: {{date}}',
     types: {
       DAILY_RECOMMENDATION: 'Dnevne preporuke',
@@ -1567,6 +1608,7 @@ const bsBS = {
     // stanje dozvole. Prije su prekidači bili useState(true) bez ijednog poziva.
     preferenceSaved: 'Postavka je spremljena',
     preferenceSaveFailed: 'Postavku nije moguće spremiti',
+    languageChangeFailed: 'Jezik nije moguće promijeniti',
     openSystemSettingsFailed: 'Nije moguće otvoriti sistemske postavke',
     notificationPermissionGranted: 'Dozvoljeno — dodirnite za promjenu u sistemskim postavkama',
     notificationPermissionDenied: 'Blokirano — dodirnite da omogućite u sistemskim postavkama',
@@ -1592,6 +1634,11 @@ const bsBS = {
     helpSupport: 'Pomoć i podrška',
     termsPrivacy: 'Uslovi i privatnost',
     developer: 'Razvojni tim',
+    // F6 (SET-05/SET-06): vidi komentare uz engleske ključeve.
+    developerDesc: 'Razvio tim Boiler Control',
+    logoutTitle: 'Odjaviti se?',
+    logoutBody: 'Za pregled kotla bit će potrebna ponovna prijava.',
+
   },
   profile: {
     title: 'Profil',
@@ -1742,6 +1789,23 @@ i18n.use(initReactI18next).init({
    */
   interpolation: {
     escapeValue: false,
+  },
+  /**
+   * F6: bez ovoga promjena jezika u Postavkama **nije** mijenjala UI.
+   *
+   * Bez `supportedLngs` i18next prihvata i varijante koje nemamo prevedene
+   * (`bs`, `en`, `en-GB`…) i tada tiho pada na `fallbackLng`, pa ekran ostane
+   * na engleskom i nakon što korisnik izabere bosanski. `load: 'currentOnly'`
+   * sprječava da se traži `bs-BS` *i* `bs`; `returnEmptyString: false` da
+   * prazan prevod ne pojede ključ. Zajedno: promjena jezika u Postavkama se
+   * odmah vidi u cijeloj aplikaciji.
+   */
+  supportedLngs: ['en-US', 'bs-BS'],
+  load: 'currentOnly',
+  returnEmptyString: false,
+
+  react: {
+    useSuspense: false,
   },
 });
 

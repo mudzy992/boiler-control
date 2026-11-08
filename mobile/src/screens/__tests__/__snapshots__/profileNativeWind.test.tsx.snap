@@ -127,7 +127,8 @@ exports[`Profile nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -148,13 +149,14 @@ exports[`Profile nativewind matches the dark snapshot 1`] = `
                 {
                   "color": "#e8edf4",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",
@@ -1046,7 +1048,8 @@ exports[`Profile nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
@@ -1067,13 +1070,14 @@ exports[`Profile nativewind matches the light snapshot 1`] = `
                 {
                   "color": "#111827",
                   "fontFamily": undefined,
-                  "fontSize": 13,
+                  "fontSize": 15,
+                  "lineHeight": 20,
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
-                  "fontSize": 9.5,
+                  "fontSize": 11,
                   "letterSpacing": 0.8,
                   "marginTop": 2,
                   "textTransform": "uppercase",

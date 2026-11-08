@@ -69,7 +69,7 @@ export const darkTokens: ThemeTokens = {
   lineStrong: '#2c3746',
   ink: '#e8edf4',
   inkMuted: '#9aa6b6',
-  inkDim: '#6b7788',
+  inkDim: '#828d9e',
   signal: '#ff6b3d',
   signalInk: '#ff8a5f',
   onSignal: '#0b0f16',
@@ -85,7 +85,22 @@ export const darkTokens: ThemeTokens = {
   scrim: 'rgba(3, 5, 8, 0.66)',
 };
 
-/** Svijetla tema je „daylight" mapiranje istih imena, ne drugi sistem. */
+/**
+ * Svijetla tema je „daylight" mapiranje istih imena, ne drugi sistem.
+ *
+ * F6 (A11Y-01): vrijednosti su korigovane da svaki tekstualni token prolazi
+ * **WCAG 2.2 AA na sve tri podloge** (`panel`, `canvas`, `raised`), a ne samo na
+ * bijeloj. Prije je `ok` (#16a34a) imao 3,30:1 na panelu — dakle padao i AA za
+ * veliki tekst — a `signal` (#e85223) 3,71:1, pa je i tekst na dugmetu
+ * (`onSignal` #ffffff na signal) bio ispod granice. Nove vrijednosti:
+ *   signal #c2410c (5,18 / 4,84 / 4,66), ok #15803d (5,02 / 4,69 / 4,51),
+ *   fault #b91c1c (6,47 / 6,04 / 5,82), info #0369a1 (5,93 / 5,54 / 5,34),
+ *   inkDim #59616e (6,25 / 5,84 / 5,63).
+ * Tamna tema je prolazila, osim `inkDim` (#6b7788 → 4,22:1); sada je #828d9e
+ * (5,71 / 6,00 / 5,34), pa su i mikro-labele AAA za veliki tekst.
+ * Kontrast se mjeri u `src/ui/__tests__/a11yContrast.test.ts`, da ga sljedeća
+ * izmjena palete ne može tiho pokvariti.
+ */
 export const lightTokens: ThemeTokens = {
   canvas: '#f6f7fb',
   panel: '#ffffff',
@@ -94,14 +109,14 @@ export const lightTokens: ThemeTokens = {
   lineStrong: '#c3cad6',
   ink: '#111827',
   inkMuted: '#4b5563',
-  inkDim: '#6b7280',
-  signal: '#e85223',
+  inkDim: '#59616e',
+  signal: '#c2410c',
   signalInk: '#c1411c',
   onSignal: '#ffffff',
-  ok: '#16a34a',
+  ok: '#15803d',
   warn: '#b45309',
-  fault: '#dc2626',
-  info: '#0284c7',
+  fault: '#b91c1c',
+  info: '#0369a1',
   signalSoft: 'rgba(232, 82, 35, 0.10)',
   okSoft: 'rgba(22, 163, 74, 0.10)',
   warnSoft: 'rgba(180, 83, 9, 0.10)',
@@ -158,24 +173,45 @@ export const systemFontFamily = {
   monoSemiBold: 'monospace',
 } as const;
 
+/**
+ * Tipografska skala.
+ *
+ * F6 (A11Y-14): minimalna veličina je podignuta sa 9 na 11 px.
+ *
+ * Prije: `label` 9 px i `meta` 10 px — mikro-labele su bile ispod svake granice
+ * čitljivosti, a pošto su `MonoLabel`/`MonoMeta` najčešći elementi u
+ * aplikaciji (svaki panel, svaki KPI, svaki red), to je bio najveći
+ * pojedinačni problem pristupačnosti u UI-ju. WCAG 2.2 1.4.4 traži da se tekst
+ * može uvećati do 200% bez gubitka sadržaja; na 9 px to praktično nije moguće.
+ *
+ * Sada: 11 / 12 / 13 / 15 / 16 / 22 / 28 / 40. Skala ostaje ne-linearna (isti
+ * odnos kao prije), pa se hijerarhija ne mijenja — samo je osnova podignuta.
+ * Kod koji je pisao `fontSize: 9` ručno sada koristi `fontSize.label`, da
+ * sljedeća izmjena skale ne zaobiđe taj fajl.
+ */
 export const fontSize = {
   /** Mono mikro-labela (uppercase, tracking). */
-  label: 9,
+  label: 11,
   /** Mala meta. */
-  meta: 10,
+  meta: 12,
   /** Tijelo — sekundarno. */
-  body: 12,
+  body: 13,
   /** Tijelo — primarno. */
-  bodyLg: 13,
+  bodyLg: 15,
   /** Naslov ekrana. */
-  title: 21,
+  title: 22,
   /** Naslov sekcije. */
-  section: 14,
+  section: 16,
   /** Readout L. */
-  readoutLg: 26,
+  readoutLg: 28,
   /** Readout XL. */
   readoutXl: 40,
 } as const;
+
+/** Visina reda po veličini — 1,35 × veličina, za tekst tijela. */
+export function lineHeightFor(size: number): number {
+  return Math.round(size * 1.35);
+}
 
 /** Trajanja animacija — 150–200 ms, `ease-out`. */
 export const motion = {

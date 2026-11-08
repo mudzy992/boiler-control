@@ -40,12 +40,13 @@ describe('F5 — startup polyfills', () => {
     expect([1, 3, 5].map((count) => rules.select(count))).toEqual(['one', 'few', 'other']);
   });
 
-  it('filter upozorenja pokriva tačno ta dva deprecation teksta', () => {
+  it('filter upozorenja pokriva tačno tri poznata upozorenja biblioteka', () => {
     const source = read('src', 'polyfills.ts');
-    const ignored = source.match(/'[^']*deprecated[^']*'/g) ?? [];
-    expect(ignored).toHaveLength(2);
+    const ignored = source.match(/'[^']*(deprecated|ignored on native)[^']*'/g) ?? [];
+    expect(ignored).toHaveLength(3);
     expect(ignored.join(' ')).toMatch(/SafeAreaView/);
     expect(ignored.join(' ')).toMatch(/ImageBackground/);
+    expect(ignored.join(' ')).toMatch(/Dependencies should only be used on the web/);
     // Nema globalnog gušenja logova.
     expect(source).not.toMatch(/ignoreAllLogs/);
     expect(source).not.toMatch(/console\.error\s*=/);

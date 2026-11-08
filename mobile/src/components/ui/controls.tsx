@@ -128,7 +128,14 @@ export function Badge(props: UiProps) {
       py={rest.py ?? 1}
       style={[colors, { alignSelf: 'flex-start' }, buildStyle(rest, colorMode), rest.style]}
     >
-      {typeof children === 'string' || typeof children === 'number' ? (
+      {/*
+        Miješana djeca (npr. `#{program.orderIndex + 1}`) su niz od tri čvora:
+        tekst „#", broj i ništa — pa provjera `typeof children === 'string'` nije
+        bila dovoljna i goli je string završavao u `<Box>`-u, što React Native
+        prijavljuje kao „Text strings must be rendered within a <Text> component".
+        Zato: sve što nije React element ide kroz `<Text>`.
+      */}
+      {isPlainContent(children) ? (
         <Text color={colors.color} fontSize="xs" fontWeight="600" {..._text}>
           {children}
         </Text>
@@ -137,6 +144,13 @@ export function Badge(props: UiProps) {
       )}
     </Box>
   );
+}
+
+/** `true` kad se sadržaj smije renderovati kao tekst (string/broj/niz takvih). */
+function isPlainContent(children: React.ReactNode): boolean {
+  if (typeof children === 'string' || typeof children === 'number') return true;
+  if (Array.isArray(children)) return children.every(isPlainContent);
+  return false;
 }
 
 export function Progress(props: UiProps) {

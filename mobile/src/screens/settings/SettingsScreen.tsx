@@ -77,10 +77,27 @@ const SettingsScreenContent = () => {
   const languageLabel =
     i18n.language === 'bs-BS' ? t('settings.languageBosnian') : t('settings.languageEnglish');
 
+  /**
+   * F6 (SET-01): jezik se mijenja odmah i vidljivo.
+   *
+   * Prije: `AppStorage.set` pa `changeLanguage`, bez ikakve povratne
+   * informacije — ako spremanje padne, ekran zatvori sheet, a jezik ostane
+   * isti, pa korisnik ne zna da promjena nije prošla. Sada se redoslijed
+   * obrće (prvo UI, pa perzistencija) da promjena bude trenutna, a greška se
+   * prijavi toastom na jeziku na koji je korisnik prešao.
+   */
   const handleLanguageChange = async (language: 'en-US' | 'bs-BS') => {
-    await AppStorage.set('app.language', language);
+    if (i18n.language === language) {
+      setShowLanguageModal(false);
+      return;
+    }
     await i18n.changeLanguage(language);
     setShowLanguageModal(false);
+    try {
+      await AppStorage.set('app.language', language);
+    } catch {
+      toast.show({ description: t('settings.languageChangeFailed'), placement: 'top' });
+    }
   };
 
   /**

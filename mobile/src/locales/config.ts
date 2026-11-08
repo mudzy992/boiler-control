@@ -709,6 +709,7 @@ const enUS = {
     // stanje dozvole. Prije su prekidači bili useState(true) bez ijednog poziva.
     preferenceSaved: 'Preference saved',
     preferenceSaveFailed: 'Could not save preference',
+    languageChangeFailed: 'Could not change language',
     openSystemSettingsFailed: 'Could not open system settings',
     notificationPermissionGranted: 'Allowed — tap to change in system settings',
     notificationPermissionDenied: 'Blocked — tap to enable in system settings',
@@ -1567,6 +1568,7 @@ const bsBS = {
     // stanje dozvole. Prije su prekidači bili useState(true) bez ijednog poziva.
     preferenceSaved: 'Postavka je spremljena',
     preferenceSaveFailed: 'Postavku nije moguće spremiti',
+    languageChangeFailed: 'Jezik nije moguće promijeniti',
     openSystemSettingsFailed: 'Nije moguće otvoriti sistemske postavke',
     notificationPermissionGranted: 'Dozvoljeno — dodirnite za promjenu u sistemskim postavkama',
     notificationPermissionDenied: 'Blokirano — dodirnite da omogućite u sistemskim postavkama',
@@ -1742,6 +1744,23 @@ i18n.use(initReactI18next).init({
    */
   interpolation: {
     escapeValue: false,
+  },
+  /**
+   * F6: bez ovoga promjena jezika u Postavkama **nije** mijenjala UI.
+   *
+   * Bez `supportedLngs` i18next prihvata i varijante koje nemamo prevedene
+   * (`bs`, `en`, `en-GB`…) i tada tiho pada na `fallbackLng`, pa ekran ostane
+   * na engleskom i nakon što korisnik izabere bosanski. `load: 'currentOnly'`
+   * sprječava da se traži `bs-BS` *i* `bs`; `returnEmptyString: false` da
+   * prazan prevod ne pojede ključ. Zajedno: promjena jezika u Postavkama se
+   * odmah vidi u cijeloj aplikaciji.
+   */
+  supportedLngs: ['en-US', 'bs-BS'],
+  load: 'currentOnly',
+  returnEmptyString: false,
+
+  react: {
+    useSuspense: false,
   },
 });
 

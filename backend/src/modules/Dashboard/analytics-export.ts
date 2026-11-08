@@ -86,12 +86,19 @@ type LocalParts = {
   month: string;
   day: string;
   hour: string;
+  minute: string;
   offsetMinutes: number;
 };
 
 const formatterCache = new Map<string, Intl.DateTimeFormat>();
 
-function localParts(date: Date, zone: string): LocalParts {
+/**
+ * Zidno vrijeme u IANA zoni + pomak. Izvezeno jer ga koristi i dnevni zapis
+ * (`DailyRecord`): granica dana i prag 06:00 moraju se računati ISTOM
+ * funkcijom kao izvoz, inače dva mjesta u aplikaciji mogu pripisati isti
+ * trenutak različitom danu.
+ */
+export function localParts(date: Date, zone: string): LocalParts {
   let formatter = formatterCache.get(zone);
   if (!formatter) {
     formatter = new Intl.DateTimeFormat('en-US', {
@@ -113,6 +120,7 @@ function localParts(date: Date, zone: string): LocalParts {
   const month = parts.month;
   const day = parts.day;
   const hour = parts.hour;
+  const minute = parts.minute;
   // Ukljucuje minute/sekunde: IANA zone mogu imati offset koji nije puni sat
   // (npr. Asia/Kathmandu +05:45). Sam sat bi izgubio tih 45 minuta.
   const wallClock = Date.UTC(
@@ -136,6 +144,7 @@ function localParts(date: Date, zone: string): LocalParts {
     month,
     day,
     hour,
+    minute,
     offsetMinutes: Math.round((wallClock - utcClock) / 60_000),
   };
 }

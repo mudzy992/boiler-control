@@ -12,6 +12,7 @@ import { HeatingRecommendationService } from '../HeatingRecommendation/heating.r
 import { CommonModule } from '../../common/common.module';
 import { GasReminderService } from './gas.reminder.service';
 import { WeatherModule } from '../Weather/weather.module';
+import { DailyRecordModule } from '../DailyRecord/daily-record.module';
 
 const IS_TEST = process.env.NODE_ENV === 'test';
 
@@ -22,6 +23,7 @@ const IS_TEST = process.env.NODE_ENV === 'test';
     BoilerModule,
     WeatherModule,
     CommonModule,
+    DailyRecordModule,
   ],
   providers: IS_TEST
     ? [

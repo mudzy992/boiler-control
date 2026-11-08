@@ -40,9 +40,16 @@ describe('F5 — startup polyfills', () => {
     expect([1, 3, 5].map((count) => rules.select(count))).toEqual(['one', 'few', 'other']);
   });
 
-  it('filter upozorenja pokriva tačno tri poznata upozorenja biblioteka', () => {
+  it('filter upozorenja pokriva tačno tri upozorenja biblioteka iz F5', () => {
     const source = read('src', 'polyfills.ts');
-    const ignored = source.match(/'[^']*(deprecated|ignored on native)[^']*'/g) ?? [];
+    // F12: filter je proširen sa šest RN deprecation tekstova (u zasebnom nizu
+    // `RN_CORE_DEPRECATIONS`). Asertacija ovdje ostaje stroga za F5 grupu —
+    // tačno tri stringa u `IGNORED_WARNINGS`, ni jedan više, ni jedan manje.
+    const ignoredBlock = source.slice(
+      source.indexOf('const IGNORED_WARNINGS'),
+      source.indexOf('const RN_CORE_DEPRECATIONS'),
+    );
+    const ignored = ignoredBlock.match(/'[^']*(deprecated|ignored on native)[^']*'/g) ?? [];
     expect(ignored).toHaveLength(3);
     expect(ignored.join(' ')).toMatch(/SafeAreaView/);
     expect(ignored.join(' ')).toMatch(/ImageBackground/);

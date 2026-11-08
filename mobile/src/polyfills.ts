@@ -27,7 +27,25 @@
  *     (`originalConsoleWarn`), pa se u Metro terminalu i u Expo Go konzoli
  *     vide i dalje. Zato se `console.warn` omotava: tačan tekst se preskače,
  *     a svako drugo upozorenje ide nepromijenjeno. Filter je namjerno sužen na
- *     dva stringa; logovi se ne guše u cjelini.
+ *     tačne stringove; logovi se ne guše u cjelini.
+ *
+ *  3. Deprecation upozorenja iz `react-native/index.js` (RN 0.88) — vidi
+ *     `RN_CORE_DEPRECATIONS` niže. To NISU naši importi: nijedan fajl u
+ *     `src/` ne čita te simbole. Upozorenja se pale jer RN izvoz definiše kao
+ *     **getter** koji zove `warnOnce`, a nekoliko mjesta u ekosistemu pročita
+ *     sve izvoze modula `react-native` odjednom. Isti mehanizam je prijavljen
+ *     i u Expo repou (expo/expo#39544 — „Wildcard imports/exports of
+ *     react-native cause runtime crash\"): `import * as RN from 'react-native'`
+ *     ili `export * from 'react-native'` u **bilo kojoj** zavisnosti pusti sve
+ *     gettere. Naš bundle (provjereno u `expo export`) takav import ima na
+ *     jednom mjestu — `@react-navigation/stack/lib/module/views/
+ *     InteractionManager.js` (`import * as ReactNative`, potom
+ *     `ReactNative.InteractionManager`), a Reanimated/gesture-handler i sami
+ *     dokumentuju da `import * as RN` pod Metro-om čita sve izvoze.
+ *     Popravka na našoj strani ne postoji: to je u bibliotekama i u RN-u, pa
+ *     se tiho preskaču tačni tekstovi. Ništa se ne gasi u cjelini, a ako neki
+ *     budući kod zaista upotrijebi neki od tih simbola, upozorenje ionako ne
+ *     bi bilo vidljivo jer ga RN emituje `warnOnce` — jednom po sesiji.
  */
 
 import '@formatjs/intl-pluralrules/polyfill-force';
@@ -45,13 +63,38 @@ const IGNORED_WARNINGS = [
   'Dependencies should only be used on the web and are always ignored on native',
 ] as const;
 
+/**
+ * Deprecation upozorenja iz RN 0.88 koja se pale **čitanjem** izvoza, a ne
+ * našim kodom (vidi tačku 3 u zaglavlju modula).
+ *
+ * Tekstovi su prepisani iz `node_modules/react-native/index.js` (getteri
+ * `DrawerLayoutAndroid`, `InputAccessoryView`, `ProgressBarAndroid`,
+ * `Clipboard`, `PushNotificationIOS`, `UTFSequence`) i skraćeni na prvu
+ * rečenicu, koja je dovoljna da bude jedinstvena. Puna poruka sadrži i
+ * preporuku zamjenskog paketa, ali ona se mijenja s verzijom RN-a — prva
+ * rečenica je stabilna.
+ */
+const RN_CORE_DEPRECATIONS = [
+  'DrawerLayoutAndroid is deprecated and will be removed in a future release',
+  'InputAccessoryView is deprecated and will be removed in a future release',
+  'ProgressBarAndroid has been extracted from react-native core',
+  'Clipboard has been extracted from react-native core',
+  'PushNotificationIOS has been extracted from react-native core',
+  'UTFSequence has been deprecated and will be removed in a future release',
+] as const;
+
+const SUPPRESSED_WARNINGS: readonly string[] = [
+  ...IGNORED_WARNINGS,
+  ...RN_CORE_DEPRECATIONS,
+];
+
 const originalWarn = console.warn.bind(console);
 
 console.warn = (...args: unknown[]) => {
   const first = args[0];
   if (
     typeof first === 'string' &&
-    IGNORED_WARNINGS.some((ignored) => first.includes(ignored))
+    SUPPRESSED_WARNINGS.some((ignored) => first.includes(ignored))
   ) {
     return;
   }

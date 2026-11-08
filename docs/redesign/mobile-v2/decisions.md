@@ -741,6 +741,69 @@ edge-to-edge.
 netaknute. Native folderi nisu u repou (CNG), pa test čita konfiguraciju, a ne
 `android/gradle.properties`.
 
+### F12 — deprecation upozorenja RN jezgra na startu
+
+Na startu aplikacije (Expo Go, SDK 58 / RN 0.88.1) ispisivalo se šest upozorenja:
+
+```
+WARN  DrawerLayoutAndroid is deprecated and will be removed in a future release. ...
+WARN  InputAccessoryView is deprecated and will be removed in a future release.
+WARN  ProgressBarAndroid has been extracted from react-native core ...
+WARN  Clipboard has been extracted from react-native core ...
+WARN  PushNotificationIOS has been extracted from react-native core ...
+WARN  UTFSequence has been deprecated and will be removed in a future release ...
+```
+
+**Uzrok (dokazan, ne pretpostavljen):** RN 0.88 u `react-native/index.js` definiše
+svih šest izvoza kao **getter** koji pri čitanju zove `warnOnce(...)`
+(`node_modules/react-native/index.js`: 46, 79, 107, 243, 329, 399). Upozorenje
+dakle ne zavisi od toga da li simbol koristimo — pali se **čitanjem svojstva**.
+Nijedan fajl u `src/`, `App.tsx` ni `index.js` ne pominje tih šest imena
+(grep: 0 hitova; tvrdi ga i novi test). Pali ih tuđi kod koji pročita sve izvoze
+modula `react-native` odjednom, tipično kroz `import * as RN from 'react-native'`
+ili `export * from 'react-native'`. Isti mehanizam je prijavljen u Expo repou
+kao expo/expo#39544 („Wildcard imports/exports of react-native cause runtime
+crash"); u našem `expo export` bundle-u takav import postoji na jednom mjestu —
+`@react-navigation/stack/lib/module/views/InteractionManager.js`
+(`import * as ReactNative from 'react-native'`), a Reanimated i
+`react-native-gesture-handler` i sami u komentarima navode da `import * as RN`
+pod Metro-om čita **svaki** izvoz.
+
+Zato popravka ne može biti „ukloni import iz našeg koda": takvog importa nema.
+`react-native-css-interop` (NativeWind) čita samo `SafeAreaView` i
+`ImageBackground` — ta dva su filtrirana još u F5 i **nisu** dio ovih šest.
+
+**Popravka:** u `src/polyfills.ts` dodat je zaseban niz `RN_CORE_DEPRECATIONS`
+sa šest tačnih tekstova (prva rečenica poruke, jer je stabilna kroz verzije) i
+spojen sa postojećim `IGNORED_WARNINGS` u `SUPPRESSED_WARNINGS`. `console.warn`
+se i dalje samo **djelimično** preskače — svako drugo upozorenje prolazi
+nepromijenjeno, `ignoreAllLogs` se ne koristi, `console.error` se ne dira.
+`warnOnce` znači da RN ta upozorenja emituje jednom po sesiji, pa filter ne
+može sakriti naknadnu stvarnu upotrebu: prvo čitanje ionako dolazi iz tuđeg
+koda pri startu. Ako neka buduća verzija RN-a ukloni taj `warnOnce` i upozorenje
+počne da se ponavlja, to je signal da se provjeri da li je neki naš fajl počeo
+da koristi simbol.
+
+**Dokaz:** novi `src/__tests__/rnWarnings.test.ts` (3 testa):
+(1) nijedan naš fajl ne sadrži tih šest imena, a `polyfills.ts` ih pominje samo
+kao tekstove, nikad kao `import`; (2) uzrok — čitanje `require('react-native')
+.Clipboard` stvarno pali `warnOnce` upozorenje; (3) popravka — u izolovanom
+registru se učita `src/polyfills.ts`, svih šest tekstova se preskoči, a
+kontrolno upozorenje prođe. Test (3) je provjeren i mutacijom: kad se iz
+`SUPPRESSED_WARNINGS` ukloni `RN_CORE_DEPRECATIONS`, pada; sa popravkom prolazi.
+Postojeći F5 test („tačno tri upozorenja biblioteka") preveden je na novi tok:
+asertacija i dalje traži **tačno tri** stringa u `IGNORED_WARNINGS`, ali čita
+samo taj blok, pa F12 grupa ne mijenja njegov smisao.
+
+**Provjera poslije F12 (2026-11-08):**
+
+```
+npx tsc --noEmit   → 0 grešaka
+npx jest           → 51 suite, 335 testova, 32 snapshot-a — sve zeleno
+npx eslint src     → 0 grešaka (45 upozorenja, isti baseline kao F11)
+npx expo export --platform android --dev → prolazi
+```
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |
@@ -755,6 +818,8 @@ netaknute. Native folderi nisu u repou (CNG), pa test čita konfiguraciju, a ne
 | F9 Plin iznova | **završeno 2026-11-07** | Plin više ne miješa dva UI sloja: `GasForm` i akcioni meni na `src/ui`; unos sa decimalnim zarezom, duplikat prije mreže, funkcionalan raspon datuma, sažetak sa istaknutom potrošnjom; 4 nova testa |
 | F8 Sheet bez gorhom-a + raspored | **završeno 2026-11-07** | `Sheet` = RN `Modal` + `Animated` (nema gorhoma, Reanimated workleta ni gesture-handlera); greška više ne ruši ekran (`undefined` toast); Početna po korisnikovom redoslijedu, alerti u status kotla, termostat-mode u kartici termostata, prevedena stanja vremena; 5 novih testova |
 | F7 Mrtvi dodiri + Gas | **završeno 2026-11-07** | `Sheet` na RN `Modal` sa deklarativnim `index` (rješava set-temp, dodaj očitanje, promjenu jezika); jezik dokazan reprodukcijom; Početna: istaknut `targetFlow` + kartica potrošnje + alerti i „Recommendation reason" u temi; Gas: meni perioda, tab traka, kartice očitanja, 44 px akcije; 13 nalaza; 12 novih testova |
+| F11 Produkcijski Android build | **završeno 2026-11-08** | pin `compileSdk`/`targetSdk` uklonjen (`checkReleaseAarMetadata`), `edgeToEdgeEnabled` uklonjen; `buildConfig.test.ts` (5 testova) |
+| F12 RN deprecation upozorenja | **završeno 2026-11-08** | filter za šest `warnOnce` tekstova iz `react-native/index.js` (uzrok: `import * as RN` u tuđem kodu, expo/expo#39544); `rnWarnings.test.ts` (3 testa) |
 
 ### Šta je F0 stvarno isporučio
 

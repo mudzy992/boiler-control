@@ -86,7 +86,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -234,7 +234,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -408,7 +408,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -570,7 +570,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -734,7 +734,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                         },
@@ -840,7 +840,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -887,7 +887,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -987,7 +987,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#6b7788",
+                        "color": "#828d9e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -1072,7 +1072,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   style={
                     [
                       {
-                        "color": "#6b7788",
+                        "color": "#828d9e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                       },
@@ -1223,7 +1223,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -1358,7 +1358,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1489,7 +1489,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1750,7 +1750,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 10,
                           },
@@ -2355,7 +2355,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
           keyboardType="decimal-pad"
           onChangeText={[Function]}
           placeholder="48 - 55"
-          placeholderTextColor="#6b7788"
+          placeholderTextColor="#828d9e"
           style={
             [
               {
@@ -2690,7 +2690,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -2838,7 +2838,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -2862,7 +2862,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   {
                     "backgroundColor": "#ffffff",
                     "borderColor": "#c3cad6",
-                    "borderLeftColor": "#e85223",
+                    "borderLeftColor": "#c2410c",
                     "borderLeftWidth": 2,
                   },
                   {
@@ -3012,7 +3012,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -3121,7 +3121,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   <View
                     style={
                       {
-                        "backgroundColor": "#16a34a",
+                        "backgroundColor": "#15803d",
                         "borderRadius": 2,
                         "bottom": 0,
                         "left": 0,
@@ -3159,7 +3159,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#16a34a",
+                          "color": "#15803d",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -3174,7 +3174,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -3338,7 +3338,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                         },
@@ -3444,7 +3444,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -3491,7 +3491,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -3591,7 +3591,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#6b7280",
+                        "color": "#59616e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -3676,7 +3676,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   style={
                     [
                       {
-                        "color": "#6b7280",
+                        "color": "#59616e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                       },
@@ -3775,7 +3775,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           "width": 5,
                         },
                         {
-                          "backgroundColor": "#16a34a",
+                          "backgroundColor": "#15803d",
                         },
                       ]
                     }
@@ -3790,7 +3790,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         },
                         null,
                         {
-                          "color": "#16a34a",
+                          "color": "#15803d",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                           "letterSpacing": 0.4,
@@ -3827,7 +3827,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -3962,7 +3962,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -4093,7 +4093,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -4354,7 +4354,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 10,
                           },
@@ -4959,7 +4959,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
           keyboardType="decimal-pad"
           onChangeText={[Function]}
           placeholder="48 - 55"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#59616e"
           style={
             [
               {
@@ -5134,8 +5134,8 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     "paddingHorizontal": 16,
                   },
                   {
-                    "backgroundColor": "#e85223",
-                    "borderColor": "#e85223",
+                    "backgroundColor": "#c2410c",
+                    "borderColor": "#c2410c",
                     "opacity": 1,
                   },
                   null,

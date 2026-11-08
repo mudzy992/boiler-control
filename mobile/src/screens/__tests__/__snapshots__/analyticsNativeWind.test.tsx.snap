@@ -153,7 +153,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -279,7 +279,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                       "letterSpacing": 0.9,
@@ -433,7 +433,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                       "letterSpacing": 0.9,
@@ -508,7 +508,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                       "letterSpacing": 0.9,
@@ -553,7 +553,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -658,7 +658,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -758,7 +758,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#6b7788",
+                        "color": "#828d9e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -794,7 +794,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -873,7 +873,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#6b7788",
+                        "color": "#828d9e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -915,7 +915,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1005,7 +1005,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1096,7 +1096,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1183,7 +1183,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                         },
@@ -1207,7 +1207,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                         },
@@ -1372,7 +1372,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7788",
+                              "color": "#828d9e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -1533,7 +1533,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7788",
+                              "color": "#828d9e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -1694,7 +1694,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7788",
+                              "color": "#828d9e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -1873,7 +1873,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7788",
+                              "color": "#828d9e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -1988,7 +1988,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -2054,7 +2054,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
             style={
               [
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
                   "fontSize": 10,
                 },
@@ -2344,7 +2344,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -2470,7 +2470,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                       "letterSpacing": 0.9,
@@ -2529,7 +2529,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     {
                       "backgroundColor": "#f1f3f7",
-                      "borderBottomColor": "#e85223",
+                      "borderBottomColor": "#c2410c",
                       "borderBottomWidth": 2,
                     },
                   ],
@@ -2624,7 +2624,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                       "letterSpacing": 0.9,
@@ -2699,7 +2699,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                       "letterSpacing": 0.9,
@@ -2744,7 +2744,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -2849,7 +2849,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -2949,7 +2949,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#6b7280",
+                        "color": "#59616e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -2985,7 +2985,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -3064,7 +3064,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#6b7280",
+                        "color": "#59616e",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -3106,7 +3106,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -3196,7 +3196,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -3287,7 +3287,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -3374,7 +3374,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                         },
@@ -3398,7 +3398,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                         },
@@ -3563,7 +3563,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7280",
+                              "color": "#59616e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -3724,7 +3724,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7280",
+                              "color": "#59616e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -3885,7 +3885,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7280",
+                              "color": "#59616e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -4064,7 +4064,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#6b7280",
+                              "color": "#59616e",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -4179,7 +4179,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -4245,7 +4245,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
             style={
               [
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
                   "fontSize": 10,
                 },

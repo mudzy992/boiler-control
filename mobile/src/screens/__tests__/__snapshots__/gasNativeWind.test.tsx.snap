@@ -85,7 +85,7 @@ exports[`GasAnalysis nativewind matches the dark snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -788,7 +788,7 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -1491,7 +1491,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -2038,7 +2038,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -2128,7 +2128,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -2197,7 +2197,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -2218,7 +2218,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 10,
                           },
@@ -2592,7 +2592,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -2613,7 +2613,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                     },
@@ -2773,7 +2773,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -2813,7 +2813,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7788",
+                            "color": "#828d9e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -2869,7 +2869,7 @@ exports[`GasReadings nativewind matches the dark snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7788",
+                          "color": "#828d9e",
                           "fontFamily": undefined,
                           "fontSize": 9,
                         },
@@ -4764,7 +4764,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -5112,7 +5112,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
               style={
                 {
                   "backgroundColor": "rgba(232, 82, 35, 0.10)",
-                  "borderColor": "#e85223",
+                  "borderColor": "#c2410c",
                   "borderRadius": 2,
                   "borderWidth": 1,
                   "paddingHorizontal": 10,
@@ -5311,7 +5311,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -5401,7 +5401,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -5470,7 +5470,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -5491,7 +5491,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 10,
                           },
@@ -5760,7 +5760,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   [
                     {
                       "backgroundColor": "rgba(232, 82, 35, 0.10)",
-                      "borderColor": "#e85223",
+                      "borderColor": "#c2410c",
                       "borderRadius": 2,
                       "borderWidth": 1,
                       "paddingHorizontal": 10,
@@ -5865,7 +5865,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -5886,7 +5886,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 10,
                     },
@@ -6046,7 +6046,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": "monospace",
                           "fontSize": 10,
                         },
@@ -6086,7 +6086,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "color": "#6b7280",
+                            "color": "#59616e",
                             "fontFamily": "monospace",
                             "fontSize": 9,
                           },
@@ -6142,7 +6142,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#6b7280",
+                          "color": "#59616e",
                           "fontFamily": undefined,
                           "fontSize": 9,
                         },
@@ -6968,8 +6968,8 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   "paddingHorizontal": 16,
                 },
                 {
-                  "backgroundColor": "#e85223",
-                  "borderColor": "#e85223",
+                  "backgroundColor": "#c2410c",
+                  "borderColor": "#c2410c",
                   "opacity": 1,
                 },
                 {
@@ -7897,7 +7897,7 @@ exports[`GasReadings nativewind matches the light snapshot 1`] = `
                   [
                     {
                       "alignItems": "center",
-                      "backgroundColor": "#e85223",
+                      "backgroundColor": "#c2410c",
                       "borderRadius": 8,
                       "flex": 1,
                       "paddingBottom": 12,

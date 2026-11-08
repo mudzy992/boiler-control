@@ -461,7 +461,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                     },
                     [
                       {
@@ -631,7 +631,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                     },
                     [
                       {
@@ -801,7 +801,7 @@ exports[`MainTabNavigator nativewind matches the dark snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                     },
                     [
                       {
@@ -1123,7 +1123,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#e85223",
+                      "color": "#c2410c",
                     },
                     [
                       {
@@ -1293,7 +1293,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                     },
                     [
                       {
@@ -1463,7 +1463,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                     },
                     [
                       {
@@ -1633,7 +1633,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                     },
                     [
                       {

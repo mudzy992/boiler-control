@@ -135,7 +135,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -437,7 +437,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -735,7 +735,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1288,7 +1288,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1605,7 +1605,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -1922,7 +1922,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -2692,7 +2692,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -2758,7 +2758,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -2824,7 +2824,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7788",
+                      "color": "#828d9e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -3246,7 +3246,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -3548,7 +3548,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -3846,7 +3846,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -4399,7 +4399,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -4716,7 +4716,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -5033,7 +5033,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                       "letterSpacing": 1.4,
@@ -5343,7 +5343,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#dc2626",
+                      "color": "#b91c1c",
                       "fontFamily": undefined,
                       "fontSize": 12.5,
                     },
@@ -5522,8 +5522,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                   "paddingHorizontal": 16,
                 },
                 {
-                  "backgroundColor": "#e85223",
-                  "borderColor": "#e85223",
+                  "backgroundColor": "#c2410c",
+                  "borderColor": "#c2410c",
                   "opacity": 1,
                 },
                 {
@@ -5803,7 +5803,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -5869,7 +5869,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -5935,7 +5935,7 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                 style={
                   [
                     {
-                      "color": "#6b7280",
+                      "color": "#59616e",
                       "fontFamily": "monospace",
                       "fontSize": 9,
                     },
@@ -6146,8 +6146,8 @@ exports[`Settings nativewind matches the light snapshot 1`] = `
                         "paddingHorizontal": 16,
                       },
                       {
-                        "backgroundColor": "#e85223",
-                        "borderColor": "#e85223",
+                        "backgroundColor": "#c2410c",
+                        "borderColor": "#c2410c",
                         "opacity": 1,
                       },
                       null,

@@ -152,7 +152,7 @@ exports[`Schedule nativewind matches the dark snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7788",
+                  "color": "#828d9e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,
@@ -631,7 +631,7 @@ exports[`Schedule nativewind matches the light snapshot 1`] = `
                 },
                 null,
                 {
-                  "color": "#6b7280",
+                  "color": "#59616e",
                   "fontFamily": "monospace",
                   "fontSize": 9.5,
                   "letterSpacing": 0.8,

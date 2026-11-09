@@ -81,12 +81,10 @@ jobs:
           code=${PIPESTATUS[0]}
           if [ "$code" -ne 0 ]; then
             echo "::error::nest build nije prošao (exit $code)"
-            grep -E "error TS" "$RUNNER_TEMP/build.log" | head -20 | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            tail -5 "$RUNNER_TEMP/build.log" | while IFS= read -r line; do
-              echo "::error::tail: $line"
-            done
+            # `--pretty false`: boje i code-frame bi sakrili same poruke od grep-a.
+            npx tsc -p tsconfig.build.json --noEmit --pretty false 2>&1 \
+              | grep -E "error TS" | head -12 \
+              | while IFS= read -r line; do echo "::error::$line"; done
           fi
           exit "$code"
 

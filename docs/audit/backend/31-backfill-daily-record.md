@@ -57,7 +57,12 @@ dnevna potrošnja postoji za 131 dan. Ono što ne postoji je veza plin ↔ stepe
 | sa stepen-danom | 4 |
 | sa `shadow*` | **0** — kako i treba |
 | ponovni dry-run | **0 novih dana** → upis je idempotentan |
+| oznake porijekla (provjereno upitom) | `backfill-events-1` × **301**, `daily-1` × **1** |
 | plin po stepen-danu (prvi put izračunljivo) | **4 dana, 0,836 m³/K·dan** |
+
+Zadnji red je bitan: jedini red koji nije backfill nosi `modelVersion = daily-1`
+i **nema** `outcomeVersion`, pa ga `/history` ispravno vodi kao `LIVE`. Da backfill
+nije ostavio oznaku, 301 rekonstruisan dan bio bi nerazlučiv od mjerenog.
 
 Onih 0,836 je prvi broj te vrste koji sistem ima; ali je iz **4 dana** i ne nosi
 zaključak — treba ≥ 30 dana sa oba podatka prije nego se iz njega bilo šta tvrdi.

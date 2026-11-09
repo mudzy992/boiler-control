@@ -167,6 +167,11 @@ jobs:
           set +e
           npx jest --runInBand --ci 2>&1 | tee "$RUNNER_TEMP/jest.log"
           code=${PIPESTATUS[0]}
+          # I brojevi idu kao anotacija: log job-a se u ovom okruženju ne može
+          # preuzeti, pa bi inače „prošlo" bilo tvrdnja bez iskaza o tome
+          # koliko je testova uopšte izvršeno.
+          grep -E "^(Test Suites:|Tests:)" "$RUNNER_TEMP/jest.log" \
+            | while IFS= read -r line; do echo "::notice::$line"; done
           if [ "$code" -ne 0 ]; then
             # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.
             echo "::error::jest nije prošao (exit $code)"

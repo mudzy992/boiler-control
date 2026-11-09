@@ -223,6 +223,52 @@ async function main() {
       notice(`plin: ${row.readings} očitanja, medijana razmaka ${num(row.median_days, 1)} dana`);
     }
 
+    // --- shema: da li su migracije stvarno primijenjene ------------------
+    /*
+     * Provjera koja ne mjeri podatke nego **šemu**: kolone koje kod čita a koje
+     * možda ne postoje u produkciji. `SELECT` nepostojeće kolone ruši endpoint u
+     * radu, a migracija koja nije primijenjena se ne vidi iz brojeva redova.
+     */
+    const expectedColumns = [
+      ['HomeProfile', 'boilerOutputKw'],
+      ['HomeProfile', 'boilerCatalogId'],
+      ['HomeProfile', 'maxHeatingFlowC'],
+      ['DailyRecord', 'modelVersion'],
+      ['DailyRecord', 'outcomeVersion'],
+      ['DailyRecord', 'origin'],
+    ];
+    const schemaCheck = await soft(
+      'kolone iz novijih migracija',
+      `SELECT table_name, column_name
+         FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND (table_name, column_name) IN (${expectedColumns
+            .map(([t, c]) => `('${t}', '${c}')`)
+            .join(', ')})
+        ORDER BY table_name, column_name`,
+    );
+    if (schemaCheck) {
+      const present = new Set(
+        schemaCheck.map((row) => `${row.table_name}.${row.column_name}`),
+      );
+      const missing = expectedColumns
+        .map(([t, c]) => `${t}.${c}`)
+        .filter((key) => !present.has(key));
+      out('## Šema: kolone koje kod čita');
+      out();
+      out(
+        missing.length === 0
+          ? `- sve provjerene kolone postoje (${expectedColumns.length}/${expectedColumns.length})`
+          : `- ⛔ **nedostaju**: ${missing.join(', ')} — migracija nije primijenjena, a kod je čita`,
+      );
+      out();
+      notice(
+        missing.length === 0
+          ? `šema: ${expectedColumns.length}/${expectedColumns.length} kolona postoji`
+          : `šema: NEDOSTAJE ${missing.join(', ')}`,
+      );
+    }
+
     // --- izvor 5: vrijeme ------------------------------------------------
     const weather = await soft(
       'WeatherCache',

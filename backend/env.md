@@ -1,3 +1,8 @@
+> **SEC-5 (2026-11-08):** ovaj dokument je očišćen. U njemu su stajale
+> **stvarne** vrijednosti (lozinka baze, Weather API ključ, Tuya ID/secret).
+> Smatraju se kompromitovanim i moraju se rotirati — vidi
+> `docs/audit/backend/35-secret-leak.md`. Vrijednosti ispod su placeholderi.
+
 > **UPOZORENJE (SEC-0):** stvarne vrijednosti su uklonjene iz ovog fajla jer je
 > repozitorij javan. Tajne se drže ISKLJUČIVO u secret manageru i lokalnom
 > `backend/.env` koji nije praćen Gitom. Postupak rotacije:
@@ -18,10 +23,10 @@
 APP_PORT=3020
 
 # MySQL connection (replace with real values, do not commit)
-# DATABASE_URL="mysql://mudzy:nije,kikiriki@sql.ba101.top:3306/boiler_assistant"
-# DATABASE_USER="mudzy"
-# DATABASE_PASSWORD="nije,kikiriki"
-# DATABASE_HOST="sql.ba101.top"
+# DATABASE_URL="mysql://<DATABASE_USER>:<DATABASE_PASSWORD>@<DATABASE_HOST>:3306/boiler_assistant"
+# DATABASE_USER="<DATABASE_USER>"
+# DATABASE_PASSWORD="<DATABASE_PASSWORD>"
+# DATABASE_HOST="<DATABASE_HOST>"
 # DATABASE_PORT=3306
 
 # Postgres connection (replace with real values, do not commit)
@@ -29,7 +34,7 @@ DATABASE_URL=<DATABASE_URL: vrijednost iz secret managera>
 DATABASE_USER=<DATABASE_USER: vrijednost iz secret managera>
 DATABASE_PASSWORD=<DATABASE_PASSWORD: vrijednost iz secret managera>
 DATABASE_NAME=<DATABASE_USER: vrijednost iz secret managera>
-DATABASE_HOST="sql.ba101.top"
+DATABASE_HOST="<DATABASE_HOST>"
 DATABASE_PORT=5432
 
 # ---------------------------------------------------------------------

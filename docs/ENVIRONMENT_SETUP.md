@@ -1,3 +1,8 @@
+> **SEC-5 (2026-11-08):** ovaj dokument je očišćen. U njemu su stajale
+> **stvarne** vrijednosti (lozinka baze, Weather API ključ, Tuya ID/secret).
+> Smatraju se kompromitovanim i moraju se rotirati — vidi
+> `docs/audit/backend/35-secret-leak.md`. Vrijednosti ispod su placeholderi.
+
 # Environment Setup Guide
 
 Complete environment configuration for Boiler Control monorepo.
@@ -13,17 +18,17 @@ Create `.env` file in `backend/`:
 DATABASE_HOST=sql.ba101.top
 DATABASE_PORT=3306
 DATABASE_USER=mudzy
-DATABASE_PASSWORD=nije,kikiriki
+DATABASE_PASSWORD=<DATABASE_PASSWORD>
 DATABASE_NAME=boiler_assistant
 
 # JWT Configuration
-JWT_SECRET=tvoj_tajni_jwt_kljuc
+JWT_SECRET=<JWT_SECRET>
 JWT_EXPIRES_IN=3600s
 
 # External APIs
-WEATHER_API_KEY=8e968a22bfca43d18a6152747260301
-TUYA_CLIENT_ID=y3kg9wjqwghsj8ak5swj
-TUYA_CLIENT_SECRET=7d2164fd310f4edcb590ecbdaf373cca
+WEATHER_API_KEY=<WEATHER_API_KEY>
+TUYA_CLIENT_ID=<TUYA_CLIENT_ID>
+TUYA_CLIENT_SECRET=<TUYA_CLIENT_SECRET>
 TUYA_REGION=EU
 TUYA_BASE_URL=https://openapi.tuyaeu.com
 

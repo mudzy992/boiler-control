@@ -235,7 +235,8 @@ async function main() {
       ['HomeProfile', 'maxHeatingFlowC'],
       ['DailyRecord', 'modelVersion'],
       ['DailyRecord', 'outcomeVersion'],
-      ['DailyRecord', 'origin'],
+      // `origin` NIJE kolona — API ga izvodi iz `modelVersion`/`outcomeVersion`
+      // (vidi `daily-history.ts`). Ne traži se ovdje da provjera ne lažno alarmira.
     ];
     const schemaCheck = await soft(
       'kolone iz novijih migracija',

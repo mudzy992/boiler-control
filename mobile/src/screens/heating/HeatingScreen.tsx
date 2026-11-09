@@ -144,13 +144,22 @@ function DeviceRow({
   isHeating: boolean;
 }) {
   const { t } = useTranslation();
-  const current = Number(thermostat.currentTemp ?? 0);
-  const target = Number(thermostat.targetTemp ?? 0);
-  const gap = target - current;
+
+  /*
+   * `null` je „nema mjerenja", a ne 0 °C. Do sada je `Number(undefined ?? 0)`
+   * pisalo „0.0 °C", pa je termostat koji nije javio temperaturu izgledao kao
+   * da je u sobi nula stepeni — a razlika Δ je bila izmišljena iz te nule.
+   * Sada se sve troje (current, target, Δ) prikazuju kao „—" kad nema podatka.
+   */
+  const current = thermostat.currentTemp ?? null;
+  const target = thermostat.targetTemp ?? null;
+  const gap = current !== null && target !== null ? target - current : null;
+  const formatTemp = (value: number | null) =>
+    value !== null && Number.isFinite(value) ? value.toFixed(1) : '—';
 
   return (
     <PanelRow
-      accessibilityLabel={`${thermostat.alias ?? thermostat.name ?? ''}: ${current.toFixed(1)} → ${target.toFixed(1)} °C`}
+      accessibilityLabel={`${thermostat.alias ?? thermostat.name ?? ''}: ${formatTemp(current)} → ${formatTemp(target)} °C`}
     >
       <View style={{ gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
@@ -164,7 +173,7 @@ function DeviceRow({
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
           <Readout
-            value={`${current.toFixed(1)} → ${target.toFixed(1)}`}
+            value={`${formatTemp(current)} → ${formatTemp(target)}`}
             unit="°C"
             size="md"
             tone={isHeating ? 'signal' : 'ink'}
@@ -175,17 +184,19 @@ function DeviceRow({
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
           <View style={{ flex: 1 }}>
             <GaugeBar
-              value={current / 30}
-              target={target / 30}
+              value={current !== null ? current / 30 : 0}
+              target={target !== null ? target / 30 : undefined}
               tone={isHeating ? 'signal' : 'muted'}
               height={3}
-              accessibilityLabel={`${t('heating.current')} ${current.toFixed(
-                1,
-              )}, ${t('heating.target')} ${target.toFixed(1)}`}
+              accessibilityLabel={`${t('heating.current')} ${formatTemp(
+                current,
+              )}, ${t('heating.target')} ${formatTemp(target)}`}
             />
           </View>
-          <MonoMeta tone={Math.abs(gap) < 0.05 ? 'ok' : 'dim'}>
-            {`Δ ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}`}
+          <MonoMeta tone={gap !== null && Math.abs(gap) < 0.05 ? 'ok' : 'dim'}>
+            {gap === null
+              ? 'Δ —'
+              : `Δ ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}`}
           </MonoMeta>
         </View>
       </View>

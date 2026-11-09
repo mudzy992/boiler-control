@@ -12,6 +12,11 @@ name: Baseline (read-only)
 
 on:
   workflow_dispatch:
+  # GitHub registruje workflow za `workflow_dispatch` samo ako fajl ima i drugi
+  # trigger. Ova grana ne postoji, pa se baseline **nikad** ne pokreće sam —
+  # filter služi isključivo registraciji. Bez njega `gh workflow run` vraća 404.
+  push:
+    branches: [baseline-ne-pokreci-sam]
 
 permissions:
   contents: read

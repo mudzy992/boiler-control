@@ -8,7 +8,8 @@ export interface DashboardCapabilities {
 export interface ThermostatProgram {
   dayType: string;
   startMinute: number;
-  targetTemp: number;
+  /** Cilj **sobe** za taj interval (`32`). */
+  roomTargetTemp: number;
   orderIndex: number;
 }
 
@@ -19,8 +20,10 @@ export interface ThermostatDevice {
   deviceId: string;
   mode: string; // PROGRAM, MANUAL, OFF
   lastSeen: string;
-  currentTemp?: number | null;
-  targetTemp?: number | null;
+  /** Soba, trenutno (`32`). `null` = termostat nije poslao — nije 0 °C. */
+  roomCurrentTemp?: number | null;
+  /** Cilj sobe (`32`). */
+  roomTargetTemp?: number | null;
   isHeatingNow?: boolean;
   program: ThermostatProgram[];
 }
@@ -29,8 +32,8 @@ export interface RecentHeatingEvent {
   deviceId: number;
   startedAt: string;
   endedAt: string | null;
-  targetTemp: number;
-  currentTemp: number;
+  roomTargetTemp: number;
+  roomCurrentTemp: number;
   hvacAction: string; // HEATING_ON, HEATING_OFF
   isAnomaly?: boolean;
 }

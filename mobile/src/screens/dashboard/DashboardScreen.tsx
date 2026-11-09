@@ -239,7 +239,7 @@ export const DashboardScreen = () => {
    * izmišlja broj.
    */
   const primaryThermostat =
-    thermostats.find((thermostat) => typeof thermostat.currentTemp === 'number') ??
+    thermostats.find((thermostat) => typeof thermostat.roomCurrentTemp === 'number') ??
     thermostats[0] ??
     null;
   const recommendation = dashboardData?.system?.recommendation;
@@ -247,8 +247,8 @@ export const DashboardScreen = () => {
   const recommendationInterval = recommendation?.breakdown?.intervalKey ?? null;
 
   const primaryThermostatTemp =
-    primaryThermostat && typeof primaryThermostat.currentTemp === 'number'
-      ? Number(primaryThermostat.currentTemp)
+    primaryThermostat && typeof primaryThermostat.roomCurrentTemp === 'number'
+      ? Number(primaryThermostat.roomCurrentTemp)
       : null;
   const health = healthQuery.data;
 
@@ -497,8 +497,9 @@ export const DashboardScreen = () => {
                 const recentEvent = primaryHome?.recentHeatingEvents?.find(
                   (event) => event.deviceId === thermostat.id,
                 );
-                const current = recentEvent?.currentTemp ?? thermostat.currentTemp ?? null;
-                const target = thermostat.targetTemp ?? null;
+                const current =
+                  recentEvent?.roomCurrentTemp ?? thermostat.roomCurrentTemp ?? null;
+                const target = thermostat.roomTargetTemp ?? null;
                 const heating = thermostat.isHeatingNow === true;
 
                 return (

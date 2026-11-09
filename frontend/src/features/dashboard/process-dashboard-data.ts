@@ -5,7 +5,7 @@ import type { DashboardResponse, ProcessedDashboard } from './types';
  *
  * Tri stvari su se ovdje **izmišljale** i sada se ne izmišljaju:
  *
- * 1. `currentTemp ?? 0` — kad termostat nije poslao temperaturu, UI je pisao
+ * 1. `roomCurrentTemp ?? 0` — kad termostat nije poslao temperaturu, UI je pisao
  *    „0.0 °C". To nije „nema podataka", to je tvrdnja da je u kući nula
  *    stepeni. Sada je `null` i prikazuje se kao „—".
  * 2. `lastUpdate: new Date().toISOString()` — vrijeme je bilo vrijeme
@@ -45,8 +45,8 @@ export const processDashboardData = (
   return {
     anomalyCount: anomalies,
     anomalyRate,
-    currentTemp: thermostat?.currentTemp ?? null,
-    targetTemp: thermostat?.targetTemp ?? null,
+    roomCurrentTemp: thermostat?.roomCurrentTemp ?? null,
+    roomTargetTemp: thermostat?.roomTargetTemp ?? null,
     lastSeen,
     recentEvents,
     boiler: raw.system.boiler,

@@ -232,8 +232,11 @@ export class DashboardThermostatProgramDto {
   @ApiProperty()
   startMinute!: number;
 
-  @ApiProperty()
-  targetTemp!: number;
+  @ApiProperty({
+    description:
+      'Cilj **sobe** za taj interval, iz kolone `targetTemp` (`32`).',
+  })
+  roomTargetTemp!: number;
 
   @ApiProperty()
   orderIndex!: number;
@@ -264,11 +267,19 @@ export class DashboardThermostatDto {
   @ApiProperty({ ...DATE_TIME, nullable: true })
   lastSeen!: Date | null;
 
-  @ApiProperty({ nullable: true, description: 'Iz `roomCurrentTemp`.' })
-  currentTemp!: number | null;
+  @ApiProperty({
+    nullable: true,
+    description:
+      'Temperatura **vazduha u sobi** koju termostat očitava (`roomCurrentTemp`). ' +
+      'Nije polazna voda — ona je u `system.boiler.actualFlowTemp` (`32`).',
+  })
+  roomCurrentTemp!: number | null;
 
-  @ApiProperty({ nullable: true, description: 'Iz `roomTargetTemp`.' })
-  targetTemp!: number | null;
+  @ApiProperty({
+    nullable: true,
+    description: 'Cilj **sobe** (`roomTargetTemp`), fiksni ili iz programa.',
+  })
+  roomTargetTemp!: number | null;
 
   @ApiProperty({
     description: '`heatingStatus.find(...)?.isHeatingNow ?? false` (l.110).',
@@ -314,25 +325,25 @@ export class DashboardRecentHeatingEventDto {
   @ApiProperty({ ...DATE_TIME, nullable: true })
   endedAt!: Date | null;
 
-  @ApiProperty({ description: 'Iz `roomTargetTemp` (događaj).' })
-  targetTemp!: number;
+  @ApiProperty({ description: 'Cilj sobe iz događaja (`roomTargetTemp`).' })
+  roomTargetTemp!: number;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'Cilj sobe s termostata u trenutku čitanja, ili null.',
+  })
+  roomTargetTempThermostat!: number | null;
+
+  @ApiProperty({ description: 'Temperatura sobe iz događaja (`roomCurrentTemp`).' })
+  roomCurrentTemp!: number;
 
   @ApiProperty({
     nullable: true,
     description:
-      'Ciljna temperatura s termostata u trenutku čitanja, ili null.',
+      'Temperatura sobe s termostata u trenutku čitanja. Ranije `curretTempThermostat` ' +
+      '— typo je ispravljen u istoj izmjeni u kojoj je polje dobilo porodicu u imenu (`32`).',
   })
-  targetTempThermostat!: number | null;
-
-  @ApiProperty({ description: 'Iz `roomCurrentTemp` (događaj).' })
-  currentTemp!: number;
-
-  @ApiProperty({
-    nullable: true,
-    description:
-      'NAMJERNO zadržan typo `curret` iz izvornog koda — preimenovanje bi slomilo FE.',
-  })
-  curretTempThermostat!: number | null;
+  roomCurrentTempThermostat!: number | null;
 
   @ApiProperty({ description: 'Slobodan string iz kolone `hvacAction`.' })
   hvacAction!: string;
@@ -396,21 +407,21 @@ export class DashboardHeatingEventDto {
   @ApiProperty({ ...DATE_TIME, nullable: true })
   endedAt!: Date | null;
 
-  @ApiProperty({ description: 'Iz `roomCurrentTemp` (događaj, NOT NULL).' })
-  currentTemp!: number;
+  @ApiProperty({ description: 'Temperatura sobe iz događaja (`roomCurrentTemp`, NOT NULL).' })
+  roomCurrentTemp!: number;
 
-  @ApiProperty({ description: 'Iz `roomTargetTemp` (događaj, NOT NULL).' })
-  targetTemp!: number;
+  @ApiProperty({ description: 'Cilj sobe iz događaja (`roomTargetTemp`, NOT NULL).' })
+  roomTargetTemp!: number;
 
   @ApiProperty({
     nullable: true,
     description:
-      'Vrijednost s termostata, `null` ako termostat nema `roomCurrentTemp`. Typo je iz izvornog koda.',
+      'Temperatura sobe s termostata, `null` ako termostat nema `roomCurrentTemp`.',
   })
-  curretTempThermostat!: number | null;
+  roomCurrentTempThermostat!: number | null;
 
-  @ApiProperty({ nullable: true, description: 'Vrijednost s termostata.' })
-  targetTempThermostat!: number | null;
+  @ApiProperty({ nullable: true, description: 'Cilj sobe s termostata.' })
+  roomTargetTempThermostat!: number | null;
 
   @ApiProperty()
   hvacAction!: string;

@@ -66,8 +66,8 @@ export const DashboardPage = (): JSX.Element => {
           <>
             <DashboardStatusBand
               isHeatingActive={d.isHeatingActive}
-              currentTemp={d.data.currentTemp}
-              targetTemp={d.data.targetTemp}
+              roomCurrentTemp={d.data.roomCurrentTemp}
+              roomTargetTemp={d.data.roomTargetTemp}
               expectedHeatTimeMin={d.expectedHeatTimeMin}
               heatingStartedAt={d.heatingStartedAt}
               onSetTemp={d.openSetTemp}

@@ -50,7 +50,7 @@ export const RecentHeatingEvents = React.memo(function RecentHeatingEvents({ eve
 
   const renderEventItem = ({ item, index }: { item: RecentHeatingEvent; index: number }) => {
     const status = getStatusDisplay(item.hvacAction);
-    const tempDiff = Math.abs(item.currentTemp - item.targetTemp);
+    const tempDiff = Math.abs(item.roomCurrentTemp - item.roomTargetTemp);
     const duration = getDuration(item.startedAt, item.endedAt);
     const isRecent = index === 0;
 
@@ -92,7 +92,7 @@ export const RecentHeatingEvents = React.memo(function RecentHeatingEvents({ eve
                 {t('heatingEvents.current')}
               </Text>
               <Text fontSize="sm" fontWeight="bold" color={textColor}>
-                {item?.currentTemp ? item.currentTemp.toFixed(1) : '—'}°C
+                {item?.roomCurrentTemp ? item.roomCurrentTemp.toFixed(1) : '—'}°C
               </Text>
             </Box>
             <Box flex={1}>
@@ -100,7 +100,7 @@ export const RecentHeatingEvents = React.memo(function RecentHeatingEvents({ eve
                 {t('heatingEvents.target')}
               </Text>
               <Text fontSize="sm" fontWeight="bold" color={textColor}>
-                {item?.targetTemp ? item.targetTemp.toFixed(1) : '—'}°C
+                {item?.roomTargetTemp ? item.roomTargetTemp.toFixed(1) : '—'}°C
               </Text>
             </Box>
             <Box flex={1}>

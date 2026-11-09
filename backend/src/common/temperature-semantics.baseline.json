@@ -1,32 +1,21 @@
 {
   "_comment": "Zateceno stanje dvosmislenih imena temperatura (32). Broj smije samo padati; novi fajl ili veci broj = test pada. Regenerisi sa UPDATE_TEMP_BASELINE=1.",
   "files": {
-    "backend/src/common/heating-health.ts": 6,
     "backend/src/modules/Auth/account-export.service.ts": 1,
     "backend/src/modules/Boiler/adapter/program-sync.types.ts": 1,
     "backend/src/modules/Boiler/adapter/program.sync.service.ts": 14,
     "backend/src/modules/Boiler/adapter/snapshot-guard.ts": 6,
     "backend/src/modules/Boiler/adapter/thermostat-adapter.interface.ts": 3,
     "backend/src/modules/Boiler/adapter/tuya.adapter.ts": 13,
-    "backend/src/modules/Dashboard/dashboard.service.ts": 10,
-    "backend/src/modules/Dashboard/dto/dashboard-response.dto.ts": 9,
+    "backend/src/modules/Dashboard/dashboard.service.ts": 1,
+    "backend/src/modules/Dashboard/dto/dashboard-response.dto.ts": 3,
     "backend/src/modules/Heating/engine/types.ts": 2,
     "backend/src/modules/ThermostatPoll/thermostat.polling.service.ts": 24,
-    "frontend/src/features/dashboard/components/dashboard-events-table.tsx": 2,
-    "frontend/src/features/dashboard/components/dashboard-schedule.tsx": 2,
-    "frontend/src/features/dashboard/components/dashboard-status-band.tsx": 11,
-    "frontend/src/features/dashboard/pages/DashboardPage.tsx": 4,
-    "frontend/src/features/dashboard/process-dashboard-data.ts": 5,
-    "frontend/src/features/dashboard/types.ts": 7,
-    "frontend/src/locales/config.ts": 8,
-    "frontend/src/types/api.d.ts": 9,
-    "mobile/src/components/RecentHeatingEvents.tsx": 6,
+    "frontend/src/locales/config.ts": 6,
+    "frontend/src/types/api.d.ts": 3,
     "mobile/src/locales/config.ts": 2,
-    "mobile/src/screens/analytics/AnalyticsScreen.tsx": 6,
-    "mobile/src/screens/dashboard/DashboardScreen.tsx": 6,
-    "mobile/src/screens/heating/HeatingScreen.tsx": 4,
     "mobile/src/screens/schedule/ScheduleManagementScreen.tsx": 6,
     "mobile/src/services/api/thermostat.api.ts": 1,
-    "mobile/src/types/Dashboard.ts": 7
+    "mobile/src/types/Dashboard.ts": 2
   }
 }

@@ -387,16 +387,23 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       ]);
     });
 
-    it('typo `curretTempThermostat` je zaključan u ugovoru', () => {
-      // Postoji u izvornom kodu (dashboard.service.ts:261 i :143) i frontend
-      // ga čita pod tim imenom. Preimenovanje bi tiho slomilo FE, pa je
-      // namjerno zadržan i ovdje fiksiran kao dio wire ugovora.
-      expect(propsOf('DashboardHeatingEventDto')).toContain(
-        'curretTempThermostat',
-      );
-      expect(propsOf('DashboardRecentHeatingEventDto')).toContain(
-        'curretTempThermostat',
-      );
+    it('polja sobe nose porodicu u ugovoru, a typo je uklonjen', () => {
+      // Do `32` je typo `curretTempThermostat` bio zaključan u ugovoru jer ga je
+      // frontend čitao pod tim imenom. U `32` je preimenovanje urađeno u istom
+      // commitu na sva tri klijenta, pa ugovor sada traži ime koje kaže **šta**
+      // je temperatura — sobu, ne polaznu vodu.
+      for (const dto of ['DashboardHeatingEventDto', 'DashboardRecentHeatingEventDto']) {
+        expect(propsOf(dto)).toEqual(
+          expect.arrayContaining([
+            'roomCurrentTemp',
+            'roomTargetTemp',
+            'roomCurrentTempThermostat',
+            'roomTargetTempThermostat',
+          ]),
+        );
+        expect(propsOf(dto)).not.toContain('curretTempThermostat');
+        expect(propsOf(dto)).not.toContain('currentTemp');
+      }
     });
 
     it('DashboardWeatherDto ima 9 nullable polja (transformWeather ?? null)', () => {

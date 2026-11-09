@@ -6,8 +6,10 @@ import { computeHeatingProgress } from '../lib/compute-heating-progress';
 interface DashboardStatusBandProps {
   isHeatingActive: boolean;
   /** `null` = nema mjerenja; prikazuje se „—", nikad 0 °C. */
-  currentTemp: number | null;
-  targetTemp: number | null;
+  /** Soba, trenutno (`32`). */
+  roomCurrentTemp: number | null;
+  /** Cilj sobe (`32`). */
+  roomTargetTemp: number | null;
   expectedHeatTimeMin: number | null;
   heatingStartedAt: string | null;
   onSetTemp: () => void;
@@ -15,8 +17,8 @@ interface DashboardStatusBandProps {
 
 export const DashboardStatusBand = ({
   isHeatingActive,
-  currentTemp,
-  targetTemp,
+  roomCurrentTemp,
+  roomTargetTemp,
   expectedHeatTimeMin,
   heatingStartedAt,
   onSetTemp,
@@ -58,10 +60,10 @@ export const DashboardStatusBand = ({
           </div>
           <div className="flex flex-wrap items-end gap-6">
             <Readout
-              label={t('dashboard.currentTemp')}
+              label={t('dashboard.roomCurrentTemp')}
               value={
-                typeof currentTemp === 'number' && Number.isFinite(currentTemp)
-                  ? currentTemp.toFixed(1)
+                typeof roomCurrentTemp === 'number' && Number.isFinite(roomCurrentTemp)
+                  ? roomCurrentTemp.toFixed(1)
                   : '—'
               }
               unit="°C"
@@ -70,8 +72,8 @@ export const DashboardStatusBand = ({
               <p className="text-sm text-ink-muted">
                 {t('dashboard.targetSubtitle', {
                   temp:
-                    typeof targetTemp === 'number' && Number.isFinite(targetTemp)
-                      ? targetTemp.toFixed(1)
+                    typeof roomTargetTemp === 'number' && Number.isFinite(roomTargetTemp)
+                      ? roomTargetTemp.toFixed(1)
                       : '—',
                 })}
               </p>

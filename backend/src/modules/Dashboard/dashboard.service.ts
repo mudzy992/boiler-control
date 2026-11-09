@@ -138,14 +138,14 @@ export class DashboardService {
               deviceId: t.deviceId,
               mode: t.mode,
               lastSeen: t.lastSeen,
-              currentTemp: t.roomCurrentTemp,
-              targetTemp: t.roomTargetTemp,
+              roomCurrentTemp: t.roomCurrentTemp,
+              roomTargetTemp: t.roomTargetTemp,
               isHeatingNow: status?.isHeatingNow ?? false,
 
               program: t.thermostatProgram.map((p) => ({
                 dayType: p.dayType,
                 startMinute: p.startMinute,
-                targetTemp: p.targetTemp,
+                roomTargetTemp: p.targetTemp,
                 orderIndex: p.orderIndex,
               })),
             };
@@ -165,12 +165,12 @@ export class DashboardService {
             deviceId: e.deviceId,
             startedAt: e.timestampStart,
             endedAt: e.timestampEnd,
-            targetTemp: e.roomTargetTemp,
-            targetTempThermostat:
+            roomTargetTemp: e.roomTargetTemp,
+            roomTargetTempThermostat:
               profile.thermostatDevices.find((t) => t.id === e.deviceId)
                 ?.roomTargetTemp ?? null,
-            currentTemp: e.roomCurrentTemp,
-            curretTempThermostat:
+            roomCurrentTemp: e.roomCurrentTemp,
+            roomCurrentTempThermostat:
               profile.thermostatDevices.find((t) => t.id === e.deviceId)
                 ?.roomCurrentTemp ?? null,
             hvacAction: e.hvacAction,
@@ -287,11 +287,11 @@ export class DashboardService {
         deviceId: e.deviceId,
         startedAt: e.timestampStart,
         endedAt: e.timestampEnd,
-        currentTemp: e.roomCurrentTemp,
-        targetTemp: e.roomTargetTemp,
-        curretTempThermostat:
+        roomCurrentTemp: e.roomCurrentTemp,
+        roomTargetTemp: e.roomTargetTemp,
+        roomCurrentTempThermostat:
           deviceById.get(e.deviceId)?.roomCurrentTemp ?? null,
-        targetTempThermostat:
+        roomTargetTempThermostat:
           deviceById.get(e.deviceId)?.roomTargetTemp ?? null,
         hvacAction: e.hvacAction,
         source: e.source,
@@ -853,8 +853,8 @@ export class DashboardService {
             (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000,
           )
         : 0,
-      targetTemp: e.roomTargetTemp,
-      currentTemp: e.roomCurrentTemp,
+      roomTargetTemp: e.roomTargetTemp,
+      roomCurrentTemp: e.roomCurrentTemp,
       isAnomaly: e.isAnomaly,
     }));
 

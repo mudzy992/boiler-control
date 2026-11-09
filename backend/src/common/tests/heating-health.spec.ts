@@ -25,8 +25,8 @@ import {
 function event(overrides: Partial<HealthEventInput> = {}): HealthEventInput {
   return {
     durationMinutes: 45,
-    targetTemp: 21,
-    currentTemp: 21,
+    roomTargetTemp: 21,
+    roomCurrentTemp: 21,
     isAnomaly: false,
     ...overrides,
   };
@@ -127,7 +127,7 @@ describe('buildHealthWarnings', () => {
   });
 
   it('shortfall se pali kad prostorija ZAOSTAJE za ciljem', () => {
-    const events = [event({ targetTemp: 22, currentTemp: 20 })]; // razlika 2 > 1.5
+    const events = [event({ roomTargetTemp: 22, roomCurrentTemp: 20 })]; // razlika 2 > 1.5
     const warnings = buildHealthWarnings(events);
     const w = warnings.find((x) => x.type === 'targetShortfall');
 
@@ -137,7 +137,7 @@ describe('buildHealthWarnings', () => {
   });
 
   it('overshoot se pali kad prostorija PRELAZI cilj', () => {
-    const events = [event({ targetTemp: 20, currentTemp: 22 })]; // razlika 2 > 1.5
+    const events = [event({ roomTargetTemp: 20, roomCurrentTemp: 22 })]; // razlika 2 > 1.5
     const warnings = buildHealthWarnings(events);
     const w = warnings.find((x) => x.type === 'targetOvershoot');
 
@@ -149,7 +149,7 @@ describe('buildHealthWarnings', () => {
 
   it('kad je temperatura tačno na cilju, ne pali se nijedno od ta dva', () => {
     const warnings = buildHealthWarnings([
-      event({ targetTemp: 21, currentTemp: 21 }),
+      event({ roomTargetTemp: 21, roomCurrentTemp: 21 }),
     ]);
     expect(warnings.map((w) => w.type)).not.toContain('targetShortfall');
     expect(warnings.map((w) => w.type)).not.toContain('targetOvershoot');

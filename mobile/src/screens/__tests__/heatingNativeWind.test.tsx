@@ -50,8 +50,8 @@ beforeEach(() => {
           {
             id: 10,
             alias: 'Living Room',
-            currentTemp: 21.5,
-            targetTemp: 23,
+            roomCurrentTemp: 21.5,
+            roomTargetTemp: 23,
             isHeatingNow: true,
           },
         ],

@@ -59,6 +59,7 @@ export class ShadowReportService {
         shadowAction: true,
         shadowReasons: true,
         shadowVersion: true,
+        shadowExploration: true,
         shadowAt: true,
       },
     });

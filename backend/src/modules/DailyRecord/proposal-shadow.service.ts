@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
 import { applyDayGain } from '../HomeModel/day-gain';
+import { effectiveShortCycleFloor } from './short-cycle-floor';
+import { explorationFor } from './exploration';
 import {
   effectiveCeilingC,
   findBoilerFamily,
@@ -83,7 +85,7 @@ export class ProposalShadowService {
       };
     }
 
-    const [home, model, previous, lastOutcome] = await Promise.all([
+    const [home, model, previous, recentOutcomes, lastOutcome] = await Promise.all([
       this.prisma.homeProfile.findUnique({
         where: { id: homeProfileId },
         select: {
@@ -102,6 +104,8 @@ export class ProposalShadowService {
           state: true,
           slopeCiHigh: true,
           shortCycleFloorC: true,
+          // Dokaz o granici ističe (`24` §7); bez datuma se starost ne zna.
+          shortCycleFloorAt: true,
           // Dnevni dobitak (`17` §13 korak 7): dan sa suncem/gostima traži nižu
           // polaznu. `null` = nema procjene, pa se ne oduzima ništa.
           uDayC: true,
@@ -114,7 +118,24 @@ export class ProposalShadowService {
           proposedFlowTemp: { not: null },
         },
         orderBy: { localDate: 'desc' },
-        select: { localDate: true, proposedFlowTemp: true },
+        select: {
+          localDate: true,
+          proposedFlowTemp: true,
+          // Jučerašnje istraživanje blokira novo (`17` §8.5).
+          shadowExplorationDirection: true,
+        },
+      }),
+
+      // Rezerva za istraživanje: prebačaji zadnjih 5 obračunatih dana.
+      this.prisma.dailyRecord.findMany({
+        where: {
+          homeProfileId,
+          localDate: { lt: localDate },
+          outcomeAt: { not: null },
+        },
+        orderBy: { localDate: 'desc' },
+        take: 5,
+        select: { localDate: true, overshootC: true },
       }),
       this.prisma.dailyRecord.findFirst({
         where: { homeProfileId, localDate: { lt: localDate }, outcomeAt: { not: null } },
@@ -170,7 +191,17 @@ export class ProposalShadowService {
           medianCycleMin: lastOutcome.medianCycleMin,
         })
       : null;
-    const storedFloor = model?.shortCycleFloorC ?? null;
+    // Granica se pamti, ali ne zauvijek: dokaz stariji od 30 dana prestaje da
+    // bude dokaz (`24` §7). Istekla granica se i briše iz modela — inače bi
+    // stajala kao podatak koji više ništa ne znači.
+    const stored = effectiveShortCycleFloor(
+      {
+        floorC: model?.shortCycleFloorC ?? null,
+        at: model?.shortCycleFloorAt ?? null,
+      },
+      now,
+    );
+    const storedFloor = stored.floorC;
     const shortCycleFloorC =
       learnedFloor == null
         ? storedFloor
@@ -183,6 +214,15 @@ export class ProposalShadowService {
         where: { homeProfileId },
         data: { shortCycleFloorC: learnedFloor, shortCycleFloorAt: now },
       });
+    } else if (stored.age === 'EXPIRED') {
+      await this.prisma.homeModel.update({
+        where: { homeProfileId },
+        data: { shortCycleFloorC: null, shortCycleFloorAt: null },
+      });
+      this.logger.log(
+        `Granica iz kratkih ciklusa za kuću ${homeProfileId} istekla ` +
+          `(${stored.ageDays?.toFixed(0)} dana bez ponavljanja) — briše se.`,
+      );
     }
 
     // Model bojlera: bez potvrđenog zapisa nema savjeta o snižavanju (`19` §1).
@@ -190,6 +230,14 @@ export class ProposalShadowService {
     const ceiling = effectiveCeilingC({
       systemMaxC: home?.maxHeatingFlowC ?? null,
       family,
+    });
+
+    // Istraživanje se dopušta samo kad je rezerva dokazana i noć nije hladna.
+    const exploration = explorationFor({
+      recentOvershootC: recentOutcomes.map((row) => row.overshootC),
+      nightMinC,
+      exploredYesterday: previous?.shadowExplorationDirection === 'LOWER',
+      hasPreviousFlow: previousFlowC != null,
     });
 
     const decision = decideProposal({
@@ -206,6 +254,7 @@ export class ProposalShadowService {
       maxFlowC: ceiling,
       flowAdviceAllowed: isFlowAdviceAllowed(family),
       modelState: (model?.state ?? 'COLD_START') as ModelState,
+      exploration: exploration.direction,
     });
 
     await this.prisma.dailyRecord.updateMany({
@@ -216,6 +265,8 @@ export class ProposalShadowService {
         shadowReasons: [...decision.reasons, ...decision.bounds].join('+'),
         shadowAt: now,
         shadowVersion: SHADOW_VERSION,
+        shadowExploration: decision.exploration,
+        shadowExplorationDirection: decision.exploration ? 'LOWER' : null,
       },
     });
 
@@ -223,7 +274,8 @@ export class ProposalShadowService {
       `Shadow kuća ${homeProfileId} ${localDate}: u_day ` +
         `${model?.uDayC == null ? '—' : `${model.uDayC.toFixed(1)} K`}, formula ` +
         `${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
-        `${decision.flowC ?? '—'} °C (${decision.action}; ` +
+        `${decision.flowC ?? '—'} °C (${decision.action}` +
+        `${decision.exploration ? ', istraživanje' : ''}; ` +
         `${[...decision.reasons, ...decision.bounds].join('+') || 'bez razloga'}).`,
     );
 

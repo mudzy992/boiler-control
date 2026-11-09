@@ -25,6 +25,7 @@ bojler"): simulacija → shadow → predlog. Ovaj dokument pokriva prve dvije pr
 | `src/modules/DailyRecord/proposal-controller.ts` | `decideProposal` (čista), `shortCycleFloorFrom` |
 | `src/modules/DailyRecord/tests/proposal-controller.spec.ts` | 24 testa |
 | `src/modules/DailyRecord/proposal-shadow.service.ts` | shadow odluka uz predlog; pamti granicu iz kratkih ciklusa |
+| `src/modules/DailyRecord/short-cycle-floor.ts` | dokad granica važi — 30 dana bez ponavljanja |
 | `src/modules/DailyRecord/tests/proposal-shadow.service.spec.ts` | 13 testova |
 | `src/modules/DailyRecord/{shadow-report.ts,shadow-report.service.ts,shadow.report.controller.ts}` | izvještaj shadow perioda (`26`) |
 | `prisma/migrations/20261112100000_proposal_shadow/migration.sql` | 5 kolona na `DailyRecord`, 2 na `HomeModel` |
@@ -45,6 +46,7 @@ Red je dio odluke, ne stil.
 | 5 | udobno, dugi ciklusi | **−1,0 K**, ali **nikad ispod ravnotežne polazne** | v. §3 |
 | 6 | manje od 3 dana od zadnje promjene | ne mijenjaj (osim pravila 2) | `17` §8.2 |
 | 7 | bez poredljivih noći (`NO_FORECAST`, `NO_EVIDENCE`) | **ne spuštaj** | `23` §4 |
+| 7b | odluka bi stala, a rezerva je dokazana (3 od 5 dana prebačaj > 1 K) | **istraživanje −1,0 K** (nikad noću, nikad dva dana zaredom) | `17` §8.5 → `28` |
 | 8 | tvrde granice | raspon 30–55, noćni minimum, ±2 K/dan, **plafon sistema i modela** | `23` §5, `25` §4 |
 
 ### 2.1 Dvije stvari iz `17` §8.2 koje nijesu implementirane
@@ -206,7 +208,20 @@ Tri stvari koje su namjerno takve:
 | upis dira **samo** `shadow*` kolone | test to zaključava spiskom ključeva; `proposedFlowTemp`, `flowSetC` i mjerna polja su van domašaja |
 | greška u shadow-u ne obara predlog | poziv je u `try/catch`; korisnik dobija predlog i kad kontroler padne |
 
-**Granica iz kratkih ciklusa se pamti** u `HomeModel.shortCycleFloorC` (nikad se ne obara).
+**Granica iz kratkih ciklusa se pamti** u `HomeModel.shortCycleFloorC` i ne obara se dok
+traje dokaz — **ali ističe poslije 30 dana bez ponavljanja** (2026-11-15, v.
+`src/modules/DailyRecord/short-cycle-floor.ts`). Kratki ciklusi su svojstvo uslova, ne
+kuće: granica nastala u blagoj zimi držala bi polaznu višom od potrebnog mjesecima, a
+previsoka polazna je i dovela do pregrijavanja. Zato `shortCycleFloorAt` nosi datum
+posljednjeg dokaza; istekla granica se **briše iz modela**, da ne stoji kao podatak koji
+više ništa ne znači.
+
+Dvije stvari se pritom **ne** rade:
+
+- granica zapisana bez datuma (stariji redovi) **ostaje**: nedostatak datuma nije dokaz da
+  je dokaz istekao, a brisanje bi vratilo polaznu tačno na vrijednost koja je pravila
+  cikluse;
+- sat ispred upisa ne čini granicu isteklom — negativna starost se čita kao nula.
 Bez pamćenja polazna bi padala na `F` i vraćala se na `F + 1` u krug, jer se granica
 izvodi iz jučerašnjeg dana — a jučerašnji dan je bio dobar tačno zato što je polazna bila
 na `F + 1`.
@@ -226,17 +241,17 @@ razliku, a presuda „još nema dovoljno dana" bi je sakrila iza roka.
 | Šta | Zašto |
 |---|---|
 | zamjena predloga odlukom | poslije shadow perioda; mjerenje postoji (`26`), pušta se na `READY` za stvaran dom |
-| pamćenje granice iz kratkih ciklusa | danas se nikad ne zaboravlja; predlaže se zaborav poslije 30 dana bez ponavljanja |
-| exploration (`17` §8.5) | nije implementiran: traži `exploration` polje u `DailyRecord` i dokaz rezerve u 3 od 5 dana; bez toga bi bio nagađanje |
+| ~~pamćenje granice iz kratkih ciklusa~~ | **riješeno 2026-11-15:** ističe poslije 30 dana bez ponavljanja (§6.5) |
+| ~~exploration (`17` §8.5)~~ | **urađeno 2026-11-16 → `28`:** rezerva 3 od 5 dana, amplituda 1 K, samo prema dolje, zapis `shadowExploration` |
 | `T_max` kao zasebno pravilo | v. §2.1 — nema mjerenja |
 | tvrdnja o uštedi | traži baseline 28 dana + dva mjesečna `GasReading`-a (`19` §5) |
 
 ## 8. Šta je provjereno
 
-`npx jest src/modules/DailyRecord` → **163 testa, 163 prošlo** (10 suite-a): `day-outcome` 20,
-`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 26, `proposal-shadow.service` 13,
-`shadow-report` 18 + `…service` 7 + `…controller` 6 (`26`), plus postojeći `daily-record-writer`
-i `proposal-schedule`.
+`npx jest src/modules/DailyRecord` → **197 testova, 197 prošlo** (12 suite-a): `day-outcome` 20,
+`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 30, `proposal-shadow.service` 27,
+`exploration` 11 (`28`), `short-cycle-floor` 7 (§6.5), `shadow-report` 19 + `…service` 7 +
+`…controller` 6 (`26`), plus postojeći `daily-record-writer` i `proposal-schedule`.
 
 `node scripts/audit/controller_sim.cjs --days=60` → tvrdnje prošle (tabela u §5).
 

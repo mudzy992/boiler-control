@@ -25,6 +25,8 @@ export interface ShadowRow {
   /** Razlozi spojeni sa `+` (tako ih piše shadow servis). */
   shadowReasons: string | null;
   shadowVersion: string | null;
+  /** Da li je odluka tog dana bila istraživanje (`17` §8.5). */
+  shadowExploration?: boolean | null;
   /** `null` znači da shadow za taj dan nije izračunat. */
   shadowAt?: Date | string | null;
 }
@@ -81,6 +83,8 @@ export interface ShadowReport {
   meanAbsDeltaC: number;
   /** Dani u kojima je razlog `MODEL_UNVERIFIED` (nepotvrđen model bojlera). */
   blockedByModel: number;
+  /** Dani na kojima je odluka bila istraživanje, a ne konvergencija. */
+  explored: number;
   firstDate: string | null;
   lastDate: string | null;
   verdict: ShadowVerdict;
@@ -193,6 +197,8 @@ export function shadowReport(rows: ShadowRow[]): ShadowReport {
       ? rounded(absDeltas.reduce((sum, value) => sum + value, 0) / absDeltas.length)
       : 0;
 
+  const explored = rowsSorted.filter((row) => row.shadowExploration === true).length;
+
   const blockedByModel = differing.filter((comparison) =>
     comparison.reasons.includes('MODEL_UNVERIFIED'),
   ).length;
@@ -223,6 +229,7 @@ export function shadowReport(rows: ShadowRow[]): ShadowReport {
     maxAbsDeltaC,
     meanAbsDeltaC,
     blockedByModel,
+    explored,
     firstDate: rowsSorted[0]?.localDate ?? null,
     lastDate: rowsSorted[rowsSorted.length - 1]?.localDate ?? null,
     verdict,

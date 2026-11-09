@@ -353,6 +353,10 @@ Bez varijacije polazne nagib se ne može identificirati. Ali istraživanje na ra
 - nikad u noći, nikad kad je `nightMin < 0 °C`,
 - rezultat se bilježi u `DailyRecord` kao `exploration = true`, da se ne pomiješa sa konvergencijom.
 
+> **Realizovano 2026-11-16 → `28`.** Kolona se zove `shadowExploration` dok odluka ne dira
+> bojler: `exploration` koja opisuje nešto što se nije dogodilo bila bi lažan zapis. Smjer je
+> samo prema dolje — varijacija prema gore daje isti podatak o nagibu, a troši komfor.
+
 ### 8.6 `T_max = 120 min` — odakle tačno dolazi
 
 Vlasnik je tražio da 120 min ima osnovu u struci, standardu ili fizici, a ne u osjećaju.

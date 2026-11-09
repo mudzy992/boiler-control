@@ -65,6 +65,47 @@ describe('decideProposal — kad se polazna ne smije spustiti', () => {
     });
   });
 
+  it('istraživanje pomjera odluku samo kad bi inače stala', () => {
+    // Prošla polazna 45, udobno: redovno pravilo bi dalo 44 (korak 1 K), pa
+    // istraživanje nema šta da pomjeri — promjena je već tu.
+    const steady = decideProposal(baseInput({ exploration: 'LOWER' }));
+    expect(steady.reasons).toEqual(['COMFORT_HOLD']);
+    expect(steady.exploration).toBe(false);
+  });
+
+  it('kad je odluka HOLD, istraživanje ide 1 K niže i kaže zašto', () => {
+    // Dwell blokira redovno spuštanje (promjena je bila juče).
+    const decision = decideProposal(
+      baseInput({ daysSinceChange: 1, exploration: 'LOWER' }),
+    );
+
+    expect(decision.flowC).toBe(44);
+    expect(decision.action).toBe('LOWER');
+    expect(decision.reasons).toEqual(['EXPLORE_LOWER']);
+    expect(decision.exploration).toBe(true);
+  });
+
+  it('istraživanje i dalje poštuje tvrde granice', () => {
+    // Granica iz kratkih ciklusa je 45 — istraživanje ne smije ispod nje.
+    const decision = decideProposal(
+      baseInput({
+        daysSinceChange: 1,
+        exploration: 'LOWER',
+        shortCycleFloorC: 45,
+      }),
+    );
+
+    expect(decision.flowC).toBe(45);
+    expect(decision.exploration).toBe(true);
+  });
+
+  it('bez zahtjeva za istraživanje ništa se ne mijenja', () => {
+    const decision = decideProposal(baseInput({ daysSinceChange: 1 }));
+    expect(decision.flowC).toBe(45);
+    expect(decision.action).toBe('HOLD');
+    expect(decision.exploration).toBe(false);
+  });
+
   it('nepotvrđen model bojlera ne spušta polaznu — PTV je važniji od uštede', () => {
     const decision = decideProposal(
       baseInput({ flowAdviceAllowed: false }),

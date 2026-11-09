@@ -152,6 +152,7 @@ describe('shadowReport — brojevi', () => {
       evaluated: 0,
       differences: 0,
       changeSharePct: 0,
+      explored: 0,
       maxAbsDeltaC: 0,
       meanAbsDeltaC: 0,
       firstDate: null,
@@ -168,6 +169,16 @@ describe('shadowReport — brojevi', () => {
     ]);
     expect(report.firstDate).toBe('2026-11-02');
     expect(report.lastDate).toBe('2026-11-09');
+  });
+
+  it('broji dane na kojima je odluka bila istraživanje', () => {
+    const report = shadowReport([
+      row({ localDate: '2026-11-01', shadowFlowC: 44, shadowReasons: 'EXPLORE_LOWER', shadowExploration: true }),
+      row({ localDate: '2026-11-02' }),
+      row({ localDate: '2026-11-03' }),
+    ]);
+    expect(report.explored).toBe(1);
+    expect(report.byReason).toEqual([{ reason: 'EXPLORE_LOWER', days: 1 }]);
   });
 
   it('broji dane u kojima je model bojlera blokirao savjet', () => {

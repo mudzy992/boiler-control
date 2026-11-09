@@ -25,7 +25,8 @@ bojler"): simulacija → shadow → predlog. Ovaj dokument pokriva prve dvije pr
 | `src/modules/DailyRecord/proposal-controller.ts` | `decideProposal` (čista), `shortCycleFloorFrom` |
 | `src/modules/DailyRecord/tests/proposal-controller.spec.ts` | 24 testa |
 | `src/modules/DailyRecord/proposal-shadow.service.ts` | shadow odluka uz predlog; pamti granicu iz kratkih ciklusa |
-| `src/modules/DailyRecord/tests/proposal-shadow.service.spec.ts` | 11 testova |
+| `src/modules/DailyRecord/tests/proposal-shadow.service.spec.ts` | 13 testova |
+| `src/modules/DailyRecord/{shadow-report.ts,shadow-report.service.ts,shadow.report.controller.ts}` | izvještaj shadow perioda (`26`) |
 | `prisma/migrations/20261112100000_proposal_shadow/migration.sql` | 5 kolona na `DailyRecord`, 2 na `HomeModel` |
 | `prisma/migrations/20261113100000_home_max_flow/migration.sql` | `HomeProfile.maxHeatingFlowC` (`19` §2) |
 | `scripts/audit/controller_sim.cjs` | zatvorena petlja kroz **stvarne** module, 60 dana, tri kuće |
@@ -214,11 +215,17 @@ Ono što shadow period treba da odgovori prije nego odluka postane predlog: koli
 često odluka i formula razlikuju, u kojem smjeru, i da li je svaka razlika objašnjiva
 razlogom iz `shadowReasons`. Ako razlika postoji bez razloga — to je greška, ne ušteda.
 
+**Mjerenje je napravljeno 2026-11-14 → `26`.** `GET /api/daily-record/shadow-report`
+vraća `differences`/`lowered`/`raised`/`changeSharePct`/`byReason`/`unexplained` i
+presudu (`NO_DATA`, `UNEXPLAINED_DIFFERENCES`, `NOT_ENOUGH_DAYS`, `NO_DIFFERENCES`,
+`READY`). Neobjašnjena razlika ima prioritet nad brojem dana: čekanje ne objašnjava
+razliku, a presuda „još nema dovoljno dana" bi je sakrila iza roka.
+
 ## 7. Šta ostaje otvoreno
 
 | Šta | Zašto |
 |---|---|
-| zamjena predloga odlukom | poslije shadow perioda; traži i mjerenje „koliko se odluka i formula razlikuju" |
+| zamjena predloga odlukom | poslije shadow perioda; mjerenje postoji (`26`), pušta se na `READY` za stvaran dom |
 | pamćenje granice iz kratkih ciklusa | danas se nikad ne zaboravlja; predlaže se zaborav poslije 30 dana bez ponavljanja |
 | exploration (`17` §8.5) | nije implementiran: traži `exploration` polje u `DailyRecord` i dokaz rezerve u 3 od 5 dana; bez toga bi bio nagađanje |
 | `T_max` kao zasebno pravilo | v. §2.1 — nema mjerenja |
@@ -226,9 +233,10 @@ razlogom iz `shadowReasons`. Ako razlika postoji bez razloga — to je greška, 
 
 ## 8. Šta je provjereno
 
-`npx jest src/modules/DailyRecord` → **122 testa, 122 prošlo** (7 suite-a): `day-outcome` 20,
-`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 24, `proposal-shadow.service` 11,
-plus postojeći `daily-record-writer` i `proposal-schedule`.
+`npx jest src/modules/DailyRecord` → **163 testa, 163 prošlo** (10 suite-a): `day-outcome` 20,
+`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 26, `proposal-shadow.service` 13,
+`shadow-report` 18 + `…service` 7 + `…controller` 6 (`26`), plus postojeći `daily-record-writer`
+i `proposal-schedule`.
 
 `node scripts/audit/controller_sim.cjs --days=60` → tvrdnje prošle (tabela u §5).
 

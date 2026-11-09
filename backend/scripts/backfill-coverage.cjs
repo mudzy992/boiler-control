@@ -90,9 +90,10 @@ async function main() {
     );
     if (origins) {
       for (const row of origins) {
-        out(
-          `porijeklo: model=${row.model} outcome=${row.outcome} → **${row.days}** dana`,
-        );
+        // `notice` da se vidi i u CI anotacijama, ne samo u logu.
+        const line = `porijeklo: model=${row.model} outcome=${row.outcome} → **${row.days}** dana`;
+        out(line);
+        notice(line);
       }
       out();
     }

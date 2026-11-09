@@ -84,6 +84,20 @@ export class CreateHomeProfileDto {
   boilerCatalogId?: string;
 
   /**
+   * Snaga odabrane izvedbe, iz `outputsKw` te porodice u katalogu.
+   *
+   * Namjerno **nije** slobodan broj: dopušten je samo onaj koji katalog
+   * navodi za odabranu porodicu (`HomeProfileService.validateBoilerSelection`).
+   * Slobodan broj bi izgledao kao potvrda proizvođača, a bio bi unos.
+   */
+  @IsOptional()
+  @Transform(preserveRawInput)
+  @IsNumber()
+  @Min(3)
+  @Max(40)
+  boilerOutputKw?: number;
+
+  /**
    * @deprecated Zamijenjeno sa `boilerCatalogId`. Prima se još samo da stari
    * klijenti ne puknu; **nijedna odluka se na njega ne oslanja**.
    */

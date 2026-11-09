@@ -1,0 +1,11 @@
+-- Snaga odabrane izvedbe iz kataloga (`HomeProfile.boilerOutputKw`).
+--
+-- Zašto zasebna kolona: `boilerCatalogId` imenuje PORODICU (npr.
+-- `vaillant-ecotec-pro-vuw`), a ista porodica pokriva 24, 28 i 30 kW. Bez snage
+-- zapis ne kaže koji uređaj stoji u kući, pa se ne može ni provjeriti da li je
+-- odabrana kombinacija uopšte postojala.
+--
+-- Nullable namjerno: postojeći profili i modeli bez `outputsKw` u katalogu
+-- (nepotvrđeni zapisi) nemaju šta upisati. Popunjavanje nulom bilo bi tvrdnja
+-- da je snaga 0 kW.
+ALTER TABLE "HomeProfile" ADD COLUMN "boilerOutputKw" DOUBLE PRECISION;

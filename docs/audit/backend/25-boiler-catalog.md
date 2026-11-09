@@ -20,9 +20,9 @@ na jedino pitanje koje je važno: *jesu li krugovi grijanja i PTV-a odvojeni?*
 
 | Fajl | Šta je |
 |---|---|
-| `backend/src/modules/BoilerCatalog/catalog.json` | katalog (13 zapisa: Vaillant, Bosch), premješten iz `docs/` |
+| `backend/src/modules/BoilerCatalog/catalog.json` | katalog (13 zapisa: Vaillant, Bosch), premješten iz `docs/`; 2026-11-18 dodan `vaillant-ecotec-pro-vuw` (VUW 246/5-3) |
 | `backend/src/modules/BoilerCatalog/boiler-catalog.ts` | tipovi, provjera integriteta, `isFlowAdviceAllowed`, `effectiveCeilingC` |
-| `backend/src/modules/BoilerCatalog/tests/boiler-catalog.spec.ts` | 12 testova |
+| `backend/src/modules/BoilerCatalog/tests/boiler-catalog.spec.ts` | 13 testova |
 | `prisma/migrations/20261114100000_boiler_catalog_id/migration.sql` | `HomeProfile.boilerCatalogId` |
 | `GET /api/home-profiles/boiler-catalog` | katalog za odabir u klijentu (`flowAdviceAllowed` po zapisu) |
 | DTO + servis | `boilerCatalogId` se validira protiv kataloga; `boilerModel` označen zastarjelim |
@@ -113,6 +113,58 @@ Dvije posljedice koje su namjerno ostavljene vidljivima:
 Katalog se dohvata paralelno sa profilom; ako padne, forma radi bez izbora modela — što je
 sigurno stanje (nema savjeta o snižavanju), a ne bijela stranica.
 
+## 5.1 Porodica + snaga: odabir mora biti stvarna kombinacija (2026-11-18)
+
+`boilerCatalogId` imenuje **porodicu**, a porodica pokriva više snaga: `ecoTEC pro VUW`
+postoji kao 24, 28 i 30 kW, `ecoTEC plus VUW` kao 20,4 / 25,5 / 30,6 kW. Dok je postojao
+samo `boilerCatalogId`, zapis je govorio „ecoTEC pro", a ne koji uređaj stoji u kući.
+
+Zato je dodat `HomeProfile.boilerOutputKw` (`Float?`, migracija
+`20261118100000_boiler_output_kw`) i pravilo da se odabir provjerava **kao cjelina**:
+
+| Situacija | Ishod |
+|---|---|
+| snaga je u `outputsKw` odabrane porodice | prihvata se |
+| snaga nije u spisku | `400`, uz spisak dozvoljenih (npr. „24, 28, 30") |
+| porodica navodi snage, a snaga nije poslata | `400` — „nije odabrano" ne smije izgledati kao „nije poznato" |
+| porodica ne navodi snage (nepotvrđen model) | snaga mora ostati prazna |
+| snaga bez porodice | `400` — broj bez uređaja nije podatak |
+| promjena porodice bez nove snage | `400`; stara snaga se **ne** prenosi na novi model |
+
+Pravilo je u `HomeProfileService.validateBoilerSelection`, ne u DTO-u: međupoljno je i
+traži katalog, a DTO bi time dobio drugi izvor istog podatka. Kod `PATCH`-a se provjerava
+**stanje poslije zahtjeva**, pa se kroz dva poziva ne može doći u kombinaciju koju nijedan
+pojedinačni zahtjev ne dozvoljava.
+
+Posljedica za klijente: forma mora poslati snagu kad porodica ima `outputsKw`. To je i
+razlog zašto je u web formi odabir trostepen (marka → porodica/varijanta → snaga), a ne
+jedan padajući spisak: jedan spisak bi nudio 13 porodica i ćutao o tome koja snaga.
+
+## 5.2 Model koji je korisnik tražio, a nije ga bilo u katalogu
+
+Korisnik ima **Vaillant ecoTEC pro VUW 246/5-3**, a katalog ga nije nudio. Zapis
+`vaillant-ecotec-pro` (VUW) je do 2026-11-18 bio `TO_VERIFY` — dakle bez brojeva i bez
+savjeta o snižavanju. Sada je potvrđen iz priručnika (`0020244995_05`, ecoTEC pro VUW
+..6/5-3) i vodi se kao `vaillant-ecotec-pro-vuw`:
+
+| Polje | Vrijednost | Izvor u priručniku |
+|---|---|---|
+| polazna, raspon podešavanja | 30…80 °C | „Max. flow temperature adjustment range (default setting: 75 °C)" |
+| polazna, tvornički | 75 °C | isto |
+| parametar ograničenja | D.071, 40…80 °C | „Max. heating target flow temp." |
+| PTV | 35…65 °C | „Hot water output temperature range" (D.006) |
+| krugovi odvojeni | `true` | D.071 dira **samo** grijanje; PTV se podešava zasebno |
+| snage | 24 / 28 / 30 kW | VUW 246/5-3, 286/5-3, 306/5-3 |
+| min. modulacija | 5 kW | „Heating adjustment range 5 … 19 kW" |
+
+Dvije stvari koje se ne smiju izgubiti iz zapisa: oznaka 24/28/30 je **razred PTV-a**, a
+grijanje je ograničeno na 5…19 kW; i `heatingFlowMaxC = 80` ne znači da aplikacija smije
+predložiti 80 — gornja granica ostaje 55, katalog samo provjerava da model ne veže niže.
+
+Duplikat `vaillant-ecotec-pro` (TO_VERIFY) je uklonjen, jer bi u UI-u stajala **dva**
+„ecoTEC pro" zapisa, jedan sa rasponom i jedan bez — a korisnik ne može znati koji je
+tačan.
+
 ## 6. Provjere
 
 Backend — `npx jest src/modules/BoilerCatalog src/modules/HomeProfile src/modules/DailyRecord`
@@ -132,7 +184,11 @@ izmišljen raspon, nosi natuknicu, prazan katalog ne ruši formu). `tsc --noEmit
 čisti.
 
 `python3 scripts/audit/boiler_catalog_check.py` → `Katalog ispravan.`
-(13 zapisa: 4 potvrđena, 9 za potvrdu.)
+(13 zapisa: 5 potvrđenih, 8 za potvrdu.)
+
+Nakon dopune 2026-11-18: `npx jest src/modules/HomeProfile src/modules/BoilerCatalog`
+→ **99 testova, 99 prošlo**, od toga 10 novih u
+`src/modules/HomeProfile/tests/home-profile-boiler-selection.spec.ts` (porodica × snaga).
 
 ## 7. Šta ostaje
 

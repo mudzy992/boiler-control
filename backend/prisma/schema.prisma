@@ -66,6 +66,10 @@ model HomeProfile {
   /// Iz njega se zna jesu li grijanje i PTV odvojeni — i smije li se polazna
   /// uopšte savjetovati snižavati. `null` = model nije odabran.
   boilerCatalogId                            String?
+  /// Koja izvedba iz odabrane porodice (`outputsKw` u katalogu), npr. 24 kW
+  /// za `vaillant-ecotec-pro-vuw` (VUW 246/5-3). Isti naziv porodice pokriva
+  /// više snaga, pa bez ovoga zapis ne kaže koji uređaj stoji u kući.
+  boilerOutputKw                             Float?
   /// Najviša polazna koju **sistem** dozvoljava: kotao ili podno grijanje
   /// (`19` §2, odluka vlasnika 2026-11-08). `null` = nije poznata, pa se
   /// koristi granica kotla (55). Nikad ne širi raspon 30–55, samo sužava.

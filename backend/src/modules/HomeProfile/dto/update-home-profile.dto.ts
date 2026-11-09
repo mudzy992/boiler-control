@@ -87,6 +87,17 @@ export class UpdateHomeProfileDto {
   @IsIn(BOILER_FAMILY_IDS as string[])
   boilerCatalogId?: string | null;
 
+  /**
+   * Snaga izvedbe; `null` briše snagu zajedno sa odabirom. Dozvoljene
+   * vrijednosti su one koje katalog navodi za porodicu iz `boilerCatalogId`.
+   */
+  @ValidateIf((_dto, value) => value !== undefined && value !== null)
+  @Transform(preserveRawInput)
+  @IsNumber()
+  @Min(3)
+  @Max(40)
+  boilerOutputKw?: number | null;
+
   /** @deprecated Zamijenjeno sa `boilerCatalogId`; prima se samo zbog starih klijenata. */
   @IsOptional()
   @Transform(preserveRawInput)

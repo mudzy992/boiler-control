@@ -40,8 +40,10 @@ describe('HomeProfileService.boilerCatalog', () => {
     );
     expect(verified?.flowAdviceAllowed).toBe(true);
 
+    // `vaillant-ecotec-pro` je 2026-11-18 potvrđen iz priručnika i sada nosi
+    // oznaku `-vuw`; za primjer nepotvrđenog zapisa koristi se drugi model.
     const unverified = families.find(
-      (family) => family.id === 'vaillant-ecotec-pro',
+      (family) => family.id === 'vaillant-ecotec-exclusive',
     );
     expect(unverified?.specStatus).toBe('TO_VERIFY');
     expect(unverified?.flowAdviceAllowed).toBe(false);

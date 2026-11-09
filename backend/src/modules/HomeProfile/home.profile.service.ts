@@ -8,6 +8,7 @@ import {
   BOILER_FAMILIES,
   ENVELOPE_MAX_C,
   ENVELOPE_MIN_C,
+  findBoilerFamily,
   isFlowAdviceAllowed,
 } from '../BoilerCatalog/boiler-catalog';
 import { CreateHomeProfileDto } from './dto/create-home-profile.dto';
@@ -50,6 +51,7 @@ export class HomeProfileService {
       numberOfResidents: profile.numberOfResidents,
       boilerModel: profile.boilerModel,
       boilerCatalogId: profile.boilerCatalogId,
+      boilerOutputKw: profile.boilerOutputKw,
       maxHeatingFlowC: profile.maxHeatingFlowC,
       hasFloorHeating: profile.hasFloorHeating,
       targetMorningTemp: profile.targetMorningTemp,
@@ -141,7 +143,70 @@ export class HomeProfileService {
     };
   }
 
+  /**
+   * Provjera da je odabir kotla **stvarna kombinacija iz kataloga**, a ne dva
+   * nezavisna polja koja se slučajno slažu.
+   *
+   * Zašto u servisu, a ne u DTO-u: pravilo je međupoljno (`boilerCatalogId` ×
+   * `boilerOutputKw`), pa mu treba katalog. `class-validator` bi tražio da DTO
+   * zna katalog — a tada bi isti podatak imao dva izvora.
+   *
+   * Tri ishoda, svaki namjeran:
+   *   - porodica ne postoji → odbij (DTO to već hvata, ovo je druga brana);
+   *   - porodica navodi snage, a snaga nije među njima → odbij, uz spisak;
+   *   - porodica navodi snage, a snaga nije poslata → odbij, jer bi zapis
+   *     izgledao kao da je snaga poznata;
+   *   - porodica ne navodi snage (nepotvrđen model) → snaga mora ostati prazna.
+   */
+  private validateBoilerSelection(
+    boilerCatalogId: string | null | undefined,
+    boilerOutputKw: number | null | undefined,
+  ): void {
+    if (boilerCatalogId == null) {
+      if (boilerOutputKw != null) {
+        throw new BadRequestException(
+          'boilerOutputKw bez boilerCatalogId ne opisuje nijedan uređaj',
+        );
+      }
+      return;
+    }
+
+    const family = findBoilerFamily(boilerCatalogId);
+    if (family == null) {
+      throw new BadRequestException(
+        `Nepoznat model iz kataloga: ${boilerCatalogId}`,
+      );
+    }
+
+    const allowed = family.outputsKw;
+    if (allowed == null || allowed.length === 0) {
+      // Model bez potvrđenih snaga ne smije nositi snagu: broj bi izgledao
+      // kao podatak proizvođača, a došao bi iz forme.
+      if (boilerOutputKw != null) {
+        throw new BadRequestException(
+          `${family.id} nema potvrđene snage u katalogu — snaga se ne upisuje`,
+        );
+      }
+      return;
+    }
+
+    if (boilerOutputKw == null) {
+      throw new BadRequestException(
+        `Za ${family.id} je potrebno odabrati snagu: ${allowed.join(', ')} kW`,
+      );
+    }
+
+    if (!allowed.includes(boilerOutputKw)) {
+      throw new BadRequestException(
+        `Snaga ${boilerOutputKw} kW nije u katalogu za ${family.id}; ` +
+          `dozvoljeno: ${allowed.join(', ')} kW`,
+      );
+    }
+  }
+
   async create(userId: number, dto: CreateHomeProfileDto) {
+    this.validateBoilerSelection(dto.boilerCatalogId, dto.boilerOutputKw);
+
     return await this.prisma.$transaction(async (tx) => {
       const profile = await tx.homeProfile.create({
         data: {
@@ -157,6 +222,7 @@ export class HomeProfileService {
           numberOfResidents: dto.numberOfResidents ?? null,
           boilerModel: dto.boilerModel ?? null,
           boilerCatalogId: dto.boilerCatalogId ?? null,
+          boilerOutputKw: dto.boilerOutputKw ?? null,
           maxHeatingFlowC: dto.maxHeatingFlowC ?? null,
           hasFloorHeating: dto.hasFloorHeating,
           targetMorningTemp: dto.targetMorningTemp,
@@ -227,6 +293,36 @@ export class HomeProfileService {
       updateData.boilerModel = dto.boilerModel ?? null;
     if (dto.boilerCatalogId !== undefined)
       updateData.boilerCatalogId = dto.boilerCatalogId ?? null;
+
+    /*
+     * Odabir kotla se provjerava kao **cjelina**, sa stanjem koje će ostati
+     * poslije ovog zahtjeva. Inače bi se kroz dva poziva (`PATCH` snaga, pa
+     * `PATCH` model) moglo doći u stanje koje nijedan pojedinačni zahtjev ne
+     * dozvoljava — npr. 24 kW uz porodicu koja ima samo 28 i 30.
+     */
+    if (dto.boilerCatalogId !== undefined || dto.boilerOutputKw !== undefined) {
+      const nextCatalogId =
+        dto.boilerCatalogId !== undefined
+          ? (dto.boilerCatalogId ?? null)
+          : (existing.boilerCatalogId ?? null);
+      let nextOutputKw =
+        dto.boilerOutputKw !== undefined
+          ? (dto.boilerOutputKw ?? null)
+          : ((existing as { boilerOutputKw?: number | null }).boilerOutputKw ??
+            null);
+
+      // Promjena modela bez nove snage: stara snaga pripada starom uređaju.
+      if (
+        dto.boilerCatalogId !== undefined &&
+        dto.boilerOutputKw === undefined &&
+        nextCatalogId !== (existing.boilerCatalogId ?? null)
+      ) {
+        nextOutputKw = null;
+      }
+
+      this.validateBoilerSelection(nextCatalogId, nextOutputKw);
+      updateData.boilerOutputKw = nextOutputKw;
+    }
     if (dto.hasFloorHeating !== undefined)
       updateData.hasFloorHeating = dto.hasFloorHeating;
     if (dto.maxHeatingFlowC !== undefined)

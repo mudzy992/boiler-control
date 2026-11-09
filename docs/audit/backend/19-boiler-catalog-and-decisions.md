@@ -127,6 +127,8 @@ Zašto 24 mjeseca: identifikacija koristi prozore do 60 dana, a tvrdnja o ušted
 
 **Sigurnosna strana:** serija ne sadrži lokaciju, ime ni identitet; vezana je na `homeProfileId`. Briše se sa nalogom, kao i ostali podaci (postoji `account-export.service.ts`; brisanje mora pokriti i novu tabelu).
 
+> **Stanje 2026-11-09:** serija postoji (`21`), ali **sažimanje još nije implementirano** — za sada se čuva sve, što je sigurni smjer. Posao koji briše podatke traži bazu na kojoj se može provjeriti; do tada se ne piše.
+
 ---
 
 ## 5. Bazni period za uštedu — odluka

@@ -13,6 +13,7 @@ import { CommonModule } from '../../common/common.module';
 import { GasReminderService } from './gas.reminder.service';
 import { WeatherModule } from '../Weather/weather.module';
 import { DailyRecordModule } from '../DailyRecord/daily-record.module';
+import { ObservationModule } from '../Observation/observation.module';
 
 const IS_TEST = process.env.NODE_ENV === 'test';
 
@@ -24,6 +25,7 @@ const IS_TEST = process.env.NODE_ENV === 'test';
     WeatherModule,
     CommonModule,
     DailyRecordModule,
+    ObservationModule,
   ],
   providers: IS_TEST
     ? [

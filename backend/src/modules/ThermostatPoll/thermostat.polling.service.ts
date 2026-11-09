@@ -8,6 +8,7 @@ import { HeatingRecommendationService } from '../HeatingRecommendation/heating.r
 import { StructuredLogger, LogContext } from '../../common/structured-logger';
 import { MetricsService } from '../../common/metrics.service';
 import { PollingWeatherService } from '../Weather/polling-weather.service';
+import { ThermostatObservationService } from '../Observation/thermostat-observation.service';
 import {
   snapshotGuardEnabled,
   isSnapshotComplete,
@@ -56,6 +57,7 @@ export class ThermostatPollingService {
     private recommendationService: HeatingRecommendationService,
     private metricsService: MetricsService,
     private readonly pollingWeather: PollingWeatherService,
+    private readonly observation: ThermostatObservationService,
   ) {}
 
   // ----------------------------------
@@ -288,6 +290,12 @@ export class ThermostatPollingService {
       }
 
       // 5️⃣ State machine grijanja
+      //
+      // `heatingStateNow` je stanje POSLIJE prelaza. Serija (`17` §5.1) mora
+      // bilježiti stanje koje u tom trenutku stvarno važi, a ne ono koje je
+      // važilo prije nego što je ovaj ciklus otvorio ili zatvorio ciklus.
+      let heatingStateNow = isHeating;
+
       if (!isHeating && heatingShouldBeOn) {
         await this.handleHeatingStart(
           device,
@@ -296,10 +304,12 @@ export class ThermostatPollingService {
           flowResult.flowTemp,
           ctx.runId,
         );
+        heatingStateNow = true;
       }
 
       if (isHeating && !heatingShouldBeOn && lastEvent) {
         await this.handleHeatingEnd(device, lastEvent, ctx.runId);
+        heatingStateNow = false;
       }
 
       if (
@@ -314,6 +324,18 @@ export class ThermostatPollingService {
         );
       }
 
+      // 6️⃣ Vremenska serija (`17` §5.1). Upisuje se POSLIJE state machine, sa
+      // stvarnim (nulabilnim) očitanjima — ne sa `?? 0` vrijednostima koje
+      // služe staroj logici ciklusa. Greška u seriji ne smije oboriti polling:
+      // očitanje je već obrađeno i uređaj je zdrav.
+      await this.recordObservation(device, {
+        now: new Date(),
+        roomTempC: currentTemp,
+        targetTempC: targetTemp,
+        isHeating: heatingStateNow,
+        runId: ctx.runId,
+      });
+
       this.logger.debug(
         `Device=${device.deviceId} | Current=${currentTempValue} | Target=${targetTempValue} | Heating=${heatingShouldBeOn} | Flow=${flowResult.flowTemp}`,
       );
@@ -326,6 +348,83 @@ export class ThermostatPollingService {
       );
       // Greška ostaje izolovana na ovaj uređaj, ali se sada BROJI.
       return 'failed';
+    }
+  }
+
+  // ----------------------------------
+  // VREMENSKA SERIJA (17 §5.1)
+  // ----------------------------------
+  /**
+   * Jedno očitanje u seriju, uz dva pravila koja se ne smiju prekršiti:
+   *
+   * 1. **Nula nije mjerenje.** Ako uređaj nije poslao temperaturu, u seriju ide
+   *    `null`. Vrijednosti `?? 0` postoje zbog stare logike ciklusa i ovdje se
+   *    NE koriste.
+   * 2. **Serija ne obara polling.** Očitanje je već obrađeno kad se ovo zove;
+   *    greška u upisu se bilježi i ciklus se nastavlja kao uspješan. Suprotno bi
+   *    značilo da kvar serije gasi grijanje.
+   */
+  private async recordObservation(
+    device: any,
+    values: {
+      now: Date;
+      roomTempC: number | null;
+      targetTempC: number | null;
+      isHeating: boolean;
+      runId?: string;
+    },
+  ): Promise<void> {
+    const ctx: LogContext = {
+      runId: values.runId,
+      deviceId: device.id,
+      userId: device.userId,
+      module: 'thermostat_polling',
+    };
+
+    if (device.homeProfileId == null) {
+      // Bez kuće se očitanje ne može pripisati modelu, pa se ne upisuje.
+      this.structuredLogger.warn('Observation skipped: device has no home', {
+        ...ctx,
+        action: 'observation_no_home',
+      });
+      return;
+    }
+
+    // Bucket se provjerava prije ijednog čitanja: u 4 od 5 ciklusa se ne
+    // upisuje ništa, pa nema smisla trošiti ni keš prognoze.
+    if (!this.observation.isDue(device.id, values.now)) return;
+
+    try {
+      const outdoorTempC =
+        await this.pollingWeather.getV2CurrentTemperature(
+          device.userId,
+          device.homeProfileId,
+        );
+
+      const result = await this.observation.record({
+        deviceId: device.id,
+        homeProfileId: device.homeProfileId,
+        now: values.now,
+        roomTempC: values.roomTempC,
+        targetTempC: values.targetTempC,
+        isHeating: values.isHeating,
+        outdoorTempC,
+        flowSetC: device.user?.currentBoilerFlowTemp ?? null,
+        source: 'TUYA',
+      });
+
+      if (result === 'created') {
+        this.structuredLogger.debug('Observation recorded', {
+          ...ctx,
+          action: 'observation_created',
+        });
+      }
+    } catch (err) {
+      this.structuredLogger.warn('Observation not recorded', {
+        ...ctx,
+        action: 'observation_failed',
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

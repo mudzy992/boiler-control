@@ -115,6 +115,7 @@ function makeHarness(options: {
     {} as any,
     metrics,
     { getV2CurrentTemperature: () => Promise.resolve(null) } as any,
+    { isDue: () => true, record: async () => 'created' } as any,
   );
   return { service, metrics, listingCalls, snapshotCalls };
 }

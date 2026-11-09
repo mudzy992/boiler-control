@@ -574,7 +574,7 @@ Posljednja dva reda su razlog zašto se ide u shadow režim, a ne direktno na bo
 | # | Korak | Zašto tim redom | Zavisnost |
 |---|---|---|---|
 | 1 | `DailyRecord` + jedan pisac u 06:00 — **urađeno 2026-11-08, vidi `20`** | bez dana nema šta da se uči | — |
-| 2 | `ThermostatObservation` (5 min) | bez serije nema `a`/`b` | 1 |
+| 2 | `ThermostatObservation` (5 min) — **urađeno 2026-11-09, vidi `21`** | bez serije nema `a`/`b` | 1 |
 | 3 | `HomeModel` + identifikacija `b` (off) | najlakše i najstabilnije prvo | 2 |
 | 4 | identifikacija `a` (on) + `s` sa CI | daje nagib kuće | 3 |
 | 5 | noćni minimum + tvrda granica | sigurnost prije optimizacije | 1 |

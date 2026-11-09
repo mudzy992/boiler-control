@@ -47,6 +47,7 @@ Red je dio odluke, ne stil.
 | 6 | manje od 3 dana od zadnje promjene | ne mijenjaj (osim pravila 2) | `17` §8.2 |
 | 7 | bez poredljivih noći (`NO_FORECAST`, `NO_EVIDENCE`) | **ne spuštaj** | `23` §4 |
 | 7b | odluka bi stala, a rezerva je dokazana (3 od 5 dana prebačaj > 1 K) | **istraživanje −1,0 K** (nikad noću, nikad dva dana zaredom) | `17` §8.5 → `28` |
+| 7c | polazna ne stiže do cilja u `T_max` = 120 min | **podigni na onu koja stigne** (ne čeka dwell; pobjeđuje istraživanje) | `17` §8.6 → `29` |
 | 8 | tvrde granice | raspon 30–55, noćni minimum, ±2 K/dan, **plafon sistema i modela** | `23` §5, `25` §4 |
 
 ### 2.1 Dvije stvari iz `17` §8.2 koje nijesu implementirane
@@ -56,13 +57,11 @@ fiksni (1,0 K dolje, 1,5 K gore), pa je svaka promjena veća od 0,5 K. Pravilo j
 zadovoljeno po konstrukciji, a ne zaboravljeno. Da je ostavljeno kao kod, bio bi to
 mrtav uslov sa testom koji ne dokazuje ništa.
 
-**Pravilo `T_max = 120 min`** — nije implementirano kao zasebno pravilo jer **mjerenje
-za njega ne postoji**: `DayOutcome` (`23` §3) ne mjeri vrijeme do postizanja cilja.
-Umjesto da se izmisli ulaz, oslanja se na posljedicu: ako kuća ne postigne cilj na
-vrijeme, to se vidi kao podbačaj u jutarnjim satima i pravilo 2 reaguje. Razlika je
-samo u slučaju „stigla je, ali tačno na granici" — a to je razlika koju 5-minutna
-serija i `ε = 1 K` ne razlikuju. Ako se ikad pokaže potreba, mjeri se `reachedTargetMin`
-u `DayOutcome`, pa pravilo dobija svoj ulaz.
+**Pravilo `T_max = 120 min`** — prvobitno nije bilo implementirano jer mjerenje nije
+postojalo; oslanjalo se na posljedicu (podbačaj ujutro ⇒ pravilo 2). **Urađeno 2026-11-17
+(`29`)**: `DayOutcome` sada mjeri `heatRateCPerHour` iz nagiba uspona po ciklusu, a
+kontroler dobija `heatTimeFloorC` — najnižu polaznu koja stigne do cilja u 120 min. Guard
+se primjenjuje poslije istraživanja, ne čeka dwell i nikad ne snižava odluku.
 
 ## 3. Nalaz koji simulacija nije mogla izbjeći: ravnotežna polazna
 
@@ -243,13 +242,14 @@ razliku, a presuda „još nema dovoljno dana" bi je sakrila iza roka.
 | zamjena predloga odlukom | poslije shadow perioda; mjerenje postoji (`26`), pušta se na `READY` za stvaran dom |
 | ~~pamćenje granice iz kratkih ciklusa~~ | **riješeno 2026-11-15:** ističe poslije 30 dana bez ponavljanja (§6.5) |
 | ~~exploration (`17` §8.5)~~ | **urađeno 2026-11-16 → `28`:** rezerva 3 od 5 dana, amplituda 1 K, samo prema dolje, zapis `shadowExploration` |
-| `T_max` kao zasebno pravilo | v. §2.1 — nema mjerenja |
+| ~~`T_max` kao zasebno pravilo~~ | **urađeno 2026-11-17 → `29`**: brzina dogrijavanja se mjeri iz serije, `T_max` je pod u kontroleru |
 | tvrdnja o uštedi | traži baseline 28 dana + dva mjesečna `GasReading`-a (`19` §5) |
 
 ## 8. Šta je provjereno
 
-`npx jest src/modules/DailyRecord` → **197 testova, 197 prošlo** (12 suite-a): `day-outcome` 20,
-`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 30, `proposal-shadow.service` 27,
+`npx jest src/modules/DailyRecord` → **220 testova, 220 prošlo** (13 suite-a): `day-outcome` 25,
+`heat-time` 10 (`29`), `proposal-shadow.service` 31,
+`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 34,
 `exploration` 11 (`28`), `short-cycle-floor` 7 (§6.5), `shadow-report` 19 + `…service` 7 +
 `…controller` 6 (`26`), plus postojeći `daily-record-writer` i `proposal-schedule`.
 

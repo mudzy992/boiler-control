@@ -28,6 +28,8 @@ interface Setup {
   nightFloor?: Record<string, unknown>;
   /** Zadnjih 5 obračunatih dana; `overshootC` nosi rezervu za istraživanje. */
   recentOutcomes?: { localDate: string; overshootC: number | null }[];
+  /** Najnoviji uzorak sobne temperature — ulaz za `T_max` (`29`). */
+  latestRoom?: { at: Date; roomTempC: number | null } | null;
 }
 
 function setup(options: Setup = {}) {
@@ -67,6 +69,9 @@ function setup(options: Setup = {}) {
             }
           : options.home,
       ),
+    },
+    thermostatObservation: {
+      findFirst: jest.fn().mockResolvedValue(options.latestRoom ?? null),
     },
     homeModel: {
       findUnique: jest.fn().mockResolvedValue(
@@ -298,6 +303,67 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
   it('bez procjene (`uDayC` nedefinisan) ponašanje je kao prije koraka 7', async () => {
     const missing = await arrange(fitted).service.evaluate(10, DAY, NOW);
     expect(missing.decision?.flowC).toBeCloseTo(44.04, 2);
+  });
+});
+
+describe('ProposalShadowService — `T_max` (`17` §8.6)', () => {
+  /** Sobna 19, cilj 21, izmjereno 0,8 K/h pri polaznoj 45 i sobi 20. */
+  const arrangements = (extra: Record<string, unknown> = {}) => ({
+    home: {
+      targetMorningTemp: 21,
+      targetDayTemp: 22,
+      boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+    },
+    previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+    changed: { localDate: '2026-10-30' },
+    outcome: {
+      ...comfortableOutcome,
+      heatRateCPerHour: 0.8,
+      heatRateFlowC: 45,
+      heatRateRoomC: 20,
+    },
+    latestRoom: { at: NOW, roomTempC: 19 },
+    ...extra,
+  });
+
+  it('podigne odluku na polaznu koja stigne do cilja u 120 min', async () => {
+    const { service } = setup(arrangements());
+
+    const result = await service.evaluate(10, DAY, NOW);
+
+    // 19 + (45−20)·(2/2)/0,8 = 50,25 — ali dnevna granica je ±2 K: 47.
+    expect(result.decision?.flowC).toBe(47);
+    expect(result.decision?.reasons).toEqual(['HEAT_TIME']);
+    expect(result.decision?.bounds).toEqual(['DAILY_CHANGE']);
+  });
+
+  it('bez izmjerenog dogrijavanja nema poda — ne podiže se naslijepo', async () => {
+    const { service } = setup(
+      arrangements({
+        outcome: { ...comfortableOutcome, heatRateCPerHour: null },
+      }),
+    );
+
+    const result = await service.evaluate(10, DAY, NOW);
+    // Ravnotežna za noć −3 i cilj 21 je 44,04; spuštanje ispod nje ne ide.
+    expect(result.decision?.flowC).toBeCloseTo(44.04, 2);
+    expect(result.decision?.reasons).toEqual(['COMFORT_HOLD']);
+  });
+
+  it('bez sobne temperature nema proračuna', async () => {
+    const { service } = setup(arrangements({ latestRoom: null }));
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBeCloseTo(44.04, 2);
+  });
+
+  it('kad je soba već na cilju, pod ne postoji', async () => {
+    const { service } = setup(
+      arrangements({ latestRoom: { at: NOW, roomTempC: 21.5 } }),
+    );
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBeCloseTo(44.04, 2);
   });
 });
 

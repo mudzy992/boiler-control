@@ -30,6 +30,12 @@ export const NIGHT_END_LOCAL_HOUR = 6;
 /** Za izmjerenu histerezu treba barem dva prelaza — jedan je slučaj, ne mjera. */
 export const MIN_TRANSITIONS_FOR_HYSTERESIS = 2;
 
+/**
+ * Ispod ovoga izmjereno dogrijavanje nije mjerenje nego šum — i ne smije se
+ * koristiti za računanje vremena do cilja (`29`).
+ */
+export const MIN_HEAT_RATE_C_PER_H = 0.1;
+
 export interface OutcomeSample {
   at: Date;
   roomTempC: number | null;
@@ -70,6 +76,17 @@ export interface DayOutcome {
   hysteresisK: number | null;
   /** `median(cilj − T_on)` — koliko ispod cilja grijanje počinje. */
   hysteresisAsymmetryK: number | null;
+  /**
+   * Izmjereno **neto** dogrijavanje, u K/h: medijana nagiba uspona po ciklusu
+   * grijanja. Neto, a ne bruto: uključuje i gubitke koji su u toku, jer je
+   * pitanje „koliko brzo soba stigne do cilja", a ne „koliko kotao daje".
+   * `null` kad nema nijednog ciklusa u kojem je soba stvarno rasla.
+   */
+  heatRateCPerHour: number | null;
+  /** Polazna pri kojoj je dogrijavanje izmjereno — osnov za preračun (`29`). */
+  heatRateFlowC: number | null;
+  /** Sobna temperatura na sredini tog ciklusa (prosjek krajeva). */
+  heatRateRoomC: number | null;
 }
 
 export type OutcomeResult =
@@ -246,6 +263,55 @@ export function computeDayOutcome(
     }
   }
 
+  // --- brzina dogrijavanja (`29`) -----------------------------------------
+  // Mjeri se po ciklusu: koliko je soba narasla dok je grijanje radilo, kroz
+  // stvarno trajanje tog ciklusa. Samo ciklusi u kojima je rasla — ciklus u
+  // kojem soba stoji ili pada uz uključeno grijanje znači da kotao ne može
+  // više, pa njegov nagib nije mjera brzine.
+  const heatRuns: Array<{ rate: number; flowC: number; roomC: number }> = [];
+  for (const run of runs) {
+    if (run.samples < 2) continue;
+    const inside = daySamples.filter(
+      (sample) =>
+        sample.isHeating &&
+        sample.roomTempC != null &&
+        sample.at >= run.start &&
+        sample.at <= run.end,
+    );
+    if (inside.length < 2) continue;
+
+    const first = inside[0];
+    const last = inside[inside.length - 1];
+    // Trajanje je razmak **između** prvog i zadnjeg uzorka: nagib spaja ta dva
+    // trenutka. Dodavanje intervala (kako se mjeri trajanje ciklusa) ovdje bi
+    // razdijelilo isti rast na duže vrijeme i podcijenilo brzinu.
+    const hours = (last.at.getTime() - first.at.getTime()) / 3_600_000;
+    const riseC = (last.roomTempC as number) - (first.roomTempC as number);
+    if (hours <= 0 || riseC <= 0) continue;
+
+    const flows = inside
+      .map((sample) => sample.flowSetC)
+      .filter((value): value is number => value != null);
+    if (flows.length === 0) continue;
+
+    const flowC = median(flows) as number;
+    const roomC =
+      ((first.roomTempC as number) + (last.roomTempC as number)) / 2;
+    // Nema pogonske razlike (polazna ispod sobe) — nagib nije mjerljiv.
+    if (flowC <= roomC) continue;
+
+    heatRuns.push({ rate: riseC / hours, flowC, roomC });
+  }
+
+  // Medijana po ciklusu, a uz nju polazna i soba **istog** ciklusa: par brojeva
+  // koji se poslije preračunava mora opisivati jedan mjereni uslov.
+  const medianHeatRun =
+    heatRuns.length === 0
+      ? null
+      : [...heatRuns].sort((a, b) => a.rate - b.rate)[
+          Math.floor((heatRuns.length - 1) / 2)
+        ];
+
   return {
     ok: true,
     outcome: {
@@ -267,6 +333,12 @@ export function computeDayOutcome(
         asymmetries.length >= MIN_TRANSITIONS_FOR_HYSTERESIS
           ? median(asymmetries)
           : null,
+      heatRateCPerHour:
+        medianHeatRun != null && medianHeatRun.rate >= MIN_HEAT_RATE_C_PER_H
+          ? medianHeatRun.rate
+          : null,
+      heatRateFlowC: medianHeatRun?.flowC ?? null,
+      heatRateRoomC: medianHeatRun?.roomC ?? null,
     },
   };
 }

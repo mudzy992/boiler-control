@@ -165,6 +165,10 @@ export class DailyOutcomeService {
           nightMinOutdoorMeasuredC: outcome.nightMinOutdoorC,
           nightFlowC: outcome.nightFlowC,
           hysteresisK: outcome.hysteresisK,
+          // Brzina dogrijavanja (`29`): bez nje nema tvrdog `T_max`.
+          heatRateCPerHour: outcome.heatRateCPerHour,
+          heatRateFlowC: outcome.heatRateFlowC,
+          heatRateRoomC: outcome.heatRateRoomC,
           hysteresisAsymmetryK: outcome.hysteresisAsymmetryK,
           outcomeAt: now,
           outcomeVersion: OUTCOME_VERSION,

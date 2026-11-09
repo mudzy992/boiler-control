@@ -525,6 +525,11 @@ model DailyRecord {
   /// `median(cilj − T_on)`. `null` dok nema ≥ 2 prelaza u danu.
   hysteresisK          Float?
   hysteresisAsymmetryK Float?
+  /// Izmjereno neto dogrijavanje (K/h) i uslovi pod kojima je izmjereno —
+  /// osnov za tvrdo `T_max` ograničenje (`29`).
+  heatRateCPerHour Float?
+  heatRateFlowC    Float?
+  heatRateRoomC    Float?
   /// Kada su mjerni podaci upisani. `null` = dan još nije obračunat.
   outcomeAt      DateTime?
   outcomeVersion String?

@@ -36,8 +36,11 @@ test.describe('Auth flow', () => {
     await expect(page).toHaveURL(/.*\/login/);
 
     // 2. Unose se kredencijali
-    await page.fill('input[name="identifier"]', identifier);
-    await page.fill('input[name="password"]', password);
+    // Id-jevi, ne `name`: `LoginPage` postavlja `id="login-identifier"` /
+    // `id="login-password"`, a `name` atribut ne postoji. Stari selektori su
+    // prolazili samo zato što se ovaj test nije izvršavao.
+    await page.fill('input#login-identifier', identifier);
+    await page.fill('input#login-password', password);
 
     // 3. Submituje se forma
     await page.click('button[type="submit"]');

@@ -48,6 +48,20 @@ const SKIP_FILES = new Set([
   'backend/src/common/tests/temperature-semantics.spec.ts',
 ]);
 
+const IGNORED_DIRS = new Set([
+  'node_modules',
+  'dist',
+  'build',
+  'out',
+  'coverage',
+  '.next',
+  '.turbo',
+  '.expo',
+  'generated',
+  'android',
+  'ios',
+]);
+
 const isTestFile = (path: string): boolean =>
   path.includes('__tests__') || /\.(spec|test)\.tsx?$/.test(path);
 
@@ -60,7 +74,9 @@ function walk(dir: string, out: string[]): void {
   }
 
   for (const entry of entries) {
-    if (entry === 'node_modules' || entry === 'dist' || entry === '.next') continue;
+    // `generated` je Prisma klijent: sadrži imena **svih** kolona (i `currentTemp`),
+    // pa bi ga skeniranje brojalo kao izvorni kod. To nije kod koji pišemo mi.
+    if (IGNORED_DIRS.has(entry)) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) {
       walk(full, out);
@@ -78,6 +94,7 @@ function countAmbiguous(): Record<string, number> {
   for (const file of files) {
     const key = relative(REPO_ROOT, file).split('\\').join('/');
     if (SKIP_FILES.has(key) || isTestFile(key)) continue;
+    if (key.includes('/generated/')) continue;
     const source = readFileSync(file, 'utf8');
     const found = source.match(AMBIGUOUS_RE);
     if (found && found.length > 0) counts[key] = found.length;

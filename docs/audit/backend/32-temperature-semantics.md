@@ -65,6 +65,11 @@ Tri sloja, svaki provjerljiv:
    imenom ili veći broj u postojećem = **pad CI-ja**, sa porukom koje ime treba.
    Baseline danas: **27 fajlova / 175 pojava** (zatečeni dug). Broj smije samo
    padati; regeneriše se sa `UPDATE_TEMP_BASELINE=1 npx jest temperature-semantics`.
+   Skeniranje preskače `generated/` (Prisma klijent sadrži imena **svih** kolona,
+   pa bi ga brojalo kao naš kod — prvi CI run je pao upravo na tome), kao i
+   `node_modules`, `dist`, `build`, `coverage`, `.next`, `.expo`, `android`, `ios`
+   i testove.
+
 3. **Test etiketa** — `frontend/src/locales/__tests__/temperature-labels.test.ts`
    provjerava da svaka etiketa polazne (en i bs) sadrži „polaz"/„flow", da dugme
    upisa ne glasi kao „postavi trenutnu temp.", i da se soba zove soba.

@@ -73,3 +73,12 @@ se može provjeriti.
   i to je poenta);
 - `maxHeatingFlowC` se čuva i vraća, ali **uticaj na predlog** mjeri se tek kad
   ima dnevnih zapisa sa mjerenjima.
+
+### 3.1 Preimenovanje polja sobe (urađeno)
+
+Klijenti su do `2d2cf4f` čitali `currentTemp` / `targetTemp` za **sobu** — ista
+imena koja u istom odgovoru nose i polazne temperature. Preimenovano je u
+`roomCurrentTemp` / `roomTargetTemp` na backendu, webu i mobilnoj u istom commitu
+(`32`). **Deploy mora ići zajedno**: stari klijent na novom backendu neće naći
+polje i prikazat će „—" umjesto broja, bez ijedne greške u logu. Kad se backend
+deploya, web build i mobilna verzija moraju ići s njim.

@@ -158,6 +158,12 @@ async function main(): Promise<void> {
     console.log('');
 
     let totalRows = 0;
+    const totals = {
+      withEvents: 0,
+      withGas: 0,
+      withDegreeDays: 0,
+      withProposal: 0,
+    };
     let totalDefaultZone = 0;
     let totalExisting = 0;
     const collected: Array<{ userId: number; homeProfileId: number; row: BackfillRow }> = [];
@@ -283,6 +289,11 @@ async function main(): Promise<void> {
           `postojećih dana ${existing.size}`,
       );
 
+      totals.withEvents += summary.withEvents;
+      totals.withGas += summary.withGas;
+      totals.withDegreeDays += summary.withDegreeDays;
+      totals.withProposal += summary.withProposal;
+
       const limited = args.limit ? rows.slice(0, args.limit) : rows;
       for (const row of limited) {
         collected.push({ userId, homeProfileId: home.id, row });
@@ -313,6 +324,10 @@ async function main(): Promise<void> {
     notice(
       `backfill ${args.apply ? 'upis' : 'dry-run'}: ${totalRows} redova, ` +
         `postojećih ${totalExisting} dana`,
+    );
+    notice(
+      `backfill izvori: ciklusi ${totals.withEvents}, plin ${totals.withGas}, ` +
+        `stepen-dan ${totals.withDegreeDays}, predlog ${totals.withProposal}`,
     );
 
     if (!args.apply) {

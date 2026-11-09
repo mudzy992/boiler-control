@@ -28,6 +28,7 @@ dana, ne apsolutna vremenska konstanta.
 | `prisma/schema.prisma` | `HomeModel` (jedan red po kući), enum `HomeModelState` |
 | `prisma/migrations/20261110100000_home_model/migration.sql` | aditivna migracija (tabela + tip) |
 | `src/modules/HomeModel/daily-balance.ts` | čista matematika: dan → red, filteri, fit, robusnost, interval |
+| `src/modules/HomeModel/day-gain.ts` | `u_day` — dnevni dobitak iz ostatka fita (`27`) |
 | `src/modules/HomeModel/home-model.service.ts` | agregacija serije po lokalnom danu, izbor primarnog uređaja, upis, noćni cron |
 | `src/modules/HomeModel/home-model.module.ts` | modul; izvozi servis |
 | testovi | `daily-balance.spec.ts` (18), `home-model.service.spec.ts` (17) |

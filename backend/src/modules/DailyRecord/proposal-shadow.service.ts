@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
+import { applyDayGain } from '../HomeModel/day-gain';
 import {
   effectiveCeilingC,
   findBoilerFamily,
@@ -101,6 +102,9 @@ export class ProposalShadowService {
           state: true,
           slopeCiHigh: true,
           shortCycleFloorC: true,
+          // Dnevni dobitak (`17` §13 korak 7): dan sa suncem/gostima traži nižu
+          // polaznu. `null` = nema procjene, pa se ne oduzima ništa.
+          uDayC: true,
         },
       }),
       this.prisma.dailyRecord.findFirst({
@@ -137,10 +141,17 @@ export class ProposalShadowService {
         ? { floorC: null, basis: 'NO_FORECAST' as const }
         : await this.outcomes.nightFloorFor(homeProfileId, nightMinC, now);
 
-    const modelFlowC =
+    // Ravnotežna polazna za **prosječan** dan, umanjena za današnji dobitak.
+    // `slopeCiHigh` je gornja granica intervala — namjerno konzervativno: bolje
+    // malo viša polazna nego kuća koja ne stigne da se ugrije.
+    const equilibriumFlowC =
       nightMinC != null && model?.slopeCiHigh != null
         ? target + model.slopeCiHigh * (target - nightMinC)
         : null;
+    const modelFlowC =
+      equilibriumFlowC == null
+        ? null
+        : applyDayGain(equilibriumFlowC, model?.uDayC);
 
     const outcome = this.outcomeSignals(lastOutcome);
     const previousFlowC =
@@ -209,7 +220,8 @@ export class ProposalShadowService {
     });
 
     this.logger.log(
-      `Shadow kuća ${homeProfileId} ${localDate}: formula ` +
+      `Shadow kuća ${homeProfileId} ${localDate}: u_day ` +
+        `${model?.uDayC == null ? '—' : `${model.uDayC.toFixed(1)} K`}, formula ` +
         `${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
         `${decision.flowC ?? '—'} °C (${decision.action}; ` +
         `${[...decision.reasons, ...decision.bounds].join('+') || 'bez razloga'}).`,

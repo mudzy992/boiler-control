@@ -215,6 +215,85 @@ describe('ProposalShadowService — odluka', () => {
   });
 });
 
+describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
+  const fitted = { state: 'TRACKING', slopeCiHigh: 0.96, shortCycleFloorC: null };
+
+  /**
+   * Bez prošlog predloga odluka je **tačno** ravnotežna polazna (korak
+   * spuštanja se ne primjenjuje), pa se `u_day` vidi bez posrednika. Ihsod
+   * mora postojati — bez njega kontroler ne odlučuje.
+   */
+  const arrange = (model: Record<string, unknown>) =>
+    setup({
+      model,
+      home: {
+        targetMorningTemp: 21,
+        targetDayTemp: 22,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      },
+      previous: null,
+      outcome: comfortableOutcome,
+      changed: null,
+    });
+
+  it('dan sa dobitkom traži nižu polaznu — za isti dan, ista noć', async () => {
+    // Bez dobitka: 21 + 0,96·(21 − (−3)) = 44,04.
+    const without = await arrange({ ...fitted, uDayC: null }).service.evaluate(
+      10,
+      DAY,
+      NOW,
+    );
+
+    // Sa 2 K dobitka (sunce, gosti): 42,04.
+    const sunny = await arrange({ ...fitted, uDayC: 2 }).service.evaluate(
+      10,
+      DAY,
+      NOW,
+    );
+
+    expect(without.decision?.flowC).toBeCloseTo(44.04, 2);
+    expect(sunny.decision?.flowC).toBeCloseTo(42.04, 2);
+    expect(
+      (without.decision!.flowC ?? 0) - (sunny.decision!.flowC ?? 0),
+    ).toBeCloseTo(2, 2);
+  });
+
+  it('negativan dobitak (hladniji dan od modela) podiže polaznu', async () => {
+    const colder = await arrange({ ...fitted, uDayC: -1.5 }).service.evaluate(
+      10,
+      DAY,
+      NOW,
+    );
+
+    // 44,04 + 1,5 = 45,54.
+    expect(colder.decision?.flowC).toBeCloseTo(45.54, 2);
+  });
+
+  it('korak spuštanja i dalje ograničava dnevnu promjenu — dobitak ne preskače ±2 K', async () => {
+    // Prošla polazna 45, dobitak 2 K: ravnotežna je 42,04, ali dnevna granica
+    // dozvoljava najviše 2 K niže, a korak je 1 K — pa odluka ne pada na 42.
+    const { service } = setup({
+      model: { ...fitted, uDayC: 2 },
+      home: {
+        targetMorningTemp: 21,
+        targetDayTemp: 22,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(44);
+  });
+
+  it('bez procjene (`uDayC` nedefinisan) ponašanje je kao prije koraka 7', async () => {
+    const missing = await arrange(fitted).service.evaluate(10, DAY, NOW);
+    expect(missing.decision?.flowC).toBeCloseTo(44.04, 2);
+  });
+});
+
 describe('ProposalShadowService — model bojlera iz kataloga', () => {
   it('bez odabranog modela nema snižavanja — samo objašnjenje', async () => {
     const { service } = setup({

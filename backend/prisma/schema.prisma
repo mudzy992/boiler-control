@@ -84,6 +84,7 @@ model HomeProfile {
   thermostatDevices                          ThermostatDevice[]
   User_User_activeHomeProfileIdToHomeProfile User?                      @relation("User_activeHomeProfileIdToHomeProfile")
   dailyRecords                               DailyRecord[]
+  homeModel                                  HomeModel?
 
   @@index([userId])
 }
@@ -358,6 +359,63 @@ enum FlowSetSource {
 enum ObservationSource {
   TUYA
   MANUAL
+}
+
+/// Stanje modela kuće (`17` §5.3). `COLD_START` = premalo dana, `TRACKING` =
+/// procjena prihvaćena, `DEGRADED` = nema dovoljno ulaza ili je procjena
+/// odbijena. U `DEGRADED` predlog se NE mijenja (`17` §11).
+enum HomeModelState {
+  COLD_START
+  TRACKING
+  DEGRADED
+}
+
+/// Jedan red po kući: ono što je izmjereno, sa dokazom kako je izmjereno
+/// (`17` §6).
+///
+/// `slopeS` je jedina veličina koja se danas može identificirati iz podataka:
+/// odnos `b/a` iz dnevnog bilansa energije. Apsolutni `a` i `b` traže prozore
+/// mirovanja/grijanja ≥ 45 min, kojih u kućama sa kratkim ciklusima nema
+/// (mjereno u `17` §6.2), pa ostaju `null` dok ih sekundarna metoda ne nađe.
+model HomeModel {
+  id            Int @id @default(autoincrement())
+  homeProfileId Int @unique
+
+  /// `s = b/a` — nagib krive kuće.
+  slopeS     Float?
+  slopeCiLow Float?
+  slopeCiHigh Float?
+  /// `c = q_int/k1` — dnevni član unutrašnjih dobitaka. Nije fizička konstanta.
+  internalGainC Float?
+
+  aPerHour Float?
+  bPerHour Float?
+
+  /// Dani u fitu i dani koji su uopšte razmatrani (razlika je filtrirao).
+  days          Int @default(0)
+  daysEvaluated Int @default(0)
+  residualStd   Float?
+
+  /// Koji uređaj je dao seriju. Kuća sa dva termostata u dvije sobe nije jedan
+  /// model; do tada fit koristi ISKLJUČIVO primarni uređaj (`21` §7).
+  sourceDeviceId Int?
+
+  state  HomeModelState @default(COLD_START)
+  /// Zašto je stanje takvo. Prazno znači "nema šta da se objasni".
+  reason String?
+
+  modelVersion String
+  windowDays   Int
+  /// Kada je fit posljednji put POKUŠAN (svaki prolaz).
+  lastAttemptAt DateTime?
+  /// Kada su brojevi posljednji put ZAPISANI (samo uspješan fit). U `DEGRADED`
+  /// se brojevi ne diraju, pa `lastFitAt` pokazuje koliko je stara procjena.
+  lastFitAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  homeProfile HomeProfile @relation(fields: [homeProfileId], references: [id], onDelete: Cascade)
 }
 
 /// Vremenska serija (`17` §5.1). Jedan red po uređaju i petominutnom bucketu.

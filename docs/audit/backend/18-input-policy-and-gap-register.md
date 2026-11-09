@@ -156,7 +156,7 @@ Svih dvanaest nalaza odnosi se na **stari mehanizam** (bucket-i, overshoot, `con
 | T-03 | Ljetnje/zimsko vrijeme (23/25 h dan) | ⚠️ | zona i DST rade (`20` §7); dnevni prosjeci još ne postoje |
 | T-04 | Propušten cron (server pao u 06:00) | ✅ | isti dan se nadoknađuje do 12:00; propušten **cijeli** dan se ne izmišlja (`20` §3) |
 | T-05 | Aktivni dom, ne `homeProfiles[0]` | ✅ | `selectDueHomes` (`20` §3) |
-| T-06 | Više uređaja u domu: koji daje seriju | ❌ | definisati primarni uređaj, upisati `deviceId` |
+| T-06 | Više uređaja u domu: koji daje seriju | ⚠️ | primarni uređaj + `sourceDeviceId` (`22` §6); model po zoni ne postoji |
 | T-07 | Reproducibilnost: `modelVersion` + parametri | ✅ | `DailyRecord.modelVersion` + `params` (`20` §1) |
 
 ### 1.6 Novi zahtjevi — učenje i kontroler
@@ -166,7 +166,7 @@ Svih dvanaest nalaza odnosi se na **stari mehanizam** (bucket-i, overshoot, `con
 | C-01 | Dnevni bilans kao primarni estimator | ✅ | `17` §6.1, izvršeno u simulaciji |
 | C-02 | `T_max` kao **ograničenje**, ne metrika | ❌ | `17` §14.2 |
 | C-03 | „Dostigao cilj" = `cilj − 0,5 K` (kvant) | ✅ | `17` §14.2 |
-| C-04 | `DEGRADED` → **drži prošlu vrijednost**, ne formulu | ❌ | nije definisano prije sada |
+| C-04 | `DEGRADED` → **drži prošlu vrijednost**, ne formulu | ⚠️ | model: ne prepisuje brojeve (`22` §5); predlog još ne postoji |
 | C-05 | `RECONTACT` poslije ≥ 5 dana bez grijanja | ❌ | §0.5 |
 | C-06 | Granice `s ∈ [0,2; 1,5]`, odbaci van granica | ✅ | `17` §6.4 |
 | C-07 | Exploracija samo uz rezervu komfora | ✅ | `17` §8.5 |
@@ -190,7 +190,7 @@ Svih dvanaest nalaza odnosi se na **stari mehanizam** (bucket-i, overshoot, `con
 | S-5 | Golden gate i replay fixture za novu formulu | ⚠️ | gate postoji za **staru** formulu (133 slučaja) |
 | S-6 | Nijedan upis prema bojleru | ✅ | adapter je čitljiv (`16` §2.4) |
 
-**Zbir:** 75 stavki — ✅ 40 · ⚠️ 8 · ❌ 22 · 🔒 1 · ➖ 4 (van opsega). Provjereno mašinski (§4).
+**Zbir:** 75 stavki — ✅ 40 · ⚠️ 10 · ❌ 20 · 🔒 1 · ➖ 4 (van opsega). Provjereno mašinski (§4).
 
 ---
 
@@ -255,8 +255,8 @@ Provjera registra praznina (docs/audit/backend/18)
   nalaza u 13 i 15:        38
   redova u registru:       75
     ✅ zatvoreno   40
-    ⚠️ djelimično  8
-    ❌ praznina    22
+    ⚠️ djelimično  10
+    ❌ praznina    20
     🔒 blokada     1
     ➖ van opsega  4
   nijedan nalaz iz 13/15 nije ispušten
@@ -265,7 +265,7 @@ Provjera registra praznina (docs/audit/backend/18)
 Registar potpun.            (exit 0)
 ```
 
-**Ali registar nije plan.** Dvadeset dvije praznine (poslije `20` i `21`) znači da su prva dva koraka iz `17` §13 urađena, a da učenje još ne postoji: `HomeModel`, identifikacija `a`/`b`/`s`, noćni minimum i kontroler su i dalje ispred.
+**Ali registar nije plan.** Dvadeset praznina (poslije `20`, `21` i `22`) znači da podaci i model postoje, a da odluka još ne postoji: noćni minimum, kontroler, mjerenje ishoda i tvrdnja o uštedi su i dalje ispred.
 
 ---
 

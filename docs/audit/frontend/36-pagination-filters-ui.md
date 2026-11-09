@@ -78,3 +78,24 @@ odluke. Snapshot test to sada čuva (`toBe(1)`, prije `toBe(2)`).
 Nijedan ekran nije otvoren na stvarnom uređaju u ovom prolazu. Straničenje i
 filteri su provjereni testovima i tipovima, ne klikom; potvrda ide kad vlasnik
 pogleda `/heating`, `/gas/readings`, `/reports` i Početnu na telefonu.
+
+## 7. „Historija dnevnih zapisa" u `/reports` (naknadni zahtjev)
+
+Tabela je imala tri problema koja se vide odmah:
+
+1. **Redoslijed.** Server vraća stranu od najnovijeg dana prema starijem, ali
+   redove slaže **uzlazno** (to traže grafikoni). Tabela je prikazivala upravo
+   to — na vrhu januar, današnji dan negdje na dnu. Sada se redovi obrću
+   (`sortNewestFirst`), pa je prvi red uvijek najnoviji dan.
+2. **Brojevi stranica.** „Prethodna/sljedeća" je bilo dovoljno dok je strana bila
+   180 redova. Sada je strana 20 dana, a historija ima ~300 dana → 16 strana;
+   korisnik mora vidjeti gdje je i skočiti. Novi `PageNumbers` računa prozor
+   `1 … 6 7 8 9 10 … 16` preko `pageList()` (testirano za prvu, srednju i zadnju
+   stranu, plus neispravan ulaz).
+3. **Veličina strane.** `limit` je bio 180 — devet strana koje se ne mogu
+   preskočiti. Sada 20.
+
+Odgovor na pitanje „koliko dana": **cijela historija** (od 01.01.), 20 dana po
+strani, najnovije prvo. Straničenje ostaje serversko (`limit`/`offset`,
+`total` iz odgovora) — frontend ne sortira i ne reže podatke, samo obrće
+poredak unutar dobijene strane.

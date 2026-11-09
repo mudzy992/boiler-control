@@ -52,12 +52,14 @@ export const ReportsPage = (): JSX.Element => {
   /*
    * Historija dnevnih zapisa ide od početka rada, a ne 30 dana kao shadow:
    * rekonstruisanih 301 dan je upravo ono što korisnik do sada nije mogao vidjeti.
-   * Ograničenje je na 180 najnovijih redova — tabela od 300 redova u pretraživaču
-   * je sporija od koristi, a `truncated` to i kaže.
+   *
+   * Strana je 20 dana (`36`): tabela se straniči na serveru i prikazuje brojeve
+   * stranica, pa 180 redova u jednom odgovoru više nema smisla — to je devet
+   * strana koje se ne mogu preskočiti.
    */
   const historyFrom = '2026-01-01';
   const historyTo = dayjs().format('YYYY-MM-DD');
-  const historyLimit = 180;
+  const historyLimit = 20;
 
   /*
    * Preporuke su straničene na serveru (`33`). Prije je backend tiho rezao na

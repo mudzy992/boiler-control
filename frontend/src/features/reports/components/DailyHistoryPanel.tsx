@@ -13,12 +13,13 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { StatusBanner } from '@/shared/components/status-banner';
-import { TablePager } from '@/shared/components/table-controls';
+import { PageNumbers } from '@/shared/components/table-controls';
 import {
   coveredGroups,
   historyHeadline,
   isHistoryEmpty,
   originLabelKey,
+  sortNewestFirst,
   valueOrNull,
 } from '../lib/daily-history';
 import type { DailyHistoryResponse, DailyHistoryRow } from '../types';
@@ -48,7 +49,7 @@ export const DailyHistoryPanel = ({
   homeProfileId,
   from,
   to,
-  limit = 60,
+  limit = 20,
 }: DailyHistoryPanelProps): JSX.Element | null => {
   const { t } = useTranslation();
   const enabled = Boolean(homeProfileId) && Boolean(from) && Boolean(to);
@@ -77,6 +78,14 @@ export const DailyHistoryPanel = ({
 
   const report: DailyHistoryResponse | undefined = historyQuery.data;
   const headline = historyHeadline(report);
+
+  /*
+   * Server vraća stranu od **najnovijeg** dana prema starijem, ali redove
+   * sortira uzlazno za grafikone. Tabela mora biti obrnuta: prvo najnoviji dan.
+   * Sortira se ovdje, a ne na serveru, da isti odgovor ostane upotrebljiv za
+   * oba prikaza — i da poredak strana (1 = najnovije) ostane tačan.
+   */
+  const rowsNewestFirst = sortNewestFirst(report?.rows ?? []);
 
   return (
     <Card>
@@ -138,12 +147,12 @@ export const DailyHistoryPanel = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {report.rows.map((row) => (
+                {rowsNewestFirst.map((row) => (
                   <HistoryRow key={row.localDate} row={row} />
                 ))}
               </TableBody>
             </Table>
-            <TablePager
+            <PageNumbers
               total={report.total ?? report.rows.length}
               offset={offset}
               limit={limit}

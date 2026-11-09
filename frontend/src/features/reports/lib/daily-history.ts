@@ -29,6 +29,19 @@ export const COVERAGE_ORDER: CoverageKey[] = [
 ];
 
 /** Grupe koje red stvarno nosi, u stalnom redu — da tabela ne skače. */
+/**
+ * Redoslijed za tabelu: **najnoviji dan prvi** (`36`).
+ *
+ * Server vraća stranu od najnovijeg dana prema starijem, a redove slaže uzlazno
+ * (`localDate` je `YYYY-MM-DD`, pa je leksikografsko poređenje isto što i
+ * hronološko) — za grafikone. Tabela mora obrnuto: prvo ono što je juče bilo.
+ * Sortira se ovdje, ne u SQL-u, da isti odgovor ostane upotrebljiv i za
+ * grafikone i za tabelu, a poredak strana (1 = najnovije) ostaje tačan.
+ */
+export function sortNewestFirst(rows: readonly DailyHistoryRow[]): DailyHistoryRow[] {
+  return [...rows].sort((a, b) => b.localDate.localeCompare(a.localDate));
+}
+
 export function coveredGroups(row: DailyHistoryRow): CoverageKey[] {
   return COVERAGE_ORDER.filter((key) => row.has[key]);
 }

@@ -64,6 +64,27 @@ describe('MO2-15 RecommendationBreakdown', () => {
     expect(queryByText(/recommendation\.interval: weekday_morning/)).toBeNull();
   });
 
+  /**
+   * `36`: stariji zapisi nemaju `appliedOffsets`. Kartica je na takvom redu
+   * rušila cijelu Početnu (`Cannot read properties of undefined (reading 'home')`),
+   * pa se offseti sada izostavljaju — ostalo (rezultat, pouzdanost) ostaje.
+   */
+  it('preživi zapis bez `appliedOffsets` i izostavi redove offseta', async () => {
+    const withoutOffsets = {
+      ...fullBreakdown,
+      appliedOffsets: undefined,
+    } as unknown as BreakdownData;
+
+    const { queryByText, getByText } = await render(
+      <RecommendationBreakdown breakdown={withoutOffsets} />
+    );
+
+    expect(queryByText('recommendation.homeOffset')).toBeNull();
+    expect(queryByText('recommendation.intervalOffset')).toBeNull();
+    expect(queryByText('recommendation.eventsOffset')).toBeNull();
+    expect(getByText('51.0°C')).toBeTruthy();
+  });
+
   it('renders nothing without a backend breakdown', async () => {
     const { toJSON } = await render(<RecommendationBreakdown breakdown={null} />);
     expect(toJSON()).toBeNull();

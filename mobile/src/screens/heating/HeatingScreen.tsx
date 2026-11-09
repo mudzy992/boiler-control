@@ -12,6 +12,7 @@ import { DASHBOARD_QUERY_KEY } from '../../services/query/keys';
 import {
   EmptyState,
   GaugeBar,
+  HeatingProgressBar,
   InlineBanner,
   Led,
   MonoLabel,
@@ -30,6 +31,11 @@ import {
 } from '../../ui';
 import { useToast } from '../../components/ui/nativewind';
 import { SETTINGS_STACK_SCREENS } from '../../constants/routes';
+import {
+  IDEAL_HEAT_MINUTES,
+  heatingProgress,
+  medianCycleMinutes,
+} from '../../lib/heating-progress';
 import { space } from '../../theme/tokens';
 
 /**
@@ -60,6 +66,14 @@ interface DashboardData {
     name: string;
     thermostats?: Thermostat[];
   }[];
+  /** Preporuka nosi naučeno vrijeme dogrijavanja za traku grijanja (`36`). */
+  system?: {
+    recommendation?: {
+      breakdown?: {
+        expectedHeatTimeMin?: number | null;
+      } | null;
+    } | null;
+  } | null;
 }
 
 interface HeatingEvent {
@@ -140,9 +154,18 @@ function StatusPill({ active, label }: { active: boolean; label: string }) {
 function DeviceRow({
   thermostat,
   isHeating,
+  activeSince,
+  predictedMin,
+  now,
 }: {
   thermostat: Thermostat;
   isHeating: boolean;
+  /** Početak otvorenog ciklusa za ovaj uređaj; `null` kad ne grije. */
+  activeSince?: string | null;
+  /** Proračunato vrijeme dogrijavanja (ili medijana stvarnih ciklusa). */
+  predictedMin?: number | null;
+  /** Sat za traku; dolazi odozgo da svi redovi tikaju zajedno. */
+  now: number;
 }) {
   const { t } = useTranslation();
 
@@ -155,6 +178,8 @@ function DeviceRow({
   const current = thermostat.roomCurrentTemp ?? null;
   const target = thermostat.roomTargetTemp ?? null;
   const gap = current !== null && target !== null ? target - current : null;
+  // Jedan model po redu: traka i njena a11y labela ne smiju računati odvojeno.
+  const progress = isHeating && activeSince ? heatingProgress({ startedAt: activeSince, now, predictedMin }) : null;
   const formatTemp = (value: number | null) =>
     value !== null && Number.isFinite(value) ? value.toFixed(1) : '—';
 
@@ -184,15 +209,38 @@ function DeviceRow({
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
           <View style={{ flex: 1 }}>
-            <GaugeBar
-              value={current !== null ? current / 30 : 0}
-              target={target !== null ? target / 30 : undefined}
-              tone={isHeating ? 'signal' : 'muted'}
-              height={3}
-              accessibilityLabel={`${t('heating.current')} ${formatTemp(
-                current,
-              )}, ${t('heating.target')} ${formatTemp(target)}`}
-            />
+            {/*
+              Dok uređaj grije, traka mjeri CJELU ciklus (minute), a ne odnos
+              sobne temperature prema cilju. Sobna traka je izgledala kao
+              „napredak grijanja" iako to nije. Kad uređaj ne grije, ostaje
+              sobna traka — tada nema ciklusa da se mjeri.
+            */}
+            {isHeating && activeSince ? (
+              <HeatingProgressBar
+                model={progress ?? heatingProgress({ startedAt: activeSince, now, predictedMin })}
+                height={4}
+                accessibilityLabel={`${t('boiler.heatingInProgress')}: ${Math.round(
+                  progress?.elapsedMin ?? 0,
+                )} ${t('boiler.minutesShort')}${
+                  predictedMin != null && predictedMin > 0
+                    ? `, ${t('boiler.predicted')} ${Math.round(predictedMin)} ${t(
+                        'boiler.minutesShort',
+                      )}`
+                    : ''
+                }`}
+                testID={`thermostat-heating-progress-${thermostat.id}`}
+              />
+            ) : (
+              <GaugeBar
+                value={current !== null ? current / 30 : 0}
+                target={target !== null ? target / 30 : undefined}
+                tone={isHeating ? 'signal' : 'muted'}
+                height={3}
+                accessibilityLabel={`${t('heating.current')} ${formatTemp(
+                  current,
+                )}, ${t('heating.target')} ${formatTemp(target)}`}
+              />
+            )}
           </View>
           <MonoMeta tone={gap !== null && Math.abs(gap) < 0.05 ? 'ok' : 'dim'}>
             {gap === null
@@ -272,6 +320,47 @@ export const HeatingScreen = () => {
     () => allEvents.filter((event) => isToday(event.timestampStart)),
     [allEvents],
   );
+
+  /**
+   * Početak otvorenog ciklusa po uređaju — minute za traku grijanja. Otvoren
+   * događaj (`timestampEnd === null`) je ciklus koji još traje.
+   */
+  const activeSinceByDevice = React.useMemo(() => {
+    const map = new Map<number, string>();
+    allEvents.forEach((event) => {
+      if (event.deviceId == null || event.timestampEnd) return;
+      const current = map.get(event.deviceId);
+      if (!current || new Date(event.timestampStart) > new Date(current)) {
+        map.set(event.deviceId, event.timestampStart);
+      }
+    });
+    return map;
+  }, [allEvents]);
+
+  /**
+   * Proračunato vrijeme dogrijavanja: prvo naučeni `expectedHeatTimeMin` iz
+   * preporuke, pa medijana **stvarnih završenih ciklusa** iz istog odgovora.
+   * Naučeno za trenutni interval je preciznije od globalne medijane, ali je
+   * medijana bolja od izmišljene nule.
+   */
+  const recommendationBreakdown = dashboardData?.system?.recommendation?.breakdown;
+  const predictedHeatMin =
+    recommendationBreakdown?.expectedHeatTimeMin != null &&
+    recommendationBreakdown.expectedHeatTimeMin > 0
+      ? recommendationBreakdown.expectedHeatTimeMin
+      : medianCycleMinutes(allEvents);
+
+  /** Sat za trake: 30 s, i to samo dok neki uređaj stvarno grije. */
+  const anyHeating = React.useMemo(
+    () => Array.from(heatingByDevice.values()).some(Boolean),
+    [heatingByDevice],
+  );
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    if (!anyHeating) return;
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, [anyHeating]);
 
   const totalHeatingMinutes = React.useMemo(
     () =>
@@ -380,6 +469,9 @@ export const HeatingScreen = () => {
                       ? true
                       : heatingByDevice.get(thermostat.id) === true
                   }
+                  activeSince={activeSinceByDevice.get(thermostat.id) ?? null}
+                  predictedMin={predictedHeatMin}
+                  now={now}
                 />
               ))
             )}
@@ -392,7 +484,9 @@ export const HeatingScreen = () => {
           */}
           {thermostats.length > 0 ? (
             <Text size="meta" tone="muted">
-              {t('heating.gaugeHint')}
+              {anyHeating
+                ? t('boiler.heatingProgressHint', { value: IDEAL_HEAT_MINUTES })
+                : t('heating.gaugeHint')}
             </Text>
           ) : null}
         </Section>

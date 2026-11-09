@@ -18,6 +18,8 @@ export { DeviceName } from './DeviceName';
 export { Pressable } from './Pressable';
 export { Field, FieldGroup, Toggle, SliderField } from './Field';
 export { Button, IconButton } from './Button';
+export { HeatingProgressBar } from './HeatingProgressBar';
+export type { HeatingProgressBarProps } from './HeatingProgressBar';
 export { GaugeBar } from './GaugeBar';
 export { Led, StatusDot } from './Led';
 export { Segmented } from './Segmented';

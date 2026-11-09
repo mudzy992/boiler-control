@@ -39,9 +39,24 @@ export const useDashboardPage = () => {
     queryKey: queryKeys.dashboard,
     queryFn: () => apiClient.getDashboard() as Promise<DashboardResponse>,
   });
+
+  /*
+   * Profil se dohvata **prije** obrade dashboard-a: kuća koja se prikazuje je
+   * aktivni profil, a ne `homes[0]`. Bez ovoga je dashboard za korisnika sa
+   * dva doma mogao prikazati grijanje i temperature onog drugog.
+   */
+  const { data: homeProfile } = useQuery({
+    queryKey: queryKeys.homeProfile,
+    queryFn: () => apiClient.getHomeProfile(),
+    staleTime: 1000 * 60 * 5,
+  });
+
   const data = useMemo(
-    () => (dashboardQuery.data ? processDashboardData(dashboardQuery.data) : null),
-    [dashboardQuery.data],
+    () =>
+      dashboardQuery.data
+        ? processDashboardData(dashboardQuery.data, homeProfile?.id)
+        : null,
+    [dashboardQuery.data, homeProfile?.id],
   );
 
   const actions = useDashboardActions({
@@ -57,11 +72,6 @@ export const useDashboardPage = () => {
     [notificationsQuery.data],
   );
 
-  const { data: homeProfile } = useQuery({
-    queryKey: queryKeys.homeProfile,
-    queryFn: () => apiClient.getHomeProfile(),
-    staleTime: 1000 * 60 * 5,
-  });
   const homeProfileId = homeProfile?.id;
   const { data: currentWeather } = useQuery({
     queryKey: queryKeys.weatherCurrent(homeProfileId),

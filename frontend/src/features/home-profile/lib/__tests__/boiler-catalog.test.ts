@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  brandOfFamily,
+  catalogBrands,
   catalogGroups,
+  familiesForBrand,
   familyLabel,
   isKnownFamilyId,
+  outputOptions,
   selectionHint,
   type BoilerCatalog,
   type BoilerCatalogFamily,
@@ -144,5 +148,91 @@ describe('isKnownFamilyId', () => {
     expect(isKnownFamilyId(families, null)).toBe(false);
     expect(isKnownFamilyId(families, 'vaillant-ecotec-pro')).toBe(false);
     expect(isKnownFamilyId(null, 'vaillant-ecotec-plus-vuw')).toBe(false);
+  });
+});
+
+/**
+ * Trostepeni odabir (`25` §5.1): marka → porodica/varijanta → snaga.
+ *
+ * Zašto ovo nije kozmetika: `boilerCatalogId` imenuje porodicu, a ista porodica
+ * pokriva više snaga. Ako UI ne pita za snagu, backend odbija zapis; ako ponudi
+ * snagu koje nema, korisnik upisuje uređaj koji ne postoji.
+ */
+describe('catalogBrands', () => {
+  it('vraća marke bez ponavljanja i u redu kataloga', () => {
+    const families = [
+      family(),
+      family({ id: 'bosch-condens-7000-w', brand: 'Bosch' }),
+      family({ id: 'vaillant-atmotec', brand: 'Vaillant' }),
+    ];
+    expect(catalogBrands(catalog(families))).toEqual(['Vaillant', 'Bosch']);
+  });
+
+  it('prazan ili nedostajući katalog daje prazan spisak', () => {
+    expect(catalogBrands(null)).toEqual([]);
+    expect(catalogBrands(catalog([]))).toEqual([]);
+  });
+});
+
+describe('familiesForBrand', () => {
+  const families = [
+    family(),
+    family({ id: 'bosch-condens-7000-w', brand: 'Bosch' }),
+  ];
+
+  it('vraća samo porodice odabrane marke', () => {
+    expect(familiesForBrand(catalog(families), 'Bosch')).toHaveLength(1);
+    expect(familiesForBrand(catalog(families), 'Bosch')[0].id).toBe(
+      'bosch-condens-7000-w',
+    );
+  });
+
+  it('bez marke ne vraća ništa — prvi korak je obavezan', () => {
+    expect(familiesForBrand(catalog(families), '')).toEqual([]);
+    expect(familiesForBrand(catalog(families), null)).toEqual([]);
+    expect(familiesForBrand(null, 'Bosch')).toEqual([]);
+  });
+});
+
+describe('outputOptions', () => {
+  const families = [
+    family({ outputsKw: [24, 28, 30] }),
+    family({ id: 'bosch-gaz-6000-w', outputsKw: null }),
+  ];
+
+  it('vraća snage tačno za odabranu porodicu', () => {
+    expect(outputOptions(families, 'vaillant-ecotec-plus-vuw')).toEqual([
+      24, 28, 30,
+    ]);
+  });
+
+  it('nepotvrđena porodica nema snage — polje se ne prikazuje', () => {
+    // `null`, a ne prazan niz: prazan niz bi u UI-u izgledao kao padajući
+    // spisak bez opcija, tj. kao greška u aplikaciji.
+    expect(outputOptions(families, 'bosch-gaz-6000-w')).toBeNull();
+  });
+
+  it('nepoznata porodica, prazan id i nedostajući katalog daju null', () => {
+    expect(outputOptions(families, 'nepostoji')).toBeNull();
+    expect(outputOptions(families, '')).toBeNull();
+    expect(outputOptions(null, 'vaillant-ecotec-plus-vuw')).toBeNull();
+  });
+});
+
+describe('brandOfFamily', () => {
+  const families = [
+    family(),
+    family({ id: 'bosch-condens-7000-w', brand: 'Bosch' }),
+  ];
+
+  it('izvodi marku iz sačuvanog modela, da forma otvori ispravan korak', () => {
+    expect(brandOfFamily(families, 'bosch-condens-7000-w')).toBe('Bosch');
+  });
+
+  it('za nepoznat ili prazan id vraća prazno, ne prvu marku', () => {
+    // Vraćanje prve marke značilo bi da forma tvrdi nešto što profil ne kaže.
+    expect(brandOfFamily(families, 'nepostoji')).toBe('');
+    expect(brandOfFamily(families, null)).toBe('');
+    expect(brandOfFamily(null, 'vaillant-ecotec-plus-vuw')).toBe('');
   });
 });

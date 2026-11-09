@@ -12,7 +12,8 @@ export interface BoilerCatalogFamily {
   brand: string;
   family: string;
   variant: string;
-  outputsKw: number[];
+  /** Snage koje proizvođač navodi za ovu porodicu; `null` = nije potvrđeno. */
+  outputsKw: number[] | null;
   dhw: string;
   specStatus: 'VERIFIED_MANUAL' | 'PARTIAL' | 'TO_VERIFY';
   separateHeatingDhwSettings: boolean | null;
@@ -38,6 +39,53 @@ export interface BoilerCatalogOption {
 export interface BoilerCatalogGroup {
   brand: string;
   options: BoilerCatalogOption[];
+}
+
+/** Marke iz kataloga, u redu kako dolaze (`25` §5.1: odabir je trostepen). */
+export function catalogBrands(
+  catalog: BoilerCatalog | null | undefined,
+): string[] {
+  if (!catalog?.families?.length) return [];
+  return [...new Set(catalog.families.map((family) => family.brand))];
+}
+
+/** Porodice jedne marke — drugi korak odabira. */
+export function familiesForBrand(
+  catalog: BoilerCatalog | null | undefined,
+  brand: string | null | undefined,
+): BoilerCatalogFamily[] {
+  if (!catalog?.families?.length || !brand) return [];
+  return catalog.families.filter((family) => family.brand === brand);
+}
+
+/**
+ * Snage za odabranu porodicu — treći korak odabira.
+ *
+ * Vraća `null` kad porodica snage **ne navodi** (nepotvrđen model): tada se
+ * polje ne prikazuje, jer bi spisak opcija izgledao kao podatak, a nije ga.
+ * Vraća niz kad snage postoje; prazan niz znači „nema šta odabrati" i za
+ * klijenta je isto što i `null` — ali se ne miješa u tipu, da pozivalac mora
+ * svjesno odlučiti šta prikazuje.
+ */
+export function outputOptions(
+  families: BoilerCatalogFamily[] | null | undefined,
+  familyId: string | null | undefined,
+): number[] | null {
+  const family = families?.find((candidate) => candidate.id === familyId);
+  if (!family) return null;
+  if (!Array.isArray(family.outputsKw) || family.outputsKw.length === 0) {
+    return null;
+  }
+  return family.outputsKw;
+}
+
+/** Marka za sačuvani id, da se forma može otvoriti na ispravnom koraku. */
+export function brandOfFamily(
+  families: BoilerCatalogFamily[] | null | undefined,
+  familyId: string | null | undefined,
+): string {
+  const family = families?.find((candidate) => candidate.id === familyId);
+  return family?.brand ?? '';
 }
 
 /**

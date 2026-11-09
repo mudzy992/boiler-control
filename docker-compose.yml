@@ -34,6 +34,10 @@ services:
       # Mora biti TACNO origin frontend-a: backend ga koristi kao CORS origin.
       - FRONTEND_URL=https://boiler-control.ba101.top
       - UPLOAD_ROOT_PATH=/usr/src/app/uploads
+      # Isti disk, poddirektorij `backups/` (vidi `docs/audit/backend/34-backups.md`).
+      # Služi SAMO za čitanje: `/health` prijavljuje starost zadnjeg backupa.
+      # Backup piše host skripta, ne kontejner — kontejner nema `pg_dump`.
+      - BACKUP_DIR=/usr/src/app/uploads/backups
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro

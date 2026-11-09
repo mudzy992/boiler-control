@@ -1,0 +1,14 @@
+# Svaki dan u 03:20 po lokalnom vremenu (TZ=Europe/Sarajevo na hostu).
+# Zašto noću: dump je kratak, ali ne treba da se takmiči sa poll-om termostata.
+[Unit]
+Description=Dnevni backup — Boiler Control
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+# Ako je host bio ugašen u 03:20, pokreni odmah po podizanju.
+Persistent=true
+# Raspršenost da se ne poklopi sa drugim poslovima na hostu.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

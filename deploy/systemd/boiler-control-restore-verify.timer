@@ -1,0 +1,10 @@
+# Nedjeljom u 04:10 — poslije dnevnog backupa, prije nego sedmica počne.
+[Unit]
+Description=Sedmični probni restore — Boiler Control
+
+[Timer]
+OnCalendar=Sun *-*-* 04:10:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

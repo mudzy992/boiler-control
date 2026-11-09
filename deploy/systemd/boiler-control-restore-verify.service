@@ -1,0 +1,13 @@
+# Sedmična provjera da se zadnji backup STVARNO može vratiti.
+# Ovo je razlika između „imamo dump" i „imamo backup".
+# Instalacija: isto kao backup, plus `systemctl enable --now boiler-control-restore-verify.timer`.
+[Unit]
+Description=Boiler Control — probni restore zadnjeg dumpa
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/boiler-control/scripts/backup/restore-verify.sh
+User=root
+TimeoutStartSec=1800

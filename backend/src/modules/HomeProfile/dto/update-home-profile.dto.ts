@@ -88,6 +88,14 @@ export class UpdateHomeProfileDto {
   @IsBoolean()
   hasFloorHeating?: boolean;
 
+  /** Najviša polazna koju sistem dozvoljava; `null` je dozvoljeno (briše se). */
+  @IsOptional()
+  @Transform(preserveRawInput)
+  @IsNumber()
+  @Min(30)
+  @Max(55)
+  maxHeatingFlowC?: number | null;
+
   @IsOptional()
   @Transform(preserveRawInput)
   @IsNumber()

@@ -220,6 +220,8 @@ Gornja granica 55 je granica **bojlera**, ne sistema. Podno grijanje obično rad
 
 > **Riješeno 2026-11-08 → `19` §2.** Vlasnik: granica je **ona koju sistem dozvoljava** i pita se pri kreiranju profila kad se odabere podno grijanje. Nijedan fiksni broj se ne izmišlja; `HomeProfile.maxHeatingFlowC` je nullable, a bez njega predlog ostaje konzervativan uz napomenu.
 
+> **Urađeno 2026-11-13 → `23` §5, `24` §2.** Kolona postoji (`maxHeatingFlowC Float?`), DTO prihvata **samo 30–55** (polje sužava zaključani raspon, nikad ga ne širi), a tvrde granice je primjenjuju kao plafon. Kad je noćni minimum iznad plafona, bira se fizička granica i razlog `SYSTEM_MAX` kaže da noć **nije** pokrivena.
+
 ### 2.3 Zaštita od smrzavanja
 
 Pod od 30 °C je iznad smrzavanja, pa je predlog bezbjedan. Ali ako je soba blizu 0 °C (prazan stan, kvar), sistem ne smije nastaviti „optimizaciju": pravilo je **alarm i zamrznut predlog**, ne nastavak spuštanja. Ovo danas ne postoji ni u `SUMMER` grani (F-08).
@@ -265,7 +267,7 @@ Provjera registra praznina (docs/audit/backend/18)
 Registar potpun.            (exit 0)
 ```
 
-**Ali registar nije plan.** Dvadeset praznina (poslije `20`, `21` i `22`) znači da podaci i model postoje, a da odluka još ne postoji: noćni minimum, kontroler, mjerenje ishoda i tvrdnja o uštedi su i dalje ispred.
+**Ali registar nije plan.** Dvadeset praznina (poslije `20`, `21`, `22` i `23`) znači da podaci, model i **ograda** postoje, a da **odluka** još ne postoji: noćni minimum je izmjeren i tvrde granice su napisane (`23`), ali kontroler koji ih primjenjuje i tvrdnja o uštedi su i dalje ispred. Praznina se ne zatvara time što je pravilo napisano — nego time što ga predlog stvarno poštuje.
 
 ---
 

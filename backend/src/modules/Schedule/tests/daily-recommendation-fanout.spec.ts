@@ -81,12 +81,14 @@ function setup(options: {
     }),
   };
 
+  const proposalShadow = { evaluate: jest.fn().mockResolvedValue({ status: 'EVALUATED' }) };
   const service = new DailyRecommendationService(
     prisma as any,
     notifications as any,
     writer as any,
+    proposalShadow as any,
   );
-  return { service, prisma, notifications, writer };
+  return { service, prisma, notifications, writer, proposalShadow };
 }
 
 describe('dnevna raspodjela', () => {

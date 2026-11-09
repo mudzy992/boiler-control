@@ -60,6 +60,10 @@ model HomeProfile {
   heatingType                                HomeProfile_heatingType
   seasonMode                                 SeasonMode                 @default(WINTER)
   boilerModel                                String?
+  /// Najviša polazna koju **sistem** dozvoljava: kotao ili podno grijanje
+  /// (`19` §2, odluka vlasnika 2026-11-08). `null` = nije poznata, pa se
+  /// koristi granica kotla (55). Nikad ne širi raspon 30–55, samo sužava.
+  maxHeatingFlowC                            Float?
   hasFloorHeating                            Boolean                    @default(false)
   homeName                                   String?
   numberOfResidents                          Int?
@@ -400,6 +404,12 @@ model HomeModel {
   /// model; do tada fit koristi ISKLJUČIVO primarni uređaj (`21` §7).
   sourceDeviceId Int?
 
+  /// Najniža polazna pri kojoj su izmjereni kratki ciklusi (`24` §4). Kao i
+  /// noćni minimum, to je granica ispod koje se ne ide — i pamti se, jer bi se
+  /// inače polazna vraćala na istu grešku svaki drugi dan.
+  shortCycleFloorC  Float?
+  shortCycleFloorAt DateTime?
+
   state  HomeModelState @default(COLD_START)
   /// Zašto je stanje takvo. Prazno znači "nema šta da se objasni".
   reason String?
@@ -488,6 +498,33 @@ model DailyRecord {
   overshootC     Float?
   comfortOk      Boolean?
   undershootC    Float?
+  /// Najveći manjak u noćnom prozoru (22:00 prethodnog dana → 06:00 ovog).
+  /// Odvojeno od dnevnog `undershootC` jer noć je ono što predlog mora pokriti.
+  nightUndershootC Float?
+  /// Najhladniji izmjereni sat te noći. Nije isto što i `nightMinC` (prognoza
+  /// koja je bila osnov predloga) — ovo je ono što se stvarno dogodilo.
+  nightMinOutdoorMeasuredC Float?
+  /// Polazna koja je te noći stvarno bila na kotlu. Sa `nightMinOutdoorMeasuredC`
+  /// i `nightUndershootC` čini dokaz „ova polazna nije bila dovoljna".
+  nightFlowC Float?
+  /// Izmjereno iz serije (`17` §9.4): `median(T_off − T_on)` i
+  /// `median(cilj − T_on)`. `null` dok nema ≥ 2 prelaza u danu.
+  hysteresisK          Float?
+  hysteresisAsymmetryK Float?
+  /// Kada su mjerni podaci upisani. `null` = dan još nije obračunat.
+  outcomeAt      DateTime?
+  outcomeVersion String?
+
+  // --- shadow odluka kontrolera (`24`) -------------------------------------
+  // Računa se uz predlog, ali **ne mijenja** `proposedFlowTemp`. Služi da se
+  // uporedi sa onim što je korisnik dobio, prije nego odluka postane predlog.
+  /// Šta bi kontroler predložio. `null` = nije računato ili nije imao osnova.
+  shadowFlowC    Float?
+  shadowAction   String?
+  /// Razlozi odluke, spojeni `+` (npr. `UNDERSHOOT+NIGHT_FLOOR`).
+  shadowReasons  String?
+  shadowAt       DateTime?
+  shadowVersion  String?
 
   gasM3      Float?
   degreeDays Float?

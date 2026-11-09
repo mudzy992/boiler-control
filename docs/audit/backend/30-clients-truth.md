@@ -82,3 +82,11 @@ imena koja u istom odgovoru nose i polazne temperature. Preimenovano je u
 (`32`). **Deploy mora ići zajedno**: stari klijent na novom backendu neće naći
 polje i prikazat će „—" umjesto broja, bez ijedne greške u logu. Kad se backend
 deploya, web build i mobilna verzija moraju ići s njim.
+
+### 3.2 Rekonstruisana historija je sada vidljiva
+
+301 rekonstruisan dan je do `2d2cf4f`..`(ovaj commit)` bio u bazi i nigdje
+prikazan — endpoint nad `DailyRecord`-om čitao je samo `shadow*`, koje je u
+backfill redu prazno. Sada: `GET /api/daily-record/history`, web `Reports` i
+mobilna `Analitika` (`31` §7). Porijeklo reda (`LIVE`/`BACKFILL`) je kolona, ne
+fusnota — rekonstrukcija se ne smije čitati kao mjerenje.

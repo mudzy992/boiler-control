@@ -213,6 +213,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/daily-record/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DailyHistoryController_dailyHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/daily-record/shadow-report": {
         parameters: {
             query?: never;
@@ -2138,12 +2154,35 @@ export interface operations {
             };
         };
     };
+    DailyHistoryController_dailyHistory: {
+        parameters: {
+            query?: {
+                homeProfileId?: number;
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dnevni zapisi za dom i period, sa porijeklom */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ShadowReportController_shadowReport: {
         parameters: {
-            query: {
-                homeProfileId: string;
-                from: string;
-                to: string;
+            query?: {
+                homeProfileId?: number;
+                from?: string;
+                to?: string;
             };
             header?: never;
             path?: never;

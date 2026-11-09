@@ -17,6 +17,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { RecommendationBreakdown } from '../../heating/components/RecommendationBreakdown';
+import { DailyHistoryPanel } from '../components/DailyHistoryPanel';
 import { ShadowReportPanel } from '../components/ShadowReportPanel';
 import type { components } from '@/types/api';
 
@@ -39,6 +40,16 @@ export const ReportsPage = (): JSX.Element => {
    */
   const shadowFrom = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
   const shadowTo = dayjs().format('YYYY-MM-DD');
+
+  /*
+   * Historija dnevnih zapisa ide od početka rada, a ne 30 dana kao shadow:
+   * rekonstruisanih 301 dan je upravo ono što korisnik do sada nije mogao vidjeti.
+   * Ograničenje je na 180 najnovijih redova — tabela od 300 redova u pretraživaču
+   * je sporija od koristi, a `truncated` to i kaže.
+   */
+  const historyFrom = '2026-01-01';
+  const historyTo = dayjs().format('YYYY-MM-DD');
+  const historyLimit = 180;
 
   const reportsQuery = useQuery({
     queryKey: queryKeys.reports,
@@ -64,6 +75,12 @@ export const ReportsPage = (): JSX.Element => {
         homeProfileId={homeProfile?.id}
         from={shadowFrom}
         to={shadowTo}
+      />
+      <DailyHistoryPanel
+        homeProfileId={homeProfile?.id}
+        from={historyFrom}
+        to={historyTo}
+        limit={historyLimit}
       />
       <QueryState
         status={status}

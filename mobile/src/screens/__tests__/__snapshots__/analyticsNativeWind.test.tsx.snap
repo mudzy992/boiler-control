@@ -2073,6 +2073,64 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                   ]
                 }
               >
+                analytics.dailyHistoryTitle
+              </Text>
+            </View>
+            <View
+              accessibilityElementsHidden={true}
+              importantForAccessibility="no-hide-descendants"
+              style={
+                [
+                  {
+                    "backgroundColor": "#111723",
+                    "borderRadius": 2,
+                    "height": 72,
+                    "width": "100%",
+                  },
+                  undefined,
+                ]
+              }
+            />
+          </View>
+          <View
+            style={
+              [
+                {
+                  "gap": 8,
+                },
+                undefined,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#e8edf4",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#828d9e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "letterSpacing": 1.4,
+                      "textTransform": "uppercase",
+                    },
+                  ]
+                }
+              >
                 analytics.modelSection
               </Text>
             </View>
@@ -4303,6 +4361,64 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                 analytics.noGasReadings
               </Text>
             </View>
+          </View>
+          <View
+            style={
+              [
+                {
+                  "gap": 8,
+                },
+                undefined,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#111827",
+                      "fontFamily": undefined,
+                      "fontSize": 15,
+                      "lineHeight": 20,
+                    },
+                    null,
+                    {
+                      "color": "#59616e",
+                      "fontFamily": "monospace",
+                      "fontSize": 11,
+                      "letterSpacing": 1.4,
+                      "textTransform": "uppercase",
+                    },
+                  ]
+                }
+              >
+                analytics.dailyHistoryTitle
+              </Text>
+            </View>
+            <View
+              accessibilityElementsHidden={true}
+              importantForAccessibility="no-hide-descendants"
+              style={
+                [
+                  {
+                    "backgroundColor": "#f1f3f7",
+                    "borderRadius": 2,
+                    "height": 72,
+                    "width": "100%",
+                  },
+                  undefined,
+                ]
+              }
+            />
           </View>
           <View
             style={

@@ -129,3 +129,39 @@ značilo da se dani režu po drugim granicama nego kod živih redova.
   predloga; dan sa više promjena polazne ima jednu vrijednost.
 - Stepen-dan iz uređaja je iz mjerenja na jednoj lokaciji, ne iz meteorološke
   stanice; baza 15 °C je izabrana, ne izvedena iz podataka.
+
+## 7. Kako se rekonstruisani dani vide (i zašto nisu prije)
+
+Do sada su 302 reda bila u bazi i **nigdje vidljiva**: jedini endpoint nad
+`DailyRecord`-om čitao je `shadow*` kolone, a one su u backfill redu prazne po
+definiciji. Podaci su postojali i bili nevidljivi.
+
+Dodano:
+
+| Gdje | Šta |
+|---|---|
+| `GET /api/daily-record/history` | redovi za dom i period, sa porijeklom i pokrivenošću; `limit` 1..400, zadano 60 |
+| Web — Reports | `DailyHistoryPanel`: datum · **izvor** · predložena polazna · ciklusi · rad % · plin · stepen-dan · šta je izmjereno |
+| Mobile — Analitika | `DailyHistoryCard`: 14 najnovijih dana, sa oznakom „rekonstruisano" po redu |
+
+Pravila prikaza, ista na oba klijenta:
+
+- **porijeklo je prva kolona**, ne fusnota — `LIVE` = izmjereno u toku dana,
+  `BACKFILL` = rekonstruisano iz starih događaja;
+- `null` je „—", nikad `0`: dan bez ciklusa je izmjereno `0`, a `null` znači da
+  mjerenja nema;
+- prazna historija piše „nema zapisa", a ne „0 dana";
+- skraćen odgovor (`truncated`) to kaže naglas.
+
+Serverska strana računa `has` zastavice (ciklusi/plin/stepen-dan/noć/histereza/
+brzina dogrijavanja/shadow) da klijent ne izvodi pokrivenost sam — dva klijenta
+bi to izvela na dva načina.
+
+## 8. Šta ni ovo ne dokazuje
+
+- Endpoint je provjeren unit testovima (25 za servis i mapiranje) i ugovorom;
+  **nije** pozvan HTTP-om na živom API-ju. Prvi pravi dokaz je otvaranje
+  Reports/Analitike nakon deploya.
+- Web panel nije snimljen testom (u repou nema render testova za Reports).
+- Mobilna kartica je u Analytics snapshotu, ali sa praznim podacima — snapshot
+  potvrđuje da se prikazuje, ne da su brojevi tačni.

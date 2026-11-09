@@ -13,6 +13,8 @@ export const queryKeys = {
   homeProfile: ['home-profile'] as const,
   shadowReport: (homeProfileId: number, from: string, to: string) =>
     ['shadow-report', homeProfileId, from, to] as const,
+  dailyHistory: (homeProfileId: number, from: string, to: string, limit: number) =>
+    ['daily-history', homeProfileId, from, to, limit] as const,
   weatherCurrent: (homeProfileId: number | undefined) =>
     ['weather-current', homeProfileId] as const,
   notifications: ['notifications'] as const,

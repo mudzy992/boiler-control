@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { SecureStorage } from '../storage/SecureStorage';
 import { API_CONFIG } from '../../config/api.config';
-import type { DashboardHealthResponse } from '../../types/Dashboard';
+import type { DailyHistoryResponse, DashboardHealthResponse } from '../../types/Dashboard';
 import type { AccountExportResponse } from '../../types/AccountExport';
 import type {
   ConfirmWeatherLocationResponse,
@@ -230,6 +230,20 @@ class ApiClientService {
       query,
       candidateId,
     });
+    return response.data;
+  }
+
+  /**
+   * Historija dnevnih zapisa (`31`). Vraća i porijeklo reda (`LIVE`/`BACKFILL`):
+   * 301 dan je rekonstruisan, pa se ne smije prikazati kao mjerenje.
+   */
+  async getDailyHistory(params: {
+    homeProfileId: number;
+    from?: string;
+    to?: string;
+    limit?: number;
+  }): Promise<DailyHistoryResponse> {
+    const response = await this.client.get('/daily-record/history', { params });
     return response.data;
   }
 

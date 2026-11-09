@@ -55,3 +55,64 @@ export interface ShadowReportResponse {
   verdict: ShadowVerdict;
   verdictNote: string;
 }
+
+/**
+ * Historija dnevnih zapisa (`31`) — `GET /api/daily-record/history`.
+ *
+ * `origin` je najvažnije polje: `BACKFILL` znači da je red rekonstruisan iz
+ * starih događaja, a ne izmjeren u toku dana. Prikaz to mora reći, inače
+ * korisnik čita rekonstrukciju kao mjerenje.
+ */
+export type DailyRecordOrigin = 'LIVE' | 'BACKFILL';
+
+export interface DailyHistoryCoverage {
+  cycles: boolean;
+  gas: boolean;
+  degreeDays: boolean;
+  night: boolean;
+  hysteresis: boolean;
+  heatRate: boolean;
+  shadow: boolean;
+}
+
+export interface DailyHistoryRow {
+  localDate: string;
+  proposedFlowTemp: number | null;
+  proposedAt: string | null;
+  cycles: number | null;
+  medianCycleMin: number | null;
+  dutyPercent: number | null;
+  overshootC: number | null;
+  undershootC: number | null;
+  flowSetC: number | null;
+  flowSetSource: string | null;
+  gasM3: number | null;
+  degreeDays: number | null;
+  nightUndershootC: number | null;
+  hysteresisK: number | null;
+  heatRateCPerHour: number | null;
+  shadowFlowC: number | null;
+  shadowAction: string | null;
+  modelVersion: string | null;
+  outcomeVersion: string | null;
+  outcomeAt: string | null;
+  origin: DailyRecordOrigin;
+  has: DailyHistoryCoverage;
+}
+
+export interface DailyHistoryResponse {
+  homeProfileId: number;
+  rows: DailyHistoryRow[];
+  summary: {
+    days: number;
+    live: number;
+    backfill: number;
+    withCycles: number;
+    withGas: number;
+    withDegreeDays: number;
+    withShadow: number;
+    firstDate: string | null;
+    lastDate: string | null;
+  };
+  truncated: boolean;
+}

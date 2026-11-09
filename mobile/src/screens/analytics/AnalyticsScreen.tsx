@@ -9,6 +9,7 @@ import { homeProfileApi } from '../../services/api/homeProfile.api';
 import { apiClient } from '../../services/api/client';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useToast } from '../../components/ui/nativewind';
+import { DailyHistoryCard } from '../../components/analytics/DailyHistoryCard';
 import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
 import {
   Button,
@@ -567,6 +568,18 @@ export const AnalyticsScreen = () => {
         <GasAnalyticsCard
           readings={gasReadingsQuery.data}
           isLoading={gasReadingsQuery.isLoading}
+        />
+
+        {/*
+          Historija dnevnih zapisa (`31`): 301 rekonstruisan dan je do sada bio u
+          bazi i nigdje vidljiv. Ograničeno na 14 najnovijih — na telefonu je
+          pitanje „šta je bilo juče", ne cijela arhiva.
+        */}
+        <DailyHistoryCard
+          homeProfileId={activeHome?.id}
+          from="2026-01-01"
+          to={new Date().toISOString().slice(0, 10)}
+          limit={14}
         />
 
         {/* Model učenja — samo ono što backend stvarno vraća. */}

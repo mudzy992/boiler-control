@@ -2916,22 +2916,22 @@
         ]
       }
     },
-    "/api/daily-record/shadow-report": {
+    "/api/daily-record/history": {
       "get": {
-        "operationId": "ShadowReportController_shadowReport",
+        "operationId": "DailyHistoryController_dailyHistory",
         "parameters": [
           {
             "in": "query",
             "name": "homeProfileId",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           },
           {
             "in": "query",
             "name": "from",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -2939,7 +2939,59 @@
           {
             "in": "query",
             "name": "to",
-            "required": true,
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dnevni zapisi za dom i period, sa porijeklom"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Daily record"
+        ]
+      }
+    },
+    "/api/daily-record/shadow-report": {
+      "get": {
+        "operationId": "ShadowReportController_shadowReport",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "homeProfileId",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
             "schema": {
               "type": "string"
             }

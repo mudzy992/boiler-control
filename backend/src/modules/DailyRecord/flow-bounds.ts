@@ -19,8 +19,19 @@ export const FLOW_MAX_C = 55;
  */
 export const MAX_DAILY_CHANGE_K = 2;
 
-/** Zašto je broj promijenjen — ide u objašnjenje uz predlog, ne u log. */
-export type BoundReason = 'RANGE' | 'NIGHT_FLOOR' | 'DAILY_CHANGE';
+/**
+ * Zašto je broj promijenjen — ide u objašnjenje uz predlog, ne u log.
+ *
+ * `SYSTEM_MAX` je poseban slučaj: granica koju sistem dozvoljava (`19` §2) je
+ * niža od noćnog minimuma. Tada se bira granica sistema, jer je ona fizička, a
+ * `SYSTEM_MAX` u razlozima kaže da noć **nije** pokrivena — da se to ne bi
+ * čitalo kao uspjeh.
+ */
+export type BoundReason =
+  | 'RANGE'
+  | 'NIGHT_FLOOR'
+  | 'DAILY_CHANGE'
+  | 'SYSTEM_MAX';
 
 export interface HardBoundsInput {
   /** Ono što je odluka predložila. */
@@ -29,6 +40,11 @@ export interface HardBoundsInput {
   previousC: number | null;
   /** Najmanja polazna koja pokriva noć; `null` kad nema dokaza. */
   nightFloorC: number | null;
+  /**
+   * Najviša polazna koju sistem dozvoljava (kotao ili podno grijanje),
+   * `HomeProfile.maxHeatingFlowC`. `null` = granica kotla (55).
+   */
+  systemMaxC?: number | null;
 }
 
 export interface HardBoundsResult {
@@ -55,16 +71,23 @@ export function applyHardBounds(input: HardBoundsInput): HardBoundsResult {
   assertFinite(input.candidateC, 'candidateC');
   if (input.previousC != null) assertFinite(input.previousC, 'previousC');
   if (input.nightFloorC != null) assertFinite(input.nightFloorC, 'nightFloorC');
+  if (input.systemMaxC != null) assertFinite(input.systemMaxC, 'systemMaxC');
 
   const reasons: BoundReason[] = [];
+  // Granica sistema samo sužava raspon; nikad ga ne širi.
+  const ceiling =
+    input.systemMaxC == null
+      ? FLOW_MAX_C
+      : Math.min(FLOW_MAX_C, Math.max(FLOW_MIN_C, input.systemMaxC));
   const floor =
     input.nightFloorC == null
       ? null
-      : clamp(input.nightFloorC, FLOW_MIN_C, FLOW_MAX_C);
+      : clamp(input.nightFloorC, FLOW_MIN_C, ceiling);
+  const limit = (value: number) => clamp(value, FLOW_MIN_C, ceiling);
 
   let flowC = input.candidateC;
 
-  const ranged = clamp(flowC, FLOW_MIN_C, FLOW_MAX_C);
+  const ranged = limit(flowC);
   if (ranged !== flowC) {
     reasons.push('RANGE');
     flowC = ranged;
@@ -76,10 +99,12 @@ export function applyHardBounds(input: HardBoundsInput): HardBoundsResult {
   }
 
   if (input.previousC != null) {
-    const limited = clamp(
-      flowC,
-      input.previousC - MAX_DAILY_CHANGE_K,
-      input.previousC + MAX_DAILY_CHANGE_K,
+    const limited = limit(
+      clamp(
+        flowC,
+        input.previousC - MAX_DAILY_CHANGE_K,
+        input.previousC + MAX_DAILY_CHANGE_K,
+      ),
     );
     if (limited !== flowC) {
       reasons.push('DAILY_CHANGE');
@@ -87,7 +112,7 @@ export function applyHardBounds(input: HardBoundsInput): HardBoundsResult {
     }
   }
 
-  const finalRanged = clamp(flowC, FLOW_MIN_C, FLOW_MAX_C);
+  const finalRanged = limit(flowC);
   if (finalRanged !== flowC) {
     if (!reasons.includes('RANGE')) reasons.push('RANGE');
     flowC = finalRanged;
@@ -95,6 +120,13 @@ export function applyHardBounds(input: HardBoundsInput): HardBoundsResult {
   if (floor != null && flowC < floor) {
     if (!reasons.includes('NIGHT_FLOOR')) reasons.push('NIGHT_FLOOR');
     flowC = floor;
+  }
+
+  // Noćni minimum iznad onoga što sistem dozvoljava: bira se fizička granica,
+  // ali se prekršaj imenuje — noć tada nije pokrivena i to se vidi.
+  if (input.nightFloorC != null && input.nightFloorC > ceiling) {
+    reasons.push('SYSTEM_MAX');
+    flowC = ceiling;
   }
 
   return { flowC, reasons };

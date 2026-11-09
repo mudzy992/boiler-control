@@ -86,6 +86,9 @@ HomeProfile.maxHeatingFlowC   // nullable
 ```
 
 - Ako je unesena → gornja granica predloga je `min(55, maxHeatingFlowC)`.
+- **Urađeno 2026-11-13:** kolona i DTO postoje (`18` §2.2), a granica se primjenjuje u
+  `applyHardBounds` preko `systemMaxC`; ako je noćni minimum iznad nje, razlog glasi
+  `SYSTEM_MAX` (noć nije pokrivena, i to se vidi).
 - Ako nije → predlog se ograničava na **konzervativnu vrijednost za podno** i prikazuje se napomena da se granica potvrdi.
 - Nikad iznad 55, nikad iznad modela bojlera.
 

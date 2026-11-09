@@ -80,7 +80,13 @@ export class ProposalShadowService {
     const [home, model, previous, lastOutcome] = await Promise.all([
       this.prisma.homeProfile.findUnique({
         where: { id: homeProfileId },
-        select: { targetMorningTemp: true, targetDayTemp: true },
+        select: {
+          targetMorningTemp: true,
+          targetDayTemp: true,
+          // Najviša polazna koju sistem dozvoljava (`19` §2). Bez nje ostaje
+          // granica kotla — nikad viša od 55.
+          maxHeatingFlowC: true,
+        },
       }),
       this.prisma.homeModel.findUnique({
         where: { homeProfileId },
@@ -172,6 +178,7 @@ export class ProposalShadowService {
       outcome,
       night: { floorC: night.floorC, basis: night.basis },
       shortCycleFloorC,
+      maxFlowC: home?.maxHeatingFlowC ?? null,
       modelState: (model?.state ?? 'COLD_START') as ModelState,
     });
 

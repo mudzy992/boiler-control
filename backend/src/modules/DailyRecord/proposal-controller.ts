@@ -265,6 +265,7 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
     candidateC: intended,
     previousC: previous,
     nightFloorC: floorC,
+    systemMaxC: input.maxFlowC ?? null,
   });
 
   // Kad su granice te koje su podigle odluku, razlog se imenuje tačno.

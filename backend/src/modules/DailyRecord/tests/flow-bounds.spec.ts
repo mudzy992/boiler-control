@@ -66,10 +66,12 @@ describe('applyHardBounds — noćni minimum', () => {
     });
   });
 
-  it('minimum koji izlazi iz raspona se reže na 55', () => {
+  it('minimum koji izlazi iz raspona se reže na 55 i prijavljuje da noć nije pokrivena', () => {
+    // Dokaz traži 58, a kotao ne ide preko 55: bira se fizička granica, ali se
+    // prekršaj imenuje — inače bi se čitalo kao da je noć pokrivena.
     expect(applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: 58 })).toEqual({
       flowC: 55,
-      reasons: ['NIGHT_FLOOR'],
+      reasons: ['NIGHT_FLOOR', 'SYSTEM_MAX'],
     });
   });
 
@@ -78,6 +80,39 @@ describe('applyHardBounds — noćni minimum', () => {
       flowC: 40,
       reasons: [],
     });
+  });
+});
+
+describe('applyHardBounds — granica sistema', () => {
+  it('granica sistema sužava raspon i nikad ga ne širi', () => {
+    expect(
+      applyHardBounds({ candidateC: 50, previousC: null, nightFloorC: null, systemMaxC: 40 }),
+    ).toEqual({ flowC: 40, reasons: ['RANGE'] });
+
+    // 60 kao granica sistema ne smije proširiti zaključanih 55.
+    expect(
+      applyHardBounds({ candidateC: 52, previousC: null, nightFloorC: null, systemMaxC: 60 }),
+    ).toEqual({ flowC: 52, reasons: [] });
+  });
+
+  it('dnevna granica ne smije podići vrijednost iznad granice sistema', () => {
+    // Prethodna 45, odluka 40, granica sistema 40. Dnevna granica bi htjela 43
+    // (45 − 2), ali granica sistema to ne dopušta — pa se ništa nije ni
+    // promijenilo i razloga nema.
+    expect(
+      applyHardBounds({ candidateC: 40, previousC: 45, nightFloorC: null, systemMaxC: 40 }),
+    ).toEqual({ flowC: 40, reasons: [] });
+
+    // Kad je granica sistema 41, dnevna granica stvarno mijenja odluku.
+    expect(
+      applyHardBounds({ candidateC: 40, previousC: 45, nightFloorC: null, systemMaxC: 41 }),
+    ).toEqual({ flowC: 41, reasons: ['DAILY_CHANGE'] });
+  });
+
+  it('kad je noćni minimum iznad granice sistema, bira se granica sistema', () => {
+    expect(
+      applyHardBounds({ candidateC: 35, previousC: null, nightFloorC: 47, systemMaxC: 40 }),
+    ).toEqual({ flowC: 40, reasons: ['NIGHT_FLOOR', 'SYSTEM_MAX'] });
   });
 });
 

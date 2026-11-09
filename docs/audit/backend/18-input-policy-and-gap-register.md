@@ -220,6 +220,8 @@ Gornja granica 55 je granica **bojlera**, ne sistema. Podno grijanje obično rad
 
 > **Riješeno 2026-11-08 → `19` §2.** Vlasnik: granica je **ona koju sistem dozvoljava** i pita se pri kreiranju profila kad se odabere podno grijanje. Nijedan fiksni broj se ne izmišlja; `HomeProfile.maxHeatingFlowC` je nullable, a bez njega predlog ostaje konzervativan uz napomenu.
 
+> **Urađeno 2026-11-13 → `23` §5, `24` §2.** Kolona postoji (`maxHeatingFlowC Float?`), DTO prihvata **samo 30–55** (polje sužava zaključani raspon, nikad ga ne širi), a tvrde granice je primjenjuju kao plafon. Kad je noćni minimum iznad plafona, bira se fizička granica i razlog `SYSTEM_MAX` kaže da noć **nije** pokrivena.
+
 ### 2.3 Zaštita od smrzavanja
 
 Pod od 30 °C je iznad smrzavanja, pa je predlog bezbjedan. Ali ako je soba blizu 0 °C (prazan stan, kvar), sistem ne smije nastaviti „optimizaciju": pravilo je **alarm i zamrznut predlog**, ne nastavak spuštanja. Ovo danas ne postoji ni u `SUMMER` grani (F-08).

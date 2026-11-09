@@ -166,7 +166,14 @@ bio bi oscilacija.
 2. noćni minimum                → NIGHT_FLOOR
 3. dnevna promjena ±2 K         → DAILY_CHANGE
 4. ponovno raspon i noćni minimum
+5. plafon sistema               → SYSTEM_MAX (samo kad je noćni minimum iznad njega)
 ```
+
+Korak 5 je dodat 2026-11-13, kad je `HomeProfile.maxHeatingFlowC` postao stvarna kolona
+(`18` §2.2): plafon sistema (kotao ili podno grijanje) **nikad ne širi** raspon 30–55,
+samo ga sužava. Kad je dokazani noćni minimum iznad plafona, bira se plafon — jer je on
+fizička granica — ali se to imenuje razlogom `SYSTEM_MAX`, da se ne pročita kao da je
+noć pokrivena.
 
 Korak 4 postoji zbog jednog slučaja: prethodna polazna 40, odluka 36, dokaz da je 40
 bilo prenisko → minimum 41. Dnevna granica bi 41 spustila, ali **ne smije**: sigurnost

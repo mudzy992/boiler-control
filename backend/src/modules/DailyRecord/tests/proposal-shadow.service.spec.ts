@@ -207,6 +207,33 @@ describe('ProposalShadowService — odluka', () => {
   });
 });
 
+describe('ProposalShadowService — maksimum sistema', () => {
+  it('najviša polazna iz profila ograničava odluku i ravnotežnu vrijednost', async () => {
+    const { service } = setup({
+      home: { targetMorningTemp: 21, targetDayTemp: 22, maxHeatingFlowC: 40 },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    // Baza bi bila 44,04, ali sistem dozvoljava najviše 40 (npr. podno grijanje).
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(40);
+  });
+
+  it('bez maksimuma u profilu ostaje granica kotla', async () => {
+    const { service } = setup({
+      home: { targetMorningTemp: 21, targetDayTemp: 22, maxHeatingFlowC: null },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBeLessThanOrEqual(55);
+  });
+});
+
 describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
   it('kratki ciklusi se pamte u HomeModel i podižu odluku', async () => {
     const { service, prisma } = setup({

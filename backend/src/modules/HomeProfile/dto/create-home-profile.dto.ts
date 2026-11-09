@@ -79,6 +79,18 @@ export class CreateHomeProfileDto {
   @IsBoolean()
   hasFloorHeating: boolean;
 
+  /**
+   * Najviša polazna koju sistem dozvoljava (`19` §2). Opciono: bez nje se
+   * koristi granica kotla. Raspon je isti kao za predlog — 30–55 — jer polje
+   * ne smije proširiti ono što je već zaključano.
+   */
+  @IsOptional()
+  @Transform(preserveRawInput)
+  @IsNumber()
+  @Min(30)
+  @Max(55)
+  maxHeatingFlowC?: number;
+
   @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)

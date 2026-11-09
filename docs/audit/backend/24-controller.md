@@ -27,6 +27,7 @@ bojler"): simulacija → shadow → predlog. Ovaj dokument pokriva prve dvije pr
 | `src/modules/DailyRecord/proposal-shadow.service.ts` | shadow odluka uz predlog; pamti granicu iz kratkih ciklusa |
 | `src/modules/DailyRecord/tests/proposal-shadow.service.spec.ts` | 11 testova |
 | `prisma/migrations/20261112100000_proposal_shadow/migration.sql` | 5 kolona na `DailyRecord`, 2 na `HomeModel` |
+| `prisma/migrations/20261113100000_home_max_flow/migration.sql` | `HomeProfile.maxHeatingFlowC` (`19` §2) |
 | `scripts/audit/controller_sim.cjs` | zatvorena petlja kroz **stvarne** module, 60 dana, tri kuće |
 
 ## 2. Pravila koja su na kraju napisana
@@ -42,7 +43,7 @@ Red je dio odluke, ne stil.
 | 5 | udobno, dugi ciklusi | **−1,0 K**, ali **nikad ispod ravnotežne polazne** | v. §3 |
 | 6 | manje od 3 dana od zadnje promjene | ne mijenjaj (osim pravila 2) | `17` §8.2 |
 | 7 | bez poredljivih noći (`NO_FORECAST`, `NO_EVIDENCE`) | **ne spuštaj** | `23` §4 |
-| 8 | tvrde granice | raspon 30–55, noćni minimum, ±2 K/dan | `23` §5 |
+| 8 | tvrde granice | raspon 30–55, noćni minimum, ±2 K/dan, **plafon sistema** | `23` §5 |
 
 ### 2.1 Dvije stvari iz `17` §8.2 koje nijesu implementirane
 
@@ -190,7 +191,8 @@ povezivanja.
 2. čita `HomeModel` (`state`, `slopeCiHigh`, zapamćenu granicu iz kratkih ciklusa);
 3. traži prošli predlog (za „prošlu polaznu" i dwell) i prošli obračunat ishod;
 4. traži noćni minimum kroz `DailyOutcomeService.nightFloorFor` (\(23\) §4);
-5. računa `F_eq` sa **gornjom** granicom intervala za `s`;
+5. računa `F_eq` sa **gornjom** granicom intervala za `s`, uz plafon iz profila
+   (`maxHeatingFlowC`);
 6. poziva `decideProposal` i upisuje `shadowFlowC`, `shadowAction`, `shadowReasons`,
    `shadowAt`, `shadowVersion`.
 

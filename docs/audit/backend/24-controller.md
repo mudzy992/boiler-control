@@ -229,7 +229,13 @@ Ono što shadow period treba da odgovori prije nego odluka postane predlog: koli
 često odluka i formula razlikuju, u kojem smjeru, i da li je svaka razlika objašnjiva
 razlogom iz `shadowReasons`. Ako razlika postoji bez razloga — to je greška, ne ušteda.
 
-**Mjerenje je napravljeno 2026-11-14 → `26`.** `GET /api/daily-record/shadow-report`
+**Mjerenje je napravljeno 2026-11-14 → `26`.** Od 2026-11-18 isti izvještaj stoji i u
+web aplikaciji (`ReportsPage` → `ShadowReportPanel`, 30 dana unazad): presuda, brojevi,
+razlozi sa udjelom **u danima sa razlikom** i spisak neobjašnjenih razlika. Do tada je
+jedini način da se vidi ovaj broj bio ručni SQL — a od njega zavisi da li odluka smije
+postati ono što korisnik vidi. Detalji i ostatak klijentskog audita: `30` §1.
+
+`GET /api/daily-record/shadow-report`
 vraća `differences`/`lowered`/`raised`/`changeSharePct`/`byReason`/`unexplained` i
 presudu (`NO_DATA`, `UNEXPLAINED_DIFFERENCES`, `NOT_ENOUGH_DAYS`, `NO_DIFFERENCES`,
 `READY`). Neobjašnjena razlika ima prioritet nad brojem dana: čekanje ne objašnjava

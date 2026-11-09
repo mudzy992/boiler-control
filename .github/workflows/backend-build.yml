@@ -224,3 +224,10 @@ jobs:
         env:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: node scripts/backfill-coverage.cjs
+
+      # Dry-run: ista logika koja bi i upisivala, ali bez upisa. Ovdje se vidi
+      # koliko bi redova nastalo i od kojih izvora, prije nego se odluči.
+      - name: Backfill daily records (dry-run, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: npm run backfill:daily -- --dry-run

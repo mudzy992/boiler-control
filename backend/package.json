@@ -25,7 +25,8 @@
     "db:reset": "npm run db:check-target && prisma migrate reset --force",
     "db:seed": "ts-node --transpile-only prisma/seed.ts",
     "db:reset:seed": "npm run db:reset && npm run db:seed",
-    "db:check-target": "ts-node --transpile-only -r tsconfig-paths/register scripts/require-safe-target.ts"
+    "db:check-target": "ts-node --transpile-only -r tsconfig-paths/register scripts/require-safe-target.ts",
+    "backfill:daily": "ts-node --transpile-only -r tsconfig-paths/register scripts/backfill-daily-records.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

@@ -48,8 +48,9 @@ interface Thermostat {
   id: number;
   alias?: string;
   name?: string;
-  currentTemp?: number | null;
-  targetTemp?: number | null;
+  /** Soba, trenutno (`32`) — s dashboarda, ne s `/thermostat-device`. */
+  roomCurrentTemp?: number | null;
+  roomTargetTemp?: number | null;
   isHeatingNow?: boolean;
 }
 
@@ -151,8 +152,8 @@ function DeviceRow({
    * da je u sobi nula stepeni — a razlika Δ je bila izmišljena iz te nule.
    * Sada se sve troje (current, target, Δ) prikazuju kao „—" kad nema podatka.
    */
-  const current = thermostat.currentTemp ?? null;
-  const target = thermostat.targetTemp ?? null;
+  const current = thermostat.roomCurrentTemp ?? null;
+  const target = thermostat.roomTargetTemp ?? null;
   const gap = current !== null && target !== null ? target - current : null;
   const formatTemp = (value: number | null) =>
     value !== null && Number.isFinite(value) ? value.toFixed(1) : '—';

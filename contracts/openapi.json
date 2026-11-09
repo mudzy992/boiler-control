@@ -770,15 +770,6 @@
       },
       "DashboardHeatingEventDto": {
         "properties": {
-          "currentTemp": {
-            "description": "Iz `roomCurrentTemp` (događaj, NOT NULL).",
-            "type": "number"
-          },
-          "curretTempThermostat": {
-            "description": "Vrijednost s termostata, `null` ako termostat nema `roomCurrentTemp`. Typo je iz izvornog koda.",
-            "nullable": true,
-            "type": "object"
-          },
           "deviceId": {
             "type": "number"
           },
@@ -797,21 +788,30 @@
           "id": {
             "type": "number"
           },
+          "roomCurrentTemp": {
+            "description": "Temperatura sobe iz događaja (`roomCurrentTemp`, NOT NULL).",
+            "type": "number"
+          },
+          "roomCurrentTempThermostat": {
+            "description": "Temperatura sobe s termostata, `null` ako termostat nema `roomCurrentTemp`.",
+            "nullable": true,
+            "type": "object"
+          },
+          "roomTargetTemp": {
+            "description": "Cilj sobe iz događaja (`roomTargetTemp`, NOT NULL).",
+            "type": "number"
+          },
+          "roomTargetTempThermostat": {
+            "description": "Cilj sobe s termostata.",
+            "nullable": true,
+            "type": "object"
+          },
           "source": {
             "type": "string"
           },
           "startedAt": {
             "format": "date-time",
             "type": "string"
-          },
-          "targetTemp": {
-            "description": "Iz `roomTargetTemp` (događaj, NOT NULL).",
-            "type": "number"
-          },
-          "targetTempThermostat": {
-            "description": "Vrijednost s termostata.",
-            "nullable": true,
-            "type": "object"
           }
         },
         "required": [
@@ -819,10 +819,10 @@
           "deviceId",
           "startedAt",
           "endedAt",
-          "currentTemp",
-          "targetTemp",
-          "curretTempThermostat",
-          "targetTempThermostat",
+          "roomCurrentTemp",
+          "roomTargetTemp",
+          "roomCurrentTempThermostat",
+          "roomTargetTempThermostat",
           "hvacAction",
           "source",
           "durationMinutes"
@@ -1114,15 +1114,6 @@
       },
       "DashboardRecentHeatingEventDto": {
         "properties": {
-          "currentTemp": {
-            "description": "Iz `roomCurrentTemp` (događaj).",
-            "type": "number"
-          },
-          "curretTempThermostat": {
-            "description": "NAMJERNO zadržan typo `curret` iz izvornog koda — preimenovanje bi slomilo FE.",
-            "nullable": true,
-            "type": "object"
-          },
           "deviceId": {
             "type": "number"
           },
@@ -1147,6 +1138,24 @@
             "nullable": true,
             "type": "string"
           },
+          "roomCurrentTemp": {
+            "description": "Temperatura sobe iz događaja (`roomCurrentTemp`).",
+            "type": "number"
+          },
+          "roomCurrentTempThermostat": {
+            "description": "Temperatura sobe s termostata u trenutku čitanja. Ranije `curretTempThermostat` — typo je ispravljen u istoj izmjeni u kojoj je polje dobilo porodicu u imenu (`32`).",
+            "nullable": true,
+            "type": "object"
+          },
+          "roomTargetTemp": {
+            "description": "Cilj sobe iz događaja (`roomTargetTemp`).",
+            "type": "number"
+          },
+          "roomTargetTempThermostat": {
+            "description": "Cilj sobe s termostata u trenutku čitanja, ili null.",
+            "nullable": true,
+            "type": "object"
+          },
           "source": {
             "description": "Slobodan string iz kolone `source`.",
             "type": "string"
@@ -1154,25 +1163,16 @@
           "startedAt": {
             "format": "date-time",
             "type": "string"
-          },
-          "targetTemp": {
-            "description": "Iz `roomTargetTemp` (događaj).",
-            "type": "number"
-          },
-          "targetTempThermostat": {
-            "description": "Ciljna temperatura s termostata u trenutku čitanja, ili null.",
-            "nullable": true,
-            "type": "object"
           }
         },
         "required": [
           "deviceId",
           "startedAt",
           "endedAt",
-          "targetTemp",
-          "targetTempThermostat",
-          "currentTemp",
-          "curretTempThermostat",
+          "roomTargetTemp",
+          "roomTargetTempThermostat",
+          "roomCurrentTemp",
+          "roomCurrentTempThermostat",
           "hvacAction",
           "source",
           "durationMinutes",
@@ -1298,11 +1298,6 @@
             "nullable": true,
             "type": "object"
           },
-          "currentTemp": {
-            "description": "Iz `roomCurrentTemp`.",
-            "nullable": true,
-            "type": "object"
-          },
           "deviceId": {
             "description": "Vanjski id uređaja (string), nije interni `id`.",
             "type": "string"
@@ -1332,8 +1327,13 @@
             },
             "type": "array"
           },
-          "targetTemp": {
-            "description": "Iz `roomTargetTemp`.",
+          "roomCurrentTemp": {
+            "description": "Temperatura **vazduha u sobi** koju termostat očitava (`roomCurrentTemp`). Nije polazna voda — ona je u `system.boiler.actualFlowTemp` (`32`).",
+            "nullable": true,
+            "type": "object"
+          },
+          "roomTargetTemp": {
+            "description": "Cilj **sobe** (`roomTargetTemp`), fiksni ili iz programa.",
             "nullable": true,
             "type": "object"
           },
@@ -1348,8 +1348,8 @@
           "deviceId",
           "mode",
           "lastSeen",
-          "currentTemp",
-          "targetTemp",
+          "roomCurrentTemp",
+          "roomTargetTemp",
           "isHeatingNow",
           "program"
         ],
@@ -1367,17 +1367,18 @@
           "orderIndex": {
             "type": "number"
           },
-          "startMinute": {
+          "roomTargetTemp": {
+            "description": "Cilj **sobe** za taj interval, iz kolone `targetTemp` (`32`).",
             "type": "number"
           },
-          "targetTemp": {
+          "startMinute": {
             "type": "number"
           }
         },
         "required": [
           "dayType",
           "startMinute",
-          "targetTemp",
+          "roomTargetTemp",
           "orderIndex"
         ],
         "type": "object"
@@ -2915,6 +2916,50 @@
         ]
       }
     },
+    "/api/daily-record/shadow-report": {
+      "get": {
+        "operationId": "ShadowReportController_shadowReport",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "homeProfileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shadow izvještaj za dom i period"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Daily record"
+        ]
+      }
+    },
     "/api/dashboard": {
       "get": {
         "operationId": "DashboardController_getDashboard",
@@ -4109,6 +4154,20 @@
     "/api/home-profiles/active": {
       "get": {
         "operationId": "HomeProfileController_findActive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Home Profiles"
+        ]
+      }
+    },
+    "/api/home-profiles/boiler-catalog": {
+      "get": {
+        "operationId": "HomeProfileController_boilerCatalog",
         "parameters": [],
         "responses": {
           "200": {

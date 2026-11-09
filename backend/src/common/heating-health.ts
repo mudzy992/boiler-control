@@ -117,8 +117,10 @@ export function computeWeightedHealthScore(
 /** Minimalni oblik događaja koji pravila upozorenja trebaju. */
 export interface HealthEventInput {
   durationMinutes: number;
-  targetTemp: number;
-  currentTemp: number;
+  /** Cilj sobe — porodica `room` (`32`). */
+  roomTargetTemp: number;
+  /** Stvarna temperatura sobe — porodica `room` (`32`). */
+  roomCurrentTemp: number;
   isAnomaly: boolean;
 }
 
@@ -151,7 +153,7 @@ export function buildHealthWarnings(
   }
 
   const shortfallAvg =
-    events.reduce((sum, e) => sum + (e.targetTemp - e.currentTemp), 0) /
+    events.reduce((sum, e) => sum + (e.roomTargetTemp - e.roomCurrentTemp), 0) /
     events.length;
   if (shortfallAvg > TARGET_SHORTFALL_WARN_C) {
     warnings.push({
@@ -162,7 +164,7 @@ export function buildHealthWarnings(
   }
 
   const overshootAvg =
-    events.reduce((sum, e) => sum + (e.currentTemp - e.targetTemp), 0) /
+    events.reduce((sum, e) => sum + (e.roomCurrentTemp - e.roomTargetTemp), 0) /
     events.length;
   if (overshootAvg > TARGET_OVERSHOOT_WARN_C) {
     warnings.push({

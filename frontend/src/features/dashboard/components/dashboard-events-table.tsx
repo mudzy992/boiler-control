@@ -58,8 +58,8 @@ export const DashboardEventsTable = ({
                     : '—'}
                 </TableCell>
                 <TableCell>{record.durationMinutes}</TableCell>
-                <TableCell>{record.currentTemp.toFixed(1)}°C</TableCell>
-                <TableCell>{record.targetTemp}°C</TableCell>
+                <TableCell>{record.roomCurrentTemp.toFixed(1)}°C</TableCell>
+                <TableCell>{record.roomTargetTemp.toFixed(1)}°C</TableCell>
                 <TableCell>
                   {record.hvacAction ? (
                     <span className="rounded bg-signal/10 px-2 py-0.5 text-xs font-medium text-signal">

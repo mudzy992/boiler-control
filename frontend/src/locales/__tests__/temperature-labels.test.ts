@@ -57,8 +57,8 @@ describe('etikete polazne vode', () => {
 
 describe('etikete temperature sobe', () => {
   it('soba se zove soba, a ne „current temp"', () => {
-    expect(mentions(en.dashboard.currentTemp, roomWords)).toBe(true);
-    expect(mentions(bs.dashboard.currentTemp, roomWords)).toBe(true);
+    expect(mentions(en.dashboard.roomCurrentTemp, roomWords)).toBe(true);
+    expect(mentions(bs.dashboard.roomCurrentTemp, roomWords)).toBe(true);
     expect(mentions(en.dashboard.targetSubtitle, roomWords)).toBe(true);
     expect(mentions(bs.dashboard.targetSubtitle, roomWords)).toBe(true);
   });

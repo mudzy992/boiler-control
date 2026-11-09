@@ -125,10 +125,10 @@ describe('B-019: heating-events mapira temperaturu po uređaju', () => {
     );
 
     // Prije ispravke oba reda su nosila 25/26 (uređaj iz `events[0]`).
-    expect(byDevice.get(11).curretTempThermostat).toBe(25);
-    expect(byDevice.get(11).targetTempThermostat).toBe(26);
-    expect(byDevice.get(22).curretTempThermostat).toBe(18);
-    expect(byDevice.get(22).targetTempThermostat).toBe(19);
+    expect(byDevice.get(11).roomCurrentTempThermostat).toBe(25);
+    expect(byDevice.get(11).roomTargetTempThermostat).toBe(26);
+    expect(byDevice.get(22).roomCurrentTempThermostat).toBe(18);
+    expect(byDevice.get(22).roomTargetTempThermostat).toBe(19);
   });
 
   it('radi TAČNO JEDAN upit za uređaje, ne po jedan po događaju', async () => {
@@ -162,10 +162,10 @@ describe('B-019: heating-events mapira temperaturu po uređaju', () => {
     const byDevice = new Map<number, any>(
       res.data.map((d: any): [number, any] => [d.deviceId, d]),
     );
-    expect(byDevice.get(11).curretTempThermostat).toBe(25);
+    expect(byDevice.get(11).roomCurrentTempThermostat).toBe(25);
     // Tuđi uređaj mora biti null, a ne 30.
-    expect(byDevice.get(22).curretTempThermostat).toBeNull();
-    expect(byDevice.get(22).targetTempThermostat).toBeNull();
+    expect(byDevice.get(22).roomCurrentTempThermostat).toBeNull();
+    expect(byDevice.get(22).roomTargetTempThermostat).toBeNull();
   });
 
   it('termostat bez izmjerenih vrijednosti daje null, ne undefined', async () => {
@@ -177,17 +177,20 @@ describe('B-019: heating-events mapira temperaturu po uređaju', () => {
     ]);
     const res = await service.getHeatingEvents(1, baseQuery);
 
-    expect(res.data[0].curretTempThermostat).toBeNull();
-    expect(res.data[0].targetTempThermostat).toBeNull();
+    expect(res.data[0].roomCurrentTempThermostat).toBeNull();
+    expect(res.data[0].roomTargetTempThermostat).toBeNull();
   });
 
-  it('legacy nazivi polja (uključujući typo) ostaju u odgovoru', async () => {
+  it('polja sobe nose porodicu u imenu, bez typo-a', async () => {
     const { service } = makeFakeDb(devices, events);
     const res = await service.getHeatingEvents(1, baseQuery);
 
-    // FE2-8 zaključava typo u ugovoru; ne smije nestati.
+    // FE2-8 je zaključao typo `curretTempThermostat`; on je uklonjen u `32`,
+    // zajedno sa preimenovanjem u `room…` — polje i dalje mora postojati,
+    // samo pod imenom koje kaže da je temperatura sobe.
     expect(Object.keys(res.data[0])).toEqual(
-      expect.arrayContaining(['curretTempThermostat', 'targetTempThermostat']),
+      expect.arrayContaining(['roomCurrentTempThermostat', 'roomTargetTempThermostat']),
     );
+    expect(Object.keys(res.data[0])).not.toContain('curretTempThermostat');
   });
 });

@@ -6,7 +6,7 @@ import type { DashboardResponse } from '../types';
  * „Nema podataka" nije nula (`18` §5).
  *
  * Tri greške koje ovaj test čuva, sve tri su bile u kodu:
- *   - `currentTemp ?? 0` je nedostatak mjerenja prikazivao kao 0,0 °C;
+ *   - `roomCurrentTemp ?? 0` je nedostatak mjerenja prikazivao kao 0,0 °C;
  *   - `lastUpdate: new Date()` je vrijeme računanja prikazivao kao vrijeme
  *     mjerenja, pa je svježina uvijek izgledala savršena;
  *   - `homes[0]` je prikazivao prvi dom, a ne aktivni.
@@ -34,8 +34,8 @@ function response(overrides: Partial<DashboardResponse> = {}): DashboardResponse
         thermostats: [
           {
             alias: 'dnevna',
-            currentTemp: 21.5,
-            targetTemp: 22,
+            roomCurrentTemp: 21.5,
+            roomTargetTemp: 22,
             mode: 'AUTO',
             lastSeen: '2026-11-18T08:00:00.000Z',
             program: [],
@@ -62,10 +62,10 @@ describe('processDashboardData — istinitost podataka', () => {
       }),
     );
 
-    expect(data.currentTemp).toBeNull();
-    expect(data.targetTemp).toBeNull();
+    expect(data.roomCurrentTemp).toBeNull();
+    expect(data.roomTargetTemp).toBeNull();
     // Bitno: null nije 0 — `toBe(0)` bi prošlo da je zamjena ostala.
-    expect(data.currentTemp).not.toBe(0);
+    expect(data.roomCurrentTemp).not.toBe(0);
   });
 
   it('stvarna 0 °C ostaje 0 — ne pretvara se u „nema podataka"', () => {
@@ -77,8 +77,8 @@ describe('processDashboardData — istinitost podataka', () => {
             thermostats: [
               {
                 alias: 'dnevna',
-                currentTemp: 0,
-                targetTemp: 0,
+                roomCurrentTemp: 0,
+                roomTargetTemp: 0,
                 mode: 'AUTO',
                 lastSeen: '2026-11-18T08:00:00.000Z',
                 program: [],
@@ -90,8 +90,8 @@ describe('processDashboardData — istinitost podataka', () => {
       }),
     );
 
-    expect(data.currentTemp).toBe(0);
-    expect(data.targetTemp).toBe(0);
+    expect(data.roomCurrentTemp).toBe(0);
+    expect(data.roomTargetTemp).toBe(0);
   });
 
   it('svježina je zadnje javljanje termostata, a ne vrijeme računanja', () => {
@@ -113,8 +113,8 @@ describe('processDashboardData — istinitost podataka', () => {
             thermostats: [
               {
                 alias: 'dnevna',
-                currentTemp: 20,
-                targetTemp: 21,
+                roomCurrentTemp: 20,
+                roomTargetTemp: 21,
                 mode: 'AUTO',
                 program: [],
               },
@@ -136,8 +136,8 @@ describe('processDashboardData — istinitost podataka', () => {
           thermostats: [
             {
               alias: 'prvi dom',
-              currentTemp: 18,
-              targetTemp: 19,
+              roomCurrentTemp: 18,
+              roomTargetTemp: 19,
               mode: 'AUTO',
               lastSeen: '2026-11-18T06:00:00.000Z',
               program: [],
@@ -150,8 +150,8 @@ describe('processDashboardData — istinitost podataka', () => {
           thermostats: [
             {
               alias: 'drugi dom',
-              currentTemp: 23,
-              targetTemp: 24,
+              roomCurrentTemp: 23,
+              roomTargetTemp: 24,
               mode: 'AUTO',
               lastSeen: '2026-11-18T09:00:00.000Z',
               program: [],
@@ -163,11 +163,11 @@ describe('processDashboardData — istinitost podataka', () => {
     });
 
     const data = processDashboardData(twoHomes, 2);
-    expect(data.currentTemp).toBe(23);
+    expect(data.roomCurrentTemp).toBe(23);
     expect(data.lastSeen).toBe('2026-11-18T09:00:00.000Z');
 
     // Nepoznat/odsutan aktivni profil: ostaje prvi, ali se to vidi po broju.
-    expect(processDashboardData(twoHomes)?.currentTemp).toBe(18);
+    expect(processDashboardData(twoHomes)?.roomCurrentTemp).toBe(18);
   });
 
   it('stopa anomalija se računa iz stvarnih događaja', () => {
@@ -175,8 +175,8 @@ describe('processDashboardData — istinitost podataka', () => {
       id: 1,
       startedAt: '2026-11-17T05:00:00.000Z',
       endedAt: '2026-11-17T06:00:00.000Z',
-      targetTemp: 21,
-      currentTemp: 19,
+      roomTargetTemp: 21,
+      roomCurrentTemp: 19,
       durationMinutes: 60,
       isAnomaly: true,
     };
@@ -188,8 +188,8 @@ describe('processDashboardData — istinitost podataka', () => {
             thermostats: [
               {
                 alias: 'dnevna',
-                currentTemp: 21,
-                targetTemp: 21,
+                roomCurrentTemp: 21,
+                roomTargetTemp: 21,
                 mode: 'AUTO',
                 lastSeen: '2026-11-18T08:00:00.000Z',
                 program: [],

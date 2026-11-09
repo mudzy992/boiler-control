@@ -308,12 +308,12 @@ export const AnalyticsScreen = () => {
     const list = (home?.thermostats ?? []) as {
       id: number;
       alias?: string;
-      currentTemp?: number | null;
-      targetTemp?: number | null;
+      roomCurrentTemp?: number | null;
+      roomTargetTemp?: number | null;
     }[];
     return list.filter(
       (thermostat) =>
-        typeof thermostat.currentTemp === 'number' && typeof thermostat.targetTemp === 'number',
+        typeof thermostat.roomCurrentTemp === 'number' && typeof thermostat.roomTargetTemp === 'number',
     );
   }, [dashboardQuery.data]);
 
@@ -458,8 +458,8 @@ export const AnalyticsScreen = () => {
               </PanelRow>
             ) : (
               thermostats.map((thermostat, index) => {
-                const actual = thermostat.currentTemp as number;
-                const target = thermostat.targetTemp as number;
+                const actual = thermostat.roomCurrentTemp as number;
+                const target = thermostat.roomTargetTemp as number;
                 const ratio = target > 0 ? actual / target : 0;
                 return (
                   <PanelRow

@@ -79,7 +79,7 @@ export const DashboardSchedule = ({
             <span className="rounded bg-success/10 px-2 py-1 text-xs font-semibold text-success">
               {t('dashboard.activeProgram', {
                 time: formatStartMinute(activeProgram.startMinute),
-                temp: activeProgram.targetTemp.toFixed(1),
+                temp: activeProgram.roomTargetTemp.toFixed(1),
               })}
             </span>
           ) : (
@@ -141,7 +141,7 @@ export const DashboardSchedule = ({
                             <span className="font-mono">
                               {formatStartMinute(p.startMinute)}
                             </span>
-                            <span>{p.targetTemp.toFixed(1)}°C</span>
+                            <span>{p.roomTargetTemp.toFixed(1)}°C</span>
                           </div>
                         );
                       })}

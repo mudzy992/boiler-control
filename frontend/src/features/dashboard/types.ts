@@ -32,7 +32,8 @@ export interface Recommendation {
 export interface ThermostatProgram {
   dayType: string;
   startMinute: number;
-  targetTemp: number;
+  /** Cilj **sobe** za taj interval (`32`). */
+  roomTargetTemp: number;
   orderIndex: number;
 }
 
@@ -40,8 +41,10 @@ export interface HeatingEvent {
   id: number;
   startedAt: string;
   endedAt: string | null;
-  targetTemp: number;
-  currentTemp: number;
+  /** Cilj sobe u trenutku događaja (`32`). */
+  roomTargetTemp: number;
+  /** Stvarna temperatura sobe u trenutku događaja (`32`). */
+  roomCurrentTemp: number;
   durationMinutes: number;
   hvacAction?: string;
   isAnomaly: boolean;
@@ -54,8 +57,8 @@ export interface HeatingEventRow extends HeatingEvent {
 export interface Thermostat {
   alias: string;
   /** `null` = termostat nije poslao temperaturu; nije isto što i 0 °C. */
-  currentTemp: number | null;
-  targetTemp: number | null;
+  roomCurrentTemp: number | null;
+  roomTargetTemp: number | null;
   mode: string;
   /** Zadnje javljanje uređaja; `null` = nikad (ili polje nije poslano). */
   lastSeen?: string | null;
@@ -82,8 +85,8 @@ export interface ProcessedDashboard {
   anomalyCount: number;
   anomalyRate: number;
   /** `null` = nema mjerenja. Nikad 0 kao zamjena za „nema podataka". */
-  currentTemp: number | null;
-  targetTemp: number | null;
+  roomCurrentTemp: number | null;
+  roomTargetTemp: number | null;
   /** Zadnje javljanje termostata; `null` = nema podataka o svježini. */
   lastSeen: string | null;
   recentEvents: HeatingEvent[];

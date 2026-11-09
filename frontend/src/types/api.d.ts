@@ -213,6 +213,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/daily-record/shadow-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ShadowReportController_shadowReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard": {
         parameters: {
             query?: never;
@@ -589,6 +605,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["HomeProfileController_findActive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/home-profiles/boiler-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HomeProfileController_boilerCatalog"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1278,10 +1310,6 @@ export interface components {
             totalDurationMin: number;
         };
         DashboardHeatingEventDto: {
-            /** @description Iz `roomCurrentTemp` (događaj, NOT NULL). */
-            currentTemp: number;
-            /** @description Vrijednost s termostata, `null` ako termostat nema `roomCurrentTemp`. Typo je iz izvornog koda. */
-            curretTempThermostat: Record<string, never> | null;
             deviceId: number;
             /** @description 0 ako `timestampEnd` ne postoji. */
             durationMinutes: number;
@@ -1289,13 +1317,17 @@ export interface components {
             endedAt: string | null;
             hvacAction: string;
             id: number;
+            /** @description Temperatura sobe iz događaja (`roomCurrentTemp`, NOT NULL). */
+            roomCurrentTemp: number;
+            /** @description Temperatura sobe s termostata, `null` ako termostat nema `roomCurrentTemp`. */
+            roomCurrentTempThermostat: Record<string, never> | null;
+            /** @description Cilj sobe iz događaja (`roomTargetTemp`, NOT NULL). */
+            roomTargetTemp: number;
+            /** @description Cilj sobe s termostata. */
+            roomTargetTempThermostat: Record<string, never> | null;
             source: string;
             /** Format: date-time */
             startedAt: string;
-            /** @description Iz `roomTargetTemp` (događaj, NOT NULL). */
-            targetTemp: number;
-            /** @description Vrijednost s termostata. */
-            targetTempThermostat: Record<string, never> | null;
         };
         DashboardHeatingEventsMetaDto: {
             /** @description `take ?? total` — bez paginacije jednako `total`. */
@@ -1370,10 +1402,6 @@ export interface components {
             windowType: components["schemas"]["HomeProfileWindowType"];
         };
         DashboardRecentHeatingEventDto: {
-            /** @description Iz `roomCurrentTemp` (događaj). */
-            currentTemp: number;
-            /** @description NAMJERNO zadržan typo `curret` iz izvornog koda — preimenovanje bi slomilo FE. */
-            curretTempThermostat: Record<string, never> | null;
             deviceId: number;
             /** @description 0 ako `timestampEnd` ne postoji (l.148-152). */
             durationMinutes: number;
@@ -1384,14 +1412,18 @@ export interface components {
             isAnomaly: boolean;
             /** Format: date-time */
             proposedEndTime: string | null;
+            /** @description Temperatura sobe iz događaja (`roomCurrentTemp`). */
+            roomCurrentTemp: number;
+            /** @description Temperatura sobe s termostata u trenutku čitanja. Ranije `curretTempThermostat` — typo je ispravljen u istoj izmjeni u kojoj je polje dobilo porodicu u imenu (`32`). */
+            roomCurrentTempThermostat: Record<string, never> | null;
+            /** @description Cilj sobe iz događaja (`roomTargetTemp`). */
+            roomTargetTemp: number;
+            /** @description Cilj sobe s termostata u trenutku čitanja, ili null. */
+            roomTargetTempThermostat: Record<string, never> | null;
             /** @description Slobodan string iz kolone `source`. */
             source: string;
             /** Format: date-time */
             startedAt: string;
-            /** @description Iz `roomTargetTemp` (događaj). */
-            targetTemp: number;
-            /** @description Ciljna temperatura s termostata u trenutku čitanja, ili null. */
-            targetTempThermostat: Record<string, never> | null;
         };
         DashboardResponseDto: {
             capabilities: components["schemas"]["DashboardCapabilitiesDto"];
@@ -1422,8 +1454,6 @@ export interface components {
         };
         DashboardThermostatDto: {
             alias: Record<string, never> | null;
-            /** @description Iz `roomCurrentTemp`. */
-            currentTemp: Record<string, never> | null;
             /** @description Vanjski id uređaja (string), nije interni `id`. */
             deviceId: string;
             id: number;
@@ -1433,15 +1463,18 @@ export interface components {
             lastSeen: string | null;
             mode: components["schemas"]["ThermostatMode"];
             program: components["schemas"]["DashboardThermostatProgramDto"][];
-            /** @description Iz `roomTargetTemp`. */
-            targetTemp: Record<string, never> | null;
+            /** @description Temperatura **vazduha u sobi** koju termostat očitava (`roomCurrentTemp`). Nije polazna voda — ona je u `system.boiler.actualFlowTemp` (`32`). */
+            roomCurrentTemp: Record<string, never> | null;
+            /** @description Cilj **sobe** (`roomTargetTemp`), fiksni ili iz programa. */
+            roomTargetTemp: Record<string, never> | null;
             vendor: string;
         };
         DashboardThermostatProgramDto: {
             dayType: components["schemas"]["DayType"];
             orderIndex: number;
+            /** @description Cilj **sobe** za taj interval, iz kolone `targetTemp` (`32`). */
+            roomTargetTemp: number;
             startMinute: number;
-            targetTemp: number;
         };
         DashboardWeatherDto: {
             condition: Record<string, never> | null;
@@ -2098,6 +2131,28 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ShadowReportController_shadowReport: {
+        parameters: {
+            query: {
+                homeProfileId: string;
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Shadow izvještaj za dom i period */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2814,6 +2869,23 @@ export interface operations {
         };
     };
     HomeProfileController_findActive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeProfileController_boilerCatalog: {
         parameters: {
             query?: never;
             header?: never;

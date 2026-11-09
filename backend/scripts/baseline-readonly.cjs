@@ -284,7 +284,19 @@ async function main() {
         'mjerenje moguće.',
     );
 
-    // Kratak sažetak kao anotacije: log se ne može preuzeti, a ovo može.
+    // Sažetak po sekcijama: log se ne može preuzeti, a anotacije mogu (max ~10).
+    if (homes) {
+      const withModel = homes.filter((h) => h.boilerCatalogId != null).length;
+      notice(
+        `domovi: ${homes.length}, sa odabranim modelom iz kataloga: ${withModel}`,
+      );
+    }
+    if (gas) {
+      const readings = gas.reduce((sum, row) => sum + Number(row.readings), 0);
+      const m3 = gas.reduce((sum, row) => sum + Number(row.total_m3 ?? 0), 0);
+      notice(`plin: ${readings} očitanja, ${m3.toFixed(1)} m³ ukupno`);
+    }
+
     const dailyTotals = (daily ?? []).reduce(
       (acc, row) => ({
         rows: acc.rows + Number(row.rows),

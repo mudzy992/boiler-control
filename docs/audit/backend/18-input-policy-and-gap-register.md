@@ -265,7 +265,7 @@ Provjera registra praznina (docs/audit/backend/18)
 Registar potpun.            (exit 0)
 ```
 
-**Ali registar nije plan.** Dvadeset praznina (poslije `20`, `21` i `22`) znači da podaci i model postoje, a da odluka još ne postoji: noćni minimum, kontroler, mjerenje ishoda i tvrdnja o uštedi su i dalje ispred.
+**Ali registar nije plan.** Dvadeset praznina (poslije `20`, `21`, `22` i `23`) znači da podaci, model i **ograda** postoje, a da **odluka** još ne postoji: noćni minimum je izmjeren i tvrde granice su napisane (`23`), ali kontroler koji ih primjenjuje i tvrdnja o uštedi su i dalje ispred. Praznina se ne zatvara time što je pravilo napisano — nego time što ga predlog stvarno poštuje.
 
 ---
 

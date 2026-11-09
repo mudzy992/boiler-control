@@ -577,7 +577,7 @@ Posljednja dva reda su razlog zašto se ide u shadow režim, a ne direktno na bo
 | 2 | `ThermostatObservation` (5 min) — **urađeno 2026-11-09, vidi `21`** | bez serije nema `a`/`b` | 1 |
 | 3 | `HomeModel` + identifikacija `b` (off) — **izmijenjeno:** `s` iz dnevnog bilansa, vidi `22` §0 | najlakše i najstabilnije prvo | 2 |
 | 4 | identifikacija `a` (on) + `s` sa CI — **`s` urađeno 2026-11-10 (`22`), `a` ostaje** | daje nagib kuće | 3 |
-| 5 | noćni minimum + tvrda granica | sigurnost prije optimizacije | 1 |
+| 5 | noćni minimum + tvrda granica — **urađeno 2026-11-11, vidi `23`** | sigurnost prije optimizacije | 1 |
 | 6 | kontroler: spuštanje do granice | donosi uštedu | 4, 5 |
 | 7 | mjerenje ishoda + `u_day` | omogućava tvrdnju o uštedi | 1, 6 |
 | 8 | analog-dani kao težine/fallback | poboljšava hladni start | 2, 4 |

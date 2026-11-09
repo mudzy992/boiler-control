@@ -92,15 +92,31 @@ uništilo podatak koji korisnik možda želi vidjeti. Ali:
   (`forbidNonWhitelisted: true` bi inače vratio 400);
 - novi klijent šalje `boilerCatalogId`.
 
-**Frontend još nije promijenjen** — polje je i dalje tekstualno. To je sljedeći korak
-(§7) i do tada je stanje svjesno: tekst se čuva, ali **ne utiče ni na šta**, pa nema
-lažnog savjeta. Ono što bi bilo opasno — da tekst i dalje otvara vrata snižavanju — više
-se ne dešava.
+U UI-u je slobodan tekst **zamijenjen izborom iz kataloga** (`Select` grupisan po
+marki). Opcija nosi raspon samo kad je potvrđen; za `TO_VERIFY` piše „raspon nije
+potvrđen" — broj napisan tamo izgledao bi kao podatak proizvođača. Ispod izbora stoji
+**posljedica**, u tri stanja:
+
+| Stanje | Šta piše |
+|---|---|
+| nije odabran | „Bez odabranog modela aplikacija ne savjetuje snižavanje polazne — samo je podiže ako je hladno." |
+| odabran, nepotvrđen | „…nije potvrđeno da su grijanje i topla voda odvojena podešavanja, pa aplikacija ne savjetuje snižavanje." |
+| odabran, potvrđen | „Model potvrđen … snižavanje polazne je bezbjedno." |
+
+Dvije posljedice koje su namjerno ostavljene vidljivima:
+
+- **prazan izbor se šalje kao `null`**, ne kao `''` — `''` bi backend odbio kao nepoznat
+  zapis, a `null` znači „obriši odabir";
+- ako je u profilu zapis kojeg **više nema u katalogu**, ne briše se sam: prikazuje se
+  kao opcija sa sirovim id-em, da korisnik vidi šta je sačuvano i svjesno odabere novo.
+
+Katalog se dohvata paralelno sa profilom; ako padne, forma radi bez izbora modela — što je
+sigurno stanje (nema savjeta o snižavanju), a ne bijela stranica.
 
 ## 6. Provjere
 
-`npx jest src/modules/BoilerCatalog src/modules/HomeProfile src/modules/DailyRecord` →
-**226 testova, 226 prošlo**:
+Backend — `npx jest src/modules/BoilerCatalog src/modules/HomeProfile src/modules/DailyRecord`
+→ **226 testova, 226 prošlo**:
 
 - katalog: integritet, jedinstveni id-evi, potvrđeni imaju izvor i brojeve, nepotvrđeni
   **nemaju** brojeve, pokvaren katalog se prepoznaje;
@@ -110,6 +126,11 @@ se ne dešava.
 - kontroler: `MODEL_UNVERIFIED` blokira spuštanje, ali ne i podizanje;
 - endpoint: katalog izlaže `flowAdviceAllowed`, ne izlaže interne parametre.
 
+Frontend — `npx vitest run` → **146 testova, 146 prošlo** (od toga 12 novih za
+`familyLabel`/`catalogGroups`/`selectionHint`/`isKnownFamilyId`: nepotvrđen zapis nema
+izmišljen raspon, nosi natuknicu, prazan katalog ne ruši formu). `tsc --noEmit` i `eslint`
+čisti.
+
 `python3 scripts/audit/boiler_catalog_check.py` → `Katalog ispravan.`
 (13 zapisa: 4 potvrđena, 9 za potvrdu.)
 
@@ -117,7 +138,7 @@ se ne dešava.
 
 | Šta | Zašto |
 |---|---|
-| odabir modela u UI (picker umjesto teksta) | traži izmjenu forme, zod šeme i prevoda; backend je spreman (`GET .../boiler-catalog`) |
-| uklanjanje `boilerModel` iz DTO-a | tek kad klijent prestane da ga šalje |
+| uklanjanje `boilerModel` iz DTO-a | tek kad klijent prestane da ga šalje (sada ga ne šalje, ali stari tabovi još mogu) |
+| prijevod natuknica na engleski | natuknice su za sada samo na bosanskom — to su rečenice, ne labele, pa traže pravi prijevod, ne mašinski |
 | dopuna 9 zapisa iz priručnika | `19` §7.1; do tada vrijedi „nepotvrđeno → ne savjetuj" |
 | granica po emiteru iz modela (`underfloorMaxFlowC`) | polje u katalogu je danas `null` za sve zapise — nema izvora, pa se ne koristi |

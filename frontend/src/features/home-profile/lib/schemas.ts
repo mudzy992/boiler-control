@@ -35,7 +35,9 @@ export const CreateHomeProfileSchema = z.object({
   heatingType: HomeProfileHeatingTypeSchema,
   constructionYear: z.number().int().min(1800).max(new Date().getFullYear()),
   numberOfResidents: z.number().int().min(1).max(50).optional(),
+  // Zastarjelo: prima se da stari podaci ne puknu, odluke ne zavise od njega.
   boilerModel: z.string().max(100).optional(),
+  boilerCatalogId: z.string().min(1).max(100).optional(),
   hasFloorHeating: z.boolean().optional(),
   targetMorningTemp: z.number().min(10).max(35).optional(),
   targetDayTemp: z.number().min(10).max(35).optional(),
@@ -58,6 +60,7 @@ export const HomeProfileResponseSchema = z.object({
   constructionYear: z.number().int(),
   numberOfResidents: z.number().int().optional(),
   boilerModel: z.string().optional(),
+  boilerCatalogId: z.string().nullable().optional(),
   hasFloorHeating: z.boolean(),
   targetMorningTemp: z.number().optional(),
   targetDayTemp: z.number().optional(),

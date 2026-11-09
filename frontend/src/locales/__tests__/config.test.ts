@@ -44,9 +44,10 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 403 = prior 401 + profile.localeBs/localeEn.
-    // Pad znači da je neko obrisao ključ ili dodao novi bez prijevoda.
-    expect(en.length).toBe(403);
+    // Čuva i broj: 406 = prior 403 + homeProfile.boilerModel{None,Stale,Legacy}
+    // (izbor modela iz kataloga, `25`). Pad znači da je neko obrisao ključ ili
+    // dodao novi bez prijevoda — tada se broj mijenja svjesno, u istom commitu.
+    expect(en.length).toBe(406);
   });
 });
 

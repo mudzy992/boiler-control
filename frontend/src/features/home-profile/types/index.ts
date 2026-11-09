@@ -32,6 +32,7 @@ export interface CreateHomeProfileDto {
   constructionYear: number;
   numberOfResidents?: number;
   boilerModel?: string;
+  boilerCatalogId?: string | null;
   hasFloorHeating?: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;
@@ -56,6 +57,7 @@ export interface HomeProfileResponse {
   constructionYear: number;
   numberOfResidents?: number;
   boilerModel?: string;
+  boilerCatalogId?: string | null;
   hasFloorHeating: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;

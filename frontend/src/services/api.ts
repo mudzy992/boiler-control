@@ -8,6 +8,7 @@ import type {
 // potpis metode prati ugovor umjesto ručno pisane deklaracije.
 import type { components } from '../types/api';
 import { shouldForceLoginRedirectOn401 } from './auth401';
+import type { BoilerCatalog } from '../features/home-profile/lib/boiler-catalog';
 
 /**
  * FE2-7 (FE-009): API base URL **bez** dev fallbacka.
@@ -529,6 +530,17 @@ export class ApiClient {
 
   async updateHomeProfile(id: number, data: UpdateHomeProfileDto): Promise<HomeProfileResponse> {
     const response = await this.client.patch(`/home-profile/${id}`, data);
+    return response.data;
+  }
+
+  /**
+   * Katalog bojlera (`19` §1). Nije korisnički podatak nego šifrarnik, pa se
+   * ne kešira u profilu: kad se katalog dopuni, klijent odmah vidi novi zapis.
+   */
+  async getBoilerCatalog(): Promise<BoilerCatalog> {
+    // Plural ruta: `HomeProfilesController` je onaj koji validira DTO-ove;
+    // singularni `/home-profile` je stariji i nema katalog.
+    const response = await this.client.get('/home-profiles/boiler-catalog');
     return response.data;
   }
 

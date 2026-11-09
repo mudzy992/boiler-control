@@ -22,6 +22,14 @@ on:
         description: 'Pročitaj baseline iz produkcije (read-only)'
         type: boolean
         default: false
+      # Upis u PRODUKCIJU. Zaseban prekidač od `baseline`, jer čitanje i pisanje
+      # ne smiju dijeliti jednu odluku: `baseline=true` nikad ne piše, a
+      # `backfill_apply=true` traži `DATABASE_URL_BACKFILL` i upisuje redove za
+      # prošle dane. Prvo se u istom jobu ispiše dry-run, pa se upisuje.
+      backfill_apply:
+        description: 'UPIŠI rekonstruisane DailyRecord redove u produkciju'
+        type: boolean
+        default: false
   push:
     branches: [main, arena/da41e5ba-boiler-control]
     paths:
@@ -195,7 +203,7 @@ jobs:
   # Zajedno sa `inputs.baseline` to znači: build se nikad ne miješa sa čitanjem
   # produkcije, a pokretanje je jedna komanda.
   baseline:
-    if: github.event_name == 'workflow_dispatch' && inputs.baseline
+    if: github.event_name == 'workflow_dispatch' && (inputs.baseline || inputs.backfill_apply)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -231,3 +239,12 @@ jobs:
         env:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: npm run backfill:daily -- --dry-run
+
+      # Upis je odvojen korak i odvojen kredencijal. `ON CONFLICT DO NOTHING`
+      # i jedna transakcija: ponovni run ne pravi duplikate, a prekinut run ne
+      # ostavlja pola historije.
+      - name: Backfill daily records (APPLY)
+        if: inputs.backfill_apply
+        env:
+          DATABASE_URL_BACKFILL: ${{ secrets.DATABASE_URL_BACKFILL }}
+        run: npm run backfill:daily -- --apply

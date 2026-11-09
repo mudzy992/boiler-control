@@ -48,6 +48,20 @@ Plin je bitno bolji izvor nego što se mislilo: medijana razmaka je jedan dan, p
 dnevna potrošnja postoji za 131 dan. Ono što ne postoji je veza plin ↔ stepen-dan
 (0 dana), jer za stepen-dan treba dnevni prosjek vanjske temperature.
 
+### Stanje poslije upisa (izmjereno, run `42608751388`)
+
+| | |
+|---|---|
+| `DailyRecord` redova | **302** (301 backfill + 1 postojeći) |
+| sa plinom | 131 |
+| sa stepen-danom | 4 |
+| sa `shadow*` | **0** — kako i treba |
+| ponovni dry-run | **0 novih dana** → upis je idempotentan |
+| plin po stepen-danu (prvi put izračunljivo) | **4 dana, 0,836 m³/K·dan** |
+
+Onih 0,836 je prvi broj te vrste koji sistem ima; ali je iz **4 dana** i ne nosi
+zaključak — treba ≥ 30 dana sa oba podatka prije nego se iz njega bilo šta tvrdi.
+
 ## 3. Šta bi se upisalo, po stupcu
 
 | Stupac | Izvor | Uslov |

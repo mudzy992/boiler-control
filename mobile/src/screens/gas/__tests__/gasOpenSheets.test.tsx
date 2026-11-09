@@ -104,7 +104,14 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
 
     // Tražimo SADRŽAJ sheeta, ne `showAddModal`: forma ima svoje polje, koje
     // postoji samo kad je sheet stvarno montiran u vidljivom stanju.
-    expect(await result.findByPlaceholderText('gas.counterValuePlaceholder')).toBeTruthy();
+    // Eksplicitan timeout: `Sheet` montira sadržaj tek poslije animacije, a
+    // zadani `findBy*` čeka 1 s. Na opterećenom CI runneru (2 jezgre, više
+    // paralelnih workers) to povremeno nije dovoljno i test padne kao „sheet se
+    // ne otvara" — iako se otvori. Flaky test u CI-ju je gori od nikakvog, jer
+    // se crveni znak počne ignorisati.
+    expect(
+      await result.findByPlaceholderText('gas.counterValuePlaceholder', {}, { timeout: 5000 }),
+    ).toBeTruthy();
     await result.unmount();
     queryClient.clear();
   });
@@ -114,9 +121,9 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
 
     // Zaglavlje liste (i meni u njemu) postoji tek kad očitanja stignu, pa se
     // čeka pojava umjesto pretpostavke da je list već izrenderovan.
-    const trigger = await result.findByTestId('gas-filter-menu');
+    const trigger = await result.findByTestId('gas-filter-menu', {}, { timeout: 5000 });
     fireEvent.press(trigger);
-    const optionMonth = await result.findByTestId('gas-filter-option-month');
+    const optionMonth = await result.findByTestId('gas-filter-option-month', {}, { timeout: 5000 });
     expect(optionMonth).toBeTruthy();
 
     fireEvent.press(optionMonth);

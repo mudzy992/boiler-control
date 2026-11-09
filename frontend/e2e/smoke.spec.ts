@@ -59,7 +59,11 @@ test.describe('FE2-7 smoke: sagradjeni bundle', () => {
     // se odloženi čip zaista dohvatio i izvršio.
     await expect(page.getByRole('heading', { name: /Boiler Control/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Sign In|Prijava/i })).toBeVisible();
-    await expect(page.locator('input#identifier')).toBeVisible();
+    // `LoginPage` koristi `id="login-identifier"` (i `login-password`). Ovaj test
+    // je tražio `input#identifier`, što je bio ostatak starijeg markup-a — i to
+    // se nije vidjelo dok se e2e nije počeo izvršavati u CI-ju (A2).
+    await expect(page.locator('input#login-identifier')).toBeVisible();
+    await expect(page.locator('input#login-password')).toBeVisible();
   });
 
   test('API poziv ide na konfigurisani base, a NE na localhost:3020', async ({ page }) => {

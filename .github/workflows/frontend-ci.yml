@@ -1,10 +1,22 @@
 name: Frontend CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      # A2: auth e2e traži živ backend i prave kredencije. Zato je odvojen
+      # prekidač, a ne dio redovnog build-a — isti princip kao `baseline` u
+      # backend-build.yml: čitanje/probijanje produkcije ne smije se desiti
+      # slučajno uz običan push.
+      e2e_live:
+        description: 'Pokreni auth e2e protiv ŽIVOG API-ja (traži E2E_USER_* secrets)'
+        type: boolean
+        default: false
   push:
-    branches: [main, arena/c9961f17-boiler-control]
+    # `arena/**` je namjerno: ranije su ovdje bile dvije fiksne grane, pa radna
+    # grana nije bila pokrivena i CI se nije pokretao za nju.
+    branches: [main, 'arena/**']
   pull_request:
-    branches: [main, arena/c9961f17-boiler-control]
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -47,3 +59,40 @@ jobs:
       - name: Production build
         working-directory: frontend
         run: VITE_API_URL=https://api.example.com/api npm run build
+
+      # --- A2: e2e nad SAGRAĐENIM bundleom -------------------------------
+      #
+      # `smoke.spec.ts` presreće sve pozive ka API hostu, pa mu backend ne
+      # treba — provjerava da `dist/` stvarno radi u browseru i da u bundleu
+      # nema uklonjenog `localhost:3020` fallbacka.
+      #
+      # `auth.spec.ts` traži živ backend; bez `E2E_LIVE=1` se preskače sa
+      # razlogom u izvještaju. Time e2e job nikad ne pada zato što tuđi server
+      # ne odgovara.
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (built bundle)
+        working-directory: frontend
+        env:
+          # Isti URL kao u build koraku — `smoke.spec.ts` poredi zahtjeve s njim
+          # i bez toga bi test prolazio nad praznim očekivanjem.
+          VITE_API_URL: https://api.example.com/api
+          E2E_LIVE: ${{ github.event.inputs.e2e_live == 'true' && '1' || '' }}
+          E2E_USER_IDENTIFIER: ${{ secrets.E2E_USER_IDENTIFIER }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+        run: npx playwright test
+
+      - name: Playwright trace (on failure)
+        # Reporter je `list` + `github`, pa HTML izvještaja nema; ono što stvarno
+        # nastaje pri padu je `test-results/<test>/trace.zip` (`trace:
+        # retain-on-failure`). Ranije je ovdje stajala putanja do nepostojećeg
+        # `playwright-report` i korak je samo proizvodio šum.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results
+          retention-days: 7
+          if-no-files-found: ignore

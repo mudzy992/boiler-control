@@ -13,6 +13,8 @@ import {
   resolveHomeTimeZone,
   type TimeZoneSource,
 } from './proposal-schedule';
+import { jsonSnapshot } from '../../common/json-snapshot';
+
 
 /**
  * Verzija zapisa i proračuna koji ga je proizveo (`17` §11: svaki
@@ -271,12 +273,17 @@ export class DailyRecordWriter {
       where: { city },
       orderBy: { fetchedAt: 'desc' },
     });
+    // `temp_min`/`temp_max` su u šemi nullable, a `Number.isFinite` ne sužava
+    // tip — pa se provjera piše tako da TypeScript vidi isto što i mi.
+    const cachedMin = cached?.temp_min;
+    const cachedMax = cached?.temp_max;
     if (
-      cached &&
-      Number.isFinite(cached.temp_min) &&
-      Number.isFinite(cached.temp_max)
+      typeof cachedMin === 'number' &&
+      typeof cachedMax === 'number' &&
+      Number.isFinite(cachedMin) &&
+      Number.isFinite(cachedMax)
     ) {
-      return { tempMin: cached.temp_min, tempMax: cached.temp_max };
+      return { tempMin: cachedMin, tempMax: cachedMax };
     }
 
     return null;
@@ -332,7 +339,7 @@ export class DailyRecordWriter {
 
     // Sve što je motor dobio i vratio — da se isti broj može preračunati
     // (`17` §11, "reproducibilnost"). Bez ovoga je zapis tvrdnja bez dokaza.
-    const params = {
+    const params = jsonSnapshot({
       version: 1,
       timeZone: context.timeZone,
       timeZoneSource: context.timeZoneSource,
@@ -351,7 +358,7 @@ export class DailyRecordWriter {
         minC: FLOW_TEMP_MIN_C,
         maxC: FLOW_TEMP_MAX_C,
       },
-    };
+    });
 
     const base = {
       localDate: context.localDate,

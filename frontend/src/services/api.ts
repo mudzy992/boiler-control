@@ -9,7 +9,10 @@ import type {
 import type { components } from '../types/api';
 import { shouldForceLoginRedirectOn401 } from './auth401';
 import type { BoilerCatalog } from '../features/home-profile/lib/boiler-catalog';
-import type { ShadowReportResponse } from '../features/reports/types';
+import type {
+  DailyHistoryResponse,
+  ShadowReportResponse,
+} from '../features/reports/types';
 
 /**
  * FE2-7 (FE-009): API base URL **bez** dev fallbacka.
@@ -560,6 +563,20 @@ export class ApiClient {
     const response = await this.client.get('/daily-record/shadow-report', {
       params,
     });
+    return response.data;
+  }
+
+  /**
+   * Historija dnevnih zapisa (`31`). Vraća i porijeklo svakog reda
+   * (`LIVE` / `BACKFILL`) — bez toga bi rekonstruisan dan izgledao izmjeren.
+   */
+  async getDailyHistory(params: {
+    homeProfileId: number;
+    from?: string;
+    to?: string;
+    limit?: number;
+  }): Promise<DailyHistoryResponse> {
+    const response = await this.client.get('/daily-record/history', { params });
     return response.data;
   }
 

@@ -44,13 +44,14 @@ describe('i18n — inicijalizacija', () => {
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
-    // Čuva i broj: 430 = 406 + homeProfile.{boilerBrand,boilerBrandNone,
+    // Čuva i broj: 454 = 406 + homeProfile.{boilerBrand,boilerBrandNone,
     // boilerOutputKw,boilerOutputKwNone,boilerOutputKwNotInCatalog,
     // maxHeatingFlowC,maxHeatingFlowCHint,required} (kategorički odabir kotla i
     // najviša polazna, `25` §5.1) + reports.shadow* (16 ključeva za shadow
-    // izvještaj, `24` §6.5). Pad znači da je neko obrisao ključ ili dodao novi
-    // bez prijevoda — tada se broj mijenja svjesno, u istom commitu.
-    expect(en.length).toBe(430);
+    // izvještaj, `24` §6.5) + reports.history* (22 ključa za historiju dnevnih
+    // zapisa, `31`, 24 ključa). Pad znači da je neko obrisao ključ ili dodao novi bez
+    // prijevoda — tada se broj mijenja svjesno, u istom commitu.
+    expect(en.length).toBe(454);
   });
 });
 

@@ -6,7 +6,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -34,6 +39,10 @@ export class ShadowReportController {
   ) {}
 
   @Get('shadow-report')
+  // Opcioni parametri, kao i kod `history` — inače ugovor tvrdi da su obavezni.
+  @ApiQuery({ name: 'homeProfileId', required: false, type: Number })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
   @ApiOkResponse({ description: 'Shadow izvještaj za dom i period' })
   async shadowReport(
     @Req() req,

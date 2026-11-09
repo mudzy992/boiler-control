@@ -165,3 +165,58 @@ export interface DashboardHealthResponse {
   warnings: HealthWarning[];
   computedAt: string;
 }
+
+/**
+ * Historija dnevnih zapisa (`31`) — `GET /api/daily-record/history`.
+ *
+ * `origin` razlikuje izmjereno od rekonstruisanog; 301 dan je rekonstruisan iz
+ * starih događaja, pa se ne smije prikazati kao mjerenje.
+ */
+export type DailyRecordOrigin = 'LIVE' | 'BACKFILL';
+
+export interface DailyHistoryRow {
+  localDate: string;
+  proposedFlowTemp: number | null;
+  proposedAt: string | null;
+  cycles: number | null;
+  medianCycleMin: number | null;
+  dutyPercent: number | null;
+  overshootC: number | null;
+  undershootC: number | null;
+  flowSetC: number | null;
+  flowSetSource: string | null;
+  gasM3: number | null;
+  degreeDays: number | null;
+  nightUndershootC: number | null;
+  hysteresisK: number | null;
+  heatRateCPerHour: number | null;
+  shadowFlowC: number | null;
+  shadowAction: string | null;
+  origin: DailyRecordOrigin;
+  has: {
+    cycles: boolean;
+    gas: boolean;
+    degreeDays: boolean;
+    night: boolean;
+    hysteresis: boolean;
+    heatRate: boolean;
+    shadow: boolean;
+  };
+}
+
+export interface DailyHistoryResponse {
+  homeProfileId: number;
+  rows: DailyHistoryRow[];
+  summary: {
+    days: number;
+    live: number;
+    backfill: number;
+    withCycles: number;
+    withGas: number;
+    withDegreeDays: number;
+    withShadow: number;
+    firstDate: string | null;
+    lastDate: string | null;
+  };
+  truncated: boolean;
+}

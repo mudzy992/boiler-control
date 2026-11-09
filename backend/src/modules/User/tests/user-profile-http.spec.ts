@@ -204,4 +204,36 @@ describe('User profile HTTP kompatibilnost', () => {
       expect(updateMe).not.toHaveBeenCalled();
     });
   });
+
+    describe('PUT /api/user — jezik (`32`/`33`)', () => {
+    /*
+     * `locale` je do sada bio slobodan string, a klijenti su ga slali kao
+     * `bs-BS`/`en-US`. Zatečeni zapisi nose i `bs-BA`. Pravilo zato prihvata
+     * jezik + opcionu regiju, a odbija sve ostalo — vrijednost koja se sačuva a
+     * klijent je ne zna pretvori se u tihi fallback na engleski.
+     */
+    beforeEach(() => {
+      updateMe.mockReset();
+      updateMe.mockImplementation(async () => ({ id: 42 }));
+    });
+
+    it.each(['bs-BS', 'en-US', 'bs', 'en', 'bs-BA'])(
+      'prihvata %s',
+      async (locale) => {
+        const response = await request(app.getHttpServer())
+          .put('/api/user')
+          .send({ locale });
+        expect(response.status).toBe(200);
+        expect(updateMe).toHaveBeenCalledWith(42, expect.objectContaining({ locale }));
+      },
+    );
+
+    it.each(['fr-FR', 'bosanski', 'BS', 'bs-BSX'])('odbija %s', async (locale) => {
+      const response = await request(app.getHttpServer())
+        .put('/api/user')
+        .send({ locale });
+      expect(response.status).toBe(400);
+      expect(updateMe).not.toHaveBeenCalled();
+    });
+    });
 });

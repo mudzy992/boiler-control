@@ -51,15 +51,24 @@ export const ReportsPage = (): JSX.Element => {
   const historyTo = dayjs().format('YYYY-MM-DD');
   const historyLimit = 180;
 
+  /*
+   * Preporuke su straničene na serveru (`33`). Prije je backend tiho rezao na
+   * 100: korisnik sa 299 preporuka vidio je 100 i nije imao način da sazna da
+   * ima još. Sada se traži strana, a `total` iz zaglavlja kaže koliko ih je
+   * stvarno — i nudi se „učitaj još" dok se ne dođe do kraja.
+   */
+  const [pageSize, setPageSize] = useState(50);
   const reportsQuery = useQuery({
-    queryKey: queryKeys.reports,
-    queryFn: async (): Promise<Recommendation[]> => {
-      const data = await apiClient.getReports();
-      return Array.isArray(data) ? data : [];
+    queryKey: queryKeys.reportsPage(pageSize),
+    queryFn: async (): Promise<{ rows: Recommendation[]; total: number }> => {
+      const data = await apiClient.getReports({ limit: pageSize });
+      return { rows: Array.isArray(data.rows) ? data.rows : [], total: data.total };
     },
   });
 
-  const recommendations = reportsQuery.data ?? [];
+  const recommendations = reportsQuery.data?.rows ?? [];
+  const recommendationsTotal = reportsQuery.data?.total ?? 0;
+  const hasMoreRecommendations = recommendations.length < recommendationsTotal;
   const status = reportsQuery.isLoading
     ? 'loading'
     : reportsQuery.isError
@@ -162,6 +171,24 @@ export const ReportsPage = (): JSX.Element => {
           </CardContent>
         </Card>
       </QueryState>
+      {hasMoreRecommendations ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-text-secondary">
+            {t('common.showingOf', {
+              shown: recommendations.length,
+              total: recommendationsTotal,
+            })}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setPageSize((size) => Math.min(size + 50, 200))}
+            disabled={reportsQuery.isFetching}
+          >
+            {t('common.loadMore')}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -23,6 +23,13 @@ async function bootstrap() {
     origin: frontendUrl,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    /*
+     * `33`: broj ukupno dostupnih redova putuje u `X-Total-Count`. Bez ovoga
+     * preglednik to zaglavlje **ne vidi** (CORS izlaže samo safelisted
+     * zaglavlja), pa bi web tiho prikazao „0" i sakrio „učitaj još" — straničenje
+     * bi radilo na serveru, a izgledalo bi pokvareno u klijentu.
+     */
+    exposedHeaders: ['X-Total-Count'],
     // SEC-4: `credentials` je potrebno da browser pošalje httpOnly refresh
     // cookie na /api/auth/refresh. Uslovljeno je zastavicom kako bi rollback
     // bio čist — dok je `off`, CORS je doslovno kao prije ove promjene.

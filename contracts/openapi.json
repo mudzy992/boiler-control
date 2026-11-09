@@ -2177,6 +2177,11 @@
             "type": "string"
           },
           "locale": {
+            "description": "Jezik aplikacije. Ograničeno na jezike koje klijenti stvarno imaju — proizvoljan string bi se sačuvao, a ekran bi pao na fallback bez traga.",
+            "enum": [
+              "bs-BS",
+              "en-US"
+            ],
             "type": "string"
           },
           "name": {
@@ -4025,7 +4030,24 @@
     "/api/gas/readings": {
       "get": {
         "operationId": "GasReadingController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4038,7 +4060,7 @@
                 }
               }
             },
-            "description": ""
+            "description": "Ukupan broj redova je u `X-Total-Count` zaglavlju."
           }
         },
         "security": [
@@ -4514,7 +4536,24 @@
     "/api/recommendations": {
       "get": {
         "operationId": "RecommendationsController_getRecommendations",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4527,7 +4566,7 @@
                 }
               }
             },
-            "description": ""
+            "description": "Ukupan broj redova je u `X-Total-Count` zaglavlju."
           }
         },
         "security": [

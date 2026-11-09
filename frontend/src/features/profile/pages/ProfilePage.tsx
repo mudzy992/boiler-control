@@ -40,6 +40,8 @@ export const ProfilePage = (): JSX.Element => {
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+  /** Poruka servera, kad je ima — generička „nije uspjelo" ne kaže šta popraviti. */
+  const [saveDetail, setSaveDetail] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -79,8 +81,16 @@ export const ProfilePage = (): JSX.Element => {
     }
     setSaving(true);
     setSaveStatus('idle');
+    setSaveDetail(null);
     try {
+      /*
+       * `id` se NE šalje. Ranije je išao u tijelo (`...updateData`), a backend
+       * ima `forbidNonWhitelisted: true` — pa je svako spremanje profila
+       * završavalo sa 400 i ekran je samo tiho prelazio u „greška". Zato se
+       * jezik nije mogao sačuvati: nije bio problem u jeziku, nego u `id`-u.
+       */
       const {
+        id: _id,
         email: _email,
         gasPriceIncVat: _inc,
         gasPriceLastUpdatedAt: _updated,
@@ -96,7 +106,15 @@ export const ProfilePage = (): JSX.Element => {
       await setAppLanguage(locale);
       setProfile((prev) => (prev ? { ...prev, ...updateData, locale } : prev));
       setSaveStatus('ok');
-    } catch {
+    } catch (error: any) {
+      const raw = error?.response?.data?.message;
+      setSaveDetail(
+        typeof raw === 'string'
+          ? raw
+          : Array.isArray(raw)
+            ? raw.join(', ')
+            : null,
+      );
       setSaveStatus('error');
     } finally {
       setSaving(false);
@@ -127,7 +145,14 @@ export const ProfilePage = (): JSX.Element => {
         <StatusBanner variant="success" message={t('profile.saveOk')} />
       ) : null}
       {saveStatus === 'error' ? (
-        <StatusBanner variant="error" message={t('profile.saveError')} />
+        <StatusBanner
+          variant="error"
+          message={
+            saveDetail
+              ? `${t('profile.saveError')} (${saveDetail})`
+              : t('profile.saveError')
+          }
+        />
       ) : null}
       <QueryState status={status} onRetry={() => void loadProfile()}>
         <Card>

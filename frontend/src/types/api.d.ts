@@ -1776,7 +1776,11 @@ export interface components {
             gasPriceEffectiveFrom?: string;
             gasPriceExVat?: number;
             homeLocation?: string;
-            locale?: string;
+            /**
+             * @description Jezik aplikacije. Ograničeno na jezike koje klijenti stvarno imaju — proizvoljan string bi se sačuvao, a ekran bi pao na fallback bez traga.
+             * @enum {string}
+             */
+            locale?: "bs-BS" | "en-US";
             name?: string;
             password?: string;
             prefersDarkMode?: boolean;
@@ -2753,13 +2757,17 @@ export interface operations {
     };
     GasReadingController_findAll: {
         parameters: {
-            query?: never;
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Ukupan broj redova je u `X-Total-Count` zaglavlju. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3207,13 +3215,17 @@ export interface operations {
     };
     RecommendationsController_getRecommendations: {
         parameters: {
-            query?: never;
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Ukupan broj redova je u `X-Total-Count` zaglavlju. */
             200: {
                 headers: {
                     [name: string]: unknown;

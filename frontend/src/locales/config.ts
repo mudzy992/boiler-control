@@ -4,6 +4,8 @@ import { initReactI18next } from 'react-i18next';
 // English (US) translations
 const enUS = {
   common: {
+    loadMore: 'Load more',
+    showingOf: 'Showing {{shown}} of {{total}}.',
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
@@ -509,6 +511,8 @@ const enUS = {
 // Bosnian (Bosnia and Herzegovina) translations
 const bsBS = {
   common: {
+    loadMore: 'Učitaj još',
+    showingOf: 'Prikazano {{shown}} od {{total}}.',
     loading: 'Učitavanje...',
     error: 'Greška',
     success: 'Uspješno',

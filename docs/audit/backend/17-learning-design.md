@@ -575,8 +575,8 @@ Posljednja dva reda su razlog zašto se ide u shadow režim, a ne direktno na bo
 |---|---|---|---|
 | 1 | `DailyRecord` + jedan pisac u 06:00 — **urađeno 2026-11-08, vidi `20`** | bez dana nema šta da se uči | — |
 | 2 | `ThermostatObservation` (5 min) — **urađeno 2026-11-09, vidi `21`** | bez serije nema `a`/`b` | 1 |
-| 3 | `HomeModel` + identifikacija `b` (off) | najlakše i najstabilnije prvo | 2 |
-| 4 | identifikacija `a` (on) + `s` sa CI | daje nagib kuće | 3 |
+| 3 | `HomeModel` + identifikacija `b` (off) — **izmijenjeno:** `s` iz dnevnog bilansa, vidi `22` §0 | najlakše i najstabilnije prvo | 2 |
+| 4 | identifikacija `a` (on) + `s` sa CI — **`s` urađeno 2026-11-10 (`22`), `a` ostaje** | daje nagib kuće | 3 |
 | 5 | noćni minimum + tvrda granica | sigurnost prije optimizacije | 1 |
 | 6 | kontroler: spuštanje do granice | donosi uštedu | 4, 5 |
 | 7 | mjerenje ishoda + `u_day` | omogućava tvrdnju o uštedi | 1, 6 |

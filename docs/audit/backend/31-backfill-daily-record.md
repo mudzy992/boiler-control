@@ -4,8 +4,11 @@ Odgovor na dva pitanja: *kada je `DailyRecord` nastao* i *može li se historija
 popuniti iz onoga što je već u bazi*. Drugo pitanje ima izmjeren odgovor, ne
 procjenu: **301 dan** bi se mogao upisati, sa jasno označenim izvorom po stupcu.
 
-Sve u ovom dokumentu je izmjereno na produkciji kroz `backend-build.yml`,
-read-only kredencijalom. Nijedan red nije upisan.
+Sve u ovom dokumentu je izmjereno na produkciji kroz `backend-build.yml`.
+**Backfill je izvršen 2026-11-08**: upisano je **301 red** (run `42608075222`,
+kredencijal `DATABASE_URL_BACKFILL`, jedna transakcija). Prije upisa je u istom
+runu ispisan dry-run sa istim brojevima — 301 red, izvori: ciklusi 115, plin 131,
+stepen-dan 4, predlog 298.
 
 ---
 
@@ -39,11 +42,25 @@ tada rečeno u `Recommendation`.
 | `BoilerHistory` | 116 dana | 116 (ali v. §4) |
 | `ThermostatObservation` | 18 uzoraka ukupno, 1 dan sa ≥ 2 uzorka | 1 |
 | `WeatherCache` / `WeatherV2Cache` | zadnji fetch, ne historija | 0 |
-| **Ukupno za upis** | | **301** |
+| **Ukupno za upis** | | **301** (upisano) |
 
 Plin je bitno bolji izvor nego što se mislilo: medijana razmaka je jedan dan, pa
 dnevna potrošnja postoji za 131 dan. Ono što ne postoji je veza plin ↔ stepen-dan
 (0 dana), jer za stepen-dan treba dnevni prosjek vanjske temperature.
+
+### Stanje poslije upisa (izmjereno, run `42608751388`)
+
+| | |
+|---|---|
+| `DailyRecord` redova | **302** (301 backfill + 1 postojeći) |
+| sa plinom | 131 |
+| sa stepen-danom | 4 |
+| sa `shadow*` | **0** — kako i treba |
+| ponovni dry-run | **0 novih dana** → upis je idempotentan |
+| plin po stepen-danu (prvi put izračunljivo) | **4 dana, 0,836 m³/K·dan** |
+
+Onih 0,836 je prvi broj te vrste koji sistem ima; ali je iz **4 dana** i ne nosi
+zaključak — treba ≥ 30 dana sa oba podatka prije nego se iz njega bilo šta tvrdi.
 
 ## 3. Šta bi se upisalo, po stupcu
 
@@ -100,7 +117,10 @@ značilo da se dani režu po drugim granicama nego kod živih redova.
 
 ## 6. Šta ovo ne dokazuje
 
-- Nijedan red nije upisan — potreban je `DATABASE_URL_BACKFILL` u secrets.
+- Upis je potvrđen samo sa brojem redova i sažetkom izvora iz CI loga; nije
+  otvoren nijedan red i nije provjereno da li se vrijednosti poklapaju s onim što
+  je tog dana zaista bilo na kotlu. Prva provjera je moguća tek uz ponovni
+  `--dry-run` (sada bi vratio 0 novih dana) i uz čitanje nekoliko redova.
 - Brojevi su iz **jedne** kuće i jednog korisnika; nema podataka kako se ponaša
   na drugom.
 - Ne provjerava se da se backfill redovi slažu sa budućim živim redovima za isti

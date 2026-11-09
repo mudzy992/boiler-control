@@ -342,66 +342,96 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   }
                 >
                   <View
-                    accessible={false}
                     style={
-                      [
-                        {
-                          "alignItems": "flex-end",
-                          "flexDirection": "row",
-                        },
-                        null,
-                        undefined,
-                      ]
+                      {
+                        "gap": 2,
+                      }
                     }
-                    testID="dashboard-flow-target"
                   >
                     <Text
                       style={
                         [
                           {
-                            "color": "#e8edf4",
-                            "fontFamily": undefined,
-                            "fontSize": 15,
-                            "lineHeight": 20,
+                            "color": "#828d9e",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
-                          {
-                            "color": "#ff8a5f",
-                            "fontFamily": "monospace",
-                            "fontSize": 40,
-                            "fontVariant": [
-                              "tabular-nums",
-                            ],
-                            "letterSpacing": -0.5,
-                            "lineHeight": 42,
-                          },
+                          [
+                            {
+                              "letterSpacing": 1.4,
+                              "textTransform": "uppercase",
+                            },
+                            undefined,
+                          ],
                         ]
                       }
                     >
-                      51.0
+                      boiler.flowSetpoint
                     </Text>
-                    <Text
+                    <View
+                      accessible={false}
                       style={
                         [
                           {
-                            "color": "#e8edf4",
-                            "fontFamily": undefined,
-                            "fontSize": 15,
-                            "lineHeight": 20,
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
                           },
                           null,
-                          {
-                            "color": "#9aa6b6",
-                            "fontFamily": "monospace",
-                            "fontSize": 13,
-                            "marginBottom": 4,
-                            "marginLeft": 3,
-                          },
+                          undefined,
                         ]
                       }
+                      testID="dashboard-flow-target"
                     >
-                      °C
-                    </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#ff8a5f",
+                              "fontFamily": "monospace",
+                              "fontSize": 40,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 42,
+                            },
+                          ]
+                        }
+                      >
+                        51.0
+                      </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#e8edf4",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#9aa6b6",
+                              "fontFamily": "monospace",
+                              "fontSize": 13,
+                              "marginBottom": 4,
+                              "marginLeft": 3,
+                            },
+                          ]
+                        }
+                      >
+                        °C
+                      </Text>
+                    </View>
                   </View>
                   <View
                     style={
@@ -3237,66 +3267,96 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   }
                 >
                   <View
-                    accessible={false}
                     style={
-                      [
-                        {
-                          "alignItems": "flex-end",
-                          "flexDirection": "row",
-                        },
-                        null,
-                        undefined,
-                      ]
+                      {
+                        "gap": 2,
+                      }
                     }
-                    testID="dashboard-flow-target"
                   >
                     <Text
                       style={
                         [
                           {
-                            "color": "#111827",
-                            "fontFamily": undefined,
-                            "fontSize": 15,
-                            "lineHeight": 20,
+                            "color": "#59616e",
+                            "fontFamily": "monospace",
+                            "fontSize": 11,
+                            "lineHeight": 15,
                           },
                           null,
-                          {
-                            "color": "#c1411c",
-                            "fontFamily": "monospace",
-                            "fontSize": 40,
-                            "fontVariant": [
-                              "tabular-nums",
-                            ],
-                            "letterSpacing": -0.5,
-                            "lineHeight": 42,
-                          },
+                          [
+                            {
+                              "letterSpacing": 1.4,
+                              "textTransform": "uppercase",
+                            },
+                            undefined,
+                          ],
                         ]
                       }
                     >
-                      51.0
+                      boiler.flowSetpoint
                     </Text>
-                    <Text
+                    <View
+                      accessible={false}
                       style={
                         [
                           {
-                            "color": "#111827",
-                            "fontFamily": undefined,
-                            "fontSize": 15,
-                            "lineHeight": 20,
+                            "alignItems": "flex-end",
+                            "flexDirection": "row",
                           },
                           null,
-                          {
-                            "color": "#4b5563",
-                            "fontFamily": "monospace",
-                            "fontSize": 13,
-                            "marginBottom": 4,
-                            "marginLeft": 3,
-                          },
+                          undefined,
                         ]
                       }
+                      testID="dashboard-flow-target"
                     >
-                      °C
-                    </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#c1411c",
+                              "fontFamily": "monospace",
+                              "fontSize": 40,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "letterSpacing": -0.5,
+                              "lineHeight": 42,
+                            },
+                          ]
+                        }
+                      >
+                        51.0
+                      </Text>
+                      <Text
+                        style={
+                          [
+                            {
+                              "color": "#111827",
+                              "fontFamily": undefined,
+                              "fontSize": 15,
+                              "lineHeight": 20,
+                            },
+                            null,
+                            {
+                              "color": "#4b5563",
+                              "fontFamily": "monospace",
+                              "fontSize": 13,
+                              "marginBottom": 4,
+                              "marginLeft": 3,
+                            },
+                          ]
+                        }
+                      >
+                        °C
+                      </Text>
+                    </View>
                   </View>
                   <View
                     style={

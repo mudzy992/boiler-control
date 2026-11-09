@@ -309,12 +309,16 @@ export const DashboardScreen = () => {
               />
 
               {/*
-                F7 (HOME-02): istaknut broj je sada CILJ (flow target), a ne
-                trenutno izmjereni polaz. Razlog: ovo je jedini broj na koji
-                korisnik može uticati, i on je ono što kotao pokušava da
-                postigne — stvarni polaz je posljedica i mijenja se sam.
-                Čitač ekrana dobija oba broja u jednoj labeli, jer dva
-                `Readout`-a bez konteksta zvuče kao „52, 48" bez značenja.
+                F7 (HOME-02): istaknut broj je CILJ (predložena polazna), a ne
+                ono što je stvarno na kotlu. Razlog: to je jedini broj na koji
+                korisnik može uticati.
+
+                Uz to ide pravilo iz `32`: **nijedan broj temperature ne stoji
+                bez svoje etikete.** Velika „52,0 °C" bez teksta čita se kao
+                temperatura sobe, a ovdje je polazna voda. Zato oba broja imaju
+                `MonoLabel` — „Predložena" i „Na kotlu" — i čitač ekrana dobija
+                oba u jednoj labeli, jer dva `Readout`-a bez konteksta zvuče
+                kao „52, 48" bez značenja.
               */}
               <View
                 style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.md }}
@@ -325,13 +329,16 @@ export const DashboardScreen = () => {
                   actualFlow !== null ? actualFlow.toFixed(1) : '—'
                 } °C`}
               >
-                <Readout
-                  value={targetFlow !== null ? targetFlow.toFixed(1) : '—'}
-                  unit="°C"
-                  size="xl"
-                  tone={targetFlow === null ? 'dim' : 'signal'}
-                  testID="dashboard-flow-target"
-                />
+                <View style={{ gap: 2 }}>
+                  <MonoLabel>{t('boiler.flowSetpoint')}</MonoLabel>
+                  <Readout
+                    value={targetFlow !== null ? targetFlow.toFixed(1) : '—'}
+                    unit="°C"
+                    size="xl"
+                    tone={targetFlow === null ? 'dim' : 'signal'}
+                    testID="dashboard-flow-target"
+                  />
+                </View>
                 <View style={{ paddingBottom: 6, gap: 2 }}>
                   <MonoLabel>{t('boiler.flowLine')}</MonoLabel>
                   <Readout

@@ -106,6 +106,48 @@ describe('decideProposal — kad se polazna ne smije spustiti', () => {
     expect(decision.exploration).toBe(false);
   });
 
+  it('`T_max` pod diže odluku kad polazna ne stigne do cilja — i ne čeka dwell', () => {
+    const decision = decideProposal(
+      baseInput({ daysSinceChange: 1, heatTimeFloorC: 47 }),
+    );
+
+    expect(decision.flowC).toBe(47);
+    expect(decision.action).toBe('RAISE');
+    expect(decision.reasons).toEqual(['HEAT_TIME']);
+  });
+
+  it('`T_max` pod nikad ne spušta odluku koja je već viša', () => {
+    const decision = decideProposal(
+      // Redovno pravilo spušta 45 → 44, a pod je 43,5 — ne dira.
+      baseInput({ heatTimeFloorC: 43.5 }),
+    );
+    expect(decision.flowC).toBe(44);
+    expect(decision.reasons).toEqual(['COMFORT_HOLD']);
+  });
+
+  it('`T_max` pobjeđuje istraživanje — komfor prije učenja', () => {
+    const decision = decideProposal(
+      baseInput({ daysSinceChange: 1, exploration: 'LOWER', heatTimeFloorC: 46 }),
+    );
+
+    expect(decision.flowC).toBe(46);
+    expect(decision.reasons).toEqual(['HEAT_TIME']);
+    expect(decision.exploration).toBe(false);
+  });
+
+  it('`T_max` pod i dalje prolazi kroz tvrde granice', () => {
+    const decision = decideProposal(
+      // Pod traži 52, sistem dozvoljava 40.
+      baseInput({ heatTimeFloorC: 52, maxFlowC: 40 }),
+    );
+
+    expect(decision.flowC).toBe(40);
+    expect(decision.reasons).toEqual(['HEAT_TIME']);
+    // Plafon sistema je granica, a `HEAT_TIME` je razlog zašto se dizalo —
+    // granica se imenuje kao `RANGE` jer je to korak koji je stvarno stisnuo.
+    expect(decision.bounds).toEqual(['RANGE']);
+  });
+
   it('nepotvrđen model bojlera ne spušta polaznu — PTV je važniji od uštede', () => {
     const decision = decideProposal(
       baseInput({ flowAdviceAllowed: false }),

@@ -1,4 +1,5 @@
 import {
+  MIN_HEAT_RATE_C_PER_H,
   MIN_TRANSITIONS_FOR_HYSTERESIS,
   UNDERSHOOT_TOLERANCE_K,
   computeDayOutcome,
@@ -356,5 +357,88 @@ describe('computeDayOutcome — izmjerena histereza', () => {
     const outcome = expectOk(computeDayOutcome(DAY, samples, ZONE));
     expect(outcome.hysteresisK).toBe(1);
     expect(outcome.hysteresisAsymmetryK).toBeNull();
+  });
+});
+
+
+describe('computeDayOutcome — brzina dogrijavanja (`29`)', () => {
+  /** Ciklus od 06:00 do 06:55 sa zadatim rastom po uzorku. */
+  const heatingRun = (
+    startHour: number,
+    minutes: number,
+    startRoom: number,
+    stepPerSample: number,
+    flowSetC = 45,
+  ) =>
+    fullDay(DAY, (index) => {
+      const start = indexOf(startHour);
+      const offset = index - start;
+      if (offset < 0 || offset >= minutes / 5) return {};
+      return {
+        isHeating: true,
+        flowSetC,
+        roomTempC: startRoom + offset * stepPerSample,
+        targetTempC: 22,
+      };
+    });
+
+  it('mjeri neto dogrijavanje iz stvarnog trajanja ciklusa', () => {
+    // 12 uzoraka po 0,25 K na 5 min → 2,75 K kroz 55 min (razmak prvog i
+    // zadnjeg uzorka) = 3 K/h.
+    const outcome = expectOk(
+      computeDayOutcome(DAY, heatingRun(6, 60, 19, 0.25), ZONE),
+    );
+
+    expect(outcome.heatRateCPerHour).toBeCloseTo(3, 6);
+    expect(outcome.heatRateFlowC).toBe(45);
+    expect(outcome.heatRateRoomC).toBeCloseTo(19 + (11 * 0.25) / 2, 6);
+  });
+
+  it('ciklus u kojem soba ne raste nije mjera brzine', () => {
+    const outcome = expectOk(
+      computeDayOutcome(DAY, heatingRun(6, 60, 21, 0), ZONE),
+    );
+    expect(outcome.heatRateCPerHour).toBeNull();
+    expect(outcome.heatRateFlowC).toBeNull();
+  });
+
+  it('bez polazne nema preračuna, pa nema ni brzine', () => {
+    const outcome = expectOk(
+      computeDayOutcome(
+        DAY,
+        heatingRun(6, 60, 19, 0.25, null as unknown as number),
+        ZONE,
+      ),
+    );
+    expect(outcome.heatRateCPerHour).toBeNull();
+  });
+
+  it('neupotrebljivo mali nagib se odbija umjesto da uđe u proračun', () => {
+    // 0,005 K po uzorku → 0,055 K kroz 55 min ≈ 0,06 K/h, ispod praga.
+    const outcome = expectOk(
+      computeDayOutcome(DAY, heatingRun(6, 60, 19, 0.005), ZONE),
+    );
+    expect(outcome.heatRateCPerHour).toBeNull();
+    expect(MIN_HEAT_RATE_C_PER_H).toBe(0.1);
+  });
+
+  it('uzima medijanu po ciklusu, ne prosjek svih uzoraka', () => {
+    // Dva ciklusa: brz (1 K/uzorak) i spor (0,1 K/uzorak) — medijana od dva
+    // je donji od dva, pa odluka ne ide na optimističnu stranu.
+    const samples = fullDay(DAY, (index) => {
+      const first = index >= indexOf(6) && index < indexOf(7);
+      const second = index >= indexOf(12) && index < indexOf(13);
+      if (first) {
+        return { isHeating: true, flowSetC: 50, roomTempC: 18 + (index - indexOf(6)) * 0.1 };
+      }
+      if (second) {
+        return { isHeating: true, flowSetC: 50, roomTempC: 18 + (index - indexOf(12)) * 0.4 };
+      }
+      return {};
+    });
+
+    const outcome = expectOk(computeDayOutcome(DAY, samples, ZONE));
+    // Donji od dva ciklusa: 0,1 K po 5 min → 1,1 K kroz 55 min = 1,2 K/h.
+    expect(outcome.heatRateCPerHour).toBeCloseTo(1.2, 6);
   });
 });

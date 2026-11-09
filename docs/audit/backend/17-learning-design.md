@@ -600,7 +600,7 @@ Simulacija (§11) je obavezna prije koraka 6.
 
 ### 14.2 Nova obaveza prije puštanja (iz simulacije)
 
-- **`T_max` mora biti tvrdo ograničenje u kontroleru, ne metrika.** U simulaciji nije prekoračen ni u jednoj kući, ali nije bio ni ograničen — kontroler ga nije provjeravao. Prije pravog bojlera to postaje guard: ako predlog ne može dostići cilj u 120 min pri toj polaznoj, predlog se podiže.
+- **`T_max` mora biti tvrdo ograničenje u kontroleru, ne metrika.** — **urađeno 2026-11-17, vidi `29`:** brzina dogrijavanja se mjeri iz serije, a kontroler diže polaznu na onu koja stigne u 120 min. U simulaciji nije prekoračen ni u jednoj kući, ali nije bio ni ograničen — kontroler ga nije provjeravao. Prije pravog bojlera to postaje guard: ako predlog ne može dostići cilj u 120 min pri toj polaznoj, predlog se podiže.
 - **„Dostigao cilj" = ušao u kvant ispod cilja.** Sa senzorom 0,5 °C i histerezom 1,0 K soba fizički **ne prelazi** cilj — termostat gasi na prvom kvantu ≥ cilj, pa je stvarni plafon ≈ `cilj − 0,25 K`. Svaka metrika koja traži `T_r ≥ cilj` prijaviće vječni promašaj; mjeri se `T_r ≥ cilj − 0,5 K`.
 
 ### 14.3 Ostaje otvoreno

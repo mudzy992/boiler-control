@@ -4,6 +4,7 @@ import { DailyOutcomeService } from './daily-outcome.service';
 import { applyDayGain } from '../HomeModel/day-gain';
 import { effectiveShortCycleFloor } from './short-cycle-floor';
 import { explorationFor } from './exploration';
+import { flowForHeatTime } from './heat-time';
 import {
   effectiveCeilingC,
   findBoilerFamily,
@@ -85,7 +86,8 @@ export class ProposalShadowService {
       };
     }
 
-    const [home, model, previous, recentOutcomes, lastOutcome] = await Promise.all([
+    const [home, model, previous, recentOutcomes, lastOutcome, latestRoom] =
+      await Promise.all([
       this.prisma.homeProfile.findUnique({
         where: { id: homeProfileId },
         select: {
@@ -146,7 +148,19 @@ export class ProposalShadowService {
           overshootC: true,
           nightUndershootC: true,
           medianCycleMin: true,
+          // Brzina dogrijavanja za `T_max` (`29`).
+          heatRateCPerHour: true,
+          heatRateFlowC: true,
+          heatRateRoomC: true,
         },
+      }),
+
+      // Sobna temperatura sada: bez nje se ne zna koliko stepeni fali do cilja,
+      // pa `T_max` nema šta da računa. Uzorak stariji od ovog dana ne vrijedi.
+      this.prisma.thermostatObservation.findFirst({
+        where: { homeProfileId, at: { lte: now } },
+        orderBy: { at: 'desc' },
+        select: { at: true, roomTempC: true },
       }),
     ]);
 
@@ -232,6 +246,25 @@ export class ProposalShadowService {
       family,
     });
 
+    // `T_max` kao pod (`17` §8.6): najniža polazna koja stigne do cilja na
+    // vrijeme. Bez izmjerenog dogrijavanja nema proračuna — i tada se ništa ne
+    // podiže naslijepo.
+    const roomC = latestRoom?.roomTempC ?? null;
+    const heatRate = lastOutcome?.heatRateCPerHour ?? null;
+    const heatTimeFloorC =
+      roomC != null &&
+      heatRate != null &&
+      lastOutcome?.heatRateFlowC != null &&
+      lastOutcome?.heatRateRoomC != null
+        ? flowForHeatTime({
+            riseC: target - roomC,
+            roomC,
+            heatRateCPerHour: heatRate,
+            measuredFlowC: lastOutcome.heatRateFlowC,
+            measuredRoomC: lastOutcome.heatRateRoomC,
+          })
+        : null;
+
     // Istraživanje se dopušta samo kad je rezerva dokazana i noć nije hladna.
     const exploration = explorationFor({
       recentOvershootC: recentOutcomes.map((row) => row.overshootC),
@@ -255,6 +288,7 @@ export class ProposalShadowService {
       flowAdviceAllowed: isFlowAdviceAllowed(family),
       modelState: (model?.state ?? 'COLD_START') as ModelState,
       exploration: exploration.direction,
+      heatTimeFloorC,
     });
 
     await this.prisma.dailyRecord.updateMany({
@@ -276,6 +310,7 @@ export class ProposalShadowService {
         `${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
         `${decision.flowC ?? '—'} °C (${decision.action}` +
         `${decision.exploration ? ', istraživanje' : ''}; ` +
+        `${heatTimeFloorC == null ? '' : `T_max pod ${heatTimeFloorC.toFixed(1)} °C, `}` +
         `${[...decision.reasons, ...decision.bounds].join('+') || 'bez razloga'}).`,
     );
 

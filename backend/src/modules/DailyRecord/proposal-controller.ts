@@ -96,7 +96,8 @@ export type ControllerReason =
   | 'STEADY'
   | 'DWELL'
   | 'MODEL_UNVERIFIED'
-  | 'EXPLORE_LOWER';
+  | 'EXPLORE_LOWER'
+  | 'HEAT_TIME';
 
 export type ModelState = 'TRACKING' | 'COLD_START' | 'DEGRADED';
 
@@ -160,6 +161,14 @@ export interface ControllerInput {
    * inače ostala na istoj vrijednosti, a tvrde granice se i dalje primjenjuju.
    */
   exploration?: ExplorationDirection | null;
+  /**
+   * Najniža polazna koja stigne do cilja u `T_max` (`17` §8.6 → `29`).
+   * `null`/nedefinisano = proračun nije moguć ili nije potreban.
+   *
+   * Djeluje kao **pod**, nikad kao plafon: može podignuti odluku, ne spustiti
+   * je. Tako greška u procjeni brzine dogrijavanja ide prema više topline.
+   */
+  heatTimeFloorC?: number | null;
 }
 
 export interface ControllerDecision {
@@ -328,6 +337,24 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
     intended = previous - EXPLORATION_AMPLITUDE_K;
     reasons = ['EXPLORE_LOWER'];
     exploration = true;
+  }
+
+  /**
+   * `T_max` (`17` §8.6): ako polazna ne stigne do cilja u 120 min, podiže se na
+   * onu koja stigne. Ne čeka dwell — promašen cilj je komfor, ne udobnost.
+   *
+   * Primjenjuje se **poslije** istraživanja: istraživanje smije ići niže samo
+   * dok god stigne na vrijeme. Ako ne stigne, `T_max` je jači razlog.
+   */
+  if (
+    input.heatTimeFloorC != null &&
+    Number.isFinite(input.heatTimeFloorC) &&
+    (intended < input.heatTimeFloorC)
+  ) {
+    intended = input.heatTimeFloorC;
+    reasons = ['HEAT_TIME'];
+    exploration = false;
+    forced = true;
   }
 
   const bounded = applyHardBounds({

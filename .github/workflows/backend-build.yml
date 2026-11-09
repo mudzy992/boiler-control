@@ -7,6 +7,11 @@ name: Backend build
 # Zašto postoji: `backend-audit.yml` se pokreće samo na dvije arhivirane grane,
 # pa se backend od tada builduje **samo na Coolify**. Greška u shemi, migraciji
 # ili `nest-cli.json` assetima tako stiže tek u deploy, bez ijednog loga u CI-u.
+#
+# `test` job je drugi, potrebniji dio: jedini način da se sazna da li suiteovi
+# koji traže bazu (ugovor, transakcije, health) prolaze, a ne samo da padaju
+# zbog nedostajuće okoline. Bez baze u CI-u „37 padajućih testova" je bilo
+# nemoguće razlikovati od „37 stvarnih grešaka". 
 
 on:
   workflow_dispatch:
@@ -19,6 +24,19 @@ on:
 permissions:
   contents: read
 
+env:
+  # Zajednička okolina za oba job-a. `PrismaService` traži SVA ČETIRI imena
+  # (host/user/password/name) da bi se uopšte povezao; prazna lozinka ga tiho
+  # ostavlja bez baze, pa je lozinka ovdje obavezna i za trust-auth Postgres.
+  DATABASE_HOST: 127.0.0.1
+  DATABASE_PORT: '5432'
+  DATABASE_USER: build
+  DATABASE_PASSWORD: build
+  DATABASE_NAME: build
+  DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+  JWT_SECRET: ci-only-secret-never-used-outside-tests
+  UPLOAD_ROOT_PATH: ${{ github.workspace }}/uploads
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,8 +46,8 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: build
+          POSTGRES_PASSWORD: build
           POSTGRES_DB: build
-          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -38,15 +56,6 @@ jobs:
     defaults:
       run:
         working-directory: backend
-    env:
-      DATABASE_URL: postgresql://build@127.0.0.1:5432/build
-      DATABASE_HOST: 127.0.0.1
-      DATABASE_PORT: '5432'
-      DATABASE_USER: build
-      DATABASE_NAME: build
-      DATABASE_PASSWORD: build
-      JWT_SECRET: ci-only-secret-never-used-outside-tests
-      UPLOAD_ROOT_PATH: ${{ github.workspace }}/uploads
     steps:
       - uses: actions/checkout@v4
 
@@ -105,3 +114,65 @@ jobs:
             console.log('porodica:', family && family.id, '| savjet dozvoljen:', c.isFlowAdviceAllowed(family));
             console.log('plafon (sistem 40):', c.effectiveCeilingC({ systemMaxC: 40, family }));
           "
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: build
+          POSTGRES_PASSWORD: build
+          POSTGRES_DB: build
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U build -d build"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Generate Prisma client
+        run: npm run generate:prisma
+
+      # Ista shema koju će deploy primijeniti — testovi ne smiju trčati na
+      # bazi koja se razlikuje od produkcione.
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Unit + contract tests
+        run: |
+          set +e
+          npx jest --runInBand --ci 2>&1 | tee "$RUNNER_TEMP/jest.log"
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.
+            echo "::error::jest nije prošao (exit $code)"
+            grep -E "^(FAIL|Tests:|Test Suites:)" "$RUNNER_TEMP/jest.log" | head -20 \
+              | while IFS= read -r line; do echo "::error::$line"; done
+            grep -E "^\s+● " "$RUNNER_TEMP/jest.log" | head -20 \
+              | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$code"

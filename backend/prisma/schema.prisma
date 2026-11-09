@@ -400,6 +400,12 @@ model HomeModel {
   /// model; do tada fit koristi ISKLJUČIVO primarni uređaj (`21` §7).
   sourceDeviceId Int?
 
+  /// Najniža polazna pri kojoj su izmjereni kratki ciklusi (`24` §4). Kao i
+  /// noćni minimum, to je granica ispod koje se ne ide — i pamti se, jer bi se
+  /// inače polazna vraćala na istu grešku svaki drugi dan.
+  shortCycleFloorC  Float?
+  shortCycleFloorAt DateTime?
+
   state  HomeModelState @default(COLD_START)
   /// Zašto je stanje takvo. Prazno znači "nema šta da se objasni".
   reason String?
@@ -504,6 +510,17 @@ model DailyRecord {
   /// Kada su mjerni podaci upisani. `null` = dan još nije obračunat.
   outcomeAt      DateTime?
   outcomeVersion String?
+
+  // --- shadow odluka kontrolera (`24`) -------------------------------------
+  // Računa se uz predlog, ali **ne mijenja** `proposedFlowTemp`. Služi da se
+  // uporedi sa onim što je korisnik dobio, prije nego odluka postane predlog.
+  /// Šta bi kontroler predložio. `null` = nije računato ili nije imao osnova.
+  shadowFlowC    Float?
+  shadowAction   String?
+  /// Razlozi odluke, spojeni `+` (npr. `UNDERSHOOT+NIGHT_FLOOR`).
+  shadowReasons  String?
+  shadowAt       DateTime?
+  shadowVersion  String?
 
   gasM3      Float?
   degreeDays Float?

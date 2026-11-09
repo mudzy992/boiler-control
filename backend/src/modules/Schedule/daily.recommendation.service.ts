@@ -9,6 +9,7 @@ import {
   DailyRecordWriter,
   type DailyRecordWriteResult,
 } from '../DailyRecord/daily-record.writer';
+import { ProposalShadowService } from '../DailyRecord/proposal-shadow.service';
 import { selectDueHomes, type DueHomeSource } from '../DailyRecord/daily-record.due';
 
 /**
@@ -40,6 +41,7 @@ export class DailyRecommendationService {
     private prisma: PrismaService,
     private notificationService: NotificationsService,
     private readonly dailyRecordWriter: DailyRecordWriter,
+    private readonly proposalShadow: ProposalShadowService,
   ) {}
 
   @Cron('*/5 * * * *', {
@@ -79,7 +81,24 @@ export class DailyRecommendationService {
           target.homeProfileId,
           now,
         );
-        if (result.status === 'created') created += 1;
+        if (result.status === 'created') {
+          created += 1;
+          // Shadow odluka ide uz predlog, ali ga ne dira. Ako padne, predlog
+          // ostaje kakav jeste — shadow nikad ne smije oboriti ono što je
+          // korisnik dobio.
+          try {
+            await this.proposalShadow.evaluate(
+              result.homeProfileId,
+              result.localDate,
+              now,
+            );
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.error(
+              `Shadow odluka nije izračunata za kuću ${result.homeProfileId}: ${message}`,
+            );
+          }
+        }
         await this.announce(result, now);
       } catch (error) {
         const stack = error instanceof Error ? error.stack : String(error);

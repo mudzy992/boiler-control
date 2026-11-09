@@ -8,13 +8,15 @@
 
 ## 0. Šta ovaj korak jeste — i šta još nije
 
-Napravljena je **odluka** (`proposal-controller.ts`) i **mjerni gate koji je pušta dalje**
-(`scripts/audit/controller_sim.cjs`). Nije napravljeno **povezivanje na predlog**: `DailyRecordWriter`
-i dalje piše isto što je pisao u `20`. Nijedan korisnik još ne dobija drugu polaznu.
+Napravljene su **tri stvari**: odluka (`proposal-controller.ts`), **mjerni gate koji je pušta
+dalje** (`scripts/audit/controller_sim.cjs`) i **shadow upis** (`proposal-shadow.service.ts`).
 
-To nije nedovršen posao nego red koji `17` §11.1 sam propisuje („ide se u shadow režim,
-a ne direktno na bojler"): odluka mora prvo proći simulaciju, pa onda mjesec-dva shadow
-upisa, pa tek onda zamijeniti predlog. Ovaj dokument pokriva prva dva koraka te lestvice.
+Predlog se **još ne mijenja**: `DailyRecordWriter` i dalje piše isto što je pisao u `20`, a
+odluka se računa uz njega i pamti u `DailyRecord.shadow*`. Nijedan korisnik ne dobija drugu
+polaznu dok shadow period ne pokaže da se odluka i formula razlikuju tamo gdje treba.
+
+To je lestvica koju `17` §11.1 sam propisuje („ide se u shadow režim, a ne direktno na
+bojler"): simulacija → shadow → predlog. Ovaj dokument pokriva prve dvije prečke.
 
 ## 1. Šta je napravljeno
 
@@ -22,6 +24,9 @@ upisa, pa tek onda zamijeniti predlog. Ovaj dokument pokriva prva dva koraka te 
 |---|---|
 | `src/modules/DailyRecord/proposal-controller.ts` | `decideProposal` (čista), `shortCycleFloorFrom` |
 | `src/modules/DailyRecord/tests/proposal-controller.spec.ts` | 24 testa |
+| `src/modules/DailyRecord/proposal-shadow.service.ts` | shadow odluka uz predlog; pamti granicu iz kratkih ciklusa |
+| `src/modules/DailyRecord/tests/proposal-shadow.service.spec.ts` | 11 testova |
+| `prisma/migrations/20261112100000_proposal_shadow/migration.sql` | 5 kolona na `DailyRecord`, 2 na `HomeModel` |
 | `scripts/audit/controller_sim.cjs` | zatvorena petlja kroz **stvarne** module, 60 dana, tri kuće |
 
 ## 2. Pravila koja su na kraju napisana
@@ -176,12 +181,59 @@ Zapisano namjerno, jer je to jedina vrijednost gate-a:
 Oba su nađena u simulaciji, ne u proizvodnji — što je i razlog zašto simulacija ide prije
 povezivanja.
 
+## 6.5 Shadow upis — kako odluka ulazi u sistem bez uticaja
+
+`ProposalShadowService.evaluate(homeId, localDate)` poziva se **poslije** upisa predloga
+(isti prolaz u `DailyRecommendationService`, samo kad je red stvarno nastao) i:
+
+1. čita današnji zapis (`nightMinC` = prognoza noći, `proposedFlowTemp` = formula);
+2. čita `HomeModel` (`state`, `slopeCiHigh`, zapamćenu granicu iz kratkih ciklusa);
+3. traži prošli predlog (za „prošlu polaznu" i dwell) i prošli obračunat ishod;
+4. traži noćni minimum kroz `DailyOutcomeService.nightFloorFor` (\(23\) §4);
+5. računa `F_eq` sa **gornjom** granicom intervala za `s`;
+6. poziva `decideProposal` i upisuje `shadowFlowC`, `shadowAction`, `shadowReasons`,
+   `shadowAt`, `shadowVersion`.
+
+Tri stvari koje su namjerno takve:
+
+| Pravilo | Zašto |
+|---|---|
+| upis je `updateMany` sa `shadowAt: null` | odluka se računa jednom po danu; dva procesa ne smiju oba pisati |
+| upis dira **samo** `shadow*` kolone | test to zaključava spiskom ključeva; `proposedFlowTemp`, `flowSetC` i mjerna polja su van domašaja |
+| greška u shadow-u ne obara predlog | poziv je u `try/catch`; korisnik dobija predlog i kad kontroler padne |
+
+**Granica iz kratkih ciklusa se pamti** u `HomeModel.shortCycleFloorC` (nikad se ne obara).
+Bez pamćenja polazna bi padala na `F` i vraćala se na `F + 1` u krug, jer se granica
+izvodi iz jučerašnjeg dana — a jučerašnji dan je bio dobar tačno zato što je polazna bila
+na `F + 1`.
+
+Ono što shadow period treba da odgovori prije nego odluka postane predlog: koliko se
+često odluka i formula razlikuju, u kojem smjeru, i da li je svaka razlika objašnjiva
+razlogom iz `shadowReasons`. Ako razlika postoji bez razloga — to je greška, ne ušteda.
+
 ## 7. Šta ostaje otvoreno
 
 | Šta | Zašto |
 |---|---|
-| povezivanje na predlog (shadow) | traži kolone (shadow polazna + razlozi + naučene granice) i servis; sljedeći korak |
-| pamćenje granica i zaboravljanje | granica iz kratkih ciklusa danas nema pravilo zaboravljanja; predlaže se 30 dana bez ponavljanja |
+| zamjena predloga odlukom | poslije shadow perioda; traži i mjerenje „koliko se odluka i formula razlikuju" |
+| pamćenje granice iz kratkih ciklusa | danas se nikad ne zaboravlja; predlaže se zaborav poslije 30 dana bez ponavljanja |
 | exploration (`17` §8.5) | nije implementiran: traži `exploration` polje u `DailyRecord` i dokaz rezerve u 3 od 5 dana; bez toga bi bio nagađanje |
 | `T_max` kao zasebno pravilo | v. §2.1 — nema mjerenja |
 | tvrdnja o uštedi | traži baseline 28 dana + dva mjesečna `GasReading`-a (`19` §5) |
+
+## 8. Šta je provjereno
+
+`npx jest src/modules/DailyRecord` → **122 testa, 122 prošlo** (7 suite-a): `day-outcome` 20,
+`flow-bounds` 25, `daily-outcome.service` 8, `proposal-controller` 24, `proposal-shadow.service` 11,
+plus postojeći `daily-record-writer` i `proposal-schedule`.
+
+`node scripts/audit/controller_sim.cjs --days=60` → tvrdnje prošle (tabela u §5).
+
+Cijela unit suite: **1059 prošlo / 37 palo u 3 suite-a** — sva tri su ekološka i postojala su
+prije ovog koraka: `maint2-nontest-guard` (`EACCES` na `/usr/src/app`), `api-contract` (traži
+bazu) i `transactional-integrity` (Nest DI u sopstvenom test-modulu ne poznaje
+`ThermostatObservationService` iz `21`). Nijedan nije u vezi sa kontrolerom.
+
+Migracije (`20261111100000_daily_outcome`, `20261112100000_proposal_shadow`) **nijesu
+primijenjene** — `prisma validate`/`generate` u ovom okruženju ne rade. SQL je pisan ručno;
+to se provjerava prvim `prisma migrate deploy`, ne tvrdnjom.

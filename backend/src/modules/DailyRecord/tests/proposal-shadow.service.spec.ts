@@ -407,6 +407,74 @@ describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
     expect(result.decision?.flowC).toBe(50);
   });
 
+  it('granica starija od 30 dana više ne drži polaznu — i briše se iz modela', async () => {
+    const longAgo = new Date(NOW.getTime() - 31 * 24 * 60 * 60 * 1000);
+    const { service, prisma } = setup({
+      model: {
+        state: 'TRACKING',
+        slopeCiHigh: 0.96,
+        shortCycleFloorC: 50,
+        shortCycleFloorAt: longAgo,
+      },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 50 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+
+    // Bez istekle granice spuštanje je dozvoljeno: 50 − 1 = 49.
+    expect(result.decision?.flowC).toBe(49);
+    expect(prisma.homeModel.update).toHaveBeenCalledWith({
+      where: { homeProfileId: 10 },
+      data: { shortCycleFloorC: null, shortCycleFloorAt: null },
+    });
+  });
+
+  it('svježa granica se još primjenjuje, sa datumom u modelu', async () => {
+    const recent = new Date(NOW.getTime() - 5 * 24 * 60 * 60 * 1000);
+    const { service, prisma } = setup({
+      model: {
+        state: 'TRACKING',
+        slopeCiHigh: 0.96,
+        shortCycleFloorC: 50,
+        shortCycleFloorAt: recent,
+      },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 50 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+
+    expect(result.decision?.flowC).toBe(50);
+    expect(prisma.homeModel.update).not.toHaveBeenCalled();
+  });
+
+  it('kad istekne granica, novi kratki ciklusi je odmah vraćaju', async () => {
+    const longAgo = new Date(NOW.getTime() - 40 * 24 * 60 * 60 * 1000);
+    const { service, prisma } = setup({
+      model: {
+        state: 'TRACKING',
+        slopeCiHigh: 0.96,
+        shortCycleFloorC: 50,
+        shortCycleFloorAt: longAgo,
+      },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 49 },
+      outcome: { ...comfortableOutcome, medianCycleMin: 4 },
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+
+    expect(prisma.homeModel.update).toHaveBeenCalledTimes(1);
+    expect(prisma.homeModel.update).toHaveBeenCalledWith({
+      where: { homeProfileId: 10 },
+      data: { shortCycleFloorC: 50, shortCycleFloorAt: NOW },
+    });
+    expect(result.decision?.flowC).toBe(50);
+  });
+
   it('ishod od drugog dana se ne pripisuje prošlom predlogu', async () => {
     const { service, prisma } = setup({
       previous: { localDate: YESTERDAY, proposedFlowTemp: 49 },

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
 import { applyDayGain } from '../HomeModel/day-gain';
+import { effectiveShortCycleFloor } from './short-cycle-floor';
 import {
   effectiveCeilingC,
   findBoilerFamily,
@@ -102,6 +103,8 @@ export class ProposalShadowService {
           state: true,
           slopeCiHigh: true,
           shortCycleFloorC: true,
+          // Dokaz o granici ističe (`24` §7); bez datuma se starost ne zna.
+          shortCycleFloorAt: true,
           // Dnevni dobitak (`17` §13 korak 7): dan sa suncem/gostima traži nižu
           // polaznu. `null` = nema procjene, pa se ne oduzima ništa.
           uDayC: true,
@@ -170,7 +173,17 @@ export class ProposalShadowService {
           medianCycleMin: lastOutcome.medianCycleMin,
         })
       : null;
-    const storedFloor = model?.shortCycleFloorC ?? null;
+    // Granica se pamti, ali ne zauvijek: dokaz stariji od 30 dana prestaje da
+    // bude dokaz (`24` §7). Istekla granica se i briše iz modela — inače bi
+    // stajala kao podatak koji više ništa ne znači.
+    const stored = effectiveShortCycleFloor(
+      {
+        floorC: model?.shortCycleFloorC ?? null,
+        at: model?.shortCycleFloorAt ?? null,
+      },
+      now,
+    );
+    const storedFloor = stored.floorC;
     const shortCycleFloorC =
       learnedFloor == null
         ? storedFloor
@@ -183,6 +196,15 @@ export class ProposalShadowService {
         where: { homeProfileId },
         data: { shortCycleFloorC: learnedFloor, shortCycleFloorAt: now },
       });
+    } else if (stored.age === 'EXPIRED') {
+      await this.prisma.homeModel.update({
+        where: { homeProfileId },
+        data: { shortCycleFloorC: null, shortCycleFloorAt: null },
+      });
+      this.logger.log(
+        `Granica iz kratkih ciklusa za kuću ${homeProfileId} istekla ` +
+          `(${stored.ageDays?.toFixed(0)} dana bez ponavljanja) — briše se.`,
+      );
     }
 
     // Model bojlera: bez potvrđenog zapisa nema savjeta o snižavanju (`19` §1).

@@ -7,9 +7,11 @@ import { getDashboard } from '../../api/dashboard.api';
 import { apiClient } from '../../services/api/client';
 import { useErrorHandler } from '../../services/api/error.handler';
 import { useTranslation } from '../../hooks/useTranslation';
+import { heatingProgress, medianCycleMinutes } from '../../lib/heating-progress';
 import {
   Button,
   GaugeBar,
+  HeatingProgressBar,
   InlineBanner,
   Kpi,
   Led,
@@ -92,6 +94,24 @@ export const DashboardScreen = () => {
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 10,
   });
+
+  /*
+   * `36` — sat za traku ciklusa grijanja. `Date.now()` u renderu bi se zamrznuo
+   * između refetch-eva, pa bi traka stajala dok ciklus traje. Osvježava se
+   * svakih 30 s i samo dok grijanje traje. Efekat je NAMJERNO ovdje, iznad
+   * ranih `return`-ova: hook poslije uslovnog returna mijenja redoslijed hookova
+   * i ruši ekran (`Rendered more hooks than during the previous render`).
+   */
+  const heatingStartIso = dashboardData?.system?.boiler?.heatingStart ?? null;
+  const boilerIsHeating = Boolean(
+    heatingStartIso && !dashboardData?.system?.boiler?.heatingEnd,
+  );
+  const [heatingClock, setHeatingClock] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    if (!boilerIsHeating) return;
+    const timer = setInterval(() => setHeatingClock(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, [boilerIsHeating]);
 
   // MO2-12: health score and alerts are computed by the backend, not here.
   const healthQuery = useQuery({
@@ -259,6 +279,26 @@ export const DashboardScreen = () => {
   const flowGap = actualFlow !== null && targetFlow !== null ? actualFlow - targetFlow : null;
   const withinTolerance = flowGap !== null && Math.abs(flowGap) <= 2;
 
+  /*
+   * Traka ciklusa grijanja. „Predviđeno" je proračunato vrijeme dogrijavanja iz
+   * preporuke (`expectedHeatTimeMin`, naučeni `avgReachTimeMin` za interval) ili,
+   * kad ga nema, medijana **stvarnih završenih ciklusa**. Nikad izmišljen broj:
+   * bez oba podatka traka piše da procjene nema.
+   */
+  const predictedHeatMinRaw = recommendation?.breakdown?.expectedHeatTimeMin ?? null;
+  const measuredMedianMin = medianCycleMinutes(primaryHome?.recentHeatingEvents ?? []);
+  const predictedHeatMin =
+    predictedHeatMinRaw != null && predictedHeatMinRaw > 0
+      ? predictedHeatMinRaw
+      : measuredMedianMin;
+  const predictedFromCycles =
+    (predictedHeatMinRaw == null || predictedHeatMinRaw <= 0) && measuredMedianMin !== null;
+  const heatingProgressModel = heatingProgress({
+    startedAt: boiler?.heatingStart ?? null,
+    now: heatingClock,
+    predictedMin: predictedHeatMin,
+  });
+
   const onlineThermostats = thermostats.filter((thermostat) => {
     const seen = new Date(thermostat.lastSeen).getTime();
     return Number.isFinite(seen) ? Date.now() - seen < 1000 * 60 * 15 : false;
@@ -350,6 +390,70 @@ export const DashboardScreen = () => {
                   />
                 </View>
               </View>
+
+              {/*
+                Traka ciklusa grijanja — samo dok grijanje traje. Prije je hero
+                imao samo traku polazne vode, koja je izgledala kao napredak
+                grijanja iako to nije.
+              */}
+              {isHeating ? (
+                <View style={{ gap: 6 }}>
+                  <HeatingProgressBar
+                    model={heatingProgressModel}
+                    accessibilityLabel={`${t('boiler.heatingInProgress')}: ${Math.round(
+                      heatingProgressModel.elapsedMin ?? 0,
+                    )} ${t('boiler.minutesShort')}${
+                      heatingProgressModel.predictedMin !== null
+                        ? `, ${t('boiler.predicted')} ${Math.round(
+                            heatingProgressModel.predictedMin,
+                          )} ${t('boiler.minutesShort')}`
+                        : ''
+                    }`}
+                    testID="dashboard-heating-progress"
+                  />
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      justifyContent: 'space-between',
+                      gap: space.sm,
+                    }}
+                  >
+                    <MonoMeta
+                      tone={
+                        heatingProgressModel.zone === 'beyond'
+                          ? 'fault'
+                          : heatingProgressModel.zone === 'over'
+                            ? 'warn'
+                            : 'ok'
+                      }
+                    >
+                      {t('boiler.heatingInProgress')} ·{' '}
+                      {t('boiler.elapsedMin', {
+                        value: Math.round(heatingProgressModel.elapsedMin ?? 0),
+                      })}
+                    </MonoMeta>
+                    <MonoMeta>
+                      {heatingProgressModel.predictedMin !== null
+                        ? t('boiler.predictedMin', {
+                            value: Math.round(heatingProgressModel.predictedMin),
+                          })
+                        : t('boiler.noPrediction')}
+                      {' · '}
+                      {t('boiler.idealMin', { value: heatingProgressModel.idealMin })}
+                    </MonoMeta>
+                  </View>
+                  <Text size="meta" tone="muted">
+                    {predictedFromCycles
+                      ? t('boiler.heatingProgressHintMeasured', {
+                          value: Math.round(predictedHeatMin ?? 0),
+                        })
+                      : t('boiler.heatingProgressHint', {
+                          value: heatingProgressModel.idealMin,
+                        })}
+                  </Text>
+                </View>
+              ) : null}
 
               <GaugeBar
                 value={actualFlow !== null ? scale(actualFlow) : 0}

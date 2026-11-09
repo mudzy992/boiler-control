@@ -469,6 +469,17 @@ const enUS = {
      * Kratko, uz samu traku — objašnjenje u chatu korisnik ne vidi na uređaju.
      */
     gaugeHint: 'Bar: where the flow temperature sits within {{min}}–{{max}} °C. It is not heating progress.',
+    heatingInProgress: 'Heating in progress',
+    elapsedMin: '{{value}} min elapsed',
+    predicted: 'predicted',
+    predictedMin: 'predicted ~{{value}} min',
+    idealMin: 'ideal {{value}} min',
+    minutesShort: 'min',
+    noPrediction: 'no prediction yet',
+    heatingProgressHint:
+      'Green up to the predicted time, yellow up to {{value}} min, red if the cycle overruns.',
+    heatingProgressHintMeasured:
+      'Prediction comes from the median of your finished cycles: ~{{value}} min.',
     gaugeMin: 'Minimum',
     gaugeMax: 'Maximum',
     voltageUpdated: 'Updated {{value}}',
@@ -1432,6 +1443,17 @@ const bsBS = {
     flowScale: '{{min}} — {{max}}',
     gaugeHint:
       'Traka: gdje je polazna voda unutar {{min}}–{{max}} °C. Nije napredak grijanja.',
+    heatingInProgress: 'Grijanje u toku',
+    elapsedMin: '{{value}} min proteklo',
+    predicted: 'predviđeno',
+    predictedMin: 'predviđeno ~{{value}} min',
+    idealMin: 'idealno {{value}} min',
+    minutesShort: 'min',
+    noPrediction: 'procjena još nije naučena',
+    heatingProgressHint:
+      'Zeleno do predviđenog vremena, žuto do {{value}} min, crveno ako ciklus probije.',
+    heatingProgressHintMeasured:
+      'Procjena je medijana tvojih završenih ciklusa: ~{{value}} min.',
     gaugeMin: 'Minimum',
     gaugeMax: 'Maksimum',
     voltageUpdated: 'Ažurirano {{value}}',

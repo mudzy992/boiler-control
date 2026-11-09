@@ -55,17 +55,31 @@ export const RecommendationBreakdown = React.memo(function RecommendationBreakdo
       label: t('recommendation.weightedExternal'),
       value: temp(breakdown.weightedExternalTemp),
     },
-    { key: 'homeOffset', label: t('recommendation.homeOffset'), value: offset(breakdown.appliedOffsets.home) },
-    {
-      key: 'intervalOffset',
-      label: t('recommendation.intervalOffset'),
-      value: offset(breakdown.appliedOffsets.interval),
-    },
-    {
-      key: 'eventsOffset',
-      label: t('recommendation.eventsOffset'),
-      value: offset(breakdown.appliedOffsets.events),
-    },
+    /*
+     * `36`: offseti su opcioni. Stariji zapisi (`types/Dashboard.ts`: „Older
+     * rows may omit it or send null") nemaju `appliedOffsets`, a kartica je na
+     * takvom redu rušila cijelu Početnu (`Cannot read properties of undefined
+     * (reading 'home')`). Red se izostavlja — bolje bez reda nego bez ekrana.
+     */
+    ...(breakdown.appliedOffsets
+      ? ([
+          {
+            key: 'homeOffset',
+            label: t('recommendation.homeOffset'),
+            value: offset(breakdown.appliedOffsets.home),
+          },
+          {
+            key: 'intervalOffset',
+            label: t('recommendation.intervalOffset'),
+            value: offset(breakdown.appliedOffsets.interval),
+          },
+          {
+            key: 'eventsOffset',
+            label: t('recommendation.eventsOffset'),
+            value: offset(breakdown.appliedOffsets.events),
+          },
+        ] as Row[])
+      : []),
     // Rezultat je jedina brojka koja nosi odluku — zato jedina u `signal` tonu.
     {
       key: 'finalTemp',
@@ -80,14 +94,16 @@ export const RecommendationBreakdown = React.memo(function RecommendationBreakdo
     },
   ];
 
-  if (breakdown.samples !== null) {
+  // `!= null` a ne `!== null`: stariji zapisi nemaju polje, pa bi `undefined`
+  // prošao provjeru i ispisao „NaN".
+  if (breakdown.samples != null) {
     rows.push({
       key: 'samples',
       label: t('recommendation.samples'),
       value: formatNumber(breakdown.samples, 0),
     });
   }
-  if (breakdown.expectedHeatTimeMin !== null) {
+  if (breakdown.expectedHeatTimeMin != null) {
     rows.push({
       key: 'expectedHeatTime',
       label: t('recommendation.expectedHeatTime'),

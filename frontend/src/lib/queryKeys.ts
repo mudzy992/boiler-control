@@ -11,6 +11,8 @@ export const queryKeys = {
   dashboardHeatingRange: (from: string, to: string, bucket: 'hour' | 'day') =>
     ['dashboard-heating-range', from, to, bucket] as const,
   homeProfile: ['home-profile'] as const,
+  shadowReport: (homeProfileId: number, from: string, to: string) =>
+    ['shadow-report', homeProfileId, from, to] as const,
   weatherCurrent: (homeProfileId: number | undefined) =>
     ['weather-current', homeProfileId] as const,
   notifications: ['notifications'] as const,

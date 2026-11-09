@@ -1,6 +1,7 @@
 import { Fragment, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { apiClient } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
 import { PageHeader } from '@/shared/components/page-header';
@@ -16,6 +17,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { RecommendationBreakdown } from '../../heating/components/RecommendationBreakdown';
+import { ShadowReportPanel } from '../components/ShadowReportPanel';
 import type { components } from '@/types/api';
 
 type Recommendation = components['schemas']['RecommendationResponseDto'];
@@ -23,6 +25,21 @@ type Recommendation = components['schemas']['RecommendationResponseDto'];
 export const ReportsPage = (): JSX.Element => {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { data: homeProfile } = useQuery({
+    queryKey: queryKeys.homeProfile,
+    queryFn: () => apiClient.getHomeProfile(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  /*
+   * Period shadow izvještaja: zadnjih 30 dana, jer se odluka poredi po danu i
+   * mjesec dana je najmanji period u kojem se vidi i hladan i topao dan. Ne
+   * pomjera se sa izborom u tabeli — tabela prikazuje ono što postoji, a
+   * izvještaj ono što je uporedivo.
+   */
+  const shadowFrom = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
+  const shadowTo = dayjs().format('YYYY-MM-DD');
+
   const reportsQuery = useQuery({
     queryKey: queryKeys.reports,
     queryFn: async (): Promise<Recommendation[]> => {
@@ -43,6 +60,11 @@ export const ReportsPage = (): JSX.Element => {
   return (
     <div className="space-y-6">
       <PageHeader title={t('reports.title')} description={t('reports.subtitle')} />
+      <ShadowReportPanel
+        homeProfileId={homeProfile?.id}
+        from={shadowFrom}
+        to={shadowTo}
+      />
       <QueryState
         status={status}
         onRetry={() => {
@@ -72,7 +94,18 @@ export const ReportsPage = (): JSX.Element => {
                           {new Date(record.date).toLocaleDateString()}
                         </TableCell>
                         <TableCell>{record.recommendedFlowTemp.toFixed(1)}°C</TableCell>
-                        <TableCell>{record.expectedHeatTimeMin.toFixed(0)} min</TableCell>
+                        {/*
+                          Backend još ne računa očekivano vrijeme dogrijavanja
+                          i u zapis upisuje `0` (`daily-record.writer.ts`).
+                          „0 min" bi izgledalo kao mjerenje, pa se nula
+                          prikazuje kao „—". Kad motor bude davao procjenu, ovdje
+                          se vraća broj bez promjene prikaza.
+                        */}
+                        <TableCell>
+                          {record.expectedHeatTimeMin > 0
+                            ? `${record.expectedHeatTimeMin.toFixed(0)} min`
+                            : '—'}
+                        </TableCell>
                         <TableCell>
                           {Math.round(record.confidenceScore * 100)}%
                         </TableCell>

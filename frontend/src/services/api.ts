@@ -9,6 +9,7 @@ import type {
 import type { components } from '../types/api';
 import { shouldForceLoginRedirectOn401 } from './auth401';
 import type { BoilerCatalog } from '../features/home-profile/lib/boiler-catalog';
+import type { ShadowReportResponse } from '../features/reports/types';
 
 /**
  * FE2-7 (FE-009): API base URL **bez** dev fallbacka.
@@ -541,6 +542,24 @@ export class ApiClient {
     // Plural ruta: `HomeProfilesController` je onaj koji validira DTO-ove;
     // singularni `/home-profile` je stariji i nema katalog.
     const response = await this.client.get('/home-profiles/boiler-catalog');
+    return response.data;
+  }
+
+  /**
+   * Shadow izvještaj (`24` §6.5): koliko bi odluka kontrolera odstupila od
+   * formule, u kojem smjeru i da li je svaka razlika objašnjiva.
+   *
+   * Ruta nosi `homeProfileId` jer izvještaj ide po kući (odluka se donosi za
+   * kuću, ne za korisnika), a period je `YYYY-MM-DD`.
+   */
+  async getShadowReport(params: {
+    homeProfileId: number;
+    from: string;
+    to: string;
+  }): Promise<ShadowReportResponse> {
+    const response = await this.client.get('/daily-record/shadow-report', {
+      params,
+    });
     return response.data;
   }
 

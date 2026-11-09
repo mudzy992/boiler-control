@@ -1,0 +1,66 @@
+name: Mobile CI
+
+# Zašto postoji (A1): mobilna aplikacija ima 347 testova i `tsc`, ali su se do
+# sada vrtjeli **samo na računaru vlasnika**. Nijedan push nije provjeravao
+# mobilni kod, pa je regresija mogla ući u APK bez ijednog crvenog znaka.
+#
+# Namjerno BEZ builda APK-a: EAS build traži nalog i kredencijale, a ovdje je
+# cilj da se za ~2 minute sazna da li kod i testovi stoje.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, arena/da41e5ba-boiler-control]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Isto kao backend: Node 22. Expo SDK 58 podržava 20+, ali dvije
+          # različite verzije u istom repozitoriju su izvor „radi kod mene".
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        # `--ignore-scripts` jer postinstall skripte (expo-modules) traže mrežu
+        # ka Expo CDN-u; za type-check i jest nijesu potrebne.
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Tests
+        # `--ci` isključuje interaktivno snimanje snapshotova: test koji bi
+        # inače tiho ažurirao snapshot u CI-ju mora pasti.
+        run: npx jest --ci
+
+      - name: i18n keys exist in both languages
+        # Poseban korak da pad bude čitljiv kao „nedostaje ključ", a ne kao
+        # „jedan od 347 testova je pao". Sam test je u `src/locales`.
+        run: npx jest --ci src/locales

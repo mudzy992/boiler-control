@@ -11,8 +11,12 @@ import { QueryState } from '@/shared/components/query-state';
 import { StatusBanner } from '@/shared/components/status-banner';
 import type { CreateHomeProfileDto, HomeProfileResponse } from '../types';
 import {
-  catalogGroups,
+  brandOfFamily,
+  catalogBrands,
+  familiesForBrand,
+  familyLabel,
   isKnownFamilyId,
+  outputOptions,
   selectionHint,
   type BoilerCatalog,
 } from '../lib/boiler-catalog';
@@ -39,6 +43,10 @@ interface HomeProfileFormValues {
   boilerModel: string;
   /** Odabir iz kataloga — ovo nosi sigurnosni bit. */
   boilerCatalogId: string;
+  /** Snaga izvedbe; obavezna kad porodica navodi snage (`25` §5.1). */
+  boilerOutputKw: number | undefined;
+  /** Najviša polazna koju sistem dozvoljava (`19` §2). */
+  maxHeatingFlowC: number | undefined;
   hasFloorHeating: boolean;
   targetMorningTemp: number | undefined;
   targetDayTemp: number | undefined;
@@ -58,6 +66,8 @@ const EMPTY_VALUES: HomeProfileFormValues = {
   numberOfResidents: undefined,
   boilerModel: '',
   boilerCatalogId: '',
+  boilerOutputKw: undefined,
+  maxHeatingFlowC: undefined,
   hasFloorHeating: false,
   targetMorningTemp: undefined,
   targetDayTemp: undefined,
@@ -101,6 +111,8 @@ export const HomeProfilePage: React.FC = () => {
             numberOfResidents: loaded.numberOfResidents,
             boilerModel: loaded.boilerModel ?? '',
             boilerCatalogId: loaded.boilerCatalogId ?? '',
+            boilerOutputKw: loaded.boilerOutputKw ?? undefined,
+            maxHeatingFlowC: loaded.maxHeatingFlowC ?? undefined,
             hasFloorHeating: loaded.hasFloorHeating ?? false,
             targetMorningTemp: loaded.targetMorningTemp,
             targetDayTemp: loaded.targetDayTemp,
@@ -130,34 +142,45 @@ export const HomeProfilePage: React.FC = () => {
     [],
   );
 
+  /**
+   * Spisak onoga što backend **zaista** traži (`CreateHomeProfileDto`).
+   *
+   * Prije ovoga forma je tražila ime doma (koje backend ne traži) i nije
+   * tražila tri ciljne temperature (koje traži). Posljedica je bila 400 na
+   * ispravno popunjenoj formi. Granice ispod su iste kao u DTO-u.
+   */
   const validate = useCallback(() => {
     const next: Record<string, string> = {};
     const required: Record<string, string> = {
-      homeName: t('homeProfile.homeName'),
       floorArea: t('homeProfile.floorArea'),
       ceilingHeight: t('homeProfile.ceilingHeight'),
       constructionYear: t('homeProfile.constructionYear'),
+      insulationThickness: t('homeProfile.insulationThickness'),
       insulationType: t('homeProfile.insulationType'),
       windowType: t('homeProfile.windowType'),
       heatingType: t('homeProfile.heatingType'),
+      targetMorningTemp: t('homeProfile.targetMorningTemp'),
+      targetDayTemp: t('homeProfile.targetDayTemp'),
+      targetNightTemp: t('homeProfile.targetNightTemp'),
     };
 
     Object.entries(required).forEach(([field, label]) => {
       const value = form[field as keyof HomeProfileFormValues];
       if (value === '' || value === undefined || value === null) {
-        next[field] = `${label} je obavezno`;
+        next[field] = t('homeProfile.required', { field: label });
       }
     });
 
     const ranges: Array<[string, number, number]> = [
       ['floorArea', 10, 2000],
-      ['ceilingHeight', 2, 5],
-      ['constructionYear', 1800, 2100],
-      ['insulationThickness', 0, 50],
+      ['ceilingHeight', 1.8, 5],
+      ['constructionYear', 1900, 2100],
+      ['insulationThickness', 5, 30],
       ['numberOfResidents', 1, 20],
       ['targetMorningTemp', 5, 30],
       ['targetDayTemp', 5, 30],
       ['targetNightTemp', 5, 30],
+      ['maxHeatingFlowC', 30, 55],
     ];
     ranges.forEach(([field, min, max]) => {
       const value = form[field as keyof HomeProfileFormValues] as
@@ -168,9 +191,27 @@ export const HomeProfilePage: React.FC = () => {
       }
     });
 
+    /*
+     * Porodica + snaga je jedna odluka (`25` §5.1). Ako porodica navodi
+     * snage, snaga je obavezna — backend to odbija, pa je bolje reći odmah i
+     * na istom mjestu, umjesto „Failed to save" poslije zahtjeva.
+     */
+    const powers = outputOptions(catalog?.families, form.boilerCatalogId);
+    if (powers && powers.length > 0) {
+      if (form.boilerOutputKw === undefined) {
+        next.boilerOutputKw = t('homeProfile.required', {
+          field: t('homeProfile.boilerOutputKw'),
+        });
+      } else if (!powers.includes(form.boilerOutputKw)) {
+        next.boilerOutputKw = t('homeProfile.boilerOutputKwNotInCatalog', {
+          options: powers.join(', '),
+        });
+      }
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [form, t]);
+  }, [catalog, form, t]);
 
   const onSubmit = useCallback(async () => {
     if (!validate()) return;
@@ -185,6 +226,11 @@ export const HomeProfilePage: React.FC = () => {
         // Prazan izbor se šalje kao `null` (briše model), ne kao `''` — `''`
         // bi backend odbio kao nepoznat zapis.
         boilerCatalogId: form.boilerCatalogId === '' ? null : form.boilerCatalogId,
+        // Snaga bez porodice je odbijena na backendu (`25` §5.1), pa se ovdje
+        // ne šalje. Snaga ostaje `number`; `null` znači „nema snage".
+        boilerOutputKw:
+          form.boilerCatalogId === '' ? null : (form.boilerOutputKw ?? null),
+        maxHeatingFlowC: form.maxHeatingFlowC ?? null,
       };
       if (profile?.id) {
         await apiClient.updateHomeProfile(profile.id, payload);
@@ -200,7 +246,39 @@ export const HomeProfilePage: React.FC = () => {
     }
   }, [form, profile, validate]);
 
-  const catalogGroupsMemo = useMemo(() => catalogGroups(catalog), [catalog]);
+  const brands = useMemo(() => catalogBrands(catalog), [catalog]);
+
+  /*
+   * Marka se pamti odvojeno od izbora modela, jer nije dio profila: profil
+   * pamti porodicu, a marka je samo korak do nje. Kad se profil učita, marka se
+   * izvodi iz porodice — inače bi forma otvorila prvi korak prazan i korisnik
+   * bi pomislio da model nije sačuvan.
+   */
+  const [brandOverride, setBrandOverride] = useState<string | null>(null);
+  const brand = brandOverride ?? brandOfFamily(catalog?.families, form.boilerCatalogId);
+  const brandFamilies = useMemo(
+    () => familiesForBrand(catalog, brand),
+    [catalog, brand],
+  );
+  const powers = outputOptions(catalog?.families, form.boilerCatalogId);
+
+  /** Promjena marke briše porodicu, jer porodica pripada marki. */
+  const onBrandChange = useCallback(
+    (value: string) => {
+      setBrandOverride(value);
+      setForm((prev) => ({ ...prev, boilerCatalogId: '', boilerOutputKw: undefined }));
+      setErrors((prev) => ({ ...prev, boilerCatalogId: '', boilerOutputKw: '' }));
+      setSaveStatus('idle');
+    },
+    [],
+  );
+
+  /** Promjena porodice briše snagu, jer snaga pripada porodici. */
+  const onFamilyChange = useCallback((value: string) => {
+    setForm((prev) => ({ ...prev, boilerCatalogId: value, boilerOutputKw: undefined }));
+    setErrors((prev) => ({ ...prev, boilerCatalogId: '', boilerOutputKw: '' }));
+    setSaveStatus('idle');
+  }, []);
 
   /**
    * Zapis koji je u profilu, a nema ga u katalogu (npr. katalog je izmijenjen
@@ -226,6 +304,8 @@ export const HomeProfilePage: React.FC = () => {
       form.constructionYear !== profile.constructionYear ||
       form.numberOfResidents !== profile.numberOfResidents ||
       form.boilerCatalogId !== (profile.boilerCatalogId ?? '') ||
+      form.boilerOutputKw !== (profile.boilerOutputKw ?? undefined) ||
+      form.maxHeatingFlowC !== (profile.maxHeatingFlowC ?? undefined) ||
       form.hasFloorHeating !== profile.hasFloorHeating ||
       form.targetMorningTemp !== profile.targetMorningTemp ||
       form.targetDayTemp !== profile.targetDayTemp ||
@@ -417,36 +497,103 @@ export const HomeProfilePage: React.FC = () => {
             }
             disabled={saving}
           />
-          <div className="space-y-1">
-            <label
-              htmlFor="home-profile-boiler-catalog"
-              className="text-sm font-medium text-text-secondary"
-            >
-              {t('homeProfile.boilerModel')}
-            </label>
-            <Select
-              id="home-profile-boiler-catalog"
-              value={form.boilerCatalogId}
-              invalid={Boolean(errors.boilerCatalogId)}
-              onChange={(e) => handleChange('boilerCatalogId', e.target.value)}
-              disabled={saving || catalogGroupsMemo.length === 0}
-            >
-              <option value="">{t('homeProfile.boilerModelNone')}</option>
-              {staleFamilyId ? (
-                <option value={staleFamilyId}>
-                  {t('homeProfile.boilerModelStale', { id: staleFamilyId })}
-                </option>
+          {/*
+            Odabir kotla je **tri koraka**: marka → porodica/varijanta → snaga
+            (`25` §5.1). Jedan padajući spisak bi nudio 13 porodica i prećutao
+            pitanje „koja snaga", a snaga je ono što razlikuje VUW 246/5-3 od
+            306/5-3. Nijedan korak nije kozmetika: bez porodice nema savjeta o
+            snižavanju, a bez snage backend odbija zapis.
+          */}
+          <div className="col-span-2 space-y-3 md:col-span-1">
+            <div className="space-y-1">
+              <label
+                htmlFor="home-profile-boiler-brand"
+                className="text-sm font-medium text-text-secondary"
+              >
+                {t('homeProfile.boilerBrand')}
+              </label>
+              <Select
+                id="home-profile-boiler-brand"
+                value={brand}
+                onChange={(e) => onBrandChange(e.target.value)}
+                disabled={saving || brands.length === 0}
+              >
+                <option value="">{t('homeProfile.boilerBrandNone')}</option>
+                {brands.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </Select>
+              {errors.boilerBrand ? (
+                <p className="text-xs text-error">{errors.boilerBrand}</p>
               ) : null}
-              {catalogGroupsMemo.map((group) => (
-                <optgroup key={group.brand} label={group.brand}>
-                  {group.options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="home-profile-boiler-catalog"
+                className="text-sm font-medium text-text-secondary"
+              >
+                {t('homeProfile.boilerModel')}
+              </label>
+              <Select
+                id="home-profile-boiler-catalog"
+                value={form.boilerCatalogId}
+                invalid={Boolean(errors.boilerCatalogId)}
+                onChange={(e) => onFamilyChange(e.target.value)}
+                disabled={saving || brandFamilies.length === 0}
+              >
+                <option value="">{t('homeProfile.boilerModelNone')}</option>
+                {staleFamilyId ? (
+                  <option value={staleFamilyId}>
+                    {t('homeProfile.boilerModelStale', { id: staleFamilyId })}
+                  </option>
+                ) : null}
+                {brandFamilies.map((family) => (
+                  <option key={family.id} value={family.id}>
+                    {familyLabel(family)}
+                  </option>
+                ))}
+              </Select>
+              {errors.boilerCatalogId ? (
+                <p className="text-xs text-error">{errors.boilerCatalogId}</p>
+              ) : null}
+            </div>
+
+            {powers && powers.length > 0 ? (
+              <div className="space-y-1">
+                <label
+                  htmlFor="home-profile-boiler-output"
+                  className="text-sm font-medium text-text-secondary"
+                >
+                  {t('homeProfile.boilerOutputKw')}
+                </label>
+                <Select
+                  id="home-profile-boiler-output"
+                  value={form.boilerOutputKw === undefined ? '' : String(form.boilerOutputKw)}
+                  invalid={Boolean(errors.boilerOutputKw)}
+                  onChange={(e) =>
+                    handleChange(
+                      'boilerOutputKw',
+                      e.target.value === '' ? undefined : Number(e.target.value),
+                    )
+                  }
+                  disabled={saving}
+                >
+                  <option value="">{t('homeProfile.boilerOutputKwNone')}</option>
+                  {powers.map((power) => (
+                    <option key={power} value={power}>
+                      {power} kW
                     </option>
                   ))}
-                </optgroup>
-              ))}
-            </Select>
+                </Select>
+                {errors.boilerOutputKw ? (
+                  <p className="text-xs text-error">{errors.boilerOutputKw}</p>
+                ) : null}
+              </div>
+            ) : null}
+
             <p className="text-xs text-text-secondary" data-testid="boiler-hint">
               {selectionHint(catalog?.families, form.boilerCatalogId)}
             </p>
@@ -455,6 +602,35 @@ export const HomeProfilePage: React.FC = () => {
                 {t('homeProfile.boilerModelLegacy', { model: form.boilerModel })}
               </p>
             ) : null}
+          </div>
+          {/*
+            Najviša polazna koju sistem dozvoljava (`19` §2). Polje samo
+            **sužava** raspon 30–55 — nikad ga ne širi — i zato je isti min/max
+            kao predlog. Prazno znači „granica kotla", ne 55 unaprijed upisano:
+            upisana vrijednost izgledala bi kao korisnikov podatak.
+          */}
+          <div className="space-y-1">
+            <InputNumber
+              label={t('homeProfile.maxHeatingFlowC')}
+              placeholder="55"
+              id="home-profile-max-heating-flow"
+              value={form.maxHeatingFlowC}
+              min={30}
+              max={55}
+              step={1}
+              precision={0}
+              error={errors.maxHeatingFlowC}
+              onChange={(value) =>
+                handleChange(
+                  'maxHeatingFlowC',
+                  typeof value === 'number' ? value : undefined,
+                )
+              }
+              disabled={saving}
+            />
+            <p className="text-xs text-text-secondary">
+              {t('homeProfile.maxHeatingFlowCHint')}
+            </p>
           </div>
           <div className="col-span-2 md:col-span-1 flex items-end">
             <label className="mr-2 text-sm font-semibold text-text-secondary">

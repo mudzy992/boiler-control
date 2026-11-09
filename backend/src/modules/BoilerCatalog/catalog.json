@@ -8,8 +8,16 @@
     "note": "Raspon proizvoda, odluka vlasnika 2026-11-08. Bojler može više (npr. 80 °C), ali predlog i unos ostaju u 30–55. Katalog ne mijenja ovaj raspon — samo provjerava je li predlog za grijanje siguran za konkretan model."
   },
   "selection": {
-    "flow": ["brand", "family", "variant", "outputKw"],
-    "requiredBeforeFirstProposal": ["family", "variant"],
+    "flow": [
+      "brand",
+      "family",
+      "variant",
+      "outputKw"
+    ],
+    "requiredBeforeFirstProposal": [
+      "family",
+      "variant"
+    ],
     "unknownModelPolicy": "Ako model nije odabran ili je specStatus TO_VERIFY: koristi globalni raspon 30–55, NIKAD ne savjetuj o PTV-u, i prikaži jednokratni poziv da se model potvrdi iz pločice uređaja."
   },
   "brands": [
@@ -20,7 +28,11 @@
           "id": "vaillant-ecotec-plus-vuw",
           "family": "ecoTEC plus",
           "variant": "VUW (kombi, protočna PTV)",
-          "outputsKw": [20.4, 25.5, 30.6],
+          "outputsKw": [
+            20.4,
+            25.5,
+            30.6
+          ],
           "dhw": "INSTANT",
           "heatingFlowMinC": 30,
           "heatingFlowMaxC": 80,
@@ -37,10 +49,40 @@
           "notes": "Polazna grijanja i temperatura PTV-a su ODVOJENA podešavanja; D.071 ograničava samo grijanje. Snižavanje polazne grijanja ne dira PTV."
         },
         {
+          "id": "vaillant-ecotec-pro-vuw",
+          "family": "ecoTEC pro",
+          "variant": "VUW 246/5-3 · 286/5-3 · 306/5-3 (kombi, protočna PTV)",
+          "outputsKw": [
+            24,
+            28,
+            30
+          ],
+          "dhw": "INSTANT",
+          "heatingFlowMinC": 30,
+          "heatingFlowMaxC": 80,
+          "heatingFlowFactoryC": 75,
+          "heatingFlowLimitParam": "D.071 – ciljna max. polazna grijanja, 40…80 °C (tvornički 75); D.005 prikazuje trenutnu ciljnu",
+          "dhwTempMinC": 35,
+          "dhwTempMaxC": 65,
+          "separateHeatingDhwSettings": true,
+          "condensing": true,
+          "modulationMinKw": 5,
+          "underfloorMaxFlowC": null,
+          "specStatus": "VERIFIED_MANUAL",
+          "source": "https://professional.vaillant.co.uk/downloads/product-manuals/ecotec-pro-1/ecotec-pro-24-28-combi-installation-and-maintenance-instructions-2055535.pdf",
+          "notes": "Kombi sa protočnom PTV. Oznaka u nazivu (24/28/30) je razred PTV-a: grijanje je ograničeno na 5…19 kW (raspon podešavanja), a max. PTV 23,4/27,0/30,0 kW. Grijanje i PTV su ODVOJENA podešavanja: D.071 ograničava samo polaznu grijanja, temperatura PTV-a se postavlja zasebno (35…65 °C, D.006). Zato je snižavanje polazne grijanja bezbjedno za PTV. Raspon podešavanja polazne je 30…80 °C, a D.071 (tvornički 75) je ono što stvarno ograničava grijanje."
+        },
+        {
           "id": "vaillant-ecotec-plus-vu",
           "family": "ecoTEC plus",
           "variant": "VU (samo grijanje, vanjski cilindar)",
-          "outputsKw": [10, 15, 20, 25, 30],
+          "outputsKw": [
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
           "dhw": "EXTERNAL_CYLINDER",
           "heatingFlowMinC": 30,
           "heatingFlowMaxC": 80,
@@ -60,7 +102,9 @@
           "id": "vaillant-ecotec-plus-vui",
           "family": "ecoTEC plus",
           "variant": "VUI (integrirani cilindar)",
-          "outputsKw": [30.9],
+          "outputsKw": [
+            30.9
+          ],
           "dhw": "INTEGRATED_CYLINDER",
           "heatingFlowMinC": 30,
           "heatingFlowMaxC": 80,
@@ -95,26 +139,6 @@
           "specStatus": "TO_VERIFY",
           "source": null,
           "notes": "Ista platformska porodica kao ecoTEC plus, ali brojevi nisu potvrđeni iz priručnika za ovaj model — ne koristiti bez provjere."
-        },
-        {
-          "id": "vaillant-ecotec-pro",
-          "family": "ecoTEC pro",
-          "variant": "VUW (kombi)",
-          "outputsKw": null,
-          "dhw": "INSTANT",
-          "heatingFlowMinC": null,
-          "heatingFlowMaxC": null,
-          "heatingFlowFactoryC": null,
-          "heatingFlowLimitParam": null,
-          "dhwTempMinC": null,
-          "dhwTempMaxC": null,
-          "separateHeatingDhwSettings": null,
-          "condensing": true,
-          "modulationMinKw": null,
-          "underfloorMaxFlowC": null,
-          "specStatus": "TO_VERIFY",
-          "source": null,
-          "notes": "Ulazni model; tip PTV-a i odvojenost krugova potvrditi iz priručnika."
         },
         {
           "id": "vaillant-atmotec",
@@ -165,7 +189,12 @@
           "id": "bosch-condens-7000-wp",
           "family": "Condens 7000 WP",
           "variant": "GC7000WP 50 / 65 / 85 / 100 (zidni, veći učin)",
-          "outputsKw": [50, 65, 85, 100],
+          "outputsKw": [
+            50,
+            65,
+            85,
+            100
+          ],
           "dhw": "EXTERNAL_CYLINDER",
           "heatingFlowMinC": 30,
           "heatingFlowMaxC": 85,

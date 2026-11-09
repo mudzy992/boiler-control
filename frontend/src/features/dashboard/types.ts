@@ -53,14 +53,17 @@ export interface HeatingEventRow extends HeatingEvent {
 
 export interface Thermostat {
   alias: string;
-  currentTemp: number;
-  targetTemp: number;
+  /** `null` = termostat nije poslao temperaturu; nije isto što i 0 °C. */
+  currentTemp: number | null;
+  targetTemp: number | null;
   mode: string;
+  /** Zadnje javljanje uređaja; `null` = nikad (ili polje nije poslano). */
+  lastSeen?: string | null;
   program: ThermostatProgram[];
 }
 
 export interface Home {
-  profile: { floorArea: number };
+  profile: { id?: number; floorArea: number };
   thermostats: Thermostat[];
   recentHeatingEvents: HeatingEvent[];
 }
@@ -78,9 +81,11 @@ export interface DashboardResponse {
 export interface ProcessedDashboard {
   anomalyCount: number;
   anomalyRate: number;
-  currentTemp: number;
-  targetTemp: number;
-  lastUpdate: string;
+  /** `null` = nema mjerenja. Nikad 0 kao zamjena za „nema podataka". */
+  currentTemp: number | null;
+  targetTemp: number | null;
+  /** Zadnje javljanje termostata; `null` = nema podataka o svježini. */
+  lastSeen: string | null;
   recentEvents: HeatingEvent[];
   boiler: Boiler;
   weather: Weather;

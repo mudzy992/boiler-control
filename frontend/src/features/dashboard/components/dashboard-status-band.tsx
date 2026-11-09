@@ -5,8 +5,9 @@ import { computeHeatingProgress } from '../lib/compute-heating-progress';
 
 interface DashboardStatusBandProps {
   isHeatingActive: boolean;
-  currentTemp: number;
-  targetTemp: number;
+  /** `null` = nema mjerenja; prikazuje se „—", nikad 0 °C. */
+  currentTemp: number | null;
+  targetTemp: number | null;
   expectedHeatTimeMin: number | null;
   heatingStartedAt: string | null;
   onSetTemp: () => void;
@@ -59,16 +60,19 @@ export const DashboardStatusBand = ({
             <Readout
               label={t('dashboard.currentTemp')}
               value={
-                Number.isFinite(currentTemp) ? currentTemp.toFixed(1) : '—'
+                typeof currentTemp === 'number' && Number.isFinite(currentTemp)
+                  ? currentTemp.toFixed(1)
+                  : '—'
               }
               unit="°C"
             />
             <div className="pb-1">
               <p className="text-sm text-ink-muted">
                 {t('dashboard.targetSubtitle', {
-                  temp: Number.isFinite(targetTemp)
-                    ? targetTemp.toFixed(1)
-                    : '—',
+                  temp:
+                    typeof targetTemp === 'number' && Number.isFinite(targetTemp)
+                      ? targetTemp.toFixed(1)
+                      : '—',
                 })}
               </p>
               <Button

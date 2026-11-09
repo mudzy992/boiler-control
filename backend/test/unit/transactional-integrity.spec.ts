@@ -6,6 +6,7 @@ import { NotificationsService } from '../../src/modules/Notification/notificatio
 import { HeatingRecommendationService } from '../../src/modules/HeatingRecommendation/heating.recommendation.service';
 import { MetricsService } from '../../src/common/metrics.service';
 import { PollingWeatherService } from '../../src/modules/Weather/polling-weather.service';
+import { ThermostatObservationService } from '../../src/modules/Observation/thermostat-observation.service';
 
 /**
  * Tests for P1c: Transactional Integrity + Idempotency
@@ -72,6 +73,17 @@ describe('ThermostatPollingService: Transactional Integrity (P1c)', () => {
           provide: PollingWeatherService,
           useValue: {
             getV2CurrentTemperature: jest.fn().mockResolvedValue(null),
+          },
+        },
+        // `ThermostatPollingService` je dobio osmi dependency (mjerenja, `29`)
+        // a ovaj modul nije bio ažuriran — pa cijeli suite nije ni startovao.
+        // Zato je izgledalo kao „ekološki" crven test: padne 13 testova koji
+        // zapravo nikad nijesu izvršeni.
+        {
+          provide: ThermostatObservationService,
+          useValue: {
+            recordSample: jest.fn().mockResolvedValue(null),
+            findLatest: jest.fn().mockResolvedValue(null),
           },
         },
       ],

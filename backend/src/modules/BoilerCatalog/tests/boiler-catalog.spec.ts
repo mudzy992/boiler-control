@@ -73,9 +73,25 @@ describe('katalog — pravilo o snižavanju', () => {
   });
 
   it('nepotvrđen model ne dozvoljava savjet — iako je u katalogu', () => {
-    const family = findBoilerFamily('vaillant-ecotec-pro');
+    // `vaillant-ecotec-pro` je do 2026-11-18 bio ovdje kao TO_VERIFY; tada je
+    // iz priručnika potvrđen i sada je `vaillant-ecotec-pro-vuw`. Za primjer
+    // nepotvrđenog zapisa koristi se drugi model iz iste marke.
+    const family = findBoilerFamily('vaillant-ecotec-exclusive');
     expect(family).not.toBeNull();
     expect(isFlowAdviceAllowed(family)).toBe(false);
+  });
+
+  it('ecoTEC pro VUW je potvrđen i dozvoljava savjet (unos korisnika 2026-11-18)', () => {
+    // Korisnik ima VUW 246/5-3, a modela nije bilo u katalogu. Zapis je dodat
+    // iz priručnika; bez ovog testa bi sljedeća izmjena kataloga mogla tiho
+    // vratiti model u „nepotvrđeno" i ukinuti savjetovanje za tu kuću.
+    const family = findBoilerFamily('vaillant-ecotec-pro-vuw');
+    expect(family?.specStatus).toBe('VERIFIED_MANUAL');
+    expect(family?.outputsKw).toEqual([24, 28, 30]);
+    expect(family?.heatingFlowMinC).toBe(30);
+    expect(family?.heatingFlowMaxC).toBe(80);
+    expect(family?.separateHeatingDhwSettings).toBe(true);
+    expect(isFlowAdviceAllowed(family)).toBe(true);
   });
 
   it('nepoznat i prazan model ne dozvoljavaju savjet', () => {

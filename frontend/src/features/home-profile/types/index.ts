@@ -31,8 +31,13 @@ export interface CreateHomeProfileDto {
   heatingType: HomeProfileHeatingType;
   constructionYear: number;
   numberOfResidents?: number;
+  /** @deprecated Zamijenjeno katalogom (`25`); šalje se samo radi starih zapisa. */
   boilerModel?: string;
   boilerCatalogId?: string | null;
+  /** Snaga izvedbe iz kataloga (`outputsKw`); traži se kad porodica navodi snage. */
+  boilerOutputKw?: number | null;
+  /** Najviša polazna koju sistem dozvoljava (30–55). `null` = granica kotla. */
+  maxHeatingFlowC?: number | null;
   hasFloorHeating?: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;
@@ -58,6 +63,8 @@ export interface HomeProfileResponse {
   numberOfResidents?: number;
   boilerModel?: string;
   boilerCatalogId?: string | null;
+  boilerOutputKw?: number | null;
+  maxHeatingFlowC?: number | null;
   hasFloorHeating: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;

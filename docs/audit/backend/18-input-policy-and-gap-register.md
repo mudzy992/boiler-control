@@ -170,7 +170,7 @@ Svih dvanaest nalaza odnosi se na **stari mehanizam** (bucket-i, overshoot, `con
 | C-05 | `RECONTACT` poslije ≥ 5 dana bez grijanja | ❌ | §0.5 |
 | C-06 | Granice `s ∈ [0,2; 1,5]`, odbaci van granica | ✅ | `17` §6.4 |
 | C-07 | Exploracija samo uz rezervu komfora | ✅ | `17` §8.5 |
-| C-08 | Kalibracija `u_day` prije tvrdnje o uštedi | ⚠️ | traži ≥ 28 dana |
+| C-08 | Kalibracija `u_day` prije tvrdnje o uštedi | ⚠️ | procjena **urađena 2026-11-15** (`27`); kalibracija i tvrdnja traže ≥ 28 dana i baseline |
 
 ### 1.7 Novi zahtjevi — prikaz, obavijesti, operacija
 

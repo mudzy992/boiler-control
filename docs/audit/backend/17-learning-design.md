@@ -579,7 +579,7 @@ Posljednja dva reda su razlog zašto se ide u shadow režim, a ne direktno na bo
 | 4 | identifikacija `a` (on) + `s` sa CI — **`s` urađeno 2026-11-10 (`22`), `a` ostaje** | daje nagib kuće | 3 |
 | 5 | noćni minimum + tvrda granica — **urađeno 2026-11-11, vidi `23`** | sigurnost prije optimizacije | 1 |
 | 6 | kontroler: spuštanje do granice — **odluka + simulacija + shadow upis urađeni 2026-11-12 (`24`), mjerenje shadow perioda 2026-11-14 (`26`); zamjena predloga ostaje** | donosi uštedu | 4, 5 |
-| 7 | mjerenje ishoda + `u_day` | omogućava tvrdnju o uštedi | 1, 6 |
+| 7 | mjerenje ishoda + `u_day` — **`u_day` urađen 2026-11-15, vidi `27`; tvrdnja o uštedi ostaje (traži baseline)** | omogućava tvrdnju o uštedi | 1, 6 |
 | 8 | analog-dani kao težine/fallback | poboljšava hladni start | 2, 4 |
 
 Simulacija (§11) je obavezna prije koraka 6.

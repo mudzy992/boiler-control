@@ -236,6 +236,6 @@ kroz transpajler.
 |---|---|
 | kontroler (korak 6) | obavezna simulacija prije njega (`17` §13) |
 | `a`, `b` apsolutno | nema prozora mirovanja u mjerenjima (`22` §0) |
-| `u_day` u formuli | korak 7; danas postoji samo zapis ishoda, ne i njegova težina |
+| `u_day` u formuli | ~~korak 7~~ **urađen 2026-11-15 → `27`**: dnevni dobitak iz ostatka fita, ±2 K, medijana 7 dana, oduzima se od ravnotežne prije granica |
 | tvrdnja o uštedi | traži 28 dana baseline-a + dva mjesečna `GasReading`-a (`19` §5) |
 | primjena migracije | nema baze u okruženju |

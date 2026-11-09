@@ -286,6 +286,43 @@ describe('fit modela kuće', () => {
     expect(upserts[0].update.lastAttemptAt).toEqual(NOW);
   });
 
+  it('uz nagib pamti i `u_day` — dnevni dobitak iz istog fita', async () => {
+    // Konstantni dobici u simulaciji: fit ih upija u `c`, pa `u_day` mora biti
+    // blizu nule. Da nije, dobitak bi se brojao dvaput — i polazna bi padala
+    // bez razloga.
+    const observations = simulateHouse({
+      days: 30,
+      C: 6e6,
+      k1: 212,
+      k2: 200,
+    });
+    const { service, upserts } = setup(observations);
+
+    await service.fitHome(10, NOW);
+
+    const update = upserts[0].update;
+    expect(typeof update.uDayC).toBe('number');
+    expect(Math.abs(update.uDayC)).toBeLessThanOrEqual(2);
+    expect(Math.abs(update.uDayC)).toBeLessThan(0.5);
+    expect(update.uDayDays).toBeGreaterThanOrEqual(4);
+    expect(update.uDayAt).toEqual(NOW);
+  });
+
+  it('kad fita nema, `u_day` se ne dira — stara procjena nije nova', async () => {
+    const observations = simulateHouse({
+      days: 3,
+      C: 6e6,
+      k1: 212,
+      k2: 200,
+    });
+    const { service, upserts } = setup(observations);
+
+    await service.fitHome(10, NOW);
+
+    expect(upserts[0].update.uDayC).toBeUndefined();
+    expect(upserts[0].update.uDayAt).toBeUndefined();
+  });
+
   it('dani koji ne prolaze filter ostaju u `daysEvaluated`, sa razlogom', async () => {
     // Samo 3 dana — dovoljno za agregaciju, premalo za fit.
     const observations = simulateHouse({

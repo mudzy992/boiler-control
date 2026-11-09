@@ -410,6 +410,14 @@ model HomeModel {
   /// model; do tada fit koristi ISKLJUČIVO primarni uređaj (`21` §7).
   sourceDeviceId Int?
 
+  /// `u_day` — dnevni član za sunce/goste/kuhanje (`17` §13 korak 7).
+  /// Pozitivno = više dobitaka tog perioda, pa polazna ide **niže**.
+  /// `null` znači „nema procjene" (manje od 4 dana), ne „nula".
+  uDayC    Float?
+  /// Koliko dana je ušlo u medijanu koja je dala `uDayC`.
+  uDayDays Int?
+  uDayAt   DateTime?
+
   /// Najniža polazna pri kojoj su izmjereni kratki ciklusi (`24` §4). Kao i
   /// noćni minimum, to je granica ispod koje se ne ide — i pamti se, jer bi se
   /// inače polazna vraćala na istu grešku svaki drugi dan.

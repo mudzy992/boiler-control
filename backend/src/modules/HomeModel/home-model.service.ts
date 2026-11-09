@@ -12,6 +12,7 @@ import {
   type DayRejection,
   type DayRow,
 } from './daily-balance';
+import { dayGains, estimateDayGain } from './day-gain';
 
 /**
  * Model kuće (`17` §5.3, §13 koraci 3–4).
@@ -183,6 +184,10 @@ type HomeModelFields = {
   slopeCiHigh?: number;
   internalGainC?: number;
   residualStd?: number;
+  /** `u_day` (`17` §13 korak 7). `null` briše procjenu — nema je, ne nula je. */
+  uDayC?: number | null;
+  uDayDays?: number | null;
+  uDayAt?: Date | null;
 };
 
 @Injectable()
@@ -303,6 +308,13 @@ export class HomeModelService {
     };
 
     if (fit.status === 'ok') {
+      // `u_day` se računa iz ostataka **istog** fita, pa ne može biti stariji od
+      // nagiba. Kad dana nema dovoljno, procjena se briše: stari dobitak ne
+      // smije nadživjeti dokaz koji ga je dao.
+      const gain = estimateDayGain(
+        dayGains(rows, { slopeS: fit.slope, internalGainC: fit.internalGainC }),
+      );
+
       const data = {
         ...base,
         state: 'TRACKING' as const,
@@ -314,12 +326,19 @@ export class HomeModelService {
         residualStd: fit.residualStd,
         days: fit.days,
         lastFitAt: now,
+        uDayC: gain?.uDayC ?? null,
+        uDayDays: gain?.days ?? null,
+        uDayAt: gain ? now : null,
       };
       await this.upsert(homeProfileId, data);
       this.logger.log(
         `Model kuće ${homeProfileId}: s=${fit.slope.toFixed(3)} ` +
           `(CI ${fit.ciLow.toFixed(3)}–${fit.ciHigh.toFixed(3)}), ` +
-          `${fit.days} dana.`,
+          `${fit.days} dana, u_day ` +
+          (gain
+            ? `${gain.uDayC.toFixed(1)} K (${gain.days} dana` +
+              `${gain.capped ? ', ograničen' : ''}).`
+            : '— (premalo dana).'),
       );
       return {
         homeProfileId,

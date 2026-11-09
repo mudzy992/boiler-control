@@ -74,6 +74,29 @@ async function main() {
       out();
     }
 
+    /*
+     * Porijeklo upisanih redova — provjera da je backfill obilježio sve što je
+     * napisao. Bez ovoga bi 301 rekonstruisan dan bio nerazlučiv od mjerenog, a
+     * to je jedina stvar koja backfill čini poštenim.
+     */
+    const origins = await soft(
+      'DailyRecord porijeklo',
+      `SELECT coalesce("modelVersion", '(bez oznake)') AS model,
+              coalesce("outcomeVersion", '(bez oznake)') AS outcome,
+              count(*) AS days
+         FROM "DailyRecord"
+        GROUP BY 1, 2
+        ORDER BY days DESC`,
+    );
+    if (origins) {
+      for (const row of origins) {
+        out(
+          `porijeklo: model=${row.model} outcome=${row.outcome} → **${row.days}** dana`,
+        );
+      }
+      out();
+    }
+
     // --- izvor 1: ciklusi grijanja --------------------------------------
     const events = await soft(
       'HeatingEvent po danu',

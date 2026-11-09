@@ -28,6 +28,11 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+# `backend/.env` je uprkos gornjem pravilu bio U GITU — bio je dodat prije nego
+# je pravilo postojalo, a git ignoriše samo nove fajlove. Zato eksplicitno:
+backend/.env
+frontend/.env
+mobile/.env
 
 # Expo (local state)
 .expo/

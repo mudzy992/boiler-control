@@ -1,0 +1,30 @@
+# Dnevni backup baze i uploads-a na bind mount (/mnt/shared-app-files/...).
+# Instalacija:
+#   sudo cp deploy/systemd/boiler-control-backup.* /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now boiler-control-backup.timer
+#   sudo systemctl start boiler-control-backup.service   # probno, odmah
+#
+# `Type=oneshot` jer je posao kratak i mora završiti; tajmer ga ponavlja.
+[Unit]
+Description=Boiler Control — lokalni backup (Postgres + uploads)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# Skripta mora biti dostupna na hostu; prilagoditi putanju.
+ExecStart=/opt/boiler-control/scripts/backup/backup.sh
+User=root
+# Okruženje se ne mora postavljati — sve ima zadane vrijednosti u skripti.
+# Ako se mijenjaju, koristi Environment= ili EnvironmentFile=.
+# Environment=BACKUP_ROOT=/mnt/shared-app-files/boiler-control
+# Environment=PG_IMAGE=postgres:16
+# Environment=KEEP_COUNT=30
+
+# Backup ne smije trošiti više od ovoga; dump koji ne stane u 30 min je
+# vjerovatno zaglavio na mreži, a ne „radi".
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target

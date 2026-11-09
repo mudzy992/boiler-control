@@ -5,6 +5,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { readBackupStatus, BackupStatus } from './backup-status';
 import { DatabaseHealthService } from './database-health';
 import { RedisHealthService, RedisHealthStatus } from './redis-health.service';
 
@@ -33,12 +34,18 @@ export class HealthController {
    * Ugovor nije dirnut: `/health` u `contracts/openapi.json` nema response
    * šemu (`responses.200` = samo `description`), pa novo polje ne mijenja
    * generisani ugovor ni frontend tipove.
+   *
+   * `backup` (34): dodaje se SAMO kad je `BACKUP_DIR` postavljen, istim
+   * pravilom kao `redis`. Zastario backup NE mijenja `status` — aplikacija je
+   * zdrava i kad backup kasni; polje postoji da se to vidi, a ne da obori
+   * readiness. Provjera je čitanje dva mala JSON fajla, bez I/O prema bazi.
    */
   @Public()
   @Get()
   async getHealth(): Promise<
     { status: string; timestamp: string } & {
       redis?: Omit<RedisHealthStatus, 'enabled'>;
+      backup?: Omit<BackupStatus, 'configured'>;
     }
   > {
     const base = {
@@ -46,8 +53,20 @@ export class HealthController {
       timestamp: new Date().toISOString(),
     };
 
+    const backupStatus = readBackupStatus();
+    const backup = backupStatus.configured
+      ? {
+          lastBackupAt: backupStatus.lastBackupAt,
+          ageHours: backupStatus.ageHours,
+          stale: backupStatus.stale,
+          dumpBytes: backupStatus.dumpBytes,
+          uploadsIncluded: backupStatus.uploadsIncluded,
+          lastError: backupStatus.lastError,
+        }
+      : undefined;
+
     if (!this.redisHealth.enabled) {
-      return base;
+      return backup ? { ...base, backup } : base;
     }
 
     const status = await this.redisHealth.ping();
@@ -59,6 +78,7 @@ export class HealthController {
         latencyMs: status.latencyMs,
         error: status.error,
       },
+      ...(backup ? { backup } : {}),
     };
   }
 

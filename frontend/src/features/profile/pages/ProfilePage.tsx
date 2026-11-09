@@ -16,6 +16,7 @@ import { Input } from '@/shared/components/ui/Input';
 import { Label } from '@/shared/components/ui/Label';
 import { Select } from '@/shared/components/ui/select';
 import { InputNumber } from '@/components/InputNumber';
+import { buildProfileUpdate } from '../lib/profile-payload';
 
 interface UserProfile {
   id: number;
@@ -84,27 +85,21 @@ export const ProfilePage = (): JSX.Element => {
     setSaveDetail(null);
     try {
       /*
-       * `id` se NE šalje. Ranije je išao u tijelo (`...updateData`), a backend
-       * ima `forbidNonWhitelisted: true` — pa je svako spremanje profila
-       * završavalo sa 400 i ekran je samo tiho prelazio u „greška". Zato se
-       * jezik nije mogao sačuvati: nije bio problem u jeziku, nego u `id`-u.
+       * Tijelo se pravi bijelom listom (`buildProfileUpdate`), ne
+       * razlistavanjem `form`-e.
+       *
+       * `form` nastaje iz `GET /api/user`, a taj odgovor sadrži i `id`, `email`,
+       * `role`, `plan`, `createdAt`, `updatedAt` te izvedena polja cijene plina.
+       * Backend ima `forbidNonWhitelisted: true`, pa svako polje koje server
+       * vraća a ne prima ruši **cijelo** spremanje. Prvo je skidan samo `id` i
+       * pad je nastavio na `role`/`plan`/`createdAt`/`updatedAt` — zato ovdje
+       * više nema šta da se „ukloni": šalje se samo ono što je dozvoljeno.
        */
-      const {
-        id: _id,
-        email: _email,
-        gasPriceIncVat: _inc,
-        gasPriceLastUpdatedAt: _updated,
-        gasPriceSource: _source,
-        gasPriceVatRate: _vat,
-        ...updateData
-      } = form;
       const locale = normalizeAppLocale(form.locale);
-      await apiClient.updateUserProfile({
-        ...(updateData as Omit<UserProfile, 'email'>),
-        locale,
-      });
+      const payload = buildProfileUpdate(form, locale);
+      await apiClient.updateUserProfile(payload);
       await setAppLanguage(locale);
-      setProfile((prev) => (prev ? { ...prev, ...updateData, locale } : prev));
+      setProfile((prev) => (prev ? { ...prev, ...payload } : prev));
       setSaveStatus('ok');
     } catch (error: any) {
       const raw = error?.response?.data?.message;

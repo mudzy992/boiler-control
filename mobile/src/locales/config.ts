@@ -6,6 +6,7 @@ import * as Localization from 'expo-localization';
 const enUS = {
   common: {
     loading: 'Loading...',
+    splashPreparing: 'Preparing your data…',
     error: 'Error',
     success: 'Success',
     warning: 'Warning',
@@ -307,6 +308,8 @@ const enUS = {
     standby: 'Standby - temperature at target',
     autoRefresh: 'Data updates automatically every minute',
     pullToRefresh: 'Pull to refresh manually',
+    gaugeHint:
+      'Bar: room temperature on a fixed 0–30 °C scale; the tick marks the target. It is not heating progress.',
     noThermostats: 'No thermostats configured',
     noThermostatsBody: 'Add a thermostat to a home to see live temperatures and heating here.',
     noThermostatsAction: 'Open schedules',
@@ -460,6 +463,14 @@ const enUS = {
     flowWithinTolerance: 'within tolerance',
     flowOutsideTolerance: 'outside tolerance',
     flowScale: '{{min}} — {{max}}',
+    /**
+     * `36`: objašnjenje trake ispod brojeva. Traka je izgledala kao „napredak
+     * grijanja", a mjeri samo gdje je polazna voda unutar dozvoljenog raspona.
+     * Kratko, uz samu traku — objašnjenje u chatu korisnik ne vidi na uređaju.
+     */
+    gaugeHint: 'Bar: where the flow temperature sits within {{min}}–{{max}} °C. It is not heating progress.',
+    gaugeMin: 'Minimum',
+    gaugeMax: 'Maximum',
     voltageUpdated: 'Updated {{value}}',
     outdoor: 'Outdoor',
     outdoorFeels: 'feels {{value}}',
@@ -961,6 +972,7 @@ const enUS = {
 const bsBS = {
   common: {
     loading: 'Učitavanje...',
+    splashPreparing: 'Pripremam podatke…',
     error: 'Greška',
     success: 'Uspješno',
     warning: 'Upozorenje',
@@ -1263,6 +1275,8 @@ const bsBS = {
     standby: 'Čekanje - temperatura na cilju',
     autoRefresh: 'Podaci se ažuriraju svakog minuta',
     pullToRefresh: 'Povuci da ažuriraš ručno',
+    gaugeHint:
+      'Traka: sobna temperatura na fiksnoj skali 0–30 °C; oznaka pokazuje cilj. Nije napredak grijanja.',
     noThermostats: 'Nema konfiguriranih termostata',
     noThermostatsBody: 'Dodaj termostat na dom da bi ovdje vidio trenutne temperature i grijanje.',
     noThermostatsAction: 'Otvori rasporede',
@@ -1416,6 +1430,10 @@ const bsBS = {
     flowWithinTolerance: 'u toleranciji',
     flowOutsideTolerance: 'izvan tolerancije',
     flowScale: '{{min}} — {{max}}',
+    gaugeHint:
+      'Traka: gdje je polazna voda unutar {{min}}–{{max}} °C. Nije napredak grijanja.',
+    gaugeMin: 'Minimum',
+    gaugeMax: 'Maksimum',
     voltageUpdated: 'Ažurirano {{value}}',
     outdoor: 'Vanjska',
     outdoorFeels: 'osjećaj {{value}}',

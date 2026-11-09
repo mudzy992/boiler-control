@@ -359,7 +359,23 @@ export const DashboardScreen = () => {
                 accessibilityLabel={t('boiler.flowTemp')}
               />
 
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.sm }}>
+              {/*
+                `36`: dva `MonoMeta` bloka u jednom redu nisu se mogla sklopiti
+                na bosanskom — „Razlika -1.6 °C · izvan tolerancije" plus skala
+                prelazili su širinu ekrana, pa je red izgledao zbijeno i
+                neuredno. Sada se red prelama (`flexWrap`), a objašnjenje trake
+                je poseban red ispod nje: traka mjeri položaj unutar raspona, ne
+                napredak grijanja, i to mora pisati uz traku.
+              */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: space.sm,
+                }}
+              >
                 <MonoMeta tone={flowGap === null ? 'dim' : withinTolerance ? 'ok' : 'warn'}>
                   {flowGap === null
                     ? t('boiler.actualNotSet')
@@ -378,6 +394,13 @@ export const DashboardScreen = () => {
                   })}
                 </MonoMeta>
               </View>
+
+              <Text size="meta" tone="muted">
+                {t('boiler.gaugeHint', {
+                  min: MIN_CURRENT_FLOW_TEMP,
+                  max: MAX_CURRENT_FLOW_TEMP,
+                })}
+              </Text>
 
               <Button
                 label={t('boiler.setCurrentTemp')}

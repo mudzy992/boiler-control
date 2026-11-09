@@ -384,6 +384,17 @@ export const HeatingScreen = () => {
               ))
             )}
           </Panel>
+          {/*
+            `36`: traka u redu termostata izgleda kao „napredak grijanja", a
+            mjeri samo gdje je sobna temperatura na fiksnoj skali 0–30 °C.
+            Objašnjenje stoji jednom, uz listu — ponavljanje u svakom redu bi
+            zatrpalo karticu.
+          */}
+          {thermostats.length > 0 ? (
+            <Text size="meta" tone="muted">
+              {t('heating.gaugeHint')}
+            </Text>
+          ) : null}
         </Section>
 
         {todayEvents.length > 0 ? (

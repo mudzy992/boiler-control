@@ -46,6 +46,12 @@ export class DailyHistoryController {
   @ApiQuery({ name: 'from', required: false, type: String })
   @ApiQuery({ name: 'to', required: false, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Koliko redova preskočiti (straničenje tabele).',
+  })
   @ApiOkResponse({ description: 'Dnevni zapisi za dom i period, sa porijeklom' })
   async dailyHistory(
     @Req() req,
@@ -53,6 +59,7 @@ export class DailyHistoryController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
     const homeId = homeProfileId
       ? Number(homeProfileId)
@@ -65,6 +72,7 @@ export class DailyHistoryController {
     return this.history.forHome(req.user.userId, homeId, {
       ...validatedWindow({ from, to }),
       limit: validatedLimit(limit),
+      offset: validatedOffset(offset),
     });
   }
 
@@ -79,6 +87,16 @@ export class DailyHistoryController {
     }
     return user.activeHomeProfileId;
   }
+}
+
+/** `offset` je opcija; mora biti nenegativan cijeli broj. */
+export function validatedOffset(raw?: string): number {
+  if (raw == null || raw === '') return 0;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new BadRequestException('offset mora biti cijeli broj ≥ 0');
+  }
+  return value;
 }
 
 /** `limit` je opcija, ali mora biti cijeli broj u granicama odgovora. */

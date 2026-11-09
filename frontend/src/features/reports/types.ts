@@ -115,4 +115,8 @@ export interface DailyHistoryResponse {
     lastDate: string | null;
   };
   truncated: boolean;
+  /** Ukupan broj zapisa za dom i period — osnova za „21–40 od 302" (`36`). */
+  total?: number;
+  /** Koliko je redova preskočeno; vraća server, ne klijent. */
+  offset?: number;
 }

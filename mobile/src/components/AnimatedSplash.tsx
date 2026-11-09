@@ -1,5 +1,14 @@
 import React from 'react';
-import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Animated,
+  Easing,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { useTranslation } from '../hooks/useTranslation';
+import { Text } from '../ui';
 
 interface AnimatedSplashProps {
   visible: boolean;
@@ -10,9 +19,25 @@ export const AnimatedSplash: React.FC<AnimatedSplashProps> = ({
   visible,
   onFinished,
 }) => {
+  const { t } = useTranslation();
+  /*
+   * `36`: splash je bio samo slika na bijelom. Dok traje najduže 2,5 s i dok
+   * čeka jezik i fontove, izgledao je kao zamrznut ekran — korisnik nije imao
+   * znak da se nešto dešava. Sada se poslije 400 ms pojavi indikator i kratak
+   * tekst; rana faza ostaje čista (indikator odmah izgleda kao da je zapelo).
+   */
+  const [showProgress, setShowProgress] = React.useState(false);
   const opacity = React.useRef(new Animated.Value(1)).current;
   const scale = React.useRef(new Animated.Value(0.9)).current;
   const [reduceMotion, setReduceMotion] = React.useState(false);
+  React.useEffect(() => {
+    if (!visible) {
+      setShowProgress(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowProgress(true), 400);
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   /*
    * F6 (A11Y-15, WCAG 2.2 SC 2.3.3 Animation from Interactions / 2.2.2):
@@ -106,6 +131,14 @@ export const AnimatedSplash: React.FC<AnimatedSplashProps> = ({
           style={styles.branding}
         />
       </Animated.View>
+      {showProgress ? (
+        <View style={styles.progress} testID="splash-progress">
+          <ActivityIndicator accessibilityLabel={t('common.splashPreparing')} />
+          <Text size="meta" tone="muted">
+            {t('common.splashPreparing')}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -130,5 +163,11 @@ const styles = StyleSheet.create({
   branding: {
     width: 220,
     height: 220,
+  },
+  progress: {
+    position: 'absolute',
+    bottom: 64,
+    alignItems: 'center',
+    gap: 8,
   },
 });

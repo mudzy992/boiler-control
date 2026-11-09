@@ -45,13 +45,21 @@ export class GetHeatingEventsDto {
   @IsString()
   source?: string;
 
-  @ApiProperty()
+  /*
+   * `from`/`to` su OPCIONI (`36`). Prije su bili obavezni, pa web tabela nije
+   * mogla ni prikazati prvu stranu bez izmišljanja raspona na klijentu — a
+   * filtriranje je tada bilo nemoguće bez ponovnog izuma istog raspona.
+   * Kad nijesu poslani, servis uzima zadnjih 30 dana.
+   */
+  @ApiPropertyOptional({ description: 'Početak raspona; zadano prije 30 dana.' })
+  @IsOptional()
   @IsDateString()
-  from: string;
+  from?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Kraj raspona; zadano sada.' })
+  @IsOptional()
   @IsDateString()
-  to: string;
+  to?: string;
 
   @ApiPropertyOptional({ default: 1, minimum: 1 })
   @IsOptional()

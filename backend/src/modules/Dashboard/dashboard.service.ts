@@ -221,8 +221,18 @@ export class DashboardService {
       limit = 20,
     } = query;
 
-    if (!from || !to) {
-      throw new Error("Parametri 'from' i 'to' su obavezni");
+    // Zadani raspon: zadnjih 30 dana. Bez njega bi svaki poziv bez filtera
+    // morao sam izmišljati raspon, pa bi se klijent i server razilazili.
+    const toDate = to ? new Date(to) : new Date();
+    const fromDate = from
+      ? new Date(from)
+      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    if (Number.isNaN(toDate.getTime()) || Number.isNaN(fromDate.getTime())) {
+      throw new BadRequestException('from/to nijesu ispravni datumi');
+    }
+    if (fromDate > toDate) {
+      throw new BadRequestException('from ne može biti poslije to');
     }
 
     const where: any = {
@@ -238,10 +248,7 @@ export class DashboardService {
     if (hvacAction) where.hvacAction = hvacAction;
     if (source) where.source = source;
 
-    where.timestampStart = {
-      gte: new Date(from),
-      lte: new Date(to),
-    };
+    where.timestampStart = { gte: fromDate, lte: toDate };
 
     const take = Number(limit);
     const skip = (Number(page) - 1) * take;

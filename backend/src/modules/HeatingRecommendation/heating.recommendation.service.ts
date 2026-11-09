@@ -232,10 +232,22 @@ export class HeatingRecommendationService {
    */
   async getRecommendations(
     userId: number,
-    page: { limit: number; offset: number } = { limit: 50, offset: 0 },
+    page: {
+      limit: number;
+      offset: number;
+      from?: Date;
+      to?: Date;
+    } = { limit: 50, offset: 0 },
   ): Promise<{ rows: any[]; total: number }> {
     try {
-      const where = { userId };
+      // Filter raspona (`36`): `date` je dan na koji se preporuka odnosi.
+      const where: any = { userId };
+      if (page.from || page.to) {
+        where.date = {
+          ...(page.from ? { gte: page.from } : {}),
+          ...(page.to ? { lte: page.to } : {}),
+        };
+      }
       const [rows, total] = await Promise.all([
         this.prisma.recommendation.findMany({
           where,

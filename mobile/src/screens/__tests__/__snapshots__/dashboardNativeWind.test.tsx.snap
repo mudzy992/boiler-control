@@ -586,7 +586,9 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                 <View
                   style={
                     {
+                      "alignItems": "center",
                       "flexDirection": "row",
+                      "flexWrap": "wrap",
                       "gap": 8,
                       "justifyContent": "space-between",
                     }
@@ -625,6 +627,22 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     boiler.flowScale
                   </Text>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  boiler.gaugeHint
+                </Text>
                 <View
                   accessibilityLabel="boiler.setCurrentTemp"
                   accessibilityRole="button"
@@ -2876,22 +2894,6 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                   </Text>
                 </View>
               </View>
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#828d9e",
-                      "fontFamily": "monospace",
-                      "fontSize": 12,
-                      "lineHeight": 16,
-                    },
-                    null,
-                    undefined,
-                  ]
-                }
-              >
-                recommendation.mode: FULL · recommendation.interval: weekday_morning
-              </Text>
             </View>
           </View>
         </View>
@@ -3511,7 +3513,9 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                 <View
                   style={
                     {
+                      "alignItems": "center",
                       "flexDirection": "row",
+                      "flexWrap": "wrap",
                       "gap": 8,
                       "justifyContent": "space-between",
                     }
@@ -3550,6 +3554,22 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     boiler.flowScale
                   </Text>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  boiler.gaugeHint
+                </Text>
                 <View
                   accessibilityLabel="boiler.setCurrentTemp"
                   accessibilityRole="button"
@@ -5801,22 +5821,6 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   </Text>
                 </View>
               </View>
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#59616e",
-                      "fontFamily": "monospace",
-                      "fontSize": 12,
-                      "lineHeight": 16,
-                    },
-                    null,
-                    undefined,
-                  ]
-                }
-              >
-                recommendation.mode: FULL · recommendation.interval: weekday_morning
-              </Text>
             </View>
           </View>
         </View>

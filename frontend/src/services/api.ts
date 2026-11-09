@@ -8,6 +8,19 @@ import type {
 // potpis metode prati ugovor umjesto ručno pisane deklaracije.
 import type { components } from '../types/api';
 
+/** Red događaja grijanja (`GET /heating-events`). */
+export interface HeatingEventRow {
+  id: number;
+  deviceId: number;
+  timestampStart: string;
+  timestampEnd: string | null;
+  roomCurrentTemp: number | null;
+  roomTargetTemp: number | null;
+  hvacAction: string;
+  source: string;
+  isAnomaly?: boolean;
+}
+
 /** Red očitanja plina kako ga backend vraća (`GET /gas/readings`). */
 export interface GasReadingRow {
   id: number;
@@ -420,9 +433,23 @@ export class ApiClient {
   // FE2-12: getBoilerStatus() uklonjen — nijedan pozivatelj u frontendu.
 
   // Heating endpoints
-  async getHeatingEvents() {
-    const response = await this.client.get('/heating-events');
-    return response.data;
+  /**
+   * Događaji grijanja, straničeno (`36`). Prije je endpoint vraćao najviše 100
+   * redova bez znaka da ima još, a na grešku **prazan niz** — pa je tabela
+   * tvrdila „nema zapisa" i kad ih je bilo 415 i kad je upit pao.
+   */
+  async getHeatingEvents(params?: {
+    limit?: number;
+    offset?: number;
+    from?: string;
+    to?: string;
+    deviceId?: number;
+  }): Promise<{ rows: HeatingEventRow[]; total: number }> {
+    const response = await this.client.get('/heating-events', { params });
+    return {
+      rows: Array.isArray(response.data) ? response.data : [],
+      total: Number(response.headers?.['x-total-count'] ?? 0),
+    };
   }
 
   // FE2-12: getHeatingAnomalies() uklonjen — nijedan pozivatelj u frontendu.
@@ -455,6 +482,8 @@ export class ApiClient {
   async getGasReadings(params?: {
     limit?: number;
     offset?: number;
+    from?: string;
+    to?: string;
   }): Promise<{ rows: GasReadingRow[]; total: number }> {
     const response = await this.client.get('/gas/readings', { params });
     return {
@@ -598,6 +627,7 @@ export class ApiClient {
     from?: string;
     to?: string;
     limit?: number;
+    offset?: number;
   }): Promise<DailyHistoryResponse> {
     const response = await this.client.get('/daily-record/history', { params });
     return response.data;
@@ -611,6 +641,8 @@ export class ApiClient {
   async getReports(params?: {
     limit?: number;
     offset?: number;
+    from?: string;
+    to?: string;
   }): Promise<{
     rows: components['schemas']['RecommendationResponseDto'][];
     total: number;

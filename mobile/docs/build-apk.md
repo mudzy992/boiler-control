@@ -1,63 +1,56 @@
-# Build APK-a — šta je spremno, šta blokira
+# Build APK-a — stanje
 
-Provjereno čitanjem `mobile/eas.json`, `mobile/app.json`, `package.json` i koda
-za registraciju push tokena.
+**Ispravka prethodne verzije ovog dokumenta:** ovdje je pisalo da push
+obavijesti ne mogu raditi jer nedostaju `extra.eas.projectId` i FCM kredencijali.
+To je bilo **netačno** — provjeravao sam `app.json`, a stvarna konfiguracija je u
+`app.config.js`, koji se primjenjuje preko njega. Push je konfigurisan i radio je.
 
-## Može se odmah
+## Šta stvarno postoji
 
-`eas.json` ima tri profila i `preview` već pravi **APK** (ne AAB):
+| Stvar | Gdje | Vrijednost |
+|---|---|---|
+| EAS projekat | `app.config.js` → `extra.eas.projectId` | `c875e85d-ad10-4eb6-bdae-fa5038133ee7` |
+| OTA ažuriranja | `app.config.js` → `updates.url` | `https://u.expo.dev/c875e85d-…`, `checkAutomatically: ON_LOAD` |
+| Runtime gate | `runtimeVersion` | `{ policy: 'appVersion' }` → OTA vrijedi samo za istu `package.json version` (2.0.0) |
+| FCM | `android.googleServicesFile` → `assets/google-services.json` | projekt `boilercontrole` |
+| Kanali | `eas.json` | `development`, `preview`, `production` — svi `buildType: apk` |
+| API URL | `eas.json` profili + `app.config.js` | `https://api.boiler-control.ba101.top/api` |
+
+## Build
 
 ```bash
 cd mobile
 npx eas-cli login
-npx eas-cli build -p android --profile preview
+npx eas-cli build -p android --profile preview     # APK, interni link
 ```
 
-- `preview`: `distribution: internal`, `android.buildType: apk` → fajл se skida
-  linkom ili iz `eas build:list`.
-- `EXPO_PUBLIC_API_URL` je već upisan u profil
-  (`https://api.boiler-control.ba101.top/api`), pa APK ne zavisi od `.env`.
-- Paket: `com.boilercontrol.app`.
+Lokalno (traži Android SDK): `npx expo prebuild -p android && cd android && ./gradlew assembleRelease`.
 
-Alternativa bez EAS-a (lokalno, traži Android SDK): `npx expo prebuild -p
-android && cd android && ./gradlew assembleRelease`. APK izlazi u
-`android/app/build/outputs/apk/release/`.
+## Važno za instaliranu aplikaciju
 
-## Blokira: push obavijesti
-
-Dvije stvari nedostaju i **obje se vide kao „obavijesti ne rade"**:
-
-1. **`extra.eas.projectId` ne postoji** u `app.json`. `getExpoPushTokenAsync`
-   traži `projectId` (`notificationService.getProjectId()` čita
-   `extra.eas.projectId` ili `Constants.easConfig.projectId`). Bez njega token
-   se ne registruje.
-2. **Nema FCM kredencijala** (`android.googleServicesFile` nije postavljen).
-
-Zašto je to ozbiljno: `NotificationsService.notifyUser()` se vraća **prije**
-upisa u bazu ako korisnik nema token. Dakle bez tokena nema ni push-a **ni
-zapisa** u listi obavijesti — korisnik ne vidi ni da je nešto propušteno.
-
-Popravka (jednom, uz EAS nalog):
+`runtimeVersion` je vezan na `package.json version` (**2.0.0**). Dok se ta
+vrijednost ne mijenja, JS izmjene se mogu poslati **bez novog APK-a**:
 
 ```bash
-cd mobile
-npx eas-cli init            # upisuje extra.eas.projectId u app.json
-npx eas-cli credentials -p android   # FCM V1 service account (ili google-services.json)
+npx eas-cli update --branch preview --message "…"
 ```
 
-Poslije toga `npm run type-check && npm test` pa build.
+ali samo na kanal iz kojeg je instalirani build. Ako je instalirani APK stariji
+od izmjene imena polja (`currentTemp` → `roomCurrentTemp`), taj build traži stara
+polja i **neće** prikazati temperature dok se ne ažurira — OTA to rješava bez
+ponovne instalacije, jer je promjena samo u JS-u.
 
-## Šta APK neće imati ni poslije toga
+## Šta APK neće imati ni poslije builda
 
-- **Web push** ne postoji; obavijesti su vezane na mobilne tokene.
-- Promjena polazne **u toku** ciklusa ne šalje obavijest (samo uz početak
-  ciklusa) — vidi `docs/audit/backend/32-locale-and-pagination.md` §3.
 - Lista očitanja plina prikazuje prvih 200 (bez „učitaj još").
+- Promjena polazne **u toku** ciklusa ne šalje obavijest (samo uz početak ciklusa).
+- Model učenja postoji na mobilnom; na webu ne.
 
 ## Provjera prije objave
 
 1. `npx tsc --noEmit` — čist.
 2. `npx jest` — 347 testova, 51 suite.
-3. Na uređaju: prijava, Dashboard, Analitika (mora pokazati historiju sa
-   oznakama „izmjereno"/„rekonstruisano"), dodavanje očitanja sa slikom,
-   promjena jezika pa **restart aplikacije** (jezik mora ostati).
+3. Na uređaju: prijava, Dashboard (temperature moraju biti brojevi, ne prazno),
+   Analitika (historija sa oznakama „izmjereno"/„rekonstruisano"), dodavanje
+   očitanja sa slikom, promjena jezika pa **restart** (jezik mora ostati),
+   dolazak push obavijesti (npr. početak grijanja).

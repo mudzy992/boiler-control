@@ -34,7 +34,10 @@ import {
   type BackfillRecommendation,
   type BackfillRow,
 } from '../src/modules/DailyRecord/backfill-reconstruction';
-import { localDateKey } from '../src/modules/DailyRecord/proposal-schedule';
+import {
+  localDateKey,
+  resolveHomeTimeZone,
+} from '../src/modules/DailyRecord/proposal-schedule';
 
 interface Args {
   apply: boolean;
@@ -104,22 +107,12 @@ const notice = (message: string): void => {
   console.log(`::notice::${message.replace(/[\r\n]+/g, ' ')}`);
 };
 
-/** Zona kuće; bez nje se dan ne može odrediti, pa se kuća preskače uz razlog. */
-function zoneFor(home: {
-  weatherTimezone: string | null;
-  location: string | null;
-}): string | null {
-  if (home.weatherTimezone) {
-    try {
-      new Intl.DateTimeFormat('en-CA', { timeZone: home.weatherTimezone });
-      return home.weatherTimezone;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
+/*
+ * Zona se određuje **istom** funkcijom kao kod živog pisca
+ * (`home.weatherTimezone` → `user.timezone` → zadana). Backfill koji bi koristio
+ * drugačije granice dana pravi redove koji se ne slažu sa živima — a to je gore
+ * od prazne tabele, jer se poslije ne vidi šta je pomjereno.
+ */
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const url = args.apply
@@ -146,12 +139,15 @@ async function main(): Promise<void> {
     const homes = (
       await client.query<{
         id: number;
+        userId: number;
         weatherTimezone: string | null;
-        location: string | null;
+        userTimeZone: string | null;
       }>(
-        `SELECT id, "weatherTimezone", "location" FROM "HomeProfile"
-          ${args.homeProfileId ? 'WHERE id = $1' : ''}
-          ORDER BY id`,
+        `SELECT hp.id, hp."userId", hp."weatherTimezone", u."timezone" AS "userTimeZone"
+           FROM "HomeProfile" hp
+           JOIN "User" u ON u.id = hp."userId"
+          ${args.homeProfileId ? 'WHERE hp.id = $1' : ''}
+          ORDER BY hp.id`,
         args.homeProfileId ? [args.homeProfileId] : [],
       )
     ).rows;
@@ -162,37 +158,31 @@ async function main(): Promise<void> {
     console.log('');
 
     let totalRows = 0;
-    let totalSkippedNoZone = 0;
+    let totalDefaultZone = 0;
     let totalExisting = 0;
     const collected: Array<{ userId: number; homeProfileId: number; row: BackfillRow }> = [];
 
     for (const home of homes) {
-      const zone = zoneFor(home);
-      if (!zone) {
-        totalSkippedNoZone += 1;
+      const resolved = resolveHomeTimeZone({
+        homeTimeZone: home.weatherTimezone,
+        userTimeZone: home.userTimeZone,
+      });
+      const zone = resolved.zone;
+      if (resolved.source === 'DEFAULT') {
+        // Nije greška, ali se vidi: bez zone dan se reže po zadanom vremenu.
+        totalDefaultZone += 1;
         console.log(
-          `- kuća #${home.id}: preskočena — nema potvrđenu vremensku zonu, pa se ` +
-            'lokalni dan ne može odrediti (upis po UTC datumu pomjerio bi dan)',
+          `- kuća #${home.id}: nema poznatu vremensku zonu — koristim ${zone} ` +
+            '(isto kao živi pisac)',
         );
-        continue;
       }
-
-      const range = [args.from, args.to].filter(Boolean);
-      const where = [
-        `hp.id = $1`,
-        ...(args.from ? [`x.at >= $${range.indexOf(args.from!) + 2}::date`] : []),
-      ];
 
       // Granice raspona se primjenjuju u SQL-u radi brzine; tačno pripadanje
       // lokalnom danu odlučuje funkcija, jer SQL ne zna zonu kuće.
       const from = args.from ? `${args.from} 00:00:00` : '1970-01-01';
       const to = args.to ? `${args.to} 23:59:59` : '2100-01-01';
 
-      const detail = await client.query<{
-        id: number;
-        userId: number;
-      }>(`SELECT id, "userId" FROM "HomeProfile" hp WHERE hp.id = $1`, [home.id]);
-      const userId = detail.rows[0].userId;
+      const userId = home.userId;
 
       const events = (
         await client.query<{
@@ -303,7 +293,7 @@ async function main(): Promise<void> {
     console.log('');
     console.log(
       `Ukupno: **${totalRows}** redova za upis, ${totalExisting} dana već postoji` +
-        (totalSkippedNoZone > 0 ? `, ${totalSkippedNoZone} kuća bez zone` : ''),
+        (totalDefaultZone > 0 ? `, ${totalDefaultZone} kuća sa zadanom zonom` : ''),
     );
 
     if (collected.length > 0) {

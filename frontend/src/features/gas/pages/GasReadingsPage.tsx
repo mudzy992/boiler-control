@@ -6,24 +6,49 @@ import { PageHeader } from '@/shared/components/page-header';
 import { QueryState } from '@/shared/components/query-state';
 import { StatusBanner } from '@/shared/components/status-banner';
 import { Button } from '@/shared/components/ui/Button';
+import { Card, CardContent } from '@/shared/components/ui/Card';
 import { queryKeys } from '@/lib/queryKeys';
 import { apiClient } from '@/services/api';
+import {
+  DateRangeFilter,
+  TablePager,
+  type DateRange,
+} from '@/shared/components/table-controls';
 import { GasForm } from '../components/GasForm';
 import { GasReadingCard } from '../components/GasReadingCard';
 import { useGasReadingsQuery } from '../hooks/useGasQueries';
+
+const PAGE_SIZE = 20;
 
 export const GasReadingsPage = (): JSX.Element => {
   const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [range, setRange] = useState<DateRange>({ from: '', to: '' });
+  const [offset, setOffset] = useState(0);
   const queryClient = useQueryClient();
+  /*
+   * Traži se `PAGE_SIZE + 1` red, počevši od jednog reda prije strane. Taj
+   * dodatni red nije za prikaz — on je „prethodno očitanje" prve kartice, bez
+   * kojeg bi prva kartica na strani 2 pokazala potrošnju od nule. Bez njega bi
+   * straničenje tiho lagalo o potrošnji.
+   */
+  const fetchOffset = Math.max(0, offset - 1);
   const {
     data: readingsData,
     isLoading,
+    isFetching,
     error,
     refetch,
-  } = useGasReadingsQuery();
-  const readings = readingsData?.rows ?? [];
+  } = useGasReadingsQuery({
+    limit: PAGE_SIZE + 1,
+    offset: fetchOffset,
+    from: range.from,
+    to: range.to,
+  });
+  const fetched = readingsData?.rows ?? [];
+  const hasPrevious = offset > 0 && fetched.length > 0;
+  const readings = hasPrevious ? fetched.slice(1) : fetched;
   /** Ukupno na serveru; ako je veće od `readings.length`, ekran to kaže (`33`). */
   const totalReadings = readingsData?.total ?? 0;
 
@@ -182,14 +207,13 @@ export const GasReadingsPage = (): JSX.Element => {
     <div className="space-y-6">
       <PageHeader
         title={t('gas.title')}
-        description={`${t('gas.subtitle')} ${readings.length} ${t('gas.readingsRecorded')}.${
-          // Server zna tačan broj; ako je veći od dohvaćenog, prikaz to kaže (`33`).
-          totalReadings > readings.length
-            ? ` ${t('common.showingOf', {
+        description={`${t('gas.subtitle')} ${totalReadings} ${t('gas.readingsRecorded')}.${
+          // Straničeno (`36`): broj u podnaslovu je ukupan, a koja je strana
+          // prikazana piše podnožje liste.
+          totalReadings > PAGE_SIZE ? ` ${t('common.showingOf', {
                 shown: readings.length,
                 total: totalReadings,
-              })}`
-            : ''
+              })}` : ''
         }`}
         action={
           <>
@@ -212,6 +236,15 @@ export const GasReadingsPage = (): JSX.Element => {
           dismissLabel={t('common.dismiss')}
         />
       ) : null}
+      <DateRangeFilter
+        idPrefix="gas-readings-range"
+        value={range}
+        onChange={(next) => {
+          setRange(next);
+          setOffset(0);
+        }}
+        disabled={isFetching}
+      />
       <QueryState
         status={status}
         emptyMessage={t('gas.noReadingsYet')}
@@ -245,6 +278,17 @@ export const GasReadingsPage = (): JSX.Element => {
               isLoading={allPending}
             />
           ))}
+          <Card>
+            <CardContent className="p-0 pt-0">
+              <TablePager
+                total={totalReadings}
+                offset={offset}
+                limit={PAGE_SIZE}
+                onChange={setOffset}
+                isFetching={isFetching}
+              />
+            </CardContent>
+          </Card>
         </div>
       </QueryState>
       <GasForm

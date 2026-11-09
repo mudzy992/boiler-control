@@ -476,6 +476,22 @@ exports[`Heating nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
             </View>
+            <Text
+              style={
+                [
+                  {
+                    "color": "#9aa6b6",
+                    "fontFamily": undefined,
+                    "fontSize": 12,
+                    "lineHeight": 16,
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+            >
+              heating.gaugeHint
+            </Text>
           </View>
           <View
             accessibilityLabel="heating.autoRefreshInfo"
@@ -1044,6 +1060,22 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
             </View>
+            <Text
+              style={
+                [
+                  {
+                    "color": "#4b5563",
+                    "fontFamily": undefined,
+                    "fontSize": 12,
+                    "lineHeight": 16,
+                  },
+                  null,
+                  undefined,
+                ]
+              }
+            >
+              heating.gaugeHint
+            </Text>
           </View>
           <View
             accessibilityLabel="heating.autoRefreshInfo"

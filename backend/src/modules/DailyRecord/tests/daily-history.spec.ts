@@ -173,17 +173,29 @@ describe('buildDailyHistory — sažetak', () => {
 });
 
 describe('DailyHistoryService', () => {
-  function setup(options: { home?: { id: number } | null; rows?: unknown[] } = {}) {
+  function setup(
+    options: {
+      home?: { id: number } | null;
+      rows?: unknown[];
+      /** Ukupan broj u bazi; `undefined` = isti kao `rows.length`. */
+      total?: number;
+    } = {},
+  ) {
     const findMany = jest.fn().mockResolvedValue(options.rows ?? []);
+    // Servis sada traži i `count` (`36`): `take: limit + 1` kaže „ima još",
+    // ali ne koliko — a bez toga tabela ne može pisati „21–40 od 302".
+    const count = jest
+      .fn()
+      .mockResolvedValue(options.total ?? (options.rows ?? []).length);
     const prisma = {
       homeProfile: {
         findFirst: jest
           .fn()
           .mockResolvedValue(options.home === undefined ? { id: 7 } : options.home),
       },
-      dailyRecord: { findMany },
+      dailyRecord: { findMany, count },
     };
-    return { service: new DailyHistoryService(prisma as never), findMany };
+    return { service: new DailyHistoryService(prisma as never), findMany, count };
   }
 
   it('odbija tuđi dom', async () => {
@@ -244,4 +256,64 @@ describe('validatedLimit', () => {
       expect(() => validatedLimit(raw)).toThrow(BadRequestException);
     },
   );
+});
+
+describe('DailyHistoryService — straničenje (`36`)', () => {
+  /**
+   * `offset` i `total` postoje da tabela može reći „Prikazano 21–40 od 302".
+   * Bez `total` bi klijent mogao samo nagađati, a bez `offset` bi „sljedeća
+   * strana" ponovo čitala iste redove.
+   */
+  const makeRows = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      localDate: `2026-01-${String(index + 1).padStart(2, '0')}`,
+      modelVersion: 'daily-1',
+      outcomeVersion: null,
+    }));
+
+  function setupWithCount(rows: unknown[], total: number) {
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn().mockResolvedValue(total);
+    const prisma = {
+      homeProfile: { findFirst: jest.fn().mockResolvedValue({ id: 7 }) },
+      dailyRecord: { findMany, count },
+    };
+    return { service: new DailyHistoryService(prisma as never), findMany, count };
+  }
+
+  it('prosljeđuje offset u upit', async () => {
+    const { service, findMany } = setupWithCount(makeRows(3), 302);
+    await service.forHome(1, 7, { limit: 20, offset: 40 });
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 40, take: 21 }),
+    );
+  });
+
+  it('bez offseta ne preskače ništa', async () => {
+    const { service, findMany } = setupWithCount(makeRows(2), 2);
+    await service.forHome(1, 7, { limit: 20 });
+
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 0 }));
+  });
+
+  it('vraća ukupan broj i offset u odgovoru', async () => {
+    const { service } = setupWithCount(makeRows(20), 302);
+    const result = await service.forHome(1, 7, { limit: 20, offset: 20 });
+
+    expect(result.total).toBe(302);
+    expect(result.offset).toBe(20);
+  });
+
+  it('`truncated` je istinit dok god postoji još redova POSLIJE ove strane', async () => {
+    const middle = setupWithCount(makeRows(20), 302);
+    await expect(
+      middle.service.forHome(1, 7, { limit: 20, offset: 20 }),
+    ).resolves.toMatchObject({ truncated: true });
+
+    const last = setupWithCount(makeRows(2), 302);
+    await expect(
+      last.service.forHome(1, 7, { limit: 20, offset: 300 }),
+    ).resolves.toMatchObject({ truncated: false });
+  });
 });

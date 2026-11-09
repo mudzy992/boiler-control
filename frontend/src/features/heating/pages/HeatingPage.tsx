@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
@@ -14,30 +14,46 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
+import {
+  DateRangeFilter,
+  TablePager,
+  type DateRange,
+} from '@/shared/components/table-controls';
 import { AnomalyBadge } from '../components/anomaly-badge';
 
-interface HeatingEvent {
-  id: number;
-  timestampStart: string;
-  timestampEnd: string | null;
-  roomCurrentTemp: number;
-  roomTargetTemp: number;
-  hvacAction: string;
-  source: string;
-  isAnomaly: boolean;
-}
+const PAGE_SIZE = 25;
 
+/**
+ * Tabela događaja grijanja (`36`).
+ *
+ * Straničenje i filter su na serveru, ne u browseru: događaja ima preko 400 i
+ * raste svaki dan, pa bi „učitaj sve pa filtriraj" značilo prenos cijele tabele
+ * pri svakom otvaranju. Zato `limit`/`offset`/`from`/`to` idu u upit, a ukupan
+ * broj dolazi iz zaglavlja `X-Total-Count`.
+ */
 export const HeatingPage = (): JSX.Element => {
   const { t } = useTranslation();
+  const [range, setRange] = useState<DateRange>({ from: '', to: '' });
+  const [offset, setOffset] = useState(0);
+
   const eventsQuery = useQuery({
-    queryKey: queryKeys.heatingEvents,
-    queryFn: async (): Promise<HeatingEvent[]> => {
-      const data = await apiClient.getHeatingEvents();
-      return Array.isArray(data) ? data : data?.events ?? [];
-    },
+    queryKey: queryKeys.heatingEventsPage(
+      range.from,
+      range.to,
+      offset,
+      PAGE_SIZE,
+    ),
+    queryFn: () =>
+      apiClient.getHeatingEvents({
+        limit: PAGE_SIZE,
+        offset,
+        from: range.from || undefined,
+        to: range.to || undefined,
+      }),
   });
 
-  const events = eventsQuery.data ?? [];
+  const events = eventsQuery.data?.rows ?? [];
+  const total = eventsQuery.data?.total ?? 0;
   const status = eventsQuery.isLoading
     ? 'loading'
     : eventsQuery.isError
@@ -46,9 +62,24 @@ export const HeatingPage = (): JSX.Element => {
         ? 'empty'
         : 'success';
 
+  /*
+   * Novi filter vraća na prvu stranu. Bez toga bi „od 2026-01-01" sa strane 7
+   * prikazao praznu tabelu i korisnik bi pomislio da filter ne radi.
+   */
+  const applyRange = (next: DateRange): void => {
+    setRange(next);
+    setOffset(0);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title={t('heating.title')} description={t('heating.subtitle')} />
+      <DateRangeFilter
+        idPrefix="heating-range"
+        value={range}
+        onChange={applyRange}
+        disabled={eventsQuery.isFetching}
+      />
       <QueryState
         status={status}
         onRetry={() => {
@@ -81,8 +112,16 @@ export const HeatingPage = (): JSX.Element => {
                         ? new Date(record.timestampEnd).toLocaleString()
                         : '—'}
                     </TableCell>
-                    <TableCell>{record.roomCurrentTemp.toFixed(1)}°C</TableCell>
-                    <TableCell>{record.roomTargetTemp.toFixed(1)}°C</TableCell>
+                    <TableCell>
+                      {record.roomCurrentTemp != null
+                        ? `${record.roomCurrentTemp.toFixed(1)}°C`
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {record.roomTargetTemp != null
+                        ? `${record.roomTargetTemp.toFixed(1)}°C`
+                        : '—'}
+                    </TableCell>
                     <TableCell>
                       <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                         {record.hvacAction
@@ -94,12 +133,19 @@ export const HeatingPage = (): JSX.Element => {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{record.source}</TableCell>
                     <TableCell>
-                      <AnomalyBadge isAnomaly={record.isAnomaly} />
+                      <AnomalyBadge isAnomaly={record.isAnomaly ?? false} />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <TablePager
+              total={total}
+              offset={offset}
+              limit={PAGE_SIZE}
+              onChange={setOffset}
+              isFetching={eventsQuery.isFetching}
+            />
           </CardContent>
         </Card>
       </QueryState>

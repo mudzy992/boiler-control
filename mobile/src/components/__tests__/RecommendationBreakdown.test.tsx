@@ -50,6 +50,20 @@ describe('MO2-15 RecommendationBreakdown', () => {
     expect(queryByText('recommendation.expectedHeatTime')).toBeNull();
   });
 
+  /**
+   * `36`: red „Režim … · Interval …" je uklonjen sa dna kartice. Isti podatak
+   * stoji uz traku termostata na Početnoj, gdje je kontekst odluke; na dnu
+   * ekrana je bio duplikat koji je korisnik zaokružio kao suvišan.
+   */
+  it('ne ispisuje režim i interval — taj kontekst nosi kartica termostata', async () => {
+    const { queryByText } = await render(
+      <RecommendationBreakdown breakdown={fullBreakdown} />
+    );
+
+    expect(queryByText(/recommendation\.mode: FULL/)).toBeNull();
+    expect(queryByText(/recommendation\.interval: weekday_morning/)).toBeNull();
+  });
+
   it('renders nothing without a backend breakdown', async () => {
     const { toJSON } = await render(<RecommendationBreakdown breakdown={null} />);
     expect(toJSON()).toBeNull();

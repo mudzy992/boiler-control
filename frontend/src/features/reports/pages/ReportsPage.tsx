@@ -9,6 +9,11 @@ import { QueryState } from '@/shared/components/query-state';
 import { Button } from '@/shared/components/ui/Button';
 import { Card, CardContent } from '@/shared/components/ui/Card';
 import {
+  DateRangeFilter,
+  TablePager,
+  type DateRange,
+} from '@/shared/components/table-controls';
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,6 +27,9 @@ import { ShadowReportPanel } from '../components/ShadowReportPanel';
 import type { components } from '@/types/api';
 
 type Recommendation = components['schemas']['RecommendationResponseDto'];
+
+/** Jedna strana tabele preporuka; ostatak se dohvaća `offset`-om (`36`). */
+const RECOMMENDATIONS_PAGE_SIZE = 25;
 
 export const ReportsPage = (): JSX.Element => {
   const { t } = useTranslation();
@@ -57,18 +65,28 @@ export const ReportsPage = (): JSX.Element => {
    * ima još. Sada se traži strana, a `total` iz zaglavlja kaže koliko ih je
    * stvarno — i nudi se „učitaj još" dok se ne dođe do kraja.
    */
-  const [pageSize, setPageSize] = useState(50);
+  const [range, setRange] = useState<DateRange>({ from: '', to: '' });
+  const [offset, setOffset] = useState(0);
   const reportsQuery = useQuery({
-    queryKey: queryKeys.reportsPage(pageSize),
+    queryKey: queryKeys.reportsPageFiltered(
+      range.from,
+      range.to,
+      offset,
+      RECOMMENDATIONS_PAGE_SIZE,
+    ),
     queryFn: async (): Promise<{ rows: Recommendation[]; total: number }> => {
-      const data = await apiClient.getReports({ limit: pageSize });
+      const data = await apiClient.getReports({
+        limit: RECOMMENDATIONS_PAGE_SIZE,
+        offset,
+        from: range.from || undefined,
+        to: range.to || undefined,
+      });
       return { rows: Array.isArray(data.rows) ? data.rows : [], total: data.total };
     },
   });
 
   const recommendations = reportsQuery.data?.rows ?? [];
   const recommendationsTotal = reportsQuery.data?.total ?? 0;
-  const hasMoreRecommendations = recommendations.length < recommendationsTotal;
   const status = reportsQuery.isLoading
     ? 'loading'
     : reportsQuery.isError
@@ -90,6 +108,16 @@ export const ReportsPage = (): JSX.Element => {
         from={historyFrom}
         to={historyTo}
         limit={historyLimit}
+      />
+      <DateRangeFilter
+        idPrefix="reports-range"
+        label={t('reports.title')}
+        value={range}
+        onChange={(next) => {
+          setRange(next);
+          setOffset(0);
+        }}
+        disabled={reportsQuery.isFetching}
       />
       <QueryState
         status={status}
@@ -168,27 +196,16 @@ export const ReportsPage = (): JSX.Element => {
                 })}
               </TableBody>
             </Table>
+            <TablePager
+              total={recommendationsTotal}
+              offset={offset}
+              limit={RECOMMENDATIONS_PAGE_SIZE}
+              onChange={setOffset}
+              isFetching={reportsQuery.isFetching}
+            />
           </CardContent>
         </Card>
       </QueryState>
-      {hasMoreRecommendations ? (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-text-secondary">
-            {t('common.showingOf', {
-              shown: recommendations.length,
-              total: recommendationsTotal,
-            })}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setPageSize((size) => Math.min(size + 50, 200))}
-            disabled={reportsQuery.isFetching}
-          >
-            {t('common.loadMore')}
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 };

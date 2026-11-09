@@ -5,6 +5,7 @@ import { StatusBanner } from '@/shared/components/status-banner';
 import { PageHeader } from '@/shared/components/page-header';
 import { QueryState } from '@/shared/components/query-state';
 import { Card, CardContent } from '@/shared/components/ui/Card';
+import type { DateRange } from '@/shared/components/table-controls';
 import {
   Table,
   TableBody,
@@ -21,16 +22,24 @@ export const GasAnalyticsPage = (): JSX.Element => {
   const { t } = useTranslation();
   const [periodDays, setPeriodDays] = useState(30);
   const [useDefaultReferenceRange, setUseDefaultReferenceRange] = useState(true);
+  const [customRange, setCustomRange] = useState<DateRange>({ from: '', to: '' });
+  const hasCustomRange = Boolean(customRange.from && customRange.to);
   const dateRange = useMemo(() => {
+    // Ručni raspon ima prednost nad brzim izborom (`36`).
+    if (customRange.from && customRange.to) {
+      return { from: customRange.from, to: customRange.to };
+    }
     const endDate = dayjs();
     return {
       from: endDate.subtract(periodDays, 'days').format('YYYY-MM-DD'),
       to: endDate.format('YYYY-MM-DD'),
     };
-  }, [periodDays]);
+  }, [periodDays, customRange]);
 
   const analysisQuery = useGasAnalysisQuery({
-    useDefaultReferenceRange,
+    // Sa ručnim rasponom eksplicitni period mora pobijediti „referenca→sada",
+    // inače bi filtriranje po datumu bilo bez efekta.
+    useDefaultReferenceRange: useDefaultReferenceRange && !hasCustomRange,
     from: dateRange.from,
     to: dateRange.to,
   });
@@ -87,8 +96,14 @@ export const GasAnalyticsPage = (): JSX.Element => {
         useDefaultReferenceRange={useDefaultReferenceRange}
         onSelectReference={() => setUseDefaultReferenceRange(true)}
         onSelectDays={(days) => {
+          setCustomRange({ from: '', to: '' });
           setUseDefaultReferenceRange(false);
           setPeriodDays(days);
+        }}
+        customRange={customRange}
+        onCustomRange={(next) => {
+          setCustomRange(next);
+          if (next.from || next.to) setUseDefaultReferenceRange(false);
         }}
       />
       <Card>

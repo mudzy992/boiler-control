@@ -68,6 +68,8 @@ export class GasReadingController {
   @Get('readings')
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
   @ApiOkResponse({
     type: [GasReadingResponseDto],
     description: `Ukupan broj redova je u \`${TOTAL_COUNT_HEADER}\` zaglavlju.`,
@@ -76,12 +78,18 @@ export class GasReadingController {
     @Req() req,
     @Query('limit') limit: string | undefined,
     @Query('offset') offset: string | undefined,
+    @Query('from') from: string | undefined,
+    @Query('to') to: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
     // Prije: svi redovi u jednom odgovoru. Očitanja rastu svaki mjesec, pa je to
     // jedina lista koja s vremenom sigurno postaje prevelika.
     const page = parsePage({ limit, offset }, { defaultLimit: 100, maxLimit: 500 });
-    const { rows, total } = await this.service.findAll(req.user.userId, page);
+    const { rows, total } = await this.service.findAll(req.user.userId, {
+      ...page,
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+    });
     setTotalCount(res, total);
     return rows;
   }

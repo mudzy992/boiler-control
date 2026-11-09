@@ -168,12 +168,14 @@ async function screenTree(mode: Mode) {
   await result.findByTestId('thermostat-panel');
   // Testovi u ovom fajlu mockaju `t` na `t(key) => key`, pa se provjerava
   // sastav reda (koji ključevi i koja vrijednost), a ne prevedeni tekst.
-  // Dva termostata (Living Room, Kitchen) => dva reda sa istim kontekstom.
+  // `36`: nekada je isti red stajao dvaput — uz termostat i na dnu ekrana
+  // (u `RecommendationBreakdown`). Korisnik ga je zaokružio kao suvišan, pa
+  // sada smije postojati tačno jednom: na kartici termostata.
   expect(
     result.getAllByText(
       /recommendation\.mode: FULL · recommendation\.interval: weekday_morning/,
     ).length,
-  ).toBe(2);
+  ).toBe(1);
 
   await result.findByTestId('recommendation-breakdown');
   await result.findByText('Short cycle warning');

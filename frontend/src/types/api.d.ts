@@ -1777,10 +1777,10 @@ export interface components {
             gasPriceExVat?: number;
             homeLocation?: string;
             /**
-             * @description Jezik aplikacije. Ograničeno na jezike koje klijenti stvarno imaju — proizvoljan string bi se sačuvao, a ekran bi pao na fallback bez traga.
-             * @enum {string}
+             * @description Jezik aplikacije. Prihvata se `bs`/`en` sa opcionom regijom (`bs-BS`, `en-US`, i zatečeni `bs-BA`), jer stariji zapisi nose regiju koja se razlikuje od one koju klijenti danas šalju. Proizvoljan string se odbija: sačuvao bi se, a klijent bi pao na fallback bez traga.
+             * @example bs-BS
              */
-            locale?: "bs-BS" | "en-US";
+            locale?: string;
             name?: string;
             password?: string;
             prefersDarkMode?: boolean;
@@ -2165,6 +2165,8 @@ export interface operations {
                 from?: string;
                 to?: string;
                 limit?: number;
+                /** @description Koliko redova preskočiti (straničenje tabele). */
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -2310,13 +2312,15 @@ export interface operations {
     };
     DashboardController_getHeatingEvents: {
         parameters: {
-            query: {
+            query?: {
                 homeProfileId?: number;
                 deviceId?: number;
                 hvacAction?: string;
                 source?: string;
-                from: string;
-                to: string;
+                /** @description Početak raspona; zadano prije 30 dana. */
+                from?: string;
+                /** @description Kraj raspona; zadano sada. */
+                to?: string;
                 page?: number;
                 limit?: number;
             };
@@ -2758,6 +2762,8 @@ export interface operations {
     GasReadingController_findAll: {
         parameters: {
             query?: {
+                to?: string;
+                from?: string;
                 offset?: number;
                 limit?: number;
             };
@@ -2780,7 +2786,13 @@ export interface operations {
     };
     HeatingController_getHeatingEvents: {
         parameters: {
-            query?: never;
+            query?: {
+                deviceId?: number;
+                to?: string;
+                from?: string;
+                offset?: number;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3216,6 +3228,8 @@ export interface operations {
     RecommendationsController_getRecommendations: {
         parameters: {
             query?: {
+                to?: string;
+                from?: string;
                 offset?: number;
                 limit?: number;
             };

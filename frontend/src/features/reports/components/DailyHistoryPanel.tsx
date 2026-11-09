@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { StatusBanner } from '@/shared/components/status-banner';
+import { TablePager } from '@/shared/components/table-controls';
 import {
   coveredGroups,
   historyHeadline,
@@ -51,15 +52,22 @@ export const DailyHistoryPanel = ({
 }: DailyHistoryPanelProps): JSX.Element | null => {
   const { t } = useTranslation();
   const enabled = Boolean(homeProfileId) && Boolean(from) && Boolean(to);
+  /*
+   * Historija se straniči na serveru (`36`): 302 dana se prije seklo na 180 i o
+   * tome je govorio samo banner. Sada se čita jedna strana, a `total` iz
+   * odgovora kaže koliko dana stvarno postoji.
+   */
+  const [offset, setOffset] = useState(0);
 
   const historyQuery = useQuery({
-    queryKey: queryKeys.dailyHistory(homeProfileId ?? 0, from, to, limit),
+    queryKey: queryKeys.dailyHistory(homeProfileId ?? 0, from, to, limit, offset),
     queryFn: () =>
       apiClient.getDailyHistory({
         homeProfileId: homeProfileId as number,
         from,
         to,
         limit,
+        offset,
       }),
     enabled,
     staleTime: 1000 * 60 * 5,
@@ -135,6 +143,13 @@ export const DailyHistoryPanel = ({
                 ))}
               </TableBody>
             </Table>
+            <TablePager
+              total={report.total ?? report.rows.length}
+              offset={offset}
+              limit={limit}
+              onChange={setOffset}
+              isFetching={historyQuery.isFetching}
+            />
           </>
         ) : null}
 

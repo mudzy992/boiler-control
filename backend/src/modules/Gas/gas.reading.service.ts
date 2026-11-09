@@ -183,9 +183,20 @@ export class GasReadingService {
    */
   async findAll(
     userId: number,
-    page: { limit: number; offset: number } = { limit: 100, offset: 0 },
+    page: { limit: number; offset: number; from?: Date; to?: Date } = {
+      limit: 100,
+      offset: 0,
+    },
   ): Promise<{ rows: any[]; total: number }> {
-    const where = { userId };
+    // Filter raspona (`36`): `readingDate` je datum očitanja, ne `createdAt` —
+    // korisnik filtrira po danu kad je brojilo očitano.
+    const where: any = { userId };
+    if (page.from || page.to) {
+      where.readingDate = {
+        ...(page.from ? { gte: page.from } : {}),
+        ...(page.to ? { lte: page.to } : {}),
+      };
+    }
     const [readings, total] = await Promise.all([
       this.prisma.gasReading.findMany({
         where,

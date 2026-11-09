@@ -21,11 +21,33 @@ export interface AppGasReading {
  * (132). `total` iz zaglavlja kaže koliko ih je stvarno — ako je veći, ekran to
  * mora reći, a ne tvrditi da je prikazano sve.
  */
-export function useGasReadingsQuery(limit = 500) {
+export function useGasReadingsQuery(
+  /**
+   * Ili broj (staro ponašanje: jedna doza za analitiku) ili puni prozor
+   * (`36`): tabela traži `offset` i raspon datuma, pa joj treba cijeli objekat.
+   */
+  params: number | { limit?: number; offset?: number; from?: string; to?: string } = 500,
+) {
+  const pageWindow = typeof params === 'number' ? { limit: params } : params;
+  const limit = pageWindow.limit ?? 500;
   return useQuery<{ rows: AppGasReading[]; total: number }>({
-    queryKey: queryKeys.gasReadings,
+    // Ključ nosi prozor, inače bi strana 2 prikazala keširane redove strane 1.
+    queryKey:
+      pageWindow.offset || pageWindow.from || pageWindow.to
+        ? queryKeys.gasReadingsPage(
+            pageWindow.from ?? '',
+            pageWindow.to ?? '',
+            pageWindow.offset ?? 0,
+            limit,
+          )
+        : queryKeys.gasReadings,
     queryFn: async () => {
-      const response = await apiClient.getGasReadings({ limit });
+      const response = await apiClient.getGasReadings({
+        limit,
+        offset: pageWindow.offset,
+        from: pageWindow.from || undefined,
+        to: pageWindow.to || undefined,
+      });
       return {
         rows: Array.isArray(response.rows) ? (response.rows as AppGasReading[]) : [],
         total: response.total,

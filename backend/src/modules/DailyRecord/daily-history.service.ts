@@ -22,6 +22,8 @@ export interface DailyHistoryWindow {
   to?: string;
   /** Najviše redova; preko toga se odgovor označi kao skraćen. */
   limit: number;
+  /** Koliko se preskače — straničenje tabele (`36`). */
+  offset?: number;
 }
 
 /** Gornja granica jednog odgovora — više od toga klijent ne prikazuje. */
@@ -35,7 +37,9 @@ export class DailyHistoryService {
     userId: number,
     homeProfileId: number,
     window: DailyHistoryWindow,
-  ): Promise<DailyHistory & { homeProfileId: number }> {
+  ): Promise<
+    DailyHistory & { homeProfileId: number; total: number; offset: number }
+  > {
     // Vlasništvo se provjerava ovdje, ne u kontroleru — servis se može zvati i
     // iz drugog mjesta, pa pravilo mora putovati s njim.
     const home = await this.prisma.homeProfile.findFirst({
@@ -62,6 +66,7 @@ export class DailyHistoryService {
       // Najnoviji prvi, pa se reže na `limit`; u odgovoru se sortira uzlazno.
       orderBy: { localDate: 'desc' },
       take: window.limit + 1,
+      skip: window.offset ?? 0,
       select: {
         localDate: true,
         proposedFlowTemp: true,
@@ -86,12 +91,35 @@ export class DailyHistoryService {
       },
     })) as unknown as DailyRecordInput[];
 
-    const truncated = rows.length > window.limit;
-    const kept = truncated ? rows.slice(0, window.limit) : rows;
+    const hasMoreRows = rows.length > window.limit;
+    const kept = hasMoreRows ? rows.slice(0, window.limit) : rows;
+
+    /*
+     * Ukupan broj se dobija zasebnim `count`-om, jer `take: limit + 1` govori
+     * samo „ima još", ne koliko. Bez broja tabela ne može napisati „21–40 od
+     * 302" — a to je razlog zbog kojeg je straničenje i traženo (`36`).
+     */
+    const total = await this.prisma.dailyRecord.count({
+      where: {
+        homeProfileId,
+        ...(window.from || window.to
+          ? {
+              localDate: {
+                ...(window.from ? { gte: window.from } : {}),
+                ...(window.to ? { lte: window.to } : {}),
+              },
+            }
+          : {}),
+      },
+    });
 
     return {
-      ...buildDailyHistory(kept, { truncated }),
+      ...buildDailyHistory(kept, {
+        truncated: (window.offset ?? 0) + kept.length < total,
+      }),
       homeProfileId,
+      total,
+      offset: window.offset ?? 0,
     };
   }
 }

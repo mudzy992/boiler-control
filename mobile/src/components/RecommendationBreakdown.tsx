@@ -120,11 +120,12 @@ export const RecommendationBreakdown = React.memo(function RecommendationBreakdo
           ))}
         </Panel>
         <InlineBanner tone="info" title={t('recommendation.disclaimer')} />
-        <MonoMeta>
-          {`${t('recommendation.mode')}: ${breakdown.mode}${
-            breakdown.intervalKey ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}` : ''
-          }`}
-        </MonoMeta>
+        {/*
+          `36`: red „Režim: FULL · Interval: weekday_evening" je uklonjen.
+          Isti podaci stoje uz traku termostata (kartica termostata na Početnoj),
+          gdje su i kontekst odluke — na dnu ekrana su bili duplikat koji je
+          korisnik zaokružio kao suvišan.
+        */}
       </View>
     </Section>
   );

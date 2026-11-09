@@ -2177,11 +2177,8 @@
             "type": "string"
           },
           "locale": {
-            "description": "Jezik aplikacije. Ograničeno na jezike koje klijenti stvarno imaju — proizvoljan string bi se sačuvao, a ekran bi pao na fallback bez traga.",
-            "enum": [
-              "bs-BS",
-              "en-US"
-            ],
+            "description": "Jezik aplikacije. Prihvata se `bs`/`en` sa opcionom regijom (`bs-BS`, `en-US`, i zatečeni `bs-BA`), jer stariji zapisi nose regiju koja se razlikuje od one koju klijenti danas šalju. Proizvoljan string se odbija: sačuvao bi se, a klijent bi pao na fallback bez traga.",
+            "example": "bs-BS",
             "type": "string"
           },
           "name": {
@@ -2956,6 +2953,15 @@
             "schema": {
               "type": "number"
             }
+          },
+          {
+            "description": "Koliko redova preskočiti (straničenje tabele).",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -3228,17 +3234,19 @@
             }
           },
           {
+            "description": "Početak raspona; zadano prije 30 dana.",
             "in": "query",
             "name": "from",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Kraj raspona; zadano sada.",
             "in": "query",
             "name": "to",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4033,6 +4041,22 @@
         "parameters": [
           {
             "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
@@ -4076,7 +4100,48 @@
     "/api/heating-events": {
       "get": {
         "operationId": "HeatingController_getHeatingEvents",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "deviceId",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -4537,6 +4602,22 @@
       "get": {
         "operationId": "RecommendationsController_getRecommendations",
         "parameters": [
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "offset",

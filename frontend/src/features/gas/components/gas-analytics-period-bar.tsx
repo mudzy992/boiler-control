@@ -2,12 +2,16 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/components/ui/Button';
 import { Card, CardContent } from '@/shared/components/ui/Card';
+import { DateRangeFilter, type DateRange } from '@/shared/components/table-controls';
 
 interface GasAnalyticsPeriodBarProps {
   periodDays: number;
   useDefaultReferenceRange: boolean;
   onSelectReference: () => void;
   onSelectDays: (days: number) => void;
+  /** Ručni raspon „od–do" (`36`); prazan = koristi se brzi izbor ili referenca. */
+  customRange: DateRange;
+  onCustomRange: (next: DateRange) => void;
 }
 
 export const GasAnalyticsPeriodBar = ({
@@ -15,6 +19,8 @@ export const GasAnalyticsPeriodBar = ({
   useDefaultReferenceRange,
   onSelectReference,
   onSelectDays,
+  customRange,
+  onCustomRange,
 }: GasAnalyticsPeriodBarProps): JSX.Element => {
   const { t } = useTranslation();
   const options: Array<{ label: string; days: number | null }> = [
@@ -34,8 +40,11 @@ export const GasAnalyticsPeriodBar = ({
           {options.map((option) => {
             const active =
               option.days === null
-                ? useDefaultReferenceRange
-                : !useDefaultReferenceRange && periodDays === option.days;
+                ? useDefaultReferenceRange && !customRange.from && !customRange.to
+                : !useDefaultReferenceRange &&
+                  !customRange.from &&
+                  !customRange.to &&
+                  periodDays === option.days;
             return (
               <Button
                 key={String(option.days)}
@@ -54,6 +63,20 @@ export const GasAnalyticsPeriodBar = ({
               </Button>
             );
           })}
+        </div>
+        {/*
+         * Brzi izbor (7d/30d/…) je neprecizan za pitanja tipa „koliko sam
+         * potrošio između dva očitanja". Ručni raspon ih zamjenjuje; kad je
+         * postavljen, nijedno dugme nije aktivno — šta se gleda piše u kartici
+         * perioda ispod.
+         */}
+        <div className="border-t border-border pt-3">
+          <DateRangeFilter
+            idPrefix="gas-analytics-range"
+            label={t('gas.periodCustom')}
+            value={customRange}
+            onChange={onCustomRange}
+          />
         </div>
       </CardContent>
     </Card>

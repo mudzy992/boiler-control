@@ -24,6 +24,8 @@ export class RecommendationsController {
   @Get()
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
   @ApiOkResponse({
     type: [RecommendationResponseDto],
     description: `Ukupan broj redova je u \`${TOTAL_COUNT_HEADER}\` zaglavlju.`,
@@ -32,6 +34,8 @@ export class RecommendationsController {
     @Req() req,
     @Query('limit') limit: string | undefined,
     @Query('offset') offset: string | undefined,
+    @Query('from') from: string | undefined,
+    @Query('to') to: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
     // Prije: `take: 100` bez ikakvog znaka da još redova postoji — korisnik sa
@@ -39,7 +43,11 @@ export class RecommendationsController {
     const page = parsePage({ limit, offset }, { defaultLimit: 50, maxLimit: 200 });
     const { rows, total } = await this.recommendationService.getRecommendations(
       req.user.userId,
-      page,
+      {
+        ...page,
+        from: from ? new Date(from) : undefined,
+        to: to ? new Date(to) : undefined,
+      },
     );
     setTotalCount(res, total);
     return rows;

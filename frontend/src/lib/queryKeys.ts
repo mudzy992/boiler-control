@@ -13,8 +13,13 @@ export const queryKeys = {
   homeProfile: ['home-profile'] as const,
   shadowReport: (homeProfileId: number, from: string, to: string) =>
     ['shadow-report', homeProfileId, from, to] as const,
-  dailyHistory: (homeProfileId: number, from: string, to: string, limit: number) =>
-    ['daily-history', homeProfileId, from, to, limit] as const,
+  dailyHistory: (
+    homeProfileId: number,
+    from: string,
+    to: string,
+    limit: number,
+    offset = 0,
+  ) => ['daily-history', homeProfileId, from, to, limit, offset] as const,
   weatherCurrent: (homeProfileId: number | undefined) =>
     ['weather-current', homeProfileId] as const,
   notifications: ['notifications'] as const,
@@ -24,7 +29,14 @@ export const queryKeys = {
   gasAnalysisRoot: ['gas-analysis'] as const,
   gasAnalysis: (rangeKey: string) => ['gas-analysis', rangeKey] as const,
   heatingEvents: ['heating-events'] as const,
+  /** Straničena tabela događaja grijanja (`36`) — parametri su dio ključa. */
+  heatingEventsPage: (from: string, to: string, offset: number, limit: number) =>
+    ['heating-events', 'page', from, to, offset, limit] as const,
+  gasReadingsPage: (from: string, to: string, offset: number, limit: number) =>
+    ['gas-readings', 'page', from, to, offset, limit] as const,
   boilerEvents: ['boiler-events'] as const,
   reports: ['reports'] as const,
   reportsPage: (limit: number) => ['reports', 'page', limit] as const,
+  reportsPageFiltered: (from: string, to: string, offset: number, limit: number) =>
+    ['reports', 'page', from, to, offset, limit] as const,
 };

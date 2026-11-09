@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Provjera kataloga bojlera (`docs/audit/backend/boiler-catalog.json`).
+"""Provjera kataloga bojlera (`backend/src/modules/BoilerCatalog/catalog.json`).
 
 Katalog je sigurnosni podatak: iz njega aplikacija odlučuje smije li uopšte
 savjetovati snižavanje polazne. Zato svaki zapis mora biti ili **potvrđen iz
@@ -28,7 +28,7 @@ import json
 import sys
 from pathlib import Path
 
-CATALOG = Path(__file__).resolve().parents[2] / "docs" / "audit" / "backend" / "boiler-catalog.json"
+CATALOG = Path(__file__).resolve().parents[2] / "backend" / "src" / "modules" / "BoilerCatalog" / "catalog.json"
 
 DHW_KINDS = {"INSTANT", "INTEGRATED_CYLINDER", "EXTERNAL_CYLINDER", "NONE"}
 SPEC_STATUS = {"VERIFIED_MANUAL", "PARTIAL", "TO_VERIFY"}

@@ -59,7 +59,13 @@ model HomeProfile {
   learningOffset                             Float                      @default(0)
   heatingType                                HomeProfile_heatingType
   seasonMode                                 SeasonMode                 @default(WINTER)
+  /// Zastarjelo: slobodan tekst koji je zamijenio katalog (`19` §1). Ostaje
+  /// samo kao istorijski podatak — **nijedna odluka se na njega ne oslanja**.
   boilerModel                                String?
+  /// Zapis iz kataloga (`backend/src/modules/BoilerCatalog/catalog.json`).
+  /// Iz njega se zna jesu li grijanje i PTV odvojeni — i smije li se polazna
+  /// uopšte savjetovati snižavati. `null` = model nije odabran.
+  boilerCatalogId                            String?
   /// Najviša polazna koju **sistem** dozvoljava: kotao ili podno grijanje
   /// (`19` §2, odluka vlasnika 2026-11-08). `null` = nije poznata, pa se
   /// koristi granica kotla (55). Nikad ne širi raspon 30–55, samo sužava.

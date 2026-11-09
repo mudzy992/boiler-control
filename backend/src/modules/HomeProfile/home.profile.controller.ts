@@ -32,6 +32,15 @@ export class HomeProfileController {
     return this.service.findActive(req.user.userId);
   }
 
+  /**
+   * Katalog bojlera za odabir modela (`19` §1). Ispred `:id` jer bi inače
+   * `boiler-catalog` bilo pročitano kao id.
+   */
+  @Get('boiler-catalog')
+  boilerCatalog() {
+    return this.service.boilerCatalog();
+  }
+
   @Get(':id')
   @ApiParam({ name: 'id', schema: { type: 'number', minimum: 1 } })
   findOne(@Req() req, @Param('id', PositiveIntPipe) id: number) {

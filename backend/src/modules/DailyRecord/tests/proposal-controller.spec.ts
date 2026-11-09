@@ -31,6 +31,7 @@ const baseInput = (overrides: Partial<ControllerInput> = {}): ControllerInput =>
   outcome: comfortable(),
   night: { floorC: 40, basis: 'NO_FAILURE' },
   modelState: 'TRACKING',
+  flowAdviceAllowed: true,
   ...overrides,
 });
 
@@ -62,6 +63,28 @@ describe('decideProposal — kad se polazna ne smije spustiti', () => {
       action: 'HOLD',
       reasons: ['NO_MODEL'],
     });
+  });
+
+  it('nepotvrđen model bojlera ne spušta polaznu — PTV je važniji od uštede', () => {
+    const decision = decideProposal(
+      baseInput({ flowAdviceAllowed: false }),
+    );
+    expect(decision).toMatchObject({
+      flowC: 45,
+      action: 'HOLD',
+      reasons: ['MODEL_UNVERIFIED'],
+    });
+  });
+
+  it('nepotvrđen model i dalje dozvoljava podizanje zbog hladnoće', () => {
+    const decision = decideProposal(
+      baseInput({
+        flowAdviceAllowed: false,
+        outcome: comfortable({ undershootC: 2 }),
+      }),
+    );
+    expect(decision.reasons).toEqual(['UNDERSHOOT']);
+    expect(decision.flowC).toBe(46.5);
   });
 
   it('bez poredljivih noći ne spušta, iako je dan bio udoban', () => {

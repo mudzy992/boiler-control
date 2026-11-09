@@ -1,13 +1,15 @@
 import {
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
-  ValidateIf,
   Max,
+  MaxLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import {
@@ -16,6 +18,7 @@ import {
   HomeProfile_heatingType,
   SeasonMode,
 } from 'src/generated/prisma';
+import { BOILER_FAMILY_IDS } from '../../BoilerCatalog/boiler-catalog';
 
 // Globalni enableImplicitConversion ne smije promijeniti raw JSON tip prije validacije.
 const preserveRawInput = ({ obj, key }: TransformFnParams) => obj[key];
@@ -78,9 +81,17 @@ export class UpdateHomeProfileDto {
   @Max(20)
   numberOfResidents?: number;
 
+  /** Zapis iz kataloga bojlera; `null` briše odabir. */
+  @IsOptional()
+  @Transform(preserveRawInput)
+  @IsIn(BOILER_FAMILY_IDS as string[])
+  boilerCatalogId?: string | null;
+
+  /** @deprecated Zamijenjeno sa `boilerCatalogId`; prima se samo zbog starih klijenata. */
   @IsOptional()
   @Transform(preserveRawInput)
   @IsString()
+  @MaxLength(100)
   boilerModel?: string;
 
   @ValidateIf((_dto, value) => value !== undefined)

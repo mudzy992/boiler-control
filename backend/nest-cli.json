@@ -8,6 +8,10 @@
       {
         "include": "generated/prisma/**/*",
         "outDir": "dist/src"
+      },
+      {
+        "include": "modules/BoilerCatalog/*.json",
+        "outDir": "dist/src"
       }
     ],
     "watchAssets": true

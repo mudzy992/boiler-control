@@ -72,8 +72,23 @@ jobs:
       - name: Apply migrations again (must be a no-op)
         run: npx prisma migrate deploy
 
+      # Greška se objavljuje kao anotacija: u ovom okruženju log job-a se ne može
+      # preuzeti (redirect na blob storage), a anotacije idu kroz API.
       - name: Build (nest build)
-        run: npm run build
+        run: |
+          set +e
+          npm run build 2>&1 | tee "$RUNNER_TEMP/build.log"
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            echo "::error::nest build nije prošao (exit $code)"
+            grep -E "error TS" "$RUNNER_TEMP/build.log" | head -20 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            tail -5 "$RUNNER_TEMP/build.log" | while IFS= read -r line; do
+              echo "::error::tail: $line"
+            done
+          fi
+          exit "$code"
 
       # Asset iz `nest-cli.json`: ako se `catalog.json` ne kopira u `dist`, build
       # prolazi a aplikacija padne pri prvom zahtjevu.

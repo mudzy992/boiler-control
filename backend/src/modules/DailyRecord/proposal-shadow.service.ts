@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
 import { applyDayGain } from '../HomeModel/day-gain';
 import { effectiveShortCycleFloor } from './short-cycle-floor';
+import { explorationFor } from './exploration';
 import {
   effectiveCeilingC,
   findBoilerFamily,
@@ -84,7 +85,7 @@ export class ProposalShadowService {
       };
     }
 
-    const [home, model, previous, lastOutcome] = await Promise.all([
+    const [home, model, previous, recentOutcomes, lastOutcome] = await Promise.all([
       this.prisma.homeProfile.findUnique({
         where: { id: homeProfileId },
         select: {
@@ -117,7 +118,24 @@ export class ProposalShadowService {
           proposedFlowTemp: { not: null },
         },
         orderBy: { localDate: 'desc' },
-        select: { localDate: true, proposedFlowTemp: true },
+        select: {
+          localDate: true,
+          proposedFlowTemp: true,
+          // Jučerašnje istraživanje blokira novo (`17` §8.5).
+          shadowExplorationDirection: true,
+        },
+      }),
+
+      // Rezerva za istraživanje: prebačaji zadnjih 5 obračunatih dana.
+      this.prisma.dailyRecord.findMany({
+        where: {
+          homeProfileId,
+          localDate: { lt: localDate },
+          outcomeAt: { not: null },
+        },
+        orderBy: { localDate: 'desc' },
+        take: 5,
+        select: { localDate: true, overshootC: true },
       }),
       this.prisma.dailyRecord.findFirst({
         where: { homeProfileId, localDate: { lt: localDate }, outcomeAt: { not: null } },
@@ -214,6 +232,14 @@ export class ProposalShadowService {
       family,
     });
 
+    // Istraživanje se dopušta samo kad je rezerva dokazana i noć nije hladna.
+    const exploration = explorationFor({
+      recentOvershootC: recentOutcomes.map((row) => row.overshootC),
+      nightMinC,
+      exploredYesterday: previous?.shadowExplorationDirection === 'LOWER',
+      hasPreviousFlow: previousFlowC != null,
+    });
+
     const decision = decideProposal({
       modelFlowC,
       previousFlowC,
@@ -228,6 +254,7 @@ export class ProposalShadowService {
       maxFlowC: ceiling,
       flowAdviceAllowed: isFlowAdviceAllowed(family),
       modelState: (model?.state ?? 'COLD_START') as ModelState,
+      exploration: exploration.direction,
     });
 
     await this.prisma.dailyRecord.updateMany({
@@ -238,6 +265,8 @@ export class ProposalShadowService {
         shadowReasons: [...decision.reasons, ...decision.bounds].join('+'),
         shadowAt: now,
         shadowVersion: SHADOW_VERSION,
+        shadowExploration: decision.exploration,
+        shadowExplorationDirection: decision.exploration ? 'LOWER' : null,
       },
     });
 
@@ -245,7 +274,8 @@ export class ProposalShadowService {
       `Shadow kuća ${homeProfileId} ${localDate}: u_day ` +
         `${model?.uDayC == null ? '—' : `${model.uDayC.toFixed(1)} K`}, formula ` +
         `${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
-        `${decision.flowC ?? '—'} °C (${decision.action}; ` +
+        `${decision.flowC ?? '—'} °C (${decision.action}` +
+        `${decision.exploration ? ', istraživanje' : ''}; ` +
         `${[...decision.reasons, ...decision.bounds].join('+') || 'bez razloga'}).`,
     );
 

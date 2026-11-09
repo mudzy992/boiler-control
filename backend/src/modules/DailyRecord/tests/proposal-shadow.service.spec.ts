@@ -26,6 +26,8 @@ interface Setup {
   outcome?: Record<string, unknown> | null;
   changed?: Record<string, unknown> | null;
   nightFloor?: Record<string, unknown>;
+  /** Zadnjih 5 obračunatih dana; `overshootC` nosi rezervu za istraživanje. */
+  recentOutcomes?: { localDate: string; overshootC: number | null }[];
 }
 
 function setup(options: Setup = {}) {
@@ -52,6 +54,7 @@ function setup(options: Setup = {}) {
             : options.record,
         );
       }),
+      findMany: jest.fn().mockResolvedValue(options.recentOutcomes ?? []),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     homeProfile: {
@@ -176,6 +179,10 @@ describe('ProposalShadowService — odluka', () => {
     expect(Object.keys(call.data).sort()).toEqual([
       'shadowAction',
       'shadowAt',
+      // Istraživanje (`17` §8.5) je dio shadow zapisa, pa mu pripadaju i ove
+      // dvije kolone — ali ništa izvan `shadow*`.
+      'shadowExploration',
+      'shadowExplorationDirection',
       'shadowFlowC',
       'shadowReasons',
       'shadowVersion',
@@ -291,6 +298,86 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
   it('bez procjene (`uDayC` nedefinisan) ponašanje je kao prije koraka 7', async () => {
     const missing = await arrange(fitted).service.evaluate(10, DAY, NOW);
     expect(missing.decision?.flowC).toBeCloseTo(44.04, 2);
+  });
+});
+
+describe('ProposalShadowService — istraživanje (`17` §8.5)', () => {
+  /** Dwell blokira redovno spuštanje, pa je odluka `HOLD` — mjesto za istraživanje. */
+  const arrangements = (extra: Record<string, unknown> = {}) => ({
+    record: { id: 1, proposedFlowTemp: 45, nightMinC: 4, shadowAt: null },
+    previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+    outcome: comfortableOutcome,
+    changed: { localDate: YESTERDAY },
+    recentOutcomes: [
+      { localDate: '2026-11-02', overshootC: 1.6 },
+      { localDate: '2026-11-03', overshootC: 1.4 },
+      { localDate: '2026-11-04', overshootC: 0.2 },
+      { localDate: '2026-11-05', overshootC: 1.9 },
+    ],
+    ...extra,
+  });
+
+  it('uz dokazanu rezervu i HOLD odluku istražuje 1 K niže', async () => {
+    const { service, prisma } = setup(arrangements());
+
+    const result = await service.evaluate(10, DAY, NOW);
+
+    expect(result.decision?.flowC).toBe(44);
+    expect(result.decision?.reasons).toEqual(['EXPLORE_LOWER']);
+    expect(result.decision?.exploration).toBe(true);
+    expect(prisma.dailyRecord.updateMany.mock.calls[0][0].data).toMatchObject({
+      shadowExploration: true,
+      shadowExplorationDirection: 'LOWER',
+    });
+  });
+
+  it('jučerašnje istraživanje blokira novo — nikad dva dana zaredom', async () => {
+    const { service, prisma } = setup(
+      arrangements({
+        previous: {
+          localDate: YESTERDAY,
+          proposedFlowTemp: 45,
+          shadowExplorationDirection: 'LOWER',
+        },
+      }),
+    );
+
+    const result = await service.evaluate(10, DAY, NOW);
+
+    expect(result.decision?.flowC).toBe(45);
+    expect(result.decision?.reasons).toEqual(['DWELL']);
+    expect(prisma.dailyRecord.updateMany.mock.calls[0][0].data).toMatchObject({
+      shadowExploration: false,
+      shadowExplorationDirection: null,
+    });
+  });
+
+  it('hladna noć poništava rezervu', async () => {
+    const { service } = setup(
+      arrangements({
+        record: { id: 1, proposedFlowTemp: 45, nightMinC: -2, shadowAt: null },
+      }),
+    );
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(45);
+    expect(result.decision?.exploration).toBe(false);
+  });
+
+  it('bez rezerve nema istraživanja ni kad je odluka HOLD', async () => {
+    const { service } = setup(
+      arrangements({
+        recentOutcomes: [
+          { localDate: '2026-11-02', overshootC: 0.2 },
+          { localDate: '2026-11-03', overshootC: 0.1 },
+          { localDate: '2026-11-04', overshootC: 0.4 },
+        ],
+      }),
+    );
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(45);
+    expect(result.decision?.exploration).toBe(false);
   });
 });
 

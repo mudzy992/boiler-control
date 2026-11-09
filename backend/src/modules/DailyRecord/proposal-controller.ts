@@ -6,6 +6,10 @@ import {
   type NightFloorBasis,
 } from './flow-bounds';
 import { UNDERSHOOT_TOLERANCE_K } from './day-outcome';
+import {
+  EXPLORATION_AMPLITUDE_K,
+  type ExplorationDirection,
+} from './exploration';
 
 /**
  * Kontroler — silazak do granice komfora (`17` §8).
@@ -91,7 +95,8 @@ export type ControllerReason =
   | 'COMFORT_HOLD'
   | 'STEADY'
   | 'DWELL'
-  | 'MODEL_UNVERIFIED';
+  | 'MODEL_UNVERIFIED'
+  | 'EXPLORE_LOWER';
 
 export type ModelState = 'TRACKING' | 'COLD_START' | 'DEGRADED';
 
@@ -147,6 +152,14 @@ export interface ControllerInput {
   modelState: ModelState;
   /** Najviše što sistem dozvoljava (podno grijanje, model kotla). */
   maxFlowC?: number | null;
+  /**
+   * Istraživanje (`17` §8.5, `exploration.ts`). Postavlja ga pozivalac koji
+   * ima istoriju ishoda; `null`/nedefinisano znači „ne istražuj".
+   *
+   * Namjerno ne utiče na ostala pravila: primjenjuje se samo kad bi odluka
+   * inače ostala na istoj vrijednosti, a tvrde granice se i dalje primjenjuju.
+   */
+  exploration?: ExplorationDirection | null;
 }
 
 export interface ControllerDecision {
@@ -156,6 +169,8 @@ export interface ControllerDecision {
   reasons: ControllerReason[];
   /** Šta su tvrde granice promijenile u odluci. */
   bounds: BoundReason[];
+  /** Da li je ova odluka istraživanje, a ne konvergencija (`17` §8.5). */
+  exploration: boolean;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -180,13 +195,31 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
   const previous = input.previousFlowC;
 
   if (input.modelState === 'DEGRADED') {
-    return { flowC: previous, action: 'HOLD', reasons: ['DEGRADED'], bounds: [] };
+    return {
+      flowC: previous,
+      action: 'HOLD',
+      reasons: ['DEGRADED'],
+      bounds: [],
+      exploration: false,
+    };
   }
   if (input.outcome == null) {
-    return { flowC: previous, action: 'HOLD', reasons: ['NO_OUTCOME'], bounds: [] };
+    return {
+      flowC: previous,
+      action: 'HOLD',
+      reasons: ['NO_OUTCOME'],
+      bounds: [],
+      exploration: false,
+    };
   }
   if (input.modelFlowC == null) {
-    return { flowC: previous, action: 'HOLD', reasons: ['NO_MODEL'], bounds: [] };
+    return {
+      flowC: previous,
+      action: 'HOLD',
+      reasons: ['NO_MODEL'],
+      bounds: [],
+      exploration: false,
+    };
   }
 
   const maxFlow =
@@ -277,6 +310,26 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
     }
   }
 
+  /**
+   * Istraživanje (`17` §8.5): pomjeraj **samo kad bi odluka stala**.
+   *
+   * Namjerno ide ispod ravnotežne polazne — to je poenta istraživanja: rezerva
+   * od 3 prebačaja u 5 dana je dokaz da je ravnotežna precijenjena za ovu kuću.
+   * Zato se primjenjuje **poslije** pravila „nikad ispod `base`", a prije tvrdih
+   * granica: noćni minimum i granica iz kratkih ciklusa vrijede i za
+   * istraživanje, jer su one mjerenje, ne procjena.
+   */
+  let exploration = false;
+  if (
+    input.exploration === 'LOWER' &&
+    previous != null &&
+    intended === previous
+  ) {
+    intended = previous - EXPLORATION_AMPLITUDE_K;
+    reasons = ['EXPLORE_LOWER'];
+    exploration = true;
+  }
+
   const bounded = applyHardBounds({
     candidateC: intended,
     previousC: previous,
@@ -306,5 +359,6 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
     action,
     reasons,
     bounds: bounded.reasons,
+    exploration,
   };
 }

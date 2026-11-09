@@ -540,6 +540,12 @@ model DailyRecord {
   shadowAt       DateTime?
   shadowVersion  String?
 
+  /// Da li je shadow odluka tog dana bila **istraživanje**, a ne konvergencija
+  /// (`17` §8.5). Ime nosi `shadow` jer odluka još ne dira bojler: kolona
+  /// `exploration` koja opisuje nešto što se nije dogodilo bila bi lažan zapis.
+  shadowExploration          Boolean @default(false)
+  shadowExplorationDirection String?
+
   gasM3      Float?
   degreeDays Float?
 

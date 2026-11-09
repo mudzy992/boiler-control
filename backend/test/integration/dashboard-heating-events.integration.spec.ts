@@ -222,22 +222,24 @@ describe('Integration: FEAT-8 dashboard heating events', () => {
     const deviceA = byDevice.get(ownerDeviceAId);
     const deviceB = byDevice.get(ownerDeviceBId);
 
+    // `room…` imena (`32`): u istom odgovoru su i polazne temperature, pa
+    // golo `currentTemp` više ne smije postojati.
     expect(deviceA).toMatchObject({
-      currentTemp: 20,
-      targetTemp: 22,
-      curretTempThermostat: 25,
-      targetTempThermostat: 26,
+      roomCurrentTemp: 20,
+      roomTargetTemp: 22,
+      roomCurrentTempThermostat: 25,
+      roomTargetTempThermostat: 26,
       durationMinutes: 30,
     });
     expect(deviceB).toMatchObject({
-      currentTemp: 18,
-      targetTemp: 20,
-      curretTempThermostat: 0,
-      targetTempThermostat: 19,
+      roomCurrentTemp: 18,
+      roomTargetTemp: 20,
+      roomCurrentTempThermostat: 0,
+      roomTargetTempThermostat: 19,
       durationMinutes: 45,
     });
-    expect(deviceA).toHaveProperty('curretTempThermostat');
-    expect(deviceA).toHaveProperty('targetTempThermostat');
+    expect(deviceA).not.toHaveProperty('curretTempThermostat');
+    expect(deviceA).not.toHaveProperty('currentTemp');
 
     expect(findMany).toHaveBeenCalledTimes(1);
     const args = findMany.mock.calls[0]?.[0];
@@ -262,10 +264,10 @@ describe('Integration: FEAT-8 dashboard heating events', () => {
     expect(before.body.data).toHaveLength(1);
     expect(before.body.data[0]).toMatchObject({
       deviceId: ownerDeviceAId,
-      currentTemp: 20,
-      targetTemp: 22,
-      curretTempThermostat: 25,
-      targetTempThermostat: 26,
+      roomCurrentTemp: 20,
+      roomTargetTemp: 22,
+      roomCurrentTempThermostat: 25,
+      roomTargetTempThermostat: 26,
       durationMinutes: 30,
     });
 
@@ -282,10 +284,10 @@ describe('Integration: FEAT-8 dashboard heating events', () => {
       expect(after.body.data).toHaveLength(1);
       expect(after.body.data[0]).toMatchObject({
         deviceId: ownerDeviceAId,
-        currentTemp: 20,
-        targetTemp: 22,
-        curretTempThermostat: 7,
-        targetTempThermostat: 30,
+        roomCurrentTemp: 20,
+        roomTargetTemp: 22,
+        roomCurrentTempThermostat: 7,
+        roomTargetTempThermostat: 30,
         durationMinutes: 30,
       });
     } finally {
@@ -305,9 +307,9 @@ describe('Integration: FEAT-8 dashboard heating events', () => {
     expect(other.body.data).toHaveLength(1);
     expect(other.body.data[0]).toMatchObject({
       deviceId: otherDeviceId,
-      currentTemp: 99,
-      curretTempThermostat: 99,
-      targetTempThermostat: 100,
+      roomCurrentTemp: 99,
+      roomCurrentTempThermostat: 99,
+      roomTargetTempThermostat: 100,
     });
 
     const foreign = await getEvents(

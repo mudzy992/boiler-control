@@ -278,8 +278,15 @@ class ApiClientService {
   }
 
   // Gas endpoints
-  async getGasReadings() {
-    const response = await this.client.get('/gas/readings');
+  /**
+   * Očitanja plina (`33`). Backend straniči; 200 je dovoljno za sve dosadašnje
+   * podatke i sprječava da odgovor raste bez granice. Lista na ekranu traži
+   * najnovija, a analitika radi na istom skupu.
+   */
+  async getGasReadings(params?: { limit?: number; offset?: number }) {
+    const response = await this.client.get('/gas/readings', {
+      params: { limit: 200, ...params },
+    });
     return response.data;
   }
 
@@ -446,6 +453,8 @@ class ApiClientService {
     password?: string;
     gasPriceExVat?: number;
     gasPriceEffectiveFrom?: string;
+    /** Jezik aplikacije (`bs-BS` | `en-US`); backend ga validira. */
+    locale?: 'bs-BS' | 'en-US';
   }) {
     const response = await this.client.put('/user', data);
     return response.data;

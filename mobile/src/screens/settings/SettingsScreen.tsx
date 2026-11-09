@@ -191,6 +191,19 @@ const SettingsScreenContent = () => {
     } catch {
       toast.show({ description: t('settings.languageChangeFailed'), placement: 'top' });
     }
+
+    /*
+     * Jezik se šalje i na server (`user.locale`). Prije je ostajao samo na
+     * uređaju: promjena je radila do prvog `AppStorage`-a na drugom telefonu ili
+     * poslije reinstalacije, a web profil je čuvao sasvim treći podatak.
+     * Neuspjeh sinhronizacije ne poništava izbor na uređaju — zato je odvojen
+     * `try` i samo tiha poruka.
+     */
+    try {
+      await apiClient.updateUserProfile({ locale: language });
+    } catch {
+      toast.show({ description: t('settings.languageSyncFailed'), placement: 'top' });
+    }
   };
 
   /**

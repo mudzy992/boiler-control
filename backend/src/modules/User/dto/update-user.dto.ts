@@ -78,10 +78,20 @@ export class UpdateUserDto {
   @IsString()
   timezone?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    example: 'bs-BS',
+    description:
+      'Jezik aplikacije. Prihvata se `bs`/`en` sa opcionom regijom (`bs-BS`, ' +
+      '`en-US`, i zatečeni `bs-BA`), jer stariji zapisi nose regiju koja se ' +
+      'razlikuje od one koju klijenti danas šalju. Proizvoljan string se odbija: ' +
+      'sačuvao bi se, a klijent bi pao na fallback bez traga.',
+  })
   @Transform(preserveRawInput)
   @IsOptional()
   @IsString()
+  @Matches(/^(bs|en)(-[A-Za-z]{2})?$/, {
+    message: 'locale mora biti bs ili en, sa opcionom regijom (npr. bs-BS)',
+  })
   locale?: string;
 
   @ApiPropertyOptional()

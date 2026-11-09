@@ -224,17 +224,31 @@ export class HeatingRecommendationService {
   /**
    * Fetch recommendations for a user
    */
-  async getRecommendations(userId: number) {
+  /**
+   * Preporuke, straničeno (`33`).
+   *
+   * `total` se dobija istim `where` uslovom, jer klijent bez njega ne zna da
+   * postoji strana 2 — a prije je servis tiho rezao na 100.
+   */
+  async getRecommendations(
+    userId: number,
+    page: { limit: number; offset: number } = { limit: 50, offset: 0 },
+  ): Promise<{ rows: any[]; total: number }> {
     try {
-      const recommendations = await this.prisma.recommendation.findMany({
-        where: { userId },
-        orderBy: { date: 'desc' },
-        take: 100,
-      });
-      return recommendations;
+      const where = { userId };
+      const [rows, total] = await Promise.all([
+        this.prisma.recommendation.findMany({
+          where,
+          orderBy: { date: 'desc' },
+          take: page.limit,
+          skip: page.offset,
+        }),
+        this.prisma.recommendation.count({ where }),
+      ]);
+      return { rows, total };
     } catch (error) {
       this.logger.error('Error fetching recommendations', error);
-      return [];
+      return { rows: [], total: 0 };
     }
   }
 }

@@ -177,12 +177,25 @@ export class GasReadingService {
     return this.mapGasReading(finalReading);
   }
 
-  async findAll(userId: number) {
-    const readings = await this.prisma.gasReading.findMany({
-      where: { userId },
-      orderBy: { readingDate: 'desc' },
-    });
-    return readings.map((reading) => this.mapGasReading(reading));
+  /**
+   * Očitanja, straničeno (`33`). `total` ide u zaglavlje da klijent zna koliko
+   * strana ima — prije je vraćao sve redove i to je radilo samo dok ih je malo.
+   */
+  async findAll(
+    userId: number,
+    page: { limit: number; offset: number } = { limit: 100, offset: 0 },
+  ): Promise<{ rows: any[]; total: number }> {
+    const where = { userId };
+    const [readings, total] = await Promise.all([
+      this.prisma.gasReading.findMany({
+        where,
+        orderBy: { readingDate: 'desc' },
+        take: page.limit,
+        skip: page.offset,
+      }),
+      this.prisma.gasReading.count({ where }),
+    ]);
+    return { rows: readings.map((reading) => this.mapGasReading(reading)), total };
   }
 
   async getLatest(userId: number) {

@@ -539,6 +539,37 @@ export class ThermostatPollingService {
       message: `Započeto zagrijavanje na ${targetTemp}°C`,
       data: { flowTemp, targetTemp },
     });
+
+    /*
+     * `FLOW_TEMP_CHANGED` (`34`).
+     *
+     * Prekidač je postojao u podešavanjima i u debounce tabeli, ali ga **niko
+     * nije emitovao** — korisnik ga je uključivao i ništa se nije dešavalo.
+     * Polazna temperatura se mijenja uz početak ciklusa (tada je i određujemo),
+     * pa se poredi sa prethodnim ciklusom. Razlika manja od 1 °C nije promjena
+     * vrijedna obavijesti — to je šum senzora.
+     *
+     * Ograničenje koje ostaje: promjena polazne **u toku** ciklusa (npr. nova
+     * maksimalna polazna iz profile doma) ne šalje obavijest.
+     */
+    const previousFlow = lastBoilerHistory?.suggestedFlowTemp;
+    if (
+      typeof previousFlow === 'number' &&
+      typeof flowTemp === 'number' &&
+      Math.abs(flowTemp - previousFlow) >= 1
+    ) {
+      await this.notifications.notifyUser({
+        userId: device.userId,
+        type: NotificationType.FLOW_TEMP_CHANGED,
+        title: 'Promijenjena polazna temperatura',
+        message: `Polazna temperatura: ${previousFlow.toFixed(0)}°C → ${flowTemp.toFixed(0)}°C`,
+        data: {
+          type: 'FLOW_TEMP_CHANGED',
+          previousFlowTemp: previousFlow,
+          flowTemp,
+        },
+      });
+    }
   }
 
   // ----------------------------------

@@ -7,6 +7,19 @@ import type {
 // FE2-14: tipovi generisani iz `contracts/openapi.json` (FE2-8), tako da
 // potpis metode prati ugovor umjesto ručno pisane deklaracije.
 import type { components } from '../types/api';
+
+/** Red očitanja plina kako ga backend vraća (`GET /gas/readings`). */
+export interface GasReadingRow {
+  id: number;
+  counterValue: number;
+  readingDate: string;
+  createdAt: string;
+  consumption?: number | null;
+  isInvoiceReference?: boolean;
+  hasMeterImage?: boolean;
+  hasInvoicePdf?: boolean;
+  invoiceUploadedAt?: string | null;
+}
 import { shouldForceLoginRedirectOn401 } from './auth401';
 import type { BoilerCatalog } from '../features/home-profile/lib/boiler-catalog';
 import type {
@@ -435,9 +448,19 @@ export class ApiClient {
   }
 
   // Gas endpoints
-  async getGasReadings() {
-    const response = await this.client.get('/gas/readings');
-    return response.data;
+  /**
+   * Očitanja, straničeno (`33`). Server vraća niz i ukupan broj u zaglavlju
+   * `X-Total-Count`; prije je vraćao **sve** redove, a lista raste svaki mjesec.
+   */
+  async getGasReadings(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<{ rows: GasReadingRow[]; total: number }> {
+    const response = await this.client.get('/gas/readings', { params });
+    return {
+      rows: Array.isArray(response.data) ? response.data : [],
+      total: Number(response.headers?.['x-total-count'] ?? 0),
+    };
   }
 
   // FE2-12: addGasReadingPayload() uklonjen — nijedan pozivatelj u frontendu;
@@ -581,9 +604,22 @@ export class ApiClient {
   }
 
   // Reports endpoints
-  async getReports(): Promise<components['schemas']['RecommendationResponseDto'][]> {
-    const response = await this.client.get('/recommendations');
-    return response.data;
+  /**
+   * Preporuke, straničeno (`33`). Prije je backend tiho rezao na 100: korisnik sa
+   * 299 preporuka vidio je 100 i nije imao način da sazna da ima još.
+   */
+  async getReports(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    rows: components['schemas']['RecommendationResponseDto'][];
+    total: number;
+  }> {
+    const response = await this.client.get('/recommendations', { params });
+    return {
+      rows: Array.isArray(response.data) ? response.data : [],
+      total: Number(response.headers?.['x-total-count'] ?? 0),
+    };
   }
 
   // FE2-12: generateReport() uklonjen — nijedan pozivatelj u frontendu;

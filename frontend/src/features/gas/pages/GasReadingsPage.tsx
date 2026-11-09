@@ -17,7 +17,15 @@ export const GasReadingsPage = (): JSX.Element => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const { data: readings = [], isLoading, error, refetch } = useGasReadingsQuery();
+  const {
+    data: readingsData,
+    isLoading,
+    error,
+    refetch,
+  } = useGasReadingsQuery();
+  const readings = readingsData?.rows ?? [];
+  /** Ukupno na serveru; ako je veće od `readings.length`, ekran to kaže (`33`). */
+  const totalReadings = readingsData?.total ?? 0;
 
   const showError = (key: string) => {
     setErrorMessage(t(key));
@@ -174,7 +182,15 @@ export const GasReadingsPage = (): JSX.Element => {
     <div className="space-y-6">
       <PageHeader
         title={t('gas.title')}
-        description={`${t('gas.subtitle')} ${readings.length} ${t('gas.readingsRecorded')}.`}
+        description={`${t('gas.subtitle')} ${readings.length} ${t('gas.readingsRecorded')}.${
+          // Server zna tačan broj; ako je veći od dohvaćenog, prikaz to kaže (`33`).
+          totalReadings > readings.length
+            ? ` ${t('common.showingOf', {
+                shown: readings.length,
+                total: totalReadings,
+              })}`
+            : ''
+        }`}
         action={
           <>
             {readings.length > 0 ? (

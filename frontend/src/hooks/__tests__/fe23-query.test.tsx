@@ -95,7 +95,7 @@ describe('FE2-3 shared gas readings cache', () => {
     ];
     const spy = vi
       .spyOn(apiClient, 'getGasReadings')
-      .mockResolvedValue(readings);
+      .mockResolvedValue({ rows: readings, total: readings.length });
 
     const wrapper = makeWrapper(client);
     const readingsPage = renderHook(() => useGasReadingsQuery(), { wrapper });
@@ -106,8 +106,14 @@ describe('FE2-3 shared gas readings cache', () => {
 
     expect(queryKeys.gasReadings).toEqual(['gas-readings']);
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(readingsPage.result.current.data).toEqual(readings);
-    expect(analyticsPage.result.current.data).toEqual(readings);
+    expect(readingsPage.result.current.data).toEqual({
+      rows: readings,
+      total: readings.length,
+    });
+    expect(analyticsPage.result.current.data).toEqual({
+      rows: readings,
+      total: readings.length,
+    });
     client.clear();
   });
 });

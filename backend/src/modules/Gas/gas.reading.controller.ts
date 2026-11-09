@@ -20,9 +20,15 @@ import { GasReadingService } from './gas.reading.service';
 import { CreateGasReadingDto } from './dto/create-gas-reading.dto';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import {
+  parsePage,
+  setTotalCount,
+  TOTAL_COUNT_HEADER,
+} from '../../common/pagination';
+import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
@@ -60,9 +66,24 @@ export class GasReadingController {
   }
 
   @Get('readings')
-  @ApiOkResponse({ type: [GasReadingResponseDto] })
-  findAll(@Req() req) {
-    return this.service.findAll(req.user.userId);
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiOkResponse({
+    type: [GasReadingResponseDto],
+    description: `Ukupan broj redova je u \`${TOTAL_COUNT_HEADER}\` zaglavlju.`,
+  })
+  async findAll(
+    @Req() req,
+    @Query('limit') limit: string | undefined,
+    @Query('offset') offset: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Prije: svi redovi u jednom odgovoru. Očitanja rastu svaki mjesec, pa je to
+    // jedina lista koja s vremenom sigurno postaje prevelika.
+    const page = parsePage({ limit, offset }, { defaultLimit: 100, maxLimit: 500 });
+    const { rows, total } = await this.service.findAll(req.user.userId, page);
+    setTotalCount(res, total);
+    return rows;
   }
 
   @Get('latest')

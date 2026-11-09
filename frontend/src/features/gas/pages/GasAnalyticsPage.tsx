@@ -1,6 +1,7 @@
 import { useMemo, useState, type JSX } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+import { StatusBanner } from '@/shared/components/status-banner';
 import { PageHeader } from '@/shared/components/page-header';
 import { QueryState } from '@/shared/components/query-state';
 import { Card, CardContent } from '@/shared/components/ui/Card';
@@ -35,7 +36,14 @@ export const GasAnalyticsPage = (): JSX.Element => {
   });
   const readingsQuery = useGasReadingsQuery();
   const analysisData = (analysisQuery.data ?? {}) as Record<string, unknown>;
-  const readings = readingsQuery.data ?? [];
+  const readings = readingsQuery.data?.rows ?? [];
+  /*
+   * Analiza se računa na dohvaćenim očitanjima. Ako ih je na serveru više od
+   * gornje granice jednog zahtjeva (500), to se mora reći — inače graf tvrdi
+   * nešto o periodu koji nije učitan.
+   */
+  const readingsTotal = readingsQuery.data?.total ?? 0;
+  const readingsTruncated = readingsTotal > readings.length;
   const period = analysisData.period as
     | { startDate?: string; endDate?: string; from?: string; to?: string; mode?: string }
     | undefined;
@@ -65,6 +73,15 @@ export const GasAnalyticsPage = (): JSX.Element => {
         title={t('gas.analyticsPageTitle')}
         description={t('gas.analyticsPageSubtitle')}
       />
+      {readingsTruncated ? (
+        <StatusBanner
+          variant="warning"
+          message={t('common.showingOf', {
+            shown: readings.length,
+            total: readingsTotal,
+          })}
+        />
+      ) : null}
       <GasAnalyticsPeriodBar
         periodDays={periodDays}
         useDefaultReferenceRange={useDefaultReferenceRange}

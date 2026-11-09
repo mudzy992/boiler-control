@@ -26,4 +26,5 @@ export const queryKeys = {
   heatingEvents: ['heating-events'] as const,
   boilerEvents: ['boiler-events'] as const,
   reports: ['reports'] as const,
+  reportsPage: (limit: number) => ['reports', 'page', limit] as const,
 };

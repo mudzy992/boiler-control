@@ -8,6 +8,8 @@ import {
   SeasonMode,
 } from '../../constants/homeProfileEnums';
 
+import type { BoilerCatalog } from '../../screens/home/boilerCatalog';
+
 export interface HomeProfile {
   id: number;
   userId: number;
@@ -25,7 +27,14 @@ export interface HomeProfile {
   heatingType: HeatingType;
   constructionYear: number;
   numberOfResidents: number;
-  boilerModel: string;
+  /** Zastarjelo: slobodan tekst. Zadržan samo za prikaz ranijeg unosa. */
+  boilerModel: string | null;
+  /** Model iz kataloga (`25`); `null` = nije odabran, pa nema savjeta. */
+  boilerCatalogId?: string | null;
+  /** Snaga izvedbe iz kataloga; traži se kad porodica navodi snage. */
+  boilerOutputKw?: number | null;
+  /** Najviša polazna koju sistem dozvoljava (30–55); `null` = granica kotla. */
+  maxHeatingFlowC?: number | null;
   hasFloorHeating: boolean;
   targetMorningTemp: number;
   targetDayTemp: number;
@@ -53,6 +62,9 @@ export interface CreateHomeProfileDto {
   targetNightTemp: number;
   numberOfResidents?: number;
   boilerModel?: string;
+  boilerCatalogId?: string | null;
+  boilerOutputKw?: number | null;
+  maxHeatingFlowC?: number | null;
   seasonMode?: SeasonMode;
 }
 
@@ -72,6 +84,9 @@ export interface UpdateHomeProfileDto {
   targetNightTemp?: number;
   numberOfResidents?: number;
   boilerModel?: string;
+  boilerCatalogId?: string | null;
+  boilerOutputKw?: number | null;
+  maxHeatingFlowC?: number | null;
   seasonMode?: SeasonMode;
 }
 
@@ -88,6 +103,18 @@ const getClient = async () => {
 };
 
 export const homeProfileApi = {
+  /**
+   * Katalog bojlera (`25` §5.1) — izbor je trostepen: marka → porodica → snaga.
+   *
+   * Plural ruta: katalog izlaže `HomeProfilesController`; singularni
+   * `/home-profile` ga nema.
+   */
+  getBoilerCatalog: async (): Promise<BoilerCatalog> => {
+    const client = await getClient();
+    const response = await client.get('/home-profiles/boiler-catalog');
+    return response.data;
+  },
+
   getAllHomeProfiles: async (): Promise<HomeProfile[]> => {
     const client = await getClient();
     const response = await client.get('/home-profiles');

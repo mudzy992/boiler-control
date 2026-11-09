@@ -26,6 +26,9 @@ export interface HomeProfileFormSource {
   targetNightTemp?: number | null;
   numberOfResidents?: number | null;
   boilerModel?: string | null;
+  boilerCatalogId?: string | null;
+  boilerOutputKw?: number | null;
+  maxHeatingFlowC?: number | null;
   seasonMode?: SeasonMode | null;
 }
 
@@ -44,7 +47,14 @@ export interface HomeProfileFormValues {
   targetDayTemp: number;
   targetNightTemp: number;
   numberOfResidents: number;
+  /** Zastarjelo: samo prikaz ranije unesenog teksta (`19` §1). */
   boilerModel: string;
+  /** Model iz kataloga; `''` = nije odabran. */
+  boilerCatalogId: string;
+  /** Snaga izvedbe; `null` = nije odabrana (ili je porodica ne navodi). */
+  boilerOutputKw: number | null;
+  /** Najviša polazna; `null` = granica kotla, polje nije postavljeno. */
+  maxHeatingFlowC: number | null;
   seasonMode: SeasonMode;
 }
 
@@ -65,6 +75,9 @@ export function homeProfileToForm(home: HomeProfileFormSource): HomeProfileFormV
     targetNightTemp: home.targetNightTemp ?? 18,
     numberOfResidents: home.numberOfResidents ?? 2,
     boilerModel: home.boilerModel ?? '',
+    boilerCatalogId: home.boilerCatalogId ?? '',
+    boilerOutputKw: home.boilerOutputKw ?? null,
+    maxHeatingFlowC: home.maxHeatingFlowC ?? null,
     seasonMode: home.seasonMode ?? SeasonMode.WINTER,
   };
 }

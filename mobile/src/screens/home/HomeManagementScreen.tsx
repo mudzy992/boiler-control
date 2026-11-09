@@ -5,7 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../components/ui/nativewind';
 
-import { homeProfileApi } from '../../services/api/homeProfile.api';
+import {
+  homeProfileApi,
+  type CreateHomeProfileDto,
+} from '../../services/api/homeProfile.api';
 import {
   InsulationType,
   WindowType,
@@ -17,6 +20,15 @@ import {
   SEASON_MODE_OPTIONS,
 } from '../../constants/homeProfileEnums';
 import { homeProfileToForm, type HomeProfileFormValues } from './homeProfileForm';
+import {
+  boilerSelectionError,
+  brandChoices,
+  brandOfFamily,
+  familyChoices,
+  outputChoices,
+  selectionHint,
+  isKnownFamilyId,
+} from './boilerCatalog';
 import { useTranslation } from '../../hooks/useTranslation';
 
 import {
@@ -291,6 +303,17 @@ const HomeManagementScreenContent = () => {
   const { t: tr } = useTranslation();
   const toast = useToast();
 
+  /*
+   * Katalog bojlera (`25` §5.1). Ne blokira formu: ako padne, forma radi bez
+   * izbora modela — što je sigurno stanje (nema savjeta o snižavanju), a ne
+   * bijeli ekran.
+   */
+  const { data: catalog } = useQuery({
+    queryKey: ['boilerCatalog'],
+    queryFn: homeProfileApi.getBoilerCatalog,
+    staleTime: 1000 * 60 * 60,
+  });
+
   const [showForm, setShowForm] = useState(false);
   const [editingHome, setEditingHome] = useState<HomeProfile | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -311,11 +334,28 @@ const HomeManagementScreenContent = () => {
     targetNightTemp: 18,
     numberOfResidents: 2,
     boilerModel: '',
+    boilerCatalogId: '',
+    boilerOutputKw: null,
+    maxHeatingFlowC: null,
     seasonMode: SeasonMode.WINTER,
   });
 
   const [formData, setFormData] = useState<HomeProfileFormValues>(emptyForm);
-  const resetForm = () => setFormData(emptyForm());
+  const resetForm = () => {
+    setFormData(emptyForm());
+    setBoilerBrandOverride(null);
+  };
+
+  /*
+   * Marka se pamti odvojeno od profila: profil pamti porodicu, a marka je samo
+   * korak do nje. Kad se dom učita, marka se izvodi iz porodice — inače bi
+   * forma otvorila prvi korak prazan i izgledalo bi da model nije sačuvan.
+   */
+  const [boilerBrandOverride, setBoilerBrandOverride] = useState<string | null>(
+    null,
+  );
+  const boilerBrand =
+    boilerBrandOverride ?? brandOfFamily(catalog, formData.boilerCatalogId);
 
   /**
    * Validacija vraća PRVU grešku na bosanskom. Poruke su u `homeProfile.form`
@@ -338,6 +378,24 @@ const HomeManagementScreenContent = () => {
     const temps = [formData.targetMorningTemp, formData.targetDayTemp, formData.targetNightTemp];
     if (temps.some((value) => value < 5 || value > 30))
       return tr('homeProfile.form.temperatureRange');
+    if (
+      formData.maxHeatingFlowC != null &&
+      (formData.maxHeatingFlowC < 30 || formData.maxHeatingFlowC > 55)
+    )
+      return tr('homeProfile.form.maxHeatingFlowRange');
+
+    /*
+     * Porodica + snaga je jedna odluka (`25` §5.1). Server odbija isto, ali
+     * poruka tu stiže kao „Failed to save"; ovdje se vidi prije slanja i tačno
+     * koja snaga postoji.
+     */
+    const boilerError = boilerSelectionError(
+      catalog,
+      formData.boilerCatalogId,
+      formData.boilerOutputKw,
+    );
+    if (boilerError) return boilerError;
+
     return null;
   };
 
@@ -350,6 +408,25 @@ const HomeManagementScreenContent = () => {
     }
     if (err instanceof Error) return err.message;
     return tr('homeManagement.genericError');
+  };
+
+  /**
+   * Forma → DTO. Izdvojeno jer se ista konverzija koristi za dodavanje i
+   * izmjenu, a `null` i `''` ovdje imaju različito značenje:
+   *
+   *   - prazan model se šalje kao `null` (briše odabir), ne kao `''` — backend
+   *     bi `''` odbio kao nepoznat zapis;
+   *   - snaga bez modela se **ne šalje**, jer je backend odbija (`25` §5.1);
+   *   - `maxHeatingFlowC` prazno ide kao `null` = granica kotla, nikad kao 55.
+   */
+  const toPayload = () => {
+    const hasModel = formData.boilerCatalogId !== '';
+    return {
+      ...formData,
+      boilerCatalogId: hasModel ? formData.boilerCatalogId : null,
+      boilerOutputKw: hasModel ? (formData.boilerOutputKw ?? null) : null,
+      maxHeatingFlowC: formData.maxHeatingFlowC ?? null,
+    };
   };
 
   /**
@@ -369,11 +446,11 @@ const HomeManagementScreenContent = () => {
     setFormError(null);
     if (editingHome) {
       if (updateHomeMutation.isPending) return;
-      updateHomeMutation.mutate({ id: editingHome.id, data: formData });
+      updateHomeMutation.mutate({ id: editingHome.id, data: toPayload() });
       return;
     }
     if (createHomeMutation.isPending) return;
-    createHomeMutation.mutate(formData);
+    createHomeMutation.mutate(toPayload() as CreateHomeProfileDto);
   };
 
   const handleDeleteHome = (home: HomeProfile) => {
@@ -905,12 +982,105 @@ const HomeManagementScreenContent = () => {
             onChange={(next) => setFormData({ ...formData, hasFloorHeating: next })}
             testID="home-form-floor-heating"
           />
-          <Field
+          {/*
+            Odabir kotla je trostepen (`25` §5.1): marka → porodica → snaga.
+            Slobodan tekst je uklonjen jer se iz naziva modela ne može znati
+            jesu li grijanje i PTV odvojena podešavanja — a o tome zavisi smije
+            li aplikacija savjetovati snižavanje polazne.
+          */}
+          <ChoiceField
+            label={tr('homeManagement.fieldBoilerBrand')}
+            value={boilerBrand}
+            onChange={(next) => {
+              setFormData({
+                ...formData,
+                boilerCatalogId: '',
+                boilerOutputKw: null,
+              });
+              setBoilerBrandOverride(next);
+            }}
+            options={brandChoices(catalog, tr('homeManagement.boilerNone'))}
+            testID="home-form-boiler-brand"
+          />
+          <ChoiceField
             label={tr('homeManagement.fieldBoilerModel')}
-            value={formData.boilerModel ?? ''}
-            onChangeText={(text) => setFormData({ ...formData, boilerModel: text })}
-            placeholder={tr('homeManagement.boilerModelPlaceholder')}
+            value={formData.boilerCatalogId}
+            onChange={(next) =>
+              setFormData({
+                ...formData,
+                boilerCatalogId: next,
+                // Snaga pripada porodici: mijenja se zajedno sa njom.
+                boilerOutputKw: null,
+              })
+            }
+            options={familyChoices(
+              catalog,
+              boilerBrand,
+              tr('homeManagement.boilerNone'),
+            )}
             testID="home-form-boiler"
+          />
+          {outputChoices(catalog, formData.boilerCatalogId, tr('homeManagement.boilerNone'))
+            .length > 0 ? (
+            <ChoiceField
+              label={tr('homeManagement.fieldBoilerOutput')}
+              value={formData.boilerOutputKw == null ? '' : String(formData.boilerOutputKw)}
+              onChange={(next) =>
+                setFormData({
+                  ...formData,
+                  boilerOutputKw: next === '' ? null : Number.parseInt(next, 10),
+                })
+              }
+              options={outputChoices(
+                catalog,
+                formData.boilerCatalogId,
+                tr('homeManagement.boilerNone'),
+              )}
+              testID="home-form-boiler-output"
+            />
+          ) : null}
+          <Text size="label" tone="muted">
+            {selectionHint(catalog, formData.boilerCatalogId)}
+          </Text>
+          {!isKnownFamilyId(catalog, formData.boilerCatalogId) &&
+          formData.boilerCatalogId !== '' ? (
+            <InlineBanner
+              tone="warn"
+              title={tr('homeManagement.boilerStale')}
+              message={formData.boilerCatalogId}
+            />
+          ) : null}
+          {formData.boilerCatalogId === '' && formData.boilerModel ? (
+            <Text size="label" tone="muted">
+              {tr('homeManagement.boilerLegacy', { model: formData.boilerModel })}
+            </Text>
+          ) : null}
+          {/*
+            Najviša polazna (`19` §2): polje samo sužava 30–55. Prazno = granica
+            kotla — nikad 55 unaprijed, jer bi upisana vrijednost izgledala kao
+            korisnikov podatak.
+          */}
+          <ChoiceField
+            label={tr('homeManagement.fieldMaxHeatingFlow')}
+            value={
+              formData.maxHeatingFlowC == null
+                ? ''
+                : String(formData.maxHeatingFlowC)
+            }
+            onChange={(next) =>
+              setFormData({
+                ...formData,
+                maxHeatingFlowC: next === '' ? null : Number.parseInt(next, 10),
+              })
+            }
+            options={[
+              { value: '', label: tr('homeManagement.maxFlowUnset') },
+              ...[30, 35, 40, 45, 50, 55].map((value) => ({
+                value: String(value),
+                label: `${value} °C`,
+              })),
+            ]}
+            testID="home-form-max-flow"
           />
 
           <MonoLabel>{tr('homeManagement.sectionTemperatures')}</MonoLabel>

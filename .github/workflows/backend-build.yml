@@ -1,0 +1,107 @@
+name: Backend build
+
+# Build gate za backend — isti koraci koje izvršava `backend/Dockerfile`
+# (`prisma generate` → `nest build`), plus provjera da migracije stvarno prolaze
+# na praznoj PostgreSQL bazi.
+#
+# Zašto postoji: `backend-audit.yml` se pokreće samo na dvije arhivirane grane,
+# pa se backend od tada builduje **samo na Coolify**. Greška u shemi, migraciji
+# ili `nest-cli.json` assetima tako stiže tek u deploy, bez ijednog loga u CI-u.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, arena/da41e5ba-boiler-control]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: build
+          POSTGRES_DB: build
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U build -d build"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://build@127.0.0.1:5432/build
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: '5432'
+      DATABASE_USER: build
+      DATABASE_NAME: build
+      DATABASE_PASSWORD: build
+      JWT_SECRET: ci-only-secret-never-used-outside-tests
+      UPLOAD_ROOT_PATH: ${{ github.workspace }}/uploads
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # `--ignore-scripts` kao u audit workflow-u: Prisma postinstall se preskače,
+      # klijent se generiše eksplicitno korak ispod.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Generate Prisma client
+        run: npm run generate:prisma
+
+      # Migracije na praznoj bazi: hvata i SQL grešku i pogrešan redoslijed.
+      - name: Apply migrations to an empty database
+        run: npx prisma migrate deploy
+
+      # Idempotentnost: drugi prolaz ne smije ništa primijeniti ni pući.
+      - name: Apply migrations again (must be a no-op)
+        run: npx prisma migrate deploy
+
+      # Greška se objavljuje kao anotacija: u ovom okruženju log job-a se ne može
+      # preuzeti (redirect na blob storage), a anotacije idu kroz API.
+      - name: Build (nest build)
+        run: |
+          set +e
+          npm run build 2>&1 | tee "$RUNNER_TEMP/build.log"
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            echo "::error::nest build nije prošao (exit $code)"
+            # `--pretty false`: boje i code-frame bi sakrili same poruke od grep-a.
+            npx tsc -p tsconfig.build.json --noEmit --pretty false 2>&1 \
+              | grep -E "error TS" | head -12 \
+              | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$code"
+
+      # Asset iz `nest-cli.json`: ako se `catalog.json` ne kopira u `dist`, build
+      # prolazi a aplikacija padne pri prvom zahtjevu.
+      - name: Catalog asset reached dist
+        run: test -f dist/src/modules/BoilerCatalog/catalog.json
+
+      - name: Compiled catalog loads and fails closed
+        run: |
+          node -e "
+            const c = require('./dist/src/modules/BoilerCatalog/boiler-catalog.js');
+            if (!c.BOILER_CATALOG_OK) {
+              console.error('Katalog nije ispravan:', c.BOILER_CATALOG_ISSUES);
+              process.exit(1);
+            }
+            const family = c.findBoilerFamily('vaillant-ecotec-plus-vuw');
+            console.log('porodica:', family && family.id, '| savjet dozvoljen:', c.isFlowAdviceAllowed(family));
+            console.log('plafon (sistem 40):', c.effectiveCeilingC({ systemMaxC: 40, family }));
+          "

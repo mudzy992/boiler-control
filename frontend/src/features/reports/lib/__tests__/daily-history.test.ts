@@ -5,6 +5,7 @@ import {
   isHistoryEmpty,
   missingGroups,
   originLabelKey,
+  sortNewestFirst,
   valueOrNull,
 } from '../daily-history';
 import type { DailyHistoryResponse, DailyHistoryRow } from '../../types';
@@ -177,5 +178,45 @@ describe('valueOrNull', () => {
   it('NaN i beskonačno ne idu u prikaz', () => {
     expect(valueOrNull(Number.NaN)).toBeNull();
     expect(valueOrNull(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+});
+
+/**
+ * Redoslijed u tabeli (`36`): najnoviji dan prvi.
+ *
+ * Prije je tabela prikazivala ono što server vrati — uzlazno od 01.01.2026, pa
+ * je korisnik na vrhu vidio januar, a današnji dan negdje na dnu. Server i dalje
+ * vraća uzlazno (za grafikone), pa obrtanje mora biti eksplicitno i testirano.
+ */
+describe('sortNewestFirst', () => {
+  const row = (localDate: string) =>
+    ({ localDate, origin: 'LIVE', modelVersion: 'daily-1' }) as unknown as DailyHistoryRow;
+
+  it('najnoviji datum je prvi', () => {
+    const rows = [row('2026-11-06'), row('2026-11-08'), row('2026-11-07')];
+
+    expect(sortNewestFirst(rows).map((item) => item.localDate)).toEqual([
+      '2026-11-08',
+      '2026-11-07',
+      '2026-11-06',
+    ]);
+  });
+
+  it('ne mijenja ulazni niz', () => {
+    const rows = [row('2026-11-06'), row('2026-11-08')];
+    sortNewestFirst(rows);
+
+    expect(rows.map((item) => item.localDate)).toEqual(['2026-11-06', '2026-11-08']);
+  });
+
+  it('radi i preko granice mjeseca i godine', () => {
+    const rows = [row('2025-12-31'), row('2026-01-01'), row('2026-11-08')];
+
+    expect(sortNewestFirst(rows)[0].localDate).toBe('2026-11-08');
+    expect(sortNewestFirst(rows)[2].localDate).toBe('2025-12-31');
+  });
+
+  it('prazna historija ostaje prazna', () => {
+    expect(sortNewestFirst([])).toEqual([]);
   });
 });

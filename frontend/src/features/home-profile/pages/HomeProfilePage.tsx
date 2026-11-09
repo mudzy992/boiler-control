@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '../../../components/Input';
+import { Select } from '@/ui';
 import { InputNumber } from '../../../components/InputNumber';
 import { Button } from '@/shared/components/ui/Button';
 import { Card, CardContent } from '@/shared/components/ui/Card';
@@ -9,6 +10,12 @@ import { PageHeader } from '@/shared/components/page-header';
 import { QueryState } from '@/shared/components/query-state';
 import { StatusBanner } from '@/shared/components/status-banner';
 import type { CreateHomeProfileDto, HomeProfileResponse } from '../types';
+import {
+  catalogGroups,
+  isKnownFamilyId,
+  selectionHint,
+  type BoilerCatalog,
+} from '../lib/boiler-catalog';
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,
@@ -28,7 +35,10 @@ interface HomeProfileFormValues {
   heatingType: HeatingType;
   constructionYear: number | undefined;
   numberOfResidents: number | undefined;
+  /** Zastarjelo, samo za prikaz ranije unesenog teksta (`19` §1). */
   boilerModel: string;
+  /** Odabir iz kataloga — ovo nosi sigurnosni bit. */
+  boilerCatalogId: string;
   hasFloorHeating: boolean;
   targetMorningTemp: number | undefined;
   targetDayTemp: number | undefined;
@@ -47,6 +57,7 @@ const EMPTY_VALUES: HomeProfileFormValues = {
   constructionYear: undefined,
   numberOfResidents: undefined,
   boilerModel: '',
+  boilerCatalogId: '',
   hasFloorHeating: false,
   targetMorningTemp: undefined,
   targetDayTemp: undefined,
@@ -62,10 +73,18 @@ export const HomeProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveStatus, setSaveStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+  const [catalog, setCatalog] = useState<BoilerCatalog | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
+        // Katalog i profil nezavisno: bez kataloga forma radi, samo nema
+        // izbora modela — a to je bolje nego da cijela stranica padne.
+        apiClient
+          .getBoilerCatalog()
+          .then(setCatalog)
+          .catch((error) => console.error('Failed to load boiler catalog:', error));
+
         const response = await apiClient.getHomeProfile();
         if (response) {
           const loaded = response as HomeProfileResponse;
@@ -81,6 +100,7 @@ export const HomeProfilePage: React.FC = () => {
             constructionYear: loaded.constructionYear,
             numberOfResidents: loaded.numberOfResidents,
             boilerModel: loaded.boilerModel ?? '',
+            boilerCatalogId: loaded.boilerCatalogId ?? '',
             hasFloorHeating: loaded.hasFloorHeating ?? false,
             targetMorningTemp: loaded.targetMorningTemp,
             targetDayTemp: loaded.targetDayTemp,
@@ -162,6 +182,9 @@ export const HomeProfilePage: React.FC = () => {
         insulationType: form.insulationType,
         windowType: form.windowType,
         heatingType: form.heatingType,
+        // Prazan izbor se šalje kao `null` (briše model), ne kao `''` — `''`
+        // bi backend odbio kao nepoznat zapis.
+        boilerCatalogId: form.boilerCatalogId === '' ? null : form.boilerCatalogId,
       };
       if (profile?.id) {
         await apiClient.updateHomeProfile(profile.id, payload);
@@ -177,6 +200,19 @@ export const HomeProfilePage: React.FC = () => {
     }
   }, [form, profile, validate]);
 
+  const catalogGroupsMemo = useMemo(() => catalogGroups(catalog), [catalog]);
+
+  /**
+   * Zapis koji je u profilu, a nema ga u katalogu (npr. katalog je izmijenjen
+   * ili je model povučen). Ne brišemo ga sami — prikazujemo ga, da korisnik
+   * vidi šta je sačuvano i svjesno odabere novo.
+   */
+  const staleFamilyId =
+    form.boilerCatalogId &&
+    !isKnownFamilyId(catalog?.families, form.boilerCatalogId)
+      ? form.boilerCatalogId
+      : null;
+
   const isDirty = useMemo(() => {
     if (!profile) return false;
     return (
@@ -189,7 +225,7 @@ export const HomeProfilePage: React.FC = () => {
       form.heatingType !== profile.heatingType ||
       form.constructionYear !== profile.constructionYear ||
       form.numberOfResidents !== profile.numberOfResidents ||
-      form.boilerModel !== profile.boilerModel ||
+      form.boilerCatalogId !== (profile.boilerCatalogId ?? '') ||
       form.hasFloorHeating !== profile.hasFloorHeating ||
       form.targetMorningTemp !== profile.targetMorningTemp ||
       form.targetDayTemp !== profile.targetDayTemp ||
@@ -381,15 +417,45 @@ export const HomeProfilePage: React.FC = () => {
             }
             disabled={saving}
           />
-          <Input
-            label={t('homeProfile.boilerModel')}
-            placeholder="Boiler model"
-            id="home-profile-boiler-model"
-            value={form.boilerModel}
-            error={errors.boilerModel}
-            onChange={(e) => handleChange('boilerModel', e.target.value)}
-            disabled={saving}
-          />
+          <div className="space-y-1">
+            <label
+              htmlFor="home-profile-boiler-catalog"
+              className="text-sm font-medium text-text-secondary"
+            >
+              {t('homeProfile.boilerModel')}
+            </label>
+            <Select
+              id="home-profile-boiler-catalog"
+              value={form.boilerCatalogId}
+              invalid={Boolean(errors.boilerCatalogId)}
+              onChange={(e) => handleChange('boilerCatalogId', e.target.value)}
+              disabled={saving || catalogGroupsMemo.length === 0}
+            >
+              <option value="">{t('homeProfile.boilerModelNone')}</option>
+              {staleFamilyId ? (
+                <option value={staleFamilyId}>
+                  {t('homeProfile.boilerModelStale', { id: staleFamilyId })}
+                </option>
+              ) : null}
+              {catalogGroupsMemo.map((group) => (
+                <optgroup key={group.brand} label={group.brand}>
+                  {group.options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </Select>
+            <p className="text-xs text-text-secondary" data-testid="boiler-hint">
+              {selectionHint(catalog?.families, form.boilerCatalogId)}
+            </p>
+            {!form.boilerCatalogId && form.boilerModel ? (
+              <p className="text-xs text-text-secondary">
+                {t('homeProfile.boilerModelLegacy', { model: form.boilerModel })}
+              </p>
+            ) : null}
+          </div>
           <div className="col-span-2 md:col-span-1 flex items-end">
             <label className="mr-2 text-sm font-semibold text-text-secondary">
               {t('homeProfile.hasFloorHeating')}

@@ -210,7 +210,7 @@ Aplikacija **danas ne zna** koji je tip: `HomeProfile.boilerModel` je slobodan t
 
 Ovo je **blokada** za bilo koju tvrdnju o uštedi na sistemima sa bojlerom.
 
-> **Riješeno 2026-11-08 → `19`.** Vlasnik je odabrao **katalog modela** umjesto slobodnog teksta. Katalog (`docs/audit/backend/boiler-catalog.json`) nosi sigurnosni bit „jesu li krugovi odvojeni" i raspon modela. Za potvrđene modele (ecoTEC plus VUW/VU/VUI, Bosch Condens 7000 WP) krugovi **jesu** odvojeni. Za nepotvrđene vrijedi: **nema savjeta o snižavanju.** Blokada postaje pravilo, ne pitanje.
+> **Riješeno 2026-11-08 → `19`, u kodu 2026-11-14 → `25`.** Vlasnik je odabrao **katalog modela** umjesto slobodnog teksta. Slobodan tekst (`boilerModel`) ostaje samo kao istorijski podatak; odluke se oslanjaju na `boilerCatalogId`. Katalog (`backend/src/modules/BoilerCatalog/catalog.json`) nosi sigurnosni bit „jesu li krugovi odvojeni" i raspon modela. Za potvrđene modele (ecoTEC plus VUW/VU/VUI, Bosch Condens 7000 WP) krugovi **jesu** odvojeni. Za nepotvrđene vrijedi: **nema savjeta o snižavanju.** Blokada postaje pravilo, ne pitanje.
 
 ### 2.2 Maksimalna polazna po emiteru
 

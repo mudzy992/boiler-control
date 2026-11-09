@@ -259,6 +259,9 @@ function simulate(house) {
             },
       night: { floorC: night.floorC, basis: night.basis },
       shortCycleFloorC: learnedShortCycleFloor,
+      // Simulacija nema model bojlera; pretpostavlja se potvrđen model sa
+      // odvojenim krugovima. Pravilo `MODEL_UNVERIFIED` pokriveno je testom.
+      flowAdviceAllowed: true,
       modelState: slope == null ? 'COLD_START' : 'TRACKING',
     });
 

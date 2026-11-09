@@ -16,7 +16,9 @@ export interface CreateHomeProfileDto {
   heatingType: HeatingType;
   constructionYear: number;
   numberOfResidents?: number;
+  /** Zastarjelo (`19` §1) — model iz kataloga nosi sigurnosni bit. */
   boilerModel?: string;
+  boilerCatalogId?: string | null;
   hasFloorHeating?: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;
@@ -35,7 +37,9 @@ export interface UpdateHomeProfileDto {
   heatingType?: HeatingType;
   constructionYear?: number;
   numberOfResidents?: number;
+  /** Zastarjelo (`19` §1) — model iz kataloga nosi sigurnosni bit. */
   boilerModel?: string;
+  boilerCatalogId?: string | null;
   hasFloorHeating?: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;
@@ -56,7 +60,9 @@ export interface HomeProfileResponse {
   heatingType: HeatingType;
   constructionYear: number;
   numberOfResidents?: number;
+  /** Zastarjelo (`19` §1) — model iz kataloga nosi sigurnosni bit. */
   boilerModel?: string;
+  boilerCatalogId?: string | null;
   hasFloorHeating: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;

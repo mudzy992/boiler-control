@@ -90,7 +90,8 @@ export type ControllerReason =
   | 'SHORT_CYCLES'
   | 'COMFORT_HOLD'
   | 'STEADY'
-  | 'DWELL';
+  | 'DWELL'
+  | 'MODEL_UNVERIFIED';
 
 export type ModelState = 'TRACKING' | 'COLD_START' | 'DEGRADED';
 
@@ -131,6 +132,18 @@ export interface ControllerInput {
    * `null` = nije zabilježeno.
    */
   shortCycleFloorC?: number | null;
+  /**
+   * Smije li se polazna uopšte savjetovati snižavati (`BoilerCatalog`).
+   *
+   * `false` kad model bojlera nije potvrđen iz priručnika ili kad nije
+   * potvrđeno da su grijanje i PTV odvojena podešavanja — tada bi snižavanje
+   * moglo ugroziti PTV (toplu vodu), pa se predlog **ne spušta**. Podizanje
+   * ostaje dozvoljeno: ono ne može ugroziti PTV.
+   *
+   * Nije opciono namjerno: svaki pozivalac mora odlučiti, jer je zadana
+   * vrijednost „dozvoljeno" upravo ona koju ne treba imati.
+   */
+  flowAdviceAllowed: boolean;
   modelState: ModelState;
   /** Najviše što sistem dozvoljava (podno grijanje, model kotla). */
   maxFlowC?: number | null;
@@ -237,7 +250,10 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
   // Spuštanje je dozvoljeno samo kad za njega postoji dokaz.
   const wantsLower = previous != null && intended < previous;
   if (wantsLower) {
-    if (input.modelState !== 'TRACKING') {
+    if (!input.flowAdviceAllowed) {
+      intended = previous;
+      reasons = ['MODEL_UNVERIFIED'];
+    } else if (input.modelState !== 'TRACKING') {
       intended = previous;
       reasons = ['NO_MODEL'];
     } else if (

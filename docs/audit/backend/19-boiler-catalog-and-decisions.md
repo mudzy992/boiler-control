@@ -37,7 +37,7 @@ Zato katalog nije „lista imena" — on nosi **jedan sigurnosni bit** i **jedan
 
 ### 1.2 Šta je potvrđeno, a šta nije
 
-Katalog (`boiler-catalog.json`) ima 13 zapisa u dvije marke:
+Katalog ima 13 zapisa u dvije marke (od 2026-11-14 živi u `backend/src/modules/BoilerCatalog/catalog.json`, v. `25`):
 
 | Stanje | Broj | Šta to znači |
 |---|---:|---|
@@ -167,4 +167,4 @@ Zato: model i kontroler rade od dana 8–14 (to je učenje), a **tvrdnja o ušte
 1. **Dopuna kataloga** — 9 zapisa je `TO_VERIFY`; svaki traži priručnik za konkretnu oznaku. Posebno `atmoTEC`, `turboTEC` i `Gaz 6000 W`, gdje odvojenost krugova **ne smije** biti pretpostavljena.
 2. **Instalacioni parametar D.071** — na ecoTEC plus gornja granica polazne se postavlja instalaterski (40–80). Ako je na uređaju postavljena na 55, to objašnjava zašto vlasnik kaže „bojler ne dozvoljava više". Aplikacija to ne može očitati — korisnik unosi ono što vidi na displeju.
 3. **Ostale marke** — Buderus, Viessmann, Immergas, Demir Dokum su česte u BiH. Katalog je proširiv; do tada vrijedi pravilo „nepotvrđeno → ne savjetuj".
-4. **Gdje katalog živi u kodu** — predlog: `backend/src/data/boiler-catalog.json` + seed u bazu, sa `specStatus` i `source` kao poljima, da se dopuna radi bez deploya.
+4. ~~**Gdje katalog živi u kodu**~~ — **riješeno 2026-11-14 → `25`.** Ne u bazi nego u kodu: `backend/src/modules/BoilerCatalog/catalog.json`. Razlog protiv seed-a u bazu: katalog je **sigurnosni** podatak i mora biti u istom commitu kao kod koji ga čita. Isti fajl provjerava `scripts/audit/boiler_catalog_check.py` (CI gate) i sam modul pri učitavanju — pokvaren katalog znači **manje** savjeta, nikad više.

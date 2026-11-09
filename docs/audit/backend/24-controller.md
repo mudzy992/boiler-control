@@ -37,13 +37,14 @@ Red je dio odluke, ne stil.
 | # | Situacija | Akcija | Izvor |
 |---|---|---|---|
 | 1 | `DEGRADED`, nema ishoda, nema modela | **ne mijenjaj** | `17` §8.2 |
+| 1b | model bojlera nije potvrđen iz kataloga | **ne spuštaj** (podizanje ostaje) | `25` §3 |
 | 2 | podbačaj dana ili noći > 1,0 K | **+1,5 K** (ne čeka dwell) | `17` §8.2, §8.3 |
 | 3 | prebačaj > 1,5 K | **−1,0 K** | `17` §8.2 |
 | 4 | kratki ciklusi (medijana < 6 min) | **ne spuštaj**; ako postoji naučena granica, idi na nju | v. §4 |
 | 5 | udobno, dugi ciklusi | **−1,0 K**, ali **nikad ispod ravnotežne polazne** | v. §3 |
 | 6 | manje od 3 dana od zadnje promjene | ne mijenjaj (osim pravila 2) | `17` §8.2 |
 | 7 | bez poredljivih noći (`NO_FORECAST`, `NO_EVIDENCE`) | **ne spuštaj** | `23` §4 |
-| 8 | tvrde granice | raspon 30–55, noćni minimum, ±2 K/dan, **plafon sistema** | `23` §5 |
+| 8 | tvrde granice | raspon 30–55, noćni minimum, ±2 K/dan, **plafon sistema i modela** | `23` §5, `25` §4 |
 
 ### 2.1 Dvije stvari iz `17` §8.2 koje nijesu implementirane
 

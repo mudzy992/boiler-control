@@ -2,6 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
 import {
+  effectiveCeilingC,
+  findBoilerFamily,
+  isFlowAdviceAllowed,
+} from '../BoilerCatalog/boiler-catalog';
+import {
   decideProposal,
   shortCycleFloorFrom,
   type ControllerDecision,
@@ -86,6 +91,8 @@ export class ProposalShadowService {
           // Najviša polazna koju sistem dozvoljava (`19` §2). Bez nje ostaje
           // granica kotla — nikad viša od 55.
           maxHeatingFlowC: true,
+          // Iz kataloga se zna smije li se polazna uopšte snižavati.
+          boilerCatalogId: true,
         },
       }),
       this.prisma.homeModel.findUnique({
@@ -167,6 +174,13 @@ export class ProposalShadowService {
       });
     }
 
+    // Model bojlera: bez potvrđenog zapisa nema savjeta o snižavanju (`19` §1).
+    const family = findBoilerFamily(home?.boilerCatalogId);
+    const ceiling = effectiveCeilingC({
+      systemMaxC: home?.maxHeatingFlowC ?? null,
+      family,
+    });
+
     const decision = decideProposal({
       modelFlowC,
       previousFlowC,
@@ -178,7 +192,8 @@ export class ProposalShadowService {
       outcome,
       night: { floorC: night.floorC, basis: night.basis },
       shortCycleFloorC,
-      maxFlowC: home?.maxHeatingFlowC ?? null,
+      maxFlowC: ceiling,
+      flowAdviceAllowed: isFlowAdviceAllowed(family),
       modelState: (model?.state ?? 'COLD_START') as ModelState,
     });
 

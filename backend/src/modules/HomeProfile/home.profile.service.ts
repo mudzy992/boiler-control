@@ -4,6 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  BOILER_FAMILIES,
+  ENVELOPE_MAX_C,
+  ENVELOPE_MIN_C,
+  isFlowAdviceAllowed,
+} from '../BoilerCatalog/boiler-catalog';
 import { CreateHomeProfileDto } from './dto/create-home-profile.dto';
 import { UpdateHomeProfileDto } from './dto/update-home-profile.dto';
 
@@ -43,6 +49,7 @@ export class HomeProfileService {
       constructionYear: profile.constructionYear,
       numberOfResidents: profile.numberOfResidents,
       boilerModel: profile.boilerModel,
+      boilerCatalogId: profile.boilerCatalogId,
       maxHeatingFlowC: profile.maxHeatingFlowC,
       hasFloorHeating: profile.hasFloorHeating,
       targetMorningTemp: profile.targetMorningTemp,
@@ -109,6 +116,31 @@ export class HomeProfileService {
     return profile;
   }
 
+  /**
+   * Katalog za odabir modela (`19` §1) — samo ono što klijent treba da
+   * prikaže izbor i da objasni zašto za neke modele nema savjeta o snižavanju.
+   */
+  boilerCatalog() {
+    return {
+      version: 1,
+      envelope: { minC: ENVELOPE_MIN_C, maxC: ENVELOPE_MAX_C },
+      families: BOILER_FAMILIES.map((family) => ({
+        id: family.id,
+        brand: family.brand,
+        family: family.family,
+        variant: family.variant,
+        outputsKw: family.outputsKw,
+        dhw: family.dhw,
+        specStatus: family.specStatus,
+        separateHeatingDhwSettings: family.separateHeatingDhwSettings,
+        flowAdviceAllowed: isFlowAdviceAllowed(family),
+        heatingFlowMinC: family.heatingFlowMinC,
+        heatingFlowMaxC: family.heatingFlowMaxC,
+        notes: family.notes,
+      })),
+    };
+  }
+
   async create(userId: number, dto: CreateHomeProfileDto) {
     return await this.prisma.$transaction(async (tx) => {
       const profile = await tx.homeProfile.create({
@@ -124,6 +156,7 @@ export class HomeProfileService {
           constructionYear: dto.constructionYear,
           numberOfResidents: dto.numberOfResidents ?? null,
           boilerModel: dto.boilerModel ?? null,
+          boilerCatalogId: dto.boilerCatalogId ?? null,
           maxHeatingFlowC: dto.maxHeatingFlowC ?? null,
           hasFloorHeating: dto.hasFloorHeating,
           targetMorningTemp: dto.targetMorningTemp,
@@ -192,6 +225,8 @@ export class HomeProfileService {
       updateData.numberOfResidents = dto.numberOfResidents ?? null;
     if (dto.boilerModel !== undefined)
       updateData.boilerModel = dto.boilerModel ?? null;
+    if (dto.boilerCatalogId !== undefined)
+      updateData.boilerCatalogId = dto.boilerCatalogId ?? null;
     if (dto.hasFloorHeating !== undefined)
       updateData.hasFloorHeating = dto.hasFloorHeating;
     if (dto.maxHeatingFlowC !== undefined)

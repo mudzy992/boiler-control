@@ -57,7 +57,11 @@ function setup(options: Setup = {}) {
     homeProfile: {
       findUnique: jest.fn().mockResolvedValue(
         options.home === undefined
-          ? { targetMorningTemp: 21, targetDayTemp: 22 }
+          ? {
+              targetMorningTemp: 21,
+              targetDayTemp: 22,
+              boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+            }
           : options.home,
       ),
     },
@@ -193,7 +197,11 @@ describe('ProposalShadowService — odluka', () => {
 
   it('cilj dolazi iz profila, a bez njega se koristi dokumentovani default', async () => {
     const { service } = setup({
-      home: null,
+      home: {
+        targetMorningTemp: null,
+        targetDayTemp: null,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      },
       previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
       outcome: comfortableOutcome,
       changed: { localDate: '2026-10-30' },
@@ -207,10 +215,60 @@ describe('ProposalShadowService — odluka', () => {
   });
 });
 
+describe('ProposalShadowService — model bojlera iz kataloga', () => {
+  it('bez odabranog modela nema snižavanja — samo objašnjenje', async () => {
+    const { service } = setup({
+      home: { targetMorningTemp: 21, targetDayTemp: 22, boilerCatalogId: null },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(45);
+    expect(result.decision?.action).toBe('HOLD');
+    expect(result.decision?.reasons).toEqual(['MODEL_UNVERIFIED']);
+  });
+
+  it('nepotvrđen model iz kataloga takođe blokira snižavanje', async () => {
+    const { service } = setup({
+      home: {
+        targetMorningTemp: 21,
+        targetDayTemp: 22,
+        boilerCatalogId: 'vaillant-ecotec-pro',
+      },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(45);
+    expect(result.decision?.reasons).toEqual(['MODEL_UNVERIFIED']);
+  });
+
+  it('potvrđen model sa odvojenim krugovima dozvoljava snižavanje', async () => {
+    const { service } = setup({
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+      changed: { localDate: '2026-10-30' },
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.reasons).toEqual(['COMFORT_HOLD']);
+    expect(result.decision?.action).toBe('LOWER');
+  });
+});
+
 describe('ProposalShadowService — maksimum sistema', () => {
   it('najviša polazna iz profila ograničava odluku i ravnotežnu vrijednost', async () => {
     const { service } = setup({
-      home: { targetMorningTemp: 21, targetDayTemp: 22, maxHeatingFlowC: 40 },
+      home: {
+        targetMorningTemp: 21,
+        targetDayTemp: 22,
+        maxHeatingFlowC: 40,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      },
       previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
       outcome: comfortableOutcome,
       changed: { localDate: '2026-10-30' },
@@ -223,7 +281,12 @@ describe('ProposalShadowService — maksimum sistema', () => {
 
   it('bez maksimuma u profilu ostaje granica kotla', async () => {
     const { service } = setup({
-      home: { targetMorningTemp: 21, targetDayTemp: 22, maxHeatingFlowC: null },
+      home: {
+        targetMorningTemp: 21,
+        targetDayTemp: 22,
+        maxHeatingFlowC: null,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      },
       previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
       outcome: comfortableOutcome,
       changed: { localDate: '2026-10-30' },

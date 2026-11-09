@@ -15,6 +15,13 @@ name: Backend build
 
 on:
   workflow_dispatch:
+    inputs:
+      # Baseline čita PRODUKCIONU bazu (samo čitanje) — zato je zaseban prekidač,
+      # a ne dio redovnog build-a. Ručno: `gh workflow run backend-build.yml -f baseline=true`.
+      baseline:
+        description: 'Pročitaj baseline iz produkcije (read-only)'
+        type: boolean
+        default: false
   push:
     branches: [main, arena/da41e5ba-boiler-control]
     paths:
@@ -181,3 +188,32 @@ jobs:
               | while IFS= read -r line; do echo "::error::$line"; done
           fi
           exit "$code"
+
+  # Namjerno u ovom fajlu, a ne kao zaseban workflow: GitHub registruje
+  # `workflow_dispatch` samo za workflow koji je već imao pokretanje, pa bi
+  # zaseban baseline workflow bio nedostupan (404) dok ga nešto ne pokrene.
+  # Zajedno sa `inputs.baseline` to znači: build se nikad ne miješa sa čitanjem
+  # produkcije, a pokretanje je jedna komanda.
+  baseline:
+    if: github.event_name == 'workflow_dispatch' && inputs.baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Baseline (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: node scripts/baseline-readonly.cjs

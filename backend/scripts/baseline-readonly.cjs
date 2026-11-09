@@ -239,6 +239,93 @@ async function main() {
     }
     out();
 
+    // --- mjesečno: plin i sati grijanja ------------------------------------
+    // Ovo je baseline koji se **stvarno može** izračunati danas: mjesečna
+    // potrošnja plina i sati rada grijanja iz istih mjeseci. Stepen-dan traži
+    // dnevnu vezu plina i vremena, koje još nema (`DailyRecord` je prazan), pa
+    // se ne izmišlja.
+    out('## Mjesečno: plin i sati grijanja');
+    out();
+    const gasMonth = await soft(
+      client,
+      'gas po mjesecu',
+      `SELECT to_char(date_trunc('month', "readingDate"), 'YYYY-MM') AS month,
+              count(*) AS readings,
+              sum(CASE WHEN "consumption" IS NOT NULL THEN "consumption" END) AS m3
+         FROM "GasReading" GROUP BY 1 ORDER BY 1`,
+    );
+    const heatMonth = await soft(
+      client,
+      'grijanje po mjesecu',
+      `SELECT to_char(date_trunc('month', "timestampStart"), 'YYYY-MM') AS month,
+              count(*) AS cycles,
+              sum(EXTRACT(EPOCH FROM (COALESCE("timestampEnd", "timestampStart") - "timestampStart"))) / 3600.0 AS hours
+         FROM "HeatingEvent" GROUP BY 1 ORDER BY 1`,
+    );
+    if (gasMonth && heatMonth) {
+      const months = new Map();
+      for (const row of gasMonth) {
+        months.set(row.month, {
+          m3: Number(row.m3 ?? 0),
+          readings: Number(row.readings),
+          cycles: 0,
+          hours: 0,
+        });
+      }
+      for (const row of heatMonth) {
+        const entry = months.get(row.month) ?? {
+          m3: 0,
+          readings: 0,
+          cycles: 0,
+          hours: 0,
+        };
+        entry.cycles = Number(row.cycles);
+        entry.hours = Number(row.hours ?? 0);
+        months.set(row.month, entry);
+      }
+      out('| mjesec | plin m³ | očitanja | ciklusa | sati grijanja | m³/sat |');
+      out('| --- | --- | --- | --- | --- | --- |');
+      let withBoth = 0;
+      let m3Sum = 0;
+      let hoursSum = 0;
+      for (const [month, entry] of [...months.entries()].sort()) {
+        const perHour = entry.hours > 0 ? entry.m3 / entry.hours : null;
+        if (perHour != null) {
+          withBoth += 1;
+          m3Sum += entry.m3;
+          hoursSum += entry.hours;
+        }
+        out(
+          `| ${month} | ${fmt(entry.m3)} | ${entry.readings} | ${entry.cycles} | ` +
+            `${fmt(entry.hours)} | ${perHour == null ? '—' : fmt(perHour, 2)} |`,
+        );
+      }
+      out();
+      if (withBoth === 0) {
+        out(
+          '- **nijedan mjesec nema i plin i sate grijanja** — odnos se ne može ' +
+            'izračunati; plin i ciklusi grijanja ne pokrivaju iste mjesece.',
+        );
+      } else {
+        out(
+          `- ukupno preko ${withBoth} mjeseci: ${fmt(m3Sum)} m³ / ${fmt(hoursSum)} h ` +
+            `= **${fmt(m3Sum / hoursSum, 2)} m³ po satu grijanja** — to je ` +
+            '„prije", sa kojim se poredi period poslije.',
+        );
+        if (withBoth < 6) {
+          out(
+            `- ⚠️ ${withBoth} mjeseci je premalo za sezonski zaključak; ` +
+              'dovoljno za provjeru da mjerenje radi.',
+          );
+        }
+      }
+      notice(
+        `mjesečno: ${withBoth} mjeseci sa i plinom i grijanjem` +
+          (withBoth > 0 ? `, ${fmt(m3Sum / hoursSum, 2)} m³/h` : ''),
+      );
+    }
+    out();
+
     // --- mjerenja -----------------------------------------------------------
     out('## Mjerenja (`ThermostatObservation`)');
     out();

@@ -1,3 +1,5 @@
+import { SYSTEM_MIN_FLOW_C } from '../Heating/strategies/base.strategy';
+
 /**
  * Raspon polazne koji korisnik smije upisati (`F13`).
  *
@@ -6,16 +8,30 @@
  * živjelo unutar servisa, pa se moglo provjeriti samo kroz `PrismaService` —
  * a upravo taj sloj je u sandboxu nedostupan, pa pravilo nije ni bilo pokriveno.
  *
- * Tri broja koja se lako pomiješaju:
- *  - **zadano** (48–55) — važi kad dom nema svoje granice;
+ * Tri broja koja se lako pomiješaju — i koja su se do 2026-11-21 miješala:
+ *  - **zadano** — važi kad dom nema svoje granice;
  *  - **apsolutno** (30–55) — fizička granica (`DailyRecord/flow-bounds.ts`);
  *    dom je može samo suziti;
  *  - **motor** (46–55, `Heating/strategies/base.strategy.ts`) — clamp izlaza
- *    preporuke, nikad granica unosa.
+ *    preporuke.
+ *
+ * Zadana granica **mora biti granica motora**, i to je popravka trećeg kruga.
+ * Prije je zadano bilo 48, a motor je predlagao 47,7 — pa je korisnik vidio
+ * vlastiti predlog („Predložena 47.7 °C") i unos te iste vrijednosti je
+ * odbijen sa „mora biti između 48 i 55". Ponuda koja se ne može prihvatiti je
+ * greška sistema, ne korisnika.
+ *
+ * Vrijednost se **ne prepisuje** ovdje: uzima se izlazna granica motora, pa se
+ * dva broja ne mogu razići ni kad se motor promijeni. Dom i dalje može podići
+ * donju granicu (kotao koji ne radi dobro na 46); može je i spustiti do 30.
  */
+export {
+  SYSTEM_MIN_FLOW_C,
+  SYSTEM_MAX_FLOW_C,
+} from '../Heating/strategies/base.strategy';
 
-/** Zadana donja granica kad dom nema svoju. */
-export const SYSTEM_MIN_CURRENT_FLOW_TEMP = 48;
+/** Zadana donja granica kad dom nema svoju — ista kao izlazna granica motora. */
+export const SYSTEM_MIN_CURRENT_FLOW_TEMP = SYSTEM_MIN_FLOW_C;
 /** Zadana gornja granica kad dom nema svoju. */
 export const SYSTEM_MAX_CURRENT_FLOW_TEMP = 55;
 /** Apsolutni raspon — dom smije suziti, nikad proširiti. */

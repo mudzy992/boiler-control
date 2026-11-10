@@ -30,10 +30,22 @@ import setTempDto from "../../../../backend/src/modules/Boiler/dto/set-current-t
  */
 
 describe("FE2-14: granice temperature polaznog voda", () => {
-  it("donja i gornja granica su 48 i 55", () => {
-    // Rezervni raspon dok server ne odgovori — isti brojevi kao prije F13.
-    expect(MIN_CURRENT_FLOW_TEMP).toBe(48);
+  /*
+   * `F13` (treći krug): rezerva je **46–55**, ne 48–55.
+   *
+   * Snimka: Početna je predlagala 47,7 °C, a unos 47 je odbijen sa „mora biti
+   * između 48 i 55". Motor izlaz klampa na 46, pa je zadana granica 48 bila
+   * *viša* od onoga što isti sistem predlaže — ponuda koja se ne može
+   * prihvatiti nije korisnikova greška.
+   */
+  it("donja granica je 46 (kao motor), gornja 55", () => {
+    expect(MIN_CURRENT_FLOW_TEMP).toBe(46);
     expect(MAX_CURRENT_FLOW_TEMP).toBe(55);
+  });
+
+  it("predlog iz snimke (47.7 °C) prolazi kroz rezervni raspon", () => {
+    expect(isWithinFlowTempRange(47.7)).toBe(true);
+    expect(isWithinFlowTempRange(47)).toBe(true);
   });
 
   it("granice su INKLUDIRAJUĆE na obje strane", () => {
@@ -43,8 +55,12 @@ describe("FE2-14: granice temperature polaznog voda", () => {
   });
 
   it("vrijednosti izvan granica se odbijaju", () => {
-    // 47.9 je ključan slučaj iz FE-010: backend je odbija, pa mora i klijent.
-    expect(isWithinFlowTempRange(47.9)).toBe(false);
+    /*
+     * FE-010 je ovdje imao `47.9 → false` sa objašnjenjem „backend je odbija".
+     * To više nije tačno: DTO nosi apsolutni raspon 30–55, a motor predlaže i
+     * ispod 48. Sada se odbija samo ono što odbija i motor.
+     */
+    expect(isWithinFlowTempRange(45.9)).toBe(false);
     expect(isWithinFlowTempRange(55.1)).toBe(false);
     expect(isWithinFlowTempRange(0)).toBe(false);
   });
@@ -71,11 +87,13 @@ describe("FE2-14: granice temperature polaznog voda", () => {
     expect(Number(maxMatch?.[1])).toBe(ABSOLUTE_MAX_FLOW_TEMP);
   });
 
-  it("I5 validateFlowTempInput: 48/55 ok, van granica i prazno ne", () => {
+  it("I5 validateFlowTempInput: 46/55 ok, van granica i prazno ne", () => {
+    expect(validateFlowTempInput(46)).toEqual({ ok: true, value: 46 });
     expect(validateFlowTempInput(48)).toEqual({ ok: true, value: 48 });
     expect(validateFlowTempInput(55)).toEqual({ ok: true, value: 55 });
     expect(validateFlowTempInput(51.26)).toEqual({ ok: true, value: 51.3 });
-    expect(validateFlowTempInput(47.9)).toEqual({
+    expect(validateFlowTempInput(47.9)).toEqual({ ok: true, value: 47.9 });
+    expect(validateFlowTempInput(45.9)).toEqual({
       ok: false,
       reason: "outOfRange",
     });

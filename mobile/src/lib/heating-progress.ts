@@ -13,7 +13,7 @@
  * probija", a to korisnik čita kao upozorenje.
  *
  * Postojeće trake (`GaugeBar`) mjerile su nešto drugo i to je bilo zbunjujuće:
- * polazna voda u rasponu 48–55 °C i sobna temperatura na fiksnoj skali 0–30 °C.
+ * polazna voda u rasponu 46–55 °C i sobna temperatura na fiksnoj skali 0–30 °C.
  * Nijedna nije bila „napredak grijanja", a obje su izgledale kao napredak.
  */
 

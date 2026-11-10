@@ -131,9 +131,9 @@ export const DashboardScreen = () => {
 
   /*
    * F13: granica polazne je po domu, pa se pita server. Dok odgovor ne stigne
-   * (ili ako padne) koristi se rezervni raspon 48–55 — isti koji je do sada bio
-   * tvrdo upisan. `staleTime` je dug jer se granice mijenjaju samo kad vlasnik
-   * izmijeni profil doma.
+   * (ili ako padne) koristi se rezervni raspon 46–55 — donja granica motora,
+   * ne tvrda 48 koja je odbijala predlog od 47,7 °C. `staleTime` je dug jer se
+   * granice mijenjaju samo kad vlasnik izmijeni profil doma.
    */
   const flowRangeQuery = useQuery({
     queryKey: BOILER_FLOW_RANGE_QUERY_KEY,
@@ -321,8 +321,6 @@ export const DashboardScreen = () => {
     predictedHeatMinRaw != null && predictedHeatMinRaw > 0
       ? predictedHeatMinRaw
       : measuredMedianMin;
-  const predictedFromCycles =
-    (predictedHeatMinRaw == null || predictedHeatMinRaw <= 0) && measuredMedianMin !== null;
   const heatingProgressModel = heatingProgress({
     startedAt: boiler?.heatingStart ?? null,
     now: heatingClock,
@@ -527,29 +525,20 @@ export const DashboardScreen = () => {
               </View>
 
               {/*
-                F13 (odluka vlasnika, 2026-11-08): objašnjenja su stajala kao tri
-                odvojena reda teksta („Zeleno do predviđenog…", pa „Traka: gdje je
-                polazna…", pa raspon uz skalu) i ponavljala su isto. Sada su DVA
-                kratka reda na jednom mjestu, ispod obje trake: prvi objašnjava
-                boje trake ciklusa, drugi šta traka polazne uopšte mjeri. Tekst je
-                vlasnikov, ne prepisan iz zatečenih ključeva.
+                F13 (odluka vlasnika, 2026-11-21 — treći put): savjeti su
+                UKLONJENI, ne skraćeni.
+
+                Prvi krug ih je sveo sa tri reda na dva, drugi je prepisao tekst,
+                a na snimci su i dalje stajala tri reda objašnjenja između trake
+                i dugmeta („Zeleno do predviđenog vremena…", „Traka: gdje je
+                polazna…"). Problem nije bio dužina nego to što objašnjenje stoji
+                na mjestu gdje korisnik donosi odluku: traka i broj su dovoljni,
+                a legenda boja objašnjava grafikon koji korisnik već gleda.
+
+                Raspon („48 — 55") ostaje uz skalu — to nije savjet nego
+                vrijednost. Ako neko polje jednom zatreba objašnjenje, ono ide
+                uz polje, ne u hero ploču.
               */}
-              <View style={{ gap: 2 }}>
-                <Text size="meta" tone="muted" testID="boiler-cycle-hint">
-                  {t('boiler.cycleColorsHint')}
-                  {predictedFromCycles
-                    ? ` ${t('boiler.heatingProgressHintMeasured', {
-                        value: Math.round(predictedHeatMin ?? 0),
-                      })}`
-                    : ''}
-                </Text>
-                <Text size="meta" tone="muted" testID="boiler-gauge-hint">
-                  {t('boiler.gaugeHint', {
-                    min: flowRange.min,
-                    max: flowRange.max,
-                  })}
-                </Text>
-              </View>
 
               {/*
                 F14: jutarnji predlog važi za cijeli dan. Kad se broj ipak

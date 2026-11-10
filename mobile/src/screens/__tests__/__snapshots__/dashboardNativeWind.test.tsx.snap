@@ -534,7 +534,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     {
                       "max": 100,
                       "min": 0,
-                      "now": 29,
+                      "now": 44,
                     }
                   }
                   accessible={true}
@@ -564,7 +564,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                         "left": 0,
                         "position": "absolute",
                         "top": 0,
-                        "width": "28.57142857142857%",
+                        "width": "44.44444444444444%",
                       }
                     }
                   />
@@ -573,7 +573,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       {
                         "backgroundColor": "#e8edf4",
                         "bottom": -1,
-                        "left": "42.857142857142854%",
+                        "left": "55.55555555555556%",
                         "marginLeft": -1,
                         "opacity": 0.55,
                         "position": "absolute",
@@ -625,48 +625,6 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     }
                   >
                     boiler.flowScale
-                  </Text>
-                </View>
-                <View
-                  style={
-                    {
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#9aa6b6",
-                          "fontFamily": undefined,
-                          "fontSize": 12,
-                          "lineHeight": 16,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                    testID="boiler-cycle-hint"
-                  >
-                    boiler.cycleColorsHint
-                  </Text>
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#9aa6b6",
-                          "fontFamily": undefined,
-                          "fontSize": 12,
-                          "lineHeight": 16,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                    testID="boiler-gauge-hint"
-                  >
-                    boiler.gaugeHint
                   </Text>
                 </View>
                 <View
@@ -3487,7 +3445,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     {
                       "max": 100,
                       "min": 0,
-                      "now": 29,
+                      "now": 44,
                     }
                   }
                   accessible={true}
@@ -3517,7 +3475,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         "left": 0,
                         "position": "absolute",
                         "top": 0,
-                        "width": "28.57142857142857%",
+                        "width": "44.44444444444444%",
                       }
                     }
                   />
@@ -3526,7 +3484,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       {
                         "backgroundColor": "#111827",
                         "bottom": -1,
-                        "left": "42.857142857142854%",
+                        "left": "55.55555555555556%",
                         "marginLeft": -1,
                         "opacity": 0.55,
                         "position": "absolute",
@@ -3578,48 +3536,6 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     }
                   >
                     boiler.flowScale
-                  </Text>
-                </View>
-                <View
-                  style={
-                    {
-                      "gap": 2,
-                    }
-                  }
-                >
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#4b5563",
-                          "fontFamily": undefined,
-                          "fontSize": 12,
-                          "lineHeight": 16,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                    testID="boiler-cycle-hint"
-                  >
-                    boiler.cycleColorsHint
-                  </Text>
-                  <Text
-                    style={
-                      [
-                        {
-                          "color": "#4b5563",
-                          "fontFamily": undefined,
-                          "fontSize": 12,
-                          "lineHeight": 16,
-                        },
-                        null,
-                        undefined,
-                      ]
-                    }
-                    testID="boiler-gauge-hint"
-                  >
-                    boiler.gaugeHint
                   </Text>
                 </View>
                 <View

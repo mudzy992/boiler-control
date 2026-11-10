@@ -120,7 +120,7 @@ export class UpdateHomeProfileDto {
 
   /**
    * Donja granica polazne za ovaj dom (`F13`); `null` je dozvoljeno (vraća se
-   * na sistemskih 48). Isti raspon kao `maxHeatingFlowC` — polje sužava
+   * na sistemskih 46). Isti raspon kao `maxHeatingFlowC` — polje sužava
    * apsolutni raspon 30–55, nikad ga ne proširuje.
    */
   @IsOptional()

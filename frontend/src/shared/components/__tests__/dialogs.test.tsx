@@ -14,25 +14,45 @@ const renderWithI18n = (ui: ReactElement) =>
   render(<I18nextProvider i18n={i18n}>{ui}</I18nextProvider>);
 
 describe('I5 TempDialog + ConfirmDialog', () => {
-  it('TempDialog accepts boundary 48 and rejects below', async () => {
+  /*
+   * `F13` (treći krug): donja granica je 46, ne 48.
+   *
+   * Snimka: Početna predlaže 47,7 °C, a dijalog odbija 47 — pa je korisnik
+   * morao upisati 48, tj. broj koji mu sistem nije predložio. Granica unosa i
+   * izlazna granica motora moraju biti ista vrijednost.
+   */
+  it('TempDialog accepts boundary 46 and rejects below', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     const { rerender } = renderWithI18n(
-      <TempDialog open initialValue={48} onOpenChange={vi.fn()} onSubmit={onSubmit} />,
+      <TempDialog open initialValue={46} onOpenChange={vi.fn()} onSubmit={onSubmit} />,
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: i18n.t('tempDialog.save') }));
-    expect(onSubmit).toHaveBeenCalledWith(48);
+    expect(onSubmit).toHaveBeenCalledWith(46);
 
     onSubmit.mockClear();
     rerender(
       <I18nextProvider i18n={i18n}>
-        <TempDialog open initialValue={47.9} onOpenChange={vi.fn()} onSubmit={onSubmit} />
+        <TempDialog open initialValue={45.9} onOpenChange={vi.fn()} onSubmit={onSubmit} />
       </I18nextProvider>,
     );
     await user.click(screen.getByRole('button', { name: i18n.t('tempDialog.save') }));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('TempDialog prihvata 47.7 — vrijednost koju motor stvarno predlaže', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    renderWithI18n(
+      <TempDialog open initialValue={47.7} onOpenChange={vi.fn()} onSubmit={onSubmit} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: i18n.t('tempDialog.save') }));
+
+    expect(onSubmit).toHaveBeenCalledWith(47.7);
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('TempDialog accepts boundary 55', async () => {

@@ -16,7 +16,7 @@ export interface TempDialogProps {
   isSubmitting?: boolean;
   /**
    * `F13`: raspon dolazi iz `GET /api/boiler/flow-range` (po domu). Dok ne
-   * stigne, važi rezervni 48–55 — isti brojevi kao prije, da forma nikad ne
+   * stigne, važi rezervni 46–55 (donja granica motora), da forma nikad ne
    * pokaže granicu koju server ne primjenjuje.
    */
   range?: FlowRange;

@@ -476,21 +476,10 @@ export const HeatingScreen = () => {
             )}
           </Panel>
           {/*
-            `36`: traka u redu termostata izgleda kao „napredak grijanja", a
-            mjeri samo gdje je sobna temperatura na fiksnoj skali 0–30 °C.
-            Objašnjenje stoji jednom, uz listu — ponavljanje u svakom redu bi
-            zatrpalo karticu.
+            F13 (odluka vlasnika, 2026-11-21): legenda je UKLONJENA i ovdje, ne
+            samo na Početnoj. Isti tekst je stajao na dva ekrana; objašnjenje
+            boja trake ne mijenja nijednu odluku koju korisnik ovdje donosi.
           */}
-          {thermostats.length > 0 ? (
-            <Text size="meta" tone="muted">
-              {/*
-                F13: ista rečenica kao na Početnoj (`cycleColorsHint`) — dvije
-                verzije istog objašnjenja su se razlikovale po broju koji su
-                navodile, pa je korisnik na dva ekrana čitao dva praga.
-              */}
-              {anyHeating ? t('boiler.cycleColorsHint') : t('heating.gaugeHint')}
-            </Text>
-          ) : null}
         </Section>
 
         {todayEvents.length > 0 ? (

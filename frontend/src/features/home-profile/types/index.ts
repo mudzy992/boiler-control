@@ -42,7 +42,7 @@ export interface CreateHomeProfileDto {
   boilerOutputKw?: number | null;
   /** Najviša polazna koju sistem dozvoljava (30–55). `null` = granica kotla. */
   maxHeatingFlowC?: number | null;
-  /** Donja granica polazne za ovaj dom (30–55). `null` = sistemskih 48. */
+  /** Donja granica polazne za ovaj dom (30–55). `null` = sistemskih 46. */
   minHeatingFlowC?: number | null;
   hasFloorHeating?: boolean;
   targetMorningTemp?: number;
@@ -71,7 +71,7 @@ export interface HomeProfileResponse {
   boilerCatalogId?: string | null;
   boilerOutputKw?: number | null;
   maxHeatingFlowC?: number | null;
-  /** Donja granica polazne za ovaj dom (30–55). `null` = sistemskih 48. */
+  /** Donja granica polazne za ovaj dom (30–55). `null` = sistemskih 46. */
   minHeatingFlowC?: number | null;
   hasFloorHeating: boolean;
   targetMorningTemp?: number;

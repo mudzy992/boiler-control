@@ -17,10 +17,21 @@ import {
  * samo rezerva — pa test čuva **ugovor rezerve i validacije**, ne broj.
  */
 describe('F13 raspon polazne vode na mobilnom', () => {
-  it('rezervni raspon ostaje 48–55 dok server ne odgovori', () => {
-    expect(DEFAULT_FLOW_RANGE).toEqual({ min: 48, max: 55, source: 'SYSTEM' });
-    expect(MIN_CURRENT_FLOW_TEMP).toBe(48);
+  /*
+   * F13 (treći krug): rezerva je 46–55, ne 48–55.
+   *
+   * Snimka je pokazala predlog od 47,7 °C i odbijanje unosa te iste vrijednosti.
+   * Motor klampa na 46, pa rezerva mora biti 46 — inače ekran tvrdi granicu
+   * koju motor ne poštuje.
+   */
+  it('rezervni raspon je 46–55, kao donja granica motora', () => {
+    expect(DEFAULT_FLOW_RANGE).toEqual({ min: 46, max: 55, source: 'SYSTEM' });
+    expect(MIN_CURRENT_FLOW_TEMP).toBe(46);
     expect(MAX_CURRENT_FLOW_TEMP).toBe(55);
+  });
+
+  it('predlog iz snimke (47.7 °C) prolazi kroz rezervni raspon', () => {
+    expect(isWithinCurrentFlowTempRange(47.7, DEFAULT_FLOW_RANGE)).toBe(true);
   });
 
   it('prihvata raspon doma koji je niži od 48', () => {
@@ -54,7 +65,9 @@ describe('F13 raspon polazne vode na mobilnom', () => {
   });
 
   it.each([
-    [47.9, false],
+    [45.9, false],
+    [46, true],
+    [47.7, true],
     [48, true],
     [52.5, true],
     [55, true],

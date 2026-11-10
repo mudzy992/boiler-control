@@ -180,7 +180,7 @@ describe('Početna — instrument panel', () => {
     await result.findByTestId('dashboard-hero');
 
     await fireEvent.press(result.getByTestId('open-set-temp'));
-    expect(await result.findByPlaceholderText('48 - 55')).toBeTruthy();
+    expect(await result.findByPlaceholderText('46 - 55')).toBeTruthy();
 
     await result.unmount();
     queryClient.clear();

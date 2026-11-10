@@ -26,7 +26,7 @@ export const DashboardPage = (): JSX.Element => {
   const d = useDashboardPage();
 
   /*
-   * `F13`: raspon polazne je po domu, pa se pita server. Rezervni 48–55 važi
+   * `F13`: raspon polazne je po domu, pa se pita server. Rezervni 46–55 važi
    * dok odgovor ne stigne; `staleTime` je dug jer se granice mijenjaju samo
    * kad vlasnik izmijeni profil doma.
    */

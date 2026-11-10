@@ -1040,6 +1040,37 @@ pokazivati staro stanje. Migracije `20261119100000_min_heating_flow` i
 `20261120100000_app_release` moraju biti primijenjene prije nego se forma za
 donju granicu uopšte pojavi.
 
+**Peti krug (2026-11-21, četvrta snimka): dvije stvari, obje poučne.**
+
+1. **Savjeti nijesu bili uklonjeni, samo skraćeni.** Prvi krug ih je sveo sa tri
+   reda na dva, drugi im je prepisao tekst — a na snimci su i dalje stajala dva
+   reda između trake i dugmeta („Zeleno do predviđenog vremena…", „Traka: gdje
+   je polazna…"). Uzrok nije bio dužina nego mjesto: objašnjenje je stajalo tamo
+   gdje korisnik donosi odluku. Sada su **uklonjeni** i sa Početne i sa ekrana
+   Grijanje (isti tekst je bio na oba). Raspon uz skalu („46 — 55") ostaje, jer
+   to nije savjet nego vrijednost. Ključevi u `locales` ostaju — brisanje teksta
+   iz UI-a i brisanje prijevoda su dvije odluke.
+
+2. **Predlog koji se ne može prihvatiti.** Snimka: „PREDLOŽENA 47.7 °C", a unos
+   47 odbijen sa „mora biti između 48 i 55". To nije bila greška korisnika ni
+   zaostali bundle: motor izlaz klampa na **46–55**, a zadana granica unosa je
+   bila **48**. Svaki predlog između 46 i 48 bio je ponuda koju sistem sam
+   odbija. Popravka: zadana granica se sada **izvodi iz granice motora**
+   (`SYSTEM_MIN_CURRENT_FLOW_TEMP = SYSTEM_MIN_FLOW_C`), pa se dva broja ne
+   mogu razići ni kad se motor promijeni. Isto u oba klijenta (rezerva 46–55) i u
+   `TempDialog`-u.
+
+   Namjerno **nije** urađeno: spuštanje apsolutne granice u
+   `DailyRecord/flow-bounds.ts` sa 30 — ona ostaje kako jeste. Mijenjala se samo
+   *zadana* granica unosa, koja mora biti jednaka onome što motor stvarno vraća.
+   Dom i dalje može podići donju granicu (kotao koji ne radi dobro na 46).
+
+Dokazi: `boiler-flow-range.spec.ts` 8 (uključujući „predlog od 47.7 prolazi"),
+`mobile/src/constants/__tests__/boilerLimits.test.ts` 22 (uključujući 45.9 pada,
+46 i 47.7 prolaze), `heatingPolicy.test.ts` 14, `dialogs.test.tsx` (TempDialog
+prihvata 47.7). Mutacija: vraćena 48 u `mobile/src/constants/boilerLimits.ts`
+rušila je 5 testova u 3 fajla.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

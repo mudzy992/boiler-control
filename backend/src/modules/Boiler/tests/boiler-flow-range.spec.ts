@@ -5,6 +5,7 @@ import {
   SYSTEM_MIN_CURRENT_FLOW_TEMP,
   resolveFlowTempRange,
 } from '../flow-range';
+import { SYSTEM_MIN_FLOW_C } from '../../Heating/strategies/base.strategy';
 
 /**
  * `F13` (treći krug): korisnik i dalje vidi „Dozvoljeni raspon polazne: 48 °C do
@@ -20,7 +21,7 @@ import {
  */
 
 describe('F13: raspon polazne po domu', () => {
-  it('dom bez granica daje sistemskih 48–55 i izvor SYSTEM', () => {
+  it('dom bez granica dobija raspon motora i izvor SYSTEM', () => {
     expect(
       resolveFlowTempRange({ minHeatingFlowC: null, maxHeatingFlowC: null }),
     ).toEqual({
@@ -28,6 +29,23 @@ describe('F13: raspon polazne po domu', () => {
       max: SYSTEM_MAX_CURRENT_FLOW_TEMP,
       source: 'SYSTEM',
     });
+  });
+
+  /*
+   * Suština korisnikove snimke od 2026-11-21: „Predložena 47.7 °C", a unos iste
+   * vrijednosti odbijen sa „mora biti između 48 i 55". Zadana granica je bila
+   * viša od onoga što motor predlaže — ponuda koja se ne može prihvatiti.
+   */
+  it('zadana donja granica nije viša od najnižeg predloga motora', () => {
+    expect(SYSTEM_MIN_CURRENT_FLOW_TEMP).toBeLessThanOrEqual(SYSTEM_MIN_FLOW_C);
+    expect(SYSTEM_MIN_CURRENT_FLOW_TEMP).toBe(46);
+  });
+
+  it('predlog od 47.7 °C prolazi kroz zadani raspon', () => {
+    const range = resolveFlowTempRange(null);
+
+    expect(47.7).toBeGreaterThanOrEqual(range.min);
+    expect(47.7).toBeLessThanOrEqual(range.max);
   });
 
   it('dom sa donjom 46 daje 46–55 — unos 47 °C više nije odbijen', () => {
@@ -60,7 +78,7 @@ describe('F13: raspon polazne po domu', () => {
 
   it('novi korisnik bez profila dobija sistemski raspon', () => {
     expect(resolveFlowTempRange(null)).toEqual({
-      min: 48,
+      min: SYSTEM_MIN_CURRENT_FLOW_TEMP,
       max: 55,
       source: 'SYSTEM',
     });

@@ -12,7 +12,15 @@
  * konstante ispod ostaju samo kao **rezerva** dok odgovor ne stigne ili ako
  * padne mreža — nikad kao istina.
  */
-export const MIN_CURRENT_FLOW_TEMP = 48;
+/*
+ * F13 (treći krug): rezerva je **46**, ne 48.
+ *
+ * Motor klampa izlaz na 46–55 (`backend/src/modules/Heating/strategies/
+ * base.strategy.ts`), pa zadana granica od 48 znači da korisnik vidi predlog
+ * 47,7 °C i ne može ga upisati. Rezerva mora biti ista kao donja granica
+ * motora — inače se ista greška vraća čim server ne odgovori.
+ */
+export const MIN_CURRENT_FLOW_TEMP = 46;
 export const MAX_CURRENT_FLOW_TEMP = 55;
 
 /** Apsolutne granice koje server primjenjuje bez obzira na dom (30–55). */

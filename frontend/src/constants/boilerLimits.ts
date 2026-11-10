@@ -4,7 +4,7 @@
  * **F13 ih je promijenio.** Do tada je DTO nosio `@Min(48)`, a motor je
  * predlagao npr. 46 °C — korisnik je dobijao broj koji aplikacija odbija. Sada
  * DTO nosi **apsolutni** raspon (`@Min(30)`, `@Max(55)`), a stvarni raspon je
- * **po domu** (`HomeProfile.minHeatingFlowC/maxHeatingFlowC`, zadano 48–55) i
+ * **po domu** (`HomeProfile.minHeatingFlowC/maxHeatingFlowC`, zadano 46–55) i
  * čita se sa `GET /api/boiler/flow-range`.
  *
  * Zato ove konstante više nisu „ista granica koju backend provjerava" — one su
@@ -26,7 +26,15 @@
  * je te dvije veličine poistovjetio i zaključio da je dio raspona nedostižan iz
  * weba; provjerom DTO-a utvrđeno je da se web i backend tačno poklapaju.
  */
-export const MIN_CURRENT_FLOW_TEMP = 48;
+/*
+ * F13 (treći krug): rezerva je **46**, ne 48.
+ *
+ * Motor klampa izlaz na 46–55 (`backend/src/modules/Heating/strategies/
+ * base.strategy.ts`), pa je zadana granica 48 odbijala predlog od 47,7 °C.
+ * Rezerva mora biti ista kao donja granica motora — isto pravilo kao u
+ * `mobile/src/constants/boilerLimits.ts`.
+ */
+export const MIN_CURRENT_FLOW_TEMP = 46;
 export const MAX_CURRENT_FLOW_TEMP = 55;
 
 /** Apsolutne granice iz DTO-a — važe bez obzira na dom. */

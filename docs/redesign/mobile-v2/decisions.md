@@ -804,6 +804,83 @@ npx eslint src     → 0 grešaka (45 upozorenja, isti baseline kao F11)
 npx expo export --platform android --dev → prolazi
 ```
 
+### F13 — šest stvari iz korisnikovog izvještaja (2026-11-19)
+
+Korisnik je poslao šest zahtjeva; tri su bile funkcionalne greške, jedna
+nedostatak, jedna jezik, jedna nova funkcionalnost.
+
+**1. Crtice u „Historiji dnevnih zapisa".** U tabeli je za jučer stajalo 4
+ciklusa, za danas 3 + jedan aktivan, a aplikacija je za Cikluse/Rad prikazivala
+„—". Uzrok nije bio prikaz: `cycles` se punio **isključivo** iz serije uzoraka
+(`ThermostatObservation`, bucket 5 min), a `outcomeAt` ostaje `null` kad serija
+za dan nije pokrivena ≥ 80 %. Ciklusi su u isto vrijeme **postojali** kao
+`HeatingEvent` redovi — ista polling petlja ih upisuje. Popravka: kad serija
+nije dovoljna, `DailyOutcomeService.fillHome` broji cikluse iz `HeatingEvent`
+(`cyclesFromEvents`) i upisuje **samo** cikluse i medijanu trajanja, sa
+`outcomeVersion = 'outcome-events-1'`. Mjerna polja koja nijesu mjerena ostaju
+`null` — nikad nula. Potpuna serija i dalje ima prednost.
+
+**2. Donja granica polazne 48 vs. predlog 46.** Motor je računao npr. 46 °C (i to
+je fizički izvodljivo), a unos je bio zaključan na 48, pa je predlog bio
+neupotrebljiv. Granica je sada **po domu** (`HomeProfile.minHeatingFlowC`, novi
+stupac + migracija) sa zadanim 48; `BoilerService.flowTempRange()` je jedini
+izvor, a klijent ga čita sa `GET /api/boiler/flow-range` umjesto da nosi svoju
+kopiju broja. Motor klampa na `max(46, dom.min)`–`min(55, dom.max)`.
+
+**3. Preporuka se mijenjala iz ciklusa u ciklus.** Motor (`calculateFlowTemp`)
+radi na svakom pollingu i svaki put vraća novi broj. Sada je mjerodavan
+**jutarnji predlog** za dan (`DailyRecord.proposedFlowTemp`, piše ga
+`DailyRecordWriter` u 06:00 lokalno). `anchorDailyFlow()` (`morning-anchor.ts`)
+odlučuje koji broj važi: jutarnji, osim kad je **izmjeren** manjak preko
+tolerancije — tada ide gore, i to samo gore. Formula ostaje u `currentFlowTemp`
+kao informacija. Dashboard vraća `system.dailyFlow` sa `basis` (`MORNING` /
+`CHANGED` / `FORMULA` / `NONE`), a Početna uz broj ispisuje „postavljeno jutros"
+ili razlog izmjene.
+
+**4. Prijevod mjerenja na kartici vremena.** `WeatherV2Card` je mjerenja držao u
+pločicama sa sirovim ključevima; sada su redovi (`WeatherMetricRow`) sa bs/en
+nazivima („Osjećaj", „Stanje", „Vlažnost", „Brzina vjetra", „Pritisak", „Danas
+min/max"). Pet WMO ključeva preimenovano na backend imena, a novi
+`locales/__tests__/weatherConditionKeys.test.ts` poredi skupove sa
+`backend/src/modules/Weather/wmo.ts` — dodavanje koda na backendu bez prijevoda
+sada pada test.
+
+**5. Suvišni savjeti.** Tri odvojena reda objašnjenja uz trake svedena su na dva
+(vlasnikov tekst): boje trake ciklusa i šta traka polazne mjeri.
+
+**Provjera poslije F13:** `mobile` `npx tsc --noEmit` → 0; `npx jest` → 57
+suite, 402 testa, 32 snapshot-a; `backend` `npx jest src/modules/DailyRecord` →
+zeleno (novi testovi: `morning-anchor.spec.ts` 9, prošireni
+`daily-outcome.service.spec.ts` 12).
+
+### F14 — jedna polazna za cijeli dan
+
+Izdvojeno iz F13 tačke 3 jer je odluka, ne popravka: korisnik postavlja
+temperaturu **ručno, jednom ujutro**, pa se broj ne smije mijenjati tokom dana.
+Pravilo „izmjena usred dana samo uz mjereni dokaz" živi u `morning-anchor.ts` i
+pokriveno je testom; spuštanje usred dana nije dozvoljeno ni sa dokazom, jer bi
+značilo da kuća hladi dok je dan još pred nama.
+
+### F15 — objava verzije kroz admin dashboard
+
+Do sada je `latestVersion` bio konstanta (`2.0.0`) u env-u, a klijent je nudio
+Play Store. Sada:
+
+- nova tabela `AppRelease` (migracija `20261120100000_app_release`), `version`
+  UNIQUE;
+- `POST /api/app-releases` (ADMIN) prima APK, **čita verziju iz
+  `assets/app.config`** unutar ZIP-a i traži ručnu korekciju kad čitanje ne
+  uspije; verzija mora biti veća od posljednje objavljene;
+- `GET /api/app-releases/:id/apk` je **javan** download sa našeg servera — gate
+  blokira i login, pa autentifikovani download ne bi imao izlaz;
+- `GET /api/app/config` sada vraća i `latestRelease`, a `latestVersion` čita iz
+  baze (env ostaje rezerva);
+- mobilni: `checkVersionGate()` razlikuje `mustUpdate` (blokada, postojeći
+  `UpdateRequiredScreen` sa uputstvom za „nepoznati izvor") od `updateAvailable`
+  (trajna traka `UpdateAvailableBanner`, bez „×" i bez samozatvaranja);
+- web: `/app-releases` ekran (vidljiv samo `ADMIN` u meniju; server provjerava
+  `RolesGuard`).
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

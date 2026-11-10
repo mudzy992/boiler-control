@@ -98,10 +98,36 @@ export interface Recommendation {
   breakdown?: RecommendationBreakdown | null;
 }
 
+/**
+ * F14: zašto se broj polazne mijenjao usred dana.
+ *
+ * `basis = 'MORNING'` znači da je broj jutarnji predlog i da se **ne** mijenja
+ * zato što formula sada računa drugačije; `CHANGED` postoji samo kad je
+ * izmjeren manjak, i tada `change` nosi koliko. Klijent ne smije sam porediti
+ * brojeve i izmišljati objašnjenje.
+ */
+export interface DailyFlowChange {
+  flowC: number;
+  reason: 'NIGHT_UNDERSHOOT' | 'DAY_UNDERSHOOT';
+  measuredUndershootC: number;
+}
+
+export interface DailyFlow {
+  localDate?: string | null;
+  morningFlowC?: number | null;
+  currentFlowC?: number | null;
+  basis: 'MORNING' | 'CHANGED' | 'FORMULA' | 'NONE';
+  changed: boolean;
+  change?: DailyFlowChange | null;
+  formulaDriftC?: number | null;
+}
+
 export interface SystemDashboard {
   weather: any; // Weather type will be defined separately
   boiler?: BoilerData | null;
   recommendation?: Recommendation | null;
+  /** F14: jedan broj za cijeli dan, sa osnovom izmjene ako je bilo. */
+  dailyFlow?: DailyFlow | null;
 }
 
 export interface DashboardResponse {

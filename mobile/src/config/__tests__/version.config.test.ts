@@ -18,6 +18,8 @@ import {
   checkVersionGate,
   compareVersions,
   getAppVersion,
+  isNewerRelease,
+  releaseDownloadUrl,
 } from '../version.config';
 
 jest.mock('axios');
@@ -212,5 +214,122 @@ describe('checkVersionGate — fail-open ugovor', () => {
 
     expect(result.mustUpdate).toBe(false);
     expect(result.verifiedByBackend).toBe(false);
+  });
+});
+
+/**
+ * `F15`: novija verzija se nudi, ali ne blokira dok je verzija podržana.
+ *
+ * Test čuva granicu između dvije stvari koje se lako pobrkaju: „postoji novija
+ * verzija" (ponuda) i „ova verzija više ne smije raditi" (blokada). Prvo je
+ * `updateAvailable`, drugo je `mustUpdate`.
+ */
+describe('checkVersionGate — F15 ponuda nove verzije', () => {
+  /**
+   * `gateResponse` u gornjem `describe`-u je u lokalnom opsegu (tamo je i
+   * definisan). Ovdje treba vlastiti jer `jest.mock` factory ne smije
+   * referencirati vanjske varijable — pa se odgovor postavlja eksplicitno.
+   */
+  const gateResponse = (data: unknown) => {
+    mockedAxios.get.mockResolvedValue({ data });
+  };
+
+  const release = (version: string) => ({
+    version,
+    buildNumber: 1400,
+    sizeBytes: 12_000_000,
+    notes: null,
+    downloadUrl: '/api/app-releases/3/apk',
+    publishedAt: '2026-11-20T09:00:00.000Z',
+  });
+
+  it('nudi ažuriranje kad je objavljena verzija novija, bez blokade', async () => {
+    setNativeVersion('1.0.0');
+    gateResponse({
+      minSupportedVersion: '1.0.0',
+      latestVersion: '1.4.0',
+      versionGateEnabled: true,
+      latestRelease: release('1.4.0'),
+    });
+
+    const result = await checkVersionGate();
+
+    expect(result.mustUpdate).toBe(false);
+    expect(result.updateAvailable).toBe(true);
+    expect(result.release?.version).toBe('1.4.0');
+  });
+
+  it('ista verzija nije „nova" — nema ponude', async () => {
+    setNativeVersion('1.4.0');
+    gateResponse({
+      minSupportedVersion: '1.0.0',
+      latestVersion: '1.4.0',
+      versionGateEnabled: true,
+      latestRelease: release('1.4.0'),
+    });
+
+    expect((await checkVersionGate()).updateAvailable).toBe(false);
+  });
+
+  it('objavljena starija verzija se ne nudi (nije downgrade)', async () => {
+    setNativeVersion('1.5.0');
+    gateResponse({
+      minSupportedVersion: '1.0.0',
+      latestVersion: '1.4.0',
+      versionGateEnabled: true,
+      latestRelease: release('1.4.0'),
+    });
+
+    const result = await checkVersionGate();
+    expect(result.updateAvailable).toBe(false);
+    expect(result.release).toBeNull();
+  });
+
+  it('blokada i ponuda mogu stajati zajedno', async () => {
+    setNativeVersion('1.0.0');
+    gateResponse({
+      minSupportedVersion: '1.2.0',
+      latestVersion: '1.4.0',
+      versionGateEnabled: true,
+      latestRelease: release('1.4.0'),
+    });
+
+    expect(await checkVersionGate()).toMatchObject({
+      mustUpdate: true,
+      updateAvailable: true,
+    });
+  });
+
+  it('FAIL-OPEN: pad mreže ne nudi ništa (nema podatka, nema tvrdnje)', async () => {
+    setNativeVersion('1.0.0');
+    mockedAxios.get.mockRejectedValue(new Error('offline'));
+
+    const result = await checkVersionGate();
+    expect(result.updateAvailable).toBe(false);
+    expect(result.release).toBeNull();
+  });
+});
+
+describe('isNewerRelease / releaseDownloadUrl', () => {
+  const base = {
+    version: '1.4.0',
+    buildNumber: 1,
+    sizeBytes: 1,
+    notes: null,
+    downloadUrl: '/api/app-releases/3/apk',
+    publishedAt: '2026-11-20T09:00:00.000Z',
+  };
+
+  it('poredi strogo semver; nepoznata verzija nije nova', () => {
+    expect(isNewerRelease('1.3.0', base)).toBe(true);
+    expect(isNewerRelease('1.4.0', base)).toBe(false);
+    expect(isNewerRelease('dev-build', base)).toBe(false);
+    expect(isNewerRelease('1.0.0', null)).toBe(false);
+  });
+
+  it('download URL se lijepi na API bazu bez duplog /api', () => {
+    // Relativna putanja iz backend-a + baza klijenta = jedna `/api` putanja.
+    expect(releaseDownloadUrl(base)).toMatch(/\/api\/app-releases\/3\/apk$/);
+    expect(releaseDownloadUrl(base)).not.toMatch(/\/api\/api\//);
   });
 });

@@ -19,6 +19,7 @@ import {
 } from '../constants/routes';
 import { handleColdStartNotification } from '../services/notifications/notificationService';
 import { UpdateRequiredScreen } from '../screens/common/UpdateRequiredScreen';
+import { UpdateAvailableBanner } from '../screens/common/UpdateAvailableBanner';
 import { checkVersionGate } from '../config/version.config';
 import type { VersionGateResult } from '../config/version.config';
 
@@ -112,6 +113,7 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
         <UpdateRequiredScreen
           currentVersion={versionGate.currentVersion}
           minSupportedVersion={versionGate.minSupportedVersion}
+          release={versionGate.release}
         />
       );
     }
@@ -127,7 +129,16 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
     };
 
     return (
-      <NavigationContainer
+      <>
+        {/*
+          F15: novija verzija postoji, a ova još smije raditi. Traka je iznad
+          navigatora (apsolutno pri dnu), pa se vidi na svakom ekranu i ne
+          mijenja layout. Blokada ostaje samo za `mustUpdate`.
+        */}
+        {versionGate.release ? (
+          <UpdateAvailableBanner release={versionGate.release} />
+        ) : null}
+        <NavigationContainer
         ref={ref}
         theme={navigationTheme}
         linking={linking}
@@ -154,6 +165,7 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
           )}
         </Stack.Navigator>
       </NavigationContainer>
+      </>
     );
   },
 );

@@ -2,6 +2,11 @@ export interface ShellNavItem {
   readonly key: string;
   readonly href: string;
   readonly labelKey: string;
+  /**
+   * `F15`: stavka vidljiva samo administratoru. Server i dalje provjerava
+   * `ADMIN` (`RolesGuard`) — skrivanje u meniju je UX, ne zaštita.
+   */
+  readonly adminOnly?: boolean;
 }
 
 /** Nine operational routes — visible to USER, SUPPORT, and ADMIN (Q6). */
@@ -15,4 +20,9 @@ export const SHELL_NAV_ITEMS: readonly ShellNavItem[] = [
   { key: 'home-profile', href: '/home-profile', labelKey: 'nav.homeProfile' },
   { key: 'notifications', href: '/notifications', labelKey: 'nav.notifications' },
   { key: 'profile', href: '/profile', labelKey: 'nav.profile' },
+] as const;
+
+/** Stavke koje se prikazuju samo administratoru (`F15`: objava verzija). */
+export const ADMIN_NAV_ITEMS: readonly ShellNavItem[] = [
+  { key: 'app-releases', href: '/app-releases', labelKey: 'nav.appReleases', adminOnly: true },
 ] as const;

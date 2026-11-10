@@ -17,16 +17,42 @@ import { API_CONFIG } from './api.config';
  * gori ishod od privremeno zastarjele verzije.
  */
 
+/**
+ * `F15`: release objavljen kroz admin dashboard, sa APK-om na našem serveru.
+ *
+ * `downloadUrl` je **relativna** putanja (`/api/app-releases/:id/apk`); klijent
+ * je lijepi na `API_CONFIG.BASE_URL`. Apsolutni URL iz backend-a bio bi pogrešan
+ * iza reverse proxy-ja, a i mijenjao bi se sa svakim okruženjem.
+ */
+export interface AppReleaseInfo {
+  version: string;
+  buildNumber: number;
+  sizeBytes: number;
+  notes: string | null;
+  downloadUrl: string;
+  publishedAt: string;
+}
+
 /** Odgovor `GET /api/app/config`. Polja se smiju samo dodavati. */
 export interface AppConfigResponse {
   minSupportedVersion: string;
   latestVersion: string;
   versionGateEnabled: boolean;
+  /** `null` kad nijedna verzija nije objavljena kroz dashboard. */
+  latestRelease?: AppReleaseInfo | null;
 }
 
 export interface VersionGateResult {
   /** `true` = prikaži "update required" i blokiraj navigaciju. */
   mustUpdate: boolean;
+  /**
+   * Postoji novija verzija, ali aplikacija još smije raditi. Tada se prikazuje
+   * **trajna** poruka sa uputstvom — ne blokada, jer stara verzija je još
+   * podržana.
+   */
+  updateAvailable: boolean;
+  /** Release koji nudi ažuriranje (`null` = nema šta ponuditi). */
+  release: AppReleaseInfo | null;
   /** Verzija koju backend traži; `null` ako odgovor nije stigao/valjan. */
   minSupportedVersion: string | null;
   /** Verzija koja je stvarno instalirana. */
@@ -100,10 +126,34 @@ function openGate(currentVersion: string, reason: string): VersionGateResult {
   }
   return {
     mustUpdate: false,
+    updateAvailable: false,
+    release: null,
     minSupportedVersion: null,
     currentVersion,
     verifiedByBackend: false,
   };
+}
+
+/**
+ * Da li je objavljeni release noviji od instalirane verzije.
+ *
+ * Namjerno **samo** `>`: jednaka verzija nije „nova", a objavljena starija od
+ * instalirane bila bi downgrade — takvu ponudu korisnik ne treba vidjeti ni u
+ * poruci, ni kao dugme.
+ */
+export function isNewerRelease(
+  currentVersion: string,
+  release: AppReleaseInfo | null | undefined
+): boolean {
+  if (!release || !isStrictSemver(release.version)) return false;
+  if (!isStrictSemver(currentVersion)) return false;
+  return compareVersions(release.version, currentVersion) > 0;
+}
+
+/** Apsolutni URL za download APK-a, izveden iz API baze (bez duplog `/api`). */
+export function releaseDownloadUrl(release: AppReleaseInfo): string {
+  const base = API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
+  return `${base}${release.downloadUrl}`;
 }
 
 /**
@@ -137,10 +187,17 @@ export async function checkVersionGate(): Promise<VersionGateResult> {
     return openGate(currentVersion, 'odgovor nije objekt');
   }
 
+  const release = isNewerRelease(currentVersion, response.latestRelease)
+    ? (response.latestRelease as AppReleaseInfo)
+    : null;
+
   if (response.versionGateEnabled === false) {
-    // Backend je eksplicitno ugasio gate (kill switch).
+    // Backend je eksplicitno ugasio gate (kill switch): nema blokade, ali
+    // ponuda nove verzije ostaje — kill switch gasi gate, ne update.
     return {
       mustUpdate: false,
+      updateAvailable: release !== null,
+      release,
       minSupportedVersion: null,
       currentVersion,
       verifiedByBackend: true,
@@ -152,8 +209,11 @@ export async function checkVersionGate(): Promise<VersionGateResult> {
   }
 
   const min = response.minSupportedVersion;
+  const mustUpdate = compareVersions(currentVersion, min) < 0;
   return {
-    mustUpdate: compareVersions(currentVersion, min) < 0,
+    mustUpdate,
+    updateAvailable: release !== null,
+    release,
     minSupportedVersion: min,
     currentVersion,
     verifiedByBackend: true,

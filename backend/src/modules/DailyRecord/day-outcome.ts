@@ -1,6 +1,9 @@
 import { localDateKey, localMinuteOfDay } from './proposal-schedule';
 import { OBSERVATION_INTERVAL_MIN } from '../Observation/observation-bucket';
-import { OBSERVATIONS_PER_DAY, MIN_DAY_COVERAGE_RATIO } from '../HomeModel/daily-balance';
+import {
+  OBSERVATIONS_PER_DAY,
+  MIN_DAY_COVERAGE_RATIO,
+} from '../HomeModel/daily-balance';
 
 /**
  * Mjerni podaci jednog dana (`17` §5.2, §9.1) — sve što se iz serije može
@@ -91,7 +94,8 @@ export function cyclesFromEvents(
     if (localDateKey(event.startedAt, zone) !== localDate) continue;
     cycles += 1;
     if (event.endedAt == null) continue;
-    const minutes = (event.endedAt.getTime() - event.startedAt.getTime()) / 60_000;
+    const minutes =
+      (event.endedAt.getTime() - event.startedAt.getTime()) / 60_000;
     if (Number.isFinite(minutes) && minutes >= MIN_EVENT_CYCLE_MIN) {
       durations.push(minutes);
     }
@@ -166,7 +170,12 @@ function median(values: readonly number[]): number | null {
  * kompletan u trenutku kad se dan obračunava; noć koja slijedi poslije
  * 22:00 istog dana još nije gotova i ne smije se mjeriti.
  */
-function inNightWindow(at: Date, localDate: string, previousDate: string, zone: string): boolean {
+function inNightWindow(
+  at: Date,
+  localDate: string,
+  previousDate: string,
+  zone: string,
+): boolean {
   const date = localDateKey(at, zone);
   const minute = localMinuteOfDay(at, zone);
   if (date === previousDate) return minute >= NIGHT_START_LOCAL_HOUR * 60;
@@ -176,7 +185,9 @@ function inNightWindow(at: Date, localDate: string, previousDate: string, zone: 
 
 function previousLocalDate(localDate: string): string {
   const noon = new Date(`${localDate}T12:00:00Z`);
-  return new Date(noon.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return new Date(noon.getTime() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
 }
 
 /** Najčešća polazna u noći; kod izjednačenja kasnija. */

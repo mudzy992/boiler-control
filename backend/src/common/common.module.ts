@@ -4,6 +4,8 @@ import { MetricsController } from './metrics.controller';
 import { MetricsAuthGuard } from './metrics-auth.guard';
 import { HealthController } from './health.controller';
 import { AppConfigController } from './app-config.controller';
+import { AppReleaseController } from './app-release.controller';
+import { AppReleaseService } from './app-release.service';
 import { AppConfigService } from './app-config.service';
 import { AnomalyDetectionService } from './anomaly-detection.service';
 import { FallbackStrategyService } from './fallback-strategy.service';
@@ -14,7 +16,12 @@ import { RedisHealthService } from './redis-health.service';
 import { DatabaseHealthService } from './database-health';
 
 @Module({
-  controllers: [MetricsController, HealthController, AppConfigController],
+  controllers: [
+    MetricsController,
+    HealthController,
+    AppConfigController,
+    AppReleaseController,
+  ],
   providers: [
     MetricsAuthGuard,
     MetricsService,
@@ -24,6 +31,7 @@ import { DatabaseHealthService } from './database-health';
     CorrelationIdService,
     FileStorageService,
     AppConfigService,
+    AppReleaseService,
     RedisHealthService,
     DatabaseHealthService,
   ],
@@ -35,6 +43,7 @@ import { DatabaseHealthService } from './database-health';
     CorrelationIdService,
     FileStorageService,
     AppConfigService,
+    AppReleaseService,
     RedisHealthService,
   ],
 })

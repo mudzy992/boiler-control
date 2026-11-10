@@ -28,7 +28,7 @@ export class AppConfigController {
     summary: 'Mobilna version-gate konfiguracija (javno, bez tokena)',
   })
   @ApiOkResponse({ type: Object })
-  getConfig(): AppConfig {
+  getConfig(): Promise<AppConfig> {
     return this.appConfigService.getAppConfig();
   }
 }

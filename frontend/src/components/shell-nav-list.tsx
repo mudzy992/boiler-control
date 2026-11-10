@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { SHELL_NAV_ITEMS } from './shell-nav-items';
+import { ADMIN_NAV_ITEMS, SHELL_NAV_ITEMS } from './shell-nav-items';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { cn } from '@/ui';
 
 interface ShellNavListProps {
@@ -10,10 +11,19 @@ interface ShellNavListProps {
 
 export const ShellNavList: React.FC<ShellNavListProps> = ({ onNavigate }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  /*
+   * `F15`: admin stavke se dodaju samo administratoru. Meni nije zaštita —
+   * server odbija `POST /api/app-releases` bez `ADMIN` — ali korisniku ne
+   * treba link na ekran na kojem bi dobio `403`.
+   */
+  const items = user?.role === 'ADMIN'
+    ? [...SHELL_NAV_ITEMS, ...ADMIN_NAV_ITEMS]
+    : SHELL_NAV_ITEMS;
 
   return (
     <nav className="space-y-0.5" aria-label={t('shell.primaryNav')}>
-      {SHELL_NAV_ITEMS.map((item) => (
+      {items.map((item) => (
         <NavLink
           key={item.key}
           to={item.href}

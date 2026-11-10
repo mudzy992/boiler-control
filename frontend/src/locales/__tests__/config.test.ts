@@ -49,9 +49,11 @@ describe('i18n — inicijalizacija', () => {
     // maxHeatingFlowC,maxHeatingFlowCHint,required} (kategorički odabir kotla i
     // najviša polazna, `25` §5.1) + reports.shadow* (16 ključeva za shadow
     // izvještaj, `24` §6.5) + reports.history* (22 ključa za historiju dnevnih
-    // zapisa, `31`, 24 ključa) + common.{loadMore,showingOf} (`33`). Pad znači da je neko obrisao ključ ili dodao novi bez
-    // prijevoda — tada se broj mijenja svjesno, u istom commitu.
-    expect(en.length).toBe(465);
+    // zapisa, `31`, 24 ključa) + common.{loadMore,showingOf} (`33`) +
+    // appReleases.* (25 ključeva za objavu verzije, `F15`). Pad znači da je
+    // neko obrisao ključ ili dodao novi bez prijevoda — tada se broj mijenja
+    // svjesno, u istom commitu.
+    expect(en.length).toBe(490);
   });
 });
 

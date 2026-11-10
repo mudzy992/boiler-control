@@ -1,8 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 // SEC-4: `authCookieEnabled` je čista funkcija (čita env, nema DI), pa je
 // `common -> modules/Auth` ovdje bezopasan; isti obrazac već koriste
 // `app-config.controller.ts:3`, `health.controller.ts:2` i `metrics.controller.ts:5`.
 import { authCookieEnabled } from '../modules/Auth/auth-cookie';
+// `import type` + `@Optional()`: servis konfiguracije mora moći da se napravi i
+// bez baze (testovi, health provjere), a `F15` release čita tek ako postoji.
+import type { AppReleaseService } from './app-release.service';
 
 /**
  * MO2-2: ugovor koji mobilna aplikacija čita da odluči smije li raditi.
@@ -32,6 +35,21 @@ export interface AppConfig {
    * dozvolio, a tada CORS **blokira cijeli odgovor** (ne samo cookie).
    */
   authRefreshEnabled: boolean;
+  /**
+   * `F15`: najnovija objavljena verzija sa njenim APK linkom.
+   *
+   * `null` kad nijedan release nije objavljen kroz dashboard — tada klijent
+   * ne prikazuje poruku o novoj verziji. Polje je aditivno, pa stariji
+   * klijenti koji ga ne čitaju rade isto kao do sada.
+   */
+  latestRelease: {
+    version: string;
+    buildNumber: number;
+    sizeBytes: number;
+    notes: string | null;
+    downloadUrl: string;
+    publishedAt: string;
+  } | null;
 }
 
 /**
@@ -66,7 +84,73 @@ export class AppConfigService {
    * zanemaruje, a vraća se sigurna zadana vrijednost. Servis nikad ne baca —
    * endpoint koji baca zaključao bi korisnike van aplikacije.
    */
-  getAppConfig(): AppConfig {
+  constructor(
+    @Optional() private readonly releases?: AppReleaseService,
+  ) {}
+
+  /**
+   * `F15`: `latestVersion` sada dolazi iz baze (admin upload), a env ostaje
+   * rezerva. Baza je prva jer je to ono što admin vidi u dashboardu — da env
+   * ima prednost, objava kroz dashboard ne bi imala efekta.
+   */
+  async getAppConfig(): Promise<AppConfig> {
+    const versionGateEnabled = this.resolveGateEnabled();
+    const latest = await this.latestReleaseSafe();
+    const latestVersion = latest?.version ?? this.resolveVersion(
+      'MOBILE_LATEST_VERSION',
+      DEFAULT_LATEST_VERSION,
+    );
+
+    if (!versionGateEnabled) {
+      return {
+        minSupportedVersion: NEVER_BLOCK_VERSION,
+        latestVersion,
+        versionGateEnabled: false,
+        authRefreshEnabled: authCookieEnabled(),
+        latestRelease: latest,
+      };
+    }
+
+    return {
+      minSupportedVersion: this.resolveVersion(
+        'MOBILE_MIN_SUPPORTED_VERSION',
+        DEFAULT_MIN_SUPPORTED_VERSION,
+      ),
+      latestVersion,
+      versionGateEnabled: true,
+      authRefreshEnabled: authCookieEnabled(),
+      latestRelease: latest,
+    };
+  }
+
+  /**
+   * Release iz baze, ili `null`. Greška baze se **guta** namjerno: konfiguracija
+   * koja baca zaključala bi korisnike van aplikacije zbog tabele koja nije
+   * migrirana. U tom slučaju važe env vrijednosti, kao prije `F15`.
+   */
+  private async latestReleaseSafe(): Promise<AppConfig['latestRelease']> {
+    if (!this.releases) return null;
+    try {
+      const row = await this.releases.latestPublished();
+      if (!row) return null;
+      return {
+        version: row.version,
+        buildNumber: row.buildNumber,
+        sizeBytes: row.sizeBytes,
+        notes: row.notes,
+        downloadUrl: `/api/app-releases/${row.id}/apk`,
+        publishedAt: row.publishedAt.toISOString(),
+      };
+    } catch (error) {
+      this.logger.warn(
+        `Release iz baze nije pročitan (${error instanceof Error ? error.message : String(error)}) — koristim env vrijednosti.`,
+      );
+      return null;
+    }
+  }
+
+  /** Ostaje sinhrono za testove i za slučaj kad baza nije potrebna. */
+  getAppConfigSync(): AppConfig {
     const versionGateEnabled = this.resolveGateEnabled();
 
     if (!versionGateEnabled) {
@@ -78,6 +162,7 @@ export class AppConfigService {
         ),
         versionGateEnabled: false,
         authRefreshEnabled: authCookieEnabled(),
+        latestRelease: null,
       };
     }
 
@@ -92,6 +177,7 @@ export class AppConfigService {
       ),
       versionGateEnabled: true,
       authRefreshEnabled: authCookieEnabled(),
+      latestRelease: null,
     };
   }
 

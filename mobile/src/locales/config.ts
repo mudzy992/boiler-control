@@ -481,6 +481,15 @@ const enUS = {
      * prekoračenje), pa se broj 120 ne prepisuje ručno u UI.
      */
     cycleColorsHint: 'Green up to the predicted time, yellow up to 120 min, red if the cycle overruns.',
+    /**
+     * F14: broj se postavlja jednom ujutro i ne prati formulu tokom dana.
+     * Bez ovog teksta korisnik vidi da se broj promijenio i ne zna zašto.
+     */
+    morningAnchor: 'Set once this morning — holds for the whole day.',
+    morningAnchorChangedOn:
+      'Changed today because the measured shortfall was {{value}} K ({{reason}}). It only rises, and only on measurement.',
+    reasonNIGHT_UNDERSHOOT: 'night shortfall',
+    reasonDAY_UNDERSHOOT: 'daytime shortfall',
     heatingInProgress: 'Heating in progress',
     elapsedMin: '{{value}} min elapsed',
     predicted: 'predicted',
@@ -971,13 +980,26 @@ const enUS = {
     cannotDeleteActive: 'Cannot delete the active home. Switch to another home first.',
     genericError: 'Something went wrong. Please try again.',
   },
+  /**
+   * F15: ažuriranje ide sa **našeg** servera, ne iz trgovine. Zato poruka ima
+   * uputstvo za instalaciju APK-a — bez njega korisnik vidi samo dugme i
+   * Androidovu poruku o nepoznatom izvoru koju ne razumije.
+   */
   update: {
     title: 'Update required',
-    body: 'This version of the app is no longer supported. Please update to continue using Boiler Control.',
+    body: 'This version of the app is no longer supported. Download the new version to continue.',
+    optionalTitle: 'New version available',
+    optionalBody: 'A newer version of Boiler Control is available. This one still works, but the new version has the latest fixes.',
     currentVersion: 'Installed version',
     requiredVersion: 'Minimum version',
+    availableVersion: 'Available version',
     updateButton: 'Update now',
-    manualHint: 'Please update the app from your app store.',
+    downloadButton: 'Download new version',
+    instructionsTitle: 'How to install:',
+    instructionsDownload: 'Tap "Download new version". The download is not automatic — confirm it when the browser asks.',
+    instructionsUnknownSource: 'If Android blocks the install, allow "Install unknown apps" for your browser in Settings.',
+    instructionsInstall: 'Open the downloaded file and confirm the installation.',
+    manualHint: 'Ask the administrator for the new version file.',
   },
   errors: {
     networkError: 'Network error. Please check your connection and try again.',
@@ -1469,6 +1491,15 @@ const bsBS = {
     /** F13: vlasnikov tekst za boje trake ciklusa (pragovi iz `heatingProgress()`). */
     cycleColorsHint:
       'Zeleno do predviđenog vremena, žuto do 120 min, crveno ako ciklus probije.',
+    /**
+     * F14: ista poruka kao u en — jutarnji broj važi za cijeli dan, a izmjena
+     * usred dana postoji samo uz izmjereni manjak.
+     */
+    morningAnchor: 'Postavljeno jutros — važi za cijeli dan.',
+    morningAnchorChangedOn:
+      'Danas izmijenjeno jer je izmjeren manjak od {{value}} K ({{reason}}). Ide samo gore i samo na mjerenje.',
+    reasonNIGHT_UNDERSHOOT: 'noćni manjak',
+    reasonDAY_UNDERSHOOT: 'dnevni manjak',
     heatingInProgress: 'Grijanje u toku',
     elapsedMin: '{{value}} min proteklo',
     predicted: 'predviđeno',
@@ -1942,11 +1973,19 @@ const bsBS = {
   },
   update: {
     title: 'Potrebno ažuriranje',
-    body: 'Ova verzija aplikacije se više ne podržava. Ažurirajte je da biste nastavili koristiti Boiler Control.',
+    body: 'Ova verzija aplikacije se više ne podržava. Preuzmite novu verziju da biste nastavili koristiti Boiler Control.',
+    optionalTitle: 'Dostupna je nova verzija',
+    optionalBody: 'Dostupna je novija verzija aplikacije Boiler Control. Ova još radi, ali nova verzija sadrži najnovije ispravke.',
     currentVersion: 'Instalirana verzija',
     requiredVersion: 'Minimalna verzija',
+    availableVersion: 'Dostupna verzija',
     updateButton: 'Ažuriraj sada',
-    manualHint: 'Ažurirajte aplikaciju kroz svoju trgovinu aplikacijama.',
+    downloadButton: 'Preuzmi novu verziju',
+    instructionsTitle: 'Kako instalirati:',
+    instructionsDownload: 'Dodirnite „Preuzmi novu verziju". Preuzimanje nije automatsko — potvrdite ga kad vas browser pita.',
+    instructionsUnknownSource: 'Ako Android blokira instalaciju, dozvolite „Instalacija nepoznatih aplikacija" za vaš browser u Postavkama.',
+    instructionsInstall: 'Otvorite preuzetu datoteku i potvrdite instalaciju.',
+    manualHint: 'Zatražite datoteku nove verzije od administratora.',
   },
   errors: {
     networkError: 'Greška u konekciji. Provjeri internetsku konekciju i pokušaj ponovo.',

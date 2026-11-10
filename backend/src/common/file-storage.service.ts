@@ -7,6 +7,18 @@ import { randomBytes } from 'crypto';
 export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 export const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
+/**
+ * APK je jedini dozvoljeni „binarni" tip (`F15`). Granica je 200 MB jer je to
+ * realna veličina release APK-a sa RN bundle-om; manja bi odbijala ispravne
+ * buildove, a veća ne služi ničemu (upload ide kroz memoriju procesa).
+ */
+export const APK_MAX_SIZE_BYTES = 200 * 1024 * 1024;
+
+export const APK_MIME_TYPES = new Set([
+  'application/vnd.android.package-archive',
+  'application/octet-stream',
+]);
+
 export const IMAGE_MIME_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -16,6 +28,8 @@ export const PDF_MIME_TYPES = new Set(['application/pdf']);
 
 const PDF_SIGNATURE = Buffer.from('%PDF-', 'ascii');
 const JPEG_SIGNATURE = Buffer.from([0xff, 0xd8, 0xff]);
+const APK_SIGNATURE = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+
 const PNG_SIGNATURE = Buffer.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 ]);
@@ -49,6 +63,7 @@ export class FileStorageService {
     void this.ensureDir('');
     void this.ensureDir('gas-readings');
     void this.ensureDir('users');
+    void this.ensureDir('app-releases');
   }
 
   async storeGasReadingImage(
@@ -85,6 +100,46 @@ export class FileStorageService {
       allowedMimeTypes: IMAGE_MIME_TYPES,
       maxSizeBytes: IMAGE_MAX_SIZE_BYTES,
     });
+  }
+
+  /**
+   * `F15`: APK release-a. Datoteka se **ne** prevodi u novi random naziv —
+   * ime nosi verziju i build, pa je u folderu odmah vidljivo šta je gdje.
+   * Provjera sadržaja je ZIP potpis (`PK\u0003\u0004`): APK je ZIP, i to je
+   * jedina provjera koja stvarno razlikuje APK od proizvoljnog binarnog fajla.
+   */
+  async storeAppRelease(
+    version: string,
+    buildNumber: number,
+    file: UploadedFileInput,
+  ): Promise<StoredFileInfo> {
+    if (!APK_MIME_TYPES.has(file.mimetype)) {
+      throw new BadRequestException('Release mora biti .apk datoteka');
+    }
+    if (file.size > APK_MAX_SIZE_BYTES) {
+      throw new BadRequestException('APK prelazi dozvoljenu veličinu');
+    }
+    if (!this.hasSignature(file.buffer, APK_SIGNATURE)) {
+      throw new BadRequestException('Datoteka nije APK (nema ZIP potpis)');
+    }
+
+    const safeVersion = version.replace(/[^\d.]/g, '');
+    if (!safeVersion) {
+      throw new BadRequestException('Neispravna verzija u nazivu datoteke');
+    }
+
+    const relativeDir = 'app-releases';
+    await this.ensureDir(relativeDir);
+    const fileName = `boiler-control-${safeVersion}-${buildNumber}.apk`;
+    const relativePath = path.posix.join(relativeDir, fileName);
+
+    await fs.writeFile(this.resolveAbsolutePath(relativePath), file.buffer);
+
+    return {
+      relativePath,
+      mimeType: 'application/vnd.android.package-archive',
+      originalName: this.sanitizeOriginalName(file.originalname),
+    };
   }
 
   createPrivateReadStream(relativePath: string) {

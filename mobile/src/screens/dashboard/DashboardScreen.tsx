@@ -79,8 +79,7 @@ function formatDuration(startIso: string): string {
  * traka i validacija unosa moraju mjeriti istim brojevima, inače unos odbija
  * vrijednost koju traka pokaže kao ispravnu.
  */
-const scale = (value: number, range: FlowRange) =>
-  (value - range.min) / (range.max - range.min);
+const scale = (value: number, range: FlowRange) => (value - range.min) / (range.max - range.min);
 
 export const DashboardScreen = () => {
   const { t, i18n } = useTranslation();
@@ -115,9 +114,7 @@ export const DashboardScreen = () => {
    * i ruši ekran (`Rendered more hooks than during the previous render`).
    */
   const heatingStartIso = dashboardData?.system?.boiler?.heatingStart ?? null;
-  const boilerIsHeating = Boolean(
-    heatingStartIso && !dashboardData?.system?.boiler?.heatingEnd,
-  );
+  const boilerIsHeating = Boolean(heatingStartIso && !dashboardData?.system?.boiler?.heatingEnd);
   const [heatingClock, setHeatingClock] = React.useState(() => Date.now());
   React.useEffect(() => {
     if (!boilerIsHeating) return;
@@ -145,7 +142,7 @@ export const DashboardScreen = () => {
   });
   const flowRange = React.useMemo(
     () => (flowRangeQuery.data ? resolveFlowRange(flowRangeQuery.data) : DEFAULT_FLOW_RANGE),
-    [flowRangeQuery.data],
+    [flowRangeQuery.data]
   );
 
   React.useEffect(() => {
@@ -213,7 +210,7 @@ export const DashboardScreen = () => {
         t('boiler.currentTempRangeError', {
           min: flowRange.min,
           max: flowRange.max,
-        }),
+        })
       );
       return;
     }
@@ -294,6 +291,7 @@ export const DashboardScreen = () => {
     thermostats.find((thermostat) => typeof thermostat.roomCurrentTemp === 'number') ??
     thermostats[0] ??
     null;
+  const dailyFlow = dashboardData?.system?.dailyFlow ?? null;
   const recommendation = dashboardData?.system?.recommendation;
   const recommendationMode = recommendation?.breakdown?.mode ?? null;
   const recommendationInterval = recommendation?.breakdown?.intervalKey ?? null;
@@ -336,7 +334,13 @@ export const DashboardScreen = () => {
     return Number.isFinite(seen) ? Date.now() - seen < 1000 * 60 * 15 : false;
   }).length;
 
-  const healthTone = !health ? 'neutral' : health.score >= 80 ? 'ok' : health.score >= 60 ? 'warn' : 'fault';
+  const healthTone = !health
+    ? 'neutral'
+    : health.score >= 80
+      ? 'ok'
+      : health.score >= 60
+        ? 'warn'
+        : 'fault';
 
   /*
    * F7 (HOME-05) — zašto `boiler.*` a ne `dashboard.*`.
@@ -433,11 +437,11 @@ export const DashboardScreen = () => {
                   <HeatingProgressBar
                     model={heatingProgressModel}
                     accessibilityLabel={`${t('boiler.heatingInProgress')}: ${Math.round(
-                      heatingProgressModel.elapsedMin ?? 0,
+                      heatingProgressModel.elapsedMin ?? 0
                     )} ${t('boiler.minutesShort')}${
                       heatingProgressModel.predictedMin !== null
                         ? `, ${t('boiler.predicted')} ${Math.round(
-                            heatingProgressModel.predictedMin,
+                            heatingProgressModel.predictedMin
                           )} ${t('boiler.minutesShort')}`
                         : ''
                     }`}
@@ -547,6 +551,23 @@ export const DashboardScreen = () => {
                 </Text>
               </View>
 
+              {/*
+                F14: jutarnji predlog važi za cijeli dan. Kad se broj ipak
+                izmijenio, razlog je izmjereni manjak — i to mora pisati uz
+                broj, inače izmjena izgleda kao oscilacija koju je korisnik
+                upravo prijavio.
+              */}
+              {dailyFlow ? (
+                <Text size="meta" tone="muted" testID="boiler-morning-anchor">
+                  {dailyFlow.changed && dailyFlow.change
+                    ? t('boiler.morningAnchorChangedOn', {
+                        value: Math.round(dailyFlow.change.measuredUndershootC * 10) / 10,
+                        reason: t(`boiler.reason${dailyFlow.change.reason}`),
+                      })
+                    : t('boiler.morningAnchor')}
+                </Text>
+              ) : null}
+
               <Button
                 label={t('boiler.setCurrentTemp')}
                 variant="secondary"
@@ -594,9 +615,7 @@ export const DashboardScreen = () => {
             value={primaryThermostatTemp !== null ? primaryThermostatTemp.toFixed(1) : '—'}
             unit="°C"
             meta={
-              primaryThermostat
-                ? primaryThermostat.alias.toUpperCase()
-                : t('heating.noThermostats')
+              primaryThermostat ? primaryThermostat.alias.toUpperCase() : t('heating.noThermostats')
             }
             testID="kpi-thermostat"
           />
@@ -663,10 +682,9 @@ export const DashboardScreen = () => {
             ) : (
               thermostats.map((thermostat, index) => {
                 const recentEvent = primaryHome?.recentHeatingEvents?.find(
-                  (event) => event.deviceId === thermostat.id,
+                  (event) => event.deviceId === thermostat.id
                 );
-                const current =
-                  recentEvent?.roomCurrentTemp ?? thermostat.roomCurrentTemp ?? null;
+                const current = recentEvent?.roomCurrentTemp ?? thermostat.roomCurrentTemp ?? null;
                 const target = thermostat.roomTargetTemp ?? null;
                 const heating = thermostat.isHeatingNow === true;
 
@@ -710,7 +728,7 @@ export const DashboardScreen = () => {
                             tone={heating ? 'signal' : 'muted'}
                             height={3}
                             accessibilityLabel={`${thermostat.alias}: ${t(
-                              'thermostat.current',
+                              'thermostat.current'
                             )} ${current ?? '—'}, ${t('thermostat.target')} ${target ?? '—'}`}
                           />
                         </View>
@@ -749,9 +767,7 @@ export const DashboardScreen = () => {
         <RecommendationBreakdown breakdown={dashboardData?.system?.recommendation?.breakdown} />
 
         {dashboardData?.homes && dashboardData.homes.length > 1 && (
-          <MonoMeta>
-            {t('boiler.moreHomes', { count: dashboardData.homes.length - 1 })}
-          </MonoMeta>
+          <MonoMeta>{t('boiler.moreHomes', { count: dashboardData.homes.length - 1 })}</MonoMeta>
         )}
       </ScreenBody>
 

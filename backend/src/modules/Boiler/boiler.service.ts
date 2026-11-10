@@ -4,6 +4,7 @@ import { addMinutes } from 'date-fns';
 import {
   FlowTempInput,
   HeatingEventInput,
+  HomeProfileInput,
   IntervalLearningInput,
 } from '../Heating/engine/types';
 import { WeatherService } from '../Weather/weather.service';
@@ -101,7 +102,7 @@ export class BoilerService {
     // -----------------------------
     // 2️⃣ Home profile (optional)
     // -----------------------------
-    let homeProfileInput = {
+    let homeProfileInput: HomeProfileInput = {
       floorArea: 150,
       learningOffset: 0,
       insulationFactor: 1,

@@ -85,7 +85,9 @@ export class DailyOutcomeService {
         await this.fillHome(home.id, now);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Ishod dana za kuću ${home.id} nije izračunat: ${message}`);
+        this.logger.error(
+          `Ishod dana za kuću ${home.id} nije izračunat: ${message}`,
+        );
       }
     }
   }
@@ -129,7 +131,9 @@ export class DailyOutcomeService {
     }
 
     // Noć pripada danu koji se završava u 06:00, pa se čita i jedan dan ranije.
-    const from = new Date(now.getTime() - (OUTCOME_LOOKBACK_DAYS + 1) * 24 * 60 * 60 * 1000);
+    const from = new Date(
+      now.getTime() - (OUTCOME_LOOKBACK_DAYS + 1) * 24 * 60 * 60 * 1000,
+    );
     const observations = await this.prisma.thermostatObservation.findMany({
       where: { homeProfileId, at: { gte: from } },
       orderBy: { at: 'asc' },
@@ -185,10 +189,18 @@ export class DailyOutcomeService {
         // Serija nije dovoljna za cijeli dan, ali ciklusi su mjereni događajima.
         // Upisuje se samo ono što je stvarno izmjereno — ostala mjerna polja
         // ostaju `null` i dalje se prikazuju kao crtice, a ne kao nula.
-        const fromEvents = cyclesFromEvents(record.localDate, cycleEvents, zone.zone);
+        const fromEvents = cyclesFromEvents(
+          record.localDate,
+          cycleEvents,
+          zone.zone,
+        );
         if (fromEvents.cycles > 0) {
           const written = await this.prisma.dailyRecord.updateMany({
-            where: { homeProfileId, localDate: record.localDate, outcomeAt: null },
+            where: {
+              homeProfileId,
+              localDate: record.localDate,
+              outcomeAt: null,
+            },
             data: {
               cycles: fromEvents.cycles,
               medianCycleMin: fromEvents.medianCycleMin,

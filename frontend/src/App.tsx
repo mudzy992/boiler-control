@@ -45,6 +45,11 @@ const GasAnalyticsPage = lazy(() =>
 const NotificationsPage = lazy(() =>
   import('./features/notifications/pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage }))
 );
+const AppReleasesPage = lazy(() =>
+  import('./features/app-releases/pages/AppReleasesPage').then((m) => ({
+    default: m.AppReleasesPage,
+  })),
+);
 const DesignGalleryPage = lazy(() =>
   import('./features/design/pages/DesignGalleryPage').then((m) => ({
     default: m.DesignGalleryPage,
@@ -157,6 +162,21 @@ function App() {
                   <ProtectedRoute>
                     <MainLayout>
                       <NotificationsPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/*
+                F15: objava verzija. Ruta je zaštićena loginom; ADMIN provjerava
+                server (`RolesGuard`). Ako korisnik bez role otvori putanju,
+                vidi prazan ekran sa greškom 403 — što je tačan odgovor.
+              */}
+              <Route
+                path="/app-releases"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <AppReleasesPage />
                     </MainLayout>
                   </ProtectedRoute>
                 }

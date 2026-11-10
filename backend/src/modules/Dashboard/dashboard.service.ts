@@ -18,6 +18,12 @@ import type { IThermostatAdapter } from '../Boiler/adapter/thermostat-adapter.in
 import { BoilerService } from '../Boiler/boiler.service';
 import { WeatherService } from '../Weather/weather.service';
 import { DashboardWeatherService } from '../Weather/dashboard-weather.service';
+import { anchorDailyFlow } from '../DailyRecord/morning-anchor';
+import {
+  localDateKey,
+  resolveHomeTimeZone,
+} from '../DailyRecord/proposal-schedule';
+import type { DailyFlowDto } from './dto/dashboard-response.dto';
 import { bucketKey } from '../../common/dashboard-bucket';
 import { toCsv } from '../../common/csv';
 import {
@@ -38,6 +44,16 @@ import {
   computeWeightedHealthScore,
   type HealthComponent,
 } from '../../common/heating-health';
+
+/**
+ * F14: ono što `homeDailyFlow` vraća. Polja su ista kao `DailyFlowDto` (ugovor
+ * prema klijentu) plus interno `boilerSuggestedFlowTemp`, koje služi da se
+ * `system.boiler.suggestedFlowTemp` zamijeni jutarnjim brojem — bez toga bi
+ * klijent i dalje prikazivao polaznu iz historije.
+ */
+export interface DailyFlowSummary extends DailyFlowDto {
+  boilerSuggestedFlowTemp?: number;
+}
 
 @Injectable()
 export class DashboardService {
@@ -102,6 +118,18 @@ export class DashboardService {
         hasThermostat ? this.getLatestBoilerHistory(userId) : null,
         this.getRecentRecommendations(userId),
       ]);
+
+    /*
+     * F14: jutarnji predlog je glavni broj za dan, ne polazna iz formule.
+     * Računa se poslije historije jer zamjenjuje njeno `suggestedFlowTemp`
+     * polje — prosleđivanje kroz `Promise.all` čitalo bi vrijednost koja još
+     * nije izračunata.
+     */
+    const dailyFlow = await this.homeDailyFlow(
+      userId,
+      homeProfiles[0] ?? null,
+      latestBoilerHistory,
+    );
 
     const heatingStatus: Array<{ deviceId: number; isHeatingNow: boolean }> =
       hasThermostat ? await this.getHeatingStatus(userId) : [];
@@ -196,8 +224,24 @@ export class DashboardService {
       },
       system: {
         weather: latestWeather,
-        boiler: latestBoilerHistory,
+        /*
+         * F14: `suggestedFlowTemp` za klijenta je **jutarnji predlog za dan**,
+         * a ne posljednja vrijednost iz historije događaja. `actualFlowTemp` i
+         * dalje dolazi iz historije — to je ono što je stvarno na kotlu.
+         *
+         * Kada oba postoje, `dailyFlow` nosi pun kontekst (osnov i dokaz ako je
+         * broj izmijenjen usred dana). Ne izmišlja se nijedan broj: bez
+         * predloga, klijent dobija `suggestedFlowTemp: null`.
+         */
+        boiler:
+          dailyFlow.boilerSuggestedFlowTemp == null || !latestBoilerHistory
+            ? latestBoilerHistory
+            : {
+                ...latestBoilerHistory,
+                suggestedFlowTemp: dailyFlow.boilerSuggestedFlowTemp as number,
+              },
         recommendation: recommendations[0] ?? null,
+        dailyFlow,
       },
       homes,
     };
@@ -762,6 +806,100 @@ export class DashboardService {
       sunrise: data.sunrise ?? null,
       sunset: data.sunset ?? null,
     };
+  }
+
+  /**
+   * F14: broj koji danas važi — jutarnji predlog, uz dokaz ako se mijenjao.
+   *
+   * Zašto ne u `BoilerService.calculateFlowTemp`: formula ne zna šta je ujutro
+   * zapisano, a upravo to korisnik treba da vidi. Formula ostaje kao
+   * `currentFlowTemp` (informacija), nikad kao cilj.
+   */
+  private async homeDailyFlow(
+    userId: number,
+    home: {
+      id: number;
+      maxHeatingFlowC: number | null;
+      weatherTimezone: string | null;
+    } | null,
+    latestBoilerHistory: {
+      suggestedFlowTemp: number;
+      [key: string]: unknown;
+    } | null,
+  ): Promise<DailyFlowSummary> {
+    if (!home) {
+      return {
+        localDate: null,
+        morningFlowC: null,
+        currentFlowC: null,
+        basis: 'NONE',
+        changed: false,
+        change: null,
+        formulaDriftC: null,
+      };
+    }
+
+    const timeZone = resolveHomeTimeZone({
+      homeTimeZone: home.weatherTimezone,
+      userTimeZone: await this.userTimeZone(userId),
+    });
+    const localDate = localDateKey(new Date(), timeZone.zone);
+
+    const [record, formula] = await Promise.all([
+      this.prisma.dailyRecord.findFirst({
+        where: { homeProfileId: home.id, localDate },
+        select: {
+          proposedFlowTemp: true,
+          outcomeAt: true,
+          undershootC: true,
+          nightUndershootC: true,
+        },
+      }),
+      this.boilerService.calculateFlowTemp(userId),
+    ]);
+
+    /*
+     * Dokaz usred dana postoji samo kad je današnji ishod već obračunat. To se
+     * u praksi dešava rijetko (obračun ide u 03:20 za prethodni dan), pa je
+     * očekivano ponašanje: **broj se tokom dana ne mijenja**. Time se ne
+     * izmišlja mjerenje da bi se opravdala promjena — suprotno bi bilo gore od
+     * oscilacije koju ovo pravilo uklanja.
+     */
+    const anchor = anchorDailyFlow({
+      morningFlowC: record?.proposedFlowTemp ?? null,
+      currentFlowC: formula.flowTemp > 0 ? formula.flowTemp : null,
+      today:
+        record?.outcomeAt == null
+          ? null
+          : {
+              undershootC: record.undershootC,
+              nightUndershootC: record.nightUndershootC,
+            },
+      ceilingC: home.maxHeatingFlowC,
+    });
+
+    return {
+      localDate,
+      morningFlowC: anchor.flowC,
+      currentFlowC: formula.flowTemp > 0 ? formula.flowTemp : null,
+      basis: anchor.basis,
+      changed: anchor.changed,
+      change: anchor.change,
+      formulaDriftC: anchor.formulaDriftC,
+      // Historija događaja ostaje izvor za ono što je na kotlu; mijenja se
+      // samo broj koji je cilj, i to na jutarnji predlog.
+      ...(latestBoilerHistory && anchor.flowC != null
+        ? { boilerSuggestedFlowTemp: anchor.flowC }
+        : {}),
+    };
+  }
+
+  private async userTimeZone(userId: number): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    return user?.timezone ?? null;
   }
 
   private getLatestBoilerHistory(userId: number) {

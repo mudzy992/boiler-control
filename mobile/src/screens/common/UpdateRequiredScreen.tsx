@@ -8,50 +8,62 @@ import {
   useColorModeValue,
 } from '../../components/ui/nativewind';
 import { Linking } from 'react-native';
-import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '../../hooks/useTranslation';
+import { releaseDownloadUrl, type AppReleaseInfo } from '../../config/version.config';
 
 /**
- * MO2-2: blokador za zastarjele verzije.
+ * MO2-2 / `F15`: blokador i ponuda ažuriranja.
  *
  * Prikazuje se UMJESTO cijele navigacije (ne kao overlay iznad nje), pa
  * korisnik ne može zaobići gate back dugmetom ni deep linkom.
+ *
+ * `F15` mijenja **izvor** ažuriranja: nema Play Store-a. APK stoji na našem
+ * serveru i skida se običnim linkom, pa poruka mora objasniti šta Android
+ * traži od korisnika (dozvola za nepoznati izvor i potvrda instalacije).
+ * Poruka se **ne zatvara sama** i nema „kasnije" dugme: to je namjerno, jer
+ * blokirana verzija ne smije ostaviti korisnika bez puta dalje.
  */
 
-/**
- * Android-only distribucija (iOS build je ukinut), pa postoji samo Play Store
- * link. Namjerno nema iOS grane: mrtva grana bi sugerirala da iOS build
- * postoji, a `IOS_APP_STORE_ID` ionako nikad nije bio poznat iz repoa.
- */
-function getStoreUrl(): string | null {
-  const pkg = Constants.expoConfig?.android?.package;
-  return pkg ? `market://details?id=${pkg}` : null;
+function formatSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '';
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)} MB`;
 }
 
 type UpdateRequiredScreenProps = {
   currentVersion: string;
   minSupportedVersion: string | null;
+  /** Release koji se nudi; `null` kad nema objavljenog APK-a. */
+  release?: AppReleaseInfo | null;
+  /**
+   * `false` = blokada (verzija više nije podržana), `true` = samo ponuda
+   * (novija verzija postoji, ali ova još radi).
+   */
+  optional?: boolean;
 };
 
 const UpdateRequiredScreenContent: React.FC<UpdateRequiredScreenProps> = ({
   currentVersion,
   minSupportedVersion,
+  release = null,
+  optional = false,
 }) => {
   const { t } = useTranslation();
   const bgColor = useColorModeValue('gray.50', 'dark.900');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const subtextColor = useColorModeValue('gray.600', 'gray.400');
+  const cardColor = useColorModeValue('white', 'dark.800');
 
-  const storeUrl = getStoreUrl();
-
-  const openStore = async () => {
-    if (!storeUrl) return;
+  const openDownload = async () => {
+    if (!release) return;
     try {
-      await Linking.openURL(storeUrl);
+      // `Linking.openURL` predaje link browseru/Download Manageru. Samo
+      // preuzimanje je interaktivno — Android traži potvrdu instalacije, i to
+      // je jedino mjesto gdje korisnik može odustati.
+      await Linking.openURL(releaseDownloadUrl(release));
     } catch {
-      // Trgovina nije dostupna (npr. bez Play Storea) — korisnik već vidi
-      // uputstvo, pa nema smisla dodatno ga uznemiravati.
+      // Bez browsera nema šta dalje; uputstvo ispod ostaje vidljivo.
     }
   };
 
@@ -61,21 +73,14 @@ const UpdateRequiredScreenContent: React.FC<UpdateRequiredScreenProps> = ({
         <MaterialCommunityIcons name="update" size={56} color="#f59e0b" />
 
         <Heading size="md" color={textColor} textAlign="center">
-          {t('update.title')}
+          {optional ? t('update.optionalTitle') : t('update.title')}
         </Heading>
 
         <Text color={subtextColor} textAlign="center" fontSize="sm">
-          {t('update.body')}
+          {optional ? t('update.optionalBody') : t('update.body')}
         </Text>
 
-        <VStack
-          space={1}
-          bg={useColorModeValue('white', 'dark.800')}
-          px={4}
-          py={3}
-          borderRadius="md"
-          w="100%"
-        >
+        <VStack space={1} bg={cardColor} px={4} py={3} borderRadius="md" w="100%">
           <Text fontSize="xs" color={subtextColor}>
             {t('update.currentVersion')}: {currentVersion}
           </Text>
@@ -84,22 +89,56 @@ const UpdateRequiredScreenContent: React.FC<UpdateRequiredScreenProps> = ({
               {t('update.requiredVersion')}: {minSupportedVersion}
             </Text>
           ) : null}
+          {release ? (
+            <Text fontSize="xs" color={subtextColor}>
+              {t('update.availableVersion')}: {release.version}
+              {formatSize(release.sizeBytes) ? ` · ${formatSize(release.sizeBytes)}` : ''}
+            </Text>
+          ) : null}
         </VStack>
 
-        {storeUrl ? (
+        {release?.notes ? (
+          <Text color={subtextColor} textAlign="center" fontSize="xs">
+            {release.notes}
+          </Text>
+        ) : null}
+
+        {release ? (
           <Button
             bg="brand.400"
             _pressed={{ bg: 'brand.500' }}
-            onPress={() => void openStore()}
-            accessibilityLabel={t('update.updateButton')}
+            onPress={() => void openDownload()}
+            accessibilityLabel={t('update.downloadButton')}
           >
-            {t('update.updateButton')}
+            {t('update.downloadButton')}
           </Button>
-        ) : (
+        ) : null}
+
+        {/*
+          Uputstvo je dio poruke, a ne tooltip: korisnik koji prvi put skida APK
+          van trgovine mora znati da će Android tražiti dozvolu za nepoznati
+          izvor i da preuzimanje traži njegovu potvrdu.
+        */}
+        <VStack space={2} w="100%" px={1}>
+          <Text color={subtextColor} fontSize="xs">
+            {t('update.instructionsTitle')}
+          </Text>
+          <Text color={subtextColor} fontSize="xs">
+            1. {t('update.instructionsDownload')}
+          </Text>
+          <Text color={subtextColor} fontSize="xs">
+            2. {t('update.instructionsUnknownSource')}
+          </Text>
+          <Text color={subtextColor} fontSize="xs">
+            3. {t('update.instructionsInstall')}
+          </Text>
+        </VStack>
+
+        {!release ? (
           <Text color={subtextColor} textAlign="center" fontSize="xs" italic>
             {t('update.manualHint')}
           </Text>
-        )}
+        ) : null}
       </VStack>
     </Box>
   );

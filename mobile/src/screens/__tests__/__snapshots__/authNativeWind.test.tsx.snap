@@ -2216,79 +2216,72 @@ exports[`UpdateRequired before/after NativeWind nativewind matches the dark snap
         </Text>
       </View>
       <View
-        accessibilityLabel="update.updateButton"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onBlur={[Function]}
-        onClick={[Function]}
-        onFocus={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
+        className="flex flex-col"
         style={
-          [
-            {
-              "alignItems": "center",
-              "backgroundColor": "#ff6b3d",
-              "borderColor": "#e85223",
-              "borderRadius": 6,
-              "borderWidth": 1,
-              "color": "#ffffff",
-              "justifyContent": "center",
-              "paddingBottom": 10,
-              "paddingLeft": 16,
-              "paddingRight": 16,
-              "paddingTop": 10,
-            },
-            undefined,
-          ]
+          {
+            "gap": 8,
+            "paddingLeft": 4,
+            "paddingRight": 4,
+            "width": "100%",
+          }
         }
       >
-        <View
-          className="flex flex-row"
+        <Text
           style={
             {
-              "alignItems": "center",
-              "gap": 8,
-              "justifyContent": "center",
+              "color": "#9ca3af",
+              "fontSize": 12,
             }
           }
         >
-          <Text
-            style={
-              {
-                "color": "#ffffff",
-                "fontSize": 16,
-                "fontWeight": "600",
-              }
+          update.instructionsTitle
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#9ca3af",
+              "fontSize": 12,
             }
-          >
-            update.updateButton
-          </Text>
-        </View>
+          }
+        >
+          1. 
+          update.instructionsDownload
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#9ca3af",
+              "fontSize": 12,
+            }
+          }
+        >
+          2. 
+          update.instructionsUnknownSource
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#9ca3af",
+              "fontSize": 12,
+            }
+          }
+        >
+          3. 
+          update.instructionsInstall
+        </Text>
       </View>
+      <Text
+        style={
+          {
+            "color": "#9ca3af",
+            "fontSize": 12,
+            "fontStyle": "italic",
+            "textAlign": "center",
+          }
+        }
+      >
+        update.manualHint
+      </Text>
     </View>
   </View>
   <View
@@ -2412,79 +2405,72 @@ exports[`UpdateRequired before/after NativeWind nativewind matches the light sna
         </Text>
       </View>
       <View
-        accessibilityLabel="update.updateButton"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onBlur={[Function]}
-        onClick={[Function]}
-        onFocus={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
+        className="flex flex-col"
         style={
-          [
-            {
-              "alignItems": "center",
-              "backgroundColor": "#ff6b3d",
-              "borderColor": "#e85223",
-              "borderRadius": 6,
-              "borderWidth": 1,
-              "color": "#ffffff",
-              "justifyContent": "center",
-              "paddingBottom": 10,
-              "paddingLeft": 16,
-              "paddingRight": 16,
-              "paddingTop": 10,
-            },
-            undefined,
-          ]
+          {
+            "gap": 8,
+            "paddingLeft": 4,
+            "paddingRight": 4,
+            "width": "100%",
+          }
         }
       >
-        <View
-          className="flex flex-row"
+        <Text
           style={
             {
-              "alignItems": "center",
-              "gap": 8,
-              "justifyContent": "center",
+              "color": "#4b5563",
+              "fontSize": 12,
             }
           }
         >
-          <Text
-            style={
-              {
-                "color": "#ffffff",
-                "fontSize": 16,
-                "fontWeight": "600",
-              }
+          update.instructionsTitle
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#4b5563",
+              "fontSize": 12,
             }
-          >
-            update.updateButton
-          </Text>
-        </View>
+          }
+        >
+          1. 
+          update.instructionsDownload
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#4b5563",
+              "fontSize": 12,
+            }
+          }
+        >
+          2. 
+          update.instructionsUnknownSource
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#4b5563",
+              "fontSize": 12,
+            }
+          }
+        >
+          3. 
+          update.instructionsInstall
+        </Text>
       </View>
+      <Text
+        style={
+          {
+            "color": "#4b5563",
+            "fontSize": 12,
+            "fontStyle": "italic",
+            "textAlign": "center",
+          }
+        }
+      >
+        update.manualHint
+      </Text>
     </View>
   </View>
   <View

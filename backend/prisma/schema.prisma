@@ -302,6 +302,36 @@ model TuyaToken {
   updatedAt   DateTime @updatedAt
 }
 
+/// `F15`: jedna objavljena verzija mobilne aplikacije.
+///
+/// Zašto tabela, a ne env var: do sada je `latestVersion` bio konstanta
+/// (`2.0.0`), pa je svaki update značio redeploy. Admin sada objavljuje kroz
+/// dashboard, a APK stoji na našem serveru — nema Play Store-a.
+///
+/// `version` je jedinstvena namjerno: ista verzija se ne objavljuje dvaput.
+/// Ako je build pokvaren, objavljuje se **nova** verzija; prepisivanje bi
+/// ostavilo korisnike sa linkom na fajl koji nije onaj koji su skinuli.
+model AppRelease {
+  id          Int      @id @default(autoincrement())
+  /// Semver bez prefiksa, npr. `1.4.0`. Upoređuje se sa `version.config.ts`.
+  version     String   @unique
+  /// `versionCode` iz `app.json` — Android ga traži za nadogradnju na istoj verziji.
+  buildNumber Int
+  /// Putanja u `UPLOAD_ROOT_PATH`, npr. `app-releases/boiler-control-1.4.0-14.apk`.
+  apkPath     String
+  /// Veličina u bajtovima; klijent je prikazuje prije skidanja (mobilni podaci).
+  sizeBytes   Int
+  /// Tekst objave; opciono, jer prazan je bolji od izmišljenog.
+  notes       String?
+  /// Da li je release vidljiv klijentima. Skriven release ostaje u historiji.
+  isPublished Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishedAt])
+}
+
 model UserDevice {
   id            Int       @id @default(autoincrement())
   userId        Int

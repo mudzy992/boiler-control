@@ -68,7 +68,7 @@ export function resolveFlowRange(raw: unknown): FlowRange {
 
 export function isWithinCurrentFlowTempRange(
   value: number,
-  range: FlowRange = DEFAULT_FLOW_RANGE,
+  range: FlowRange = DEFAULT_FLOW_RANGE
 ): boolean {
   return Number.isFinite(value) && value >= range.min && value <= range.max;
 }

@@ -42,8 +42,8 @@ describe('AppConfigService (MO2-2 version gate)', () => {
   });
 
   describe('zadano stanje (bez env varijabli)', () => {
-    it('gate je uključen i ne blokira postojeće instalacije (min = 1.0.0)', () => {
-      const config = service.getAppConfig();
+    it('gate je uključen i ne blokira postojeće instalacije (min = 1.0.0)', async () => {
+      const config = await service.getAppConfigSync();
 
       expect(config.versionGateEnabled).toBe(true);
       // 1.0.0 je verzija koja je stvarno kod korisnika (app.json), pa gate
@@ -54,20 +54,20 @@ describe('AppConfigService (MO2-2 version gate)', () => {
   });
 
   describe('env override', () => {
-    it('prihvata ispravne semver vrijednosti', () => {
+    it('prihvata ispravne semver vrijednosti', async () => {
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '2.1.0';
       process.env.MOBILE_LATEST_VERSION = '2.3.4';
 
-      const config = service.getAppConfig();
+      const config = await service.getAppConfigSync();
 
       expect(config.minSupportedVersion).toBe('2.1.0');
       expect(config.latestVersion).toBe('2.3.4');
     });
 
-    it('trim-uje vrijednosti iz env-a', () => {
+    it('trim-uje vrijednosti iz env-a', async () => {
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '  2.1.0  ';
 
-      expect(service.getAppConfig().minSupportedVersion).toBe('2.1.0');
+      expect(await service.getAppConfigSync().minSupportedVersion).toBe('2.1.0');
     });
   });
 
@@ -78,17 +78,17 @@ describe('AppConfigService (MO2-2 version gate)', () => {
       ['0', false],
       ['true', true],
       ['1', true],
-    ])('APP_VERSION_GATE_ENABLED="%s" -> %s', (raw, expected) => {
+    ])('APP_VERSION_GATE_ENABLED="%s" -> %s', async (raw, expected) => {
       process.env.APP_VERSION_GATE_ENABLED = raw;
 
-      expect(service.getAppConfig().versionGateEnabled).toBe(expected);
+      expect(await service.getAppConfigSync().versionGateEnabled).toBe(expected);
     });
 
-    it('kad je gate isključen, min je 0.0.0 ČAK I ako env traži više', () => {
+    it('kad je gate isključen, min je 0.0.0 ČAK I ako env traži više', async () => {
       process.env.APP_VERSION_GATE_ENABLED = 'false';
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '9.9.9';
 
-      const config = service.getAppConfig();
+      const config = await service.getAppConfigSync();
 
       expect(config.versionGateEnabled).toBe(false);
       expect(config.minSupportedVersion).toBe('0.0.0');
@@ -96,31 +96,31 @@ describe('AppConfigService (MO2-2 version gate)', () => {
       expect(config.latestVersion).toBe('2.0.0');
     });
 
-    it('neispravna vrijednost flag-a ne gasi gate (fail-safe na true)', () => {
+    it('neispravna vrijednost flag-a ne gasi gate (fail-safe na true)', async () => {
       process.env.APP_VERSION_GATE_ENABLED = 'mozda';
 
-      expect(service.getAppConfig().versionGateEnabled).toBe(true);
+      expect(await service.getAppConfigSync().versionGateEnabled).toBe(true);
     });
   });
 
   describe('fail-safe na neispravan env', () => {
     it.each([['abc'], ['1.2'], ['1.2.3.4'], ['v1.2.3'], ['1.2.3-beta'], ['']])(
       'MOBILE_MIN_SUPPORTED_VERSION="%s" -> vraća zadano 1.0.0',
-      (raw) => {
+      async (raw) => {
         process.env.MOBILE_MIN_SUPPORTED_VERSION = raw;
 
-        const config = service.getAppConfig();
+        const config = await service.getAppConfigSync();
 
         expect(config.minSupportedVersion).toBe('1.0.0');
         expect(config.versionGateEnabled).toBe(true);
       },
     );
 
-    it('neispravan latest ne utječe na min', () => {
+    it('neispravan latest ne utječe na min', async () => {
       process.env.MOBILE_LATEST_VERSION = 'nije-verzija';
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '2.0.0';
 
-      const config = service.getAppConfig();
+      const config = await service.getAppConfigSync();
 
       expect(config.minSupportedVersion).toBe('2.0.0');
       expect(config.latestVersion).toBe('2.0.0');
@@ -130,26 +130,26 @@ describe('AppConfigService (MO2-2 version gate)', () => {
   describe('SEC-4: authRefreshEnabled', () => {
     it('zadano je false dok je AUTH_COOKIE_REFRESH_ENABLED off', () => {
       delete process.env.AUTH_COOKIE_REFRESH_ENABLED;
-      const config = new AppConfigService().getAppConfig();
+      const config = new AppConfigService().getAppConfigSync();
       expect(config.authRefreshEnabled).toBe(false);
     });
 
     it('postaje true kad je zastavica uključena', () => {
       process.env.AUTH_COOKIE_REFRESH_ENABLED = 'on';
-      const config = new AppConfigService().getAppConfig();
+      const config = new AppConfigService().getAppConfigSync();
       expect(config.authRefreshEnabled).toBe(true);
     });
 
     it('neispravna vrijednost zastavice ostaje false (fail-safe)', () => {
       process.env.AUTH_COOKIE_REFRESH_ENABLED = 'mozda';
-      const config = new AppConfigService().getAppConfig();
+      const config = new AppConfigService().getAppConfigSync();
       expect(config.authRefreshEnabled).toBe(false);
     });
 
     it('polje je prisutno i kad je version gate isključen (klijenti ga uvijek čitaju)', () => {
       process.env.APP_VERSION_GATE_ENABLED = 'false';
       delete process.env.AUTH_COOKIE_REFRESH_ENABLED;
-      const config = new AppConfigService().getAppConfig();
+      const config = new AppConfigService().getAppConfigSync();
       expect(config.versionGateEnabled).toBe(false);
       expect(config.authRefreshEnabled).toBe(false);
     });
@@ -159,7 +159,7 @@ describe('AppConfigService (MO2-2 version gate)', () => {
     process.env.MOBILE_MIN_SUPPORTED_VERSION = '💥';
     process.env.APP_VERSION_GATE_ENABLED = '💥';
 
-    expect(() => service.getAppConfig()).not.toThrow();
+    expect(() => service.getAppConfigSync()).not.toThrow();
   });
 });
 
@@ -180,7 +180,7 @@ describe('AppConfigController (MO2-2)', () => {
 
     const controller = module.get<AppConfigController>(AppConfigController);
 
-    expect(controller.getConfig()).toEqual(stub);
+    expect(await controller.getConfig()).toEqual(stub);
   });
 });
 
@@ -214,10 +214,15 @@ describe('GET /api/app/config (MO2-2 ugovor rute)', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       minSupportedVersion: '1.0.0',
+      // F15: `latestVersion` sada dolazi iz baze (`AppRelease`). U ovom testu
+      // servis nema `AppReleaseService`, pa važi env/zadana vrijednost — isti
+      // ugovor kao prije F15.
       latestVersion: '2.0.0',
       versionGateEnabled: true,
       // SEC-4: novo polje; zadano false jer je zastavica off
       authRefreshEnabled: false,
+      // F15: bez objavljenog release-a klijent ne prikazuje poruku o novoj verziji.
+      latestRelease: null,
     });
   });
 

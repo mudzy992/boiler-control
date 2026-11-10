@@ -334,7 +334,9 @@ export class DashboardRecentHeatingEventDto {
   })
   roomTargetTempThermostat!: number | null;
 
-  @ApiProperty({ description: 'Temperatura sobe iz događaja (`roomCurrentTemp`).' })
+  @ApiProperty({
+    description: 'Temperatura sobe iz događaja (`roomCurrentTemp`).',
+  })
   roomCurrentTemp!: number;
 
   @ApiProperty({
@@ -407,10 +409,14 @@ export class DashboardHeatingEventDto {
   @ApiProperty({ ...DATE_TIME, nullable: true })
   endedAt!: Date | null;
 
-  @ApiProperty({ description: 'Temperatura sobe iz događaja (`roomCurrentTemp`, NOT NULL).' })
+  @ApiProperty({
+    description: 'Temperatura sobe iz događaja (`roomCurrentTemp`, NOT NULL).',
+  })
   roomCurrentTemp!: number;
 
-  @ApiProperty({ description: 'Cilj sobe iz događaja (`roomTargetTemp`, NOT NULL).' })
+  @ApiProperty({
+    description: 'Cilj sobe iz događaja (`roomTargetTemp`, NOT NULL).',
+  })
   roomTargetTemp!: number;
 
   @ApiProperty({
@@ -612,4 +618,53 @@ export class DashboardAnalyticsExportResponseDto {
 
   @ApiPropertyOptional({ type: () => DashboardAnalyticsExportMetaDto })
   meta?: DashboardAnalyticsExportMetaDto;
+}
+
+/**
+ * F14: broj polazne koji danas važi.
+ *
+ * `basis` je dio ugovora, ne dodatak: `MORNING` znači da je broj jutarnji
+ * predlog i da formula odstupa bez dokaza; `CHANGED` znači da je izmijenjen uz
+ * mjereni manjak (`change` nosi koliko i gdje). Bez toga bi klijent morao da
+ * pogađa zašto se broj promijenio.
+ */
+export class DailyFlowChangeDto {
+  @ApiProperty({ description: 'Nova polazna poslije izmjene.' })
+  flowC!: number;
+
+  @ApiProperty({ enum: ['NIGHT_UNDERSHOOT', 'DAY_UNDERSHOOT'] })
+  reason!: string;
+
+  @ApiProperty({ description: 'Izmjereni manjak u kelvinima.' })
+  measuredUndershootC!: number;
+}
+
+export class DailyFlowDto {
+  @ApiPropertyOptional({ description: 'Lokalni dan na koji se broj odnosi.' })
+  localDate?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Broj koji se prikazuje i smije postaviti. `null` = nema predloga.',
+  })
+  morningFlowC?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Šta formula računa sada (informativno).',
+  })
+  currentFlowC?: number | null;
+
+  @ApiProperty({ enum: ['MORNING', 'CHANGED', 'FORMULA', 'NONE'] })
+  basis!: 'MORNING' | 'CHANGED' | 'FORMULA' | 'NONE';
+
+  @ApiProperty({ description: 'Je li broj izmijenjen u odnosu na jutro.' })
+  changed!: boolean;
+
+  @ApiPropertyOptional({ type: () => DailyFlowChangeDto })
+  change?: DailyFlowChangeDto | null;
+
+  @ApiPropertyOptional({
+    description: 'Koliko formula odstupa od jutra, kad nema dokaza za izmjenu.',
+  })
+  formulaDriftC?: number | null;
 }

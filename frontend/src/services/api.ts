@@ -373,16 +373,27 @@ export class ApiClient {
   }
 
   /**
-   * SEC-7: dohvaća CSRF token sa backenda. Zasticen je jednoraznim provjeravanjem
-   * da li endpoint postoji; ako backend ne nudi csrf-token endpoint, brojanje se
-   * prestaje i header se ne salje (soft fail, bez preloma postojećeg ponašanja).
+   * SEC-7: dohvaća CSRF token sa backenda.
+   *
+   * Backend danas **nema** `GET /auth/csrf-token` (provjereno: nijedan hit u
+   * `backend/src`), pa je prvi poziv uvijek bio `404` u Network tabu. To nije
+   * greška u radu — zaštita je soft-fail — ali je šum koji korisnik vidi i
+   * tumači kao kvar. Zato se endpoint pita **jednom po sesiji** i odgovor se
+   * pamti; poslije 404-a se ne ponavlja do sljedeće prijave.
    */
   private async getCsrfToken(): Promise<string | null> {
     if (this.csrfToken) return this.csrfToken;
     if (this.csrfAvailable === false) return null;
 
     try {
-      const response = await this.client.get("/auth/csrf-token");
+      const response = await this.client.get("/auth/csrf-token", {
+        // 404 je očekivan odgovor, ne greška koju vrijedi prijavljivati.
+        validateStatus: (status) => status === 200 || status === 404,
+      });
+      if (response.status === 404) {
+        this.csrfAvailable = false;
+        return null;
+      }
       const token = response.data?.csrfToken ?? response.data?.token;
       if (typeof token === "string" && token.length > 0) {
         this.csrfToken = token;
@@ -447,6 +458,15 @@ export class ApiClient {
   }
 
   // Boiler endpoints
+  /**
+   * `F13`: raspon polazne za aktivni dom. Web ga mora pitati iz istog razloga
+   * kao mobilni — inače forma odbija vrijednost koju motor upravo predlaže.
+   */
+  async getBoilerFlowRange() {
+    const response = await this.client.get("/boiler/flow-range");
+    return response.data;
+  }
+
   async getBoilerEvents() {
     const response = await this.client.get("/boiler/history");
     return response.data;

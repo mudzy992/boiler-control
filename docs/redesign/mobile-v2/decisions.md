@@ -904,6 +904,39 @@ da je posao obavljen), a ispod inputa piše **koja je datoteka odabrana i koliko
 je velika**; poruka servera o nedostajućem fajlu sada kaže i da zahtjev nije
 bio `multipart/form-data`.
 
+**Drugi krug (2026-11-20, snimka ekrana):** na ekranu je i dalje stajalo dugme
+„Objavi verziju" i sirov ključ `appReleases.fileSelected`. To je značilo da
+**bundle nije bio nov**, ali je otkrilo dvije stvarne greške koje bi se inače
+ponovile:
+
+1. **Izmjena prijevoda je tiho promašila.** Prettier je `locales/config.ts`
+   preveo na dvostruke navodnike, a izmjena je tražila jednostruke — `python`
+   `str.replace` nije našao ništa i nije se požalio. Zato sada postoji
+   `locales/__tests__/appReleasesKeys.test.ts`: čita **stvarni ekran**, vadi
+   svaki `t("…")` literal i traži ga u oba jezika. Test je provjeren mutacijom
+   (uklonjen `fileSelected` → padaju 2 testa).
+2. **Popravka uploada je provjerena u oba adaptera, ne samo u Node-u.** Stub
+   `XMLHttpRequest`-a pokazuje da u browseru axios **ne pošalje**
+   `Content-Type` (jedino `Accept`), pa granicu dodaje browser; lokalni HTTP
+   server potvrđuje da u Node-u stigne `multipart/form-data; boundary=…` sa
+   `filename="a.apk"`. Zato test **ne** tvrdi da je zaglavlje
+   `'multipart/form-data'` — tvrdi da je `undefined` i da `FormData` izađe iz
+   `transformRequest` kao `FormData`.
+
+Uz to dvije stvari koje je snimka odala:
+
+- **`GET /api/auth/csrf-token` je 404 na svaki POST.** Backend taj endpoint nema
+  (0 hitova), pa ga je klijent pitao uzalud. Sada se 404 pamti
+  (`validateStatus`), pa nema novog zahtjeva do sljedeće prijave.
+- **Web je još nosio granicu 48–55.** `frontend/src/constants/boilerLimits.ts`
+  je tvrdio 48, dok backend sada prima 30–55 i poštuje granicu doma. Web sada
+  čita `GET /api/boiler/flow-range` (`TempDialog` prima `range`), a test
+  pariteta poredi DTO sa **apsolutnim** granicama, ne sa domaćim.
+
+**Podsjetnik za deploy:** promjena u `frontend/src` ne postoji dok se ne napravi
+nova slika/bundle. Ako ekran i dalje pokazuje staro dugme, build nije objavljen
+— to nije greška u kodu.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { useTranslation } from 'react-i18next';
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
+  DEFAULT_FLOW_RANGE,
   flowTempRangeMessage,
-  MAX_CURRENT_FLOW_TEMP,
-  MIN_CURRENT_FLOW_TEMP,
   validateFlowTempInput,
-} from '@/constants/boilerLimits';
-import { Button, Field, Modal, NumberInput, fieldAria } from '@/ui';
+  type FlowRange,
+} from "@/constants/boilerLimits";
+import { Button, Field, Modal, NumberInput, fieldAria } from "@/ui";
 
 export interface TempDialogProps {
   open: boolean;
@@ -14,6 +14,12 @@ export interface TempDialogProps {
   initialValue?: number | null;
   onSubmit: (value: number) => void | Promise<void>;
   isSubmitting?: boolean;
+  /**
+   * `F13`: raspon dolazi iz `GET /api/boiler/flow-range` (po domu). Dok ne
+   * stigne, važi rezervni 48–55 — isti brojevi kao prije, da forma nikad ne
+   * pokaže granicu koju server ne primjenjuje.
+   */
+  range?: FlowRange;
 }
 
 export const TempDialog = ({
@@ -22,27 +28,28 @@ export const TempDialog = ({
   initialValue = null,
   onSubmit,
   isSubmitting = false,
+  range = DEFAULT_FLOW_RANGE,
 }: TempDialogProps): React.JSX.Element => {
   const { t } = useTranslation();
   const [value, setValue] = React.useState<number | undefined>(
-    typeof initialValue === 'number' ? initialValue : undefined,
+    typeof initialValue === "number" ? initialValue : undefined,
   );
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
-      setValue(typeof initialValue === 'number' ? initialValue : undefined);
+      setValue(typeof initialValue === "number" ? initialValue : undefined);
       setError(null);
     }
   }, [open, initialValue]);
 
   const handleSubmit = async (): Promise<void> => {
-    const result = validateFlowTempInput(value ?? null);
+    const result = validateFlowTempInput(value ?? null, range);
     if (!result.ok) {
       setError(
-        result.reason === 'required'
-          ? t('tempDialog.required')
-          : flowTempRangeMessage(),
+        result.reason === "required"
+          ? t("tempDialog.required")
+          : flowTempRangeMessage(range),
       );
       return;
     }
@@ -54,18 +61,22 @@ export const TempDialog = ({
     <Modal
       open={open}
       onClose={() => onOpenChange(false)}
-      title={t('tempDialog.title')}
-      description={t('tempDialog.range', {
-        min: MIN_CURRENT_FLOW_TEMP,
-        max: MAX_CURRENT_FLOW_TEMP,
+      title={t("tempDialog.title")}
+      description={t("tempDialog.range", {
+        min: range.min,
+        max: range.max,
       })}
     >
-      <Field id="temp-dialog-value" label={t('tempDialog.label')} error={error ?? undefined}>
+      <Field
+        id="temp-dialog-value"
+        label={t("tempDialog.label")}
+        error={error ?? undefined}
+      >
         <NumberInput
           id="temp-dialog-value"
-          value={value ?? ''}
-          min={MIN_CURRENT_FLOW_TEMP}
-          max={MAX_CURRENT_FLOW_TEMP}
+          value={value ?? ""}
+          min={range.min}
+          max={range.max}
           step={0.1}
           invalid={Boolean(error)}
           onValueChange={(next) => {
@@ -73,7 +84,7 @@ export const TempDialog = ({
             setError(null);
           }}
           disabled={isSubmitting}
-          {...fieldAria('temp-dialog-value', { error: error ?? undefined })}
+          {...fieldAria("temp-dialog-value", { error: error ?? undefined })}
         />
       </Field>
       <div className="mt-4 flex flex-wrap justify-end gap-2">
@@ -83,7 +94,7 @@ export const TempDialog = ({
           onClick={() => onOpenChange(false)}
           disabled={isSubmitting}
         >
-          {t('common.cancel')}
+          {t("common.cancel")}
         </Button>
         <Button
           type="button"
@@ -93,7 +104,7 @@ export const TempDialog = ({
           isLoading={isSubmitting}
           disabled={isSubmitting}
         >
-          {t('tempDialog.save')}
+          {t("tempDialog.save")}
         </Button>
       </div>
     </Modal>

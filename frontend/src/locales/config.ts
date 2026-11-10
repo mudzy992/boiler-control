@@ -91,7 +91,15 @@ const enUS = {
       "Manual correction in 1.2.3 format. It must be higher than the last published version.",
     notesLabel: "Release notes (optional)",
     notesPlaceholder: "What is fixed in this version",
-    upload: "Publish version",
+    /*
+     * `F15`: dugme je **upload** datoteke, ne „objava" — „Publish version" je
+     * zvučalo kao da je posao već obavljen pa korisnik nije znao šta još treba.
+     * Uz to, potvrda izbora datoteke mora imati tekst; bez nje `t()` vraća
+     * sam ključ i na ekranu se ispiše `appReleases.fileSelected`.
+     */
+    fileSelected: "Selected: {{name}} ({{size}})",
+    fileNotSelected: "No file selected yet.",
+    upload: "Upload APK",
     uploading: "Uploading…",
     success: "Version {{version}} published. Users will see the update notice.",
     errorNoFile: "Select an APK file first.",
@@ -648,8 +656,10 @@ const bsBS = {
       "Ručna korekcija u obliku 1.2.3. Mora biti veća od posljednje objavljene verzije.",
     notesLabel: "Napomene uz verziju (opciono)",
     notesPlaceholder: "Šta je ispravljeno u ovoj verziji",
-    upload: "Objavi verziju",
-    uploading: "Objavljivanje…",
+    fileSelected: "Odabrano: {{name}} ({{size}})",
+    fileNotSelected: "Datoteka još nije odabrana.",
+    upload: "Pošalji APK",
+    uploading: "Slanje…",
     success:
       "Verzija {{version}} je objavljena. Korisnici će vidjeti obavijest o ažuriranju.",
     errorNoFile: "Prvo odaberite APK datoteku.",

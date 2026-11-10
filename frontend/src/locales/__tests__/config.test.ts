@@ -1,5 +1,5 @@
-import { describe, expect, it, afterEach } from 'vitest';
-import i18n from '../config';
+import { describe, expect, it, afterEach } from "vitest";
+import i18n from "../config";
 
 /**
  * FE2-11 — i18n fallback.
@@ -15,32 +15,32 @@ import i18n from '../config';
 
 afterEach(async () => {
   // Vrati jezik na zadano da testovi ne cure jedan u drugi.
-  await i18n.changeLanguage('en-US');
+  await i18n.changeLanguage("en-US");
 });
 
-describe('i18n — inicijalizacija', () => {
-  it('fallbackLng je en-US', () => {
+describe("i18n — inicijalizacija", () => {
+  it("fallbackLng je en-US", () => {
     // `options.fallbackLng` je izvor istine; bez ovog bi testovi prolazili
     // i da fallback nije konfigurisan. i18next normalizira string u NIZ, pa
     // se poredi s nizom (izmjereno: `["en-US"]`).
-    expect(i18n.options.fallbackLng).toEqual(['en-US']);
+    expect(i18n.options.fallbackLng).toEqual(["en-US"]);
   });
 
-  it('oba jezika su registrovana kao resursi', () => {
-    expect(i18n.hasResourceBundle('en-US', 'translation')).toBe(true);
-    expect(i18n.hasResourceBundle('bs-BS', 'translation')).toBe(true);
+  it("oba jezika su registrovana kao resursi", () => {
+    expect(i18n.hasResourceBundle("en-US", "translation")).toBe(true);
+    expect(i18n.hasResourceBundle("bs-BS", "translation")).toBe(true);
   });
 
-  it('paritet ključeva: bs-BS ne zaostaje za en-US', () => {
-    const flat = (obj: Record<string, unknown>, prefix = ''): string[] =>
+  it("paritet ključeva: bs-BS ne zaostaje za en-US", () => {
+    const flat = (obj: Record<string, unknown>, prefix = ""): string[] =>
       Object.entries(obj).flatMap(([k, v]) =>
-        v !== null && typeof v === 'object'
+        v !== null && typeof v === "object"
           ? flat(v as Record<string, unknown>, `${prefix}${k}.`)
           : [`${prefix}${k}`],
       );
 
-    const en = flat(i18n.getResourceBundle('en-US', 'translation'));
-    const bs = new Set(flat(i18n.getResourceBundle('bs-BS', 'translation')));
+    const en = flat(i18n.getResourceBundle("en-US", "translation"));
+    const bs = new Set(flat(i18n.getResourceBundle("bs-BS", "translation")));
 
     const missing = en.filter((k) => !bs.has(k));
     expect(missing).toEqual([]);
@@ -50,68 +50,70 @@ describe('i18n — inicijalizacija', () => {
     // najviša polazna, `25` §5.1) + reports.shadow* (16 ključeva za shadow
     // izvještaj, `24` §6.5) + reports.history* (22 ključa za historiju dnevnih
     // zapisa, `31`, 24 ključa) + common.{loadMore,showingOf} (`33`) +
-    // appReleases.* (26 ključeva za objavu verzije, `F15`). Pad znači da je
+    // appReleases.* (28 ključeva za objavu verzije, `F15`). Pad znači da je
     // neko obrisao ključ ili dodao novi bez prijevoda — tada se broj mijenja
     // svjesno, u istom commitu.
-    expect(en.length).toBe(491);
+    expect(en.length).toBe(493);
   });
 });
 
-describe('i18n — prevodi', () => {
-  it('bosanski jezik vraća bosanski tekst', async () => {
-    await i18n.changeLanguage('bs-BS');
-    expect(i18n.t('gas.addReading')).toBe('Dodaj čitanje');
-    expect(i18n.t('common.cancel')).toBe('Otkaži');
+describe("i18n — prevodi", () => {
+  it("bosanski jezik vraća bosanski tekst", async () => {
+    await i18n.changeLanguage("bs-BS");
+    expect(i18n.t("gas.addReading")).toBe("Dodaj čitanje");
+    expect(i18n.t("common.cancel")).toBe("Otkaži");
   });
 
-  it('engleski jezik vraća engleski tekst', async () => {
-    await i18n.changeLanguage('en-US');
-    expect(i18n.t('gas.addReading')).toBe('Add Reading');
-    expect(i18n.t('common.cancel')).toBe('Cancel');
+  it("engleski jezik vraća engleski tekst", async () => {
+    await i18n.changeLanguage("en-US");
+    expect(i18n.t("gas.addReading")).toBe("Add Reading");
+    expect(i18n.t("common.cancel")).toBe("Cancel");
   });
 
-  it('NEPOSTOJEĆI ključ vraća sam ključ, ne prazan string', async () => {
-    await i18n.changeLanguage('en-US');
+  it("NEPOSTOJEĆI ključ vraća sam ključ, ne prazan string", async () => {
+    await i18n.changeLanguage("en-US");
     // i18next default za nepostojeći ključ; bitno je da UI ne prikaže "".
-    expect(i18n.t('gas.thisKeyDoesNotExist')).toBe('gas.thisKeyDoesNotExist');
+    expect(i18n.t("gas.thisKeyDoesNotExist")).toBe("gas.thisKeyDoesNotExist");
   });
 });
 
-describe('i18n — fallback kada ključ nedostaje u aktivnom jeziku', () => {
-  const KEY = 'gas.addReading';
-  const EN_VALUE = 'Add Reading';
+describe("i18n — fallback kada ključ nedostaje u aktivnom jeziku", () => {
+  const KEY = "gas.addReading";
+  const EN_VALUE = "Add Reading";
 
-  it('ključ koji nedostaje u bs-BS pada na en-US', async () => {
-    await i18n.changeLanguage('bs-BS');
+  it("ključ koji nedostaje u bs-BS pada na en-US", async () => {
+    await i18n.changeLanguage("bs-BS");
     // Preduslov: bez ovoga test ne bi dokazivao fallback.
-    expect(i18n.t(KEY)).toBe('Dodaj čitanje');
+    expect(i18n.t(KEY)).toBe("Dodaj čitanje");
 
-    const bundle = i18n.getResourceBundle('bs-BS', 'translation');
-    const original = bundle.gas[KEY.split('.')[1]];
-    expect(original).toBe('Dodaj čitanje');
+    const bundle = i18n.getResourceBundle("bs-BS", "translation");
+    const original = bundle.gas[KEY.split(".")[1]];
+    expect(original).toBe("Dodaj čitanje");
 
     try {
-      delete bundle.gas[KEY.split('.')[1]];
+      delete bundle.gas[KEY.split(".")[1]];
 
       // Ključ je stvarno uklonjen iz bs-BS...
-      expect(i18n.getResourceBundle('bs-BS', 'translation').gas.addReading).toBeUndefined();
+      expect(
+        i18n.getResourceBundle("bs-BS", "translation").gas.addReading,
+      ).toBeUndefined();
       // ...i prevod se vraća na engleski, što dokazuje da fallbackLng radi.
       expect(i18n.t(KEY)).toBe(EN_VALUE);
     } finally {
-      bundle.gas[KEY.split('.')[1]] = original;
+      bundle.gas[KEY.split(".")[1]] = original;
     }
 
     // Restauracija potvrđena — test ne smije ostaviti trajnu rupu.
-    expect(i18n.t(KEY)).toBe('Dodaj čitanje');
+    expect(i18n.t(KEY)).toBe("Dodaj čitanje");
   });
 });
 
-describe('i18n — <html lang> (FE2-6)', () => {
-  it('document.documentElement.lang prati odabrani jezik', async () => {
-    await i18n.changeLanguage('bs-BS');
-    expect(document.documentElement.lang).toBe('bs-BS');
+describe("i18n — <html lang> (FE2-6)", () => {
+  it("document.documentElement.lang prati odabrani jezik", async () => {
+    await i18n.changeLanguage("bs-BS");
+    expect(document.documentElement.lang).toBe("bs-BS");
 
-    await i18n.changeLanguage('en-US');
-    expect(document.documentElement.lang).toBe('en-US');
+    await i18n.changeLanguage("en-US");
+    expect(document.documentElement.lang).toBe("en-US");
   });
 });

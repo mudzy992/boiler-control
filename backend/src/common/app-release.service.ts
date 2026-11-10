@@ -270,7 +270,17 @@ export class AppReleaseService {
    */
   async upload(input: UploadAppReleaseInput): Promise<AppReleaseDto> {
     if (!input.file) {
-      throw new BadRequestException('Nedostaje APK fajl');
+      /*
+       * Poruka mora reći i **zašto** se to dešava, jer se najčešći uzrok ne
+       * vidi iz forme: datoteka je odabrana u browseru, ali zahtjev nije otišao
+       * kao `multipart/form-data` (npr. JSON zaglavlje pretvori `FormData` u
+       * tekst i fajl nestane). Bez ovog dijela poruka optužuje korisnika za
+       * nešto što je uradio.
+       */
+      throw new BadRequestException(
+        'Nedostaje APK fajl — zahtjev nije stigao kao multipart/form-data. ' +
+          'Odaberite datoteku i pokušajte ponovo.',
+      );
     }
     if (input.file.size > APK_MAX_SIZE_BYTES) {
       throw new BadRequestException('APK prelazi dozvoljenu veličinu');

@@ -107,6 +107,11 @@ export const AppReleasesPage = (): JSX.Element => {
     },
   });
 
+  /*
+   * `file` je jedini uslov za upload. Stanje se prikazuje tekstom, a ne samo
+   * kroz `disabled` na dugmetu — korisnik koji odabere datoteku mora vidjeti
+   * da je stvarno primljena (ime i veličina), a ne da nagađa zašto dugme ne radi.
+   */
   const rows = releasesQuery.data ?? [];
   const status = releasesQuery.isLoading
     ? "loading"
@@ -146,6 +151,22 @@ export const AppReleasesPage = (): JSX.Element => {
             />
             <p className="text-xs text-ink-dim">
               {t("appReleases.versionHint")}
+            </p>
+            {/*
+              Potvrda izbora. Bez nje se „Choose file" ponaša kao crna kutija:
+              browser ne pokaže uvijek ime fajla (a `.apk` se uz to često ne
+              prepoznaje), pa korisnik ne zna je li datoteka uopšte primljena.
+            */}
+            <p
+              className={file ? "text-xs text-ok" : "text-xs text-warn"}
+              data-testid="app-release-file-state"
+            >
+              {file
+                ? t("appReleases.fileSelected", {
+                    name: file.name,
+                    size: formatSize(file.size),
+                  })
+                : t("appReleases.fileNotSelected")}
             </p>
           </div>
 

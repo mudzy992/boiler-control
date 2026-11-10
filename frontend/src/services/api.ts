@@ -1,12 +1,12 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError } from "axios";
 import type {
   CreateHomeProfileDto,
   UpdateHomeProfileDto,
   HomeProfileResponse,
-} from '../types/homeProfile';
+} from "../types/homeProfile";
 // FE2-14: tipovi generisani iz `contracts/openapi.json` (FE2-8), tako da
 // potpis metode prati ugovor umjesto ručno pisane deklaracije.
-import type { components } from '../types/api';
+import type { components } from "../types/api";
 
 /** Red događaja grijanja (`GET /heating-events`). */
 export interface HeatingEventRow {
@@ -33,12 +33,12 @@ export interface GasReadingRow {
   hasInvoicePdf?: boolean;
   invoiceUploadedAt?: string | null;
 }
-import { shouldForceLoginRedirectOn401 } from './auth401';
-import type { BoilerCatalog } from '../features/home-profile/lib/boiler-catalog';
+import { shouldForceLoginRedirectOn401 } from "./auth401";
+import type { BoilerCatalog } from "../features/home-profile/lib/boiler-catalog";
 import type {
   DailyHistoryResponse,
   ShadowReportResponse,
-} from '../features/reports/types';
+} from "../features/reports/types";
 
 /**
  * FE2-7 (FE-009): API base URL **bez** dev fallbacka.
@@ -56,7 +56,7 @@ import type {
  * build pada** — vidi `requireApiBaseUrl()` u `vite.config.ts`. Odluka
  * vlasnika: "Dev fallback se uklanja (greška, ne drugi host)".
  */
-const API_BASE_URL = (import.meta.env.VITE_API_URL ?? '').trim();
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").trim();
 
 /**
  * SEC-4 (faza 2): dual-mode autentifikacija.
@@ -104,7 +104,7 @@ export class ApiClient {
     this.client = axios.create({
       baseURL: API_BASE_URL,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -121,16 +121,16 @@ export class ApiClient {
 
       // SEC-7: CSRF token za mutacije (POST/PUT/PATCH/DELETE), osim auth
       // endpint-a koji CSRF nije zahtijevan (login, refresh, logout).
-      const method = (config.method ?? 'get').toUpperCase();
-      const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+      const method = (config.method ?? "get").toUpperCase();
+      const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
       const isAuthRoute =
-        config.url?.includes('/auth/login') ||
-        config.url?.includes('/auth/refresh') ||
-        config.url?.includes('/auth/logout');
+        config.url?.includes("/auth/login") ||
+        config.url?.includes("/auth/refresh") ||
+        config.url?.includes("/auth/logout");
       if (isMutation && !isAuthRoute) {
         const csrf = await this.getCsrfToken();
         if (csrf) {
-          config.headers['X-CSRF-Token'] = csrf;
+          config.headers["X-CSRF-Token"] = csrf;
         }
       }
       return config;
@@ -141,14 +141,20 @@ export class ApiClient {
       (response) => response,
       async (error: AxiosError) => {
         const status = error.response?.status;
-        const url = error.config?.url ?? '';
-        const alreadyRetried = (error.config as { _sec4Retried?: boolean } | undefined)
-          ?._sec4Retried;
+        const url = error.config?.url ?? "";
+        const alreadyRetried = (
+          error.config as { _sec4Retried?: boolean } | undefined
+        )?._sec4Retried;
         const isAuthRoute =
-          url.includes('/auth/refresh') || url.includes('/auth/login');
+          url.includes("/auth/refresh") || url.includes("/auth/login");
 
         // SEC-4: jedan pokušaj osvježavanja, pa tek onda odjava.
-        if (status === 401 && this.cookieAuthEnabled && !alreadyRetried && !isAuthRoute) {
+        if (
+          status === 401 &&
+          this.cookieAuthEnabled &&
+          !alreadyRetried &&
+          !isAuthRoute
+        ) {
           const refreshed = await this.refreshSession();
           if (refreshed && error.config) {
             const retry = error.config as typeof error.config & {
@@ -169,10 +175,10 @@ export class ApiClient {
           // radi bez obzira na to koji je tok bio aktivan.
           // AU-01: 401 na /auth/login ne radi full reload — forma zadrži poruku.
           this.clearToken();
-          window.location.href = '/login';
+          window.location.href = "/login";
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -183,7 +189,7 @@ export class ApiClient {
    */
   async detectAuthMode(): Promise<boolean> {
     try {
-      const response = await this.client.get('/app/config');
+      const response = await this.client.get("/app/config");
       this.cookieAuthEnabled = response.data?.authRefreshEnabled === true;
     } catch {
       this.cookieAuthEnabled = false;
@@ -206,9 +212,9 @@ export class ApiClient {
 
     this.refreshInFlight = (async () => {
       try {
-        const response = await this.client.post('/auth/refresh');
+        const response = await this.client.post("/auth/refresh");
         const token = response.data?.token;
-        if (typeof token === 'string' && token.length > 0) {
+        if (typeof token === "string" && token.length > 0) {
           this.setToken(token);
           return true;
         }
@@ -236,7 +242,7 @@ export class ApiClient {
     if (this.cookieAuthEnabled) {
       return this.accessToken;
     }
-    return localStorage.getItem('token');
+    return localStorage.getItem("token");
   }
 
   /**
@@ -251,7 +257,7 @@ export class ApiClient {
    * zastavica uključi.
    */
   async downloadProtectedFile(url: string): Promise<Blob> {
-    const response = await this.client.get(url, { responseType: 'blob' });
+    const response = await this.client.get(url, { responseType: "blob" });
     return response.data as Blob;
   }
 
@@ -261,22 +267,22 @@ export class ApiClient {
       // FE2-2: token NE ide u localStorage. Ako tamo još stoji stari primjerak
       // iz sesije prije uključivanja zastavice, briše se — inače bi XSS i
       // dalje imao šta pročitati iako se aplikacija više ne oslanja na njega.
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
       return;
     }
-    localStorage.setItem('token', token);
+    localStorage.setItem("token", token);
   }
 
   clearToken() {
     this.accessToken = null;
     // Čisti se bezuslovno: odjava mora ukloniti token i kad se zastavica
     // promijenila usred sesije.
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
   }
 
   // Auth endpoints
   async login(identifier: string, password: string) {
-    const response = await this.client.post('/auth/login', {
+    const response = await this.client.post("/auth/login", {
       identifier,
       password,
     });
@@ -291,7 +297,7 @@ export class ApiClient {
   async logout() {
     if (this.cookieAuthEnabled) {
       try {
-        await this.client.post('/auth/logout');
+        await this.client.post("/auth/logout");
       } catch {
         // namjerno ignorisano
       }
@@ -301,7 +307,7 @@ export class ApiClient {
 
   /** SEC-4: javna konfiguracija (version gate + stanje auth zastavice). */
   async getAppConfig() {
-    const response = await this.client.get('/app/config');
+    const response = await this.client.get("/app/config");
     return response.data;
   }
 
@@ -316,12 +322,29 @@ export class ApiClient {
   /**
    * Type-safe POST poziv.
    */
-  async post<T = unknown>(
-    url: string,
-    data?: any,
-    config?: any,
-  ): Promise<T> {
+  async post<T = unknown>(url: string, data?: any, config?: any): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
+    return response.data;
+  }
+
+  /**
+   * `F15`: upload datoteke preko `multipart/form-data`.
+   *
+   * Zašto zasebna metoda, a ne običan `post`: instanca ima default
+   * `Content-Type: application/json`, a axios 1.20 na `FormData` sa JSON
+   * zaglavljem radi **`JSON.stringify(formDataToJSON(data))`** — svako polje
+   * postane običan string, a `File` se serijalizuje u `{}`. Server tada ne
+   * dobije nijedan fajl i vrati `400 "Nedostaje APK fajl"`, iako je korisnik
+   * datoteku odabrao.
+   *
+   * Zato se ovdje `Content-Type` postavlja na `undefined` — axios tada sam
+   * postavlja `multipart/form-data; boundary=...`. Ručno napisan
+   * `'multipart/form-data'` bez granice je drugi način da se isti upload slomi.
+   */
+  async upload<T = unknown>(url: string, form: FormData): Promise<T> {
+    const response = await this.client.post<T>(url, form, {
+      headers: { "Content-Type": undefined },
+    });
     return response.data;
   }
 
@@ -336,11 +359,7 @@ export class ApiClient {
   /**
    * Type-safe PATCH poziv.
    */
-  async patch<T = unknown>(
-    url: string,
-    data?: any,
-    config?: any,
-  ): Promise<T> {
+  async patch<T = unknown>(url: string, data?: any, config?: any): Promise<T> {
     const response = await this.client.patch<T>(url, data, config);
     return response.data;
   }
@@ -363,9 +382,9 @@ export class ApiClient {
     if (this.csrfAvailable === false) return null;
 
     try {
-      const response = await this.client.get('/auth/csrf-token');
+      const response = await this.client.get("/auth/csrf-token");
       const token = response.data?.csrfToken ?? response.data?.token;
-      if (typeof token === 'string' && token.length > 0) {
+      if (typeof token === "string" && token.length > 0) {
         this.csrfToken = token;
         this.csrfAvailable = true;
         return token;
@@ -379,26 +398,34 @@ export class ApiClient {
 
   // Dashboard endpoints
   async getDashboard() {
-    const response = await this.client.get('/dashboard');
+    const response = await this.client.get("/dashboard");
     return response.data;
   }
 
-  async getDashboardHeatingEvents(params: { from: string; to: string; limit?: number }) {
-    const response = await this.client.get('/dashboard/heating-events', { params });
+  async getDashboardHeatingEvents(params: {
+    from: string;
+    to: string;
+    limit?: number;
+  }) {
+    const response = await this.client.get("/dashboard/heating-events", {
+      params,
+    });
     return response.data;
   }
 
   async getDashboardHeatingSummary(params: {
     from: string;
     to: string;
-    bucket: 'hour' | 'day';
+    bucket: "hour" | "day";
   }) {
-    const response = await this.client.get('/dashboard/heating-summary', { params });
+    const response = await this.client.get("/dashboard/heating-summary", {
+      params,
+    });
     return response.data;
   }
 
   async getDashboardHeatingStatus() {
-    const response = await this.client.get('/dashboard/heating-status');
+    const response = await this.client.get("/dashboard/heating-status");
     return response.data;
   }
 
@@ -412,19 +439,21 @@ export class ApiClient {
    * Tip odgovora dolazi iz generisanog `src/types/api.d.ts`
    * (`DashboardHealthResponseDto`), ne iz ručno pisane deklaracije.
    */
-  async getDashboardHealth(): Promise<components['schemas']['DashboardHealthResponseDto']> {
-    const response = await this.client.get('/dashboard/health');
+  async getDashboardHealth(): Promise<
+    components["schemas"]["DashboardHealthResponseDto"]
+  > {
+    const response = await this.client.get("/dashboard/health");
     return response.data;
   }
 
   // Boiler endpoints
   async getBoilerEvents() {
-    const response = await this.client.get('/boiler/history');
+    const response = await this.client.get("/boiler/history");
     return response.data;
   }
 
   async setBoilerCurrentTemp(currentFlowTemp: number) {
-    const response = await this.client.patch('/boiler/current-temp', {
+    const response = await this.client.patch("/boiler/current-temp", {
       currentFlowTemp,
     });
     return response.data;
@@ -445,10 +474,10 @@ export class ApiClient {
     to?: string;
     deviceId?: number;
   }): Promise<{ rows: HeatingEventRow[]; total: number }> {
-    const response = await this.client.get('/heating-events', { params });
+    const response = await this.client.get("/heating-events", { params });
     return {
       rows: Array.isArray(response.data) ? response.data : [],
-      total: Number(response.headers?.['x-total-count'] ?? 0),
+      total: Number(response.headers?.["x-total-count"] ?? 0),
     };
   }
 
@@ -465,12 +494,12 @@ export class ApiClient {
 
   // User endpoints
   async getUserProfile() {
-    const response = await this.client.get('/user');
+    const response = await this.client.get("/user");
     return response.data;
   }
 
   async updateUserProfile(data: any) {
-    const response = await this.client.put('/user', data);
+    const response = await this.client.put("/user", data);
     return response.data;
   }
 
@@ -485,10 +514,10 @@ export class ApiClient {
     from?: string;
     to?: string;
   }): Promise<{ rows: GasReadingRow[]; total: number }> {
-    const response = await this.client.get('/gas/readings', { params });
+    const response = await this.client.get("/gas/readings", { params });
     return {
       rows: Array.isArray(response.data) ? response.data : [],
-      total: Number(response.headers?.['x-total-count'] ?? 0),
+      total: Number(response.headers?.["x-total-count"] ?? 0),
     };
   }
 
@@ -503,14 +532,14 @@ export class ApiClient {
     meterImage?: File;
   }) {
     const form = new FormData();
-    form.append('counterValue', String(data.counterValue));
-    form.append('readingDate', data.readingDate);
+    form.append("counterValue", String(data.counterValue));
+    form.append("readingDate", data.readingDate);
     if (data.meterImage) {
-      form.append('meterImage', data.meterImage);
+      form.append("meterImage", data.meterImage);
     }
 
-    const response = await this.client.post('/gas/reading', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const response = await this.client.post("/gas/reading", form, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   }
@@ -529,22 +558,34 @@ export class ApiClient {
 
   async uploadGasMeterImage(id: number, meterImage: File) {
     const form = new FormData();
-    form.append('meterImage', meterImage);
-    const response = await this.client.post(`/gas/reading/${id}/meter-image`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    form.append("meterImage", meterImage);
+    const response = await this.client.post(
+      `/gas/reading/${id}/meter-image`,
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
     return response.data;
   }
 
-  async uploadGasInvoice(id: number, invoicePdf: File, invoiceGasPriceExVat?: number) {
+  async uploadGasInvoice(
+    id: number,
+    invoicePdf: File,
+    invoiceGasPriceExVat?: number,
+  ) {
     const form = new FormData();
-    form.append('invoicePdf', invoicePdf);
+    form.append("invoicePdf", invoicePdf);
     if (invoiceGasPriceExVat !== undefined) {
-      form.append('invoiceGasPriceExVat', String(invoiceGasPriceExVat));
+      form.append("invoiceGasPriceExVat", String(invoiceGasPriceExVat));
     }
-    const response = await this.client.post(`/gas/reading/${id}/invoice`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await this.client.post(
+      `/gas/reading/${id}/invoice`,
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
     return response.data;
   }
 
@@ -569,22 +610,27 @@ export class ApiClient {
             to,
           }
         : undefined;
-    const response = await this.client.get('/gas/analysis', { params });
+    const response = await this.client.get("/gas/analysis", { params });
     return response.data;
   }
 
   // Home Profile endpoints
   async getHomeProfile(): Promise<HomeProfileResponse> {
-    const response = await this.client.get('/home-profile');
+    const response = await this.client.get("/home-profile");
     return response.data;
   }
 
-  async createHomeProfile(data: CreateHomeProfileDto): Promise<HomeProfileResponse> {
-    const response = await this.client.post('/home-profile', data);
+  async createHomeProfile(
+    data: CreateHomeProfileDto,
+  ): Promise<HomeProfileResponse> {
+    const response = await this.client.post("/home-profile", data);
     return response.data;
   }
 
-  async updateHomeProfile(id: number, data: UpdateHomeProfileDto): Promise<HomeProfileResponse> {
+  async updateHomeProfile(
+    id: number,
+    data: UpdateHomeProfileDto,
+  ): Promise<HomeProfileResponse> {
     const response = await this.client.patch(`/home-profile/${id}`, data);
     return response.data;
   }
@@ -596,7 +642,7 @@ export class ApiClient {
   async getBoilerCatalog(): Promise<BoilerCatalog> {
     // Plural ruta: `HomeProfilesController` je onaj koji validira DTO-ove;
     // singularni `/home-profile` je stariji i nema katalog.
-    const response = await this.client.get('/home-profiles/boiler-catalog');
+    const response = await this.client.get("/home-profiles/boiler-catalog");
     return response.data;
   }
 
@@ -612,7 +658,7 @@ export class ApiClient {
     from: string;
     to: string;
   }): Promise<ShadowReportResponse> {
-    const response = await this.client.get('/daily-record/shadow-report', {
+    const response = await this.client.get("/daily-record/shadow-report", {
       params,
     });
     return response.data;
@@ -629,7 +675,7 @@ export class ApiClient {
     limit?: number;
     offset?: number;
   }): Promise<DailyHistoryResponse> {
-    const response = await this.client.get('/daily-record/history', { params });
+    const response = await this.client.get("/daily-record/history", { params });
     return response.data;
   }
 
@@ -644,13 +690,13 @@ export class ApiClient {
     from?: string;
     to?: string;
   }): Promise<{
-    rows: components['schemas']['RecommendationResponseDto'][];
+    rows: components["schemas"]["RecommendationResponseDto"][];
     total: number;
   }> {
-    const response = await this.client.get('/recommendations', { params });
+    const response = await this.client.get("/recommendations", { params });
     return {
       rows: Array.isArray(response.data) ? response.data : [],
-      total: Number(response.headers?.['x-total-count'] ?? 0),
+      total: Number(response.headers?.["x-total-count"] ?? 0),
     };
   }
 
@@ -659,7 +705,7 @@ export class ApiClient {
 
   // Notification endpoints
   async getNotifications() {
-    const response = await this.client.get('/notifications');
+    const response = await this.client.get("/notifications");
     return response.data;
   }
 
@@ -669,17 +715,20 @@ export class ApiClient {
   }
 
   async markAllNotificationsRead() {
-    const response = await this.client.post('/notifications/mark-all-read');
+    const response = await this.client.post("/notifications/mark-all-read");
     return response.data;
   }
 
   async getNotificationPreferences() {
-    const response = await this.client.get('/notifications/preferences');
+    const response = await this.client.get("/notifications/preferences");
     return response.data;
   }
 
   async updateNotificationPreference(type: string, enabled: boolean) {
-    const response = await this.client.patch('/notifications/preferences', { type, enabled });
+    const response = await this.client.patch("/notifications/preferences", {
+      type,
+      enabled,
+    });
     return response.data;
   }
 }

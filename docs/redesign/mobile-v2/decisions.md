@@ -889,6 +889,21 @@ da gleda samo vidljive, admin bi nakon povlačenja 1.6.0 mogao objaviti 1.5.0, a
 korisnici koji su 1.6.0 već dobili nikad više ne bi dobili obavijest. Pravilo
 „nudenje gleda vidljivost, istorija gleda sve" zaključano je sa 4 testa.
 
+**Regresija pri prvom stvarnom uploadu (2026-11-20):** korisnik odabere APK,
+a server vrati `400 "Nedostaje APK fajl"`. Uzrok nije bio forma nego dijeljena
+axios instanca: ima default `Content-Type: application/json`, a `axios@1.20.0`
+u `transformRequest` za `FormData` radi
+`hasJSONContentType ? JSON.stringify(formDataToJSON(data)) : data` — fajl se
+serijalizuje u `{}` i nestane. Popravka je `apiClient.upload()` koji postavlja
+`Content-Type: undefined` (axios tada sam postavi `multipart/form-data` sa
+granicom). Test `services/__tests__/apiUpload.test.ts` propušta `FormData`
+kroz stvarni `transformRequest` i traži da izađe kao `FormData`, a ne kao
+string — grep nad izvorom bi prošao i kad bi se greška vratila drugom putanjom.
+Uz to: dugme se zove „Pošalji APK" (a ne „Objavi verziju", što je zvučalo kao
+da je posao obavljen), a ispod inputa piše **koja je datoteka odabrana i koliko
+je velika**; poruka servera o nedostajućem fajlu sada kaže i da zahtjev nije
+bio `multipart/form-data`.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

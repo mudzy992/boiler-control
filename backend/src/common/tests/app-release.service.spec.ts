@@ -231,6 +231,15 @@ describe('AppReleaseService.upload', () => {
     );
   });
 
+  it('poruka o nedostajućem fajlu kaže i da zahtjev nije bio multipart', async () => {
+    const { service, storage } = setup();
+
+    await expect(service.upload({ file: undefined as never })).rejects.toThrow(
+      /multipart\/form-data/,
+    );
+    expect(storage.storeAppRelease).not.toHaveBeenCalled();
+  });
+
   it('bez pročitane verzije traži ručni unos umjesto da izmišlja broj', async () => {
     const { service, storage } = setup();
 

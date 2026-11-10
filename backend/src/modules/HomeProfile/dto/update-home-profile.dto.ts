@@ -118,6 +118,18 @@ export class UpdateHomeProfileDto {
   @Max(55)
   maxHeatingFlowC?: number | null;
 
+  /**
+   * Donja granica polazne za ovaj dom (`F13`); `null` je dozvoljeno (vraća se
+   * na sistemskih 48). Isti raspon kao `maxHeatingFlowC` — polje sužava
+   * apsolutni raspon 30–55, nikad ga ne proširuje.
+   */
+  @IsOptional()
+  @Transform(preserveRawInput)
+  @IsNumber()
+  @Min(30)
+  @Max(55)
+  minHeatingFlowC?: number | null;
+
   @IsOptional()
   @Transform(preserveRawInput)
   @IsNumber()

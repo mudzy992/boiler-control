@@ -53,6 +53,7 @@ export class HomeProfileService {
       boilerCatalogId: profile.boilerCatalogId,
       boilerOutputKw: profile.boilerOutputKw,
       maxHeatingFlowC: profile.maxHeatingFlowC,
+      minHeatingFlowC: profile.minHeatingFlowC,
       hasFloorHeating: profile.hasFloorHeating,
       targetMorningTemp: profile.targetMorningTemp,
       targetDayTemp: profile.targetDayTemp,
@@ -224,6 +225,7 @@ export class HomeProfileService {
           boilerCatalogId: dto.boilerCatalogId ?? null,
           boilerOutputKw: dto.boilerOutputKw ?? null,
           maxHeatingFlowC: dto.maxHeatingFlowC ?? null,
+          minHeatingFlowC: dto.minHeatingFlowC ?? null,
           hasFloorHeating: dto.hasFloorHeating,
           targetMorningTemp: dto.targetMorningTemp,
           targetDayTemp: dto.targetDayTemp,
@@ -327,6 +329,8 @@ export class HomeProfileService {
       updateData.hasFloorHeating = dto.hasFloorHeating;
     if (dto.maxHeatingFlowC !== undefined)
       updateData.maxHeatingFlowC = dto.maxHeatingFlowC ?? null;
+    if (dto.minHeatingFlowC !== undefined)
+      updateData.minHeatingFlowC = dto.minHeatingFlowC ?? null;
     if (dto.targetMorningTemp !== undefined)
       updateData.targetMorningTemp = dto.targetMorningTemp;
     if (dto.targetDayTemp !== undefined)

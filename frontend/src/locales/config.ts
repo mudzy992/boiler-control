@@ -481,6 +481,8 @@ const enUS = {
     historyOriginLive: "Measured",
     historyOriginBackfill: "Reconstructed",
     historyNoCoverage: "nothing",
+    /** F13: ciklusi brojani iz događaja, ne iz serije uzoraka. */
+    historyCyclesFromEvents: "(from events)",
     historyCoverage_cycles: "cycles",
     historyCoverage_gas: "gas",
     historyCoverage_degreeDays: "degree-days",
@@ -552,6 +554,9 @@ const enUS = {
     maxHeatingFlowC: "Max heating flow temperature (°C)",
     maxHeatingFlowCHint:
       "Highest flow this system allows (radiators, screed). Empty = the boiler limit. The value can only narrow 30–55 °C.",
+    minHeatingFlowC: "Min heating flow temperature (°C)",
+    minHeatingFlowCHint:
+      "Lowest flow this boiler still heats well with. Empty = 48 °C. Set 46 if the boiler runs fine that low — otherwise you will be refused a 46 °C proposal.",
     required: "{{field}} is required",
     hasFloorHeating: "Has Floor Heating",
     targetMorningTemp: "Target Morning Temp (°C)",
@@ -1042,6 +1047,8 @@ const bsBS = {
     historyOriginLive: "Izmjereno",
     historyOriginBackfill: "Rekonstruisano",
     historyNoCoverage: "ništa",
+    /** F13: ciklusi brojani iz događaja, ne iz serije uzoraka. */
+    historyCyclesFromEvents: "(iz događaja)",
     historyCoverage_cycles: "ciklusi",
     historyCoverage_gas: "plin",
     historyCoverage_degreeDays: "stepen-dan",
@@ -1112,6 +1119,9 @@ const bsBS = {
     maxHeatingFlowC: "Najviša polazna grijanja (°C)",
     maxHeatingFlowCHint:
       "Najviša polazna koju sistem dozvoljava (radijatori, estrih). Prazno = granica kotla. Vrijednost samo sužava 30–55 °C.",
+    minHeatingFlowC: "Najniža polazna grijanja (°C)",
+    minHeatingFlowCHint:
+      "Najniža polazna s kojom kotao još dobro grije. Prazno = 48 °C. Upišite 46 ako kotao radi i na toliko — inače će vam predlog od 46 °C biti odbijen.",
     required: "{{field}} je obavezno",
     hasFloorHeating: "Podno grejanje",
     targetMorningTemp: "Ciljana temperatura jutro (°C)",

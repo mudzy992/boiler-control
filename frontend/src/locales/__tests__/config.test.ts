@@ -53,7 +53,13 @@ describe("i18n — inicijalizacija", () => {
     // appReleases.* (28 ključeva za objavu verzije, `F15`). Pad znači da je
     // neko obrisao ključ ili dodao novi bez prijevoda — tada se broj mijenja
     // svjesno, u istom commitu.
-    expect(en.length).toBe(493);
+    //
+    // 493 → 496 (F13, treći krug): `homeProfile.minHeatingFlowC`,
+    // `minHeatingFlowCHint` (polje je postojalo samo u bazi — nijedna forma ga
+    // nije slala, pa je donja granica uvijek ostala zadana 48 i predlog od
+    // 46 °C je i dalje bio odbijen) + `reports.historyCyclesFromEvents` (izvor
+    // broja ciklusa u tabeli historije).
+    expect(en.length).toBe(496);
   });
 });
 

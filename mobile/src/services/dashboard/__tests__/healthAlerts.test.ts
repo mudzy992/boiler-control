@@ -63,6 +63,51 @@ describe('MO2-12 mapHealthWarningsToAlerts', () => {
     expect(mapHealthWarningsToAlerts([])).toEqual([]);
   });
 
+  /*
+   * F13 (treći krug): `message` iz backend-a je bosanski i web ga tako
+   * prikazuje. Mobilni ekran ga je ispisivao i na engleskom, pa je uz naslov
+   * „Long heating cycles" stajalo „Detektovano 2 dugih ciklusa grijanja…".
+   */
+  it('sa brojevima daje ključ za prijevod, a sirov `message` ostavlja prazan', () => {
+    const [alert] = mapHealthWarningsToAlerts([
+      {
+        type: 'longCycles',
+        level: 'info',
+        message: 'Detektovano 2 dugih ciklusa grijanja (> 90 min)',
+        count: 2,
+        threshold: 90,
+      },
+    ]);
+
+    expect(alert.detailKey).toBe('healthWarningDetail.longCycles');
+    expect(alert.detailParams).toEqual({ count: 2, threshold: 90 });
+    expect(alert.message).toBe('');
+  });
+
+  it('odstupanje u °C ide kao parametar, ne parsira se iz rečenice', () => {
+    const [alert] = mapHealthWarningsToAlerts([
+      {
+        type: 'targetShortfall',
+        level: 'warning',
+        message: 'Ciljna temperatura se ne dostiže - prosječno zaostajanje: 2.0°C',
+        valueC: 2,
+      },
+    ]);
+
+    expect(alert.detailKey).toBe('healthWarningDetail.targetShortfall');
+    expect(alert.detailParams).toEqual({ value: 2 });
+    expect(alert.message).toBe('');
+  });
+
+  it('bez brojeva ostaje sirov `message` (stariji backend) — bolje išta nego ništa', () => {
+    const [alert] = mapHealthWarningsToAlerts([
+      { type: 'longCycles', level: 'info', message: 'Detektovano 2 dugih ciklusa' },
+    ]);
+
+    expect(alert.detailKey).toBeNull();
+    expect(alert.message).toBe('Detektovano 2 dugih ciklusa');
+  });
+
   it('does not mutate the backend response', () => {
     const warnings = fixtureWarnings();
     const snapshot = JSON.stringify(warnings);

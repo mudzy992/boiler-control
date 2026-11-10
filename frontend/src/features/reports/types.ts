@@ -11,13 +11,13 @@
  */
 
 export type ShadowVerdict =
-  | 'NO_DATA'
-  | 'NOT_ENOUGH_DAYS'
-  | 'UNEXPLAINED_DIFFERENCES'
-  | 'NO_DIFFERENCES'
-  | 'READY';
+  | "NO_DATA"
+  | "NOT_ENOUGH_DAYS"
+  | "UNEXPLAINED_DIFFERENCES"
+  | "NO_DIFFERENCES"
+  | "READY";
 
-export type ShadowDirection = 'LOWER' | 'HIGHER' | 'SAME';
+export type ShadowDirection = "LOWER" | "HIGHER" | "SAME";
 
 export interface ShadowReasonCount {
   reason: string;
@@ -63,7 +63,7 @@ export interface ShadowReportResponse {
  * starih događaja, a ne izmjeren u toku dana. Prikaz to mora reći, inače
  * korisnik čita rekonstrukciju kao mjerenje.
  */
-export type DailyRecordOrigin = 'LIVE' | 'BACKFILL';
+export type DailyRecordOrigin = "LIVE" | "BACKFILL";
 
 export interface DailyHistoryCoverage {
   cycles: boolean;
@@ -97,6 +97,14 @@ export interface DailyHistoryRow {
   outcomeVersion: string | null;
   outcomeAt: string | null;
   origin: DailyRecordOrigin;
+  /**
+   * `F13`: odakle je broj ciklusa — serija uzoraka (`SERIES`), događaji
+   * (`EVENTS`) ili nema mjerenja (`NONE`).
+   *
+   * Serija mjeri i rad i cikluse iz istog izvora; događaji daju samo broj i
+   * medijanu. Bez ove oznake dva različita mjerenja izgledaju isto u tabeli.
+   */
+  cyclesSource: "SERIES" | "EVENTS" | "NONE";
   has: DailyHistoryCoverage;
 }
 

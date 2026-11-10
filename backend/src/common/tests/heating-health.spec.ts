@@ -178,6 +178,42 @@ describe('buildHealthWarnings', () => {
     expect(w?.level).toBe('error');
   });
 
+  /*
+   * F13 (treći krug): mobilna Početna je prikazivala `message` iz backend-a, a
+   * taj tekst je bosanski. Na engleskom je uz naslov alerta stajala bosanska
+   * rečenica koja uz to ponavlja naslov. Klijent sada ima brojeve, pa ih
+   * backend mora slati — inače se vraća na sirov tekst.
+   */
+  it('svako upozorenje nosi brojeve za prijevod, ne samo rečenicu', () => {
+    const warnings = buildHealthWarnings([
+      event({ durationMinutes: LONG_CYCLE_MINUTES + 5 }),
+      event({ roomTargetTemp: 24, roomCurrentTemp: 20 }),
+    ]);
+
+    const longCycles = warnings.find((x) => x.type === 'longCycles');
+    expect(longCycles?.count).toBe(1);
+    expect(longCycles?.threshold).toBe(LONG_CYCLE_MINUTES);
+
+    const shortfall = warnings.find((x) => x.type === 'targetShortfall');
+    /*
+     * Prosjek ide preko **svih** događaja (`shortfallAvg` u
+     * `heating-health.ts`), pa drugi događaj bez manjka spušta prosjek na 2,0.
+     * Vrijednost se prenosi kako je izračunata — test čuva da stiže do klijenta
+     * kao broj, ne da potvrđuje formulu.
+     */
+    expect(shortfall?.valueC).toBe(2);
+  });
+
+  it('anomalije nose samo broj (nemaju prag)', () => {
+    const w = buildHealthWarnings([
+      event({ isAnomaly: true }),
+      event({ isAnomaly: true }),
+    ]).find((x) => x.type === 'anomalies');
+
+    expect(w?.count).toBe(2);
+    expect(w?.threshold).toBeUndefined();
+  });
+
   it('pragovi ciklusa su dokumentovane vrijednosti', () => {
     expect(SHORT_CYCLE_MINUTES).toBe(20);
     expect(SHORT_CYCLE_COUNT_THRESHOLD).toBe(3);

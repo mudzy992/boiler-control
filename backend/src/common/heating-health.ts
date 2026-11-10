@@ -82,6 +82,27 @@ export interface HealthWarning {
    * žele lokalizaciju mogu koristiti `type` kao ključ.
    */
   message: string;
+  /**
+   * `F13` (treći krug): broj koji poruka nosi, da je klijent može prevesti.
+   *
+   * Kontekst: mobilna Početna je ispisivala sirov `message` iz backend-a, pa je
+   * uz naslov alerta („Dugi ciklusi grijanja") stajala **bosanska rečenica i na
+   * engleskom jeziku**. Klijent sada ima `type` (ključ) i broj; rečenicu sastavlja
+   * sam, na svom jeziku. `message` ostaje za web, koji ga je oduvijek koristio.
+   *
+   * Polje je opciono namjerno: `type` bez broja je i dalje upotrebljiv (naslov
+   * alerta), a stariji klijenti ne pucaju.
+   */
+  count?: number;
+  /** Prag na koji se broj odnosi (npr. 90 min za duge cikluse). */
+  threshold?: number;
+  /**
+   * Prosječno odstupanje u °C, za `targetShortfall`/`targetOvershoot`.
+   *
+   * Bez ovog polja klijent bi morao parcirati bosansku rečenicu iz `message`
+   * da bi je preveo — a to je isti kvar samo jedan sloj niže.
+   */
+  valueC?: number;
 }
 
 /**
@@ -149,6 +170,8 @@ export function buildHealthWarnings(
       type: 'shortCycles',
       level: 'warning',
       message: `Detektovano ${shortCycles.length} kratkih ciklusa grijanja (< ${SHORT_CYCLE_MINUTES} min)`,
+      count: shortCycles.length,
+      threshold: SHORT_CYCLE_MINUTES,
     });
   }
 
@@ -160,6 +183,7 @@ export function buildHealthWarnings(
       type: 'targetShortfall',
       level: 'warning',
       message: `Ciljna temperatura se ne dostiže - prosječno zaostajanje: ${shortfallAvg.toFixed(1)}°C`,
+      valueC: Number(shortfallAvg.toFixed(1)),
     });
   }
 
@@ -171,6 +195,7 @@ export function buildHealthWarnings(
       type: 'targetOvershoot',
       level: 'warning',
       message: `Moguće pregašenje cilja - prosječno iznad: ${overshootAvg.toFixed(1)}°C`,
+      valueC: Number(overshootAvg.toFixed(1)),
     });
   }
 
@@ -182,6 +207,8 @@ export function buildHealthWarnings(
       type: 'longCycles',
       level: 'info',
       message: `Detektovano ${longCycles.length} dugih ciklusa grijanja (> ${LONG_CYCLE_MINUTES} min)`,
+      count: longCycles.length,
+      threshold: LONG_CYCLE_MINUTES,
     });
   }
 
@@ -191,6 +218,7 @@ export function buildHealthWarnings(
       type: 'anomalies',
       level: 'error',
       message: `${anomalyCount} anomalija(e) u odabranom periodu`,
+      count: anomalyCount,
     });
   }
 

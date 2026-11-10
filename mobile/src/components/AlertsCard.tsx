@@ -51,6 +51,18 @@ export const AlertsCard = React.memo(function AlertsCard({ warnings = [] }: Aler
   const alerts = mapHealthWarningsToAlerts(warnings);
   if (alerts.length === 0) return null;
 
+  /*
+   * F13 (treći krug): rečenica dolazi sastavljena iz dijelova koje backend
+   * šalje kao brojeve, pa je na oba jezika. Prije je stajao sirov `message` iz
+   * backend-a (bosanski), pa je na engleskom uz naslov alerta pisala bosanska
+   * rečenica — i ponavljala naslov („Dugi ciklusi grijanja / Detektovano 2
+   * dugih ciklusa grijanja (> 90 min)").
+   */
+  const detailText = (detailKey: string | null, message: string, params: Record<string, number>) => {
+    if (detailKey) return t(detailKey, params);
+    return message;
+  };
+
   return (
     <Panel variant="flush" padded={false} testID="dashboard-alerts">
       {alerts.map((alert, index) => {
@@ -61,9 +73,9 @@ export const AlertsCard = React.memo(function AlertsCard({ warnings = [] }: Aler
           <PanelRow
             key={alert.id}
             divider={index < alerts.length - 1}
-            accessibilityLabel={`${t(SEVERITY_LABEL[alert.severity])}: ${t(alert.titleKey)}. ${
-              alert.message
-            }`}
+            accessibilityLabel={`${t(SEVERITY_LABEL[alert.severity])}: ${t(
+              alert.titleKey,
+            )}. ${detailText(alert.detailKey, alert.message, alert.detailParams)}`}
           >
             <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
               <View
@@ -86,9 +98,9 @@ export const AlertsCard = React.memo(function AlertsCard({ warnings = [] }: Aler
                 <Text size="bodyLg" weight="medium">
                   {t(alert.titleKey)}
                 </Text>
-                {alert.message ? (
+                {detailText(alert.detailKey, alert.message, alert.detailParams) ? (
                   <Text size="body" tone="muted">
-                    {alert.message}
+                    {detailText(alert.detailKey, alert.message, alert.detailParams)}
                   </Text>
                 ) : null}
               </View>

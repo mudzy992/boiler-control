@@ -975,6 +975,71 @@ protiv pravog multera, uključujući 45 MB fajl) i `apiUpload.test.ts` (5 testov
 na stubu XHR-a: nijedan `Content-Type`, `Authorization`/`X-CSRF-Token` ručno,
 `FormData` ide u `send()`, `400` nosi poruku servera).
 
+**Četvrti krug (2026-11-21, treća snimka): korisnik ne vidi tri od šest
+popravki.** Snimke su pokazale: (a) Ciklusi su i dalje crtice, (b) granica je i
+dalje „48 °C do 55 °C" i unos 47 se odbija, (c) na Početnoj stoji sirov
+`WMO_80` i duga oznaka se lomi, (d) uz alert „Dugi ciklusi grijanja" stoji
+bosanska rečenica. Uzrok nije bio prikaz ni keš — svaki slučaj je bio
+**popravka koja nije stigla do mjesta gdje se koristi**:
+
+1. **Ciklusi — pisac gleda 7 dana, tabela 20.** `DailyOutcomeService` popunjava
+   samo `OUTCOME_LOOKBACK_DAYS = 7` dana unazad. Za starije dane `cycles` je
+   zauvijek ostajao `null`, iako `HeatingEvent` redovi postoje od prve verzije
+   aplikacije. Popravka je zato u **čitanju** (`DailyRecord/history-page.ts`):
+   za stranu koja se prikazuje uzmu se događaji tog prozora i popune se samo
+   crtice. Red koji već ima cikluse se **ne dira** (serija uzoraka mjeri i rad i
+   cikluse iz istog izvora). Izvor se vidi u tabeli — `cyclesSource` je
+   `SERIES` / `EVENTS` / `NONE`, a web uz broj piše „(iz događaja)". Bez te
+   oznake dva različita mjerenja izgledaju isto.
+
+2. **Granica 48 — polje nije bilo upisivo.** `HomeProfile.minHeatingFlowC`,
+   migracija, `flowTempRange()` i `GET /api/boiler/flow-range` su postojali, ali
+   **nijedna forma nije slala to polje**: DTO nije imao `minHeatingFlowC`, pa je
+   granica za svakog korisnika ostala zadana 48. Dodato je u `Create/Update`
+   DTO i u web formu profila doma. Pravilo „dom sužava, nikad ne proširuje" je
+   izdvojeno iz servisa u `Boiler/flow-range.ts` — unutar servisa se nije moglo
+   izvršiti nijedan test (traži `PrismaService`).
+
+3. **`WMO_80` — stari put nije imao tabelu kodova.** `WeatherV2Card` koristi
+   `conditionI18nKey` sa backenda, ali Početna u ovom režimu ide kroz stari
+   `WeatherRow`, koji je imao samo tabelu engleskih naziva. `WMO_80` se
+   normalizovalo u `wmo80`, nije nađeno i otišlo na ekran. Novi
+   `mobile/src/utils/wmo.ts` prevodi WMO prefiks, a nepoznat kod daje
+   „Nepoznato stanje" — sirov identifikator više ne može doći do korisnika.
+   Test poredi tabelu sa **backendovim** `wmo.ts`.
+
+4. **Duga oznaka iznad broja.** „Trenutna prognoza vremena" se lomila u tri reda
+   iznad 10 °C. Nova oznaka je `weather.currentShort` („Trenutno" / „Now").
+
+5. **Bosanska rečenica na engleskom.** `AlertsCard` je ispisivao `message` iz
+   backend-a, a taj tekst je bosanski (web ga tako i prikazuje) i uz to ponavlja
+   naslov („Dugi ciklusi grijanja / Detektovano 2 dugih ciklusa grijanja (> 90
+   min)"). Backend sada uz `message` šalje **brojeve** (`count`, `threshold`,
+   `valueC`), a klijent sastavlja rečenicu iz `healthWarningDetail.*`. Broj se
+   nikad ne parse-uje iz rečenice — to bi bio isti kvar jedan sloj niže.
+
+Dokazi po tački:
+
+| šta | test | broj |
+|---|---|---|
+| ciklusi iz događaja | `DailyRecord/tests/event-cycles.spec.ts` | 7 |
+| strana historije + izvor | `DailyRecord/tests/history-page.spec.ts` | 5 |
+| raspon po domu | `Boiler/tests/boiler-flow-range.spec.ts` | 6 |
+| WMO → ključ | `mobile/src/utils/__tests__/wmo.test.ts` | 4 |
+| `WMO_80` na ekranu | `mobile/.../weatherCondition.test.tsx` | 5 |
+| alert na engleskom | `healthAlerts.test.ts` + `heating-health.spec.ts` | 7 + 25 |
+| polje u web formi | `frontend/.../flow-bounds-fields.test.ts` | 4 |
+
+Mutacijom je provjereno da testovi stvarno drže kod: izmijenjen
+`resolveFlowTempRange` (zanemarena donja granica doma) ruši 3 od 6 testova;
+uklonjen `minHeatingFlowC` iz payloada forme ruši 1 od 4.
+
+**Podsjetnik za deploy (ponovo):** sve četiri stvari su u `mobile/` i
+`frontend/` — dok se ne napravi nova slika frontenda i novi APK, snimka će
+pokazivati staro stanje. Migracije `20261119100000_min_heating_flow` i
+`20261120100000_app_release` moraju biti primijenjene prije nego se forma za
+donju granicu uopšte pojavi.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

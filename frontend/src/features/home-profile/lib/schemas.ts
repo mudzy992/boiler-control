@@ -10,19 +10,23 @@
  * iz `types/index.ts` su izvor istine za *compile-time* strukturu.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
-export const HomeProfileHeatingTypeSchema = z.enum(['RADIATOR', 'UNDERFLOOR', 'MIXED']);
+export const HomeProfileHeatingTypeSchema = z.enum([
+  "RADIATOR",
+  "UNDERFLOOR",
+  "MIXED",
+]);
 export const HomeProfileInsulationTypeSchema = z.enum([
-  'STANDARD',
-  'EPS',
-  'MINERAL_WOOL',
-  'ADVANCED',
+  "STANDARD",
+  "EPS",
+  "MINERAL_WOOL",
+  "ADVANCED",
 ]);
 export const HomeProfileWindowTypeSchema = z.enum([
-  'SINGLE_GLAZED',
-  'DOUBLE_GLAZED',
-  'TRIPLE_GLAZED',
+  "SINGLE_GLAZED",
+  "DOUBLE_GLAZED",
+  "TRIPLE_GLAZED",
 ]);
 
 /*
@@ -50,6 +54,8 @@ export const CreateHomeProfileSchema = z.object({
   boilerOutputKw: z.number().min(3).max(40).optional(),
   /** Najviša polazna; isti raspon kao predlog (30–55), polje samo sužava. */
   maxHeatingFlowC: z.number().min(30).max(55).optional(),
+  /** Najniža polazna za ovaj dom; polje samo sužava apsolutni raspon. */
+  minHeatingFlowC: z.number().min(30).max(55).optional(),
   hasFloorHeating: z.boolean(),
   targetMorningTemp: z.number().min(5).max(30),
   targetDayTemp: z.number().min(5).max(30),
@@ -75,6 +81,7 @@ export const HomeProfileResponseSchema = z.object({
   boilerCatalogId: z.string().nullable().optional(),
   boilerOutputKw: z.number().nullable().optional(),
   maxHeatingFlowC: z.number().nullable().optional(),
+  minHeatingFlowC: z.number().nullable().optional(),
   hasFloorHeating: z.boolean(),
   targetMorningTemp: z.number().optional(),
   targetDayTemp: z.number().optional(),
@@ -90,4 +97,6 @@ export const HomeProfileResponseSchema = z.object({
 /** Tipovi izvođeni iz Zod shema (runtime <-> compile-time sinkronizacija). */
 export type CreateHomeProfileInput = z.infer<typeof CreateHomeProfileSchema>;
 export type UpdateHomeProfileInput = z.infer<typeof UpdateHomeProfileSchema>;
-export type HomeProfileResponseOutput = z.infer<typeof HomeProfileResponseSchema>;
+export type HomeProfileResponseOutput = z.infer<
+  typeof HomeProfileResponseSchema
+>;

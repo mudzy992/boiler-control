@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Input } from '../../../components/Input';
-import { Select } from '@/ui';
-import { InputNumber } from '../../../components/InputNumber';
-import { Button } from '@/shared/components/ui/Button';
-import { Card, CardContent } from '@/shared/components/ui/Card';
-import { apiClient } from '../../../services/api';
-import { PageHeader } from '@/shared/components/page-header';
-import { QueryState } from '@/shared/components/query-state';
-import { StatusBanner } from '@/shared/components/status-banner';
-import type { CreateHomeProfileDto, HomeProfileResponse } from '../types';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Input } from "../../../components/Input";
+import { Select } from "@/ui";
+import { InputNumber } from "../../../components/InputNumber";
+import { Button } from "@/shared/components/ui/Button";
+import { Card, CardContent } from "@/shared/components/ui/Card";
+import { apiClient } from "../../../services/api";
+import { PageHeader } from "@/shared/components/page-header";
+import { QueryState } from "@/shared/components/query-state";
+import { StatusBanner } from "@/shared/components/status-banner";
+import type { CreateHomeProfileDto, HomeProfileResponse } from "../types";
 import {
   brandOfFamily,
   catalogBrands,
@@ -19,7 +19,7 @@ import {
   outputOptions,
   selectionHint,
   type BoilerCatalog,
-} from '../lib/boiler-catalog';
+} from "../lib/boiler-catalog";
 import {
   INSULATION_TYPE_OPTIONS,
   WINDOW_TYPE_OPTIONS,
@@ -27,7 +27,7 @@ import {
   InsulationType,
   WindowType,
   HeatingType,
-} from '../../../constants/homeProfileEnums';
+} from "../../../constants/homeProfileEnums";
 
 interface HomeProfileFormValues {
   homeName: string;
@@ -47,6 +47,12 @@ interface HomeProfileFormValues {
   boilerOutputKw: number | undefined;
   /** Najviša polazna koju sistem dozvoljava (`19` §2). */
   maxHeatingFlowC: number | undefined;
+  /**
+   * `F13`: najniža polazna za ovaj dom. Bez ovog polja granica je uvijek bila
+   * zadana (48), pa je predlog od 46 °C bio neupotrebljiv — korisnik nije imao
+   * gdje reći da njegov kotao radi i na 46.
+   */
+  minHeatingFlowC: number | undefined;
   hasFloorHeating: boolean;
   targetMorningTemp: number | undefined;
   targetDayTemp: number | undefined;
@@ -55,7 +61,7 @@ interface HomeProfileFormValues {
 }
 
 const EMPTY_VALUES: HomeProfileFormValues = {
-  homeName: '',
+  homeName: "",
   floorArea: undefined,
   ceilingHeight: undefined,
   insulationType: InsulationType.STANDARD,
@@ -64,15 +70,16 @@ const EMPTY_VALUES: HomeProfileFormValues = {
   heatingType: HeatingType.RADIATOR,
   constructionYear: undefined,
   numberOfResidents: undefined,
-  boilerModel: '',
-  boilerCatalogId: '',
+  boilerModel: "",
+  boilerCatalogId: "",
   boilerOutputKw: undefined,
   maxHeatingFlowC: undefined,
+  minHeatingFlowC: undefined,
   hasFloorHeating: false,
   targetMorningTemp: undefined,
   targetDayTemp: undefined,
   targetNightTemp: undefined,
-  preferredScheduleNotes: '',
+  preferredScheduleNotes: "",
 };
 
 export const HomeProfilePage: React.FC = () => {
@@ -82,7 +89,7 @@ export const HomeProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+  const [saveStatus, setSaveStatus] = useState<"idle" | "ok" | "error">("idle");
   const [catalog, setCatalog] = useState<BoilerCatalog | null>(null);
 
   useEffect(() => {
@@ -93,14 +100,16 @@ export const HomeProfilePage: React.FC = () => {
         apiClient
           .getBoilerCatalog()
           .then(setCatalog)
-          .catch((error) => console.error('Failed to load boiler catalog:', error));
+          .catch((error) =>
+            console.error("Failed to load boiler catalog:", error),
+          );
 
         const response = await apiClient.getHomeProfile();
         if (response) {
           const loaded = response as HomeProfileResponse;
           setProfile(loaded);
           setForm({
-            homeName: loaded.homeName ?? '',
+            homeName: loaded.homeName ?? "",
             floorArea: loaded.floorArea,
             ceilingHeight: loaded.ceilingHeight,
             insulationType: loaded.insulationType ?? InsulationType.STANDARD,
@@ -109,19 +118,20 @@ export const HomeProfilePage: React.FC = () => {
             heatingType: loaded.heatingType ?? HeatingType.RADIATOR,
             constructionYear: loaded.constructionYear,
             numberOfResidents: loaded.numberOfResidents,
-            boilerModel: loaded.boilerModel ?? '',
-            boilerCatalogId: loaded.boilerCatalogId ?? '',
+            boilerModel: loaded.boilerModel ?? "",
+            boilerCatalogId: loaded.boilerCatalogId ?? "",
             boilerOutputKw: loaded.boilerOutputKw ?? undefined,
             maxHeatingFlowC: loaded.maxHeatingFlowC ?? undefined,
+            minHeatingFlowC: loaded.minHeatingFlowC ?? undefined,
             hasFloorHeating: loaded.hasFloorHeating ?? false,
             targetMorningTemp: loaded.targetMorningTemp,
             targetDayTemp: loaded.targetDayTemp,
             targetNightTemp: loaded.targetNightTemp,
-            preferredScheduleNotes: loaded.preferredScheduleNotes ?? '',
+            preferredScheduleNotes: loaded.preferredScheduleNotes ?? "",
           });
         }
       } catch (error) {
-        console.error('Failed to load home profile:', error);
+        console.error("Failed to load home profile:", error);
       } finally {
         setLoading(false);
       }
@@ -136,8 +146,8 @@ export const HomeProfilePage: React.FC = () => {
       value: string | number | boolean | undefined,
     ) => {
       setForm((prev) => ({ ...prev, [field]: value }));
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-      setSaveStatus('idle');
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+      setSaveStatus("idle");
     },
     [],
   );
@@ -152,42 +162,42 @@ export const HomeProfilePage: React.FC = () => {
   const validate = useCallback(() => {
     const next: Record<string, string> = {};
     const required: Record<string, string> = {
-      floorArea: t('homeProfile.floorArea'),
-      ceilingHeight: t('homeProfile.ceilingHeight'),
-      constructionYear: t('homeProfile.constructionYear'),
-      insulationThickness: t('homeProfile.insulationThickness'),
-      insulationType: t('homeProfile.insulationType'),
-      windowType: t('homeProfile.windowType'),
-      heatingType: t('homeProfile.heatingType'),
-      targetMorningTemp: t('homeProfile.targetMorningTemp'),
-      targetDayTemp: t('homeProfile.targetDayTemp'),
-      targetNightTemp: t('homeProfile.targetNightTemp'),
+      floorArea: t("homeProfile.floorArea"),
+      ceilingHeight: t("homeProfile.ceilingHeight"),
+      constructionYear: t("homeProfile.constructionYear"),
+      insulationThickness: t("homeProfile.insulationThickness"),
+      insulationType: t("homeProfile.insulationType"),
+      windowType: t("homeProfile.windowType"),
+      heatingType: t("homeProfile.heatingType"),
+      targetMorningTemp: t("homeProfile.targetMorningTemp"),
+      targetDayTemp: t("homeProfile.targetDayTemp"),
+      targetNightTemp: t("homeProfile.targetNightTemp"),
     };
 
     Object.entries(required).forEach(([field, label]) => {
       const value = form[field as keyof HomeProfileFormValues];
-      if (value === '' || value === undefined || value === null) {
-        next[field] = t('homeProfile.required', { field: label });
+      if (value === "" || value === undefined || value === null) {
+        next[field] = t("homeProfile.required", { field: label });
       }
     });
 
     const ranges: Array<[string, number, number]> = [
-      ['floorArea', 10, 2000],
-      ['ceilingHeight', 1.8, 5],
-      ['constructionYear', 1900, 2100],
-      ['insulationThickness', 5, 30],
-      ['numberOfResidents', 1, 20],
-      ['targetMorningTemp', 5, 30],
-      ['targetDayTemp', 5, 30],
-      ['targetNightTemp', 5, 30],
-      ['maxHeatingFlowC', 30, 55],
+      ["floorArea", 10, 2000],
+      ["ceilingHeight", 1.8, 5],
+      ["constructionYear", 1900, 2100],
+      ["insulationThickness", 5, 30],
+      ["numberOfResidents", 1, 20],
+      ["targetMorningTemp", 5, 30],
+      ["targetDayTemp", 5, 30],
+      ["targetNightTemp", 5, 30],
+      ["maxHeatingFlowC", 30, 55],
+      ["minHeatingFlowC", 30, 55],
     ];
     ranges.forEach(([field, min, max]) => {
       const value = form[field as keyof HomeProfileFormValues] as
-        | number
-        | undefined;
+        number | undefined;
       if (value !== undefined && (value < min || value > max)) {
-        next[field] = t('homeProfile.outOfRange', { min, max });
+        next[field] = t("homeProfile.outOfRange", { min, max });
       }
     });
 
@@ -199,12 +209,12 @@ export const HomeProfilePage: React.FC = () => {
     const powers = outputOptions(catalog?.families, form.boilerCatalogId);
     if (powers && powers.length > 0) {
       if (form.boilerOutputKw === undefined) {
-        next.boilerOutputKw = t('homeProfile.required', {
-          field: t('homeProfile.boilerOutputKw'),
+        next.boilerOutputKw = t("homeProfile.required", {
+          field: t("homeProfile.boilerOutputKw"),
         });
       } else if (!powers.includes(form.boilerOutputKw)) {
-        next.boilerOutputKw = t('homeProfile.boilerOutputKwNotInCatalog', {
-          options: powers.join(', '),
+        next.boilerOutputKw = t("homeProfile.boilerOutputKwNotInCatalog", {
+          options: powers.join(", "),
         });
       }
     }
@@ -216,7 +226,7 @@ export const HomeProfilePage: React.FC = () => {
   const onSubmit = useCallback(async () => {
     if (!validate()) return;
     setSaving(true);
-    setSaveStatus('idle');
+    setSaveStatus("idle");
     try {
       const payload = {
         ...form,
@@ -225,22 +235,24 @@ export const HomeProfilePage: React.FC = () => {
         heatingType: form.heatingType,
         // Prazan izbor se šalje kao `null` (briše model), ne kao `''` — `''`
         // bi backend odbio kao nepoznat zapis.
-        boilerCatalogId: form.boilerCatalogId === '' ? null : form.boilerCatalogId,
+        boilerCatalogId:
+          form.boilerCatalogId === "" ? null : form.boilerCatalogId,
         // Snaga bez porodice je odbijena na backendu (`25` §5.1), pa se ovdje
         // ne šalje. Snaga ostaje `number`; `null` znači „nema snage".
         boilerOutputKw:
-          form.boilerCatalogId === '' ? null : (form.boilerOutputKw ?? null),
+          form.boilerCatalogId === "" ? null : (form.boilerOutputKw ?? null),
         maxHeatingFlowC: form.maxHeatingFlowC ?? null,
+        minHeatingFlowC: form.minHeatingFlowC ?? null,
       };
       if (profile?.id) {
         await apiClient.updateHomeProfile(profile.id, payload);
       } else {
         await apiClient.createHomeProfile(payload as CreateHomeProfileDto);
       }
-      setSaveStatus('ok');
+      setSaveStatus("ok");
     } catch (error) {
-      console.error('Failed to save home profile:', error);
-      setSaveStatus('error');
+      console.error("Failed to save home profile:", error);
+      setSaveStatus("error");
     } finally {
       setSaving(false);
     }
@@ -255,7 +267,8 @@ export const HomeProfilePage: React.FC = () => {
    * bi pomislio da model nije sačuvan.
    */
   const [brandOverride, setBrandOverride] = useState<string | null>(null);
-  const brand = brandOverride ?? brandOfFamily(catalog?.families, form.boilerCatalogId);
+  const brand =
+    brandOverride ?? brandOfFamily(catalog?.families, form.boilerCatalogId);
   const brandFamilies = useMemo(
     () => familiesForBrand(catalog, brand),
     [catalog, brand],
@@ -263,21 +276,26 @@ export const HomeProfilePage: React.FC = () => {
   const powers = outputOptions(catalog?.families, form.boilerCatalogId);
 
   /** Promjena marke briše porodicu, jer porodica pripada marki. */
-  const onBrandChange = useCallback(
-    (value: string) => {
-      setBrandOverride(value);
-      setForm((prev) => ({ ...prev, boilerCatalogId: '', boilerOutputKw: undefined }));
-      setErrors((prev) => ({ ...prev, boilerCatalogId: '', boilerOutputKw: '' }));
-      setSaveStatus('idle');
-    },
-    [],
-  );
+  const onBrandChange = useCallback((value: string) => {
+    setBrandOverride(value);
+    setForm((prev) => ({
+      ...prev,
+      boilerCatalogId: "",
+      boilerOutputKw: undefined,
+    }));
+    setErrors((prev) => ({ ...prev, boilerCatalogId: "", boilerOutputKw: "" }));
+    setSaveStatus("idle");
+  }, []);
 
   /** Promjena porodice briše snagu, jer snaga pripada porodici. */
   const onFamilyChange = useCallback((value: string) => {
-    setForm((prev) => ({ ...prev, boilerCatalogId: value, boilerOutputKw: undefined }));
-    setErrors((prev) => ({ ...prev, boilerCatalogId: '', boilerOutputKw: '' }));
-    setSaveStatus('idle');
+    setForm((prev) => ({
+      ...prev,
+      boilerCatalogId: value,
+      boilerOutputKw: undefined,
+    }));
+    setErrors((prev) => ({ ...prev, boilerCatalogId: "", boilerOutputKw: "" }));
+    setSaveStatus("idle");
   }, []);
 
   /**
@@ -303,9 +321,10 @@ export const HomeProfilePage: React.FC = () => {
       form.heatingType !== profile.heatingType ||
       form.constructionYear !== profile.constructionYear ||
       form.numberOfResidents !== profile.numberOfResidents ||
-      form.boilerCatalogId !== (profile.boilerCatalogId ?? '') ||
+      form.boilerCatalogId !== (profile.boilerCatalogId ?? "") ||
       form.boilerOutputKw !== (profile.boilerOutputKw ?? undefined) ||
       form.maxHeatingFlowC !== (profile.maxHeatingFlowC ?? undefined) ||
+      form.minHeatingFlowC !== (profile.minHeatingFlowC ?? undefined) ||
       form.hasFloorHeating !== profile.hasFloorHeating ||
       form.targetMorningTemp !== profile.targetMorningTemp ||
       form.targetDayTemp !== profile.targetDayTemp ||
@@ -320,28 +339,34 @@ export const HomeProfilePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('homeProfile.title')} description={t('homeProfile.subtitle')} />
+      <PageHeader
+        title={t("homeProfile.title")}
+        description={t("homeProfile.subtitle")}
+      />
 
-      {saveStatus === 'ok' ? (
-        <StatusBanner variant="success" message={t('homeProfile.saveSuccess')} />
+      {saveStatus === "ok" ? (
+        <StatusBanner
+          variant="success"
+          message={t("homeProfile.saveSuccess")}
+        />
       ) : null}
-      {saveStatus === 'error' ? (
-        <StatusBanner variant="error" message={t('homeProfile.saveError')} />
+      {saveStatus === "error" ? (
+        <StatusBanner variant="error" message={t("homeProfile.saveError")} />
       ) : null}
 
       <Card variant="elevated">
         <CardContent className="grid gap-4 pt-4 sm:grid-cols-2 sm:pt-5 lg:grid-cols-3">
           <Input
-            label={t('homeProfile.homeName')}
+            label={t("homeProfile.homeName")}
             placeholder="My Home"
             id="home-profile-home-name"
             value={form.homeName}
             error={errors.homeName}
-            onChange={(e) => handleChange('homeName', e.target.value)}
+            onChange={(e) => handleChange("homeName", e.target.value)}
             disabled={saving}
           />
           <InputNumber
-            label={t('homeProfile.floorArea')}
+            label={t("homeProfile.floorArea")}
             placeholder="100"
             id="home-profile-floor-area"
             value={form.floorArea}
@@ -350,14 +375,14 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.floorArea}
             onChange={(value) =>
               handleChange(
-                'floorArea',
-                typeof value === 'number' ? value : undefined,
+                "floorArea",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
           />
           <InputNumber
-            label={t('homeProfile.ceilingHeight')}
+            label={t("homeProfile.ceilingHeight")}
             placeholder="2.6"
             id="home-profile-ceiling-height"
             value={form.ceilingHeight}
@@ -368,15 +393,15 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.ceilingHeight}
             onChange={(value) =>
               handleChange(
-                'ceilingHeight',
-                typeof value === 'number' ? value : undefined,
+                "ceilingHeight",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
           />
-            <InputNumber
-              label={t('homeProfile.constructionYear')}
-              placeholder={String(new Date().getFullYear())}
+          <InputNumber
+            label={t("homeProfile.constructionYear")}
+            placeholder={String(new Date().getFullYear())}
             id="home-profile-construction-year"
             value={form.constructionYear}
             min={1800}
@@ -384,21 +409,21 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.constructionYear}
             onChange={(value) =>
               handleChange(
-                'constructionYear',
-                typeof value === 'number' ? value : undefined,
+                "constructionYear",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
           />
           <div className="col-span-2 md:col-span-1">
             <label className="block text-sm font-semibold text-text-secondary mb-1">
-              {t('homeProfile.insulationType')}
+              {t("homeProfile.insulationType")}
             </label>
             <select
               id="home-profile-insulation-type"
               value={form.insulationType}
               onChange={(e) =>
-                handleChange('insulationType', e.target.value as InsulationType)
+                handleChange("insulationType", e.target.value as InsulationType)
               }
               disabled={saving}
               className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
@@ -410,13 +435,11 @@ export const HomeProfilePage: React.FC = () => {
               ))}
             </select>
             {errors.insulationType && (
-              <p className="mt-1 text-sm text-error">
-                {errors.insulationType}
-              </p>
+              <p className="mt-1 text-sm text-error">{errors.insulationType}</p>
             )}
           </div>
           <InputNumber
-            label={t('homeProfile.insulationThickness')}
+            label={t("homeProfile.insulationThickness")}
             placeholder="10"
             id="home-profile-insulation-thickness"
             value={form.insulationThickness}
@@ -425,21 +448,21 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.insulationThickness}
             onChange={(value) =>
               handleChange(
-                'insulationThickness',
-                typeof value === 'number' ? value : undefined,
+                "insulationThickness",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
           />
           <div className="col-span-2 md:col-span-1">
             <label className="block text-sm font-semibold text-text-secondary mb-1">
-              {t('homeProfile.windowType')}
+              {t("homeProfile.windowType")}
             </label>
             <select
               id="home-profile-window-type"
               value={form.windowType}
               onChange={(e) =>
-                handleChange('windowType', e.target.value as WindowType)
+                handleChange("windowType", e.target.value as WindowType)
               }
               disabled={saving}
               className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
@@ -451,20 +474,18 @@ export const HomeProfilePage: React.FC = () => {
               ))}
             </select>
             {errors.windowType && (
-              <p className="mt-1 text-sm text-error">
-                {errors.windowType}
-              </p>
+              <p className="mt-1 text-sm text-error">{errors.windowType}</p>
             )}
           </div>
           <div className="col-span-2 md:col-span-1">
             <label className="block text-sm font-semibold text-text-secondary mb-1">
-              {t('homeProfile.heatingType')}
+              {t("homeProfile.heatingType")}
             </label>
             <select
               id="home-profile-heating-type"
               value={form.heatingType}
               onChange={(e) =>
-                handleChange('heatingType', e.target.value as HeatingType)
+                handleChange("heatingType", e.target.value as HeatingType)
               }
               disabled={saving}
               className="block w-full rounded-lg border border-border px-3 py-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-brand bg-surface text-text-primary"
@@ -476,13 +497,11 @@ export const HomeProfilePage: React.FC = () => {
               ))}
             </select>
             {errors.heatingType && (
-              <p className="mt-1 text-sm text-error">
-                {errors.heatingType}
-              </p>
+              <p className="mt-1 text-sm text-error">{errors.heatingType}</p>
             )}
           </div>
           <InputNumber
-            label={t('homeProfile.numberOfResidents')}
+            label={t("homeProfile.numberOfResidents")}
             placeholder="1"
             id="home-profile-number-of-residents"
             value={form.numberOfResidents}
@@ -491,8 +510,8 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.numberOfResidents}
             onChange={(value) =>
               handleChange(
-                'numberOfResidents',
-                typeof value === 'number' ? value : undefined,
+                "numberOfResidents",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
@@ -510,7 +529,7 @@ export const HomeProfilePage: React.FC = () => {
                 htmlFor="home-profile-boiler-brand"
                 className="text-sm font-medium text-text-secondary"
               >
-                {t('homeProfile.boilerBrand')}
+                {t("homeProfile.boilerBrand")}
               </label>
               <Select
                 id="home-profile-boiler-brand"
@@ -518,7 +537,7 @@ export const HomeProfilePage: React.FC = () => {
                 onChange={(e) => onBrandChange(e.target.value)}
                 disabled={saving || brands.length === 0}
               >
-                <option value="">{t('homeProfile.boilerBrandNone')}</option>
+                <option value="">{t("homeProfile.boilerBrandNone")}</option>
                 {brands.map((name) => (
                   <option key={name} value={name}>
                     {name}
@@ -535,7 +554,7 @@ export const HomeProfilePage: React.FC = () => {
                 htmlFor="home-profile-boiler-catalog"
                 className="text-sm font-medium text-text-secondary"
               >
-                {t('homeProfile.boilerModel')}
+                {t("homeProfile.boilerModel")}
               </label>
               <Select
                 id="home-profile-boiler-catalog"
@@ -544,10 +563,10 @@ export const HomeProfilePage: React.FC = () => {
                 onChange={(e) => onFamilyChange(e.target.value)}
                 disabled={saving || brandFamilies.length === 0}
               >
-                <option value="">{t('homeProfile.boilerModelNone')}</option>
+                <option value="">{t("homeProfile.boilerModelNone")}</option>
                 {staleFamilyId ? (
                   <option value={staleFamilyId}>
-                    {t('homeProfile.boilerModelStale', { id: staleFamilyId })}
+                    {t("homeProfile.boilerModelStale", { id: staleFamilyId })}
                   </option>
                 ) : null}
                 {brandFamilies.map((family) => (
@@ -567,21 +586,29 @@ export const HomeProfilePage: React.FC = () => {
                   htmlFor="home-profile-boiler-output"
                   className="text-sm font-medium text-text-secondary"
                 >
-                  {t('homeProfile.boilerOutputKw')}
+                  {t("homeProfile.boilerOutputKw")}
                 </label>
                 <Select
                   id="home-profile-boiler-output"
-                  value={form.boilerOutputKw === undefined ? '' : String(form.boilerOutputKw)}
+                  value={
+                    form.boilerOutputKw === undefined
+                      ? ""
+                      : String(form.boilerOutputKw)
+                  }
                   invalid={Boolean(errors.boilerOutputKw)}
                   onChange={(e) =>
                     handleChange(
-                      'boilerOutputKw',
-                      e.target.value === '' ? undefined : Number(e.target.value),
+                      "boilerOutputKw",
+                      e.target.value === ""
+                        ? undefined
+                        : Number(e.target.value),
                     )
                   }
                   disabled={saving}
                 >
-                  <option value="">{t('homeProfile.boilerOutputKwNone')}</option>
+                  <option value="">
+                    {t("homeProfile.boilerOutputKwNone")}
+                  </option>
                   {powers.map((power) => (
                     <option key={power} value={power}>
                       {power} kW
@@ -594,12 +621,17 @@ export const HomeProfilePage: React.FC = () => {
               </div>
             ) : null}
 
-            <p className="text-xs text-text-secondary" data-testid="boiler-hint">
+            <p
+              className="text-xs text-text-secondary"
+              data-testid="boiler-hint"
+            >
               {selectionHint(catalog?.families, form.boilerCatalogId)}
             </p>
             {!form.boilerCatalogId && form.boilerModel ? (
               <p className="text-xs text-text-secondary">
-                {t('homeProfile.boilerModelLegacy', { model: form.boilerModel })}
+                {t("homeProfile.boilerModelLegacy", {
+                  model: form.boilerModel,
+                })}
               </p>
             ) : null}
           </div>
@@ -611,7 +643,30 @@ export const HomeProfilePage: React.FC = () => {
           */}
           <div className="space-y-1">
             <InputNumber
-              label={t('homeProfile.maxHeatingFlowC')}
+              label={t("homeProfile.minHeatingFlowC")}
+              placeholder="48"
+              id="home-profile-min-heating-flow"
+              value={form.minHeatingFlowC}
+              min={30}
+              max={55}
+              step={1}
+              precision={0}
+              error={errors.minHeatingFlowC}
+              onChange={(value) =>
+                handleChange(
+                  "minHeatingFlowC",
+                  typeof value === "number" ? value : undefined,
+                )
+              }
+              disabled={saving}
+            />
+            <p className="text-xs text-text-secondary">
+              {t("homeProfile.minHeatingFlowCHint")}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <InputNumber
+              label={t("homeProfile.maxHeatingFlowC")}
               placeholder="55"
               id="home-profile-max-heating-flow"
               value={form.maxHeatingFlowC}
@@ -622,31 +677,33 @@ export const HomeProfilePage: React.FC = () => {
               error={errors.maxHeatingFlowC}
               onChange={(value) =>
                 handleChange(
-                  'maxHeatingFlowC',
-                  typeof value === 'number' ? value : undefined,
+                  "maxHeatingFlowC",
+                  typeof value === "number" ? value : undefined,
                 )
               }
               disabled={saving}
             />
             <p className="text-xs text-text-secondary">
-              {t('homeProfile.maxHeatingFlowCHint')}
+              {t("homeProfile.maxHeatingFlowCHint")}
             </p>
           </div>
           <div className="col-span-2 md:col-span-1 flex items-end">
             <label className="mr-2 text-sm font-semibold text-text-secondary">
-              {t('homeProfile.hasFloorHeating')}
+              {t("homeProfile.hasFloorHeating")}
             </label>
             <input
               type="checkbox"
               id="home-profile-has-floor-heating"
               checked={form.hasFloorHeating}
-              onChange={(e) => handleChange('hasFloorHeating', e.target.checked)}
+              onChange={(e) =>
+                handleChange("hasFloorHeating", e.target.checked)
+              }
               disabled={saving}
               className="rounded border-border text-brand focus:ring-brand"
             />
           </div>
           <InputNumber
-            label={t('homeProfile.targetMorningTemp')}
+            label={t("homeProfile.targetMorningTemp")}
             placeholder="22"
             id="home-profile-target-morning-temp"
             value={form.targetMorningTemp}
@@ -655,14 +712,14 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.targetMorningTemp}
             onChange={(value) =>
               handleChange(
-                'targetMorningTemp',
-                typeof value === 'number' ? value : undefined,
+                "targetMorningTemp",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
           />
           <InputNumber
-            label={t('homeProfile.targetDayTemp')}
+            label={t("homeProfile.targetDayTemp")}
             placeholder="20"
             id="home-profile-target-day-temp"
             value={form.targetDayTemp}
@@ -670,12 +727,15 @@ export const HomeProfilePage: React.FC = () => {
             max={30}
             error={errors.targetDayTemp}
             onChange={(value) =>
-              handleChange('targetDayTemp', typeof value === 'number' ? value : undefined)
+              handleChange(
+                "targetDayTemp",
+                typeof value === "number" ? value : undefined,
+              )
             }
             disabled={saving}
           />
           <InputNumber
-            label={t('homeProfile.targetNightTemp')}
+            label={t("homeProfile.targetNightTemp")}
             placeholder="18"
             id="home-profile-target-night-temp"
             value={form.targetNightTemp}
@@ -684,8 +744,8 @@ export const HomeProfilePage: React.FC = () => {
             error={errors.targetNightTemp}
             onChange={(value) =>
               handleChange(
-                'targetNightTemp',
-                typeof value === 'number' ? value : undefined,
+                "targetNightTemp",
+                typeof value === "number" ? value : undefined,
               )
             }
             disabled={saving}
@@ -695,14 +755,14 @@ export const HomeProfilePage: React.FC = () => {
               htmlFor="home-profile-preferred-schedule-notes"
               className="text-sm font-medium"
             >
-              {t('homeProfile.preferredScheduleNotes')}
+              {t("homeProfile.preferredScheduleNotes")}
             </label>
             <textarea
               id="home-profile-preferred-schedule-notes"
               placeholder="Optional notes about preferred schedule"
               value={form.preferredScheduleNotes}
               onChange={(e) =>
-                handleChange('preferredScheduleNotes', e.target.value)
+                handleChange("preferredScheduleNotes", e.target.value)
               }
               disabled={saving}
               rows={3}
@@ -723,7 +783,7 @@ export const HomeProfilePage: React.FC = () => {
             isLoading={saving}
             disabled={saving || !isDirty}
           >
-            {t('homeProfile.saveChanges')}
+            {t("homeProfile.saveChanges")}
           </Button>
         </div>
       </Card>
@@ -731,4 +791,4 @@ export const HomeProfilePage: React.FC = () => {
   );
 };
 
-HomeProfilePage.displayName = 'HomeProfilePage';
+HomeProfilePage.displayName = "HomeProfilePage";

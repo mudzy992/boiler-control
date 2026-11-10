@@ -13,7 +13,11 @@
  * samo re-export iz `api.d.ts`.
  */
 
-import { InsulationType, WindowType, HeatingType } from '../../../constants/homeProfileEnums';
+import {
+  InsulationType,
+  WindowType,
+  HeatingType,
+} from "../../../constants/homeProfileEnums";
 
 /** HomeProfile enumovi — preuzeti iz backend-konzistentnih konstanti (isti su kao OpenAPI unioni). */
 export type HomeProfileHeatingType = HeatingType;
@@ -38,6 +42,8 @@ export interface CreateHomeProfileDto {
   boilerOutputKw?: number | null;
   /** Najviša polazna koju sistem dozvoljava (30–55). `null` = granica kotla. */
   maxHeatingFlowC?: number | null;
+  /** Donja granica polazne za ovaj dom (30–55). `null` = sistemskih 48. */
+  minHeatingFlowC?: number | null;
   hasFloorHeating?: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;
@@ -65,6 +71,8 @@ export interface HomeProfileResponse {
   boilerCatalogId?: string | null;
   boilerOutputKw?: number | null;
   maxHeatingFlowC?: number | null;
+  /** Donja granica polazne za ovaj dom (30–55). `null` = sistemskih 48. */
+  minHeatingFlowC?: number | null;
   hasFloorHeating: boolean;
   targetMorningTemp?: number;
   targetDayTemp?: number;

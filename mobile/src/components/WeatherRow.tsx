@@ -1,6 +1,7 @@
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useTranslation } from '../hooks/useTranslation';
+import { wmoConditionKey } from '../utils/wmo';
 import { useTokens } from '../ui/theme';
 import { MonoLabel, MonoMeta, Panel, PanelRow, Readout, Text } from '../ui';
 import type { TodayWeather } from '../types/Weather';
@@ -57,6 +58,14 @@ const CONDITION_KEYS: Record<string, string> = {
 
 function conditionKey(condition: string | undefined): string | null {
   if (!condition) return null;
+  /*
+   * F13 (treći krug): backend ovim putem šalje `WMO_80`, a stara tabela naziva
+   * ga nije poznavala — na Početnoj je pisalo doslovno `WMO_80`. WMO prefiks se
+   * zato prevodi prvi; ostalo ide po tabeli naziva („Partly cloudy" i sl.), jer
+   * taj put i dalje postoji u instaliranim verzijama.
+   */
+  const fromWmo = wmoConditionKey(condition);
+  if (fromWmo) return `weather.condition.${fromWmo}`;
   const normalized = condition.toLowerCase().replace(/[\s_-]+/g, '');
   return CONDITION_KEYS[normalized] ?? null;
 }
@@ -64,10 +73,16 @@ function conditionKey(condition: string | undefined): string | null {
 export function WeatherRow({ weather, isFetching = false }: WeatherRowProps) {
   const { t } = useTranslation();
 
+  /*
+   * F13 (treći krug): nepoznat kod se NE prikazuje kako je stigao. Prije je
+   * `WMO_80` završio na ekranu; sada WMO ide u tabelu, a ako ni tamo nema
+   * naziva, piše čitljivo „Nepoznato stanje". Sirov identifikator nije podatak
+   * za korisnika — „WMO_80" ne znači ništa nikome van koda.
+   */
   const translatedConditionKey = conditionKey(weather?.condition);
   const translatedCondition = translatedConditionKey
     ? t(translatedConditionKey)
-    : (weather?.condition ?? '');
+    : t('weather.conditionUnknown');
 
   if (!weather) {
     return (
@@ -86,7 +101,10 @@ export function WeatherRow({ weather, isFetching = false }: WeatherRowProps) {
       <PanelRow divider={false}>
         <View style={styles.row}>
           <View style={styles.left}>
-            <MonoLabel>{t('weather.current')}</MonoLabel>
+            {/* F13: `weather.current` („Trenutna prognoza vremena") je bio duži
+                od polovine reda i lomio se u tri reda iznad broja. Naziv
+                mjerenja je kratak: „Trenutno". */}
+            <MonoLabel>{t('weather.currentShort')}</MonoLabel>
             <Readout
               value={Number(weather.temp).toFixed(0)}
               unit="°C"

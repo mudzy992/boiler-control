@@ -182,6 +182,16 @@ export interface HealthWarning {
   type: HealthWarningType;
   level: HealthWarningLevel;
   message: string;
+  /**
+   * F13: broj koji poruka nosi i prag na koji se odnosi. `message` je na
+   * bosanskom (tako ga piše backend i tako ga web prikazuje), pa ga ekran na
+   * engleskom ne smije ispisati kako jeste — od ovih polja sastavlja svoju
+   * rečenicu.
+   */
+  count?: number;
+  threshold?: number;
+  /** Prosječno odstupanje u °C (`targetShortfall`/`targetOvershoot`). */
+  valueC?: number;
 }
 
 export interface DashboardHealthResponse {

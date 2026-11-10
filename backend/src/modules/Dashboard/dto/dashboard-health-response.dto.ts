@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * FE2-14 (FE-010): odgovor `GET /api/dashboard/health`.
@@ -90,6 +90,26 @@ export class HealthWarningDto {
     example: 'Ciljna temperatura se ne dostiže - prosječno zaostajanje: 2.0°C',
   })
   message!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Broj koji poruka nosi (ciklusi, anomalije), da ga klijent prevede sam.',
+    example: 2,
+  })
+  count?: number;
+
+  @ApiPropertyOptional({
+    description: 'Prag na koji se broj odnosi, u minutama (npr. 90).',
+    example: 90,
+  })
+  threshold?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Prosječno odstupanje u °C, za `targetShortfall`/`targetOvershoot`.',
+    example: 2.0,
+  })
+  valueC?: number;
 }
 
 export class DashboardHealthResponseDto {

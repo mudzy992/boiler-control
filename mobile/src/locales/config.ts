@@ -345,6 +345,8 @@ const enUS = {
     conditionFog: 'Fog',
     conditionHaze: 'Haze',
     conditionWindy: 'Windy',
+    /** Ne prepoznat kod: čitljiv tekst, nikad sirov ključ (`WMO_80`). */
+    conditionUnknown: 'Unknown conditions',
     /** Naziv mjerenja — prije je kao „label" stajala oznaka jedinice (`km/h`, `hPa`). */
     windSpeed: 'Wind speed',
     pressure: 'Pressure',
@@ -353,6 +355,8 @@ const enUS = {
     todayMinMax: 'Today min/max',
 
     current: 'Current Weather',
+    /** Kratka oznaka mjerenja — duga verzija se lomila iznad broja (`F13`). */
+    currentShort: 'Now',
     feelsLike: 'Feels like {{value}}°C',
     humidity: 'Humidity',
     windUnit: 'm/s',
@@ -536,6 +540,18 @@ const enUS = {
     targetShortfall: 'Target temperature not reached',
     targetOvershoot: 'Possible target overshoot',
     anomalies: 'Heating anomalies',
+  },
+  /**
+   * F13: detalj ispod naslova alerta. Brojevi dolaze sa backenda
+   * (`count`/`threshold`/`valueC`), pa se rečenica prevodi — prije je stajala
+   * bosanska rečenica i na engleskom.
+   */
+  healthWarningDetail: {
+    shortCycles: '{{count}} cycles shorter than {{threshold}} min',
+    longCycles: '{{count}} cycles longer than {{threshold}} min',
+    anomalies: '{{count}} anomalies in the selected period',
+    targetShortfall: 'Average gap: {{value}} °C',
+    targetOvershoot: 'Average above target: {{value}} °C',
   },
   alerts: {
     flowTempCriticalTitle: 'Flow Temperature Critical',
@@ -1357,6 +1373,8 @@ const bsBS = {
     conditionFog: 'Magla',
     conditionHaze: 'Izmaglica',
     conditionWindy: 'Vjetrovito',
+    /** Ne prepoznat kod: čitljiv tekst, nikad sirov ključ (`WMO_80`). */
+    conditionUnknown: 'Nepoznato stanje',
     /**
      * F13: „Brzina vetra" je bila ijekavizovana pogrešno („vetra" = ekavica) i
      * mjerila je brzinu, ne smjer. Sada „Brzina vjetra". „Osjećaj" zamjenjuje
@@ -1370,6 +1388,11 @@ const bsBS = {
     todayMinMax: 'Danas min/max',
 
     current: 'Trenutna prognoza vremena',
+    /**
+     * F13: „Trenutna prognoza vremena" je stajala iznad broja i lomila se u tri
+     * reda. Riječ je o mjerenju, pa je oznaka kratka.
+     */
+    currentShort: 'Trenutno',
     feelsLike: 'Osjećaj {{value}}°C',
     humidity: 'Vlažnost',
     windUnit: 'm/s',
@@ -1546,6 +1569,14 @@ const bsBS = {
     targetShortfall: 'Ciljna temperatura se ne dostiže',
     targetOvershoot: 'Moguće pregašenje cilja',
     anomalies: 'Anomalije grijanja',
+  },
+  /** F13: detalj ispod naslova — brojevi sa backenda, rečenica naša. */
+  healthWarningDetail: {
+    shortCycles: '{{count}} ciklusa kraćih od {{threshold}} min',
+    longCycles: '{{count}} ciklusa dužih od {{threshold}} min',
+    anomalies: '{{count}} anomalija u odabranom periodu',
+    targetShortfall: 'Prosječno zaostajanje: {{value}} °C',
+    targetOvershoot: 'Prosječno iznad cilja: {{value}} °C',
   },
   alerts: {
     flowTempCriticalTitle: 'Kritična temperatura polazne vode',

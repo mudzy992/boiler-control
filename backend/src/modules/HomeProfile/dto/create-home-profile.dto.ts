@@ -123,6 +123,23 @@ export class CreateHomeProfileDto {
   @Max(55)
   maxHeatingFlowC?: number;
 
+  /**
+   * Donja granica polazne za **ovaj** dom (`F13`).
+   *
+   * Postoji jer je 48 bila tvrda i u klijentu i u servisu: motor je predlagao
+   * 46 °C (fizički izvodljivo za taj kotao), a unos je odbijao sve ispod 48.
+   * Granica je fizička i zavisi od kotla i načina grijanja, pa pripada domu.
+   *
+   * Raspon je isti kao apsolutni (30–55) — polje samo **sužava**, nikad ne
+   * proširuje ono što `flow-bounds.ts` već zaključava.
+   */
+  @IsOptional()
+  @Transform(preserveRawInput)
+  @IsNumber()
+  @Min(30)
+  @Max(55)
+  minHeatingFlowC?: number;
+
   @Transform(preserveRawInput)
   @IsNumber()
   @Min(5)

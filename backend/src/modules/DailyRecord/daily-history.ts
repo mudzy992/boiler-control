@@ -15,6 +15,12 @@
 /** Oznaka u `modelVersion`/`outcomeVersion` za redove koje je napisao backfill. */
 export const BACKFILL_VERSION_PREFIX = 'backfill-';
 
+/**
+ * Verzija reda popunjenog **samo iz `HeatingEvent`** (mora ostati ista kao u
+ * `daily-outcome.service.ts`; test to poredi).
+ */
+export const OUTCOME_VERSION_EVENTS = 'outcome-events-1';
+
 export type DailyRecordOrigin = 'LIVE' | 'BACKFILL';
 
 /** Red kakav dolazi iz baze (samo kolone koje izvještaj koristi). */
@@ -42,8 +48,22 @@ export interface DailyRecordInput {
 }
 
 /** Red za klijenta: iste vrijednosti + ono što klijent ne treba da izvodi sam. */
+/**
+ * Odakle su ciklusi u redu (`F13`, treći krug).
+ *
+ * `SERIES` = serija uzoraka (mjeri i rad i cikluse iz istog izvora);
+ * `EVENTS` = `HeatingEvent` redovi, upotrijebljeni jer serija za taj dan nije
+ * dovoljna; `NONE` = nema mjerenja, crtica se prikazuje i dalje.
+ *
+ * Razlika je namjerna: broj ciklusa iz događaja i `dutyPercent` iz serije nisu
+ * ista mjera, pa se ne smiju stopiti u jedan „izmjereno" bez traga.
+ */
+export type CycleSource = 'SERIES' | 'EVENTS' | 'NONE';
+
 export interface DailyHistoryRow extends DailyRecordInput {
   origin: DailyRecordOrigin;
+  /** Odakle je broj ciklusa; `null` kad red nije imao nikakav izvor. */
+  cyclesSource: CycleSource;
   /** Koje grupe mjerenja red stvarno nosi. `false` = nije mjereno, nije nula. */
   has: {
     cycles: boolean;
@@ -98,6 +118,14 @@ function withFlags(row: DailyRecordInput): DailyHistoryRow {
   return {
     ...row,
     origin: classifyOrigin(row),
+    // Izvor ciklusa se ne izvodi iz broja: `EVENTS` red ima broj, ali nema
+    // `dutyPercent`, pa bi „ima cycles" izgledalo isto kao puno mjerenje.
+    cyclesSource:
+      row.cycles == null
+        ? 'NONE'
+        : row.outcomeVersion === OUTCOME_VERSION_EVENTS
+          ? 'EVENTS'
+          : 'SERIES',
     has: {
       // Ciklus `0` je mjerenje (dan bez grijanja); `null` je odsustvo mjerenja.
       // Zato se provjerava `!= null`, a ne istinitost — `0` je istinito netačan

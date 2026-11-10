@@ -11,6 +11,7 @@ import { WeatherService } from '../Weather/weather.service';
 import { BoilerWeatherService } from '../Weather/boiler-weather.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { MetricsService } from '../../common/metrics.service';
+import { resolveFlowTempRange } from './flow-range';
 
 export interface FlowTempCalculationResult {
   flowTemp: number;
@@ -32,19 +33,14 @@ export interface SetCurrentTempResult {
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
   private readonly DEFAULT_ANON_CITY = 'Visoko';
-  /**
-   * Granice koje važe kad dom nema svoje (`F13`).
+  /*
+   * Granice su premještene u `./flow-range.ts` (`F13`).
    *
-   * `SYSTEM_MIN` je zadana donja granica, a ne jedina: dom može imati nižu
-   * (`HomeProfile.minHeatingFlowC`), jer je donja granica fizička i zavisi od
-   * kotla i načina grijanja. Motor računa do 46, pa bi tvrda 48 značila da
-   * korisnik dobija predlog koji ne može upisati.
+   * Razlog nije čišćenje koda nego dokazivost: pravilo „dom sužava, nikad ne
+   * proširuje" je do sada bilo zaključano u servisu koji traži bazu, pa ga
+   * nijedan test nije mogao provjeriti bez `PrismaService`. Sada je čista
+   * funkcija, a servis je samo dovodi do nje.
    */
-  private readonly SYSTEM_MIN_CURRENT_FLOW_TEMP = 48;
-  private readonly SYSTEM_MAX_CURRENT_FLOW_TEMP = 55;
-  /** Apsolutni raspon iz `flow-bounds.ts` — dom ga smije suziti, nikad proširiti. */
-  private readonly ABSOLUTE_MIN_FLOW_C = 30;
-  private readonly ABSOLUTE_MAX_FLOW_C = 55;
 
   constructor(
     private prisma: PrismaService,
@@ -286,41 +282,14 @@ export class BoilerService {
    * sijeku sa apsolutnim rasponom 30–55, pa neispravan zapis u bazi (npr.
    * 20 ili 70) ne može proširiti opseg — samo ga suziti.
    */
-  async flowTempRange(userId: number): Promise<{
-    min: number;
-    max: number;
-    source: 'HOME' | 'SYSTEM';
-  }> {
+  async flowTempRange(userId: number) {
     const home = await this.prisma.homeProfile.findFirst({
       where: { userId },
       select: { minHeatingFlowC: true, maxHeatingFlowC: true },
     });
 
-    const requestedMin =
-      home?.minHeatingFlowC ?? this.SYSTEM_MIN_CURRENT_FLOW_TEMP;
-    const requestedMax =
-      home?.maxHeatingFlowC ?? this.SYSTEM_MAX_CURRENT_FLOW_TEMP;
-
-    const min = Math.max(this.ABSOLUTE_MIN_FLOW_C, requestedMin);
-    const max = Math.min(this.ABSOLUTE_MAX_FLOW_C, requestedMax);
-
-    // Dom koji je sam sebi okrenut naopačke (min > max) nije razlog da se
-    // korisnik zaključa: vraća se sigurni sistemski raspon i to je vidljivo
-    // kroz `source`.
-    if (!(min <= max)) {
-      return {
-        min: this.SYSTEM_MIN_CURRENT_FLOW_TEMP,
-        max: this.SYSTEM_MAX_CURRENT_FLOW_TEMP,
-        source: 'SYSTEM',
-      };
-    }
-
-    const source: 'HOME' | 'SYSTEM' =
-      home?.minHeatingFlowC != null || home?.maxHeatingFlowC != null
-        ? 'HOME'
-        : 'SYSTEM';
-
-    return { min, max, source };
+    // Pravilo je u čistoj funkciji (`./flow-range.ts`) — v. komentar iznad.
+    return resolveFlowTempRange(home);
   }
 
   async setCurrentTemp(

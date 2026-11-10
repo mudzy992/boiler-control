@@ -978,7 +978,7 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                       ]
                     }
                   >
-                    weather.current
+                    weather.currentShort
                   </Text>
                   <View
                     accessibilityLabel="weather.current: 8.5 °C"
@@ -3931,7 +3931,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       ]
                     }
                   >
-                    weather.current
+                    weather.currentShort
                   </Text>
                   <View
                     accessibilityLabel="weather.current: 8.5 °C"

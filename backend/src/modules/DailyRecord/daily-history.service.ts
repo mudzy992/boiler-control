@@ -5,6 +5,8 @@ import {
   type DailyHistory,
   type DailyRecordInput,
 } from './daily-history';
+import { applyPageCycles } from './history-page';
+import { resolveHomeTimeZone } from './proposal-schedule';
 
 /**
  * Čitanje historije dnevnih zapisa (`31`) — **samo čita**.
@@ -44,7 +46,13 @@ export class DailyHistoryService {
     // iz drugog mjesta, pa pravilo mora putovati s njim.
     const home = await this.prisma.homeProfile.findFirst({
       where: { id: homeProfileId, userId },
-      select: { id: true },
+      // Zona je potrebna za razrez ciklusa po lokalnom danu — bez nje ciklus
+      // koji počne u 23:50 ne bi bilo moguće pripisati pravom danu.
+      select: {
+        id: true,
+        weatherTimezone: true,
+        user: { select: { timezone: true } },
+      },
     });
 
     if (!home) {
@@ -113,10 +121,79 @@ export class DailyHistoryService {
       },
     });
 
+    /*
+     * `F13` (drugi krug): ciklusi iz događaja za dane koje obračun još nije
+     * obradio. `DailyOutcomeService` gleda samo 7 dana unazad, a tabela 20 —
+     * zato je za starije dane Ciklusi ostajao crtica iako `HeatingEvent`
+     * redovi postoje. Upit je uzak: samo dani iz ove strane, samo početak i
+     * kraj ciklusa.
+     */
+    const zone = resolveHomeTimeZone({
+      homeTimeZone: home.weatherTimezone,
+      userTimeZone: home.user.timezone,
+    });
+    const dates = kept.map((row) => row.localDate).sort();
+    /*
+     * Granice prozora su datumi **bez vremena** (`YYYY-MM-DD` → UTC ponoć tog
+     * dana). To je namjerno šire od stvarnog lokalnog dana: sat vremena više
+     * događaja na rubu ne mijenja ništa jer `fillCyclesFromEvents` razrezuje po
+     * lokalnom datumu, a sat vremena manje bi odsjeklo ciklus koji je počeo
+     * prije ruba.
+     */
+    const windowStart = new Date(`${dates[0]}T00:00:00.000Z`);
+    const windowEnd = new Date(
+      new Date(`${dates[dates.length - 1]}T00:00:00.000Z`).getTime() +
+        2 * 24 * 60 * 60 * 1000,
+    );
+    const eventsForPage =
+      dates.length === 0
+        ? []
+        : await this.prisma.heatingEvent.findMany({
+            where: {
+              thermostat: { homeProfileId },
+              // Jedan dan šire: ciklus koji je počeo dan prije ponoći, a
+              // završio u danu iz zahtjeva, mora ući u skup da bi mu se znalo
+              // trajanje.
+              timestampStart: {
+                gte: windowStart,
+                lt: windowEnd,
+              },
+            },
+            select: { timestampStart: true, timestampEnd: true },
+            orderBy: { timestampStart: 'asc' },
+          });
+
+    const page = applyPageCycles(
+      kept,
+      eventsForPage.map((row) => ({
+        startedAt: row.timestampStart,
+        endedAt: row.timestampEnd,
+      })),
+      zone.zone,
+    );
+    const filled = page.rows;
+
+    const history = buildDailyHistory(filled, {
+      truncated: (window.offset ?? 0) + kept.length < total,
+    });
+
+    /*
+     * Red popunjen iz događaja mora to i reći. Bez ovoga bi tabela prikazala
+     * broj ciklusa u istoj koloni i sa istom oznakom kao cikluse izmjerene
+     * serijom — a to su dvije različite mjere (serija mjeri i `dutyPercent`,
+     * događaji ne).
+     */
+    const rowsWithSource = history.rows.map((row) => {
+      if (row.cycles == null) return row;
+      if (row.cyclesSource === 'EVENTS') return row;
+      return page.filledFromEvents.has(row.localDate)
+        ? { ...row, cyclesSource: 'EVENTS' as const }
+        : row;
+    });
+
     return {
-      ...buildDailyHistory(kept, {
-        truncated: (window.offset ?? 0) + kept.length < total,
-      }),
+      ...history,
+      rows: rowsWithSource,
       homeProfileId,
       total,
       offset: window.offset ?? 0,

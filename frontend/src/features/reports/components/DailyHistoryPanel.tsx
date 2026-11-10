@@ -1,9 +1,9 @@
-import { useState, type JSX } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/services/api';
-import { queryKeys } from '@/lib/queryKeys';
-import { Card, CardContent } from '@/shared/components/ui/Card';
+import { useState, type JSX } from "react";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/api";
+import { queryKeys } from "@/lib/queryKeys";
+import { Card, CardContent } from "@/shared/components/ui/Card";
 import {
   Table,
   TableBody,
@@ -11,9 +11,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/components/ui/table';
-import { StatusBanner } from '@/shared/components/status-banner';
-import { PageNumbers } from '@/shared/components/table-controls';
+} from "@/shared/components/ui/table";
+import { StatusBanner } from "@/shared/components/status-banner";
+import { PageNumbers } from "@/shared/components/table-controls";
 import {
   coveredGroups,
   historyHeadline,
@@ -21,8 +21,8 @@ import {
   originLabelKey,
   sortNewestFirst,
   valueOrNull,
-} from '../lib/daily-history';
-import type { DailyHistoryResponse, DailyHistoryRow } from '../types';
+} from "../lib/daily-history";
+import type { DailyHistoryResponse, DailyHistoryRow } from "../types";
 
 interface DailyHistoryPanelProps {
   homeProfileId: number | null | undefined;
@@ -61,7 +61,13 @@ export const DailyHistoryPanel = ({
   const [offset, setOffset] = useState(0);
 
   const historyQuery = useQuery({
-    queryKey: queryKeys.dailyHistory(homeProfileId ?? 0, from, to, limit, offset),
+    queryKey: queryKeys.dailyHistory(
+      homeProfileId ?? 0,
+      from,
+      to,
+      limit,
+      offset,
+    ),
     queryFn: () =>
       apiClient.getDailyHistory({
         homeProfileId: homeProfileId as number,
@@ -92,35 +98,35 @@ export const DailyHistoryPanel = ({
       <CardContent className="space-y-4 pt-4">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">
-            {t('reports.historyTitle')}
+            {t("reports.historyTitle")}
           </h2>
           <p className="mt-1 text-sm text-text-secondary">
-            {t('reports.historySubtitle')}
+            {t("reports.historySubtitle")}
           </p>
         </div>
 
         {historyQuery.isLoading ? (
-          <p className="text-sm text-text-secondary">{t('common.loading')}</p>
+          <p className="text-sm text-text-secondary">{t("common.loading")}</p>
         ) : null}
 
         {historyQuery.isError ? (
-          <StatusBanner variant="error" message={t('reports.historyError')} />
+          <StatusBanner variant="error" message={t("reports.historyError")} />
         ) : null}
 
         {report && !isHistoryEmpty(report) ? (
           <>
             <p className="text-sm text-text-secondary">
-              {t('reports.historySummary', {
+              {t("reports.historySummary", {
                 days: headline.days,
-                from: headline.firstDate ?? '—',
-                to: headline.lastDate ?? '—',
+                from: headline.firstDate ?? "—",
+                to: headline.lastDate ?? "—",
               })}
             </p>
 
             {headline.backfill > 0 ? (
               <StatusBanner
                 variant="info"
-                message={t('reports.historyBackfillNote', {
+                message={t("reports.historyBackfillNote", {
                   count: headline.backfill,
                 })}
               />
@@ -129,21 +135,21 @@ export const DailyHistoryPanel = ({
             {headline.truncated ? (
               <StatusBanner
                 variant="warning"
-                message={t('reports.historyTruncated', { limit })}
+                message={t("reports.historyTruncated", { limit })}
               />
             ) : null}
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('reports.colDate')}</TableHead>
-                  <TableHead>{t('reports.historyColOrigin')}</TableHead>
-                  <TableHead>{t('reports.historyColProposal')}</TableHead>
-                  <TableHead>{t('reports.historyColCycles')}</TableHead>
-                  <TableHead>{t('reports.historyColDuty')}</TableHead>
-                  <TableHead>{t('reports.historyColGas')}</TableHead>
-                  <TableHead>{t('reports.historyColDegreeDays')}</TableHead>
-                  <TableHead>{t('reports.historyColCoverage')}</TableHead>
+                  <TableHead>{t("reports.colDate")}</TableHead>
+                  <TableHead>{t("reports.historyColOrigin")}</TableHead>
+                  <TableHead>{t("reports.historyColProposal")}</TableHead>
+                  <TableHead>{t("reports.historyColCycles")}</TableHead>
+                  <TableHead>{t("reports.historyColDuty")}</TableHead>
+                  <TableHead>{t("reports.historyColGas")}</TableHead>
+                  <TableHead>{t("reports.historyColDegreeDays")}</TableHead>
+                  <TableHead>{t("reports.historyColCoverage")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -163,7 +169,9 @@ export const DailyHistoryPanel = ({
         ) : null}
 
         {report && isHistoryEmpty(report) && !historyQuery.isLoading ? (
-          <p className="text-sm text-text-secondary">{t('reports.historyEmpty')}</p>
+          <p className="text-sm text-text-secondary">
+            {t("reports.historyEmpty")}
+          </p>
         ) : null}
       </CardContent>
     </Card>
@@ -185,25 +193,39 @@ const HistoryRow = ({ row }: { row: DailyHistoryRow }): JSX.Element => {
       <TableCell>
         <span
           className={
-            row.origin === 'BACKFILL'
-              ? 'rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400'
-              : 'rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400'
+            row.origin === "BACKFILL"
+              ? "rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400"
+              : "rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
           }
         >
           {t(originLabelKey(row.origin))}
         </span>
       </TableCell>
-      <TableCell>{proposal === null ? '—' : `${proposal.toFixed(1)}°C`}</TableCell>
-      <TableCell>{cycles === null ? '—' : cycles}</TableCell>
-      <TableCell>{duty === null ? '—' : `${duty.toFixed(1)}%`}</TableCell>
-      <TableCell>{gas === null ? '—' : `${gas.toFixed(2)} m³`}</TableCell>
       <TableCell>
-        {degreeDays === null ? '—' : degreeDays.toFixed(1)}
+        {proposal === null ? "—" : `${proposal.toFixed(1)}°C`}
       </TableCell>
       <TableCell>
+        {cycles === null ? "—" : cycles}
+        {/*
+          F13: broj iz događaja se vidi kao takav. Bez oznake bi „2 ciklusa"
+          izgledalo isto kao puno mjerenje, iako su `duty` i noćna polja za taj
+          dan prazni — jer mjerena nijesu.
+        */}
+        {row.cyclesSource === "EVENTS" ? (
+          <span className="ml-1 text-xs text-text-secondary">
+            {t("reports.historyCyclesFromEvents")}
+          </span>
+        ) : null}
+      </TableCell>
+      <TableCell>{duty === null ? "—" : `${duty.toFixed(1)}%`}</TableCell>
+      <TableCell>{gas === null ? "—" : `${gas.toFixed(2)} m³`}</TableCell>
+      <TableCell>{degreeDays === null ? "—" : degreeDays.toFixed(1)}</TableCell>
+      <TableCell>
         {covered.length === 0
-          ? t('reports.historyNoCoverage')
-          : covered.map((key) => t(`reports.historyCoverage_${key}`)).join(' · ')}
+          ? t("reports.historyNoCoverage")
+          : covered
+              .map((key) => t(`reports.historyCoverage_${key}`))
+              .join(" · ")}
       </TableCell>
     </TableRow>
   );

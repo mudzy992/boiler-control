@@ -45,13 +45,47 @@ describe('F8 prevod stanja vremena', () => {
     await result.unmount();
   });
 
-  it('nepoznato stanje prikazuje kako je stiglo, bez izmišljanja prijevoda', async () => {
-    const result = render(
+  /*
+   * F13 (treći krug): ranije je nepoznat tekst išao na ekran kako je stigao.
+   * To je značilo i da `WMO_80` — identifikator, ne naziv — završi pred
+   * korisnikom. Sada se prikazuje čitljiv tekst.
+   */
+  it('nepoznato stanje daje čitljiv tekst, ne sirov identifikator', async () => {
+    // `render` u ovoj verziji testing-library-ja vraća promise.
+    const result = await render(
       <AppThemeProvider colorMode="dark">
         <WeatherRow weather={{ ...weather, condition: 'Volcanic ash' } as never} />
       </AppThemeProvider>,
     );
-    expect((await result).getByText('Volcanic ash')).toBeTruthy();
-    await (await result).unmount();
+    expect(result.getByText('Unknown conditions')).toBeTruthy();
+    expect(result.queryByText('Volcanic ash')).toBeNull();
+    await result.unmount();
+  });
+
+  it('WMO_80 iz snimke se prevodi, nikad ne piše na ekranu', async () => {
+    await i18n.changeLanguage('bs-BS');
+    const result = await render(
+      <AppThemeProvider colorMode="dark">
+        <WeatherRow weather={{ ...weather, condition: 'WMO_80' } as never} />
+      </AppThemeProvider>,
+    );
+
+    expect(result.queryByText('WMO_80')).toBeNull();
+    // `weather.condition.slight_rain_showers` u bosanskom = „Slabi pljuskovi".
+    expect(result.getByText('Slabi pljuskovi')).toBeTruthy();
+    await result.unmount();
+  });
+
+  it('oznaka mjerenja je kratka (duga se lomila iznad broja)', async () => {
+    await i18n.changeLanguage('bs-BS');
+    const result = await render(
+      <AppThemeProvider colorMode="dark">
+        <WeatherRow weather={weather as never} />
+      </AppThemeProvider>,
+    );
+
+    expect(result.getByText('Trenutno')).toBeTruthy();
+    expect(result.queryByText('Trenutna prognoza vremena')).toBeNull();
+    await result.unmount();
   });
 });

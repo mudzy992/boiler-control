@@ -1,154 +1,185 @@
-import type { AxiosInstance } from "axios";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
 
 /**
- * `F15` — regresija koja je korisniku vratila `400 "Nedostaje APK fajl"` iako je
- * datoteku odabrao.
+ * `F15` — regresija koja se **stvarno dogodila na produkciji dvaput**:
+ * `400 "Nedostaje APK fajl"`, iako je fajl odabran (45.6 MB) i prikazan pod
+ * „Odabrano: …". Kroz ovaj fajl su prošla tri pogrešna rješenja, sva tri
+ * izmjerena, pa su ovdje zapisana da se ne ponove:
  *
- * Uzrok (dokazan u `axios@1.20.0`, `dist/node/axios.cjs`):
+ * 1. `this.client.post(url, form)` — dijeljena instanca ima
+ *    `Content-Type: application/json`; axios tada radi
+ *    `JSON.stringify(formDataToJSON(data))`, fajl postane `{}` nijedan ne stigne.
+ * 2. `{ headers: { 'Content-Type': undefined } }` — `dispatchRequest` poslije
+ *    transformacije ipak postavi `application/x-www-form-urlencoded` za POST;
+ *    multer traži `multipart/form-data` i vrati 400.
+ * 3. Ručni `'multipart/form-data; boundary=X'` — browser tada ne prepisuje
+ *    zaglavlje, ali **tijelo serijalizuje svojom granicom**, pa se delimiteri
+ *    ne poklapaju (izmjereno `match:false`) i multer opet ne nađe fajl.
  *
- *     transformRequest(data, headers) {
- *       const hasJSONContentType = contentType.indexOf('application/json') > -1;
- *       const isFormData = utils.isFormData(data);
- *       if (isFormData) {
- *         return hasJSONContentType ? JSON.stringify(formDataToJSON(data)) : data;
- *       }
- *       ...
- *
- * Dijeljena instanca ima `Content-Type: application/json`, pa `FormData` postaje
- * JSON: polja ostaju stringovi, a `File` se serijalizuje u `{}`. Server tada u
- * `req.file` nema ništa i vraća 400 — tačno ono što je korisnik vidio.
- *
- * Test zato **ne** provjerava izvor grepom, nego stvarno ponašanje: propušta
- * `FormData` kroz `transformRequest` i traži da izađe kao `FormData`, a ne kao
- * string. Grep bi prošao i kad bi se greška vratila kroz drugu putanju.
+ * Ispravno rješenje (i ono što ovaj test čuva): syrov `XMLHttpRequest` **bez
+ * ijednog `Content-Type`** — browser tada sam postavi granicu koja stvarno
+ * stoji u tijelu (izmjereno `delimiterMatches:true`).
  */
 
-type ClientWithAxios = { client: AxiosInstance };
+interface Recorded {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body: unknown;
+}
 
-async function loadFreshApi(): Promise<{
-  client: AxiosInstance;
-  api: unknown;
-}> {
+/** Minimalni XHR stub koji bilježi šta je aplikacija tražila od browsera. */
+function installXhrStub(
+  response: { status: number; text: string } = {
+    status: 201,
+    text: '{"version":"1.4.0"}',
+  },
+) {
+  const requests: Recorded[] = [];
+
+  class StubXHR {
+    static current: StubXHR | null = null;
+    upload = { addEventListener: () => undefined };
+    withCredentials = false;
+    status = 0;
+    responseText = "";
+    response = "";
+    responseType = "";
+    timeout = 0;
+    readyState = 0;
+    onloadend: (() => void) | null = null;
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    ontimeout: (() => void) | null = null;
+    onabort: (() => void) | null = null;
+    private record: Recorded = {
+      url: "",
+      method: "",
+      headers: {},
+      body: undefined,
+    };
+
+    constructor() {
+      StubXHR.current = this;
+    }
+
+    open(method: string, url: string) {
+      this.record.method = method;
+      this.record.url = url;
+    }
+
+    setRequestHeader(key: string, value: string) {
+      this.record.headers[key] = value;
+    }
+
+    abort() {
+      /* noop */
+    }
+
+    getAllResponseHeaders() {
+      return "content-type: application/json\r\n";
+    }
+
+    getResponseHeader() {
+      return "application/json";
+    }
+
+    send(body: unknown) {
+      this.record.body = body;
+      requests.push(this.record);
+      this.status = response.status;
+      this.responseText = response.text;
+      this.response = response.text;
+      this.readyState = 4;
+      this.onload?.();
+      this.onloadend?.();
+    }
+  }
+
+  vi.stubGlobal("XMLHttpRequest", StubXHR as never);
+  return { requests, StubXHR };
+}
+
+async function freshApi() {
   vi.resetModules();
   const mod = await import("../api");
-  return {
-    client: (mod.apiClient as unknown as ClientWithAxios).client,
-    api: mod.apiClient,
-  };
+  return mod.apiClient;
 }
 
-/** Kopija ponašanja axios-ovog `transformRequest` za `FormData` (v. komentar gore). */
-function transformLikeAxios(
-  client: AxiosInstance,
-  form: FormData,
-  headerOverride?: Record<string, unknown>,
-): unknown {
-  const headers = client.defaults.headers as Record<string, unknown>;
-  const postHeaders = headers.post as Record<string, unknown> | undefined;
-  // Kad je zaglavlje zadato eksplicitno, ono **zamjenjuje** default instance
-  // (kao u axios-u: `undefined` briše vrijednost, ne nasljeđuje je).
-  const contentType = headerOverride
-    ? String(headerOverride["Content-Type"] ?? "")
-    : String(headers["Content-Type"] ?? postHeaders?.["Content-Type"] ?? "");
-  const transform = client.defaults.transformRequest as unknown;
-  const list = Array.isArray(transform) ? transform : [transform];
-  let data: unknown = form;
-  for (const fn of list) {
-    if (typeof fn !== "function") continue;
-    data = fn.call(client.defaults, data, {
-      getContentType: () => contentType,
-      setContentType: () => undefined,
-      hasContentType: () => contentType !== "",
-    });
-  }
-  return data;
-}
-
-describe("F15: upload APK-a mora ostati multipart", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.resetModules();
-  });
-
-  it("dijeljena instanca ima JSON Content-Type (uzrok regresije)", async () => {
-    const { client } = await loadFreshApi();
-    const headers = client.defaults.headers as Record<string, unknown>;
-    expect(String(headers["Content-Type"])).toContain("application/json");
-
-    // I upravo zato bi običan `post` slomio FormData:
-    const form = new FormData();
-    form.append("notes", "test");
-    form.append(
-      "apk",
-      new Blob(["x"], { type: "application/vnd.android.package-archive" }),
-      "a.apk",
-    );
-    const transformed = transformLikeAxios(client, form);
-    expect(typeof transformed).toBe("string");
-    expect(transformed).not.toBeInstanceOf(FormData);
-  });
-
-  it("`upload` gasi JSON Content-Type, pa FormData ostaje FormData", async () => {
-    const { client, api } = await loadFreshApi();
-    const form = new FormData();
-    form.append("apk", new Blob(["x"]), "a.apk");
-
-    const spy = vi
-      .spyOn(client, "post")
-      .mockResolvedValue({ data: { version: "1.4.0" } } as never);
-
-    await (
-      api as { upload: (url: string, form: FormData) => Promise<unknown> }
-    ).upload("/app-releases", form);
-
-    const [, body, config] = spy.mock.calls[0];
-    expect(body).toBe(form);
-
-    /*
-     * Srž: `Content-Type` mora biti **undefined**, a ne `'multipart/form-data'`
-     * napisan rukom. Oba detalja su provjerena stvarnim izvršavanjem:
-     *
-     * - sa `application/json` axios pretvori `FormData` u JSON (fajl nestane);
-     * - sa ručno napisanim `'multipart/form-data'` nema `boundary`, pa server
-     *   ne može parsirati tijelo;
-     * - sa `undefined` XHR adapter u browseru **ne pošalje** `Content-Type` —
-     *   browser ga sam postavi sa granicom (provjereno stubom XHR-a: jedino
-     *   zaglavlje koje axios pošalje je `Accept`). U Node-u `resolveConfig`
-     *   postavi `multipart/form-data; boundary=…` (provjereno lokalnim HTTP
-     *   serverom: stigne `filename="a.apk"`).
-     */
-    expect(
-      (config as { headers: Record<string, unknown> }).headers["Content-Type"],
-    ).toBeUndefined();
-
-    // I sam transform, bez mreže: uz ovo zaglavlje `FormData` ostaje objekt.
-    const encoded = transformLikeAxios(client, form, {
-      "Content-Type": "application/json",
-    });
-    expect(typeof encoded).toBe("string");
-    const kept = transformLikeAxios(client, form, {});
-    expect(kept).toBe(form);
-  });
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.resetModules();
 });
 
-describe("SEC-7: csrf-token se ne pita ponovo nakon 404", () => {
-  it('404 se pamti kao „nema CSRF-a", pa mutacija ne pravi novi zahtjev', async () => {
-    vi.resetModules();
-    const { apiClient } = await import("../api");
-    const client = (apiClient as unknown as { client: AxiosInstance }).client;
+describe("F15: upload APK-a — Content-Type mora ostaviti browseru", () => {
+  it("ne šalje NIJEDAN Content-Type (browser dodaje granicu koja odgovara tijelu)", async () => {
+    const { requests } = installXhrStub();
+    const api = await freshApi();
 
-    const getSpy = vi.spyOn(client, "get").mockResolvedValue({
-      status: 404,
-      data: { message: "Cannot GET /api/auth/csrf-token" },
-    } as never);
+    const form = new FormData();
+    form.append("apk", new Blob(["x".repeat(32)]), "build.apk");
+    form.append("version", "1.4.0");
 
-    // Prva mutacija pita jednom.
-    await apiClient.upload("/app-releases", new FormData()).catch(() => {});
-    // Druga više ne pita — inače bi svaki upload pravio 404 šum u Network tabu.
-    await apiClient.upload("/app-releases", new FormData()).catch(() => {});
+    await api.upload("/app-releases", form);
 
-    expect(getSpy).toHaveBeenCalledTimes(1);
-    expect(String(getSpy.mock.calls[0][0])).toContain("/auth/csrf-token");
+    // Prvi zahtjev je CSRF provjera (endpoint ne postoji), drugi je upload.
+    const upload = requests.filter((r) => r.method === "POST");
+    expect(upload).toHaveLength(1);
+    const keys = Object.keys(upload[0].headers).map((k) => k.toLowerCase());
+    expect(keys).not.toContain("content-type");
+    // Tijelo ide kao FormData, nikad kao string (JSON) — to je bila prva greška.
+    expect(upload[0].body).toBe(form);
+  });
+
+  it("ručna granica u zaglavlju NE smije se vraćati (tijelo bi imalo drugu)", async () => {
+    const { requests } = installXhrStub();
+    const api = await freshApi();
+    await api.upload("/app-releases", new FormData());
+
+    const upload = requests.filter((r) => r.method === "POST");
+    const contentType = upload[0].headers["Content-Type"];
+    expect(contentType).toBeUndefined();
+  });
+
+  it("šalje Authorization i CSRF ručno — metoda ne zaobilazi prijavu", async () => {
+    const { requests } = installXhrStub();
+    const api = await freshApi();
+    api.setToken("test-token");
+
+    // CSRF endpoint ne postoji; `getCsrfToken` tada ne smije blokirati upload.
+    vi.spyOn(
+      api as unknown as { getCsrfToken: () => Promise<string | null> },
+      "getCsrfToken",
+    ).mockResolvedValue("csrf-123");
+
+    await api.upload("/app-releases", new FormData());
+
+    const upload = requests.filter((r) => r.method === "POST");
+    expect(upload[0].headers.Authorization).toBe("Bearer test-token");
+    expect(upload[0].headers["X-CSRF-Token"]).toBe("csrf-123");
+  });
+
+  it("grešku servera pretvara u isti oblik kao axios (ekrani čitaju `message`)", async () => {
+    installXhrStub({
+      status: 400,
+      text: JSON.stringify({ message: "Nedostaje APK fajl", statusCode: 400 }),
+    });
+    const api = await freshApi();
+
+    await expect(
+      api.upload("/app-releases", new FormData()),
+    ).rejects.toMatchObject({
+      message: "Nedostaje APK fajl",
+      status: 400,
+    });
+  });
+
+  it('bez JSON poruke daje čitljiv status, a ne „[object Object]"', async () => {
+    installXhrStub({ status: 502, text: "<html>Bad gateway</html>" });
+    const api = await freshApi();
+
+    await expect(api.upload("/app-releases", new FormData())).rejects.toThrow(
+      "Request failed with status code 502",
+    );
   });
 });

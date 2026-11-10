@@ -1,22 +1,22 @@
-import { useMemo, useState, type JSX } from 'react';
-import dayjs from 'dayjs';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { PageHeader } from '@/shared/components/page-header';
-import { QueryState } from '@/shared/components/query-state';
-import { StatusBanner } from '@/shared/components/status-banner';
-import { Button } from '@/shared/components/ui/Button';
-import { Card, CardContent } from '@/shared/components/ui/Card';
-import { queryKeys } from '@/lib/queryKeys';
-import { apiClient } from '@/services/api';
+import { useMemo, useState, type JSX } from "react";
+import dayjs from "dayjs";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { PageHeader } from "@/shared/components/page-header";
+import { QueryState } from "@/shared/components/query-state";
+import { StatusBanner } from "@/shared/components/status-banner";
+import { Button } from "@/shared/components/ui/Button";
+import { Card, CardContent } from "@/shared/components/ui/Card";
+import { queryKeys } from "@/lib/queryKeys";
+import { apiClient } from "@/services/api";
 import {
   DateRangeFilter,
   TablePager,
   type DateRange,
-} from '@/shared/components/table-controls';
-import { GasForm } from '../components/GasForm';
-import { GasReadingCard } from '../components/GasReadingCard';
-import { useGasReadingsQuery } from '../hooks/useGasQueries';
+} from "@/shared/components/table-controls";
+import { GasForm } from "../components/GasForm";
+import { GasReadingCard } from "../components/GasReadingCard";
+import { useGasReadingsQuery } from "../hooks/useGasQueries";
 
 const PAGE_SIZE = 20;
 
@@ -24,7 +24,7 @@ export const GasReadingsPage = (): JSX.Element => {
   const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [range, setRange] = useState<DateRange>({ from: '', to: '' });
+  const [range, setRange] = useState<DateRange>({ from: "", to: "" });
   const [offset, setOffset] = useState(0);
   const queryClient = useQueryClient();
   /*
@@ -64,19 +64,23 @@ export const GasReadingsPage = (): JSX.Element => {
     }) => apiClient.addGasReadingWithUpload(data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.gasAnalysisRoot,
+      });
       setShowAddModal(false);
     },
-    onError: () => showError('gas.addReadingError'),
+    onError: () => showError("gas.addReadingError"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => apiClient.deleteGasReading(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.gasAnalysisRoot,
+      });
     },
-    onError: () => showError('gas.deleteError'),
+    onError: () => showError("gas.deleteError"),
   });
 
   const referenceMutation = useMutation({
@@ -84,9 +88,11 @@ export const GasReadingsPage = (): JSX.Element => {
       apiClient.updateGasReference(payload.id, payload.isReference),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.gasAnalysisRoot,
+      });
     },
-    onError: () => showError('gas.referenceError'),
+    onError: () => showError("gas.referenceError"),
   });
 
   const meterImageUploadMutation = useMutation({
@@ -95,7 +101,7 @@ export const GasReadingsPage = (): JSX.Element => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
     },
-    onError: () => showError('gas.meterImageUploadError'),
+    onError: () => showError("gas.meterImageUploadError"),
   });
 
   const invoiceUploadMutation = useMutation({
@@ -111,24 +117,28 @@ export const GasReadingsPage = (): JSX.Element => {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.gasAnalysisRoot,
+      });
     },
-    onError: () => showError('gas.invoiceUploadError'),
+    onError: () => showError("gas.invoiceUploadError"),
   });
 
   const invoiceDeleteMutation = useMutation({
     mutationFn: async (id: number) => apiClient.deleteGasInvoice(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.gasReadings });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.gasAnalysisRoot });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.gasAnalysisRoot,
+      });
     },
-    onError: () => showError('gas.invoiceDeleteError'),
+    onError: () => showError("gas.invoiceDeleteError"),
   });
 
   const openProtectedFile = async (url: string, fileName: string) => {
     const blob = await apiClient.downloadProtectedFile(url);
     const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = blobUrl;
     link.download = fileName;
     link.click();
@@ -136,52 +146,56 @@ export const GasReadingsPage = (): JSX.Element => {
   };
 
   const handleUploadInvoice = (readingId: number) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/pdf';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/pdf";
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
       void invoiceUploadMutation
         .mutateAsync({ id: readingId, invoicePdf: file })
-        .catch(() => showError('gas.invoiceUploadError'));
+        .catch(() => showError("gas.invoiceUploadError"));
     };
     input.click();
   };
 
   const handleUploadMeterImage = (readingId: number) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/jpeg,image/png,image/webp';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/jpeg,image/png,image/webp";
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
       void meterImageUploadMutation
         .mutateAsync({ id: readingId, meterImage: file })
-        .catch(() => showError('gas.meterImageUploadError'));
+        .catch(() => showError("gas.meterImageUploadError"));
     };
     input.click();
   };
 
   const sortedReadings = useMemo(
     () =>
-      [...readings].sort((a, b) => dayjs(b.readingDate).diff(dayjs(a.readingDate))),
+      [...readings].sort((a, b) =>
+        dayjs(b.readingDate).diff(dayjs(a.readingDate)),
+      ),
     [readings],
   );
 
   const handleExportCSV = () => {
-    const headers = ['Counter Value (m³)', 'Reading Date', 'Created At'];
+    const headers = ["Counter Value (m³)", "Reading Date", "Created At"];
     const rows = readings.map((r) => [
       r.counterValue,
-      dayjs(r.readingDate).format('YYYY-MM-DD HH:mm'),
-      dayjs(r.createdAt).format('YYYY-MM-DD HH:mm'),
+      dayjs(r.readingDate).format("YYYY-MM-DD HH:mm"),
+      dayjs(r.createdAt).format("YYYY-MM-DD HH:mm"),
     ]);
-    const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
+      "\n",
+    );
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `gas-readings-${dayjs().format('YYYY-MM-DD')}.csv`;
+    link.download = `gas-readings-${dayjs().format("YYYY-MM-DD")}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -196,34 +210,36 @@ export const GasReadingsPage = (): JSX.Element => {
     invoiceDeleteMutation.isPending;
 
   const status = isLoading
-    ? 'loading'
+    ? "loading"
     : error
-      ? 'error'
+      ? "error"
       : readings.length === 0
-        ? 'empty'
-        : 'success';
+        ? "empty"
+        : "success";
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('gas.title')}
-        description={`${t('gas.subtitle')} ${totalReadings} ${t('gas.readingsRecorded')}.${
+        title={t("gas.title")}
+        description={`${t("gas.subtitle")} ${totalReadings} ${t("gas.readingsRecorded")}.${
           // Straničeno (`36`): broj u podnaslovu je ukupan, a koja je strana
           // prikazana piše podnožje liste.
-          totalReadings > PAGE_SIZE ? ` ${t('common.showingOf', {
+          totalReadings > PAGE_SIZE
+            ? ` ${t("common.showingOf", {
                 shown: readings.length,
                 total: totalReadings,
-              })}` : ''
+              })}`
+            : ""
         }`}
         action={
           <>
             {readings.length > 0 ? (
               <Button type="button" size="sm" onClick={handleExportCSV}>
-                {t('gas.exportCsv')}
+                {t("gas.exportCsv")}
               </Button>
             ) : null}
             <Button type="button" onClick={() => setShowAddModal(true)}>
-              {t('gas.addReadingCta')}
+              {t("gas.addReadingCta")}
             </Button>
           </>
         }
@@ -233,7 +249,7 @@ export const GasReadingsPage = (): JSX.Element => {
           variant="error"
           message={errorMessage}
           onDismiss={() => setErrorMessage(null)}
-          dismissLabel={t('common.dismiss')}
+          dismissLabel={t("common.dismiss")}
         />
       ) : null}
       <DateRangeFilter
@@ -247,7 +263,7 @@ export const GasReadingsPage = (): JSX.Element => {
       />
       <QueryState
         status={status}
-        emptyMessage={t('gas.noReadingsYet')}
+        emptyMessage={t("gas.noReadingsYet")}
         onRetry={() => void refetch()}
       >
         <div className="space-y-3">
@@ -255,7 +271,9 @@ export const GasReadingsPage = (): JSX.Element => {
             <GasReadingCard
               key={reading.id}
               reading={reading}
-              previousReading={index > 0 ? sortedReadings[index - 1] : undefined}
+              previousReading={
+                index > 0 ? sortedReadings[index - 1] : undefined
+              }
               onDelete={(id) => deleteMutation.mutateAsync(id)}
               onToggleReference={(id, isReference) =>
                 referenceMutation.mutate({ id, isReference })
@@ -267,13 +285,13 @@ export const GasReadingsPage = (): JSX.Element => {
                 void openProtectedFile(
                   apiClient.getGasMeterImageUrl(id),
                   `meter-${id}.jpg`,
-                ).catch(() => showError('gas.meterImageOpenError'))
+                ).catch(() => showError("gas.meterImageOpenError"))
               }
               onOpenInvoice={(id) =>
                 void openProtectedFile(
                   apiClient.getGasInvoiceUrl(id),
                   `invoice-${id}.pdf`,
-                ).catch(() => showError('gas.invoiceOpenError'))
+                ).catch(() => showError("gas.invoiceOpenError"))
               }
               isLoading={allPending}
             />
@@ -294,7 +312,12 @@ export const GasReadingsPage = (): JSX.Element => {
       <GasForm
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onSubmit={(data) => addMutation.mutateAsync(data)}
+        // `F15`: upload vraća tijelo odgovora, a forma traži `Promise<void>` —
+        // zato se rezultat ne propagira. Ranije je `response.data` bio `any`, pa
+        // se ova razlika nije vidjela.
+        onSubmit={async (data) => {
+          await addMutation.mutateAsync(data);
+        }}
         isLoading={addMutation.isPending}
       />
     </div>

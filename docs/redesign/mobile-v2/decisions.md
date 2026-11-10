@@ -937,6 +937,44 @@ Uz to dvije stvari koje je snimka odala:
 nova slika/bundle. Ako ekran i dalje pokazuje staro dugme, build nije objavljen
 — to nije greška u kodu.
 
+**Treći krug (2026-11-21, druga snimka):** bundle je ovaj put bio nov (dugme
+„Pošalji APK", `Odabrano: build-1794342462408.apk (45.6 MB)`), a upload je i
+dalje vraćao `400 Nedostaje APK fajl`. Time je pala i teorija „stari bundle" i
+teorija „`Content-Type: undefined` je dovoljno". Uzrok je nađen mjerenjem, a ne
+rasuđivanjem — test pušta **pravi** `express` + `multer` (`multer().single('apk')`,
+isti middleware koji `FileInterceptor('apk')` koristi) i propušta kroz njega
+stvarni `apiClient`:
+
+| poziv | `content-type` na serveru | `req.file` | odgovor |
+|---|---|---|---|
+| `apiClient.post('/app-releases', form)` | `application/json` | **nema** | **400 Nedostaje APK fajl** |
+| `apiClient.upload('/app-releases', form)`, 45 MB | `multipart/form-data; boundary=--------------------------16…` | ima, `47185920 B`, `build-1794342462408.apk` | 201 |
+
+Prvi red je korisnikov `400`. Dijeljena instanca ima
+`Content-Type: application/json`, pa axios 1.20 u `transformRequest` radi
+`JSON.stringify(formDataToJSON(data))`: `File` postane `{}`, a multipart tijelo
+nestane. Zato `upload()` **ne** ide kroz tu instancu, nego kroz syrov
+`XMLHttpRequest` bez ijednog `Content-Type` zaglavlja — browser tada sam postavi
+granicu koja stvarno stoji u tijelu (izmjereno `delimiterMatches: true`).
+
+Uz to dvije stvari koje su se pokazale mjerenjem, a prije su bile pretpostavke:
+
+- **`Content-Type: undefined` u jsdom-u protiv pravog multera prolazi** (`201`,
+  granicu dodaje jsdom). Ne treba se na to oslanjati: u axiosu
+  `dispatchRequest` poslije transformacije radi
+  `headers.setContentType('application/x-www-form-urlencoded', false)`, pa je
+  ponašanje zavisno od adaptera. Syrov XHR nema tu dvosmislenost.
+- **`post()`/`put()`/`patch()` sada preusmjeravaju `FormData` na `upload()`.**
+  Popravak na jednom ekranu ne štiti sljedeći koji zaboravi `upload()`; ovako
+  greška ne može ponovo nastati ni na jednom ekranu. Običan JSON POST je
+  netaknut (test to tvrdi: `post('/nepostojeca-ruta', {a:1})` → 404, ne
+  multipart).
+
+Dokazi su u `frontend/src/services/__tests__/apiUploadMulter.test.ts` (3 testa
+protiv pravog multera, uključujući 45 MB fajl) i `apiUpload.test.ts` (5 testova
+na stubu XHR-a: nijedan `Content-Type`, `Authorization`/`X-CSRF-Token` ručno,
+`FormData` ide u `send()`, `400` nosi poruku servera).
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

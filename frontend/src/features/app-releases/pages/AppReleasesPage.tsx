@@ -73,9 +73,10 @@ export const AppReleasesPage = (): JSX.Element => {
       if (version.trim()) form.append("version", version.trim());
       if (notes.trim()) form.append("notes", notes.trim());
 
-      // `multipart/form-data` bez ručnog `Content-Type`: granicu postavlja
-      // browser, a ručni header bi je pokvario.
-      return apiClient.post<AppReleaseRow>("/app-releases", form);
+      // `upload()` je jedini put koji ne prolazi kroz JSON instancu — v.
+      // `api.ts`. Isti poziv kroz `post()` bio je uzrok `400 "Nedostaje APK
+      // fajl"`: instanca pretvori `FormData` u JSON i fajl nestane.
+      return apiClient.upload<AppReleaseRow>("/app-releases", form);
     },
     onSuccess: (row) => {
       setFile(null);

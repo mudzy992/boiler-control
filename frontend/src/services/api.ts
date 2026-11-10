@@ -56,7 +56,47 @@ import type {
  * build pada** — vidi `requireApiBaseUrl()` u `vite.config.ts`. Odluka
  * vlasnika: "Dev fallback se uklanja (greška, ne drugi host)".
  */
+/** Tijelo odgovora: JSON kad jeste, tekst inače (npr. HTML stranica proxy-ja). */
+function parseBody(text: string): unknown {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * Greška sa servera u istom obliku koji daje axios (`message` iz tijela), da
+ * ekrani koji prikazuju `error.message` rade identično za oba puta.
+ */
+function apiErrorFrom(
+  status: number,
+  body: unknown,
+): Error & { status?: number } {
+  const message =
+    body &&
+    typeof body === "object" &&
+    typeof (body as { message?: unknown }).message === "string"
+      ? String((body as { message: string }).message)
+      : `Request failed with status code ${status}`;
+  const error = new Error(message) as Error & { status?: number };
+  error.status = status;
+  return error;
+}
+
 const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").trim();
+
+/**
+ * `F15`: da li je tijelo zahtjeva binarna forma.
+ *
+ * Provjera je funkcija, a ne `instanceof` u metodi, jer `FormData` ne postoji u
+ * svakom kontekstu izvršavanja (npr. stariji jsdom bez `File`), a `typeof`
+ * čuva da nedostatak globala ne sruši svaki običan POST.
+ */
+function isFormData(value: unknown): value is FormData {
+  return typeof FormData !== "undefined" && value instanceof FormData;
+}
 
 /**
  * SEC-4 (faza 2): dual-mode autentifikacija.
@@ -321,8 +361,20 @@ export class ApiClient {
 
   /**
    * Type-safe POST poziv.
+   *
+   * `F15`: `FormData` se **ne smije** poslati kroz dijeljenu instancu. Instanca
+   * ima `Content-Type: application/json`, pa axios 1.20 u `transformRequest`
+   * uradi `JSON.stringify(formDataToJSON(data))` — `File` postane `{}`, zahtjev
+   * ode kao JSON i multer vrati `400 "Nedostaje APK fajl"`.
+   *
+   * To je izmjereno protiv pravog `express` + `multer` servera:
+   * `apiClient.post(FormData)` → `400`, `content-type: application/json`,
+   * `req.file === undefined`; ista forma kroz `upload()` → `201`, fajl stigne
+   * sa tačnim imenom i veličinom. Zato se ovdje preusmjerava, a ne prepisuje —
+   * svaki budući ekran koji zaboravi `upload()` ipak pošalje fajl ispravno.
    */
   async post<T = unknown>(url: string, data?: any, config?: any): Promise<T> {
+    if (isFormData(data)) return this.upload<T>(url, data);
     const response = await this.client.post<T>(url, data, config);
     return response.data;
   }
@@ -330,36 +382,87 @@ export class ApiClient {
   /**
    * `F15`: upload datoteke preko `multipart/form-data`.
    *
-   * Zašto zasebna metoda, a ne običan `post`: instanca ima default
-   * `Content-Type: application/json`, a axios 1.20 na `FormData` sa JSON
-   * zaglavljem radi **`JSON.stringify(formDataToJSON(data))`** — svako polje
-   * postane običan string, a `File` se serijalizuje u `{}`. Server tada ne
-   * dobije nijedan fajl i vrati `400 "Nedostaje APK fajl"`, iako je korisnik
-   * datoteku odabrao.
+   * Ovo je jedina metoda u klijentu koja **ne** prolazi kroz dijeljenu JSON
+   * instancu, i to je namjerno. Sve ispod je izmjereno, ne pretpostavljeno.
    *
-   * Zato se ovdje `Content-Type` postavlja na `undefined` — axios tada sam
-   * postavlja `multipart/form-data; boundary=...`. Ručno napisan
-   * `'multipart/form-data'` bez granice je drugi način da se isti upload slomi.
+   * 1. **Dijeljena instanca ne može poslati fajl.** Ima default
+   *    `Content-Type: application/json`, a axios 1.20 u `transformRequest` radi
+   *    `hasJSONContentType ? JSON.stringify(formDataToJSON(data)) : data` — pa
+   *    `FormData` postane tekst, a `File` postane `{}`.
+   * 2. **`Content-Type: undefined` na toj instanci NIJE dovoljno.**
+   *    `dispatchRequest` poslije transformacije radi
+   *    `headers.setContentType('application/x-www-form-urlencoded', false)` za
+   *    `POST/PUT/PATCH`, pa `setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')`
+   *    ode prije nego što browser stigne dodati granicu. Multer tada ne nađe
+   *    fajl → `400`. (Izmjereno stubom XHR-a: jedino `Accept` … a onda ipak
+   *    `x-www-form-urlencoded` kroz dispatch.)
+   * 3. **Ručna granica u zaglavlju je gora.** Browser tada ne prepisuje
+   *    `Content-Type`, ali **tijelo i dalje serijalizuje svojom granicom**, pa
+   *    se delimiter iz zaglavlja i tijela ne poklapaju (izmjereno: `match:false`).
+   *
+   * Zato se ovdje koristi **syrov `XMLHttpRequest` bez ijednog `Content-Type`
+   * zaglavlja**: tada ga browser postavi sam, zajedno sa granicom koja stvarno
+   * stoji u tijelu (izmjereno: `delimiterMatches: true`). Auth i CSRF se
+   * primjenjuju ručno, istim funkcijama koje koristi interceptor instance —
+   * metoda ne smije zaobići prijavu.
    */
-  async upload<T = unknown>(url: string, form: FormData): Promise<T> {
-    const response = await this.client.post<T>(url, form, {
-      headers: { "Content-Type": undefined },
+  async upload<T = unknown>(
+    url: string,
+    form: FormData,
+    options: { auth?: boolean } = {},
+  ): Promise<T> {
+    const token = options.auth === false ? null : this.getToken();
+
+    // CSRF se pita samo kad ga backend ima; `null` je normalan slučaj.
+    const csrf = options.auth === false ? null : await this.getCsrfToken();
+
+    // Ista osnovna adresa kao dijeljena instanca: ako `VITE_API_URL` nije
+    // ugradjen (test, lokalni poziv), koristi se ono što instanca već ima —
+    // inače bi upload tiho otišao na frontend host i vratio `index.html`.
+    const base = API_BASE_URL || this.client.defaults.baseURL || "";
+
+    return new Promise<T>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${base}${url}`, true);
+      xhr.responseType = "text";
+      if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      if (csrf) xhr.setRequestHeader("X-CSRF-Token", csrf);
+      xhr.withCredentials = this.cookieAuthEnabled;
+      // NAMJERNO nema `setRequestHeader('Content-Type', …)`: browser mora sam
+      // postaviti `multipart/form-data; boundary=…` koji odgovara tijelu.
+
+      xhr.onload = () => {
+        const body = parseBody(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(body as T);
+          return;
+        }
+        reject(apiErrorFrom(xhr.status, body));
+      };
+      xhr.onerror = () =>
+        reject(
+          new Error("Network Error — provjerite vezu i pokušajte ponovo."),
+        );
+      xhr.ontimeout = () => reject(new Error("Request timed out."));
+
+      xhr.send(form);
     });
-    return response.data;
   }
 
   /**
-   * Type-safe PUT poziv.
+   * Type-safe PUT poziv. Isti `FormData` oprez kao u `post()`.
    */
   async put<T = unknown>(url: string, data?: any, config?: any): Promise<T> {
+    if (isFormData(data)) return this.upload<T>(url, data);
     const response = await this.client.put<T>(url, data, config);
     return response.data;
   }
 
   /**
-   * Type-safe PATCH poziv.
+   * Type-safe PATCH poziv. Isti `FormData` oprez kao u `post()`.
    */
   async patch<T = unknown>(url: string, data?: any, config?: any): Promise<T> {
+    if (isFormData(data)) return this.upload<T>(url, data);
     const response = await this.client.patch<T>(url, data, config);
     return response.data;
   }
@@ -558,10 +661,9 @@ export class ApiClient {
       form.append("meterImage", data.meterImage);
     }
 
-    const response = await this.client.post("/gas/reading", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return response.data;
+    // F15: isti kvar kao kod APK uploada — v. `upload()`. Ručno napisan
+    // `multipart/form-data` nema granicu, pa multer ne nađe fajl.
+    return this.upload("/gas/reading", form);
   }
 
   async deleteGasReading(id: number) {
@@ -579,14 +681,7 @@ export class ApiClient {
   async uploadGasMeterImage(id: number, meterImage: File) {
     const form = new FormData();
     form.append("meterImage", meterImage);
-    const response = await this.client.post(
-      `/gas/reading/${id}/meter-image`,
-      form,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      },
-    );
-    return response.data;
+    return this.upload(`/gas/reading/${id}/meter-image`, form);
   }
 
   async uploadGasInvoice(
@@ -599,14 +694,7 @@ export class ApiClient {
     if (invoiceGasPriceExVat !== undefined) {
       form.append("invoiceGasPriceExVat", String(invoiceGasPriceExVat));
     }
-    const response = await this.client.post(
-      `/gas/reading/${id}/invoice`,
-      form,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      },
-    );
-    return response.data;
+    return this.upload(`/gas/reading/${id}/invoice`, form);
   }
 
   async deleteGasInvoice(id: number) {

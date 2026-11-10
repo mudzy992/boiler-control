@@ -31,8 +31,19 @@ export interface SetCurrentTempResult {
 export class BoilerService {
   private readonly logger = new Logger(BoilerService.name);
   private readonly DEFAULT_ANON_CITY = 'Visoko';
-  private readonly MIN_CURRENT_FLOW_TEMP = 48;
-  private readonly MAX_CURRENT_FLOW_TEMP = 55;
+  /**
+   * Granice koje važe kad dom nema svoje (`F13`).
+   *
+   * `SYSTEM_MIN` je zadana donja granica, a ne jedina: dom može imati nižu
+   * (`HomeProfile.minHeatingFlowC`), jer je donja granica fizička i zavisi od
+   * kotla i načina grijanja. Motor računa do 46, pa bi tvrda 48 značila da
+   * korisnik dobija predlog koji ne može upisati.
+   */
+  private readonly SYSTEM_MIN_CURRENT_FLOW_TEMP = 48;
+  private readonly SYSTEM_MAX_CURRENT_FLOW_TEMP = 55;
+  /** Apsolutni raspon iz `flow-bounds.ts` — dom ga smije suziti, nikad proširiti. */
+  private readonly ABSOLUTE_MIN_FLOW_C = 30;
+  private readonly ABSOLUTE_MAX_FLOW_C = 55;
 
   constructor(
     private prisma: PrismaService,
@@ -106,6 +117,10 @@ export class BoilerService {
         learningOffset: profile.learningOffset,
         insulationFactor: 1,
         confidence: profile.learningConfidence,
+        // F13: motor poštuje granice doma, pa predlog nikad nije ispod onoga
+        // što korisnik smije upisati (uzrok „predlaže 46, a unos traži 48").
+        minFlowC: profile.minHeatingFlowC ?? null,
+        maxFlowC: profile.maxHeatingFlowC ?? null,
       };
       mode = 'PROFILE_ONLY';
 
@@ -262,16 +277,59 @@ export class BoilerService {
    * Persist user-confirmed current boiler flow temperature and
    * sync it to the latest boiler history row (if one exists).
    */
+  /**
+   * Raspon u koji korisnik smije upisati polaznu (`F13`).
+   *
+   * Izvor je **dom**, ne konstanta: `minHeatingFlowC` je fizička granica tog
+   * kotla/načina grijanja, a `maxHeatingFlowC` već postoji (`19` §2). Oba se
+   * sijeku sa apsolutnim rasponom 30–55, pa neispravan zapis u bazi (npr.
+   * 20 ili 70) ne može proširiti opseg — samo ga suziti.
+   */
+  async flowTempRange(userId: number): Promise<{
+    min: number;
+    max: number;
+    source: 'HOME' | 'SYSTEM';
+  }> {
+    const home = await this.prisma.homeProfile.findFirst({
+      where: { userId },
+      select: { minHeatingFlowC: true, maxHeatingFlowC: true },
+    });
+
+    const requestedMin =
+      home?.minHeatingFlowC ?? this.SYSTEM_MIN_CURRENT_FLOW_TEMP;
+    const requestedMax =
+      home?.maxHeatingFlowC ?? this.SYSTEM_MAX_CURRENT_FLOW_TEMP;
+
+    const min = Math.max(this.ABSOLUTE_MIN_FLOW_C, requestedMin);
+    const max = Math.min(this.ABSOLUTE_MAX_FLOW_C, requestedMax);
+
+    // Dom koji je sam sebi okrenut naopačke (min > max) nije razlog da se
+    // korisnik zaključa: vraća se sigurni sistemski raspon i to je vidljivo
+    // kroz `source`.
+    if (!(min <= max)) {
+      return {
+        min: this.SYSTEM_MIN_CURRENT_FLOW_TEMP,
+        max: this.SYSTEM_MAX_CURRENT_FLOW_TEMP,
+        source: 'SYSTEM',
+      };
+    }
+
+    const source: 'HOME' | 'SYSTEM' =
+      home?.minHeatingFlowC != null || home?.maxHeatingFlowC != null
+        ? 'HOME'
+        : 'SYSTEM';
+
+    return { min, max, source };
+  }
+
   async setCurrentTemp(
     userId: number,
     currentFlowTemp: number,
   ): Promise<SetCurrentTempResult> {
-    if (
-      currentFlowTemp < this.MIN_CURRENT_FLOW_TEMP ||
-      currentFlowTemp > this.MAX_CURRENT_FLOW_TEMP
-    ) {
+    const range = await this.flowTempRange(userId);
+    if (currentFlowTemp < range.min || currentFlowTemp > range.max) {
       throw new Error(
-        `Current flow temperature must be between ${this.MIN_CURRENT_FLOW_TEMP}°C and ${this.MAX_CURRENT_FLOW_TEMP}°C`,
+        `Current flow temperature must be between ${range.min}°C and ${range.max}°C`,
       );
     }
 

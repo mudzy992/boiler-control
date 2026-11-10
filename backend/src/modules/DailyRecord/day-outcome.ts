@@ -47,6 +47,62 @@ export interface OutcomeSample {
   flowSetC?: number | null;
 }
 
+/**
+ * Jedan izmjereni ciklus iz `HeatingEvent` — **drugi, nezavisni izvor** broja
+ * ciklusa (`F13`).
+ *
+ * Zašto postoji: `cycles` se do sada računao isključivo iz serije uzoraka
+ * (`isHeating = true`). Kad serija za dan nije potpuna (upis je krenuo poslije
+ * uvođenja serije, ili je poller bio u zastoju), `outcomeAt` je ostajao `null`
+ * i tabela historije je za taj dan prikazivala crtice — iako su ciklusi
+ * **postojali** kao `HeatingEvent` i upisivali se istim pollingom. Korisnik je
+ * tako vidio „nema mjerenja" za dan za koji je znao da je bilo 4 paljenja.
+ *
+ * Pravilo koje se ovim ne mijenja: ciklusi iz serije imaju prednost. Događaji
+ * su rezerva, i kad se koriste to se vidi (`cyclesSource`).
+ */
+export interface CycleEvent {
+  /** Stvarni početak ciklusa (iz baze), već u UTC-u. */
+  startedAt: Date;
+  /** Kraj; `null` = ciklus još traje, pa trajanje nije mjereno. */
+  endedAt: Date | null;
+}
+
+export type CycleSource = 'SERIES' | 'EVENTS' | 'NONE';
+
+/** Ciklus kraći od ovoga mjeri šum pollera, ne rad kotla. */
+export const MIN_EVENT_CYCLE_MIN = 5;
+
+/**
+ * Broj i medijana trajanja ciklusa iz `HeatingEvent` redova.
+ *
+ * Ciklus koji prelazi ponoć pripada danu u kojem je **počeo** — isto pravilo
+ * kao kod serije (rez je na granici dana, bez skrivanja artefakta).
+ */
+export function cyclesFromEvents(
+  localDate: string,
+  events: readonly CycleEvent[],
+  zone: string,
+): { cycles: number; medianCycleMin: number | null } {
+  const durations: number[] = [];
+  let cycles = 0;
+
+  for (const event of events) {
+    if (localDateKey(event.startedAt, zone) !== localDate) continue;
+    cycles += 1;
+    if (event.endedAt == null) continue;
+    const minutes = (event.endedAt.getTime() - event.startedAt.getTime()) / 60_000;
+    if (Number.isFinite(minutes) && minutes >= MIN_EVENT_CYCLE_MIN) {
+      durations.push(minutes);
+    }
+  }
+
+  return {
+    cycles,
+    medianCycleMin: durations.length === 0 ? null : median(durations),
+  };
+}
+
 export interface DayOutcome {
   localDate: string;
   samples: number;

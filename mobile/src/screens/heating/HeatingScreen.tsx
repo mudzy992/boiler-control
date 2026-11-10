@@ -32,7 +32,6 @@ import {
 import { useToast } from '../../components/ui/nativewind';
 import { SETTINGS_STACK_SCREENS } from '../../constants/routes';
 import {
-  IDEAL_HEAT_MINUTES,
   heatingProgress,
   medianCycleMinutes,
 } from '../../lib/heating-progress';
@@ -484,9 +483,12 @@ export const HeatingScreen = () => {
           */}
           {thermostats.length > 0 ? (
             <Text size="meta" tone="muted">
-              {anyHeating
-                ? t('boiler.heatingProgressHint', { value: IDEAL_HEAT_MINUTES })
-                : t('heating.gaugeHint')}
+              {/*
+                F13: ista rečenica kao na Početnoj (`cycleColorsHint`) — dvije
+                verzije istog objašnjenja su se razlikovale po broju koji su
+                navodile, pa je korisnik na dva ekrana čitao dva praga.
+              */}
+              {anyHeating ? t('boiler.cycleColorsHint') : t('heating.gaugeHint')}
             </Text>
           ) : null}
         </Section>

@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
-import { computeDayOutcome, type OutcomeSample } from './day-outcome';
+import {
+  computeDayOutcome,
+  cyclesFromEvents,
+  type CycleEvent,
+  type OutcomeSample,
+} from './day-outcome';
 import { localDateKey, resolveHomeTimeZone } from './proposal-schedule';
 import {
   nightFloorFrom,
@@ -20,6 +25,16 @@ import {
  */
 
 export const OUTCOME_VERSION = 'outcome-1';
+
+/**
+ * Verzija zapisa popunjenog **samo iz `HeatingEvent`** redova (`F13`).
+ *
+ * Razlikuje se od `outcome-1` namjerno: iz nje se vidi da mjerni podaci dana
+ * (podbačaj, histereza, brzina dogrijavanja) nijesu mjereni, a da su ciklusi
+ * jesu. Bez te razlike bi poslije bilo nemoguće reći zašto red ima cikluse a
+ * nema ništa drugo.
+ */
+export const OUTCOME_VERSION_EVENTS = 'outcome-events-1';
 
 /**
  * Koliko dana nazad se popunjava. Sedam je dovoljno da se pokrije dan-dva
@@ -141,11 +156,56 @@ export class DailyOutcomeService {
     let filled = 0;
     let skipped = 0;
 
+    /*
+     * F13: ciklusi postoje i kao `HeatingEvent` — upisuje ih isti polling koji
+     * puni seriju. Za dane u kojima serija nije potpuna obračun je dosad
+     * odustajao (`INCOMPLETE`), pa je tabela historije prikazivala crtice za
+     * dane za koje korisnik zna da je kotao palio 3–4 puta. Događaji su zato
+     * rezerva, ne zamjena: prednost i dalje ima serija.
+     */
+    const eventFrom = new Date(
+      now.getTime() - (OUTCOME_LOOKBACK_DAYS + 1) * 24 * 60 * 60 * 1000,
+    );
+    const heatingEvents = await this.prisma.heatingEvent.findMany({
+      where: {
+        thermostat: { homeProfileId },
+        timestampStart: { gte: eventFrom },
+      },
+      select: { timestampStart: true, timestampEnd: true },
+      orderBy: { timestampStart: 'asc' },
+    });
+    const cycleEvents: CycleEvent[] = heatingEvents.map((row) => ({
+      startedAt: row.timestampStart,
+      endedAt: row.timestampEnd,
+    }));
+
     for (const record of pending) {
       const result = computeDayOutcome(record.localDate, samples, zone.zone);
       if (!result.ok) {
-        skipped += 1;
-        reasons.push(`${record.localDate}:${result.reason}`);
+        // Serija nije dovoljna za cijeli dan, ali ciklusi su mjereni događajima.
+        // Upisuje se samo ono što je stvarno izmjereno — ostala mjerna polja
+        // ostaju `null` i dalje se prikazuju kao crtice, a ne kao nula.
+        const fromEvents = cyclesFromEvents(record.localDate, cycleEvents, zone.zone);
+        if (fromEvents.cycles > 0) {
+          const written = await this.prisma.dailyRecord.updateMany({
+            where: { homeProfileId, localDate: record.localDate, outcomeAt: null },
+            data: {
+              cycles: fromEvents.cycles,
+              medianCycleMin: fromEvents.medianCycleMin,
+              outcomeAt: now,
+              outcomeVersion: OUTCOME_VERSION_EVENTS,
+            },
+          });
+          if (written.count > 0) {
+            filled += 1;
+          } else {
+            skipped += 1;
+            reasons.push(`${record.localDate}:ALREADY_WRITTEN`);
+          }
+        } else {
+          skipped += 1;
+          reasons.push(`${record.localDate}:${result.reason}`);
+        }
         continue;
       }
 

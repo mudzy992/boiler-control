@@ -627,22 +627,48 @@ exports[`Dashboard nativewind matches the dark snapshot 1`] = `
                     boiler.flowScale
                   </Text>
                 </View>
-                <Text
+                <View
                   style={
-                    [
-                      {
-                        "color": "#9aa6b6",
-                        "fontFamily": undefined,
-                        "fontSize": 12,
-                        "lineHeight": 16,
-                      },
-                      null,
-                      undefined,
-                    ]
+                    {
+                      "gap": 2,
+                    }
                   }
                 >
-                  boiler.gaugeHint
-                </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": undefined,
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                    testID="boiler-cycle-hint"
+                  >
+                    boiler.cycleColorsHint
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#9aa6b6",
+                          "fontFamily": undefined,
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                    testID="boiler-gauge-hint"
+                  >
+                    boiler.gaugeHint
+                  </Text>
+                </View>
                 <View
                   accessibilityLabel="boiler.setCurrentTemp"
                   accessibilityRole="button"
@@ -3554,22 +3580,48 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     boiler.flowScale
                   </Text>
                 </View>
-                <Text
+                <View
                   style={
-                    [
-                      {
-                        "color": "#4b5563",
-                        "fontFamily": undefined,
-                        "fontSize": 12,
-                        "lineHeight": 16,
-                      },
-                      null,
-                      undefined,
-                    ]
+                    {
+                      "gap": 2,
+                    }
                   }
                 >
-                  boiler.gaugeHint
-                </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": undefined,
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                    testID="boiler-cycle-hint"
+                  >
+                    boiler.cycleColorsHint
+                  </Text>
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#4b5563",
+                          "fontFamily": undefined,
+                          "fontSize": 12,
+                          "lineHeight": 16,
+                        },
+                        null,
+                        undefined,
+                      ]
+                    }
+                    testID="boiler-gauge-hint"
+                  >
+                    boiler.gaugeHint
+                  </Text>
+                </View>
                 <View
                   accessibilityLabel="boiler.setCurrentTemp"
                   accessibilityRole="button"

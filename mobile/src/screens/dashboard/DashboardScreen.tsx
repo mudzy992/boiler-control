@@ -32,11 +32,16 @@ import {
 } from '../../ui';
 import { useToast } from '../../components/ui/nativewind';
 import { space } from '../../theme/tokens';
-import { DASHBOARD_QUERY_KEY, DASHBOARD_HEALTH_QUERY_KEY } from '../../services/query/keys';
 import {
-  MIN_CURRENT_FLOW_TEMP,
-  MAX_CURRENT_FLOW_TEMP,
+  BOILER_FLOW_RANGE_QUERY_KEY,
+  DASHBOARD_QUERY_KEY,
+  DASHBOARD_HEALTH_QUERY_KEY,
+} from '../../services/query/keys';
+import {
+  DEFAULT_FLOW_RANGE,
   isWithinCurrentFlowTempRange,
+  resolveFlowRange,
+  type FlowRange,
 } from '../../constants/boilerLimits';
 import { AlertsCard } from '../../components/AlertsCard';
 import { RecommendationBreakdown } from '../../components/RecommendationBreakdown';
@@ -67,8 +72,15 @@ function formatDuration(startIso: string): string {
   return `${hours}h ${String(minutes % 60).padStart(2, '0')}m`;
 }
 
-const scale = (value: number) =>
-  (value - MIN_CURRENT_FLOW_TEMP) / (MAX_CURRENT_FLOW_TEMP - MIN_CURRENT_FLOW_TEMP);
+/**
+ * Položaj vrijednosti na traci polazne, u rasponu **doma**.
+ *
+ * Raspon dolazi iz API-ja (`/boiler/flow-range`), pa je funkcija parametarski:
+ * traka i validacija unosa moraju mjeriti istim brojevima, inače unos odbija
+ * vrijednost koju traka pokaže kao ispravnu.
+ */
+const scale = (value: number, range: FlowRange) =>
+  (value - range.min) / (range.max - range.min);
 
 export const DashboardScreen = () => {
   const { t, i18n } = useTranslation();
@@ -120,6 +132,22 @@ export const DashboardScreen = () => {
     staleTime: 1000 * 60,
   });
 
+  /*
+   * F13: granica polazne je po domu, pa se pita server. Dok odgovor ne stigne
+   * (ili ako padne) koristi se rezervni raspon 48–55 — isti koji je do sada bio
+   * tvrdo upisan. `staleTime` je dug jer se granice mijenjaju samo kad vlasnik
+   * izmijeni profil doma.
+   */
+  const flowRangeQuery = useQuery({
+    queryKey: BOILER_FLOW_RANGE_QUERY_KEY,
+    queryFn: () => apiClient.getBoilerFlowRange(),
+    staleTime: 1000 * 60 * 30,
+  });
+  const flowRange = React.useMemo(
+    () => (flowRangeQuery.data ? resolveFlowRange(flowRangeQuery.data) : DEFAULT_FLOW_RANGE),
+    [flowRangeQuery.data],
+  );
+
   React.useEffect(() => {
     if (error) showError(error, t('dashboard.loadError'));
   }, [error, showError, t]);
@@ -160,10 +188,14 @@ export const DashboardScreen = () => {
         : typeof boiler?.suggestedFlowTemp === 'number'
           ? boiler.suggestedFlowTemp
           : 52;
-    setCurrentTempInput(suggested.toFixed(1));
+    // Predlog motora i granica doma moraju se poklopiti: ako motor iz nekog
+    // razloga vrati vrijednost van raspona, u polje ide bliža granica, a ne
+    // broj koji će submit odmah odbiti.
+    const clamped = Math.min(flowRange.max, Math.max(flowRange.min, suggested));
+    setCurrentTempInput(clamped.toFixed(1));
     setTempError(null);
     setShowSetTempSheet(true);
-  }, [dashboardData?.system?.boiler]);
+  }, [dashboardData?.system?.boiler, flowRange]);
 
   const submitCurrentTemp = React.useCallback(() => {
     const parsed = Number(currentTempInput.replace(',', '.').trim());
@@ -176,11 +208,11 @@ export const DashboardScreen = () => {
     }
 
     const rounded = Math.round(parsed * 10) / 10;
-    if (!isWithinCurrentFlowTempRange(rounded)) {
+    if (!isWithinCurrentFlowTempRange(rounded, flowRange)) {
       setTempError(
         t('boiler.currentTempRangeError', {
-          min: MIN_CURRENT_FLOW_TEMP,
-          max: MAX_CURRENT_FLOW_TEMP,
+          min: flowRange.min,
+          max: flowRange.max,
         }),
       );
       return;
@@ -188,7 +220,7 @@ export const DashboardScreen = () => {
 
     setTempError(null);
     setCurrentTempMutation.mutate(rounded);
-  }, [currentTempInput, setCurrentTempMutation, t]);
+  }, [currentTempInput, flowRange, setCurrentTempMutation, t]);
 
   const header = (
     <ScreenHeader
@@ -443,21 +475,12 @@ export const DashboardScreen = () => {
                       {t('boiler.idealMin', { value: heatingProgressModel.idealMin })}
                     </MonoMeta>
                   </View>
-                  <Text size="meta" tone="muted">
-                    {predictedFromCycles
-                      ? t('boiler.heatingProgressHintMeasured', {
-                          value: Math.round(predictedHeatMin ?? 0),
-                        })
-                      : t('boiler.heatingProgressHint', {
-                          value: heatingProgressModel.idealMin,
-                        })}
-                  </Text>
                 </View>
               ) : null}
 
               <GaugeBar
-                value={actualFlow !== null ? scale(actualFlow) : 0}
-                target={targetFlow !== null ? scale(targetFlow) : undefined}
+                value={actualFlow !== null ? scale(actualFlow, flowRange) : 0}
+                target={targetFlow !== null ? scale(targetFlow, flowRange) : undefined}
                 tone={actualFlow === null ? 'muted' : withinTolerance ? 'ok' : 'warn'}
                 height={6}
                 accessibilityLabel={t('boiler.flowTemp')}
@@ -493,18 +516,36 @@ export const DashboardScreen = () => {
                 </MonoMeta>
                 <MonoMeta>
                   {t('boiler.flowScale', {
-                    min: MIN_CURRENT_FLOW_TEMP,
-                    max: MAX_CURRENT_FLOW_TEMP,
+                    min: flowRange.min,
+                    max: flowRange.max,
                   })}
                 </MonoMeta>
               </View>
 
-              <Text size="meta" tone="muted">
-                {t('boiler.gaugeHint', {
-                  min: MIN_CURRENT_FLOW_TEMP,
-                  max: MAX_CURRENT_FLOW_TEMP,
-                })}
-              </Text>
+              {/*
+                F13 (odluka vlasnika, 2026-11-08): objašnjenja su stajala kao tri
+                odvojena reda teksta („Zeleno do predviđenog…", pa „Traka: gdje je
+                polazna…", pa raspon uz skalu) i ponavljala su isto. Sada su DVA
+                kratka reda na jednom mjestu, ispod obje trake: prvi objašnjava
+                boje trake ciklusa, drugi šta traka polazne uopšte mjeri. Tekst je
+                vlasnikov, ne prepisan iz zatečenih ključeva.
+              */}
+              <View style={{ gap: 2 }}>
+                <Text size="meta" tone="muted" testID="boiler-cycle-hint">
+                  {t('boiler.cycleColorsHint')}
+                  {predictedFromCycles
+                    ? ` ${t('boiler.heatingProgressHintMeasured', {
+                        value: Math.round(predictedHeatMin ?? 0),
+                      })}`
+                    : ''}
+                </Text>
+                <Text size="meta" tone="muted" testID="boiler-gauge-hint">
+                  {t('boiler.gaugeHint', {
+                    min: flowRange.min,
+                    max: flowRange.max,
+                  })}
+                </Text>
+              </View>
 
               <Button
                 label={t('boiler.setCurrentTemp')}
@@ -724,14 +765,14 @@ export const DashboardScreen = () => {
         <View style={{ gap: space.md }}>
           <Text tone="muted" size="body">
             {t('boiler.currentTempRangeHint', {
-              min: MIN_CURRENT_FLOW_TEMP,
-              max: MAX_CURRENT_FLOW_TEMP,
+              min: flowRange.min,
+              max: flowRange.max,
             })}
           </Text>
           <TemperatureField
             value={currentTempInput}
             onChangeText={setCurrentTempInput}
-            placeholder={`${MIN_CURRENT_FLOW_TEMP} - ${MAX_CURRENT_FLOW_TEMP}`}
+            placeholder={`${flowRange.min} - ${flowRange.max}`}
             editable={!setCurrentTempMutation.isPending}
             accessibilityLabel={t('boiler.setCurrentTemp')}
           />

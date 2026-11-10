@@ -67,6 +67,19 @@ export class BoilerController {
   }
 
   /**
+   * F13: raspon u koji korisnik smije upisati polaznu, za njegov dom.
+   *
+   * Klijent ga čita umjesto da nosi svoju kopiju brojeva: granica je po domu
+   * (`HomeProfile.minHeatingFlowC`), pa ista aplikacija na dva doma mora vidjeti
+   * dva raspona. Bez ovoga bi mobilna app ponovo prikazivala tvrdu 48.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('flow-range')
+  async getFlowRange(@Req() req) {
+    return this.boilerService.flowTempRange(req.user.userId);
+  }
+
+  /**
    * User-confirmed current boiler flow temperature
    */
   @UseGuards(JwtAuthGuard)

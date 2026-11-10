@@ -398,6 +398,17 @@ class ApiClientService {
     return response.data;
   }
 
+  /**
+   * F13: raspon polazne za aktivni dom (server ga računa iz profila doma).
+   *
+   * Klijent ga mora pitati umjesto da nosi tvrdu granicu — inače ekran odbija
+   * vrijednost koju je isti sistem upravo predložio.
+   */
+  async getBoilerFlowRange() {
+    const response = await this.client.get('/boiler/flow-range');
+    return response.data;
+  }
+
   async setBoilerCurrentTemp(currentFlowTemp: number) {
     const response = await this.client.patch('/boiler/current-temp', {
       currentFlowTemp,

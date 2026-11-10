@@ -19,6 +19,13 @@ export interface HomeProfileInput {
   learningOffset?: number; // ± korekcija krivulje
   confidence?: number; // 0–1, koliko vjerujemo offset-u
   insulationFactor?: number; // interno, može ostati opcionalno
+  /**
+   * Granice koje **ovaj dom** dozvoljava (`F13`). Motor ih ne smije prekoračiti
+   * ni u jednu stranu — inače vraća broj koji korisnik ne može upisati na kotao.
+   * `null`/`undefined` = važi sistemski raspon iz `BaseHeatingStrategy`.
+   */
+  minFlowC?: number | null;
+  maxFlowC?: number | null;
 }
 
 export interface IntervalLearningInput {

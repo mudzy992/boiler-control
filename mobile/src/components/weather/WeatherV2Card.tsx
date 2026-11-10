@@ -324,6 +324,13 @@ const ForecastContent = React.memo(function ForecastContent({
 }: ForecastContentProps) {
   const { t } = useTranslation();
   const current = forecast.currentHidden ? null : forecast.current;
+  /*
+   * F13: „danas min/max" je dnevni red za današnji datum — isti izvor kao
+   * kartice sedmodnevne prognoze, bez izmišljanja vrijednosti. Ako današnji dan
+   * nije u nizu (npr. prognoza počinje sutra), red se ne prikazuje.
+   */
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayForecast = forecast.daily.find((day) => day.date === todayKey) ?? null;
   const timeZone = forecast.location.timezone;
 
   return (
@@ -355,14 +362,30 @@ const ForecastContent = React.memo(function ForecastContent({
                   °C
                 </Text>
               </HStack>
-              <Text fontSize="sm" color={mutedColor}>
-                {t('weather.feelsLike', {
-                  value: formatNullableNumber(current.apparentTemperatureC),
-                })}
-              </Text>
-              <Text fontSize="sm" fontWeight="600" color={accentColor}>
-                {t(current.conditionI18nKey)}
-              </Text>
+              <HStack space={2} alignItems="baseline">
+                <Text fontSize="sm" color={mutedColor}>
+                  {t('weather.feelsLikeLabel')}
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color={textColor}>
+                  {formatNullableNumber(current.apparentTemperatureC)}°C
+                </Text>
+              </HStack>
+              <HStack space={2} alignItems="baseline">
+                <Text fontSize="sm" color={mutedColor}>
+                  {t('weather.conditionLabel')}
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color={accentColor}>
+                  {/*
+                    F13: `conditionI18nKey` dolazi s backenda kao
+                    `weather.condition.<key>`. `defaultValue` je namjeran: ako
+                    backend doda novi WMO kod prije nego što ga prevedemo,
+                    korisnik vidi čitljiv naziv umjesto sirovog ključa.
+                  */}
+                  {t(current.conditionI18nKey, {
+                    defaultValue: current.conditionKey.replace(/_/g, ' '),
+                  })}
+                </Text>
+              </HStack>
             </VStack>
             <Ionicons
               name={weatherConditionIcon(current.conditionKey)}
@@ -371,29 +394,54 @@ const ForecastContent = React.memo(function ForecastContent({
             />
           </HStack>
 
-          <HStack space={2}>
-            <WeatherMetric
+          {/*
+            F13: oznake su prije bile JEDINICE, ne mjerenja — ispod broja je
+            pisalo „km/h" i „hPa" umjesto „Brzina vjetra" i „Pritisak". Sada je
+            prvo naziv mjerenja, a jedinica je uz broj, gdje se i čita.
+          */}
+          <VStack space={1}>
+            <WeatherMetricRow
+              label={t('weather.feelsLikeLabel')}
+              value={`${formatNullableNumber(current.apparentTemperatureC, 1)}°C`}
+              textColor={textColor}
+              mutedColor={mutedColor}
+            />
+            <WeatherMetricRow
+              label={t('weather.conditionLabel')}
+              value={t(current.conditionI18nKey, {
+                defaultValue: current.conditionKey.replace(/_/g, ' '),
+              })}
+              textColor={textColor}
+              mutedColor={mutedColor}
+            />
+            <WeatherMetricRow
               label={t('weather.humidity')}
               value={`${formatNullableNumber(current.humidityPercent)}%`}
-              bg={subtleBg}
               textColor={textColor}
               mutedColor={mutedColor}
             />
-            <WeatherMetric
-              label={t('weather.windKph')}
-              value={formatNullableNumber(current.windKph, 1)}
-              bg={subtleBg}
+            <WeatherMetricRow
+              label={t('weather.windSpeed')}
+              value={`${formatNullableNumber(current.windKph, 1)} ${t('weather.windKph')}`}
               textColor={textColor}
               mutedColor={mutedColor}
             />
-            <WeatherMetric
-              label={t('weather.pressureUnit')}
-              value={formatNullableNumber(current.pressureHpa)}
-              bg={subtleBg}
+            <WeatherMetricRow
+              label={t('weather.pressure')}
+              value={`${formatNullableNumber(current.pressureHpa)} ${t('weather.pressureUnit')}`}
               textColor={textColor}
               mutedColor={mutedColor}
             />
-          </HStack>
+            <WeatherMetricRow
+              label={t('weather.todayMinMax')}
+              value={`${formatNullableNumber(todayForecast?.temperatureMinC, 1)} / ${formatNullableNumber(
+                todayForecast?.temperatureMaxC,
+                1,
+              )}°C`}
+              textColor={textColor}
+              mutedColor={mutedColor}
+            />
+          </VStack>
         </VStack>
       )}
 
@@ -487,27 +535,33 @@ const ForecastContent = React.memo(function ForecastContent({
   );
 });
 
-function WeatherMetric({
+/**
+ * F13: jedan red mjerenja — naziv lijevo, vrijednost desno.
+ *
+ * Prije je to bila kutija sa vrijednošću iznad oznake, a oznaka je bila
+ * jedinica (`km/h`). Tri takve kutije stale su u jedan red, ali nijedna nije
+ * kazivala ŠTA se mjeri, i nije bilo mjesta za „osjećaj" ni „danas min/max"
+ * koji su traženi. Red se čita kao tabela i prima koliko god mjerenja treba.
+ */
+function WeatherMetricRow({
   label,
   value,
-  bg,
   textColor,
   mutedColor,
 }: {
   label: string;
   value: string;
-  bg: string;
   textColor: string;
   mutedColor: string;
 }) {
   return (
-    <Box flex={1} bg={bg} rounded="md" p={2} alignItems="center">
-      <Text fontSize="sm" fontWeight="700" color={textColor}>
-        {value}
-      </Text>
-      <Text fontSize="xs" color={mutedColor} textAlign="center">
+    <HStack justifyContent="space-between" alignItems="baseline" space={3}>
+      <Text fontSize="sm" color={mutedColor}>
         {label}
       </Text>
-    </Box>
+      <Text fontSize="sm" fontWeight="600" color={textColor} textAlign="right" flexShrink={1}>
+        {value}
+      </Text>
+    </HStack>
   );
 }

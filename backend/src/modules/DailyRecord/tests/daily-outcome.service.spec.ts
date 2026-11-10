@@ -2,7 +2,11 @@ jest.mock('../../../prisma/prisma.service', () => ({
   PrismaService: class {},
 }));
 
-import { DailyOutcomeService, OUTCOME_VERSION } from '../daily-outcome.service';
+import {
+  DailyOutcomeService,
+  OUTCOME_VERSION,
+  OUTCOME_VERSION_EVENTS,
+} from '../daily-outcome.service';
 
 /**
  * Servis je jedini I/O sloj mjernog zapisa. Testovi ovdje čuvaju tri stvari
@@ -57,6 +61,7 @@ function setup(options: {
   pending?: Array<{ localDate: string }>;
   observations?: ObservationRow[];
   evidence?: Array<Record<string, unknown>>;
+  heatingEvents?: Array<{ timestampStart: Date; timestampEnd: Date | null }>;
 }) {
   const prisma = {
     homeProfile: {
@@ -80,6 +85,9 @@ function setup(options: {
     },
     thermostatObservation: {
       findMany: jest.fn().mockResolvedValue(options.observations ?? []),
+    },
+    heatingEvent: {
+      findMany: jest.fn().mockResolvedValue(options.heatingEvents ?? []),
     },
   };
 
@@ -227,5 +235,90 @@ describe('DailyOutcomeService.nightFloorFor', () => {
 
     expect(result.floorC).toBeNull();
     expect(result.basis).toBe('NO_EVIDENCE');
+  });
+});
+
+/**
+ * F13 (`a` iz korisnikovog izvještaja): „jučer 4 ciklusa, danas 3, a u tabeli
+ * stoje crtice". Uzrok nije prikaz nego obračun: `cycles` se računao samo iz
+ * serije uzoraka, pa je dan bez potpune serije ostajao `outcomeAt = null` —
+ * iako su ciklusi postojali kao `HeatingEvent`, koje upisuje isti polling.
+ */
+describe('DailyOutcomeService.fillHome — ciklusi iz HeatingEvent', () => {
+  const event = (startHour: number, endHour: number | null, date = DAY) => ({
+    timestampStart: localInstant(date, startHour),
+    timestampEnd: endHour == null ? null : localInstant(date, endHour),
+  });
+
+  it('dan bez potpune serije dobija cikluse iz događaja, ostala polja ostaju neizmjerenja', async () => {
+    const { service, prisma } = setup({
+      pending: [{ localDate: DAY }],
+      // 30 uzoraka — ispod praga pokrivenosti, pa `computeDayOutcome` odbija dan.
+      observations: dayObservations(DAY, 30),
+      heatingEvents: [event(6, 7), event(10, 11), event(15, 16), event(20, 22)],
+    });
+
+    const result = await service.fillHome(10, NOW);
+
+    expect(result).toMatchObject({ filled: 1, skipped: 0 });
+    const data = prisma.dailyRecord.updateMany.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      cycles: 4,
+      medianCycleMin: 60,
+      outcomeAt: NOW,
+      outcomeVersion: OUTCOME_VERSION_EVENTS,
+    });
+    // Ništa što nije izmjereno ne smije se upisati kao nula ili izmišljena
+    // vrijednost — podbačaj, histereza i brzina dogrijavanja ostaju izostali.
+    expect(data).not.toHaveProperty('undershootC');
+    expect(data).not.toHaveProperty('hysteresisK');
+    expect(data).not.toHaveProperty('heatRateCPerHour');
+    expect(data).not.toHaveProperty('proposedFlowTemp');
+  });
+
+  it('ciklus koji još traje se broji, ali ne ulazi u medijanu trajanja', async () => {
+    const { service, prisma } = setup({
+      pending: [{ localDate: DAY }],
+      observations: dayObservations(DAY, 30),
+      heatingEvents: [event(6, 7), event(18, null)],
+    });
+
+    await service.fillHome(10, NOW);
+
+    const data = prisma.dailyRecord.updateMany.mock.calls[0][0].data;
+    expect(data.cycles).toBe(2);
+    expect(data.medianCycleMin).toBe(60);
+  });
+
+  it('bez serije i bez događaja dan ostaje neobračunat (crtice su istina)', async () => {
+    const { service, prisma } = setup({
+      pending: [{ localDate: DAY }],
+      observations: dayObservations(DAY, 30),
+      heatingEvents: [],
+    });
+
+    const result = await service.fillHome(10, NOW);
+
+    expect(result).toMatchObject({ filled: 0, skipped: 1 });
+    expect(result.reasons).toEqual([`${DAY}:INCOMPLETE`]);
+    expect(prisma.dailyRecord.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('potpuna serija ima prednost pred događajima', async () => {
+    const { service, prisma } = setup({
+      pending: [{ localDate: DAY }],
+      observations: [
+        ...dayObservations(PREVIOUS, 288),
+        ...dayObservations(DAY, 288),
+      ],
+      // Događaji tvrde nešto drugo; serija je mjerodavna.
+      heatingEvents: [event(1, 2), event(3, 4), event(5, 6)],
+    });
+
+    await service.fillHome(10, NOW);
+
+    const data = prisma.dailyRecord.updateMany.mock.calls[0][0].data;
+    expect(data.outcomeVersion).toBe(OUTCOME_VERSION);
+    expect(data.cycles).toBe(0);
   });
 });

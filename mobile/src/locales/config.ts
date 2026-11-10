@@ -345,6 +345,12 @@ const enUS = {
     conditionFog: 'Fog',
     conditionHaze: 'Haze',
     conditionWindy: 'Windy',
+    /** Naziv mjerenja — prije je kao „label" stajala oznaka jedinice (`km/h`, `hPa`). */
+    windSpeed: 'Wind speed',
+    pressure: 'Pressure',
+    feelsLikeLabel: 'Feels like',
+    conditionLabel: 'Condition',
+    todayMinMax: 'Today min/max',
 
     current: 'Current Weather',
     feelsLike: 'Feels like {{value}}°C',
@@ -393,9 +399,9 @@ const enUS = {
       heavy_rain: 'Heavy rain',
       light_freezing_rain: 'Light freezing rain',
       heavy_freezing_rain: 'Heavy freezing rain',
-      slight_snow: 'Slight snow',
-      moderate_snow: 'Moderate snow',
-      heavy_snow: 'Heavy snow',
+      slight_snowfall: 'Slight snow',
+      moderate_snowfall: 'Moderate snow',
+      heavy_snowfall: 'Heavy snow',
       snow_grains: 'Snow grains',
       slight_rain_showers: 'Slight rain showers',
       moderate_rain_showers: 'Moderate rain showers',
@@ -403,8 +409,8 @@ const enUS = {
       slight_snow_showers: 'Slight snow showers',
       heavy_snow_showers: 'Heavy snow showers',
       thunderstorm: 'Thunderstorm',
-      thunderstorm_slight_hail: 'Thunderstorm with slight hail',
-      thunderstorm_heavy_hail: 'Thunderstorm with heavy hail',
+      thunderstorm_with_slight_hail: 'Thunderstorm with slight hail',
+      thunderstorm_with_heavy_hail: 'Thunderstorm with heavy hail',
       unknown: 'Unknown conditions',
     },
   },
@@ -469,6 +475,12 @@ const enUS = {
      * Kratko, uz samu traku — objašnjenje u chatu korisnik ne vidi na uređaju.
      */
     gaugeHint: 'Bar: where the flow temperature sits within {{min}}–{{max}} °C. It is not heating progress.',
+    /**
+     * F13: boje trake ciklusa. Vlasnikov tekst — ista rečenica u oba jezika
+     * opisuje pragove iz `heatingProgress()` (do predviđenog / do 120 min /
+     * prekoračenje), pa se broj 120 ne prepisuje ručno u UI.
+     */
+    cycleColorsHint: 'Green up to the predicted time, yellow up to 120 min, red if the cycle overruns.',
     heatingInProgress: 'Heating in progress',
     elapsedMin: '{{value}} min elapsed',
     predicted: 'predicted',
@@ -1323,6 +1335,17 @@ const bsBS = {
     conditionFog: 'Magla',
     conditionHaze: 'Izmaglica',
     conditionWindy: 'Vjetrovito',
+    /**
+     * F13: „Brzina vetra" je bila ijekavizovana pogrešno („vetra" = ekavica) i
+     * mjerila je brzinu, ne smjer. Sada „Brzina vjetra". „Osjećaj" zamjenjuje
+     * „osećaj" iz istog razloga.
+     */
+    windSpeed: 'Brzina vjetra',
+    pressure: 'Pritisak',
+    /** Osjetna temperatura — ime mjerenja, ne cijela rečenica. */
+    feelsLikeLabel: 'Osjećaj',
+    conditionLabel: 'Stanje',
+    todayMinMax: 'Danas min/max',
 
     current: 'Trenutna prognoza vremena',
     feelsLike: 'Osjećaj {{value}}°C',
@@ -1371,9 +1394,9 @@ const bsBS = {
       heavy_rain: 'Jaka kiša',
       light_freezing_rain: 'Slaba ledena kiša',
       heavy_freezing_rain: 'Jaka ledena kiša',
-      slight_snow: 'Slab snijeg',
-      moderate_snow: 'Umjeren snijeg',
-      heavy_snow: 'Jak snijeg',
+      slight_snowfall: 'Slab snijeg',
+      moderate_snowfall: 'Umjeren snijeg',
+      heavy_snowfall: 'Jak snijeg',
       snow_grains: 'Snježna zrna',
       slight_rain_showers: 'Slabi pljuskovi',
       moderate_rain_showers: 'Umjerni pljuskovi',
@@ -1381,8 +1404,8 @@ const bsBS = {
       slight_snow_showers: 'Slabi snježni pljuskovi',
       heavy_snow_showers: 'Jaki snježni pljuskovi',
       thunderstorm: 'Grmljavina',
-      thunderstorm_slight_hail: 'Grmljavina sa sitnim gradom',
-      thunderstorm_heavy_hail: 'Grmljavina sa jakim gradom',
+      thunderstorm_with_slight_hail: 'Grmljavina sa sitnim gradom',
+      thunderstorm_with_heavy_hail: 'Grmljavina sa jakim gradom',
       unknown: 'Nepoznati uslovi',
     },
   },
@@ -1443,6 +1466,9 @@ const bsBS = {
     flowScale: '{{min}} — {{max}}',
     gaugeHint:
       'Traka: gdje je polazna voda unutar {{min}}–{{max}} °C. Nije napredak grijanja.',
+    /** F13: vlasnikov tekst za boje trake ciklusa (pragovi iz `heatingProgress()`). */
+    cycleColorsHint:
+      'Zeleno do predviđenog vremena, žuto do 120 min, crveno ako ciklus probije.',
     heatingInProgress: 'Grijanje u toku',
     elapsedMin: '{{value}} min proteklo',
     predicted: 'predviđeno',

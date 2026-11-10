@@ -285,6 +285,13 @@ export const AppReleasesPage = (): JSX.Element => {
           </CardContent>
         </Card>
       </QueryState>
+
+      {/*
+        `F15`: „Povuci" nije brisanje i nije skrivanje iz historije — povlači
+        ponudu korisnicima. Bez ovog teksta admin ne može znati da li je
+        povlačenje trajno, pa se pravilo piše uz tabelu, a ne u dokumentaciji.
+      */}
+      <p className="text-xs text-ink-dim">{t("appReleases.hideHint")}</p>
     </div>
   );
 };

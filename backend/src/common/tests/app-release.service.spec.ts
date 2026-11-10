@@ -136,16 +136,38 @@ describe('buildNumberFromVersion', () => {
 });
 
 describe('AppReleaseService.upload', () => {
-  function setup(existing: Array<{ version: string }> = []) {
+  function setup(
+    existing: Array<{ version: string; isPublished?: boolean }> = [],
+  ) {
+    // `latestPublished` i `highestEver` oba čitaju `findMany`; razlika je u
+    // `where` filteru, pa se ovdje poštuje — inače test ne bi razlikovao
+    // „najnovija vidljiva" od „najviša ikad".
+    const rows = existing.map((row, index) => ({
+      id: index + 1,
+      buildNumber: 1,
+      sizeBytes: 1,
+      notes: null,
+      isPublished: row.isPublished ?? true,
+      publishedAt: new Date(2026, 10, 1 + index),
+      ...row,
+    }));
+
     const prisma = {
       appRelease: {
-        findFirst: jest.fn().mockResolvedValue(existing[0] ?? null),
-        findMany: jest.fn().mockResolvedValue(existing),
-        create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => ({
-          id: 7,
-          publishedAt: new Date('2026-11-20T09:00:00Z'),
-          ...data,
-        })),
+        findMany: jest.fn((args?: { where?: { isPublished?: boolean } }) =>
+          Promise.resolve(
+            args?.where?.isPublished === true
+              ? rows.filter((row) => row.isPublished)
+              : rows,
+          ),
+        ),
+        create: jest.fn(
+          async ({ data }: { data: Record<string, unknown> }) => ({
+            id: 7,
+            publishedAt: new Date('2026-11-20T09:00:00Z'),
+            ...data,
+          }),
+        ),
         findUnique: jest.fn(),
         update: jest.fn(),
       },
@@ -226,5 +248,113 @@ describe('AppReleaseService.upload', () => {
     expect(storage.deleteFile).toHaveBeenCalledWith(
       'app-releases/boiler-control-1.4.0-14.apk',
     );
+  });
+});
+
+/**
+ * `F15` — pravilo vidljivosti i pravilo istorije su **namjerno različita**.
+ *
+ * Ovo je jedina odluka u `AppRelease` sistemu koja se lako pobrka, pa je
+ * zapisana testom, a ne samo komentarom.
+ */
+describe('AppReleaseService — skrivena verzija', () => {
+  const releaseRow = (overrides: Record<string, unknown>) => ({
+    id: 1,
+    buildNumber: 1,
+    sizeBytes: 1,
+    notes: null,
+    isPublished: true,
+    publishedAt: new Date('2026-11-01T09:00:00Z'),
+    ...overrides,
+  });
+
+  function serviceWith(rows: Array<Record<string, unknown>>) {
+    const prisma = {
+      appRelease: {
+        findMany: jest.fn((args?: { where?: { isPublished?: boolean } }) =>
+          Promise.resolve(
+            args?.where?.isPublished === true
+              ? rows.filter((row) => row.isPublished === true)
+              : rows,
+          ),
+        ),
+        create: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
+    };
+    const storage = {
+      storeAppRelease: jest.fn().mockResolvedValue({
+        relativePath: 'app-releases/boiler-control-1.5.0-15.apk',
+        mimeType: 'application/vnd.android.package-archive',
+        originalName: 'app.apk',
+      }),
+      deleteFile: jest.fn(),
+    };
+    return {
+      service: new AppReleaseService(prisma as never, storage as never),
+      prisma,
+      storage,
+    };
+  }
+
+  it('skrivena verzija se NE nudi korisnicima, ali ostaje u historiji', async () => {
+    const { service } = serviceWith([
+      releaseRow({ id: 2, version: '1.6.0', isPublished: false }),
+      releaseRow({ id: 1, version: '1.5.0', isPublished: true }),
+    ]);
+
+    // Ono što klijent dobija:
+    expect((await service.latestPublished())?.version).toBe('1.5.0');
+    // Ono što admin vidi:
+    expect(await service.list()).toHaveLength(2);
+  });
+
+  it('najnovija je najviša vidljiva verzija, ne najskorije objavljena', async () => {
+    const { service } = serviceWith([
+      // Starija verzija ponovo prikazana poslije novije — bez ovog pravila
+      // korisnici bi dobili 1.4.0 kao „novu".
+      releaseRow({
+        id: 3,
+        version: '1.4.0',
+        publishedAt: new Date('2026-11-20T09:00:00Z'),
+      }),
+      releaseRow({ id: 2, version: '1.6.0' }),
+    ]);
+
+    expect((await service.latestPublished())?.version).toBe('1.6.0');
+  });
+
+  it('ako su sve verzije skrivene, nema ponude', async () => {
+    const { service } = serviceWith([
+      releaseRow({ id: 1, version: '1.6.0', isPublished: false }),
+    ]);
+
+    expect(await service.latestPublished()).toBeNull();
+  });
+
+  it('upload se poredi sa najvišom ikad, uključujući skrivene', async () => {
+    const { service, prisma, storage } = serviceWith([
+      releaseRow({ id: 2, version: '1.6.0', isPublished: false }),
+      releaseRow({ id: 1, version: '1.5.0', isPublished: true }),
+    ]);
+
+    const file = {
+      buffer: Buffer.concat([
+        Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+        Buffer.from('x'),
+      ]),
+      mimetype: 'application/vnd.android.package-archive',
+      size: 8,
+      originalname: 'app.apk',
+    };
+
+    // 1.5.0 je veća od vidljive 1.5.0? Nije — jednaka je. Ali 1.6.0 je
+    // skrivena i dalje postoji, pa 1.5.0 ne smije proći kao „nova".
+    await expect(service.upload({ file, version: '1.5.0' })).rejects.toThrow(
+      /nije veća od posljednje objavljene \(1\.6\.0\)/,
+    );
+    expect(storage.storeAppRelease).not.toHaveBeenCalled();
+    expect(prisma.appRelease.create).not.toHaveBeenCalled();
   });
 });

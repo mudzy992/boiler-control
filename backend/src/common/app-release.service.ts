@@ -174,9 +174,23 @@ export class AppReleaseService {
     private readonly storage: FileStorageService,
   ) {}
 
-  /** Najnovija **objavljena** verzija. `null` = nijedan release nije objavljen. */
+  /**
+   * Najnovija **objavljena** verzija — ona koja se nudi korisnicima.
+   *
+   * Dvije stvari koje ova metoda mora da poštuje, a nijedna nije očigledna:
+   *
+   * 1. **Skrivena verzija se ne nudi.** „Sakrij" postoji upravo zato da se
+   *    loš build povuče — bio bi besmislen kad bi se sakriveni build i dalje
+   *    nudio. Zato `isPublished: true` stoji u upitu, a ne u filteru poslije.
+   * 2. **Najnovija je najviša verzija, ne najskorije objavljena.** Ove dvije
+   *    se razilaze čim se neka starija verzija ponovo prikaže: da se gleda
+   *    samo `publishedAt`, ponovno prikazivanje 1.4.0 poslije 1.6.0 vratilo bi
+   *    korisnicima 1.4.0 kao „novu". Skup objavljenih je mali (jedan po
+   *    izdanju), pa se najviša verzija traži u kodu istim poređenjem koje
+   *    koristi i klijent.
+   */
   async latestPublished(): Promise<AppReleaseRow | null> {
-    const row = await this.prisma.appRelease.findFirst({
+    const rows = await this.prisma.appRelease.findMany({
       where: { isPublished: true },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       select: {
@@ -189,7 +203,47 @@ export class AppReleaseService {
         publishedAt: true,
       },
     });
-    return row ?? null;
+
+    let latest: AppReleaseRow | null = null;
+    for (const row of rows) {
+      if (!latest || compareVersions(row.version, latest.version) > 0) {
+        latest = row;
+      }
+    }
+    return latest;
+  }
+
+  /**
+   * Najviša verzija ikad objavljena, uključujući skrivene.
+   *
+   * Koristi je **samo** provjera pri uploadu. Razlika prema `latestPublished`
+   * je namjerna i rješava tihu zamku: ako je 1.6.0 sakrivena, a provjera gleda
+   * samo vidljive, admin bi mogao objaviti 1.5.0 kao „novu" — korisnici koji
+   * su već dobili 1.6.0 (dok je bila vidljiva) nikad više ne bi dobili
+   * obavijest, jer je njihova verzija novija od svega što se nudi.
+   *
+   * Zabrana je zato vezana za **istoriju**, a nudenje za **vidljivost**.
+   */
+  private async highestEver(): Promise<AppReleaseRow | null> {
+    const rows = await this.prisma.appRelease.findMany({
+      select: {
+        id: true,
+        version: true,
+        buildNumber: true,
+        sizeBytes: true,
+        notes: true,
+        isPublished: true,
+        publishedAt: true,
+      },
+    });
+
+    let highest: AppReleaseRow | null = null;
+    for (const row of rows) {
+      if (!highest || compareVersions(row.version, highest.version) > 0) {
+        highest = row;
+      }
+    }
+    return highest;
   }
 
   async list(): Promise<AppReleaseRow[]> {
@@ -231,7 +285,7 @@ export class AppReleaseService {
       );
     }
 
-    const previous = await this.latestPublished();
+    const previous = await this.highestEver();
     if (previous && compareVersions(version, previous.version) <= 0) {
       throw new ConflictException(
         `Verzija ${version} nije veća od posljednje objavljene (${previous.version})`,

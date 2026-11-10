@@ -881,6 +881,14 @@ Play Store. Sada:
 - web: `/app-releases` ekran (vidljiv samo `ADMIN` u meniju; server provjerava
   `RolesGuard`).
 
+**Odluka o skrivenoj verziji (vlasnik, 2026-11-20):** „Sakrij" **povlači**
+verziju — skriveni build se ne nudi korisnicima, ali ostaje u historiji. To je
+jedini smisao te kontrole: sakriti loš build znači prestati ga dijeliti.
+Zabrana pri uploadu zato gleda **najvišu ikad** objavljenu verziju (i skrivene):
+da gleda samo vidljive, admin bi nakon povlačenja 1.6.0 mogao objaviti 1.5.0, a
+korisnici koji su 1.6.0 već dobili nikad više ne bi dobili obavijest. Pravilo
+„nudenje gleda vidljivost, istorija gleda sve" zaključano je sa 4 testa.
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

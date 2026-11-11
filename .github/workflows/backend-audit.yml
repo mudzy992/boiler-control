@@ -208,10 +208,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
-        # `--ignore-scripts` kao u `frontend-ci.yml` (i kao mobile job iznad).
-        # Ista verzija koda ovdje je padala na `playwright install`, a tamo
-        # prolazila — razlika je bila samo u postinstall skriptama.
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       # FE2-8: generisani tipovi moraju odgovarati ugovoru. Backend korak
       # "OpenAPI contract in sync" čuva `contracts/openapi.json` u skladu s
       # kontrolerima; ovaj korak čuva `src/types/api.d.ts` u skladu s tim
@@ -310,13 +307,7 @@ jobs:
           cache: npm
           cache-dependency-path: mobile/package-lock.json
       - name: Install dependencies
-        # `--ignore-scripts` kao u `mobile-ci.yml`: postinstall skripte
-        # (expo-modules) traže mrežu ka Expo CDN-u i ne utiču na type-check,
-        # lint ni jest. Bez ove zastavice instalacija se ponaša drugačije nego
-        # u mobilnom workflowu — a razlika se vidjela kao test koji padne ovdje
-        # a prođe tamo (`gasOpenSheets`), što se onda pogrešno pripisuje
-        # flaky testu.
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Type-check
         run: npm run type-check
       # MO2-8: baseline od 91 pre-postojećeg warninga je dokumentovan u

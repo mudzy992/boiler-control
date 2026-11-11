@@ -7,7 +7,12 @@ backfill (`backfill-events-1`, 301) ili `daily-1` (3). Bez `daily-2` nema
 `nightMinC`, pa se F2 ne pušta. `backfill_apply` je izvršen (§10.2: 0 redova,
 historija je već popunjena), a **uzrok je redoslijed upisa** (§10.3): pisac
 preskače dan koji već ima red, pa `daily-2` može nastati tek za prvi dan bez
-reda — **11-12**. Čekanje ide od tog datuma, ne od backfill-a. Odluka vlasnika
+reda — **11-12**. Čekanje ide od tog datuma, ne od backfill-a.
+
+Gejt je **zelen u cijelosti** (§10.6, `d04dfab`): Audit, Frontend CI, Mobile CI,
+Secret scan, Backend build. Usput su popravljena dva stvarna kvara koja su se
+krila iza crvenog CI-ja: mobilni `testTimeout` (§10.4) i `/api/dashboard` koji je
+vraćao 500 kad Open-Meteo ne odgovori (§10.5). Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.

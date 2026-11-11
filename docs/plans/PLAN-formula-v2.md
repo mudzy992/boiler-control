@@ -1,8 +1,9 @@
 # PLAN — formula v2: penzionisanje stare krive i puštanje toplotnog bilansa
 
-Status: **F1 implementiran (2026-11-07); F2 implementiran (2026-11-07),
-nije pušten u produkciju**; F3–F5 nijesu. F2 čeka zelen CI i provjeru na stvarnoj
-bazi (§10 — upit je vratio `0`, uzrok još nije dijagnostikovan). Odluka vlasnika
+Status: **F1 implementiran (2026-11-07); F2 implementiran i CI zelen
+(2026-11-07), nije pušten u produkciju**; F3–F5 nijesu. F2 čeka **samo**
+provjeru na stvarnoj bazi (§10 — upit je vratio `0`, uzrok još nije
+dijagnostikovan). Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.
@@ -280,8 +281,41 @@ da tih podataka za sada nema (`daily-2` upit vratio `0`).
 
 **Definicija gotovog (ispunjeno osim produkcijske provjere):** manje ili isto
 ciklusa i nijedan dodatni dan podbačaja na istoj istoriji ✓; izraz nosi sve
-članove i verzije ✓; testovi 21 (modul) + 35 (servis) ✓; CI gate ✓; **stvarni
-podaci ✗** (nema `daily-2` redova — v. §10).
+članove i verzije ✓; testovi 21 (modul) + 35 (servis) ✓; **CI zelen** ✓
+(`dfc4ad5`: lint 0, `tsc` 0, jest 1574, F2 zlatni brojevi, build, frontend,
+mobile) ; **stvarni podaci ✗** (nema `daily-2` redova — v. §10).
+
+**Zaključak:** F2 je spreman za shadow produkciju po svim svojim kriterijumima
+osim jednog — nema dokaza da `nightMinC` stvarno postoji u bazi. To je §10, i
+to je sljedeći korak, ne F3.
+
+#### Stanje CI gejta (2026-11-07)
+
+Ovaj plan traži zelen CI prije produkcije, pa je gejt morao prvo **postojati**.
+Do 2026-11-07 `backend-audit.yml` se nije pokretao na ovoj grani (trigger je
+nabrajao dvije starije), pa je „CI zelen" značilo samo *build* + *frontend* +
+*secret scan* — bez lint-a, `tsc`-a, jest-a sa Postgresom, OpenAPI provjere i
+integracijskih testova. Prvi prolaz je zato našao 303 lint greške, 14 `tsc`
+grešaka i zastario ugovor.
+
+Sada, na `dfc4ad5`:
+
+| provjera | rezultat |
+|---|---|
+| `Audit checks` — lint / `tsc` | **0 grešaka** (2 upozorenja `no-floating-promises`) |
+| `Audit checks` — jest | **127 suiteova / 1574 testa** prolaze |
+| `Audit checks` — integracijski | prolaze (uz Postgres) |
+| `Audit checks` — **Equilibrium controller golden (F2)** | prolazi |
+| `Audit checks` — OpenAPI ugovor | prolazi (ugovor regenerisan; falilo je sve iz F13/F15) |
+| `Audit checks` — SEC-1/REL-4/PERF-1/redis repro | prolaze (prije su bili `exit 2` — skripte su nabrajale samo starije grane) |
+| `Backend build` / `Frontend CI` / `Mobile CI` (418 testova) | prolaze |
+
+`mobile-ci.yml` je dobio `arena/**` u trigger, jer je jedini koji vrti mobilne
+**testove**; `backend-audit.yml` ima samo mobile `tsc`.
+
+**Naučeno, da se ne ponovi:** artefakt `contracts/openapi.json` se kvario tiho
+jer nijedan workflow koji ga provjerava nije pokrivat grane na kojima se radilo.
+Gate bez pokrivene grane nije gate.
 
 ---
 

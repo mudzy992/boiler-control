@@ -128,16 +128,25 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
         { timeout: SHEET_TIMEOUT_MS },
       );
     } catch (error) {
-      const handles = result.UNSAFE_root.findAll(
-        (node) => typeof node.type === 'string',
+      // `toJSON()` daje cijelo stablo (host elementi + testID-ovi), pa poruka
+      // pokaže je li sheet uopšte montiran i šta je u njemu.
+      const tree = JSON.stringify(result.toJSON());
+      const testIds = [
+        ...new Set(
+          (tree.match(/"testID":"([^"]+)"/g) ?? []).map((hit) =>
+            hit.slice(10, -1),
+          ),
+        ),
+      ];
+      const placeholder = (tree.match(/"placeholder":"([^"]*)"/g) ?? []).map(
+        (hit) => hit.slice(15, -1),
       );
-      const modalPresent = result.queryAllByTestId(/^gas-add-/).length;
       throw new Error(
         [
-          String((error as Error)?.message ?? error).slice(0, 400),
-          `Modal prisutan: ${modalPresent > 0 ? 'da' : 'ne'}`,
-          `Vidljivi host elementi: ${handles.length}`,
-          `Sheet modal u stablu: ${result.queryAllByTestId(/modal$/).length}`,
+          String((error as Error)?.message ?? error).slice(0, 300),
+          `testID: ${testIds.slice(0, 12).join(',') || '(nijedan)'}`,
+          `placeholder: ${placeholder.slice(0, 6).join(',') || '(nijedan)'}`,
+          `stablo: ${tree.length} B`,
         ].join(' | '),
       );
     }

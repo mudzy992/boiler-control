@@ -1,6 +1,6 @@
 # PLAN — formula v2: penzionisanje stare krive i puštanje toplotnog bilansa
 
-Status: **plan, ništa od ovoga nije implementirano.** Odluka vlasnika
+Status: **F1 implementiran (2026-11-07)**; F2–F5 nijesu. Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.
@@ -129,7 +129,7 @@ iz prognoze koja je bila osnov predloga.
 | F1.3 | `persistSkipped` upisuje bar `nightMinC` ako prognoza postoji | `daily-record.writer.ts:436` | isto |
 | F1.4 | Fallback za `WeatherCache` (bez v2): `nightMinC = temp_min` uz eksplicitno `nightMinSource: 'DAILY_MIN'` | `writer.ts:loadWeather` | test: bez v2 polje nije `null`, ali je označeno kao gruba procjena |
 | F1.5 | Kad prognoze nema, polje ostaje `null` — **ne nula** | svuda | test: `NO_WEATHER` red ima `nightMinC: null` |
-| F1.6 | Backfill istorijskih `nightMinC` iz `ThermostatObservation.outdoorTempC` (mjereno, ne prognoza) u **odvojeno** polje `nightMinMeasuredC` | nova migracija + `backfill-reconstruction.ts` | skripta ispiše koliko % dana ima mjereno |
+| F1.6 | **nije urađeno** — Backfill istorijskih `nightMinC` iz `ThermostatObservation.outdoorTempC` (mjereno, ne prognoza) u **odvojeno** polje `nightMinMeasuredC` | nova migracija + `backfill-reconstruction.ts` | skripta ispiše koliko % dana ima mjereno |
 
 **Zašto odvojeno polje za mjereno:** `nightMinC` je *prognoza koja je bila osnov
 predloga*, `nightMinOutdoorMeasuredC` je *šta se dogodilo*. Miješanje bi
@@ -143,6 +143,38 @@ dana; bez toga `nightMin` može biti min *pola* noći i izgledati ispravno.
 **Definicija gotovog:** u produkcijskoj bazi, za 7 uzastopnih dana,
 `COUNT(nightMinC IS NOT NULL) = COUNT(*)` za sve kuće koje imaju prognozu; a
 `shadowReasons` prestaje da sadrži `NO_MODEL` zbog nedostatka noći.
+
+#### Stanje F1 (implementirano 2026-11-07)
+
+| # | Stanje | Gdje je sada |
+|---|---|---|
+| F1.1 | **urađeno** | `DailyRecord/night-forecast.ts` (novo): `nightMinimumFrom`, `daySummaryFrom`, `isNightHourOf`, `previousLocalDate`; `Weather/daily-weather-input.ts` računa `nightMinC` iz `response.hourly` u zoni kuće |
+| F1.2 | **urađeno** | `daily-record.writer.ts` `persistProposal` upisuje `nightMinC`, `dayMeanC`, `dayMaxC`, `degreeHours` |
+| F1.3 | **urađeno i prošireno** | `persistSkipped` prima prognozu; noć se upisuje i za `MISSED_WINDOW`, `OUT_OF_SEASON` (i `SUMMER`, i `AUTO`) |
+| F1.4 | **urađeno** | fallback na `WeatherCache` daje `nightMinC = temp_min` uz `nightMinSource: 'DAILY_MIN'`; `dayMeanC`/`dayMaxC`/`degreeHours` ostaju `null` |
+| F1.5 | **urađeno** | `null` kad prognoze nema; test tvrdi da nije nula |
+| F1.6 | **nije urađeno** | backfill traži migraciju `nightMinMeasuredC` + odluku vlasnika (§7) |
+
+**Odluke donesene tokom F1 (nisu u prvobitnom planu):**
+
+1. **Verzija zapisa je podignuta na `daily-2`.** Polja su nova, pa `daily-1` i
+   `daily-2` redovi ne smiju u istu analizu: noć u `daily-1` redu nije „nula",
+   nego nije ni postojala.
+2. **`nightMinSource` je dio zapisa** (`HOURLY` / `DAILY_MIN`), a ne samo
+   interni detalj. Bez toga bi gruba procjena iz dnevnog minimuma izgledala
+   isto kao mjerenje iz sata — a analiza greške prognoze (F3.4) bi mjerila
+   sopstvenu zamjenu.
+3. **`params` razdvaja ulaz motora od podataka zapisa.** Motor i dalje dobija
+   `weather: { tempMin, tempMax }`, a noć/dan idu u `params.input.forecast`.
+   Razlog: zapis mora ostati preračunljiv — ako se u `params.input.weather`
+   podmetne prošireni objekat, stari motor ga ne bi mogao reproducirati.
+4. **`daySummaryFrom` poštuje `degreeHours` kao `Σ max(0, 15 − T_sat)`**, a ne
+   prosjek: stepen-sati su zbir, i sabiranje po satima je jedino što se može
+   provjeriti. (U backfill-u se `degreeDays` računa iz mjerenog prosjeka —
+   dvije veličine, dva izvora; ne miješati ih.)
+5. **Pad prognoze ne oduzima red.** `tryLoadWeather` hvata grešku i vraća
+   `null`; bez toga bi `MISSED_WINDOW` red prestao da nastaje zbog Open-Meteo
+   greške — regresija uvedena samim F1.
 
 ---
 
@@ -343,8 +375,22 @@ tabele postanu CI test.
 
 ## 10. Prvi korak
 
-**F1.1 + F1.2 + F1.3** — prognoza noći i upis polja. To je jedina faza koja
-otključava sve ostalo, a sama po sebi ništa ne mijenja u onome što korisnik
-vidi (polja su nova, kontroler ih još ne koristi za predlog). Poslije nje
-kontroler prestaje vraćati `NO_MODEL` — i **to** je prvi broj koji se može
-izmjeriti na stvarnoj bazi.
+**F1.1–F1.5 su urađene** (v. „Stanje F1" gore). Sljedeće je **provjera na
+stvarnoj bazi**, a ne novi kod:
+
+```sql
+SELECT COUNT(*) FILTER (WHERE "nightMinC" IS NOT NULL) AS ima_noc,
+       COUNT(*) AS ukupno
+FROM "DailyRecord"
+WHERE "modelVersion" = 'daily-2'
+  AND "localDate" >= (CURRENT_DATE - 7)::text;
+```
+
+Ako je `ima_noc = ukupno`, noć postoji i F2 može početi. Ako nije, uzrok je
+jedan od tri: kuća nema prognozu, `nightMinSource = 'DAILY_MIN'` (nema satne),
+ili je `sub` sat pokrio samo dio noći — treće se vidi po `nightHoursUsed < 8`.
+
+Zatim **F3.4** (greška prognoze: `nightMinC` vs `nightMinOutdoorMeasuredC`) —
+jedina analiza koja se može uraditi odmah, jer mjereno polje već postoji iz
+`day-outcome.ts`. Bez nje se ne zna da li `− c` u F2 treba ići sa dnevnom
+referencom ili ostati na noći.

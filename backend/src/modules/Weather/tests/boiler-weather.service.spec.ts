@@ -69,9 +69,18 @@ describe('BoilerWeatherService', () => {
       ],
     });
 
+    // F1: ugovor je proširen noćnim minimumom i izvorom. Bez satne prognoze
+    // noć je dnevni minimum — i to piše u `nightMinSource`, da se gruba
+    // procjena ne čita kao mjerenje iz sata.
     await expect(service.getV2WeatherInput(1, 10)).resolves.toEqual({
       tempMin: -4,
       tempMax: 0,
+      nightMinC: -4,
+      nightMinSource: 'DAILY_MIN',
+      nightHoursUsed: 0,
+      dayMeanC: null,
+      dayMaxC: null,
+      degreeHours: null,
     });
     expect(weatherV2.getCachedWeather).toHaveBeenCalledWith(1, 10);
   });

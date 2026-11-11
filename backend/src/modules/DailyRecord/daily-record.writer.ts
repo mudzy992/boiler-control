@@ -4,6 +4,7 @@ import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine
 import type { FlowTempInput } from '../Heating/engine/types';
 import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
+import type { DailyWeatherInput } from '../Weather/daily-weather-input';
 import {
   intervalKeyForLocalDate,
   isAutoOutOfSeason,
@@ -15,13 +16,17 @@ import {
 } from './proposal-schedule';
 import { jsonSnapshot } from '../../common/json-snapshot';
 
-
 /**
  * Verzija zapisa i proračuna koji ga je proizveo (`17` §11: svaki
  * `DailyRecord` mora biti preračunljiv). Mijenja se kad se promijeni bilo koje
  * polje zapisa ili formula koja ga puni — nikad tiho.
+ *
+ * `daily-2` (F1): zapis nosi `nightMinC`, `dayMeanC`, `dayMaxC`, `degreeHours`
+ * i izvor noćnog minimuma (`HOURLY` / `DAILY_MIN`). Stariji redovi nemaju ta
+ * polja, pa se `daily-1` i `daily-2` ne smiju miješati u analizi: noć u
+ * `daily-1` redu nije „nula", nego nije ni postojala.
  */
-export const DAILY_RECORD_MODEL_VERSION = 'daily-1';
+export const DAILY_RECORD_MODEL_VERSION = 'daily-2';
 
 /**
  * Granice predloga. Iste su kao granice unosa (`18` §1, `16` §4.5) i ovdje
@@ -214,26 +219,51 @@ export class DailyRecordWriter {
     }
 
     if (home.seasonMode === 'SUMMER') {
+      const forecast = await this.tryLoadWeather(
+        user.id,
+        home.id,
+        user.homeLocation,
+      );
       return this.persistSkipped(
         context,
         home.seasonMode,
         'OUT_OF_SEASON',
         flowSet,
+        forecast,
       );
     }
 
     if (!isWithinProposalWindow(now, zone.zone)) {
+      // Noć se čita i za promašen prozor: red tada nema predlog, ali ima ono
+      // što je predlog trebao da pokrije. Čitanje je u `try` grani jer do sada
+      // ovaj put nije dirao ni bazu ni keš — pad prognoze ne smije pretvoriti
+      // „promašen prozor" u „red nije nastao".
+      const forecast = await this.tryLoadWeather(
+        user.id,
+        home.id,
+        user.homeLocation,
+      );
       return this.persistSkipped(
         context,
         home.seasonMode,
         'MISSED_WINDOW',
         flowSet,
+        forecast,
       );
     }
 
-    const weather = await this.loadWeather(user.id, home.id, user.homeLocation);
+    const weather = await this.tryLoadWeather(
+      user.id,
+      home.id,
+      user.homeLocation,
+    );
     if (!weather) {
-      return this.persistSkipped(context, home.seasonMode, 'NO_WEATHER', flowSet);
+      return this.persistSkipped(
+        context,
+        home.seasonMode,
+        'NO_WEATHER',
+        flowSet,
+      );
     }
 
     if (home.seasonMode === 'AUTO' && isAutoOutOfSeason(weather)) {
@@ -242,6 +272,7 @@ export class DailyRecordWriter {
         home.seasonMode,
         'OUT_OF_SEASON',
         flowSet,
+        weather,
       );
     }
 
@@ -258,13 +289,14 @@ export class DailyRecordWriter {
     userId: number,
     homeProfileId: number,
     city: string | null,
-  ): Promise<{ tempMin: number; tempMax: number } | null> {
+  ): Promise<DailyWeatherInput | null> {
     const v2 = await this.recommendationWeather.getV2WeatherInput(
       userId,
       homeProfileId,
     );
+    // v2 nosi i satnu prognozu, pa se vraća cijeli unos — ne samo min/max.
     if (v2 && Number.isFinite(v2.tempMin) && Number.isFinite(v2.tempMax)) {
-      return { tempMin: v2.tempMin, tempMax: v2.tempMax };
+      return v2;
     }
 
     if (!city) return null;
@@ -283,30 +315,64 @@ export class DailyRecordWriter {
       Number.isFinite(cachedMin) &&
       Number.isFinite(cachedMax)
     ) {
-      return { tempMin: cachedMin, tempMax: cachedMax };
+      // Nema satne prognoze: noćni minimum je dnevni, i to je označeno. Polja
+      // koja traže sate (`dayMeanC`, `dayMaxC`, `degreeHours`) ostaju `null`,
+      // jer se iz dnevnog min/max ne mogu izvesti — a izmišljati ih bi značilo
+      // da kontroler računa na broj koji niko nije izmjerio.
+      return {
+        tempMin: cachedMin,
+        tempMax: cachedMax,
+        nightMinC: cachedMin,
+        nightMinSource: 'DAILY_MIN',
+        nightHoursUsed: 0,
+        dayMeanC: null,
+        dayMaxC: null,
+        degreeHours: null,
+      };
     }
 
     return null;
   }
 
+  /**
+   * Prognoza za red koji nema predlog. Greška se ne diže dalje: takav red
+   * nastaje i bez prognoze, pa bi pad keša oduzeo zapis koji je do sada
+   * nastajao. Vraća `null` i to se u zapisu vidi kao „nema noći", ne kao nula.
+   */
+  private async tryLoadWeather(
+    userId: number,
+    homeProfileId: number,
+    city: string | null,
+  ): Promise<DailyWeatherInput | null> {
+    try {
+      return await this.loadWeather(userId, homeProfileId, city);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `Prognoza nije pročitana za kuću ${homeProfileId} (${message}); ` +
+          `red nastaje bez noćnog minimuma.`,
+      );
+      return null;
+    }
+  }
+
   private async persistProposal(
     context: RecordContext,
     home: LoadedHome,
-    weather: { tempMin: number; tempMax: number },
+    weather: DailyWeatherInput,
     now: Date,
     flowSet: FlowSetSnapshot,
   ): Promise<DailyRecordWriteResult> {
     const intervalKey = intervalKeyForLocalDate(context.localDate);
-    const intervalLearning = await this.prisma.heatingIntervalLearning.findUnique(
-      {
+    const intervalLearning =
+      await this.prisma.heatingIntervalLearning.findUnique({
         where: {
           homeProfileId_intervalKey: {
             homeProfileId: home.id,
             intervalKey,
           },
         },
-      },
-    );
+      });
 
     const input: FlowTempInput = {
       mode: intervalLearning ? 'FULL' : 'PROFILE_ONLY',
@@ -325,7 +391,10 @@ export class DailyRecordWriter {
         : undefined,
       // Za jutarnji predlog nema "recent events": dan još nije počeo.
       recentEvents: [],
-      weather,
+      // Motor i dalje traži samo min/max; noćni minimum i dnevni prosjek idu
+      // u zapis, a formula ih (za sada) ne čita. To je namjerno: F1 uvodi
+      // podatak, a ne mijenja predlog.
+      weather: { tempMin: weather.tempMin, tempMax: weather.tempMax },
     };
 
     const result = FlowTemperatureEngine.calculate(input);
@@ -346,7 +415,17 @@ export class DailyRecordWriter {
       input: {
         mode: input.mode,
         intervalKey,
-        weather,
+        // Motor je dobio samo min/max; ostalo su podaci zapisa, ne ulaz
+        // formule — pa se ovdje razdvajaju da bi zapis bio preračunljiv.
+        weather: { tempMin: weather.tempMin, tempMax: weather.tempMax },
+        forecast: {
+          nightMinC: weather.nightMinC ?? null,
+          nightMinSource: weather.nightMinSource ?? null,
+          nightHoursUsed: weather.nightHoursUsed ?? null,
+          dayMeanC: weather.dayMeanC ?? null,
+          dayMaxC: weather.dayMaxC ?? null,
+          degreeHours: weather.degreeHours ?? null,
+        },
         homeProfile: input.homeProfile,
         intervalLearning: input.intervalLearning ?? null,
       },
@@ -383,6 +462,13 @@ export class DailyRecordWriter {
             flowSetSince: flowSet.since,
             flowSetSource: flowSet.source,
             modelVersion: DAILY_RECORD_MODEL_VERSION,
+            // F1: ono što je predlog trebao da pokrije. Bez `nightMinC`
+            // kontroler nikad nije imao ravnotežnu polaznu, pa noćni pod nije
+            // postojao. `null` (ne nula) kad prognoza ne postoji.
+            nightMinC: weather.nightMinC ?? null,
+            dayMeanC: weather.dayMeanC ?? null,
+            dayMaxC: weather.dayMaxC ?? null,
+            degreeHours: weather.degreeHours ?? null,
             params,
           },
         });
@@ -420,6 +506,14 @@ export class DailyRecordWriter {
     seasonMode: SeasonMode,
     skipReason: DailyRecordSkipReason,
     flowSet: FlowSetSnapshot,
+    /**
+     * Prognoza, kad je već pročitana. Red nastaje i bez nje (`MISSED_WINDOW`,
+     * `NO_WEATHER`), pa je `null` normalno stanje — ali kad postoji, noć u
+     * zapis ide i za preskočen dan: kontroler sutra pita „je li noć bila
+     * pokrivena", a odgovor ne smije zavisiti od toga je li predlog teoretski
+     * mogao nastati.
+     */
+    weather?: DailyWeatherInput | null,
   ): Promise<DailyRecordWriteResult> {
     const base = {
       localDate: context.localDate,
@@ -448,11 +542,25 @@ export class DailyRecordWriter {
             flowSetSince: flowSet.since,
             flowSetSource: flowSet.source,
             modelVersion: DAILY_RECORD_MODEL_VERSION,
+            nightMinC: weather?.nightMinC ?? null,
+            dayMeanC: weather?.dayMeanC ?? null,
+            dayMaxC: weather?.dayMaxC ?? null,
+            degreeHours: weather?.degreeHours ?? null,
             params: {
               version: 1,
               timeZone: context.timeZone,
               timeZoneSource: context.timeZoneSource,
               skipReason,
+              forecast: weather
+                ? {
+                    nightMinC: weather.nightMinC ?? null,
+                    nightMinSource: weather.nightMinSource ?? null,
+                    nightHoursUsed: weather.nightHoursUsed ?? null,
+                    dayMeanC: weather.dayMeanC ?? null,
+                    dayMaxC: weather.dayMaxC ?? null,
+                    degreeHours: weather.degreeHours ?? null,
+                  }
+                : null,
             },
           },
         });

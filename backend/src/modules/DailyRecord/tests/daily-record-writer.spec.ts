@@ -82,9 +82,11 @@ function setup(options: {
 
   const prisma = {
     homeProfile: {
-      findUnique: jest.fn().mockResolvedValue(
-        options.home === undefined ? baseHome() : options.home,
-      ),
+      findUnique: jest
+        .fn()
+        .mockResolvedValue(
+          options.home === undefined ? baseHome() : options.home,
+        ),
     },
     weatherCache: {
       findFirst: jest
@@ -264,6 +266,47 @@ describe('kada predloga nema', () => {
     expect(dailyRecords[0].proposedFlowTemp).toBeNull();
   });
 
+  it('noć se upisuje i kad je prozor promašen', async () => {
+    // F1: red bez predloga i dalje nosi ono što je predlog trebao pokriti.
+    const { writer, dailyRecords } = setup({
+      v2Weather: {
+        tempMin: -9,
+        tempMax: -1,
+        nightMinC: -7,
+        nightMinSource: 'HOURLY',
+        nightHoursUsed: 8,
+        dayMeanC: -5,
+        dayMaxC: -1,
+        degreeHours: 160,
+      },
+    });
+    await writer.writeForHome(10, NOW_AFTER_WINDOW);
+
+    expect(dailyRecords[0].proposedFlowTemp).toBeNull();
+    expect(dailyRecords[0].nightMinC).toBe(-7);
+    expect(dailyRecords[0].dayMeanC).toBe(-5);
+    expect(dailyRecords[0].dayMaxC).toBe(-1);
+    expect(dailyRecords[0].degreeHours).toBe(160);
+    expect(dailyRecords[0].params.forecast.nightMinSource).toBe('HOURLY');
+  });
+
+  it('bez prognoze preskočen red ima null noć, a ne nulu', async () => {
+    const home = baseHome();
+    home.user.homeLocation = null;
+    const { writer, dailyRecords } = setup({
+      home,
+      v2Weather: null,
+      cachedWeather: null,
+    });
+
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(dailyRecords[0].skipReason).toBe('NO_WEATHER');
+    expect(dailyRecords[0].nightMinC).toBeNull();
+    expect(dailyRecords[0].dayMeanC).toBeNull();
+    expect(dailyRecords[0].params.forecast).toBeNull();
+  });
+
   it('neaktivna kuća: ne piše se ništa', async () => {
     const home = baseHome();
     home.user.activeHomeProfileId = 99;
@@ -339,6 +382,104 @@ describe('prognoza: v2 prvo, pa gradski keš', () => {
       tempMin: 8,
       tempMax: 12,
     });
+  });
+});
+
+describe('F1 — noć i dnevni prosjek u zapisu', () => {
+  const forecast = {
+    tempMin: -9,
+    tempMax: -1,
+    nightMinC: -7.5,
+    nightMinSource: 'HOURLY',
+    nightHoursUsed: 8,
+    dayMeanC: -5.25,
+    dayMaxC: -1,
+    degreeHours: 162,
+  };
+
+  it('zapis nosi noćni minimum i dnevni prosjek iz prognoze', async () => {
+    const { writer, dailyRecords } = setup({ v2Weather: forecast });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(dailyRecords[0].nightMinC).toBe(-7.5);
+    expect(dailyRecords[0].dayMeanC).toBe(-5.25);
+    expect(dailyRecords[0].dayMaxC).toBe(-1);
+    expect(dailyRecords[0].degreeHours).toBe(162);
+  });
+
+  it('motor i dalje dobija samo min/max — F1 ne mijenja predlog', async () => {
+    const { writer } = setup({ v2Weather: forecast });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(engineCalculate.mock.calls[0][0].weather).toEqual({
+      tempMin: -9,
+      tempMax: -1,
+    });
+  });
+
+  it('params razdvaja ulaz motora od podataka zapisa', async () => {
+    const { writer, dailyRecords } = setup({ v2Weather: forecast });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    const params = dailyRecords[0].params;
+    // Motor je dobio samo ovo dvoje — i to mora ostati preračunljivo.
+    expect(params.input.weather).toEqual({ tempMin: -9, tempMax: -1 });
+    expect(params.input.forecast.nightMinC).toBe(-7.5);
+    expect(params.input.forecast.nightMinSource).toBe('HOURLY');
+    expect(params.input.forecast.nightHoursUsed).toBe(8);
+    expect(params.input.forecast.dayMeanC).toBe(-5.25);
+    expect(params.input.forecast.dayMaxC).toBe(-1);
+    expect(params.input.forecast.degreeHours).toBe(162);
+  });
+
+  it('verzija zapisa je podignuta — stari i novi redovi se ne miješaju', async () => {
+    const { writer, dailyRecords } = setup({ v2Weather: forecast });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(DAILY_RECORD_MODEL_VERSION).toBe('daily-2');
+    expect(dailyRecords[0].modelVersion).toBe('daily-2');
+  });
+
+  it('stariji izvor bez satne prognoze: noć = dnevni minimum, označeno', async () => {
+    const { writer, dailyRecords } = setup({
+      v2Weather: null,
+      cachedWeather: { temp_min: 8, temp_max: 12 },
+    });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(dailyRecords[0].nightMinC).toBe(8);
+    expect(dailyRecords[0].params.input.forecast.nightMinSource).toBe(
+      'DAILY_MIN',
+    );
+    // Iz dnevnog min/max se prosjek ne može izvesti — ostaje null.
+    expect(dailyRecords[0].dayMeanC).toBeNull();
+    expect(dailyRecords[0].degreeHours).toBeNull();
+  });
+
+  it('nula iz prognoze ostaje nula, ne pretvara se u „nema podatka"', async () => {
+    const { writer, dailyRecords } = setup({
+      v2Weather: {
+        tempMin: 0,
+        tempMax: 0,
+        nightMinC: 0,
+        nightMinSource: 'HOURLY',
+      },
+    });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(dailyRecords[0].nightMinC).toBe(0);
+  });
+
+  it('pad prognoze pri promašenom prozoru ne oduzima red', async () => {
+    const { writer, dailyRecords, weather } = setup({});
+    weather.getV2WeatherInput.mockRejectedValue(new Error('Open-Meteo 503'));
+
+    const result = await writer.writeForHome(10, NOW_AFTER_WINDOW);
+
+    expect(result.status).toBe('skipped');
+    expect(result.skipReason).toBe('MISSED_WINDOW');
+    expect(dailyRecords).toHaveLength(1);
+    expect(dailyRecords[0].nightMinC).toBeNull();
   });
 });
 

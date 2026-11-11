@@ -639,6 +639,40 @@ na tom commitu i daje isto kao u §10.3 — `304` dana, `daily-2` **0**,
 zadnji `daily-1` upisan `11-11 05:00`. Gejt je zelen i mjeri tačno ono što
 treba; nema više dijagnostike koja visi.
 
+### 10.5 `/api/dashboard` je padao kad Open-Meteo ne odgovori (2026-11-07)
+
+Gejt je na commit `f414109`, koji mijenja **samo dokumentaciju**, pao u backend
+`test` jobu: `GET /api/dashboard` je vraćao **500**. Pošto taj commit ne dira kod,
+pad je morao biti u kodu koji je već stajao — i bio je:
+
+```
+getDashboard → homeDailyFlow → boilerService.calculateFlowTemp
+             → weatherService.getTodayWeather → throw
+```
+
+`getTodayWeather` baca grešku kad nema svježeg keša a Open-Meteo ne odgovori
+(2 × 10 s timeout). Posljedica: dashboard padne **ulogovanom korisniku** kad god
+je spoljni servis nedostupan — iako jutarnji predlog za dan već postoji u
+`DailyRecord`-u i **ne zavisi od mreže**.
+
+Popravka je degradacija, ne gašenje greške:
+
+| putanja | prije | poslije |
+|---|---|---|
+| `homeDailyFlow`, predlog postoji | 500 | `basis: 'MORNING'`, `currentFlowC: null` |
+| `homeDailyFlow`, bez predloga | 500 | `basis: 'NONE'` |
+| anonimni dashboard | 500 | `recommendedFlowTemp: 0` |
+
+`anchorDailyFlow` je sve tri situacije **već** podržavao — servis je bio taj koji
+ih nije koristio. Test `dashboard-weather-failure.spec.ts` padao bi prije ove
+izmjene.
+
+Uz to `backend/jest.config.js` dobija `testTimeout: 30_000`, isto kao
+`jest-integration.config.js`. Ugovorni test je pao kao „Exceeded timeout", ne
+kao tvrdnja — dižu cijeli `AppModule`, pa im je zadanih 5 s tijesno. To je isti
+uzrok kao kod mobilnog `gasOpenSheets` (§10.4): **granica u testu iznad zadanog
+Jest limita nikad ne stupi na snagu.**
+
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
 **drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je

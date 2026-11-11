@@ -673,6 +673,28 @@ kao tvrdnja — dižu cijeli `AppModule`, pa im je zadanih 5 s tijesno. To je is
 uzrok kao kod mobilnog `gasOpenSheets` (§10.4): **granica u testu iznad zadanog
 Jest limita nikad ne stupi na snagu.**
 
+### 10.6 Završno stanje gejta (2026-11-07, `d04dfab`)
+
+| provjera | stanje |
+|---|---|
+| Audit checks | ✓ (`test`, `frontend`, `mobile` svi zeleni) |
+| Frontend CI | ✓ |
+| Mobile CI | ✓ |
+| Secret scan | ✓ |
+| Backend build (baseline) | ✓ |
+
+Baseline `43115294390`: `304` dana, `daily-2` **0**, zadnji `daily-1` upisan
+`11-11 05:00 UTC` — dakle stanje je isto kao u §10.3, kako i treba: **prvi
+`daily-2` dan je 11-12.**
+
+**Zapažanje o flaky testovima.** `gasOpenSheets` je padao u četiri navrata i
+svaki put sa porukom koja nije razlikovala uzroke. Pravi uzrok je bio
+`testTimeout` (§10.4), ali je put do njega bio predug zato što **logovi joba
+nijesu bili preuzimljivi** (`gh run view --log` vraća praznu arhivu), a
+anotacije nose samo ime testa. Zato sada oba mobilna workflowa dodaju Jest JSON
+kao artefakt pri padu (`b33f033`, `d04dfab`) — dijagnostika prestaje da bude
+nagađanje.
+
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
 **drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je

@@ -69,9 +69,22 @@ jobs:
       # `auth.spec.ts` traži živ backend; bez `E2E_LIVE=1` se preskače sa
       # razlogom u izvještaju. Time e2e job nikad ne pada zato što tuđi server
       # ne odgovara.
+      # Isti keš kao u `backend-audit.yml`: gejt ne smije zavisiti od toga je
+      # li Playwright CDN dostupan u ovom trenutku.
+      - name: Cache Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
       - name: Install Playwright browser
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "Keš pogodio — browser je već tu."
+          else
+            npx playwright install --with-deps chromium
+          fi
 
       - name: E2E (built bundle)
         working-directory: frontend

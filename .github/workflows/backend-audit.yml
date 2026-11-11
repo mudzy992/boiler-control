@@ -271,8 +271,25 @@ jobs:
       - name: Bundle evaluates and renders (FE2-7)
         working-directory: .
         run: node scripts/audit/frontend_chunk_graph.cjs
+      # Browser se kešira po verziji Playwright-a iz lock fajla: kad keš
+      # pogodi, ovaj korak ne dira mrežu. Bez toga je jedan spoljni CDN
+      # (playwright.azureedge.net) mogao oboriti cijeli gejt — 2026-11-07 je
+      # padao i ovdje i u `frontend-ci.yml`, na kodu koji je sat prije prolazio.
+      - name: Cache Playwright browser (FE2-7)
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
       - name: Install Playwright browsers (FE2-7)
-        run: npx playwright install --with-deps chromium
+        # `--with-deps` ide u apt i traži root; preskače se kad je keš pogodio,
+        # jer su sistemske zavisnosti tada već prisutne na runneru.
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "Keš pogodio — browser je već tu."
+          else
+            npx playwright install --with-deps chromium
+          fi
       # Smoke nad SAGRADJENIM dist/: SPA se pokrene, API poziv ide na ugradjeni
       # base, nijedan zahtjev ne ide na uklonjeni dev fallback.
       - name: E2E smoke (FE2-7)

@@ -612,6 +612,32 @@ Zato:
 Ovo je i dobar ishod: backfill je ostavio historiju, a pisac preuzima od prvog
 dana bez reda. Nema miješanja dvije verzije u istom danu.
 
+### 10.4 Gejt: dva kvara koja su izgledala kao kod (2026-11-07)
+
+Dok se čekao prvi `daily-2` dan (§10.3), CI je tri puta pao na stvarima koje
+nijesu bile u kodu. Vrijedi zapisati, jer oba obrasca se ponavljaju:
+
+**1. `gasOpenSheets` — tri pada, tri pogrešne dijagnoze.** Test je padao sa
+porukom koja izgleda kao da se sheet nije montirao. Redom je probano: veći
+timeout u testu (15 s, commit `9060b19`), pa `--ignore-scripts` u instalaciji
+(`fdcbb31`). Ni jedno nije pomoglo, jer pravi uzrok nije bio u testu nego u
+**konfiguraciji runnera**: `jest.config.js` nije postavljao `testTimeout`, pa je
+važilo zadanih **5000 ms po testu**. Test lokalno traje ~3,8 s; na opterećenom
+runneru pređe 5 s i Jest ga ubije **prije** nego `findBy*` dođe do svoje granice
+od 15 s. Granica u testu je bila nedostižna. Rješenje: `testTimeout: 20_000`
+(`9509685`).
+
+**2. Playwright CDN.** `npx playwright install` padao je u **oba** workflowa
+(`frontend-ci.yml` i `backend-audit.yml`) na kodu koji je sat prije prolazio.
+Dokaz da nije kod: `frontend-ci.yml` nije bio mijenjan, a pao je u 13:51 poslije
+uspjeha u 13:48. Rješenje: keš browsera po `hashFiles('frontend/package-lock.json')`
+(`69738dc`) + tri pokušaja sa 20 s pauze (`f3b269a`).
+
+**Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
+`tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
+**drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je
+konfiguracija ili okruženje, ne kod.
+
 **Automatizovano (2026-11-07):** isti razlikovni upit je sada dio
 `backend/scripts/backfill-coverage.cjs` (`baseline` job, read-only, sekcija
 „F2: noć u dnevnom zapisu"). Skripta ne samo broji, nego i **presuđuje**:

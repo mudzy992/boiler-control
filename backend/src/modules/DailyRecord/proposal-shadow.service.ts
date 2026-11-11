@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
-import { applyDayGain } from '../HomeModel/day-gain';
+import { equilibriumFlow } from './equilibrium-flow';
 import { effectiveShortCycleFloor } from './short-cycle-floor';
 import { explorationFor } from './exploration';
 import { flowForHeatTime } from './heat-time';
@@ -30,7 +30,12 @@ import {
  * uslovljen sa `shadowAt IS NULL`, isto kao mjerni upis u `DailyOutcomeService`.
  */
 
-export const SHADOW_VERSION = 'shadow-1';
+/**
+ * `shadow-2` (F2): odluka se računa iz `equilibrium-flow.ts` — sa `c`,
+ * dnevnom referencom i nagibom koji ima starost. `shadow-1` redovi nijesu
+ * uporedivi sa `shadow-2`: isti ulaz daje drugi broj, i to namjerno.
+ */
+export const SHADOW_VERSION = 'shadow-2';
 
 /**
  * Cilj sobne temperature kad profil ne kaže ništa. Nije preporuka nego
@@ -70,6 +75,8 @@ export class ProposalShadowService {
         id: true,
         proposedFlowTemp: true,
         nightMinC: true,
+        // F2: dnevni maksimum ulazi u referentnu vanjsku temperaturu.
+        dayMaxC: true,
         shadowAt: true,
       },
     });
@@ -88,81 +95,91 @@ export class ProposalShadowService {
 
     const [home, model, previous, recentOutcomes, lastOutcome, latestRoom] =
       await Promise.all([
-      this.prisma.homeProfile.findUnique({
-        where: { id: homeProfileId },
-        select: {
-          targetMorningTemp: true,
-          targetDayTemp: true,
-          // Najviša polazna koju sistem dozvoljava (`19` §2). Bez nje ostaje
-          // granica kotla — nikad viša od 55.
-          maxHeatingFlowC: true,
-          // Iz kataloga se zna smije li se polazna uopšte snižavati.
-          boilerCatalogId: true,
-        },
-      }),
-      this.prisma.homeModel.findUnique({
-        where: { homeProfileId },
-        select: {
-          state: true,
-          slopeCiHigh: true,
-          shortCycleFloorC: true,
-          // Dokaz o granici ističe (`24` §7); bez datuma se starost ne zna.
-          shortCycleFloorAt: true,
-          // Dnevni dobitak (`17` §13 korak 7): dan sa suncem/gostima traži nižu
-          // polaznu. `null` = nema procjene, pa se ne oduzima ništa.
-          uDayC: true,
-        },
-      }),
-      this.prisma.dailyRecord.findFirst({
-        where: {
-          homeProfileId,
-          localDate: { lt: localDate },
-          proposedFlowTemp: { not: null },
-        },
-        orderBy: { localDate: 'desc' },
-        select: {
-          localDate: true,
-          proposedFlowTemp: true,
-          // Jučerašnje istraživanje blokira novo (`17` §8.5).
-          shadowExplorationDirection: true,
-        },
-      }),
+        this.prisma.homeProfile.findUnique({
+          where: { id: homeProfileId },
+          select: {
+            targetMorningTemp: true,
+            targetDayTemp: true,
+            // Najviša polazna koju sistem dozvoljava (`19` §2). Bez nje ostaje
+            // granica kotla — nikad viša od 55.
+            maxHeatingFlowC: true,
+            // Iz kataloga se zna smije li se polazna uopšte snižavati.
+            boilerCatalogId: true,
+          },
+        }),
+        this.prisma.homeModel.findUnique({
+          where: { homeProfileId },
+          select: {
+            state: true,
+            // F2: izraz ravnotežne polazne traži tačku-procjenu, granicu CI-ja,
+            // broj dana u fitu i `c` — dosad se od ovoga čitala samo granica,
+            // pa `c` nikad nije ušao u odluku iako je bio izmjeren.
+            slopeS: true,
+            slopeCiHigh: true,
+            days: true,
+            internalGainC: true,
+            shortCycleFloorC: true,
+            // Dokaz o granici ističe (`24` §7); bez datuma se starost ne zna.
+            shortCycleFloorAt: true,
+            // Dnevni dobitak (`17` §13 korak 7): dan sa suncem/gostima traži nižu
+            // polaznu. `null` = nema procjene, pa se ne oduzima ništa.
+            uDayC: true,
+          },
+        }),
+        this.prisma.dailyRecord.findFirst({
+          where: {
+            homeProfileId,
+            localDate: { lt: localDate },
+            proposedFlowTemp: { not: null },
+          },
+          orderBy: { localDate: 'desc' },
+          select: {
+            localDate: true,
+            proposedFlowTemp: true,
+            // Jučerašnje istraživanje blokira novo (`17` §8.5).
+            shadowExplorationDirection: true,
+          },
+        }),
 
-      // Rezerva za istraživanje: prebačaji zadnjih 5 obračunatih dana.
-      this.prisma.dailyRecord.findMany({
-        where: {
-          homeProfileId,
-          localDate: { lt: localDate },
-          outcomeAt: { not: null },
-        },
-        orderBy: { localDate: 'desc' },
-        take: 5,
-        select: { localDate: true, overshootC: true },
-      }),
-      this.prisma.dailyRecord.findFirst({
-        where: { homeProfileId, localDate: { lt: localDate }, outcomeAt: { not: null } },
-        orderBy: { localDate: 'desc' },
-        select: {
-          localDate: true,
-          undershootC: true,
-          overshootC: true,
-          nightUndershootC: true,
-          medianCycleMin: true,
-          // Brzina dogrijavanja za `T_max` (`29`).
-          heatRateCPerHour: true,
-          heatRateFlowC: true,
-          heatRateRoomC: true,
-        },
-      }),
+        // Rezerva za istraživanje: prebačaji zadnjih 5 obračunatih dana.
+        this.prisma.dailyRecord.findMany({
+          where: {
+            homeProfileId,
+            localDate: { lt: localDate },
+            outcomeAt: { not: null },
+          },
+          orderBy: { localDate: 'desc' },
+          take: 5,
+          select: { localDate: true, overshootC: true },
+        }),
+        this.prisma.dailyRecord.findFirst({
+          where: {
+            homeProfileId,
+            localDate: { lt: localDate },
+            outcomeAt: { not: null },
+          },
+          orderBy: { localDate: 'desc' },
+          select: {
+            localDate: true,
+            undershootC: true,
+            overshootC: true,
+            nightUndershootC: true,
+            medianCycleMin: true,
+            // Brzina dogrijavanja za `T_max` (`29`).
+            heatRateCPerHour: true,
+            heatRateFlowC: true,
+            heatRateRoomC: true,
+          },
+        }),
 
-      // Sobna temperatura sada: bez nje se ne zna koliko stepeni fali do cilja,
-      // pa `T_max` nema šta da računa. Uzorak stariji od ovog dana ne vrijedi.
-      this.prisma.thermostatObservation.findFirst({
-        where: { homeProfileId, at: { lte: now } },
-        orderBy: { at: 'desc' },
-        select: { at: true, roomTempC: true },
-      }),
-    ]);
+        // Sobna temperatura sada: bez nje se ne zna koliko stepeni fali do cilja,
+        // pa `T_max` nema šta da računa. Uzorak stariji od ovog dana ne vrijedi.
+        this.prisma.thermostatObservation.findFirst({
+          where: { homeProfileId, at: { lte: now } },
+          orderBy: { at: 'desc' },
+          select: { at: true, roomTempC: true },
+        }),
+      ]);
 
     const target =
       home?.targetMorningTemp ?? home?.targetDayTemp ?? DEFAULT_TARGET_ROOM_C;
@@ -176,17 +193,21 @@ export class ProposalShadowService {
         ? { floorC: null, basis: 'NO_FORECAST' as const }
         : await this.outcomes.nightFloorFor(homeProfileId, nightMinC, now);
 
-    // Ravnotežna polazna za **prosječan** dan, umanjena za današnji dobitak.
-    // `slopeCiHigh` je gornja granica intervala — namjerno konzervativno: bolje
-    // malo viša polazna nego kuća koja ne stigne da se ugrije.
-    const equilibriumFlowC =
-      nightMinC != null && model?.slopeCiHigh != null
-        ? target + model.slopeCiHigh * (target - nightMinC)
-        : null;
-    const modelFlowC =
-      equilibriumFlowC == null
-        ? null
-        : applyDayGain(equilibriumFlowC, model?.uDayC);
+    // Ravnotežna polazna za **prosječan** dan (`F2`). Izraz je u
+    // `equilibrium-flow.ts` — čist, sa verzijom koja ide u `params`, jer se
+    // ovdje nekad nalazio nepotpun: `c` nije oduziman, a referenca je bila
+    // samo najhladniji sat noći iako polazna pokriva cijeli dan.
+    const equilibrium = equilibriumFlow({
+      targetRoomC: target,
+      nightMinC,
+      dayMaxC: record.dayMaxC ?? null,
+      slopeS: model?.slopeS ?? null,
+      slopeCiHigh: model?.slopeCiHigh ?? null,
+      modelDays: model?.days ?? null,
+      internalGainC: model?.internalGainC ?? null,
+      uDayC: model?.uDayC ?? null,
+    });
+    const modelFlowC = equilibrium.flowC;
 
     const outcome = this.outcomeSignals(lastOutcome);
     const previousFlowC =
@@ -223,7 +244,10 @@ export class ProposalShadowService {
           ? learnedFloor
           : Math.max(storedFloor, learnedFloor);
 
-    if (learnedFloor != null && (storedFloor == null || learnedFloor > storedFloor)) {
+    if (
+      learnedFloor != null &&
+      (storedFloor == null || learnedFloor > storedFloor)
+    ) {
       await this.prisma.homeModel.update({
         where: { homeProfileId },
         data: { shortCycleFloorC: learnedFloor, shortCycleFloorAt: now },
@@ -304,10 +328,21 @@ export class ProposalShadowService {
       },
     });
 
+    // Log nosi članove izraza, ne samo rezultat: bez toga se „kontroler je
+    // tražio 42,3" ne može ni potvrditi ni osporiti — a `c` i `u_day` su dva
+    // broja koja se lako zamijene ili oduzmu dvaput.
+    const eq = equilibrium.terms;
     this.logger.log(
-      `Shadow kuća ${homeProfileId} ${localDate}: u_day ` +
-        `${model?.uDayC == null ? '—' : `${model.uDayC.toFixed(1)} K`}, formula ` +
-        `${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
+      `Shadow kuća ${homeProfileId} ${localDate}: ` +
+        `F_eq ${eq == null ? '—' : eq.slopeTermC.toFixed(1) + ' K + cilj'} ` +
+        `(s=${equilibrium.slopeUsed?.toFixed(3) ?? '—'}` +
+        `${equilibrium.slopeSource === 'CI_HIGH' ? ', gornja CI' : ''}), ` +
+        `ref ${equilibrium.outdoorRefC?.toFixed(1) ?? '—'} °C` +
+        `${equilibrium.outdoorRefSource === 'NIGHT_DAY_BLEND' ? ' (noć+dan)' : ''}, ` +
+        `c ${equilibrium.internalGainAppliedC.toFixed(2)} K, ` +
+        `u_day ${equilibrium.dayGainAppliedC.toFixed(1)} K` +
+        `${equilibrium.reasons.length ? ` [${equilibrium.reasons.join('+')}]` : ''}, ` +
+        `formula ${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
         `${decision.flowC ?? '—'} °C (${decision.action}` +
         `${decision.exploration ? ', istraživanje' : ''}; ` +
         `${heatTimeFloorC == null ? '' : `T_max pod ${heatTimeFloorC.toFixed(1)} °C, `}` +
@@ -346,7 +381,8 @@ export class ProposalShadowService {
     if (!changed) return null;
 
     const days =
-      (Date.parse(previousLocalDate) - Date.parse(changed.localDate)) / 86_400_000;
+      (Date.parse(previousLocalDate) - Date.parse(changed.localDate)) /
+      86_400_000;
     return Number.isFinite(days) ? days : null;
   }
 

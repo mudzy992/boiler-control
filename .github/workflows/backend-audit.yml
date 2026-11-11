@@ -158,6 +158,16 @@ jobs:
           if [ "$result" -ne 0 ]; then exit "$result"; fi
           if [ "$report_result" -ne 0 ]; then exit "$report_result"; fi
           exit "$coverage_result"
+      # F2: zlatni brojevi kontrolera toplotnog bilansa. Simulacija ne dira
+      # bazu ni mrežu (radi isključivo iz `learning_sim.cjs`), pa ne zavisi od
+      # `prepare`. Gate je namjerno ovdje, a ne u `jest`-u: pokreće istu
+      # skriptu koju čovjek koristi za istraživanje, pa nema kopije formule
+      # koja bi se mogla pokvariti zajedno s njom. Exit 1 znači da se polazna,
+      # broj ciklusa ili podbačaj promijenio — vidi
+      # `docs/plans/PLAN-formula-v2.md`, F2.
+      - name: Equilibrium controller golden (F2)
+        if: ${{ !cancelled() }}
+        run: node ../scripts/audit/formula_v2_golden.cjs
       - name: Existing integration tests
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

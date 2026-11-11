@@ -76,7 +76,16 @@ function setup(options: Setup = {}) {
     homeModel: {
       findUnique: jest.fn().mockResolvedValue(
         options.model === undefined
-          ? { state: 'TRACKING', slopeCiHigh: 0.96, shortCycleFloorC: null }
+          ? {
+              state: 'TRACKING',
+              // Stvarni model uvijek nosi oba: `slopeS` i granicu nastaju u
+              // istom fitu. F2 traži tačku-procjenu, pa je fixture mora imati.
+              slopeS: 0.96,
+              slopeCiHigh: 0.96,
+              days: 40,
+              internalGainC: null,
+              shortCycleFloorC: null,
+            }
           : options.model,
       ),
       update: jest.fn().mockResolvedValue({}),
@@ -85,7 +94,11 @@ function setup(options: Setup = {}) {
 
   const outcomes = {
     nightFloorFor: jest.fn().mockResolvedValue(
-      options.nightFloor ?? { floorC: null, basis: 'NO_FAILURE', comparableNights: 3 },
+      options.nightFloor ?? {
+        floorC: null,
+        basis: 'NO_FAILURE',
+        comparableNights: 3,
+      },
     ),
   };
 
@@ -143,6 +156,21 @@ describe('ProposalShadowService — kada se ne odlučuje', () => {
     expect(result.decision?.reasons).toEqual(['DEGRADED']);
   });
 
+  it('model bez tačke-procjene nagiba ne daje polaznu — drži prošlu', async () => {
+    // F2: `slopeCiHigh` bez `slopeS` nije model. Granica intervala je izvedena
+    // iz fita; bez fita nema iz čega da se izvede, pa se ne pogađa.
+    const { service } = setup({
+      model: { state: 'TRACKING', slopeS: null, slopeCiHigh: 0.96, days: 0 },
+      previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
+      outcome: comfortableOutcome,
+    });
+
+    const result = await service.evaluate(10, DAY, NOW);
+    expect(result.decision?.flowC).toBe(45);
+    expect(result.decision?.action).toBe('HOLD');
+    expect(result.decision?.reasons).toEqual(['NO_MODEL']);
+  });
+
   it('bez prognoze noći kontroler ne računa ravnotežnu polaznu', async () => {
     const { service, outcomes } = setup({
       record: { id: 1, proposedFlowTemp: 45, nightMinC: null, shadowAt: null },
@@ -174,7 +202,11 @@ describe('ProposalShadowService — odluka', () => {
 
     expect(prisma.dailyRecord.updateMany).toHaveBeenCalledTimes(1);
     const call = prisma.dailyRecord.updateMany.mock.calls[0][0];
-    expect(call.where).toEqual({ homeProfileId: 10, localDate: DAY, shadowAt: null });
+    expect(call.where).toEqual({
+      homeProfileId: 10,
+      localDate: DAY,
+      shadowAt: null,
+    });
     expect(call.data).toMatchObject({
       shadowFlowC: 44.04,
       shadowAction: 'LOWER',
@@ -199,7 +231,11 @@ describe('ProposalShadowService — odluka', () => {
       previous: { localDate: YESTERDAY, proposedFlowTemp: 45 },
       outcome: comfortableOutcome,
       changed: { localDate: '2026-10-30' },
-      nightFloor: { floorC: 47, basis: 'RAISED_FROM_FAILURE', comparableNights: 2 },
+      nightFloor: {
+        floorC: 47,
+        basis: 'RAISED_FROM_FAILURE',
+        comparableNights: 2,
+      },
     });
 
     const result = await service.evaluate(10, DAY, NOW);
@@ -228,7 +264,15 @@ describe('ProposalShadowService — odluka', () => {
 });
 
 describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
-  const fitted = { state: 'TRACKING', slopeCiHigh: 0.96, shortCycleFloorC: null };
+  // Stvarni model nosi oba nagiba iz istog fita (F2 traži tačku-procjenu).
+  const fitted = {
+    state: 'TRACKING',
+    slopeS: 0.96,
+    slopeCiHigh: 0.96,
+    days: 40,
+    internalGainC: null,
+    shortCycleFloorC: null,
+  };
 
   /**
    * Bez prošlog predloga odluka je **tačno** ravnotežna polazna (korak
@@ -303,6 +347,86 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
   it('bez procjene (`uDayC` nedefinisan) ponašanje je kao prije koraka 7', async () => {
     const missing = await arrange(fitted).service.evaluate(10, DAY, NOW);
     expect(missing.decision?.flowC).toBeCloseTo(44.04, 2);
+  });
+});
+
+describe('ProposalShadowService — F2: c, dnevna referenca i starost nagiba', () => {
+  const fitted = {
+    state: 'TRACKING',
+    slopeS: 0.96,
+    slopeCiHigh: 0.96,
+    days: 40,
+    internalGainC: null,
+    shortCycleFloorC: null,
+  };
+
+  /** Bez prošlog predloga odluka je tačno ravnotežna polazna. */
+  const arrange = (
+    model: Record<string, unknown>,
+    record?: Record<string, unknown>,
+  ) =>
+    setup({
+      model,
+      record: record ?? {
+        id: 1,
+        proposedFlowTemp: 45,
+        nightMinC: -3,
+        shadowAt: null,
+      },
+      home: {
+        targetMorningTemp: 21,
+        targetDayTemp: 22,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      },
+      outcome: comfortableOutcome,
+    });
+
+  it('izmjereni c snižava odluku tačno za svoj iznos', async () => {
+    // Baza: 21 + 0,96·(21 − (−3)) = 44,04; sa c = 0,95 → 43,09.
+    const without = await arrange(fitted).service.evaluate(10, DAY, NOW);
+    const withC = await arrange({
+      ...fitted,
+      internalGainC: 0.95,
+    }).service.evaluate(10, DAY, NOW);
+
+    expect(without.decision?.flowC).toBeCloseTo(44.04, 2);
+    expect(withC.decision?.flowC).toBeCloseTo(43.09, 2);
+  });
+
+  it('dnevni maksimum ulazi u referencu — sunčan dan traži nižu polaznu', async () => {
+    // 0,96 · 0,3 · (7 − (−3)) = 2,88 → 44,04 − 2,88 = 41,16.
+    const withDay = await arrange(fitted, {
+      id: 1,
+      proposedFlowTemp: 45,
+      nightMinC: -3,
+      dayMaxC: 7,
+      shadowAt: null,
+    }).service.evaluate(10, DAY, NOW);
+
+    expect(withDay.decision?.flowC).toBeCloseTo(41.16, 2);
+  });
+
+  it('mlad model koristi gornju granicu CI-ja, zreo tačku-procjenu', async () => {
+    const model = {
+      state: 'TRACKING',
+      slopeS: 0.9,
+      slopeCiHigh: 0.96,
+      shortCycleFloorC: null,
+    };
+    const young = await arrange({ ...model, days: 9 }).service.evaluate(
+      10,
+      DAY,
+      NOW,
+    );
+    const mature = await arrange({ ...model, days: 40 }).service.evaluate(
+      10,
+      DAY,
+      NOW,
+    );
+
+    // Mlad: 21 + 0,96·24 = 44,04; zreo: 21 + 0,9·24 = 42,6.
+    expect(young.decision?.flowC).toBeCloseTo(44.04, 2);
+    expect(mature.decision?.flowC).toBeCloseTo(42.6, 2);
   });
 });
 
@@ -549,7 +673,13 @@ describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
 
   it('zapamćena granica se ne obara ni kad novi dan nema kratkih ciklusa', async () => {
     const { service } = setup({
-      model: { state: 'TRACKING', slopeCiHigh: 0.96, shortCycleFloorC: 50 },
+      model: {
+        state: 'TRACKING',
+        slopeS: 0.96,
+        slopeCiHigh: 0.96,
+        days: 40,
+        shortCycleFloorC: 50,
+      },
       previous: { localDate: YESTERDAY, proposedFlowTemp: 50 },
       outcome: comfortableOutcome,
       changed: { localDate: '2026-10-30' },
@@ -565,7 +695,9 @@ describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
     const { service, prisma } = setup({
       model: {
         state: 'TRACKING',
+        slopeS: 0.96,
         slopeCiHigh: 0.96,
+        days: 40,
         shortCycleFloorC: 50,
         shortCycleFloorAt: longAgo,
       },
@@ -589,7 +721,9 @@ describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
     const { service, prisma } = setup({
       model: {
         state: 'TRACKING',
+        slopeS: 0.96,
         slopeCiHigh: 0.96,
+        days: 40,
         shortCycleFloorC: 50,
         shortCycleFloorAt: recent,
       },
@@ -609,7 +743,9 @@ describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
     const { service, prisma } = setup({
       model: {
         state: 'TRACKING',
+        slopeS: 0.96,
         slopeCiHigh: 0.96,
+        days: 40,
         shortCycleFloorC: 50,
         shortCycleFloorAt: longAgo,
       },
@@ -631,7 +767,11 @@ describe('ProposalShadowService — granica iz kratkih ciklusa', () => {
   it('ishod od drugog dana se ne pripisuje prošlom predlogu', async () => {
     const { service, prisma } = setup({
       previous: { localDate: YESTERDAY, proposedFlowTemp: 49 },
-      outcome: { ...comfortableOutcome, localDate: '2026-11-04', medianCycleMin: 3 },
+      outcome: {
+        ...comfortableOutcome,
+        localDate: '2026-11-04',
+        medianCycleMin: 3,
+      },
       changed: { localDate: '2026-10-30' },
     });
 

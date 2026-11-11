@@ -1,6 +1,8 @@
 # PLAN — formula v2: penzionisanje stare krive i puštanje toplotnog bilansa
 
-Status: **F1 implementiran (2026-11-07)**; F2–F5 nijesu. Odluka vlasnika
+Status: **F1 implementiran (2026-11-07); F2 implementiran (2026-11-07),
+nije pušten u produkciju**; F3–F5 nijesu. F2 čeka zelen CI i provjeru na stvarnoj
+bazi (§10 — upit je vratio `0`, uzrok još nije dijagnostikovan). Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.
@@ -180,32 +182,106 @@ dana; bez toga `nightMin` može biti min *pola* noći i izgledati ispravno.
 
 ### F2 — Formula: `− c` + referentna vanjska + starost modela
 
-| # | Posao | Gdje | Mjera |
+**Stanje: implementirano 2026-11-07, nije pušteno u produkciju.** Izraz živi u
+`backend/src/modules/DailyRecord/equilibrium-flow.ts` (`EQUILIBRIUM_VERSION =
+'equilibrium-1'`) i jedini ga poziva `proposal-shadow.service.ts`
+(`SHADOW_VERSION = 'shadow-2'`).
+
+#### Izraz
+
+```
+F_eq = T_cilj + s·(T_cilj − O_ref) − (c + u_day)
+
+O_ref = (1 − w)·nightMinC + w·dayMaxC      w = 0,3
+        (bez dayMaxC → O_ref = nightMinC, tj. ponašanje „noć samo")
+s     = slopeCiHigh   dok je model.days < 20   (konzervativno)
+        slopeS        inače
+        nepoznat `days` → tretira se kao mlad
+c     = internalGainC (null → 0, ne izmišlja se)
+u_day = uDayC         (null → 0)
+```
+
+Nedostatak noći (`nightMinC` nema) ili nagiba (`s` nema) ⇒ `flowC = null`, razlog
+`NO_NIGHT` / `NO_SLOPE`, kontroler drži `HOLD`. To je namjerno: bolje ne
+predložiti ništa nego predložiti broj bez osnova.
+
+`EquilibriumResult` nosi `flowC`, `slopeUsed`, `slopeSource` (`CI_HIGH`/`POINT`),
+`outdoorRefC`, `outdoorRefSource` (`NIGHT`/`NIGHT_DAY_BLEND`),
+`internalGainAppliedC`, `dayGainAppliedC`, `terms`, `reasons` — svaki predlog
+zato može da se rekonstruiše iz loga, član po član.
+
+#### Stavke
+
+| # | Posao | Stanje | Gdje |
 |---|---|---|---|
-| F2.1 | `equilibriumFlowC = target + s·(target − O_ref) − c` | `proposal-shadow.service.ts:183` | test sa `c = 0,95`, `s = 0,943`: polazna niža tačno za `c` |
-| F2.2 | `O_ref = 0,7·nightMin + 0,3·dayMax` (dnevni prosjek umjesto najhladnijeg sata) | isto + `DailyRecord.dayMaxC` iz F1 | test: sunčan dan (max ≫ min) daje nižu polaznu |
-| F2.3 | `s` se bira po starosti: `days < 20` → `slopeCiHigh`; inače `slopeS` | isto | test granice na 20. danu |
-| F2.4 | `confidence = exp(−age/45)` gdje je `age` dani od `lastFitAt`; ulazi u odluku kao **prigušivač** (offset → 0 pri niskoj) | `proposal-controller.ts` | test: model star 90 dana ne mijenja polaznu bez svježeg ishoda |
-| F2.5 | `u_day` i `− c` u isti znak — **jedan** test koji tvrdi da se ne oduzimaju dvaput | `day-gain.ts` + `proposal-shadow` | test: `u_day = 0` i `c = 0,95` ⇒ tačno `−c`; `u_day = 1` ⇒ još `−1` |
-| F2.6 | Ispraviti istu grešku u `scripts/audit/learning_sim.cjs` (mjerio je pogrešan kontroler) | `scripts/audit/learning_sim.cjs:307` | ponovljen run daje iste brojeve kao §9 |
+| F2.1 | `− c` u ravnotežnoj polaznoj | **urađeno** | `equilibrium-flow.ts` (`internalGainAppliedC`) |
+| F2.2 | `O_ref = 0,7·nightMin + 0,3·dayMax` | **urađeno** | isto (`referenceOutdoorC`, `DAY_REFERENCE_WEIGHT`) |
+| F2.3 | `s` po starosti: `days < 20` → `slopeCiHigh` | **urađeno** | isto (`chooseSlope`, `SLOPE_CONSERVATIVE_MAX_DAYS`) |
+| F2.4 | `confidence = exp(−age/45)` kao prigušivač | **nije** — v. dolje | `proposal-controller.ts` |
+| F2.5 | `u_day` i `− c` u isti znak, bez dvostrukog oduzimanja | **urađeno + test** | `equilibrium-flow.ts` + test „ne oduzima dvaput" |
+| F2.6 | Ista greška u `scripts/audit/learning_sim.cjs` | **urađeno** | `--c=`, `--dayref=`, `--conservative=` |
 
-**Mjereno prije pisanja plana** (`learning_sim`, 60 dana, sve tri kuće):
+**Zašto F2.4 nije urađeno:** mjereno u `learning_sim` — model od 10. dana ima
+`c` tačan na 0,01 K, a `s` na 0,005 (v. §9). Prigušivanje po starosti bi zato
+snižavalo polaznu **bez** ijednog dana manje greške; to je isti tip greške kao
+`slopeCiHigh` poslije 20. dana, samo obrnutog znaka. F2.4 ostaje otvoreno dok
+F3.2 (kalibracija `confidence`) ne pokaže da je starost stvarno prediktor
+greške. Do tada je starost pokrivena kroz F2.3, gdje je efekat mjerljiv.
 
-| kuća | polazna (kraj) base → `−c` → `−c` + `O_ref` | ciklusa/dan | podbačaj-dana |
+#### Mjereno (poslije implementacije, `learning_sim`, 60 dana, tri tipa kuće)
+
+Komanda (ponovljiva):
+
+```bash
+node scripts/audit/learning_sim.cjs --scenario=controller --days=60 \
+  --house=medium --json --c=<0|1> --dayref=<0|1>
+```
+
+| kuća | polazna: base → `−c` → `−c`+`O_ref` | ciklusa/dan: base → `−c` → `−c`+`O_ref` | podbačaj >1 K, dan 10+ |
 |---|---|---|---|
-| light | 39,1 → 38,1 → 37,1 | 28,1 → 23,1 → 17,2 | 0/50 u sva tri |
-| medium | 43,6 → 42,6 → 41,4 | 21,7 → 18,2 → 13,3 | 0/50 u sva tri |
-| heavy | 44,9 → 43,9 → 42,5 | 6,6 → 5,6 → 4,0 | 0/50 u sva tri |
+| light | 39,1 → 38,0 → 37,1 | 28,37 → 23,47 → 17,78 | 0/50 u sva tri |
+| medium | 43,6 → 42,6 → 41,4 | 21,80 → 18,63 → 13,52 | 0/50 u sva tri |
+| heavy | 44,9 → 43,9 → 42,6 | 6,88 → 5,90 → 4,32 | 0/50 u sva tri |
 
-**Rizik:** `− c` snižava polaznu, a jedini razlog zašto simulacija ne pada u
-podbačaj je kontroler koji podiže na svaki podbačaj. Ako je `c` precjenjen
-(cijeli `c` se pripisuje dobitku, a dio je greška fita), polazna ide prenisko.
-Zato F2.1 ide zajedno sa F3.1 (pokrivenost CI) i sa tvrdim testom da `c` nikad
-nije veći od `residualStd`-om opravdane granice.
+Najgori podbačaj: 0,80 / 0,80 / 0,76 K — nepromijenjen kroz sve tri varijante,
+tj. ni `−c` ni `O_ref` nijesu pojeli rezervu komfora.
 
-**Definicija gotovog:** na istoj istoriji, `− c` verzija ima **manje ili isto**
-ciklusa i **nijedan** dodatni dan podbačaja; `params` svakog predloga nosi
-`c`, `s`, `ciLow/High`, `modelVersion`, `constantsVersion`.
+**Efekat F2.3 (konzervativna granica prvih 20 dana) je mali i mjerljiv:** sa
+`--conservative=20` medium ima 13,52 cikl/dan, sa `--conservative=0` 13,25 —
+razlika 0,27 cikl/dan (2 %), uz istu polaznu na kraju i isti podbačaj. Dakle
+konzervativnost košta 2 % ciklusa, a štiti prvih 20 dana; omjer je prihvatljiv.
+
+**Kontradikcija iz ranijeg mjerenja je objašnjena, ne otklonjena.** Manje
+ciklusa, ali **duži** medijalni ciklus na kraju (medium 52,5 → 79 min). To nije
+greška modela nego mjerenja: `cycles.medianFirst` je prvih 10 dana, a
+`medianLast` zadnjih 10, i polazna pada tokom 60 dana, pa ciklus duže traje dok
+soba dođe do cilja. Duži ciklus **je** cilj (manje taktovanja), a broj ciklusa
+pada jer ih je manje započeto — dvije brojke se ne isključuju.
+
+#### CI zaštita (novo)
+
+`scripts/audit/formula_v2_golden.cjs` + `fixtures/formula_v2_golden.json`
+pokreću **istu** simulaciju i tvrde: polazna ±0,05 K, ciklusa/dan ±0,05,
+podbačaj-dana tačno, najgori podbačaj ±0,01 K, dana preko 2 h tačno. Korak u
+CI-ju: „Equilibrium controller golden (F2)" u `.github/workflows/backend-audit.yml`
+(ne zavisi od baze). Namjerno nije `jest` test: kopija izraza u testu bi se mogla
+pokvariti zajedno s izrazom, a ovako gate mjeri kroz istu skriptu koju čovjek
+koristi za istraživanje.
+
+**Reprodukcija:** `node scripts/audit/formula_v2_golden.cjs` (exit 1 na drift);
+`--write` samo uz svjesnu odluku i objašnjenje u commitu.
+
+**Rizik (nepromijenjen):** `− c` snižava polaznu, a jedini razlog zašto
+simulacija ne pada u podbačaj je kontroler koji podiže na svaki podbačaj. Ako je
+`c` precjenjen (cijeli `c` se pripisuje dobitku, a dio je greška fita), polazna
+ide prenisko. Zato F2 ostaje u shadow režimu dok F3.1 (pokrivenost CI) i F3.4
+(greška prognoze) ne budu imali izlaz na **stvarnim** podacima — a §10 pokazuje
+da tih podataka za sada nema (`daily-2` upit vratio `0`).
+
+**Definicija gotovog (ispunjeno osim produkcijske provjere):** manje ili isto
+ciklusa i nijedan dodatni dan podbačaja na istoj istoriji ✓; izraz nosi sve
+članove i verzije ✓; testovi 21 (modul) + 35 (servis) ✓; CI gate ✓; **stvarni
+podaci ✗** (nema `daily-2` redova — v. §10).
 
 ---
 
@@ -285,7 +361,8 @@ F1 (podaci)  ──► F3.1, F3.4 ──► F2 (formula) ──► F3.3, F3.5..F
 ```
 
 - **F2 ne može početi prije F1.2** — bez `nightMinC` nema `O_ref`, a bez
-  `dayMaxC` nema ni mješavine.
+  `dayMaxC` nema ni mješavine. *(F2 je urađen na kodu prije nego što je F1
+  potvrđen na stvarnoj bazi; zato F2 ostaje u shadow režimu — v. §10.)*
 - **F4 ne može početi prije F3.1** — puštanje modela bez izmjerene pokrivenosti
   CI je zamjena jednog neprovjerenog broja drugim.
 - **F5 ide paralelno**, osim F5.2 koja mijenja ponašanje učenja (i zato ide
@@ -298,7 +375,7 @@ Postojeća infrastruktura je dovoljna, uz tri dodatka:
 | Šta | Gdje | Zašto |
 |---|---|---|
 | `backend-build.yml` `test` job već vrti `jest --runInBand` na Postgresu 16 | `.github/workflows/backend-build.yml:145` | ništa novo ne treba za unit testove |
-| **Novi korak:** `node scripts/audit/learning_sim.cjs --json` i poređenje sa zlatnim brojevima u `scripts/audit/fixtures/formula-v2.json` | novi korak u `test` jobu | sprječava tihu regresiju formule; brojevi iz §9 postaju test |
+| **Novi korak: `Equilibrium controller golden (F2)`** — `node scripts/audit/formula_v2_golden.cjs` poredi `learning_sim` sa `scripts/audit/fixtures/formula_v2_golden.json` | `.github/workflows/backend-audit.yml`, `test` job | **urađeno 2026-11-07**; sprječava tihu regresiju formule; brojevi iz §9 su postali test. Exit 1 na drift > 0,05 K / 0,05 ciklusa / 1 dan podbačaja |
 | **Novi korak:** migracije dvaput (već postoji) + provjera da `nightMinC` nije `null` na svježem seed-u | `backend-build.yml` `build` job | F1 se ne može „zaboraviti" |
 | `frontend-ci.yml`: `openapi:check` mora proći poslije F4.3 | `frontend/package.json:17` | ugovor se mijenja svjesno |
 | `mobile-ci.yml`: `tsc` poslije F4.4 | — | `null` u `baseCurveTemp` je tip |
@@ -320,8 +397,8 @@ Postojeća infrastruktura je dovoljna, uz tri dodatka:
 1. **F1.2 `dayMaxC`:** uzimati iz prognoze ili izmjereno? Prognoza je ono što je
    bilo osnov predloga (konzistentno sa `nightMinC`), mjereno je ono što se
    dogodilo. Predlog: **prognoza** u `dayMaxC`, mjereno u odvojeno polje.
-2. **F2.3 granica 20 dana:** je li prihvatljivo da prvih 20 dana polazna ide po
-   gornjoj granici CI? Do sada je tako radilo i nije bilo podbačaja.
+2. ~~**F2.3 granica 20 dana:**~~ **odgovoreno mjerenjem** — košta 2 % ciklusa
+   (medium 13,52 vs 13,25 cikl/dan), podbačaj se ne mijenja. Zadržano na 20.
 3. **F4.1 prekidač:** `PROPOSAL_ENGINE` kao env varijabla (brz rollback, ali
    stanje u konfiguraciji) ili kolona u `HomeProfile` (po kući, ali traži
    migraciju)? Predlog: **env**, jer je korisnik jedan.
@@ -367,16 +444,25 @@ preko `T_max`.
 `c` je tačan od 10. dana, isto kao `s` — dakle **nema razloga čekati** da se
 počne koristiti.
 
-**Reprodukcija:** patch je bio privremen (u `/tmp`, nije u repou). F2.6 ga
-pretvara u trajnu mogućnost skripte (`--subc`, `--oref`) da brojevi iz ove
-tabele postanu CI test.
+**Reprodukcija:** patch je bio privremen (u `/tmp`, nije u repou). F2.6 ga je
+pretvorio u trajne prekidače `learning_sim.cjs`:
+
+| prekidač | značenje |
+|---|---|
+| `--c=0\|1` | oduzimati `c` (zadano `1`, kao produkcija) |
+| `--dayref=0\|1` | `O_ref` miješa dan (zadano `1`) |
+| `--conservative=n` | gornja CI granica prvih `n` dana (zadano 20, `0` = nikad) |
+
+Brojevi iz tabele gore postaju CI test kroz
+`scripts/audit/formula_v2_golden.cjs` (v. „CI zaštita" u F2).
 
 ---
 
 ## 10. Prvi korak
 
-**F1.1–F1.5 su urađene** (v. „Stanje F1" gore). Sljedeće je **provjera na
-stvarnoj bazi**, a ne novi kod:
+**F1.1–F1.5 su urađene** (v. „Stanje F1" gore), **F2 je implementiran ali nije
+pušten**. Sljedeće je **provjera na stvarnoj bazi**, a ne novi kod — upit ispod
+je pušten 2026-11-07 i vratio **`0`**:
 
 ```sql
 SELECT COUNT(*) FILTER (WHERE "nightMinC" IS NOT NULL) AS ima_noc,
@@ -386,7 +472,29 @@ WHERE "modelVersion" = 'daily-2'
   AND "localDate" >= (CURRENT_DATE - 7)::text;
 ```
 
-Ako je `ima_noc = ukupno`, noć postoji i F2 može početi. Ako nije, uzrok je
+**Rezultat `0` je dvosmislen i to je blokada, ne prepreka.** `0` može značiti
+(i) nema `daily-2` redova uopšte — pisac još ne piše u produkciji, ili (ii) ima
+redova ali nijedan nema `nightMinC`. Upit ne razlikuje ta dva slučaja. Zato
+prvo ide razlikovni upit, pa tek onda F3.4:
+
+```sql
+SELECT COUNT(*) AS ukupno,
+       COUNT(*) FILTER (WHERE "nightMinC" IS NOT NULL) AS ima_noc,
+       COUNT(*) FILTER (WHERE "nightHoursUsed" >= 8)   AS puna_noc,
+       MIN("localDate") AS prvi,
+       MAX("localDate") AS zadnji
+FROM "DailyRecord"
+WHERE "modelVersion" = 'daily-2';
+```
+
+- `ukupno = 0` → pisac `daily-2` ne radi u produkciji. F2 tada ostaje shadow i
+  **ne smije** se puštati; radi se F1.6 (backfill) i provjera pisca.
+- `ukupno > 0`, `ima_noc = 0` → noć se ne popunjava; uzrok je `nightMinSource =
+  'DAILY_MIN'` ili kraći satni niz.
+- `ima_noc > 0`, `puna_noc < ima_noc` → `nightHoursUsed < 8`; noć je djelimična
+  i `O_ref` je slabiji nego što izgleda.
+
+Ako je `ima_noc = ukupno`, noć postoji i F2 može u produkciju. Ako nije, uzrok je
 jedan od tri: kuća nema prognozu, `nightMinSource = 'DAILY_MIN'` (nema satne),
 ili je `sub` sat pokrio samo dio noći — treće se vidi po `nightHoursUsed < 8`.
 

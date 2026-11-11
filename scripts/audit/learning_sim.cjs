@@ -54,9 +54,18 @@ if (args.includes('--help')) {
   --days=<n>        broj dana simulacije (default 60)
   --house=<tip>     light | medium | heavy (default medium)
   --scenario=<s>    formula | controller | both (default both)
+  --c=<0|1>         oduzimaj izmjereni c u ravnotežnoj polaznoj (default 1)
+  --dayref=<0|1>    referenca 0,7·noć + 0,3·dnevni maks (default 1)
+  --conservative=n  gornja CI granica prvih n dana (default 20, 0 = nikad)
   --trace           ispiši polaznu po danu
   --json            mašinski čitljiv izlaz
   --help            ova poruka
+
+Napomena: do 2026-11-07 skripta nije oduzimala c, iako ga je fit procjenjivao
+(c ≈ 0,92–1,01 K). Mjerila je kontroler koji u produkciji ne postoji. Sa
+--c=1 (novo zadano) brojevi odgovaraju izrazu iz
+backend/src/modules/DailyRecord/equilibrium-flow.ts; --c=0 reprodukuje stare
+brojeve za poređenje.
 
 Model kuće (lumped, jedan kapacitet):
   C·dT/dτ = k1·(T_flow − T_r) − k2·(T_r − T_out) + q_int
@@ -84,11 +93,23 @@ const num = (name, def) => {
   return v;
 };
 
+/** 0 je legitimna vrijednost za prekidače (isključeno), pa `num` ne služi. */
+const flag = (name, def) => {
+  const arg = args.find((a) => a.startsWith(`--${name}=`));
+  if (!arg) return def;
+  const v = Number(arg.slice(name.length + 3));
+  if (!Number.isFinite(v) || v < 0) {
+    console.error(`Neispravna vrijednost za --${name}`);
+    process.exit(2);
+  }
+  return v;
+};
+
 const known = new Set(['--json', '--trace', '--help']);
 const bad = args.filter(
   (a) =>
     !known.has(a) &&
-    !/^--(days|house|scenario)=/.test(a),
+    !/^--(days|house|scenario|c|dayref|conservative)=/.test(a),
 );
 if (bad.length) {
   console.error(`Nepoznat argument "${bad[0]}"; koristite --help`);
@@ -100,6 +121,14 @@ const trace = args.includes('--trace');
 const days = Math.round(num('days', 60));
 const houseKey = (args.find((a) => a.startsWith('--house=')) ?? '--house=medium').split('=')[1];
 const scenarioArg = (args.find((a) => a.startsWith('--scenario=')) ?? '--scenario=both').split('=')[1];
+
+// F2: izraz ravnotežne polazne isti kao `equilibrium-flow.ts`.
+//   F_eq = T + s·(T − O_ref) − c,  O_ref = (1−w)·noć + w·dnevni maks
+const USE_C = flag('c', 1) === 1;
+const USE_DAY_REF = flag('dayref', 1) === 1;
+const CONSERVATIVE_DAYS = flag('conservative', 20);
+/** Isti udio kao `DAY_REFERENCE_WEIGHT` u `equilibrium-flow.ts`. */
+const DAY_WEIGHT = 0.3;
 
 const HOUSES = {
   light: { C: 4e6, k1: 212, k2: 160, label: 'laka konstrukcija' },
@@ -246,7 +275,7 @@ function estimateModel(obs, flowByDay) {
 
   return {
     s: fit.slope > 0.1 && fit.slope < 3 ? fit.slope : null,
-    c: -fit.intercept,
+    c: Number.isFinite(fit.intercept) ? -fit.intercept : null,
     ci,
     days: rows.length,
     mad: fit.mad,
@@ -304,7 +333,16 @@ function simulate(house, scenario) {
     } else {
       let base;
       if (model.s !== null) {
-        base = TARGET_ROOM + model.s * (TARGET_ROOM - nightMin);
+        // F2: isti izraz kao `backend/src/modules/DailyRecord/equilibrium-flow.ts`
+        //   F_eq = T + s·(T − O_ref) − c
+        // `--c=0` / `--dayref=0` reprodukuju staro ponašanje za poređenje.
+        const slope =
+          model.ci && day < CONSERVATIVE_DAYS && model.ci[1] >= model.s
+            ? model.ci[1]
+            : model.s;
+        const oRef = USE_DAY_REF ? (1 - DAY_WEIGHT) * nightMin + DAY_WEIGHT * max : nightMin;
+        const cTerm = USE_C && typeof model.c === 'number' ? model.c : 0;
+        base = TARGET_ROOM + slope * (TARGET_ROOM - oRef) - cTerm;
       } else {
         base = formulaFlow(min, max);
       }
@@ -326,7 +364,13 @@ function simulate(house, scenario) {
 
       // noćni minimum je tvrda granica
       if (model.s !== null) {
-        const guard = TARGET_ROOM + model.s * (TARGET_ROOM - nightMin);
+        const slope =
+          model.ci && day < CONSERVATIVE_DAYS && model.ci[1] >= model.s
+            ? model.ci[1]
+            : model.s;
+        const oRef = USE_DAY_REF ? (1 - DAY_WEIGHT) * nightMin + DAY_WEIGHT * max : nightMin;
+        const cTerm = USE_C && typeof model.c === 'number' ? model.c : 0;
+        const guard = TARGET_ROOM + slope * (TARGET_ROOM - oRef) - cTerm;
         if (guard > next && guard <= FLOW_MAX) next = guard;
       }
     }

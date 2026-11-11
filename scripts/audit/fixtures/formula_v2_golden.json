@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "generatedBy": "node scripts/audit/formula_v2_golden.cjs --write",
+  "controller": "scripts/audit/learning_sim.cjs --scenario=controller",
+  "expression": "backend/src/modules/DailyRecord/equilibrium-flow.ts",
+  "days": 60,
+  "settings": {
+    "c": true,
+    "dayRef": true,
+    "conservativeDays": 20
+  },
+  "houses": {
+    "light": {
+      "house": "light",
+      "flowEnd": 37.1,
+      "cyclesPerDay": 17.78,
+      "undershootDaysAfter10": 0,
+      "daysAfter10": 50,
+      "worstUndershoot": 0.8,
+      "daysOverTmax": 0,
+      "modelSlope": 0.767
+    },
+    "medium": {
+      "house": "medium",
+      "flowEnd": 41.4,
+      "cyclesPerDay": 13.52,
+      "undershootDaysAfter10": 0,
+      "daysAfter10": 50,
+      "worstUndershoot": 0.8,
+      "daysOverTmax": 0,
+      "modelSlope": 0.947
+    },
+    "heavy": {
+      "house": "heavy",
+      "flowEnd": 42.6,
+      "cyclesPerDay": 4.32,
+      "undershootDaysAfter10": 0,
+      "daysAfter10": 50,
+      "worstUndershoot": 0.76,
+      "daysOverTmax": 0,
+      "modelSlope": 1.027
+    }
+  }
+}

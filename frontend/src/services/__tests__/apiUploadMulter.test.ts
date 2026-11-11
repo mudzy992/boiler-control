@@ -13,12 +13,16 @@ import type { Server } from "node:http";
  * axios instanca pretvori `FormData` u JSON tekst. Upravo taj `400` je korisnik
  * dobijao na ekranu.
  *
- * eslint-disable-next-line @typescript-eslint/no-require-imports
+ * Zavisnosti su **lokalne** (`frontend/package.json`: `express@5.2.1`,
+ * `multer@2.5.0` — iste verzije koje backend zaključava). Ranije su importovane
+ * apsolutnom putanjom u `backend/node_modules`, pa je test prolazio samo na
+ * mašini gdje backend zavisnosti postoje; CI instalira samo `frontend/` i padao
+ * je na `Cannot find module express` (run 42925651049).
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const express = require("/home/user/boiler-control/backend/node_modules/express");
+const express = require("express");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const multer = require("/home/user/boiler-control/backend/node_modules/multer");
+const multer = require("multer");
 
 interface Seen {
   contentType: string | undefined;

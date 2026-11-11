@@ -10,11 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiQuery } from '@nestjs/swagger';
-import {
-  parsePage,
-  setTotalCount,
-  TOTAL_COUNT_HEADER,
-} from '../../common/pagination';
+import { parsePage, setTotalCount } from '../../common/pagination';
 import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';

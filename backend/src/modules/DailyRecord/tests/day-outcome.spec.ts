@@ -27,30 +27,6 @@ function localInstant(localDate: string, hour: number, minute = 0): Date {
   return new Date(`${localDate}T${hh}:${mm}:00+01:00`);
 }
 
-interface SampleOptions {
-  isHeating?: boolean;
-  outdoorTempC?: number | null;
-  flowSetC?: number | null;
-}
-
-function sample(
-  localDate: string,
-  hour: number,
-  minute: number,
-  roomTempC: number | null,
-  targetTempC: number | null,
-  options: SampleOptions = {},
-): OutcomeSample {
-  return {
-    at: localInstant(localDate, hour, minute),
-    roomTempC,
-    targetTempC,
-    isHeating: options.isHeating ?? false,
-    outdoorTempC: options.outdoorTempC ?? null,
-    flowSetC: options.flowSetC ?? null,
-  };
-}
-
 /**
  * Pun dan: 288 uzoraka na 5 min. `override` mijenja pojedini uzorak po indeksu
  * (`0` = 00:00, `287` = 23:55), tako da svaki test pomjera samo ono što mjeri.

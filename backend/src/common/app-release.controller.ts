@@ -147,5 +147,5 @@ export class AppReleaseController {
 
 function fileNameFor(path: string): string {
   const name = path.split('/').pop() ?? 'boiler-control.apk';
-  return name.replace(/[^\w.\-]/g, '');
+  return name.replace(/[^\w.-]/g, '');
 }

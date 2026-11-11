@@ -214,7 +214,7 @@ describe('User profile HTTP kompatibilnost', () => {
      */
     beforeEach(() => {
       updateMe.mockReset();
-      updateMe.mockImplementation(async () => ({ id: 42 }));
+      updateMe.mockImplementation(() => Promise.resolve({ id: 42 }));
     });
 
     it.each(['bs-BS', 'en-US', 'bs', 'en', 'bs-BA'])(

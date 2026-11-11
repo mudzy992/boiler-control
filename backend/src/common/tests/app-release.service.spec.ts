@@ -161,8 +161,11 @@ describe('AppReleaseService.upload', () => {
               : rows,
           ),
         ),
-        create: jest.fn(
-          async ({ data }: { data: Record<string, unknown> }) => ({
+        // Povratni tip je `Promise`, kao i stvarni Prisma poziv: jedan test
+        // namjerno pravi odbijenicu (`mockRejectedValueOnce`), a to je moguće
+        // samo ako `jest.fn` nije zaključan na sinhroni `never`.
+        create: jest.fn(({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({
             id: 7,
             publishedAt: new Date('2026-11-20T09:00:00Z'),
             ...data,

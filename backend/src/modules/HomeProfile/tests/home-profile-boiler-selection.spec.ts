@@ -40,21 +40,23 @@ function makeService(existing: Record<string, unknown> | null = null) {
 
   const prisma = {
     homeProfile: {
-      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      create: jest.fn(({ data }: { data: Record<string, unknown> }) => {
         created.push(data);
         return { id: 7, ...data };
       }),
-      update: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      update: jest.fn(({ data }: { data: Record<string, unknown> }) => {
         updated.push(data);
         return { id: existing?.id ?? 1, ...data };
       }),
-      findFirst: jest.fn(async () => existing),
+      findFirst: jest.fn(() => Promise.resolve(existing)),
     },
     user: {
-      findUnique: jest.fn(async () => ({ activeHomeProfileId: 1 })),
+      findUnique: jest.fn(() => Promise.resolve({ activeHomeProfileId: 1 })),
       update: jest.fn(),
     },
-    $transaction: jest.fn(async (fn: (tx: unknown) => unknown) => fn(prisma)),
+    $transaction: jest.fn((fn: (tx: unknown) => unknown) =>
+      Promise.resolve(fn(prisma)),
+    ),
   };
 
   const service = new HomeProfileService(prisma as never);

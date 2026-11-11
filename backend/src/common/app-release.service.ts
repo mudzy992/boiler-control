@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { inflateRawSync } from 'node:zlib';
 import { PrismaService } from '../prisma/prisma.service';
 import { FileStorageService, APK_MAX_SIZE_BYTES } from './file-storage.service';
 
@@ -150,8 +151,7 @@ function readZipEntry(archive: Buffer, entryName: string): Buffer | null {
         try {
           // `zlib` je dio Node-a; nema nove zavisnosti za jednu funkciju.
 
-          const zlib = require('zlib') as typeof import('zlib');
-          return zlib.inflateRawSync(data);
+          return inflateRawSync(data);
         } catch {
           return null;
         }
@@ -246,6 +246,10 @@ export class AppReleaseService {
     return highest;
   }
 
+  // `async` je namjerno zadržan iako unutra nema `await`: pozivaoci ga
+  // `await`-uju, a promjena povratnog tipa u `PrismaPromise` bi procurila kroz
+  // kontroler u ugovor. Zato je `require-await` ovdje isključen, a ne prekršen.
+  // eslint-disable-next-line @typescript-eslint/require-await
   async list(): Promise<AppReleaseRow[]> {
     return this.prisma.appRelease.findMany({
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],

@@ -116,7 +116,15 @@ function makeHarness(
 
   const observation = {
     isDue: jest.fn(() => due),
-    record: jest.fn(options.recordImpl ?? (async () => 'created')),
+    // Eksplicitni parametar: bez njega `jest.fn` daje `calls[i]` tip `[]`, pa
+    // `calls[0][0]` ne postoji za `tsc` iako test radi.
+    // Parametar je eksplicitan iako ga tijelo ne koristi: bez njega `jest.fn`
+    // daje `calls[i]` tip `[]`, pa `calls[0][0]` ne postoji za `tsc`. Zato je
+    // `no-unused-vars` isključen u ovom redu, umjesto da se tip izgubi.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    record: jest.fn((_input: Record<string, unknown>) =>
+      (options.recordImpl ?? (() => 'created'))(),
+    ),
   };
   const metrics = new MetricsService();
 

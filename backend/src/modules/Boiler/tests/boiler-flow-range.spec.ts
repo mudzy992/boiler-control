@@ -9,6 +9,7 @@ import {
   SYSTEM_MAX_FLOW_C,
   SYSTEM_MIN_FLOW_C,
 } from '../../Heating/strategies/base.strategy';
+import type { FlowTempInput } from '../../Heating/engine/types';
 import {
   BOILER_FAMILIES,
   effectiveCeilingC,
@@ -283,7 +284,7 @@ describe('šesti krug: raspon polazne po tipu bojlera', () => {
       targetTemp: 22,
       events: [],
       hour: 7,
-    } as unknown;
+    } as unknown as FlowTempInput;
 
     const baseline = strategy.calculate(input);
 

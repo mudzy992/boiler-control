@@ -68,7 +68,7 @@ function setup(options: {
   const notifications = { notifyUser: jest.fn().mockResolvedValue(null) };
 
   const writer = {
-    writeForHome: jest.fn(async (homeProfileId: number) => {
+    writeForHome: jest.fn((homeProfileId: number) => {
       const preset = options.writeResults?.[homeProfileId];
       if (preset instanceof Error) throw preset;
       if (preset) return preset;

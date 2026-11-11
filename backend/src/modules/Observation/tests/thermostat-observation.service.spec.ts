@@ -13,7 +13,7 @@ function setup(options: { violationOnce?: boolean } = {}) {
 
   const prisma = {
     thermostatObservation: {
-      create: jest.fn(async ({ data }: any) => {
+      create: jest.fn(({ data }: any) => {
         if (violations > 0) {
           violations -= 1;
           const error = new Error('Unique constraint failed') as Error & {

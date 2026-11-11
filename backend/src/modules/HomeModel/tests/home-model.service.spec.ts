@@ -212,7 +212,7 @@ function setup(observations: unknown[], existingModel: unknown = null) {
     },
     homeModel: {
       findUnique: jest.fn().mockResolvedValue(existingModel),
-      upsert: jest.fn(async (args: any) => {
+      upsert: jest.fn((args: any) => {
         upserts.push(args);
         return args;
       }),
@@ -240,7 +240,9 @@ describe('fit modela kuće', () => {
     expect(result.state).toBe('TRACKING');
     expect(result.slope).not.toBeNull();
     expect(Math.abs((result.slope ?? 0) - 200 / 212)).toBeLessThanOrEqual(0.1);
-    expect(upserts[0].update.slopeS).toBeCloseTo(result.slope, 10);
+    // `slope` je `number | null`; `?? NaN` ga sužava za `tsc` bez tvrdnje
+    // tipa, a `NaN` ne bi prošao `toBeCloseTo` — test i dalje pada ako je null.
+    expect(upserts[0].update.slopeS).toBeCloseTo(result.slope ?? NaN, 10);
     expect(upserts[0].update.state).toBe('TRACKING');
     expect(upserts[0].update.modelVersion).toBe('model-1');
     expect(upserts[0].update.lastFitAt).toEqual(NOW);

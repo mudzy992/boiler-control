@@ -129,12 +129,23 @@ export function catalogIssues(families: readonly BoilerFamily[]): string[] {
   return issues;
 }
 
+/**
+ * Tekstualno polje iz sirovog JSON-a.
+ *
+ * `String(raw.family ?? '')` bi na pogrešnom tipu dao `'[object Object]'` —
+ * tiho i u katalogu, gdje bi ga dalje čitala cijela aplikacija. Zato se
+ * ne-tekstualna vrijednost odbija, a ne pretvara.
+ */
+function textField(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
 function normalise(raw: RawFamily, brand: string): BoilerFamily {
   return {
     id: String(raw.id),
     brand,
-    family: String(raw.family ?? ''),
-    variant: String(raw.variant ?? ''),
+    family: textField(raw.family),
+    variant: textField(raw.variant),
     outputsKw: Array.isArray(raw.outputsKw)
       ? (raw.outputsKw as number[])
       : null,

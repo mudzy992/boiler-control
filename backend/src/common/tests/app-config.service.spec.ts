@@ -42,8 +42,8 @@ describe('AppConfigService (MO2-2 version gate)', () => {
   });
 
   describe('zadano stanje (bez env varijabli)', () => {
-    it('gate je uključen i ne blokira postojeće instalacije (min = 1.0.0)', async () => {
-      const config = await service.getAppConfigSync();
+    it('gate je uključen i ne blokira postojeće instalacije (min = 1.0.0)', () => {
+      const config = service.getAppConfigSync();
 
       expect(config.versionGateEnabled).toBe(true);
       // 1.0.0 je verzija koja je stvarno kod korisnika (app.json), pa gate
@@ -54,22 +54,20 @@ describe('AppConfigService (MO2-2 version gate)', () => {
   });
 
   describe('env override', () => {
-    it('prihvata ispravne semver vrijednosti', async () => {
+    it('prihvata ispravne semver vrijednosti', () => {
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '2.1.0';
       process.env.MOBILE_LATEST_VERSION = '2.3.4';
 
-      const config = await service.getAppConfigSync();
+      const config = service.getAppConfigSync();
 
       expect(config.minSupportedVersion).toBe('2.1.0');
       expect(config.latestVersion).toBe('2.3.4');
     });
 
-    it('trim-uje vrijednosti iz env-a', async () => {
+    it('trim-uje vrijednosti iz env-a', () => {
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '  2.1.0  ';
 
-      expect(await service.getAppConfigSync().minSupportedVersion).toBe(
-        '2.1.0',
-      );
+      expect(service.getAppConfigSync().minSupportedVersion).toBe('2.1.0');
     });
   });
 
@@ -80,19 +78,17 @@ describe('AppConfigService (MO2-2 version gate)', () => {
       ['0', false],
       ['true', true],
       ['1', true],
-    ])('APP_VERSION_GATE_ENABLED="%s" -> %s', async (raw, expected) => {
+    ])('APP_VERSION_GATE_ENABLED="%s" -> %s', (raw, expected) => {
       process.env.APP_VERSION_GATE_ENABLED = raw;
 
-      expect(await service.getAppConfigSync().versionGateEnabled).toBe(
-        expected,
-      );
+      expect(service.getAppConfigSync().versionGateEnabled).toBe(expected);
     });
 
-    it('kad je gate isključen, min je 0.0.0 ČAK I ako env traži više', async () => {
+    it('kad je gate isključen, min je 0.0.0 ČAK I ako env traži više', () => {
       process.env.APP_VERSION_GATE_ENABLED = 'false';
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '9.9.9';
 
-      const config = await service.getAppConfigSync();
+      const config = service.getAppConfigSync();
 
       expect(config.versionGateEnabled).toBe(false);
       expect(config.minSupportedVersion).toBe('0.0.0');
@@ -100,31 +96,31 @@ describe('AppConfigService (MO2-2 version gate)', () => {
       expect(config.latestVersion).toBe('2.0.0');
     });
 
-    it('neispravna vrijednost flag-a ne gasi gate (fail-safe na true)', async () => {
+    it('neispravna vrijednost flag-a ne gasi gate (fail-safe na true)', () => {
       process.env.APP_VERSION_GATE_ENABLED = 'mozda';
 
-      expect(await service.getAppConfigSync().versionGateEnabled).toBe(true);
+      expect(service.getAppConfigSync().versionGateEnabled).toBe(true);
     });
   });
 
   describe('fail-safe na neispravan env', () => {
     it.each([['abc'], ['1.2'], ['1.2.3.4'], ['v1.2.3'], ['1.2.3-beta'], ['']])(
       'MOBILE_MIN_SUPPORTED_VERSION="%s" -> vraća zadano 1.0.0',
-      async (raw) => {
+      (raw) => {
         process.env.MOBILE_MIN_SUPPORTED_VERSION = raw;
 
-        const config = await service.getAppConfigSync();
+        const config = service.getAppConfigSync();
 
         expect(config.minSupportedVersion).toBe('1.0.0');
         expect(config.versionGateEnabled).toBe(true);
       },
     );
 
-    it('neispravan latest ne utječe na min', async () => {
+    it('neispravan latest ne utječe na min', () => {
       process.env.MOBILE_LATEST_VERSION = 'nije-verzija';
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '2.0.0';
 
-      const config = await service.getAppConfigSync();
+      const config = service.getAppConfigSync();
 
       expect(config.minSupportedVersion).toBe('2.0.0');
       expect(config.latestVersion).toBe('2.0.0');

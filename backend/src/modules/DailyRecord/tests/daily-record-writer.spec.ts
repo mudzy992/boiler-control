@@ -60,7 +60,7 @@ function setup(options: {
   const recommendations: any[] = [];
   const tx = {
     dailyRecord: {
-      create: jest.fn(async ({ data }: any) => {
+      create: jest.fn(({ data }: any) => {
         if (options.uniqueViolation) {
           const error = new Error('Unique constraint failed') as Error & {
             code: string;
@@ -73,7 +73,7 @@ function setup(options: {
       }),
     },
     recommendation: {
-      create: jest.fn(async ({ data }: any) => {
+      create: jest.fn(({ data }: any) => {
         recommendations.push(data);
         return data;
       }),
@@ -98,7 +98,7 @@ function setup(options: {
         ),
     },
     heatingIntervalLearning: { findUnique: jest.fn().mockResolvedValue(null) },
-    $transaction: jest.fn(async (callback: any) => callback(tx)),
+    $transaction: jest.fn((callback: any) => Promise.resolve(callback(tx))),
   };
 
   const weather = {
@@ -242,7 +242,7 @@ describe('kada predloga nema', () => {
 
   it('nema prognoze: NO_WEATHER, a ne predlog izmišljen iz 0 °C', async () => {
     const home = baseHome();
-    home.user.homeLocation = null;
+    (home.user as { homeLocation: string | null }).homeLocation = null;
     const { writer, dailyRecords, recommendations } = setup({
       home,
       v2Weather: null,
@@ -292,7 +292,7 @@ describe('kada predloga nema', () => {
 
   it('bez prognoze preskočen red ima null noć, a ne nulu', async () => {
     const home = baseHome();
-    home.user.homeLocation = null;
+    (home.user as { homeLocation: string | null }).homeLocation = null;
     const { writer, dailyRecords } = setup({
       home,
       v2Weather: null,
@@ -343,7 +343,7 @@ describe('vremenska zona u zapisu', () => {
 
   it('bez ijedne zone koristi se dokumentovani fallback', async () => {
     const home = baseHome();
-    home.weatherTimezone = null;
+    (home as { weatherTimezone: string | null }).weatherTimezone = null;
     const { writer } = setup({ home });
 
     const result = await writer.writeForHome(10, NOW_IN_WINDOW);

@@ -1,9 +1,11 @@
 # PLAN — formula v2: penzionisanje stare krive i puštanje toplotnog bilansa
 
-Status: **F1 implementiran (2026-11-07); F2 implementiran i CI zelen
-(2026-11-07), nije pušten u produkciju**; F3–F5 nijesu. F2 čeka **samo**
-provjeru na stvarnoj bazi (§10 — upit je vratio `0`, uzrok još nije
-dijagnostikovan). Odluka vlasnika
+Status: **F1 implementiran; F2 implementiran, CI zelen (2026-11-07), nije pušten
+u produkciju**; F3–F5 nijesu. **Blokada je dijagnostikovana (§10.1): pisac
+`daily-2` još ne piše u produkciji** — `DailyRecord` ima 304 dana, ali svi su
+backfill (`backfill-events-1`, 301) ili `daily-1` (3). Bez `daily-2` nema
+`nightMinC`, pa se F2 ne pušta; prvi korak je **F1.6** (backfill + puštanje
+pisca), a ne F3. Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.
@@ -505,6 +507,44 @@ FROM "DailyRecord"
 WHERE "modelVersion" = 'daily-2'
   AND "localDate" >= (CURRENT_DATE - 7)::text;
 ```
+
+### 10.1 Rezultat razlikovnog upita (2026-11-07, read-only, `baseline` job)
+
+Mjereno na produkciji preko `DATABASE_URL_READONLY` (run `43026160240`), bez
+ijednog upisa:
+
+| šta | vrijednost |
+|---|---|
+| `DailyRecord` ukupno | **304 dana** |
+| porijeklo | `backfill-events-1` → **301 dan**; `daily-1` → **3 dana** |
+| `daily-2` redova | **0** |
+| `daily-1` redova | **3** |
+| `daily-2` sa noći | 0 (nema redova — pitanje se ne postavlja) |
+| dnevni zapis sa `shadow*` | **2 dana** |
+
+**Zaključak: uzrok `0` nije noć, nego to što pisac `daily-2` u produkciji još
+ne piše.** Historija je 99 % rekonstruisana backfill-om (`backfill-events-1`,
+301 dan) — to su dani bez prognoze, pa bez `nightMinC`, i to je ispravno
+ponašanje, ne greška. F1 (koji uvodi `daily-2` i noć) je implementiran, ali
+**nije pušten**, pa nema ni jednog dana po novom piscu.
+
+Zato:
+
+- **F2 se ne pušta** — `O_ref` bi bio `null` na svakom danu, jer nema `daily-2`.
+- **F1.6 (backfill + `nightMinMeasuredC`) i puštanje pisca `daily-2` idu
+  prvi.** Tek poslije nekoliko dana rada pisca ima smisla mjeriti §10 ponovo.
+- Kad pisac proradi, isti `baseline` job već odgovara na pitanje — nema
+  novog koda, samo novi run (`gh workflow run backend-build.yml -f baseline=true`).
+
+Ostali nalazi iz istog runa, korisni za F3:
+
+| nalaz | značenje za plan |
+|---|---|
+| ciklusi: 118 dana, 422 ciklusa (2026-01-07 → 2026-11-11) | dovoljno za F3.5/F3.7, ali samo 118 od 304 dana ima događaje |
+| mjerenja: 618 uzoraka, 3 dana sa noćnim uzorcima | **F3.4 nije mjerljiva** — 3 dana je premalo za histogram greške prognoze |
+| `nightMinOutdoorMeasuredC` parova | 0 (nema `daily-2`) |
+| plin: 134 očitanja, 920,9 m³, medijana razmaka 1 dan | podaci za efikasnost postoje |
+| šema: 5/5 kolona postoji | F1 kolone su primijenjene u produkciji |
 
 **Automatizovano (2026-11-07):** isti razlikovni upit je sada dio
 `backend/scripts/backfill-coverage.cjs` (`baseline` job, read-only, sekcija

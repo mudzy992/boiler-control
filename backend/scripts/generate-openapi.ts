@@ -37,6 +37,23 @@ function repoRoot(): string {
   return resolve(__dirname, '..', '..');
 }
 
+/**
+ * Opis prve razlike između dva teksta: linija i kratak kontekst.
+ * Namjerno ne vraća cijele linije ako su dugačke — dovoljno je da se zna gdje.
+ */
+function firstDifference(current: string, expected: string): string {
+  const a = current.split('\n');
+  const b = expected.split('\n');
+  const limit = Math.max(a.length, b.length);
+  for (let i = 0; i < limit; i++) {
+    if (a[i] === b[i]) continue;
+    const cut = (line?: string) =>
+      line === undefined ? '<kraj fajla>' : line.trim().slice(0, 120);
+    return `linija ${i + 1}, komitovano "${cut(a[i])}", očekivano "${cut(b[i])}"`;
+  }
+  return 'nema razlike u linijama (razlika u završnom novom redu?)';
+}
+
 function defaultOutputPath(): string {
   return resolve(repoRoot(), 'contracts', 'openapi.json');
 }
@@ -88,9 +105,13 @@ async function main(): Promise<void> {
         return;
       }
       if (current !== serialized) {
+        // Prva linija razlike, ne cijeli dokument: bez ovoga CI kaže samo
+        // „razlikuje se", pa se uzrok traži ručno. Poruka ne nosi sadržaj
+        // ugovora, samo mjesto gdje počinje razlika.
         logger.error(
           'OpenAPI ugovor se razlikuje od komitovanog artefakta. ' +
-            'Pokreni `npm run openapi:generate` i komituj razliku.',
+            'Pokreni `npm run openapi:generate` i komituj razliku. ' +
+            `Prva razlika: ${firstDifference(current, serialized)}`,
         );
         process.exitCode = 1;
         return;

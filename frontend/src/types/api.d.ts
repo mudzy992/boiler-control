@@ -181,6 +181,22 @@ export interface paths {
         patch: operations["BoilerController_setCurrentTemp"];
         trace?: never;
     };
+    "/api/boiler/flow-range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BoilerController_getFlowRange"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/boiler/history": {
         parameters: {
             query?: never;
@@ -2115,6 +2131,23 @@ export interface operations {
                 "application/json": components["schemas"]["SetCurrentTempDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BoilerController_getFlowRange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

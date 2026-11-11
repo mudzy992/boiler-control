@@ -74,7 +74,8 @@ function fullDay(
       roomTempC: changed.roomTempC === undefined ? 21 : changed.roomTempC,
       targetTempC: changed.targetTempC === undefined ? 21 : changed.targetTempC,
       isHeating: changed.isHeating ?? false,
-      outdoorTempC: changed.outdoorTempC === undefined ? 5 : changed.outdoorTempC,
+      outdoorTempC:
+        changed.outdoorTempC === undefined ? 5 : changed.outdoorTempC,
       flowSetC: changed.flowSetC === undefined ? 45 : changed.flowSetC,
     });
   }
@@ -263,7 +264,12 @@ describe('computeDayOutcome — noćni prozor', () => {
   it('bez mjerenja noću noćni podbačaj je null, a ne nula', () => {
     const samples = fullDay(DAY, (index) =>
       index * 5 < 360
-        ? { roomTempC: null, targetTempC: null, flowSetC: null, outdoorTempC: null }
+        ? {
+            roomTempC: null,
+            targetTempC: null,
+            flowSetC: null,
+            outdoorTempC: null,
+          }
         : {},
     );
 
@@ -360,7 +366,6 @@ describe('computeDayOutcome — izmjerena histereza', () => {
   });
 });
 
-
 describe('computeDayOutcome — brzina dogrijavanja (`29`)', () => {
   /** Ciklus od 06:00 do 06:55 sa zadatim rastom po uzorku. */
   const heatingRun = (
@@ -429,10 +434,18 @@ describe('computeDayOutcome — brzina dogrijavanja (`29`)', () => {
       const first = index >= indexOf(6) && index < indexOf(7);
       const second = index >= indexOf(12) && index < indexOf(13);
       if (first) {
-        return { isHeating: true, flowSetC: 50, roomTempC: 18 + (index - indexOf(6)) * 0.1 };
+        return {
+          isHeating: true,
+          flowSetC: 50,
+          roomTempC: 18 + (index - indexOf(6)) * 0.1,
+        };
       }
       if (second) {
-        return { isHeating: true, flowSetC: 50, roomTempC: 18 + (index - indexOf(12)) * 0.4 };
+        return {
+          isHeating: true,
+          flowSetC: 50,
+          roomTempC: 18 + (index - indexOf(12)) * 0.4,
+        };
       }
       return {};
     });

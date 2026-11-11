@@ -56,9 +56,14 @@ describe('minutesToReach', () => {
 
   it('neupotrebljivo mjerenje daje `null`, ne izmišljeno vrijeme', () => {
     expect(
-      minutesToReach(input({ heatRateCPerHour: MIN_HEAT_RATE_C_PER_H / 2 }), 45),
+      minutesToReach(
+        input({ heatRateCPerHour: MIN_HEAT_RATE_C_PER_H / 2 }),
+        45,
+      ),
     ).toBeNull();
-    expect(minutesToReach(input({ heatRateCPerHour: Number.NaN }), 45)).toBeNull();
+    expect(
+      minutesToReach(input({ heatRateCPerHour: Number.NaN }), 45),
+    ).toBeNull();
     // Mjereno u uslovima bez pogonske razlike — nema osnova za preračun.
     expect(
       minutesToReach(input({ measuredFlowC: 21, measuredRoomC: 21 }), 45),
@@ -88,7 +93,9 @@ describe('flowForHeatTime', () => {
 
   it('bez mjerenja vraća `null` — ne podiže se naslijepo', () => {
     expect(flowForHeatTime(input({ heatRateCPerHour: 0.01 }))).toBeNull();
-    expect(flowForHeatTime(input({ measuredFlowC: 20, measuredRoomC: 20 }))).toBeNull();
+    expect(
+      flowForHeatTime(input({ measuredFlowC: 20, measuredRoomC: 20 })),
+    ).toBeNull();
     expect(flowForHeatTime(input(), 0)).toBeNull();
   });
 

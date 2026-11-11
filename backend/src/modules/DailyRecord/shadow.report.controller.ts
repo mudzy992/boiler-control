@@ -55,7 +55,9 @@ export class ShadowReportController {
       : await this.activeHomeProfileId(req.user.userId);
 
     if (!Number.isInteger(homeId) || homeId <= 0) {
-      throw new BadRequestException('homeProfileId mora biti pozitivan cio broj');
+      throw new BadRequestException(
+        'homeProfileId mora biti pozitivan cio broj',
+      );
     }
 
     return this.reports.forHome(

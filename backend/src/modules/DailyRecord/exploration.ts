@@ -38,11 +38,7 @@ export const EXPLORATION_AMPLITUDE_K = 1;
 export type ExplorationDirection = 'LOWER';
 
 export type ExplorationBlock =
-  | 'NO_PREVIOUS'
-  | 'NO_FORECAST'
-  | 'COLD_NIGHT'
-  | 'YESTERDAY'
-  | 'NO_RESERVE';
+  'NO_PREVIOUS' | 'NO_FORECAST' | 'COLD_NIGHT' | 'YESTERDAY' | 'NO_RESERVE';
 
 export interface ExplorationDecision {
   direction: ExplorationDirection | null;

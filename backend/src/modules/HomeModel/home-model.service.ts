@@ -116,8 +116,7 @@ export function aggregateByLocalDay(
       day.heatingSamples += 1;
       if (observation.flowSetC != null) {
         day.heatingPairs += 1;
-        day.flowMinusRoomSum +=
-          observation.flowSetC - observation.roomTempC;
+        day.flowMinusRoomSum += observation.flowSetC - observation.roomTempC;
       }
     }
   }
@@ -220,9 +219,7 @@ export class HomeModelService {
         await this.fitHome(home.id, now);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(
-          `Model kuće ${home.id} nije izračunat: ${message}`,
-        );
+        this.logger.error(`Model kuće ${home.id} nije izračunat: ${message}`);
       }
     }
   }
@@ -417,7 +414,8 @@ export function pickPrimaryDevice(
   let bestCount = -1;
   for (const [deviceId, count] of counts) {
     const better =
-      count > bestCount || (count === bestCount && (best === null || deviceId < best));
+      count > bestCount ||
+      (count === bestCount && (best === null || deviceId < best));
     if (better) {
       best = deviceId;
       bestCount = count;

@@ -149,7 +149,7 @@ function readZipEntry(archive: Buffer, entryName: string): Buffer | null {
       if (method === 8) {
         try {
           // `zlib` je dio Node-a; nema nove zavisnosti za jednu funkciju.
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
+
           const zlib = require('zlib') as typeof import('zlib');
           return zlib.inflateRawSync(data);
         } catch {

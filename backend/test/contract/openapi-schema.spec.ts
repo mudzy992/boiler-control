@@ -392,7 +392,10 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       // frontend čitao pod tim imenom. U `32` je preimenovanje urađeno u istom
       // commitu na sva tri klijenta, pa ugovor sada traži ime koje kaže **šta**
       // je temperatura — sobu, ne polaznu vodu.
-      for (const dto of ['DashboardHeatingEventDto', 'DashboardRecentHeatingEventDto']) {
+      for (const dto of [
+        'DashboardHeatingEventDto',
+        'DashboardRecentHeatingEventDto',
+      ]) {
         expect(propsOf(dto)).toEqual(
           expect.arrayContaining([
             'roomCurrentTemp',

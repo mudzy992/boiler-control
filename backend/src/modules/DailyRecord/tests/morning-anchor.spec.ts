@@ -1,7 +1,4 @@
-import {
-  anchorDailyFlow,
-  type DaytimeChangeReason,
-} from '../morning-anchor';
+import { anchorDailyFlow, type DaytimeChangeReason } from '../morning-anchor';
 
 /**
  * `F14`: jedna polazna za cijeli dan.
@@ -105,7 +102,11 @@ describe('anchorDailyFlow — jedna polazna za cijeli dan', () => {
   it('bez jutarnjeg predloga broj je formula, i tako se i prijavljuje', () => {
     const result = anchorDailyFlow({ ...base, morningFlowC: null });
 
-    expect(result).toMatchObject({ flowC: 52, basis: 'FORMULA', changed: false });
+    expect(result).toMatchObject({
+      flowC: 52,
+      basis: 'FORMULA',
+      changed: false,
+    });
   });
 
   it('bez jutra i bez formule nema broja (ne izmišlja se ništa)', () => {

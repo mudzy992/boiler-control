@@ -84,9 +84,7 @@ export class AppConfigService {
    * zanemaruje, a vraća se sigurna zadana vrijednost. Servis nikad ne baca —
    * endpoint koji baca zaključao bi korisnike van aplikacije.
    */
-  constructor(
-    @Optional() private readonly releases?: AppReleaseService,
-  ) {}
+  constructor(@Optional() private readonly releases?: AppReleaseService) {}
 
   /**
    * `F15`: `latestVersion` sada dolazi iz baze (admin upload), a env ostaje
@@ -96,10 +94,9 @@ export class AppConfigService {
   async getAppConfig(): Promise<AppConfig> {
     const versionGateEnabled = this.resolveGateEnabled();
     const latest = await this.latestReleaseSafe();
-    const latestVersion = latest?.version ?? this.resolveVersion(
-      'MOBILE_LATEST_VERSION',
-      DEFAULT_LATEST_VERSION,
-    );
+    const latestVersion =
+      latest?.version ??
+      this.resolveVersion('MOBILE_LATEST_VERSION', DEFAULT_LATEST_VERSION);
 
     if (!versionGateEnabled) {
       return {

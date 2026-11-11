@@ -56,7 +56,9 @@ describe('readBackupStatus', () => {
 
   it('backup stariji od granice je zastario', () => {
     const dir = makeDir();
-    const old = new Date(NOW.getTime() - (DEFAULT_MAX_AGE_HOURS + 1) * 3_600_000);
+    const old = new Date(
+      NOW.getTime() - (DEFAULT_MAX_AGE_HOURS + 1) * 3_600_000,
+    );
     writeManifest(dir, { createdAt: old.toISOString(), dumpBytes: 10 });
 
     const status = readBackupStatus({ dir, now: NOW });
@@ -112,7 +114,11 @@ describe('readBackupStatus', () => {
     writeManifest(dir, { createdAt: '2026-11-08T00:00:00.000Z', dumpBytes: 1 });
 
     // Starost je tačno 12 h; granica 11 h je prekoračena, granica 13 h nije.
-    expect(readBackupStatus({ dir, now: NOW, maxAgeHours: 11 }).stale).toBe(true);
-    expect(readBackupStatus({ dir, now: NOW, maxAgeHours: 13 }).stale).toBe(false);
+    expect(readBackupStatus({ dir, now: NOW, maxAgeHours: 11 }).stale).toBe(
+      true,
+    );
+    expect(readBackupStatus({ dir, now: NOW, maxAgeHours: 13 }).stale).toBe(
+      false,
+    );
   });
 });

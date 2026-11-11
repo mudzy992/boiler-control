@@ -64,7 +64,7 @@ function makeService(existing: Record<string, unknown> | null = null) {
 async function createError(dto: Record<string, unknown>): Promise<string> {
   const { service } = makeService();
   try {
-    await service.create(1, { ...VALID, ...dto } as never);
+    await service.create(1, { ...VALID, ...dto });
     return '';
   } catch (error) {
     if (error instanceof BadRequestException) {
@@ -87,7 +87,7 @@ describe('HomeProfileService — porodica i snaga kotla', () => {
       ...VALID,
       boilerCatalogId: FAMILY_WITH_OUTPUTS,
       boilerOutputKw: 24,
-    } as never);
+    });
 
     expect(created[0].boilerCatalogId).toBe(FAMILY_WITH_OUTPUTS);
     expect(created[0].boilerOutputKw).toBe(24);
@@ -119,7 +119,7 @@ describe('HomeProfileService — porodica i snaga kotla', () => {
 
   it('dozvoljava profil bez kotla i bez snage', async () => {
     const { service, created } = makeService();
-    await service.create(1, { ...VALID } as never);
+    await service.create(1, { ...VALID });
     expect(created[0].boilerCatalogId).toBeNull();
     expect(created[0].boilerOutputKw).toBeNull();
   });
@@ -140,7 +140,7 @@ describe('HomeProfileService — porodica i snaga kotla', () => {
     });
 
     await expect(
-      service.update(1, 1, { boilerCatalogId: FAMILY_WITH_OUTPUTS } as never),
+      service.update(1, 1, { boilerCatalogId: FAMILY_WITH_OUTPUTS }),
     ).rejects.toThrow(/potrebno odabrati snagu/);
     expect(updated).toHaveLength(0);
   });
@@ -154,7 +154,7 @@ describe('HomeProfileService — porodica i snaga kotla', () => {
     await service.update(1, 1, {
       boilerCatalogId: FAMILY_WITH_OUTPUTS,
       boilerOutputKw: 28,
-    } as never);
+    });
 
     expect(updated[0].boilerCatalogId).toBe(FAMILY_WITH_OUTPUTS);
     expect(updated[0].boilerOutputKw).toBe(28);
@@ -166,7 +166,7 @@ describe('HomeProfileService — porodica i snaga kotla', () => {
       boilerCatalogId: FAMILY_WITH_OUTPUTS,
       boilerOutputKw: 24,
     });
-    await service.update(1, 1, { floorArea: 160 } as never);
+    await service.update(1, 1, { floorArea: 160 });
 
     expect(updated[0].boilerOutputKw).toBeUndefined();
     expect(updated[0].floorArea).toBe(160);

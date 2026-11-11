@@ -46,11 +46,16 @@ function dayObservations(
     const totalMinutes = index * 5;
     const changed = overrides(index);
     return {
-      at: localInstant(localDate, Math.floor(totalMinutes / 60), totalMinutes % 60),
+      at: localInstant(
+        localDate,
+        Math.floor(totalMinutes / 60),
+        totalMinutes % 60,
+      ),
       roomTempC: changed.roomTempC === undefined ? 21 : changed.roomTempC,
       targetTempC: changed.targetTempC === undefined ? 21 : changed.targetTempC,
       isHeating: changed.isHeating ?? false,
-      outdoorTempC: changed.outdoorTempC === undefined ? 3 : changed.outdoorTempC,
+      outdoorTempC:
+        changed.outdoorTempC === undefined ? 3 : changed.outdoorTempC,
       flowSetC: changed.flowSetC === undefined ? 45 : changed.flowSetC,
     };
   });
@@ -65,11 +70,13 @@ function setup(options: {
 }) {
   const prisma = {
     homeProfile: {
-      findUnique: jest.fn().mockResolvedValue(
-        options.home === undefined
-          ? { id: 10, weatherTimezone: ZONE, user: { timezone: null } }
-          : options.home,
-      ),
+      findUnique: jest
+        .fn()
+        .mockResolvedValue(
+          options.home === undefined
+            ? { id: 10, weatherTimezone: ZONE, user: { timezone: null } }
+            : options.home,
+        ),
     },
     dailyRecord: {
       // Isti model, dva različita upita: noćni dokaz se prepoznaje po filteru
@@ -101,7 +108,12 @@ describe('DailyOutcomeService.fillHome', () => {
 
     const result = await service.fillHome(10, NOW);
 
-    expect(result).toEqual({ homeProfileId: 10, filled: 0, skipped: 0, reasons: [] });
+    expect(result).toEqual({
+      homeProfileId: 10,
+      filled: 0,
+      skipped: 0,
+      reasons: [],
+    });
     expect(prisma.thermostatObservation.findMany).not.toHaveBeenCalled();
     expect(prisma.dailyRecord.updateMany).not.toHaveBeenCalled();
   });

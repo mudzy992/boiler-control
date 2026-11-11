@@ -51,7 +51,9 @@ export class GetHeatingEventsDto {
    * filtriranje je tada bilo nemoguće bez ponovnog izuma istog raspona.
    * Kad nijesu poslani, servis uzima zadnjih 30 dana.
    */
-  @ApiPropertyOptional({ description: 'Početak raspona; zadano prije 30 dana.' })
+  @ApiPropertyOptional({
+    description: 'Početak raspona; zadano prije 30 dana.',
+  })
   @IsOptional()
   @IsDateString()
   from?: string;

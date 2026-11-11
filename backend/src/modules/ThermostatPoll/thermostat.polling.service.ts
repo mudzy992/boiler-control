@@ -395,11 +395,10 @@ export class ThermostatPollingService {
     if (!this.observation.isDue(device.id, values.now)) return;
 
     try {
-      const outdoorTempC =
-        await this.pollingWeather.getV2CurrentTemperature(
-          device.userId,
-          device.homeProfileId,
-        );
+      const outdoorTempC = await this.pollingWeather.getV2CurrentTemperature(
+        device.userId,
+        device.homeProfileId,
+      );
 
       const result = await this.observation.record({
         deviceId: device.id,

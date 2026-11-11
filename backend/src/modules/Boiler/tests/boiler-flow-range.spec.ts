@@ -258,10 +258,9 @@ describe('šesti krug: raspon polazne po tipu bojlera', () => {
    * čim se katalog umiješa u `finalTemp`.
    */
   it('raspon ne dira motor: isti ulaz daje isti finalTemp bez obzira na granice', () => {
-    const { ProfileStrategy } =
-      jest.requireActual<typeof import('../../Heating/strategies/profile.strategy')>(
-        '../../Heating/strategies/profile.strategy',
-      );
+    const { ProfileStrategy } = jest.requireActual<
+      typeof import('../../Heating/strategies/profile.strategy')
+    >('../../Heating/strategies/profile.strategy');
     const strategy = new ProfileStrategy();
 
     const input = {
@@ -284,7 +283,7 @@ describe('šesti krug: raspon polazne po tipu bojlera', () => {
       targetTemp: 22,
       events: [],
       hour: 7,
-    } as unknown as Parameters<ProfileStrategy['calculate']>[0];
+    } as unknown;
 
     const baseline = strategy.calculate(input);
 

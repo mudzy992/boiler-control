@@ -16,7 +16,9 @@ export const OBSERVATION_INTERVAL_MIN = 5;
 
 const MS_PER_MINUTE = 60_000;
 
-export function observationIntervalMs(intervalMin = OBSERVATION_INTERVAL_MIN): number {
+export function observationIntervalMs(
+  intervalMin = OBSERVATION_INTERVAL_MIN,
+): number {
   return intervalMin * MS_PER_MINUTE;
 }
 

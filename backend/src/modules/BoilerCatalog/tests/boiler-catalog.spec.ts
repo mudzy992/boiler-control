@@ -49,17 +49,16 @@ describe('katalog — integritet', () => {
 
   it('pokvaren katalog se prepoznaje, a ne prećutkuje', () => {
     const broken: BoilerFamily = {
-      ...(BOILER_FAMILIES[0] as BoilerFamily),
+      ...BOILER_FAMILIES[0],
       id: 'test',
       specStatus: 'TO_VERIFY',
       heatingFlowMaxC: 80,
     };
-    expect(catalogIssues([broken]).join('; ')).toMatch(/nepotvrđen, a ima brojeve/);
+    expect(catalogIssues([broken]).join('; ')).toMatch(
+      /nepotvrđen, a ima brojeve/,
+    );
 
-    const duplicated = [
-      BOILER_FAMILIES[0] as BoilerFamily,
-      BOILER_FAMILIES[0] as BoilerFamily,
-    ];
+    const duplicated = [BOILER_FAMILIES[0], BOILER_FAMILIES[0]];
     expect(catalogIssues(duplicated).join('; ')).toMatch(/duplikat/);
   });
 });
@@ -102,13 +101,13 @@ describe('katalog — pravilo o snižavanju', () => {
 
   it('potvrđen model bez odvojenih krugova ne dozvoljava savjet', () => {
     const family = {
-      ...(BOILER_FAMILIES[0] as BoilerFamily),
+      ...BOILER_FAMILIES[0],
       separateHeatingDhwSettings: false,
     };
     expect(isFlowAdviceAllowed(family)).toBe(false);
 
     const unknown = {
-      ...(BOILER_FAMILIES[0] as BoilerFamily),
+      ...BOILER_FAMILIES[0],
       separateHeatingDhwSettings: null,
     };
     expect(isFlowAdviceAllowed(unknown)).toBe(false);
@@ -127,13 +126,19 @@ describe('katalog — gornja granica', () => {
   });
 
   it('model sužava granicu kad je niži od profila', () => {
-    const family = { ...(BOILER_FAMILIES[0] as BoilerFamily), heatingFlowMaxC: 45 };
+    const family = {
+      ...BOILER_FAMILIES[0],
+      heatingFlowMaxC: 45,
+    };
     expect(effectiveCeilingC({ systemMaxC: null, family })).toBe(45);
     expect(effectiveCeilingC({ systemMaxC: 40, family })).toBe(40);
   });
 
   it('nijedan ulaz ne može proširiti raspon preko 55', () => {
-    const family = { ...(BOILER_FAMILIES[0] as BoilerFamily), heatingFlowMaxC: 80 };
+    const family = {
+      ...BOILER_FAMILIES[0],
+      heatingFlowMaxC: 80,
+    };
     expect(effectiveCeilingC({ systemMaxC: 70, family })).toBe(ENVELOPE_MAX_C);
   });
 });

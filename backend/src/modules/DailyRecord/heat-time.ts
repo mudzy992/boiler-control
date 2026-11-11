@@ -51,10 +51,7 @@ export interface HeatTimeInput {
 }
 
 /** Pomoćna: brzina pri kandidatu, ili `null` kad proračun ne stoji. */
-function rateAt(
-  input: HeatTimeInput,
-  candidateFlowC: number,
-): number | null {
+function rateAt(input: HeatTimeInput, candidateFlowC: number): number | null {
   const measuredDrive = input.measuredFlowC - input.measuredRoomC;
   const drive = candidateFlowC - input.roomC;
 

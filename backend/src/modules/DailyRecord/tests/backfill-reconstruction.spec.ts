@@ -57,7 +57,9 @@ describe('reconstructDay — dan bez ijednog izvora', () => {
 
   it('događaj iz drugog dana ne pravi red', () => {
     const row = reconstructDay(
-      input({ events: [event('2026-03-09T20:00:00Z', '2026-03-09T21:00:00Z')] }),
+      input({
+        events: [event('2026-03-09T20:00:00Z', '2026-03-09T21:00:00Z')],
+      }),
     );
     expect(row).toBeNull();
   });
@@ -106,7 +108,11 @@ describe('reconstructDay — ciklusi iz događaja', () => {
 
   it('bez događaja ciklusi su u `missing`, a ne nula', () => {
     const row = reconstructDay(
-      input({ gasReadings: [{ readingDate: new Date('2026-03-10T18:00:00Z'), consumption: 4.2 }] }),
+      input({
+        gasReadings: [
+          { readingDate: new Date('2026-03-10T18:00:00Z'), consumption: 4.2 },
+        ],
+      }),
     );
     expect(row?.cycles).toBeNull();
     expect(row?.missing).toContain('cycles');
@@ -153,7 +159,9 @@ describe('reconstructDay — polazna, plin i stepen-dan', () => {
     expect(withGas?.gasM3).toBe(6);
 
     const noGas = reconstructDay(
-      input({ events: [event('2026-03-10T05:00:00Z', '2026-03-10T06:00:00Z')] }),
+      input({
+        events: [event('2026-03-10T05:00:00Z', '2026-03-10T06:00:00Z')],
+      }),
     );
     expect(noGas?.gasM3).toBeNull();
     expect(noGas?.missing).toContain('gasM3');
@@ -176,12 +184,15 @@ describe('reconstructDay — polazna, plin i stepen-dan', () => {
 
     const enough = reconstructDay(
       input({
-        boilerRows: Array.from({ length: MIN_OUTDOOR_SAMPLES_PER_DAY }, (_, index) => ({
-          createdAt: new Date(`2026-03-10T0${index % 10}:00:00Z`),
-          externalTemp: 5,
-          suggestedFlowTemp: 45,
-          actualFlowTemp: 40,
-        })),
+        boilerRows: Array.from(
+          { length: MIN_OUTDOOR_SAMPLES_PER_DAY },
+          (_, index) => ({
+            createdAt: new Date(`2026-03-10T0${index % 10}:00:00Z`),
+            externalTemp: 5,
+            suggestedFlowTemp: 45,
+            actualFlowTemp: 40,
+          }),
+        ),
       }),
     );
     expect(enough?.degreeDays).toBe(DEGREE_DAY_BASE_C - 5);
@@ -246,7 +257,9 @@ describe('reconstructDay — šta backfill ne smije popuniti', () => {
 
   it('svaki red nosi verziju backfilla, da se poslije može razlikovati', () => {
     const row = reconstructDay(
-      input({ events: [event('2026-03-10T05:00:00Z', '2026-03-10T06:00:00Z')] }),
+      input({
+        events: [event('2026-03-10T05:00:00Z', '2026-03-10T06:00:00Z')],
+      }),
     );
     expect(row?.version).toBe(BACKFILL_VERSION);
   });

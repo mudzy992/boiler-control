@@ -206,7 +206,10 @@ export class GasReadingService {
       }),
       this.prisma.gasReading.count({ where }),
     ]);
-    return { rows: readings.map((reading) => this.mapGasReading(reading)), total };
+    return {
+      rows: readings.map((reading) => this.mapGasReading(reading)),
+      total,
+    };
   }
 
   async getLatest(userId: number) {

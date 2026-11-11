@@ -10,7 +10,10 @@ import {
   type DailyRecordWriteResult,
 } from '../DailyRecord/daily-record.writer';
 import { ProposalShadowService } from '../DailyRecord/proposal-shadow.service';
-import { selectDueHomes, type DueHomeSource } from '../DailyRecord/daily-record.due';
+import {
+  selectDueHomes,
+  type DueHomeSource,
+} from '../DailyRecord/daily-record.due';
 
 /**
  * Jutarnji predlog — ali **ne** kao jedan posao u 06:00 UTC.
@@ -62,7 +65,9 @@ export class DailyRecommendationService {
     // kucanje (288 dnevno) išlo u bazu po svakoj kući.
     const existing = await this.prisma.dailyRecord.findMany({
       where: {
-        homeProfileId: { in: [...new Set(due.map((home) => home.homeProfileId))] },
+        homeProfileId: {
+          in: [...new Set(due.map((home) => home.homeProfileId))],
+        },
         localDate: { in: [...new Set(due.map((home) => home.localDate))] },
       },
       select: { homeProfileId: true, localDate: true },
@@ -93,7 +98,8 @@ export class DailyRecommendationService {
               now,
             );
           } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message =
+              error instanceof Error ? error.message : String(error);
             this.logger.error(
               `Shadow odluka nije izračunata za kuću ${result.homeProfileId}: ${message}`,
             );

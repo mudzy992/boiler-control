@@ -191,13 +191,18 @@ export function shadowReport(rows: ShadowRow[]): ShadowReport {
   const unexplained = differing.filter((comparison) => !comparison.explained);
 
   const absDeltas = differing.map((comparison) => Math.abs(comparison.deltaC));
-  const maxAbsDeltaC = absDeltas.length > 0 ? rounded(Math.max(...absDeltas)) : 0;
+  const maxAbsDeltaC =
+    absDeltas.length > 0 ? rounded(Math.max(...absDeltas)) : 0;
   const meanAbsDeltaC =
     absDeltas.length > 0
-      ? rounded(absDeltas.reduce((sum, value) => sum + value, 0) / absDeltas.length)
+      ? rounded(
+          absDeltas.reduce((sum, value) => sum + value, 0) / absDeltas.length,
+        )
       : 0;
 
-  const explored = rowsSorted.filter((row) => row.shadowExploration === true).length;
+  const explored = rowsSorted.filter(
+    (row) => row.shadowExploration === true,
+  ).length;
 
   const blockedByModel = differing.filter((comparison) =>
     comparison.reasons.includes('MODEL_UNVERIFIED'),

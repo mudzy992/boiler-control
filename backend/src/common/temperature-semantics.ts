@@ -45,9 +45,9 @@ export type FlowTempC = number & { readonly __family?: 'FLOW' };
 /** Vanjska temperatura (°C) — s uređaja ili iz prognoze. */
 export type OutdoorTempC = number & { readonly __family?: 'OUTDOOR' };
 
-export const asRoomTempC = (value: number): RoomTempC => value as RoomTempC;
-export const asFlowTempC = (value: number): FlowTempC => value as FlowTempC;
-export const asOutdoorTempC = (value: number): OutdoorTempC => value as OutdoorTempC;
+export const asRoomTempC = (value: number): RoomTempC => value;
+export const asFlowTempC = (value: number): FlowTempC => value;
+export const asOutdoorTempC = (value: number): OutdoorTempC => value;
 
 /**
  * Kanonska imena po konceptu. Ovo je referenca za refaktorisanja: ako u kodu

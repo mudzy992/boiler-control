@@ -22,10 +22,7 @@ import catalogJson from './catalog.json';
  */
 
 export type DhwKind =
-  | 'INSTANT'
-  | 'INTEGRATED_CYLINDER'
-  | 'EXTERNAL_CYLINDER'
-  | 'NONE';
+  'INSTANT' | 'INTEGRATED_CYLINDER' | 'EXTERNAL_CYLINDER' | 'NONE';
 
 export type BoilerSpecStatus = 'VERIFIED_MANUAL' | 'PARTIAL' | 'TO_VERIFY';
 
@@ -87,9 +84,7 @@ function asStringOrNull(value: unknown): string | null {
  * Ista pravila kao `scripts/audit/boiler_catalog_check.py`, ali u runtime-u —
  * skripta je gate u CI-u, ovo je odbrana u aplikaciji.
  */
-export function catalogIssues(
-  families: readonly BoilerFamily[],
-): string[] {
+export function catalogIssues(families: readonly BoilerFamily[]): string[] {
   const issues: string[] = [];
   const seen = new Set<string>();
 
@@ -111,7 +106,8 @@ export function catalogIssues(
       issues.push(`${family.id}: min polazne nije manji od max`);
     }
     if (family.specStatus === 'VERIFIED_MANUAL') {
-      if (family.source == null) issues.push(`${family.id}: potvrđen bez izvora`);
+      if (family.source == null)
+        issues.push(`${family.id}: potvrđen bez izvora`);
       if (family.heatingFlowMinC == null || family.heatingFlowMaxC == null) {
         issues.push(`${family.id}: potvrđen bez brojeva polazne`);
       }
@@ -149,9 +145,7 @@ function normalise(raw: RawFamily, brand: string): BoilerFamily {
     heatingFlowLimitParam: asStringOrNull(raw.heatingFlowLimitParam),
     dhwTempMinC: asNumberOrNull(raw.dhwTempMinC),
     dhwTempMaxC: asNumberOrNull(raw.dhwTempMaxC),
-    separateHeatingDhwSettings: asBooleanOrNull(
-      raw.separateHeatingDhwSettings,
-    ),
+    separateHeatingDhwSettings: asBooleanOrNull(raw.separateHeatingDhwSettings),
     condensing: asBooleanOrNull(raw.condensing),
     modulationMinKw: asNumberOrNull(raw.modulationMinKw),
     underfloorMaxFlowC: asNumberOrNull(raw.underfloorMaxFlowC),
@@ -283,9 +277,7 @@ export function effectiveFloorC(input: {
   return Math.max(ENVELOPE_MIN_C, familyMin ?? fallback ?? ENVELOPE_MIN_C);
 }
 
-function clampToEnvelope(
-  value: number | null | undefined,
-): number | null {
+function clampToEnvelope(value: number | null | undefined): number | null {
   if (value == null || !Number.isFinite(value)) return null;
   return Math.max(ENVELOPE_MIN_C, Math.min(ENVELOPE_MAX_C, value));
 }

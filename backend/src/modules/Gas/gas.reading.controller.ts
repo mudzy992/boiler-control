@@ -84,7 +84,10 @@ export class GasReadingController {
   ) {
     // Prije: svi redovi u jednom odgovoru. Očitanja rastu svaki mjesec, pa je to
     // jedina lista koja s vremenom sigurno postaje prevelika.
-    const page = parsePage({ limit, offset }, { defaultLimit: 100, maxLimit: 500 });
+    const page = parsePage(
+      { limit, offset },
+      { defaultLimit: 100, maxLimit: 500 },
+    );
     const { rows, total } = await this.service.findAll(req.user.userId, {
       ...page,
       from: from ? new Date(from) : undefined,

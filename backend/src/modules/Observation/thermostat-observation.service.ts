@@ -75,7 +75,10 @@ export class ThermostatObservationService {
    * Nije garancija (garant je unique indeks) — samo najava.
    */
   isDue(deviceId: number, now: Date): boolean {
-    return this.lastBucketByDevice.get(deviceId) !== observationBucketStart(now).getTime();
+    return (
+      this.lastBucketByDevice.get(deviceId) !==
+      observationBucketStart(now).getTime()
+    );
   }
 
   async record(sample: ObservationSample): Promise<ObservationWriteResult> {

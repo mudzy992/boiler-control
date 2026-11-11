@@ -174,7 +174,8 @@ function rangeSource(input: {
      * gornju) — granica je tada opet katalog, ne motor.
      */
     const narrowedByBoiler =
-      min !== SYSTEM_MIN_CURRENT_FLOW_TEMP || max !== SYSTEM_MAX_CURRENT_FLOW_TEMP;
+      min !== SYSTEM_MIN_CURRENT_FLOW_TEMP ||
+      max !== SYSTEM_MAX_CURRENT_FLOW_TEMP;
     return narrowedByBoiler ? 'BOILER' : 'SYSTEM';
   }
   return 'HOME';

@@ -40,7 +40,9 @@ function home(
       id: userId,
       timezone: extra.timezone ?? null,
       activeHomeProfileId:
-        extra.activeHomeProfileId === undefined ? id : extra.activeHomeProfileId,
+        extra.activeHomeProfileId === undefined
+          ? id
+          : extra.activeHomeProfileId,
     },
   };
 }
@@ -57,7 +59,9 @@ function setup(options: {
       findMany: jest.fn().mockResolvedValue(options.existing ?? []),
     },
     notification: {
-      findFirst: jest.fn().mockResolvedValue(options.alreadyNotified ? { id: 1 } : null),
+      findFirst: jest
+        .fn()
+        .mockResolvedValue(options.alreadyNotified ? { id: 1 } : null),
     },
   };
 
@@ -81,7 +85,9 @@ function setup(options: {
     }),
   };
 
-  const proposalShadow = { evaluate: jest.fn().mockResolvedValue({ status: 'EVALUATED' }) };
+  const proposalShadow = {
+    evaluate: jest.fn().mockResolvedValue({ status: 'EVALUATED' }),
+  };
   const service = new DailyRecommendationService(
     prisma as any,
     notifications as any,

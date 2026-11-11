@@ -56,10 +56,7 @@ describe('grupisanje serije po lokalnom danu', () => {
 
   it('uzorak bez sobne ne ulazi u `samples`, ali vanjska se broji', () => {
     const [day] = aggregateByLocalDay(
-      [
-        sample(),
-        sample({ roomTempC: null, isHeating: false }),
-      ],
+      [sample(), sample({ roomTempC: null, isHeating: false })],
       ZONE,
       '2026-11-02',
     );
@@ -178,7 +175,9 @@ function simulateHouse(options: {
       else if (!heating && sensor <= TARGET - 1) heating = true;
 
       const deltaRoom =
-        (heating ? aPerHour * (flow - room) : 0) - bPerHour * (room - outdoor) + uPerHour;
+        (heating ? aPerHour * (flow - room) : 0) -
+        bPerHour * (room - outdoor) +
+        uPerHour;
       room += deltaRoom / 60;
 
       if (minute % 5 === 0) {
@@ -208,7 +207,9 @@ function setup(observations: unknown[], existingModel: unknown = null) {
         user: { timezone: null },
       }),
     },
-    thermostatObservation: { findMany: jest.fn().mockResolvedValue(observations) },
+    thermostatObservation: {
+      findMany: jest.fn().mockResolvedValue(observations),
+    },
     homeModel: {
       findUnique: jest.fn().mockResolvedValue(existingModel),
       upsert: jest.fn(async (args: any) => {
@@ -239,7 +240,7 @@ describe('fit modela kuće', () => {
     expect(result.state).toBe('TRACKING');
     expect(result.slope).not.toBeNull();
     expect(Math.abs((result.slope ?? 0) - 200 / 212)).toBeLessThanOrEqual(0.1);
-    expect(upserts[0].update.slopeS).toBeCloseTo(result.slope as number, 10);
+    expect(upserts[0].update.slopeS).toBeCloseTo(result.slope, 10);
     expect(upserts[0].update.state).toBe('TRACKING');
     expect(upserts[0].update.modelVersion).toBe('model-1');
     expect(upserts[0].update.lastFitAt).toEqual(NOW);
@@ -390,11 +391,7 @@ describe('fit modela kuće', () => {
       k1: 212,
       k2: 200,
     });
-    const aggregates = aggregateByLocalDay(
-      observations,
-      ZONE,
-      '2026-10-03',
-    );
+    const aggregates = aggregateByLocalDay(observations, ZONE, '2026-10-03');
     for (const day of aggregates) {
       expect(day.samples).toBeLessThanOrEqual(OBSERVATIONS_PER_DAY);
     }
@@ -413,9 +410,7 @@ describe('primarni uređaj', () => {
   });
 
   it('uzima uređaj sa najviše uzoraka', () => {
-    expect(
-      pickPrimaryDevice([row(2), row(1), row(1)]),
-    ).toBe(1);
+    expect(pickPrimaryDevice([row(2), row(1), row(1)])).toBe(1);
   });
 
   it('kod izjednačenja uzima manji id — determinizam', () => {

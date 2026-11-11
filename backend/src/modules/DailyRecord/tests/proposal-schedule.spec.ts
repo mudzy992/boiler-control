@@ -37,8 +37,12 @@ describe('lokalni dan i prag 06:00', () => {
   });
 
   it('predlog nije "dužan" prije 06:00 lokalno', () => {
-    expect(isProposalDue(new Date('2026-07-15T03:59:00Z'), SARAJEVO)).toBe(false);
-    expect(isProposalDue(new Date('2026-07-15T04:00:00Z'), SARAJEVO)).toBe(true);
+    expect(isProposalDue(new Date('2026-07-15T03:59:00Z'), SARAJEVO)).toBe(
+      false,
+    );
+    expect(isProposalDue(new Date('2026-07-15T04:00:00Z'), SARAJEVO)).toBe(
+      true,
+    );
   });
 
   it('prozor pisanja je [06:00, 12:00) lokalno', () => {
@@ -67,8 +71,12 @@ describe('lokalni dan i prag 06:00', () => {
     expect(localDateKey(first, SARAJEVO)).toBe('2026-10-25');
     expect(localDateKey(second, SARAJEVO)).toBe('2026-10-25');
     // Prag 06:00 pada poslije prelaza (CET), dakle u 05:00Z, ne 04:00Z.
-    expect(isProposalDue(new Date('2026-10-25T04:59:00Z'), SARAJEVO)).toBe(false);
-    expect(isProposalDue(new Date('2026-10-25T05:00:00Z'), SARAJEVO)).toBe(true);
+    expect(isProposalDue(new Date('2026-10-25T04:59:00Z'), SARAJEVO)).toBe(
+      false,
+    );
+    expect(isProposalDue(new Date('2026-10-25T05:00:00Z'), SARAJEVO)).toBe(
+      true,
+    );
   });
 });
 

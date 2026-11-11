@@ -189,7 +189,10 @@ describe('B-019: heating-events mapira temperaturu po uređaju', () => {
     // zajedno sa preimenovanjem u `room…` — polje i dalje mora postojati,
     // samo pod imenom koje kaže da je temperatura sobe.
     expect(Object.keys(res.data[0])).toEqual(
-      expect.arrayContaining(['roomCurrentTempThermostat', 'roomTargetTempThermostat']),
+      expect.arrayContaining([
+        'roomCurrentTempThermostat',
+        'roomTargetTempThermostat',
+      ]),
     );
     expect(Object.keys(res.data[0])).not.toContain('curretTempThermostat');
   });

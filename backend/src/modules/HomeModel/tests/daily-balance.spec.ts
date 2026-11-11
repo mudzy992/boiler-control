@@ -72,7 +72,11 @@ describe('jedan dan -> jedan red regresije', () => {
         { heatingSamples: 100, heatingPairs: 80 },
         'FLOW_MISSING',
       ],
-      ['grijanje cijeli dan', { heatingSamples: 287, heatingPairs: 287 }, 'DUTY'],
+      [
+        'grijanje cijeli dan',
+        { heatingSamples: 287, heatingPairs: 287 },
+        'DUTY',
+      ],
       ['bez grijanja (2 %)', { heatingSamples: 5, heatingPairs: 5 }, 'DUTY'],
       ['slab signal', { outdoorSum: 288 * 18 }, 'WEAK_SIGNAL'],
       ['nije u ravnoteži', { roomSum: 288 * 24 }, 'NOT_IN_BALANCE'],
@@ -161,7 +165,9 @@ describe('fit dnevnog bilansa', () => {
   });
 
   it('premalo dana: nema procjene, ne nula', () => {
-    const result = fitDailyBalance(syntheticRows(MIN_DAYS_FOR_FIT - 1, 0.8, 0.9));
+    const result = fitDailyBalance(
+      syntheticRows(MIN_DAYS_FOR_FIT - 1, 0.8, 0.9),
+    );
     expect(result.status).toBe('insufficient');
     if (result.status !== 'insufficient') return;
     expect(result.days).toBe(MIN_DAYS_FOR_FIT - 1);

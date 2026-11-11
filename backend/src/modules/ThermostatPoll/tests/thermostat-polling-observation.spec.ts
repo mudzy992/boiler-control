@@ -42,14 +42,20 @@ function openEvent() {
   };
 }
 
-function makeHarness(options: {
-  snapshot?: { currentTemp: number | null; targetTemp: number | null; powerOn: boolean | null };
-  lastEvent?: ReturnType<typeof openEvent> | null;
-  v2Temperature?: number | null;
-  device?: Record<string, unknown>;
-  recordImpl?: () => Promise<string>;
-  due?: boolean;
-} = {}) {
+function makeHarness(
+  options: {
+    snapshot?: {
+      currentTemp: number | null;
+      targetTemp: number | null;
+      powerOn: boolean | null;
+    };
+    lastEvent?: ReturnType<typeof openEvent> | null;
+    v2Temperature?: number | null;
+    device?: Record<string, unknown>;
+    recordImpl?: () => Promise<string>;
+    due?: boolean;
+  } = {},
+) {
   process.env[POLL_PAGINATION_FLAG] = 'on';
   const due = options.due ?? true;
 
@@ -85,14 +91,18 @@ function makeHarness(options: {
         ),
       create: jest
         .fn()
-        .mockImplementation(({ data }: any) => Promise.resolve({ id: 1, ...data })),
+        .mockImplementation(({ data }: any) =>
+          Promise.resolve({ id: 1, ...data }),
+        ),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     boilerHistory: {
       findFirst: jest.fn().mockResolvedValue(null),
       create: jest
         .fn()
-        .mockImplementation(({ data }: any) => Promise.resolve({ id: 2, ...data })),
+        .mockImplementation(({ data }: any) =>
+          Promise.resolve({ id: 2, ...data }),
+        ),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     user: {
@@ -114,7 +124,11 @@ function makeHarness(options: {
     prisma as any,
     {
       fetchSnapshot: jest.fn().mockResolvedValue(
-        options.snapshot ?? { currentTemp: 20.5, targetTemp: 22, powerOn: true },
+        options.snapshot ?? {
+          currentTemp: 20.5,
+          targetTemp: 22,
+          powerOn: true,
+        },
       ),
     } as any,
     { calculateFlowTemp: jest.fn().mockResolvedValue({ flowTemp: 45 }) } as any,

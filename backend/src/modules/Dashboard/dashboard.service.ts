@@ -238,7 +238,7 @@ export class DashboardService {
             ? latestBoilerHistory
             : {
                 ...latestBoilerHistory,
-                suggestedFlowTemp: dailyFlow.boilerSuggestedFlowTemp as number,
+                suggestedFlowTemp: dailyFlow.boilerSuggestedFlowTemp,
               },
         recommendation: recommendations[0] ?? null,
         dailyFlow,

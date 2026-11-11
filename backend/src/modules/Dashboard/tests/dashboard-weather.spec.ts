@@ -57,9 +57,7 @@ function makeService(
   const prisma = {
     weatherCache,
     user: {
-      findUnique: jest
-        .fn()
-        .mockResolvedValue({ timezone: 'Europe/Sarajevo' }),
+      findUnique: jest.fn().mockResolvedValue({ timezone: 'Europe/Sarajevo' }),
     },
     dailyRecord: { findFirst: jest.fn().mockResolvedValue(null) },
   };

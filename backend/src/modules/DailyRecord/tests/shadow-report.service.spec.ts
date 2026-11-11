@@ -6,16 +6,20 @@ import { ShadowReportService } from '../shadow-report.service';
  * odbiti tuđi dom — izvještaj nosi podatke o nečijem grijanju.
  */
 
-function setup(options: {
-  home?: { id: number } | null;
-  rows?: unknown[];
-} = {}) {
+function setup(
+  options: {
+    home?: { id: number } | null;
+    rows?: unknown[];
+  } = {},
+) {
   const findMany = jest.fn().mockResolvedValue(options.rows ?? []);
   const prisma = {
     homeProfile: {
       findFirst: jest
         .fn()
-        .mockResolvedValue(options.home === undefined ? { id: 7 } : options.home),
+        .mockResolvedValue(
+          options.home === undefined ? { id: 7 } : options.home,
+        ),
     },
     dailyRecord: { findMany },
   };

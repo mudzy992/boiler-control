@@ -169,7 +169,8 @@ export function reconstructDay(input: BackfillInput): BackfillRow | null {
       .filter((event) => event.timestampEnd != null)
       .map(
         (event) =>
-          (event.timestampEnd!.getTime() - event.timestampStart.getTime()) / 60_000,
+          (event.timestampEnd!.getTime() - event.timestampStart.getTime()) /
+          60_000,
       )
       .filter((minutes) => minutes >= MIN_CYCLE_MIN);
 
@@ -192,7 +193,13 @@ export function reconstructDay(input: BackfillInput): BackfillRow | null {
     overshootC = round(maxOvershoot, 2);
     undershootC = round(maxUndershoot, 2);
   } else {
-    missing.push('cycles', 'medianCycleMin', 'dutyPercent', 'overshootC', 'undershootC');
+    missing.push(
+      'cycles',
+      'medianCycleMin',
+      'dutyPercent',
+      'overshootC',
+      'undershootC',
+    );
   }
 
   // --- polazna koja je stvarno bila na kotlu -------------------------------
@@ -219,9 +226,14 @@ export function reconstructDay(input: BackfillInput): BackfillRow | null {
   if (gas.length > 0) {
     const values = gas
       .map((row) => row.consumption)
-      .filter((value): value is number => value != null && Number.isFinite(value));
+      .filter(
+        (value): value is number => value != null && Number.isFinite(value),
+      );
     if (values.length > 0) {
-      gasM3 = round(values.reduce((sum, value) => sum + value, 0), 3);
+      gasM3 = round(
+        values.reduce((sum, value) => sum + value, 0),
+        3,
+      );
       sources.push('GAS_READING');
     }
   }
@@ -233,7 +245,8 @@ export function reconstructDay(input: BackfillInput): BackfillRow | null {
     .map((row) => row.externalTemp)
     .filter((value) => Number.isFinite(value));
   if (outdoor.length >= MIN_OUTDOOR_SAMPLES_PER_DAY) {
-    const mean = outdoor.reduce((sum, value) => sum + value, 0) / outdoor.length;
+    const mean =
+      outdoor.reduce((sum, value) => sum + value, 0) / outdoor.length;
     degreeDays = round(Math.max(0, DEGREE_DAY_BASE_C - mean), 2);
     sources.push('DEGREE_DAYS_FROM_DEVICE');
   } else {
@@ -292,12 +305,14 @@ export interface BackfillSummary {
 export function summarise(rows: readonly BackfillRow[]): BackfillSummary {
   return {
     days: rows.length,
-    withEvents: rows.filter((row) => row.sources.includes('HEATING_EVENT')).length,
+    withEvents: rows.filter((row) => row.sources.includes('HEATING_EVENT'))
+      .length,
     withGas: rows.filter((row) => row.sources.includes('GAS_READING')).length,
     withDegreeDays: rows.filter((row) =>
       row.sources.includes('DEGREE_DAYS_FROM_DEVICE'),
     ).length,
-    withProposal: rows.filter((row) => row.sources.includes('RECOMMENDATION')).length,
+    withProposal: rows.filter((row) => row.sources.includes('RECOMMENDATION'))
+      .length,
     totalMissing: rows.reduce((sum, row) => sum + row.missing.length, 0),
   };
 }

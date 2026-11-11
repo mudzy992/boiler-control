@@ -98,7 +98,11 @@ export function readBackupStatus(
 
   const now = options.now ?? new Date();
   const ageHours = createdAt
-    ? Math.max(0, Math.round(((now.getTime() - createdAt.getTime()) / 3_600_000) * 10) / 10)
+    ? Math.max(
+        0,
+        Math.round(((now.getTime() - createdAt.getTime()) / 3_600_000) * 10) /
+          10,
+      )
     : null;
 
   return {
@@ -106,7 +110,8 @@ export function readBackupStatus(
     lastBackupAt: createdAt ? createdAt.toISOString() : null,
     ageHours,
     stale: ageHours === null || ageHours > maxAgeHours,
-    dumpBytes: typeof manifest?.dumpBytes === 'number' ? manifest.dumpBytes : null,
+    dumpBytes:
+      typeof manifest?.dumpBytes === 'number' ? manifest.dumpBytes : null,
     uploadsIncluded: Boolean(manifest?.uploads),
     lastError,
   };

@@ -14,10 +14,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { PrismaService } from '../../prisma/prisma.service';
-import {
-  DailyHistoryService,
-  MAX_HISTORY_ROWS,
-} from './daily-history.service';
+import { DailyHistoryService, MAX_HISTORY_ROWS } from './daily-history.service';
 import { validatedWindow } from './shadow.report.controller';
 
 /**
@@ -52,7 +49,9 @@ export class DailyHistoryController {
     type: Number,
     description: 'Koliko redova preskočiti (straničenje tabele).',
   })
-  @ApiOkResponse({ description: 'Dnevni zapisi za dom i period, sa porijeklom' })
+  @ApiOkResponse({
+    description: 'Dnevni zapisi za dom i period, sa porijeklom',
+  })
   async dailyHistory(
     @Req() req,
     @Query('homeProfileId') homeProfileId?: string,
@@ -66,7 +65,9 @@ export class DailyHistoryController {
       : await this.activeHomeProfileId(req.user.userId);
 
     if (!Number.isInteger(homeId) || homeId <= 0) {
-      throw new BadRequestException('homeProfileId mora biti pozitivan cio broj');
+      throw new BadRequestException(
+        'homeProfileId mora biti pozitivan cio broj',
+      );
     }
 
     return this.history.forHome(req.user.userId, homeId, {
@@ -83,7 +84,9 @@ export class DailyHistoryController {
     });
 
     if (!user?.activeHomeProfileId) {
-      throw new BadRequestException('Nema aktivnog doma — pošalji homeProfileId');
+      throw new BadRequestException(
+        'Nema aktivnog doma — pošalji homeProfileId',
+      );
     }
     return user.activeHomeProfileId;
   }

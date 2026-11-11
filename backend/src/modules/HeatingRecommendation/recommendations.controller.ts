@@ -2,8 +2,17 @@ import { Controller, Get, Query, Res, UseGuards, Req } from '@nestjs/common';
 import type { Response } from 'express';
 import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { parsePage, setTotalCount, TOTAL_COUNT_HEADER } from '../../common/pagination';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  parsePage,
+  setTotalCount,
+  TOTAL_COUNT_HEADER,
+} from '../../common/pagination';
 import { RecommendationResponseDto } from './dto/recommendation-response.dto';
 import { HeatingRecommendationService } from './heating.recommendation.service';
 
@@ -40,7 +49,10 @@ export class RecommendationsController {
   ) {
     // Prije: `take: 100` bez ikakvog znaka da još redova postoji — korisnik sa
     // 299 preporuka je vidio 100 i nije imao način da sazna da ima još.
-    const page = parsePage({ limit, offset }, { defaultLimit: 50, maxLimit: 200 });
+    const page = parsePage(
+      { limit, offset },
+      { defaultLimit: 50, maxLimit: 200 },
+    );
     const { rows, total } = await this.recommendationService.getRecommendations(
       req.user.userId,
       {

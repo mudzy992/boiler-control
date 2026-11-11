@@ -80,7 +80,9 @@ describe('compareShadowDay', () => {
   });
 
   it('razlika bez razloga je neobjašnjena — to je greška, ne ušteda', () => {
-    const comparison = compareShadowDay(row({ shadowFlowC: 41, shadowReasons: '' }));
+    const comparison = compareShadowDay(
+      row({ shadowFlowC: 41, shadowReasons: '' }),
+    );
     expect(comparison).toMatchObject({ direction: 'LOWER', explained: false });
   });
 
@@ -97,9 +99,21 @@ describe('shadowReport — brojevi', () => {
   it('broji dane, razlike, smjer i udio', () => {
     const report = shadowReport([
       row({ localDate: '2026-11-01' }),
-      row({ localDate: '2026-11-02', shadowFlowC: 41, shadowReasons: 'COMFORT_HOLD' }),
-      row({ localDate: '2026-11-03', shadowFlowC: 47, shadowReasons: 'UNDERSHOOT' }),
-      row({ localDate: '2026-11-04', shadowFlowC: 41, shadowReasons: 'COMFORT_HOLD+DWELL' }),
+      row({
+        localDate: '2026-11-02',
+        shadowFlowC: 41,
+        shadowReasons: 'COMFORT_HOLD',
+      }),
+      row({
+        localDate: '2026-11-03',
+        shadowFlowC: 47,
+        shadowReasons: 'UNDERSHOOT',
+      }),
+      row({
+        localDate: '2026-11-04',
+        shadowFlowC: 41,
+        shadowReasons: 'COMFORT_HOLD+DWELL',
+      }),
     ]);
 
     expect(report).toMatchObject({
@@ -132,7 +146,12 @@ describe('shadowReport — brojevi', () => {
   it('dani bez shadow upisa i bez formule ne ulaze u razlike', () => {
     const report = shadowReport([
       row({ localDate: '2026-11-01' }),
-      row({ localDate: '2026-11-02', shadowAt: null, shadowFlowC: null, shadowReasons: null }),
+      row({
+        localDate: '2026-11-02',
+        shadowAt: null,
+        shadowFlowC: null,
+        shadowReasons: null,
+      }),
       row({ localDate: '2026-11-03', proposedFlowTemp: null, shadowFlowC: 41 }),
     ]);
 
@@ -173,7 +192,12 @@ describe('shadowReport — brojevi', () => {
 
   it('broji dane na kojima je odluka bila istraživanje', () => {
     const report = shadowReport([
-      row({ localDate: '2026-11-01', shadowFlowC: 44, shadowReasons: 'EXPLORE_LOWER', shadowExploration: true }),
+      row({
+        localDate: '2026-11-01',
+        shadowFlowC: 44,
+        shadowReasons: 'EXPLORE_LOWER',
+        shadowExploration: true,
+      }),
       row({ localDate: '2026-11-02' }),
       row({ localDate: '2026-11-03' }),
     ]);
@@ -183,14 +207,26 @@ describe('shadowReport — brojevi', () => {
 
   it('broji dane u kojima je model bojlera blokirao savjet', () => {
     const report = shadowReport([
-      row({ localDate: '2026-11-01', shadowFlowC: 45, shadowReasons: 'MODEL_UNVERIFIED' }),
-      row({ localDate: '2026-11-02', shadowFlowC: 45, shadowReasons: 'MODEL_UNVERIFIED' }),
+      row({
+        localDate: '2026-11-01',
+        shadowFlowC: 45,
+        shadowReasons: 'MODEL_UNVERIFIED',
+      }),
+      row({
+        localDate: '2026-11-02',
+        shadowFlowC: 45,
+        shadowReasons: 'MODEL_UNVERIFIED',
+      }),
       row({ localDate: '2026-11-03' }),
     ]);
     expect(report.blockedByModel).toBe(0);
     expect(
       shadowReport([
-        row({ localDate: '2026-11-01', shadowFlowC: 43, shadowReasons: 'MODEL_UNVERIFIED' }),
+        row({
+          localDate: '2026-11-01',
+          shadowFlowC: 43,
+          shadowReasons: 'MODEL_UNVERIFIED',
+        }),
       ]).blockedByModel,
     ).toBe(1);
   });
@@ -199,7 +235,11 @@ describe('shadowReport — brojevi', () => {
 describe('shadowReport — presuda', () => {
   it('neobjašnjena razlika blokira i kad je dana dovoljno', () => {
     const rows = series(SHADOW_MIN_DAYS + 5);
-    rows[3] = row({ localDate: rows[3].localDate, shadowFlowC: 41, shadowReasons: '' });
+    rows[3] = row({
+      localDate: rows[3].localDate,
+      shadowFlowC: 41,
+      shadowReasons: '',
+    });
 
     const report = shadowReport(rows);
     expect(report.evaluated).toBeGreaterThanOrEqual(SHADOW_MIN_DAYS);
@@ -210,15 +250,17 @@ describe('shadowReport — presuda', () => {
   });
 
   it('neobjašnjena razlika ima prioritet nad prekratkim periodom', () => {
-    const report = shadowReport([
-      row({ shadowFlowC: 41, shadowReasons: '' }),
-    ]);
+    const report = shadowReport([row({ shadowFlowC: 41, shadowReasons: '' })]);
     expect(report.verdict).toBe('UNEXPLAINED_DIFFERENCES');
   });
 
   it('prekratak period, iako su sve razlike objašnjene', () => {
     const report = shadowReport([
-      row({ localDate: '2026-11-01', shadowFlowC: 41, shadowReasons: 'COMFORT_HOLD' }),
+      row({
+        localDate: '2026-11-01',
+        shadowFlowC: 41,
+        shadowReasons: 'COMFORT_HOLD',
+      }),
     ]);
     expect(report.verdict).toBe('NOT_ENOUGH_DAYS');
     expect(report.verdictNote).toContain(`1 od ${SHADOW_MIN_DAYS}`);
@@ -232,7 +274,11 @@ describe('shadowReport — presuda', () => {
 
   it('dovoljno dana i sve razlike objašnjene — spremno', () => {
     const rows = series(SHADOW_MIN_DAYS);
-    rows[0] = row({ localDate: rows[0].localDate, shadowFlowC: 41, shadowReasons: 'COMFORT_HOLD' });
+    rows[0] = row({
+      localDate: rows[0].localDate,
+      shadowFlowC: 41,
+      shadowReasons: 'COMFORT_HOLD',
+    });
 
     const report = shadowReport(rows);
     expect(report.verdict).toBe('READY');

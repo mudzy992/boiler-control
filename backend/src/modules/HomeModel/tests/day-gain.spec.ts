@@ -32,7 +32,9 @@ describe('dayGains', () => {
   });
 
   it('prosječan dan daje nulu, a hladniji od modela negativan dobitak', () => {
-    expect(dayGains([{ localDate: '2026-11-01', x: 20, y: 18 }], MODEL)[0].gainC).toBe(0);
+    expect(
+      dayGains([{ localDate: '2026-11-01', x: 20, y: 18 }], MODEL)[0].gainC,
+    ).toBe(0);
     expect(
       dayGains([{ localDate: '2026-11-02', x: 20, y: 20 }], MODEL)[0].gainC,
     ).toBe(-2);

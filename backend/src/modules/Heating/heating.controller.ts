@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiQuery } from '@nestjs/swagger';
-import { parsePage, setTotalCount, TOTAL_COUNT_HEADER } from '../../common/pagination';
+import {
+  parsePage,
+  setTotalCount,
+  TOTAL_COUNT_HEADER,
+} from '../../common/pagination';
 import { throwIfStubRejected } from '../../common/stub-endpoint';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -72,7 +76,10 @@ export class HeatingController {
     @Query('deviceId') deviceId: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const page = parsePage({ limit, offset }, { defaultLimit: 50, maxLimit: 500 });
+    const page = parsePage(
+      { limit, offset },
+      { defaultLimit: 50, maxLimit: 500 },
+    );
     const { rows, total } = await this.heatingService.getHeatingEvents(
       req.user.userId,
       {

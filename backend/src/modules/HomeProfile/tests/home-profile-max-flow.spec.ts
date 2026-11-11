@@ -27,7 +27,10 @@ const validCreate = {
 };
 
 async function createErrors(extra: Record<string, unknown>) {
-  const dto = plainToInstance(CreateHomeProfileDto, { ...validCreate, ...extra });
+  const dto = plainToInstance(CreateHomeProfileDto, {
+    ...validCreate,
+    ...extra,
+  });
   const errors = await validate(dto as object);
   return errors.map((error) => error.property);
 }
@@ -43,8 +46,12 @@ describe('CreateHomeProfileDto — maxHeatingFlowC', () => {
   });
 
   it('odbija 29, 56 i vrijednost koja nije broj', async () => {
-    expect(await createErrors({ maxHeatingFlowC: 29 })).toEqual(['maxHeatingFlowC']);
-    expect(await createErrors({ maxHeatingFlowC: 56 })).toEqual(['maxHeatingFlowC']);
+    expect(await createErrors({ maxHeatingFlowC: 29 })).toEqual([
+      'maxHeatingFlowC',
+    ]);
+    expect(await createErrors({ maxHeatingFlowC: 56 })).toEqual([
+      'maxHeatingFlowC',
+    ]);
     expect(await createErrors({ maxHeatingFlowC: '45' })).toEqual([
       'maxHeatingFlowC',
     ]);
@@ -53,12 +60,12 @@ describe('CreateHomeProfileDto — maxHeatingFlowC', () => {
 
 describe('CreateHomeProfileDto — boilerCatalogId', () => {
   it('prihvata id iz kataloga', async () => {
-    expect(await createErrors({ boilerCatalogId: 'vaillant-ecotec-plus-vuw' })).toEqual(
-      [],
-    );
-    expect(await createErrors({ boilerCatalogId: 'bosch-condens-7000-wp' })).toEqual(
-      [],
-    );
+    expect(
+      await createErrors({ boilerCatalogId: 'vaillant-ecotec-plus-vuw' }),
+    ).toEqual([]);
+    expect(
+      await createErrors({ boilerCatalogId: 'bosch-condens-7000-wp' }),
+    ).toEqual([]);
   });
 
   it('odbija model kojeg nema u katalogu', async () => {
@@ -70,9 +77,7 @@ describe('CreateHomeProfileDto — boilerCatalogId', () => {
   it('prima zastarjeli slobodan tekst kao string, ali ga ne koristi za odluku', async () => {
     // `boilerModel` ostaje samo da stari klijenti ne puknu (`19` §1).
     expect(await createErrors({ boilerModel: 'Bosch' })).toEqual([]);
-    expect(await createErrors({ boilerModel: 123 as unknown as string })).toEqual([
-      'boilerModel',
-    ]);
+    expect(await createErrors({ boilerModel: 123 })).toEqual(['boilerModel']);
   });
 });
 
@@ -89,8 +94,12 @@ describe('UpdateHomeProfileDto — maxHeatingFlowC', () => {
   });
 
   it('odbija vrijednost izvan raspona', async () => {
-    expect(await updateErrors({ maxHeatingFlowC: 60 })).toEqual(['maxHeatingFlowC']);
-    expect(await updateErrors({ maxHeatingFlowC: 20 })).toEqual(['maxHeatingFlowC']);
+    expect(await updateErrors({ maxHeatingFlowC: 60 })).toEqual([
+      'maxHeatingFlowC',
+    ]);
+    expect(await updateErrors({ maxHeatingFlowC: 20 })).toEqual([
+      'maxHeatingFlowC',
+    ]);
   });
 
   it('ne dira polje kad nije poslano', async () => {

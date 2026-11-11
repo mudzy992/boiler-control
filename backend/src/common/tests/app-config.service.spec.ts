@@ -67,7 +67,9 @@ describe('AppConfigService (MO2-2 version gate)', () => {
     it('trim-uje vrijednosti iz env-a', async () => {
       process.env.MOBILE_MIN_SUPPORTED_VERSION = '  2.1.0  ';
 
-      expect(await service.getAppConfigSync().minSupportedVersion).toBe('2.1.0');
+      expect(await service.getAppConfigSync().minSupportedVersion).toBe(
+        '2.1.0',
+      );
     });
   });
 
@@ -81,7 +83,9 @@ describe('AppConfigService (MO2-2 version gate)', () => {
     ])('APP_VERSION_GATE_ENABLED="%s" -> %s', async (raw, expected) => {
       process.env.APP_VERSION_GATE_ENABLED = raw;
 
-      expect(await service.getAppConfigSync().versionGateEnabled).toBe(expected);
+      expect(await service.getAppConfigSync().versionGateEnabled).toBe(
+        expected,
+      );
     });
 
     it('kad je gate isključen, min je 0.0.0 ČAK I ako env traži više', async () => {

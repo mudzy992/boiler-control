@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 
 import { applyPageCycles } from '../history-page';
-import { buildDailyHistory, OUTCOME_VERSION_EVENTS, type DailyRecordInput } from '../daily-history';
+import {
+  buildDailyHistory,
+  OUTCOME_VERSION_EVENTS,
+  type DailyRecordInput,
+} from '../daily-history';
 
 /**
  * Historija: ciklusi za dane koje obračun nije stigao (`F13`, treći krug).

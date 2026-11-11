@@ -16,7 +16,9 @@ import {
  * bez modela, bez ishoda, `DEGRADED`, bez poredljive noći.
  */
 
-const comfortable = (overrides: Partial<OutcomeSignals> = {}): OutcomeSignals => ({
+const comfortable = (
+  overrides: Partial<OutcomeSignals> = {},
+): OutcomeSignals => ({
   undershootC: 0.2,
   overshootC: 0.1,
   nightUndershootC: 0.1,
@@ -24,7 +26,9 @@ const comfortable = (overrides: Partial<OutcomeSignals> = {}): OutcomeSignals =>
   ...overrides,
 });
 
-const baseInput = (overrides: Partial<ControllerInput> = {}): ControllerInput => ({
+const baseInput = (
+  overrides: Partial<ControllerInput> = {},
+): ControllerInput => ({
   modelFlowC: 42,
   previousFlowC: 45,
   daysSinceChange: 10,
@@ -127,7 +131,11 @@ describe('decideProposal — kad se polazna ne smije spustiti', () => {
 
   it('`T_max` pobjeđuje istraživanje — komfor prije učenja', () => {
     const decision = decideProposal(
-      baseInput({ daysSinceChange: 1, exploration: 'LOWER', heatTimeFloorC: 46 }),
+      baseInput({
+        daysSinceChange: 1,
+        exploration: 'LOWER',
+        heatTimeFloorC: 46,
+      }),
     );
 
     expect(decision.flowC).toBe(46);
@@ -149,9 +157,7 @@ describe('decideProposal — kad se polazna ne smije spustiti', () => {
   });
 
   it('nepotvrđen model bojlera ne spušta polaznu — PTV je važniji od uštede', () => {
-    const decision = decideProposal(
-      baseInput({ flowAdviceAllowed: false }),
-    );
+    const decision = decideProposal(baseInput({ flowAdviceAllowed: false }));
     expect(decision).toMatchObject({
       flowC: 45,
       action: 'HOLD',
@@ -193,7 +199,11 @@ describe('decideProposal — kad se polazna ne smije spustiti', () => {
 
   it('bez prošle vrijednosti kontroler ne izmišlja: prva odluka je bazna', () => {
     const decision = decideProposal(baseInput({ previousFlowC: null }));
-    expect(decision).toMatchObject({ flowC: 42, action: 'HOLD', reasons: ['STEADY'] });
+    expect(decision).toMatchObject({
+      flowC: 42,
+      action: 'HOLD',
+      reasons: ['STEADY'],
+    });
   });
 
   it('prva odluka bez modela vraća null, ne broj', () => {
@@ -229,7 +239,10 @@ describe('decideProposal — podbačaj podiže, i to iznad prošle', () => {
 
   it('podbačaj ne čeka dwell — komfor je sigurnosna stvar', () => {
     const decision = decideProposal(
-      baseInput({ daysSinceChange: 0, outcome: comfortable({ undershootC: 2 }) }),
+      baseInput({
+        daysSinceChange: 0,
+        outcome: comfortable({ undershootC: 2 }),
+      }),
     );
     expect(decision.reasons).toEqual(['UNDERSHOOT']);
     expect(decision.flowC).toBe(46.5);
@@ -237,7 +250,10 @@ describe('decideProposal — podbačaj podiže, i to iznad prošle', () => {
 
   it('podbačaj tačno na toleranciji ne diže polaznu', () => {
     const decision = decideProposal(
-      baseInput({ night: { floorC: null, basis: 'NO_FAILURE' }, outcome: comfortable({ undershootC: 1.0 }) }),
+      baseInput({
+        night: { floorC: null, basis: 'NO_FAILURE' },
+        outcome: comfortable({ undershootC: 1.0 }),
+      }),
     );
     expect(decision.reasons).toEqual(['COMFORT_HOLD']);
     expect(decision.action).toBe('LOWER');
@@ -276,7 +292,9 @@ describe('decideProposal — prebačaj, kratki ciklusi, udobnost', () => {
   });
 
   it('granica iz kratkih ciklusa se ne izmišlja kad ciklusi nijesu kratki', () => {
-    expect(shortCycleFloorFrom({ flowC: 49, medianCycleMin: SHORT_CYCLE_MIN })).toBeNull();
+    expect(
+      shortCycleFloorFrom({ flowC: 49, medianCycleMin: SHORT_CYCLE_MIN }),
+    ).toBeNull();
     expect(shortCycleFloorFrom({ flowC: 49, medianCycleMin: null })).toBeNull();
     expect(shortCycleFloorFrom({ flowC: null, medianCycleMin: 3 })).toBeNull();
   });

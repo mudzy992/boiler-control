@@ -29,8 +29,14 @@ describe('F13: ciklusi iz događaja za dane koje obračun nije stigao', () => {
     const [filled] = fillCyclesFromEvents(
       [{ localDate: '2026-11-09', cycles: null, medianCycleMin: null }],
       [
-        { startedAt: startsAt('2026-11-09T05:00:00Z'), endedAt: startsAt('2026-11-09T05:40:00Z') },
-        { startedAt: startsAt('2026-11-09T08:00:00Z'), endedAt: startsAt('2026-11-09T08:30:00Z') },
+        {
+          startedAt: startsAt('2026-11-09T05:00:00Z'),
+          endedAt: startsAt('2026-11-09T05:40:00Z'),
+        },
+        {
+          startedAt: startsAt('2026-11-09T08:00:00Z'),
+          endedAt: startsAt('2026-11-09T08:30:00Z'),
+        },
       ],
       ZONE,
     );
@@ -46,7 +52,10 @@ describe('F13: ciklusi iz događaja za dane koje obračun nije stigao', () => {
       [{ localDate: '2026-11-09', cycles: null, medianCycleMin: null }],
       // 23:40 UTC = 00:40 po lokalnom vremenu (CET, +1) — dakle 10. 11.
       [
-        { startedAt: startsAt('2026-11-09T22:30:00Z'), endedAt: startsAt('2026-11-09T23:20:00Z') },
+        {
+          startedAt: startsAt('2026-11-09T22:30:00Z'),
+          endedAt: startsAt('2026-11-09T23:20:00Z'),
+        },
       ],
       ZONE,
     );
@@ -60,9 +69,18 @@ describe('F13: ciklusi iz događaja za dane koje obračun nije stigao', () => {
     const [filled] = fillCyclesFromEvents(
       [{ localDate: '2026-11-09', cycles: 4, medianCycleMin: 22 }],
       [
-        { startedAt: startsAt('2026-11-09T05:00:00Z'), endedAt: startsAt('2026-11-09T05:40:00Z') },
-        { startedAt: startsAt('2026-11-09T08:00:00Z'), endedAt: startsAt('2026-11-09T08:30:00Z') },
-        { startedAt: startsAt('2026-11-09T12:00:00Z'), endedAt: startsAt('2026-11-09T12:30:00Z') },
+        {
+          startedAt: startsAt('2026-11-09T05:00:00Z'),
+          endedAt: startsAt('2026-11-09T05:40:00Z'),
+        },
+        {
+          startedAt: startsAt('2026-11-09T08:00:00Z'),
+          endedAt: startsAt('2026-11-09T08:30:00Z'),
+        },
+        {
+          startedAt: startsAt('2026-11-09T12:00:00Z'),
+          endedAt: startsAt('2026-11-09T12:30:00Z'),
+        },
       ],
       ZONE,
     );
@@ -75,7 +93,12 @@ describe('F13: ciklusi iz događaja za dane koje obračun nije stigao', () => {
   it('dan bez ijednog događaja ostaje crtica — nula se ne izmišlja', () => {
     const [filled] = fillCyclesFromEvents(
       [{ localDate: '2026-11-08', cycles: null, medianCycleMin: null }],
-      [{ startedAt: startsAt('2026-11-09T05:00:00Z'), endedAt: startsAt('2026-11-09T05:40:00Z') }],
+      [
+        {
+          startedAt: startsAt('2026-11-09T05:00:00Z'),
+          endedAt: startsAt('2026-11-09T05:40:00Z'),
+        },
+      ],
       ZONE,
     );
 
@@ -96,8 +119,14 @@ describe('F13: ciklusi iz događaja za dane koje obračun nije stigao', () => {
 
   it('ciklus kraći od 5 min ne ulazi u medijanu (isti prag kao obračun)', () => {
     const events = [
-      { startedAt: startsAt('2026-11-10T04:00:00Z'), endedAt: startsAt('2026-11-10T04:02:00Z') },
-      { startedAt: startsAt('2026-11-10T06:00:00Z'), endedAt: startsAt('2026-11-10T06:44:00Z') },
+      {
+        startedAt: startsAt('2026-11-10T04:00:00Z'),
+        endedAt: startsAt('2026-11-10T04:02:00Z'),
+      },
+      {
+        startedAt: startsAt('2026-11-10T06:00:00Z'),
+        endedAt: startsAt('2026-11-10T06:44:00Z'),
+      },
     ];
     const [filled] = fillCyclesFromEvents(
       [{ localDate: '2026-11-10', cycles: null, medianCycleMin: null }],
@@ -108,7 +137,9 @@ describe('F13: ciklusi iz događaja za dane koje obračun nije stigao', () => {
     expect(filled.cycles).toBe(2);
     expect(filled.medianCycleMin).toBe(44);
     // Isti rezultat kao funkcija koju koristi obračun — bez druge istine.
-    expect(filled.medianCycleMin).toBe(cyclesFromEvents('2026-11-10', events, ZONE).medianCycleMin);
+    expect(filled.medianCycleMin).toBe(
+      cyclesFromEvents('2026-11-10', events, ZONE).medianCycleMin,
+    );
   });
 
   it('prazan skup događaja vraća redove netaknute', () => {

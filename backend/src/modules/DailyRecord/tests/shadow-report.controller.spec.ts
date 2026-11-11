@@ -1,15 +1,20 @@
 import { BadRequestException } from '@nestjs/common';
-import { ShadowReportController, validatedWindow } from '../shadow.report.controller';
+import {
+  ShadowReportController,
+  validatedWindow,
+} from '../shadow.report.controller';
 
 /**
  * Ulaz u izvještaj (`24` §6.5). Provjerava se **ulaz**: pogrešan datum ili
  * pogrešan dom moraju pasti prije nego se bilo šta pročita.
  */
 
-function setup(options: {
-  activeHomeProfileId?: number | null;
-  report?: unknown;
-} = {}) {
+function setup(
+  options: {
+    activeHomeProfileId?: number | null;
+    report?: unknown;
+  } = {},
+) {
   const forHome = jest.fn().mockResolvedValue(options.report ?? { days: 0 });
   const reports = { forHome };
   const prisma = {
@@ -23,7 +28,10 @@ function setup(options: {
     },
   };
 
-  const controller = new ShadowReportController(reports as never, prisma as never);
+  const controller = new ShadowReportController(
+    reports as never,
+    prisma as never,
+  );
   const req = { user: { userId: 3 } };
   return { controller, req, forHome };
 }

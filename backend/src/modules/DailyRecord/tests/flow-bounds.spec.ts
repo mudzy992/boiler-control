@@ -19,32 +19,50 @@ import { UNDERSHOOT_TOLERANCE_K } from '../day-outcome';
 
 describe('applyHardBounds — raspon', () => {
   it('iznad 55 se reže na 55 uz razlog RANGE', () => {
-    expect(applyHardBounds({ candidateC: 60, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 60, previousC: null, nightFloorC: null }),
+    ).toEqual({
       flowC: 55,
       reasons: ['RANGE'],
     });
   });
 
   it('ispod 30 se reže na 30 uz razlog RANGE', () => {
-    expect(applyHardBounds({ candidateC: 20, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 20, previousC: null, nightFloorC: null }),
+    ).toEqual({
       flowC: 30,
       reasons: ['RANGE'],
     });
   });
 
   it('granice same prolaze nepromijenjene i bez razloga', () => {
-    expect(applyHardBounds({ candidateC: FLOW_MIN_C, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({
+        candidateC: FLOW_MIN_C,
+        previousC: null,
+        nightFloorC: null,
+      }),
+    ).toEqual({
       flowC: FLOW_MIN_C,
       reasons: [],
     });
-    expect(applyHardBounds({ candidateC: FLOW_MAX_C, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({
+        candidateC: FLOW_MAX_C,
+        previousC: null,
+        nightFloorC: null,
+      }),
+    ).toEqual({
       flowC: FLOW_MAX_C,
       reasons: [],
     });
   });
 
   it('vrijednost unutar granica i bez historije prolazi netaknuta', () => {
-    expect(applyHardBounds({ candidateC: 41.5, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 41.5, previousC: null, nightFloorC: null }),
+    ).toEqual({
       flowC: 41.5,
       reasons: [],
     });
@@ -53,14 +71,18 @@ describe('applyHardBounds — raspon', () => {
 
 describe('applyHardBounds — noćni minimum', () => {
   it('podigne predlog na izmjereni noćni minimum', () => {
-    expect(applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: 44 })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: 44 }),
+    ).toEqual({
       flowC: 44,
       reasons: ['NIGHT_FLOOR'],
     });
   });
 
   it('ne spušta predlog koji je već iznad minimuma', () => {
-    expect(applyHardBounds({ candidateC: 48, previousC: null, nightFloorC: 44 })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 48, previousC: null, nightFloorC: 44 }),
+    ).toEqual({
       flowC: 48,
       reasons: [],
     });
@@ -69,14 +91,18 @@ describe('applyHardBounds — noćni minimum', () => {
   it('minimum koji izlazi iz raspona se reže na 55 i prijavljuje da noć nije pokrivena', () => {
     // Dokaz traži 58, a kotao ne ide preko 55: bira se fizička granica, ali se
     // prekršaj imenuje — inače bi se čitalo kao da je noć pokrivena.
-    expect(applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: 58 })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: 58 }),
+    ).toEqual({
       flowC: 55,
       reasons: ['NIGHT_FLOOR', 'SYSTEM_MAX'],
     });
   });
 
   it('bez dokaza (null) nema razloga NIGHT_FLOOR', () => {
-    expect(applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: null }),
+    ).toEqual({
       flowC: 40,
       reasons: [],
     });
@@ -86,12 +112,22 @@ describe('applyHardBounds — noćni minimum', () => {
 describe('applyHardBounds — granica sistema', () => {
   it('granica sistema sužava raspon i nikad ga ne širi', () => {
     expect(
-      applyHardBounds({ candidateC: 50, previousC: null, nightFloorC: null, systemMaxC: 40 }),
+      applyHardBounds({
+        candidateC: 50,
+        previousC: null,
+        nightFloorC: null,
+        systemMaxC: 40,
+      }),
     ).toEqual({ flowC: 40, reasons: ['RANGE'] });
 
     // 60 kao granica sistema ne smije proširiti zaključanih 55.
     expect(
-      applyHardBounds({ candidateC: 52, previousC: null, nightFloorC: null, systemMaxC: 60 }),
+      applyHardBounds({
+        candidateC: 52,
+        previousC: null,
+        nightFloorC: null,
+        systemMaxC: 60,
+      }),
     ).toEqual({ flowC: 52, reasons: [] });
   });
 
@@ -100,32 +136,51 @@ describe('applyHardBounds — granica sistema', () => {
     // (45 − 2), ali granica sistema to ne dopušta — pa se ništa nije ni
     // promijenilo i razloga nema.
     expect(
-      applyHardBounds({ candidateC: 40, previousC: 45, nightFloorC: null, systemMaxC: 40 }),
+      applyHardBounds({
+        candidateC: 40,
+        previousC: 45,
+        nightFloorC: null,
+        systemMaxC: 40,
+      }),
     ).toEqual({ flowC: 40, reasons: [] });
 
     // Kad je granica sistema 41, dnevna granica stvarno mijenja odluku.
     expect(
-      applyHardBounds({ candidateC: 40, previousC: 45, nightFloorC: null, systemMaxC: 41 }),
+      applyHardBounds({
+        candidateC: 40,
+        previousC: 45,
+        nightFloorC: null,
+        systemMaxC: 41,
+      }),
     ).toEqual({ flowC: 41, reasons: ['DAILY_CHANGE'] });
   });
 
   it('kad je noćni minimum iznad granice sistema, bira se granica sistema', () => {
     expect(
-      applyHardBounds({ candidateC: 35, previousC: null, nightFloorC: 47, systemMaxC: 40 }),
+      applyHardBounds({
+        candidateC: 35,
+        previousC: null,
+        nightFloorC: 47,
+        systemMaxC: 40,
+      }),
     ).toEqual({ flowC: 40, reasons: ['NIGHT_FLOOR', 'SYSTEM_MAX'] });
   });
 });
 
 describe('applyHardBounds — dnevna promjena', () => {
   it('rast je ograničen na +2 K dnevno', () => {
-    expect(applyHardBounds({ candidateC: 50, previousC: 40, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 50, previousC: 40, nightFloorC: null }),
+    ).toEqual({
       flowC: 42,
       reasons: ['DAILY_CHANGE'],
     });
   });
 
   it('pad je ograničen na −2 K dnevno', () => {
-    expect(applyHardBounds({ candidateC: 40, previousC: 50, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 40, previousC: 50, nightFloorC: null }),
+    ).toEqual({
       flowC: 48,
       reasons: ['DAILY_CHANGE'],
     });
@@ -142,7 +197,9 @@ describe('applyHardBounds — dnevna promjena', () => {
   });
 
   it('promjena se ne primjenjuje kad prethodna polazna nije poznata', () => {
-    expect(applyHardBounds({ candidateC: 52, previousC: null, nightFloorC: null })).toEqual({
+    expect(
+      applyHardBounds({ candidateC: 52, previousC: null, nightFloorC: null }),
+    ).toEqual({
       flowC: 52,
       reasons: [],
     });
@@ -153,7 +210,11 @@ describe('applyHardBounds — redoslijed pravila', () => {
   it('dnevna promjena ne smije spustiti predlog ispod noćnog minimuma', () => {
     // Prethodna 40, odluka 36, dokaz kaže da je 40 bilo prenisko uz +1,0 → 41.
     // Dnevna promjena bi 41 spustila na 42? Ne: 41 je iznad 40 − 2, pa ostaje.
-    const result = applyHardBounds({ candidateC: 36, previousC: 40, nightFloorC: 41 });
+    const result = applyHardBounds({
+      candidateC: 36,
+      previousC: 40,
+      nightFloorC: 41,
+    });
     expect(result.flowC).toBe(41);
     expect(result.reasons).toContain('NIGHT_FLOOR');
     expect(result.reasons).not.toContain('DAILY_CHANGE');
@@ -162,20 +223,36 @@ describe('applyHardBounds — redoslijed pravila', () => {
   it('kad se pravila sukobe, minimum pobjeduje dnevnu granicu', () => {
     // Prethodna 40 → dozvoljeno [38, 42]; minimum je 44. Sigurnost ima
     // prednost: 44, uz oba razloga, jer je dnevna granica prekršena svjesno.
-    const result = applyHardBounds({ candidateC: 36, previousC: 40, nightFloorC: 44 });
+    const result = applyHardBounds({
+      candidateC: 36,
+      previousC: 40,
+      nightFloorC: 44,
+    });
     expect(result.flowC).toBe(44);
     expect(result.reasons).toEqual(['NIGHT_FLOOR', 'DAILY_CHANGE']);
   });
 
   it('nekonačan broj se odbija, a ne propušta na kotao', () => {
     expect(() =>
-      applyHardBounds({ candidateC: Number.NaN, previousC: null, nightFloorC: null }),
+      applyHardBounds({
+        candidateC: Number.NaN,
+        previousC: null,
+        nightFloorC: null,
+      }),
     ).toThrow(/candidateC/);
     expect(() =>
-      applyHardBounds({ candidateC: 40, previousC: Number.POSITIVE_INFINITY, nightFloorC: null }),
+      applyHardBounds({
+        candidateC: 40,
+        previousC: Number.POSITIVE_INFINITY,
+        nightFloorC: null,
+      }),
     ).toThrow(/previousC/);
     expect(() =>
-      applyHardBounds({ candidateC: 40, previousC: null, nightFloorC: Number.NaN }),
+      applyHardBounds({
+        candidateC: 40,
+        previousC: null,
+        nightFloorC: Number.NaN,
+      }),
     ).toThrow(/nightFloorC/);
   });
 
@@ -183,7 +260,11 @@ describe('applyHardBounds — redoslijed pravila', () => {
     for (const candidateC of [-40, 0, 29.9, 30, 41.3, 55, 55.1, 90]) {
       for (const previousC of [null, 30, 45, 55, 70]) {
         for (const nightFloorC of [null, 20, 30, 44, 55, 80]) {
-          const result = applyHardBounds({ candidateC, previousC, nightFloorC });
+          const result = applyHardBounds({
+            candidateC,
+            previousC,
+            nightFloorC,
+          });
           expect(Number.isFinite(result.flowC)).toBe(true);
           expect(result.flowC).toBeGreaterThanOrEqual(FLOW_MIN_C);
           expect(result.flowC).toBeLessThanOrEqual(FLOW_MAX_C);

@@ -269,13 +269,22 @@ export function fitDailyBalance(
   const random = mulberry32(options.seed ?? DEFAULT_BOOTSTRAP_SEED);
 
   if (rows.length < minDays) {
-    return { status: 'insufficient', days: rows.length, reason: 'NOT_ENOUGH_DAYS' };
+    return {
+      status: 'insufficient',
+      days: rows.length,
+      reason: 'NOT_ENOUGH_DAYS',
+    };
   }
 
   let working = [...rows];
   let fit = ols(working);
   if (!fit) {
-    return { status: 'rejected', days: working.length, reason: 'NO_X_VARIANCE', slope: null };
+    return {
+      status: 'rejected',
+      days: working.length,
+      reason: 'NO_X_VARIANCE',
+      slope: null,
+    };
   }
 
   // Robusnost: dani sa rezidualom većim od 3·MAD su otvoren prozor, gosti ili

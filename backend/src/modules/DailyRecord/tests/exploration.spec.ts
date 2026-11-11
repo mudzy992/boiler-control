@@ -52,8 +52,9 @@ describe('explorationFor — kada je dozvoljeno', () => {
         .block,
     ).toBe('NO_RESERVE');
     expect(
-      explorationFor(input({ recentOvershootC: [null, 1.5, 1.5, null, 1.5, 1.5] }))
-        .direction,
+      explorationFor(
+        input({ recentOvershootC: [null, 1.5, 1.5, null, 1.5, 1.5] }),
+      ).direction,
     ).toBe('LOWER');
   });
 });
@@ -67,7 +68,9 @@ describe('explorationFor — kada nije dozvoljeno', () => {
   });
 
   it('bez prognoze noći ne istražujemo', () => {
-    expect(explorationFor(input({ nightMinC: null })).block).toBe('NO_FORECAST');
+    expect(explorationFor(input({ nightMinC: null })).block).toBe(
+      'NO_FORECAST',
+    );
   });
 
   it('hladna noć poništava rezervu sa dana', () => {
@@ -84,7 +87,8 @@ describe('explorationFor — kada nije dozvoljeno', () => {
 
   it('bez rezerve nema istraživanja', () => {
     expect(
-      explorationFor(input({ recentOvershootC: [0.2, 0.1, 0.4, 0.3, 0.9] })).block,
+      explorationFor(input({ recentOvershootC: [0.2, 0.1, 0.4, 0.3, 0.9] }))
+        .block,
     ).toBe('NO_RESERVE');
     expect(explorationFor(input({ recentOvershootC: [] })).block).toBe(
       'NO_RESERVE',

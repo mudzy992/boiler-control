@@ -8,14 +8,20 @@ import {
 describe('petominutni bucket', () => {
   it('poravnava na početak bucketa, ne na trenutak upisa', () => {
     expect(
-      observationBucketStart(new Date('2026-11-09T06:03:47.512Z')).toISOString(),
+      observationBucketStart(
+        new Date('2026-11-09T06:03:47.512Z'),
+      ).toISOString(),
     ).toBe('2026-11-09T06:00:00.000Z');
     expect(
-      observationBucketStart(new Date('2026-11-09T06:05:00.000Z')).toISOString(),
+      observationBucketStart(
+        new Date('2026-11-09T06:05:00.000Z'),
+      ).toISOString(),
     ).toBe('2026-11-09T06:05:00.000Z');
     // 07:09:59 je još bucket 07:05.
     expect(
-      observationBucketStart(new Date('2026-11-09T07:09:59.999Z')).toISOString(),
+      observationBucketStart(
+        new Date('2026-11-09T07:09:59.999Z'),
+      ).toISOString(),
     ).toBe('2026-11-09T07:05:00.000Z');
   });
 
@@ -23,9 +29,9 @@ describe('petominutni bucket', () => {
     const base = Date.UTC(2026, 10, 9, 6, 0, 0);
     const first = observationBucketIndex(new Date(base));
     for (let minute = 1; minute < 5; minute++) {
-      expect(
-        observationBucketIndex(new Date(base + minute * 60_000)),
-      ).toBe(first);
+      expect(observationBucketIndex(new Date(base + minute * 60_000))).toBe(
+        first,
+      );
     }
     expect(observationBucketIndex(new Date(base + 5 * 60_000))).toBe(first + 1);
   });

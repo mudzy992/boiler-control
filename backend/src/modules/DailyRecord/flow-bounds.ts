@@ -28,10 +28,7 @@ export const MAX_DAILY_CHANGE_K = 2;
  * čitalo kao uspjeh.
  */
 export type BoundReason =
-  | 'RANGE'
-  | 'NIGHT_FLOOR'
-  | 'DAILY_CHANGE'
-  | 'SYSTEM_MAX';
+  'RANGE' | 'NIGHT_FLOOR' | 'DAILY_CHANGE' | 'SYSTEM_MAX';
 
 export interface HardBoundsInput {
   /** Ono što je odluka predložila. */
@@ -134,7 +131,9 @@ export function applyHardBounds(input: HardBoundsInput): HardBoundsResult {
 
 function assertFinite(value: number, name: string): void {
   if (!Number.isFinite(value)) {
-    throw new Error(`${name} mora biti konačan broj, dobijeno: ${String(value)}`);
+    throw new Error(
+      `${name} mora biti konačan broj, dobijeno: ${String(value)}`,
+    );
   }
 }
 

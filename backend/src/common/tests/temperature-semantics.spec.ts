@@ -1,4 +1,10 @@
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 /**

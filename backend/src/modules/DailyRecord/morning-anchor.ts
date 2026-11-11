@@ -118,7 +118,7 @@ export function anchorDailyFlow(
     const reason: DaytimeChangeReason = nightEvidence
       ? 'NIGHT_UNDERSHOOT'
       : 'DAY_UNDERSHOOT';
-    const measured = nightEvidence ? (night as number) : (day as number);
+    const measured = nightEvidence ? night : (day as number);
     // Cilj izmjene: formula, jer ona nosi izmjereni manjak; jutro je bilo
     // prenisko. Nikad ispod jutra — izmjena zbog manjka ide samo gore.
     const target = formula == null ? morning : Math.max(morning, formula);

@@ -233,7 +233,11 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
 
   const maxFlow =
     input.maxFlowC == null ? FLOW_MAX_C : Math.min(FLOW_MAX_C, input.maxFlowC);
-  const base = clamp(input.modelFlowC, FLOW_MIN_C, Math.max(FLOW_MIN_C, maxFlow));
+  const base = clamp(
+    input.modelFlowC,
+    FLOW_MIN_C,
+    Math.max(FLOW_MIN_C, maxFlow),
+  );
 
   const failingDay = input.outcome.undershootC > UNDERSHOOT_TOLERANCE_K;
   const failingNight =
@@ -349,7 +353,7 @@ export function decideProposal(input: ControllerInput): ControllerDecision {
   if (
     input.heatTimeFloorC != null &&
     Number.isFinite(input.heatTimeFloorC) &&
-    (intended < input.heatTimeFloorC)
+    intended < input.heatTimeFloorC
   ) {
     intended = input.heatTimeFloorC;
     reasons = ['HEAT_TIME'];

@@ -1,5 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
-import { parsePage, setTotalCount, slicePage, TOTAL_COUNT_HEADER } from '../pagination';
+import {
+  parsePage,
+  setTotalCount,
+  slicePage,
+  TOTAL_COUNT_HEADER,
+} from '../pagination';
 
 /**
  * Straničenje (`33`).
@@ -38,11 +43,15 @@ describe('parsePage', () => {
   });
 
   it.each(['0', '-5', '1.5', 'abc', '201'])('odbija limit %s', (raw) => {
-    expect(() => parsePage({ limit: raw }, limits)).toThrow(BadRequestException);
+    expect(() => parsePage({ limit: raw }, limits)).toThrow(
+      BadRequestException,
+    );
   });
 
   it.each(['-1', '2.5', 'abc'])('odbija offset %s', (raw) => {
-    expect(() => parsePage({ offset: raw }, limits)).toThrow(BadRequestException);
+    expect(() => parsePage({ offset: raw }, limits)).toThrow(
+      BadRequestException,
+    );
   });
 
   it('poruka kaže dozvoljeni raspon, ne samo „neispravno"', () => {
@@ -53,7 +62,10 @@ describe('parsePage', () => {
 describe('setTotalCount', () => {
   it('postavlja zaglavlje kao string', () => {
     const headers: Record<string, string> = {};
-    setTotalCount({ setHeader: (k: string, v: string) => (headers[k] = v) } as never, 299);
+    setTotalCount(
+      { setHeader: (k: string, v: string) => (headers[k] = v) } as never,
+      299,
+    );
     expect(headers[TOTAL_COUNT_HEADER]).toBe('299');
   });
 

@@ -5,7 +5,10 @@ import {
   classifyOrigin,
   type DailyRecordInput,
 } from '../daily-history';
-import { DailyHistoryService, MAX_HISTORY_ROWS } from '../daily-history.service';
+import {
+  DailyHistoryService,
+  MAX_HISTORY_ROWS,
+} from '../daily-history.service';
 import { validatedLimit } from '../daily-history.controller';
 
 /**
@@ -73,7 +76,10 @@ describe('classifyOrigin', () => {
 
   it('prefiks mora biti na početku oznake, ne bilo gdje', () => {
     expect(
-      classifyOrigin({ modelVersion: 'w-not-backfill-1', outcomeVersion: null }),
+      classifyOrigin({
+        modelVersion: 'w-not-backfill-1',
+        outcomeVersion: null,
+      }),
     ).toBe('LIVE');
   });
 });
@@ -100,9 +106,7 @@ describe('buildDailyHistory — šta red nosi', () => {
   });
 
   it('shadow je prisutan i kad je samo akcija upisana', () => {
-    const { rows } = buildDailyHistory([
-      row({ shadowAction: 'HOLD' }),
-    ]);
+    const { rows } = buildDailyHistory([row({ shadowAction: 'HOLD' })]);
     expect(rows[0].has.shadow).toBe(true);
   });
 
@@ -199,14 +203,22 @@ describe('DailyHistoryService', () => {
       homeProfile: {
         findFirst: jest.fn().mockResolvedValue(
           options.home === undefined
-            ? { id: 7, weatherTimezone: 'Europe/Sarajevo', user: { timezone: null } }
+            ? {
+                id: 7,
+                weatherTimezone: 'Europe/Sarajevo',
+                user: { timezone: null },
+              }
             : options.home,
         ),
       },
       dailyRecord: { findMany, count },
       heatingEvent,
     };
-    return { service: new DailyHistoryService(prisma as never), findMany, count };
+    return {
+      service: new DailyHistoryService(prisma as never),
+      findMany,
+      count,
+    };
   }
 
   it('odbija tuđi dom', async () => {
@@ -235,7 +247,11 @@ describe('DailyHistoryService', () => {
 
   it('period ide u upit kao granice na `localDate`', async () => {
     const { service, findMany } = setup({ rows: [] });
-    await service.forHome(1, 7, { from: '2026-01-01', to: '2026-03-01', limit: 10 });
+    await service.forHome(1, 7, {
+      from: '2026-01-01',
+      to: '2026-03-01',
+      limit: 10,
+    });
 
     expect(findMany.mock.calls[0][0].where).toEqual({
       homeProfileId: 7,
@@ -296,7 +312,11 @@ describe('DailyHistoryService — straničenje (`36`)', () => {
       dailyRecord: { findMany, count },
       heatingEvent: { findMany: jest.fn().mockResolvedValue([]) },
     };
-    return { service: new DailyHistoryService(prisma as never), findMany, count };
+    return {
+      service: new DailyHistoryService(prisma as never),
+      findMany,
+      count,
+    };
   }
 
   it('prosljeđuje offset u upit', async () => {

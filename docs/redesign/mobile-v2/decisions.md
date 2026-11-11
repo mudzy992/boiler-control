@@ -1137,6 +1137,38 @@ poslije merge-a (commit `6b58533`).
 Pouka za dalje: poslije svake izmjene servisa provjeriti sve
 `new *Service(prisma as never)` stubove (`grep "as never"`).
 
+**A11Y nalaz (2026-11-21): web je tvrdio AA, a mjerio ga je samo mobilni.**
+
+Na pitanje „da li aplikacija posjeduje pri buildu provjeru kontrasta" odgovor je
+bio **djelimično**: mobilni ima `src/ui/__tests__/a11yContrast.test.ts` (paleta ×
+tri podloge, AA 4,5:1, AAA 7:1 za `ink`), a web je imao samo `axe` sken sa
+**isključenim** `color-contrast` pravilom (jsdom nema layout). Mjerenje pokazuje
+da je to bio stvarni propust, ne formalnost — u svijetloj temi:
+
+| token | bilo | kako se koristi | odnos |
+|---|---|---|---|
+| `--signal` | `255 107 61` | `text-signal`, badge | **2,55:1** |
+| `--ok` | `34 197 94` | `text-ok` | **2,05:1** |
+| `--warn` | `245 165 36` | `text-warn` | **1,84:1** |
+| `--info` | `56 189 248` | `text-info` | **1,93:1** |
+| `--fault` | `239 68 68` | `text-fault`, greška polja | **3,39:1** |
+| `--ink-dim` | `107 114 128` | meta, jedinice | **4,35:1** |
+| `--btn-danger` | `239 68 68` + bijeli tekst | brisanje | **3,76:1** |
+
+Popravka: iste vrijednosti koje mobilni već koristi (`--signal` `180 58 12`,
+`--ok` `20 110 52`, `--warn` `158 72 8`, `--fault` `185 28 28`, `--info`
+`3 105 161`, `--ink-dim` `89 97 110`, `--btn-danger` `185 28 28`) — plus
+tamnjenje u mobilnom tamo gdje je mjerenje na **vlastitoj 10% podlozi**
+(`okSoft`, `warnSoft`, `signalSoft`) davalo 4,07–4,19:1: `signal` `#b43a0c`,
+`ok` `#146e34`, `warn` `#9e4808`, dark `fault` `#f87171`.
+
+Novi mjerni test, `frontend/src/design/__tests__/contrast.test.ts` (12 testova):
+čita `tokens.css` kao izvor istine (ne kopiju brojeva), mjeri AA na `panel`/
+`canvas`/`raised`, tekst na vlastitom tintu (`bg-fault/10 text-fault`), sve
+varijante dugmadi, placeholder, AAA za primarni tekst — i **poredi web paletu sa
+mobilnom**, pa se dvije aplikacije više ne mogu razići o tome šta je
+„pristupačno".
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

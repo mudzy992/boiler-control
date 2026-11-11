@@ -62,7 +62,22 @@ jobs:
       - name: Tests
         # `--ci` isključuje interaktivno snimanje snapshotova: test koji bi
         # inače tiho ažurirao snapshot u CI-ju mora pasti.
-        run: npx jest --ci
+        #
+        # JSON se piše uvijek, ne samo pri padu: artefakt ispod se dodaje
+        # `if: failure()`, pa je dovoljno da postoji kad zatreba.
+        run: npx jest --ci --json --outputFile="$RUNNER_TEMP/mobile-ci-jest.json"
+
+      # Bez ovoga je pad ovdje bio nedijagnostikovan: logovi joba se ne mogu
+      # preuzeti (`gh run view --log` vraća praznu arhivu), a anotacije nose
+      # samo ime testa. Isti razlog kao u `backend-audit.yml`.
+      - name: Jest result (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-ci-jest-result
+          path: ${{ runner.temp }}/mobile-ci-jest.json
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: i18n keys exist in both languages
         # Poseban korak da pad bude čitljiv kao „nedostaje ključ", a ne kao

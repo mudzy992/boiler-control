@@ -802,14 +802,14 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                       style={
                         [
                           {
-                            "backgroundColor": "#c2410c",
+                            "backgroundColor": "#b43a0c",
                             "borderRadius": 999,
                             "height": 7,
                             "width": 7,
                           },
                           {
                             "elevation": 0,
-                            "shadowColor": "#c2410c",
+                            "shadowColor": "#b43a0c",
                             "shadowOffset": {
                               "height": 0,
                               "width": 0,
@@ -851,7 +851,7 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                       style={
                         {
                           "alignItems": "center",
-                          "borderColor": "#c2410c",
+                          "borderColor": "#b43a0c",
                           "borderRadius": 2,
                           "borderWidth": 1,
                           "flexDirection": "row",
@@ -865,7 +865,7 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                         style={
                           [
                             {
-                              "color": "#c1411c",
+                              "color": "#b43a0c",
                               "fontFamily": "monospace",
                               "fontSize": 12,
                               "lineHeight": 16,
@@ -913,7 +913,7 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#c1411c",
+                              "color": "#b43a0c",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [
@@ -998,7 +998,7 @@ exports[`Heating nativewind matches the light snapshot 1`] = `
                         <View
                           style={
                             {
-                              "backgroundColor": "#c2410c",
+                              "backgroundColor": "#b43a0c",
                               "borderRadius": 2,
                               "bottom": 0,
                               "left": 0,

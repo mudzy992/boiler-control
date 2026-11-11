@@ -2580,7 +2580,7 @@ exports[`GasAnalysis nativewind matches the light snapshot 1`] = `
                         },
                         null,
                         {
-                          "color": "#c1411c",
+                          "color": "#b43a0c",
                           "fontFamily": "monospace",
                           "fontSize": 16,
                           "fontVariant": [

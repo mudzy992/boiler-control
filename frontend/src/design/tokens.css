@@ -12,12 +12,21 @@
   --line-strong: 180 188 202;
   --ink: 17 24 39;
   --ink-muted: 75 85 99;
-  --ink-dim: 107 114 128;
-  --signal: 255 107 61;
-  --ok: 34 197 94;
-  --warn: 245 165 36;
-  --fault: 239 68 68;
-  --info: 56 189 248;
+  /* A11Y: 107 114 128 je dao 4,35:1 na `raised` — ispod AA. 89 97 110 = 6,25 / 5,84 / 5,63. */
+  --ink-dim: 89 97 110;
+  /*
+   * A11Y (2026-11-21): ove četiri boje su se koristile i kao TEKST
+   * (`text-ok`, `text-fault`, `bg-fault/10 text-fault`…), a u svijetloj temi su
+   * davale 1,8–3,4:1 — dakle ispod AA za svaki tekst i ispod 3:1 za ikone.
+   * Vrijednosti su sada iste kao u mobilnoj aplikaciji (`mobile/src/theme/tokens.ts`),
+   * gdje ih mjeri `a11yContrast.test.ts`. Boje **podloga** (`--btn-*`, `--hero-border`,
+   * `--input-border-focus`) ostaju vivid — mjeri se tekst, ne brand.
+   */
+  --signal: 180 58 12;
+  --ok: 20 110 52;
+  --warn: 158 72 8;
+  --fault: 185 28 28;
+  --info: 3 105 161;
 
   /* Button */
   --btn-primary-bg: 255 107 61;
@@ -32,8 +41,9 @@
   --btn-ghost-bg-hover: 241 243 247;
   --btn-ghost-fg: 17 24 39;
   --btn-ghost-border: 0 0 0;
-  --btn-danger-bg: 239 68 68;
-  --btn-danger-bg-hover: 185 28 28;
+  /* A11Y: bijeli tekst na 239 68 68 daje 3,76:1. 185 28 28 = 6,47, hover 220 38 38 = 4,83. */
+  --btn-danger-bg: 185 28 28;
+  --btn-danger-bg-hover: 220 38 38;
   --btn-danger-fg: 255 255 255;
   --btn-danger-border: 239 68 68;
 
@@ -97,11 +107,13 @@ html.dark {
   --line-strong: 44 55 70;
   --ink: 232 237 244;
   --ink-muted: 154 166 182;
-  --ink-dim: 107 119 136;
+  /* A11Y: 107 119 136 je dao 3,95:1 na `raised`. 130 141 158 = 5,71 / 6,00 / 5,34. */
+  --ink-dim: 130 141 158;
   --signal: 255 107 61;
   --ok: 34 197 94;
   --warn: 245 165 36;
-  --fault: 239 68 68;
+  /* A11Y: 239 68 68 na `bg-fault/10` daje 4,36:1. 248 113 113 = 5,70 / 6,49. */
+  --fault: 248 113 113;
   --info: 56 189 248;
 
   --btn-primary-bg: 255 107 61;
@@ -116,8 +128,9 @@ html.dark {
   --btn-ghost-bg-hover: 17 23 35;
   --btn-ghost-fg: 232 237 244;
   --btn-ghost-border: 0 0 0;
-  --btn-danger-bg: 239 68 68;
-  --btn-danger-bg-hover: 220 38 38;
+  /* A11Y: bijeli tekst na 239 68 68 daje 3,76:1. 220 38 38 = 4,83, hover 185 28 28 = 6,47. */
+  --btn-danger-bg: 220 38 38;
+  --btn-danger-bg-hover: 185 28 28;
   --btn-danger-fg: 255 255 255;
   --btn-danger-border: 239 68 68;
 
@@ -126,7 +139,8 @@ html.dark {
   --input-border-hover: 44 55 70;
   --input-border-focus: 255 107 61;
   --input-fg: 232 237 244;
-  --input-placeholder: 107 119 136;
+  /* A11Y: 107 119 136 na `--input-bg` daje 4,22:1; 123 132 148 = 5,09. */
+  --input-placeholder: 123 132 148;
   --input-invalid: 239 68 68;
 
   --panel-bg: 11 15 22;

@@ -2222,7 +2222,7 @@ exports[`Settings nativewind matches the dark snapshot 1`] = `
                     },
                     null,
                     {
-                      "color": "#ef4444",
+                      "color": "#f87171",
                       "fontFamily": undefined,
                       "fontSize": 12.5,
                     },

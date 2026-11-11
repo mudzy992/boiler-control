@@ -1123,7 +1123,7 @@ exports[`MainTabNavigator nativewind matches the light snapshot 1`] = `
                       "textAlign": "center",
                     },
                     {
-                      "color": "#c2410c",
+                      "color": "#b43a0c",
                     },
                     [
                       {

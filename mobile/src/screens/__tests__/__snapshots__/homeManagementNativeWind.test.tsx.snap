@@ -936,7 +936,7 @@ exports[`HomeManagement nativewind matches the dark snapshot 1`] = `
                           style={
                             [
                               {
-                                "color": "#ef4444",
+                                "color": "#f87171",
                                 "fontFamily": undefined,
                                 "fontSize": 12,
                                 "lineHeight": 16,
@@ -1330,7 +1330,7 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                     {
                       "backgroundColor": "#ffffff",
                       "borderColor": "#c3cad6",
-                      "borderLeftColor": "#c2410c",
+                      "borderLeftColor": "#b43a0c",
                       "borderLeftWidth": 2,
                     },
                     null,
@@ -1399,7 +1399,7 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                       <View
                         style={
                           {
-                            "borderColor": "#15803d",
+                            "borderColor": "#146e34",
                             "borderRadius": 2,
                             "borderWidth": 1,
                             "paddingHorizontal": 4,
@@ -1411,7 +1411,7 @@ exports[`HomeManagement nativewind matches the light snapshot 1`] = `
                           style={
                             [
                               {
-                                "color": "#15803d",
+                                "color": "#146e34",
                                 "fontFamily": "monospace",
                                 "fontSize": 11,
                                 "lineHeight": 15,

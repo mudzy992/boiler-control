@@ -48,7 +48,10 @@ describe('design tokens', () => {
     // normalan tekst, a pošto je signal i podloga primarnog dugmeta, i bijeli
     // tekst na njemu je bio ispod granice. Nova vrijednost je 5,18 / 4,84.
     expect(darkTokens.signal).toBe('#ff6b3d');
-    expect(lightTokens.signal).toBe('#c2410c');
+    // 2026-11-21: #c2410c je prolazio na podlozi, ali je kao tekst na vlastitoj
+    // 10% podlozi (`signalSoft`) davao 4,14:1. #b43a0c daje 4,61:1 — v. web
+    // `design/__tests__/contrast.test.ts`, koji poredi obje palete.
+    expect(lightTokens.signal).toBe('#b43a0c');
   });
 
   it('`tokensFor` vraća dark za nepoznatu vrijednost (fail-safe na default)', () => {

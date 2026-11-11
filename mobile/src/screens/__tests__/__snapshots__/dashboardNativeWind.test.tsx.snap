@@ -3172,7 +3172,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   {
                     "backgroundColor": "#ffffff",
                     "borderColor": "#c3cad6",
-                    "borderLeftColor": "#c2410c",
+                    "borderLeftColor": "#b43a0c",
                     "borderLeftWidth": 2,
                   },
                   {
@@ -3306,7 +3306,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#c1411c",
+                              "color": "#b43a0c",
                               "fontFamily": "monospace",
                               "fontSize": 40,
                               "fontVariant": [
@@ -3469,7 +3469,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                   <View
                     style={
                       {
-                        "backgroundColor": "#15803d",
+                        "backgroundColor": "#146e34",
                         "borderRadius": 2,
                         "bottom": 0,
                         "left": 0,
@@ -3509,7 +3509,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                     style={
                       [
                         {
-                          "color": "#15803d",
+                          "color": "#146e34",
                           "fontFamily": "monospace",
                           "fontSize": 12,
                           "lineHeight": 16,
@@ -3690,7 +3690,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       style={
                         {
                           "alignSelf": "stretch",
-                          "backgroundColor": "#b45309",
+                          "backgroundColor": "#9e4808",
                           "borderRadius": 1,
                           "width": 2,
                         }
@@ -3716,7 +3716,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         <View
                           style={
                             {
-                              "backgroundColor": "#b45309",
+                              "backgroundColor": "#9e4808",
                               "borderRadius": 999,
                               "height": 6,
                               "width": 6,
@@ -3727,7 +3727,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           style={
                             [
                               {
-                                "color": "#b45309",
+                                "color": "#9e4808",
                                 "fontFamily": "monospace",
                                 "fontSize": 12,
                                 "lineHeight": 16,
@@ -4296,7 +4296,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                           "width": 5,
                         },
                         {
-                          "backgroundColor": "#15803d",
+                          "backgroundColor": "#146e34",
                         },
                       ]
                     }
@@ -4312,7 +4312,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         },
                         null,
                         {
-                          "color": "#15803d",
+                          "color": "#146e34",
                           "fontFamily": "monospace",
                           "fontSize": 9,
                           "letterSpacing": 0.4,
@@ -4429,7 +4429,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                         "width": 5,
                       },
                       {
-                        "backgroundColor": "#b45309",
+                        "backgroundColor": "#9e4808",
                       },
                     ]
                   }
@@ -4445,7 +4445,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                       },
                       null,
                       {
-                        "color": "#b45309",
+                        "color": "#9e4808",
                         "fontFamily": "monospace",
                         "fontSize": 9,
                         "letterSpacing": 0.4,
@@ -5456,7 +5456,7 @@ exports[`Dashboard nativewind matches the light snapshot 1`] = `
                             },
                             null,
                             {
-                              "color": "#c1411c",
+                              "color": "#b43a0c",
                               "fontFamily": "monospace",
                               "fontSize": 16,
                               "fontVariant": [

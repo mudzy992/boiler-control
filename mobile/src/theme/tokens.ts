@@ -75,7 +75,8 @@ export const darkTokens: ThemeTokens = {
   onSignal: '#0b0f16',
   ok: '#22c55e',
   warn: '#f5a524',
-  fault: '#ef4444',
+  /* A11Y 2026-11-21: 239 68 68 je na `faultSoft` dao 4,19:1 — ispod AA. */
+  fault: '#f87171',
   info: '#38bdf8',
   signalSoft: 'rgba(255, 107, 61, 0.14)',
   okSoft: 'rgba(34, 197, 94, 0.14)',
@@ -93,9 +94,16 @@ export const darkTokens: ThemeTokens = {
  * bijeloj. Prije je `ok` (#16a34a) imao 3,30:1 na panelu — dakle padao i AA za
  * veliki tekst — a `signal` (#e85223) 3,71:1, pa je i tekst na dugmetu
  * (`onSignal` #ffffff na signal) bio ispod granice. Nove vrijednosti:
- *   signal #c2410c (5,18 / 4,84 / 4,66), ok #15803d (5,02 / 4,69 / 4,51),
+ *   signal #b43a0c (5,79 / 5,54 / 5,32), ok #146e34 (5,71 / 5,43 / 5,23),
  *   fault #b91c1c (6,47 / 6,04 / 5,82), info #0369a1 (5,93 / 5,54 / 5,34),
  *   inkDim #59616e (6,25 / 5,84 / 5,63).
+ *
+ * 2026-11-21 (A11Y mjerenje i na tintu): iste boje se koriste kao tekst **na
+ * vlastitoj 10% podlozi** (`okSoft`, `warnSoft`…). Tu su `ok`, `warn` i `signal`
+ * davali 4,07–4,14:1 — ispod AA. Zato su `signal` (#c2410c → #b43a0c), `ok`
+ * (#15803d → #146e34) i `warn` (#b45309 → #9e4808) potamnjene; tekst na tintu
+ * sada ima 4,61–4,97:1. Vrijednosti su **iste kao u web tokenima**
+ * (`frontend/src/design/tokens.css`), a to poredi `frontend/src/design/__tests__/contrast.test.ts`.
  * Tamna tema je prolazila, osim `inkDim` (#6b7788 → 4,22:1); sada je #828d9e
  * (5,71 / 6,00 / 5,34), pa su i mikro-labele AAA za veliki tekst.
  * Kontrast se mjeri u `src/ui/__tests__/a11yContrast.test.ts`, da ga sljedeća
@@ -110,11 +118,11 @@ export const lightTokens: ThemeTokens = {
   ink: '#111827',
   inkMuted: '#4b5563',
   inkDim: '#59616e',
-  signal: '#c2410c',
-  signalInk: '#c1411c',
+  signal: '#b43a0c',
+  signalInk: '#b43a0c',
   onSignal: '#ffffff',
-  ok: '#15803d',
-  warn: '#b45309',
+  ok: '#146e34',
+  warn: '#9e4808',
   fault: '#b91c1c',
   info: '#0369a1',
   signalSoft: 'rgba(232, 82, 35, 0.10)',

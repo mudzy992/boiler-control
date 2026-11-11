@@ -141,6 +141,36 @@ async function main() {
     }
 
     /*
+     * Zadnjih 14 dana po redu — da se vidi **ko** je upisao koji dan.
+     *
+     * Zašto: `daily-2` je 0 iako je F1 kod u produkciji. Pisac preskače dan
+     * za koji red **već postoji**, bez obzira na `modelVersion` — pa
+     * rekonstruisan dan ostaje `backfill-events-1` zauvijek, a `daily-2`
+     * nastaje tek za dan koji još nema red. Ova tabela to pokazuje datum po
+     * datum, umjesto da se zaključuje iz zbirnih brojeva.
+     */
+    const recent = await soft(
+      'zadnjih 14 dana',
+      `SELECT "localDate" AS d, coalesce("modelVersion", '(bez)') AS model,
+              "nightMinC", "dayMaxC", "proposedFlowTemp", "skipReason"
+         FROM "DailyRecord"
+        ORDER BY "localDate" DESC
+        LIMIT 14`,
+    );
+    if (recent) {
+      out('| dan | model | noć | dnevni max | predlog | razlog |');
+      out('|---|---|---|---|---|---|');
+      for (const row of recent) {
+        out(
+          `| ${row.d} | ${row.model} | ${num(row.nightMinC, 1)} | ` +
+            `${num(row.dayMaxC, 1)} | ${num(row.proposedFlowTemp, 1)} | ` +
+            `${row.skipReason ?? '—'} |`,
+        );
+      }
+      out();
+    }
+
+    /*
      * F3.4 (greška prognoze) traži oba polja: koliko je `nightMinC` promašio
      * izmjereni `nightMinOutdoorMeasuredC`. Ovaj upit samo mjeri da li je
      * uzorak dovoljan za tu analizu — samu analizu radi posebna skripta.

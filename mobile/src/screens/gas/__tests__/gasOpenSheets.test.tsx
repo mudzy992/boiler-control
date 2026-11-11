@@ -115,13 +115,32 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
 
     // Tražimo SADRŽAJ sheeta, ne `showAddModal`: forma ima svoje polje, koje
     // postoji samo kad je sheet stvarno montiran u vidljivom stanju.
-    expect(
+    //
+    // `try/catch` nije da bi test preživio pad — nego da poruka kaže **šta je
+    // na ekranu** kad padne. Dosadašnja poruka („unable to find placeholder")
+    // nije razlikovala tri bitno različita uzroka: sheet se nije otvorio, sheet
+    // se otvorio ali forma nije, ili je test pao iz drugog razloga. Bez toga se
+    // nagađalo kroz nekoliko uzastopnih CI padova.
+    try {
       await result.findByPlaceholderText(
         'gas.counterValuePlaceholder',
         {},
         { timeout: SHEET_TIMEOUT_MS },
-      ),
-    ).toBeTruthy();
+      );
+    } catch (error) {
+      const handles = result.UNSAFE_root.findAll(
+        (node) => typeof node.type === 'string',
+      );
+      const modalPresent = result.queryAllByTestId(/^gas-add-/).length;
+      throw new Error(
+        [
+          String((error as Error)?.message ?? error).slice(0, 400),
+          `Modal prisutan: ${modalPresent > 0 ? 'da' : 'ne'}`,
+          `Vidljivi host elementi: ${handles.length}`,
+          `Sheet modal u stablu: ${result.queryAllByTestId(/modal$/).length}`,
+        ].join(' | '),
+      );
+    }
     await result.unmount();
     queryClient.clear();
   });

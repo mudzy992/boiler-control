@@ -356,3 +356,16 @@ jobs:
           report_result=$?
           if [ "$result" -ne 0 ]; then exit "$result"; fi
           exit "$report_result"
+      # Mašinsko čitanje uzrokâ: `jest_report.cjs` svjesno ne ispisuje sirove
+      # poruke (da ne procuri vrijednost iz testa), a anotacije se uz to
+      # odsijecaju. Kad padne nešto što nije očigledno (ovdje: test koji prođe
+      # lokalno i u `mobile-ci.yml`, a padne samo ovdje), bez ovoga se nagađa.
+      # Zato se pri padu dodaje JSON kao artefakt — čita se ručno, ne parsira.
+      - name: Mobile Jest result (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-jest-result
+          path: ${{ runner.temp }}/mobile-jest.json
+          retention-days: 7
+          if-no-files-found: ignore

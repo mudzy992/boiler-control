@@ -1113,11 +1113,28 @@ Dokazi: `boiler-flow-range.spec.ts` **19** (8 starih + 11 novih, uključujući
 `boilerCatalog.test.ts` (mobilni) — `flowBoundsForFamily` 3 nova,
 `heatingPolicy.test.ts` 16, `boilerLimits.test.ts` (mobilni) — `BOILER` izvor.
 
-CI: run `42920655959` je pao na `DailyHistoryService` (9 testova / 2 suite-a) — ne
-zbog logike, nego zato što je **stub u testu ostao na starom obliku servisa**
-(poslije `F13` servis čita i `HeatingEvent` i zonu doma). Stub je dopunjen
-(`heatingEvent.findMany`, `weatherTimezone`, `user.timezone`) → 29/29;
-commit `13c8c61`. Pouka za dalje: poslije svake izmjene servisa provjeriti sve
+**CI je dio posla, ne detalj.** Tri propusta su bila otvorena; sva tri su
+popravljena i run `a1c12ec` je **zelen u oba workflow-a** (`Frontend CI`,
+`Backend build` — i `build` i `test` job, na pravom PostgreSQL-u):
+
+1. `42920655959` — `DailyHistoryService` (9 testova / 2 suite-a). Nije bila
+   logika: **stub je ostao na starom obliku servisa** poslije `F13` (servis čita
+   i `HeatingEvent` i zonu doma). Stub dopunjen (`heatingEvent.findMany`,
+   `weatherTimezone`, `user.timezone`) → 29/29, commit `13c8c61`.
+2. `42925651049` — `apiUploadMulter.test.ts` je importovao
+   `backend/node_modules/{express,multer}` apsolutnom putanjom, a CI instalira
+   samo `frontend/`. Iste verzije (`express 5.2.1`, `multer 2.5.0`) su sada
+   **lokalne devDependencies** frontenda; test prolazi i bez `backend/node_modules`
+   (dokazano premještanjem tog direktorija), commit `b40ab46`.
+3. `42981488213` — `DashboardService` stub nije imao `prisma.user` ni
+   `prisma.dailyRecord`, koje je uveo `F14` (`homeDailyFlow`). Dopunjen stub →
+   7/7, commit `a1c12ec`.
+
+Uz to je `backend-build.yml` dobio `'arena/**'` u `push.branches` — prije je
+pokrivao samo `main` i jednu arhiviranu granu, pa se pad backenda otkrio tek
+poslije merge-a (commit `6b58533`).
+
+Pouka za dalje: poslije svake izmjene servisa provjeriti sve
 `new *Service(prisma as never)` stubove (`grep "as never"`).
 
 ## 4. Status provedbe

@@ -285,7 +285,12 @@ export class BoilerService {
   async flowTempRange(userId: number) {
     const home = await this.prisma.homeProfile.findFirst({
       where: { userId },
-      select: { minHeatingFlowC: true, maxHeatingFlowC: true },
+      select: {
+        minHeatingFlowC: true,
+        maxHeatingFlowC: true,
+        // Šesti krug: i model iz kataloga, jer granice nijesu konstante.
+        boilerCatalogId: true,
+      },
     });
 
     // Pravilo je u čistoj funkciji (`./flow-range.ts`) — v. komentar iznad.

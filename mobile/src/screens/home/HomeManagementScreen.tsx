@@ -28,6 +28,8 @@ import {
   outputChoices,
   selectionHint,
   isKnownFamilyId,
+  flowBoundsForFamily,
+  flowBoundChoices,
 } from './boilerCatalog';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -337,6 +339,7 @@ const HomeManagementScreenContent = () => {
     boilerCatalogId: '',
     boilerOutputKw: null,
     maxHeatingFlowC: null,
+    minHeatingFlowC: null,
     seasonMode: SeasonMode.WINTER,
   });
 
@@ -356,6 +359,11 @@ const HomeManagementScreenContent = () => {
   );
   const boilerBrand =
     boilerBrandOverride ?? brandOfFamily(catalog, formData.boilerCatalogId);
+  /*
+   * Pod i tavan polazne za odabrani model — jedan izvor za oba polja, inače bi
+   * donja i gornja granica mogle pokazati dvije različite slike istog kotla.
+   */
+  const minFlowBounds = flowBoundsForFamily(catalog, formData.boilerCatalogId);
 
   /**
    * Validacija vraća PRVU grešku na bosanskom. Poruke su u `homeProfile.form`
@@ -383,6 +391,23 @@ const HomeManagementScreenContent = () => {
       (formData.maxHeatingFlowC < 30 || formData.maxHeatingFlowC > 55)
     )
       return tr('homeProfile.form.maxHeatingFlowRange');
+    /*
+     * Granice su **podatak po tipu bojlera** (šesti krug), pa se ovdje provjerava
+     * i donja — do sada je nije bilo u formi, a server ju je znao samo kao
+     * konstantu 46. Ručni unos ostaje jedini izvor za model kojeg nema u
+     * katalogu, pa je i dalje dozvoljen cijeli apsolutni raspon.
+     */
+    if (
+      formData.minHeatingFlowC != null &&
+      (formData.minHeatingFlowC < 30 || formData.minHeatingFlowC > 55)
+    )
+      return tr('homeProfile.form.minHeatingFlowRange');
+    if (
+      formData.minHeatingFlowC != null &&
+      formData.maxHeatingFlowC != null &&
+      formData.minHeatingFlowC > formData.maxHeatingFlowC
+    )
+      return tr('homeProfile.form.flowRangeInverted');
 
     /*
      * Porodica + snaga je jedna odluka (`25` §5.1). Server odbija isto, ali
@@ -426,6 +451,7 @@ const HomeManagementScreenContent = () => {
       boilerCatalogId: hasModel ? formData.boilerCatalogId : null,
       boilerOutputKw: hasModel ? (formData.boilerOutputKw ?? null) : null,
       maxHeatingFlowC: formData.maxHeatingFlowC ?? null,
+      minHeatingFlowC: formData.minHeatingFlowC ?? null,
     };
   };
 
@@ -1056,10 +1082,42 @@ const HomeManagementScreenContent = () => {
             </Text>
           ) : null}
           {/*
-            Najviša polazna (`19` §2): polje samo sužava 30–55. Prazno = granica
-            kotla — nikad 55 unaprijed, jer bi upisana vrijednost izgledala kao
-            korisnikov podatak.
+            Granice polazne (`19` §2, šesti krug): polje samo sužava 30–55.
+            Prazno = granica kotla — nikad 55 unaprijed, jer bi upisana
+            vrijednost izgledala kao korisnikov podatak.
+
+            Ponuda dolazi iz **kataloga za odabrani model**: za potvrđen model
+            opcije kreću od njegovog poda, a za model kojeg nema u katalogu (ili
+            nije potvrđen) ostaje cijeli raspon 30–55 — tada granicu upisuje
+            korisnik sam.
           */}
+          <ChoiceField
+            label={tr('homeManagement.fieldMinHeatingFlow')}
+            value={
+              formData.minHeatingFlowC == null
+                ? ''
+                : String(formData.minHeatingFlowC)
+            }
+            onChange={(next) =>
+              setFormData({
+                ...formData,
+                minHeatingFlowC: next === '' ? null : Number.parseInt(next, 10),
+              })
+            }
+            options={flowBoundChoices(minFlowBounds, tr('homeManagement.minFlowUnset'))}
+            testID="home-form-min-flow"
+          />
+          <Text size="label" tone="muted">
+            {minFlowBounds.fromCatalog
+              ? tr('homeManagement.flowBoundsFromCatalog', {
+                  min: minFlowBounds.min,
+                  max: minFlowBounds.max,
+                })
+              : tr('homeManagement.flowBoundsManual', {
+                  min: minFlowBounds.min,
+                  max: minFlowBounds.max,
+                })}
+          </Text>
           <ChoiceField
             label={tr('homeManagement.fieldMaxHeatingFlow')}
             value={
@@ -1073,13 +1131,7 @@ const HomeManagementScreenContent = () => {
                 maxHeatingFlowC: next === '' ? null : Number.parseInt(next, 10),
               })
             }
-            options={[
-              { value: '', label: tr('homeManagement.maxFlowUnset') },
-              ...[30, 35, 40, 45, 50, 55].map((value) => ({
-                value: String(value),
-                label: `${value} °C`,
-              })),
-            ]}
+            options={flowBoundChoices(minFlowBounds, tr('homeManagement.maxFlowUnset'))}
             testID="home-form-max-flow"
           />
 

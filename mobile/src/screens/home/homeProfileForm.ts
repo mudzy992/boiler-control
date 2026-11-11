@@ -29,6 +29,7 @@ export interface HomeProfileFormSource {
   boilerCatalogId?: string | null;
   boilerOutputKw?: number | null;
   maxHeatingFlowC?: number | null;
+  minHeatingFlowC?: number | null;
   seasonMode?: SeasonMode | null;
 }
 
@@ -55,6 +56,11 @@ export interface HomeProfileFormValues {
   boilerOutputKw: number | null;
   /** Najviša polazna; `null` = granica kotla, polje nije postavljeno. */
   maxHeatingFlowC: number | null;
+  /**
+   * Najniža polazna za **ovaj** dom (šesti krug: granica je podatak, ne
+   * konstanta). `null` = nije upisano, pa važi pod iz kataloga ili motor (46).
+   */
+  minHeatingFlowC: number | null;
   seasonMode: SeasonMode;
 }
 
@@ -78,6 +84,7 @@ export function homeProfileToForm(home: HomeProfileFormSource): HomeProfileFormV
     boilerCatalogId: home.boilerCatalogId ?? '',
     boilerOutputKw: home.boilerOutputKw ?? null,
     maxHeatingFlowC: home.maxHeatingFlowC ?? null,
+    minHeatingFlowC: home.minHeatingFlowC ?? null,
     seasonMode: home.seasonMode ?? SeasonMode.WINTER,
   };
 }

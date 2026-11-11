@@ -216,3 +216,67 @@ export function boilerSelectionError(
   }
   return null;
 }
+
+/**
+ * Pod i tavan polazne za odabrani model — šta forma smije primiti.
+ *
+ * Isti posao kao `flowBoundsForFamily` u web formi, i **ista pravila**: web i
+ * mobilna aplikacija ne smiju drugačije tumačiti istu granicu.
+ *
+ * Šesti krug (2026-11-21): granica je podatak po tipu bojlera, ali ne smije
+ * zaključati korisnika — modela nema u katalogu, ili katalog za njega nema
+ * potvrđen broj (`TO_VERIFY`/`PARTIAL`), pa granicu upisuje korisnik sam.
+ */
+export interface FlowBoundsForFamily {
+  min: number;
+  max: number;
+  fromCatalog: boolean;
+  manual: boolean;
+}
+
+export const CATALOG_FLOW_ENVELOPE = { minC: 30, maxC: 55 } as const;
+
+export function flowBoundsForFamily(
+  catalog: BoilerCatalog | null | undefined,
+  familyId: string | null | undefined,
+): FlowBoundsForFamily {
+  const { minC, maxC } = CATALOG_FLOW_ENVELOPE;
+  const family = catalog?.families?.find(
+    (candidate) => candidate.id === familyId,
+  );
+
+  const verified =
+    family != null &&
+    family.specStatus === 'VERIFIED_MANUAL' &&
+    family.heatingFlowMinC != null &&
+    family.heatingFlowMaxC != null;
+
+  if (verified) {
+    return {
+      min: Math.max(minC, family.heatingFlowMinC as number),
+      max: Math.min(maxC, family.heatingFlowMaxC as number),
+      fromCatalog: true,
+      manual: false,
+    };
+  }
+
+  return { min: minC, max: maxC, fromCatalog: false, manual: true };
+}
+
+/**
+ * Opcije za polja granica: cijeli stepeni unutar raspona koji model dozvoljava.
+ *
+ * Razlog zašto iz kataloga, a ne iz konstanti: za Vaillant ecoTEC (pod 30 °C)
+ * nema smisla ponuditi samo 45–55, a za nepotvrđen model nema smisla tvrditi
+ * da je 30 „pod kotla".
+ */
+export function flowBoundChoices(
+  bounds: FlowBoundsForFamily,
+  unsetLabel: string,
+): CatalogChoice[] {
+  const choices: CatalogChoice[] = [{ value: '', label: unsetLabel }];
+  for (let value = Math.ceil(bounds.min); value <= Math.floor(bounds.max); value += 1) {
+    choices.push({ value: String(value), label: `${value} °C` });
+  }
+  return choices;
+}

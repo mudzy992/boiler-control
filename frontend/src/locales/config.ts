@@ -556,7 +556,11 @@ const enUS = {
       "Highest flow this system allows (radiators, screed). Empty = the boiler limit. The value can only narrow 30–55 °C.",
     minHeatingFlowC: "Min heating flow temperature (°C)",
     minHeatingFlowCHint:
-      "Lowest flow this boiler still heats well with. Empty = 46 °C, the same limit the boiler model uses. Raise it if your boiler does not run well that low.",
+      "Lowest flow this boiler still heats well with. Empty = the boiler catalogue value, or 46 °C when the model has none. Raise it if your boiler does not run well that low.",
+    flowBoundsFromCatalog:
+      "The catalogue gives this boiler {{min}}–{{max}} °C.",
+    flowBoundsManual:
+      "No verified catalogue value for this boiler — enter the limits yourself, {{min}}–{{max}} °C.",
     required: "{{field}} is required",
     hasFloorHeating: "Has Floor Heating",
     targetMorningTemp: "Target Morning Temp (°C)",
@@ -1121,7 +1125,11 @@ const bsBS = {
       "Najviša polazna koju sistem dozvoljava (radijatori, estrih). Prazno = granica kotla. Vrijednost samo sužava 30–55 °C.",
     minHeatingFlowC: "Najniža polazna grijanja (°C)",
     minHeatingFlowCHint:
-      "Najniža polazna s kojom kotao još dobro grije. Prazno = 46 °C, ista granica koju koristi model. Podignite je ako vaš kotao ne radi dobro na toliko.",
+      "Najniža polazna s kojom kotao još dobro grije. Prazno = vrijednost iz kataloga za taj kotao, ili 46 °C kad je katalog nema. Podignite je ako vaš kotao ne radi dobro na toliko.",
+    flowBoundsFromCatalog:
+      "Katalog za ovaj kotao navodi {{min}}–{{max}} °C.",
+    flowBoundsManual:
+      "Za ovaj kotao nema potvrđene vrijednosti u katalogu — upišite granice sami, {{min}}–{{max}} °C.",
     required: "{{field}} je obavezno",
     hasFloorHeating: "Podno grejanje",
     targetMorningTemp: "Ciljana temperatura jutro (°C)",

@@ -163,3 +163,55 @@ export function isKnownFamilyId(
   if (!value) return false;
   return Boolean(families?.some((family) => family.id === value));
 }
+
+/**
+ * Pod i tavan polazne za odabrani model — ono što forma smije primiti.
+ *
+ * Šesti krug (2026-11-21): granica polazne je **podatak po tipu bojlera**, pa se
+ * ne smije ponuditi 30 °C za model za koji katalog to ne tvrdi. Ali se ne smije
+ * ni zaključati korisnika: kad modela nema u katalogu (ili nije potvrđen), polja
+ * ostaju ručno podesiva unutar apsolutnog raspona 30–55.
+ *
+ * Vraća tri stvari, namjerno odvojene:
+ *  - `min`/`max` — šta polje dozvoljava (uvijek unutar 30–55);
+ *  - `fromCatalog` — da li broj dolazi iz priručnika (`VERIFIED_MANUAL`);
+ *  - `manual` — da li korisnik mora upisati granicu sam.
+ */
+export interface FlowBoundsForFamily {
+  min: number;
+  max: number;
+  fromCatalog: boolean;
+  manual: boolean;
+}
+
+export const CATALOG_FLOW_ENVELOPE = { minC: 30, maxC: 55 } as const;
+
+export function flowBoundsForFamily(
+  families: BoilerCatalogFamily[] | null | undefined,
+  familyId: string | null | undefined,
+): FlowBoundsForFamily {
+  const { minC, maxC } = CATALOG_FLOW_ENVELOPE;
+  const family = families?.find((candidate) => candidate.id === familyId);
+
+  const verified =
+    family != null &&
+    family.specStatus === 'VERIFIED_MANUAL' &&
+    family.heatingFlowMinC != null &&
+    family.heatingFlowMaxC != null;
+
+  if (verified) {
+    return {
+      min: Math.max(minC, family.heatingFlowMinC as number),
+      max: Math.min(maxC, family.heatingFlowMaxC as number),
+      fromCatalog: true,
+      manual: false,
+    };
+  }
+
+  /*
+   * Nepotvrđen model ili model kojeg nema u katalogu: granica je korisnikov
+   * ručni unos. Zato se ne nudi 30 kao „pod kotla" — nudi se apsolutni raspon,
+   * a tekst objašnjava da broj nije potvrđen.
+   */
+  return { min: minC, max: maxC, fromCatalog: false, manual: true };
+}

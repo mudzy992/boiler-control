@@ -233,3 +233,91 @@ export function effectiveCeilingC(input: {
   ].filter((value): value is number => value != null && Number.isFinite(value));
   return Math.min(...candidates);
 }
+
+/**
+ * Donja granica polazne: `max(30, model, profil)` — ogledalo `effectiveCeilingC`.
+ *
+ * Zašto postoji: do 2026-11-21 donja granica je bila **konstanta 46** u dva
+ * mjesta (motor i `flow-range.ts`), pa je dom bez upisanih granica uvijek dobijao
+ * 46 — i kad katalog za njegov kotao zna drugi broj. Gornja strana je od početka
+ * išla kroz `effectiveCeilingC`; donja nije, i to je bila nedosljednost, ne
+ * odluka.
+ *
+ * Tri pravila, sva tri namjerna:
+ *  - **envelope 30** je tvrd pod: i model i profil ga mogu samo podići;
+ *  - **model** ulazi samo kad je `VERIFIED_MANUAL` **i** ima broj. `TO_VERIFY` i
+ *    `PARTIAL` ne nose brojeve (v. `catalogIssues`), a i da nose — nagađanje ne
+ *    smije postati granica koju korisnik ne može zaobići;
+ *  - kad model nema potvrđen broj, `null` iz kataloga **ne** gasi granicu —
+ *    vraća se `fallbackC`, tj. ono što je važilo prije kataloga (motor 46, ili
+ *    ručni unos u `HomeProfile.minHeatingFlowC`).
+ *
+ * Ova funkcija **ne dira motor**. Motor (`base.strategy.ts`) i dalje klampa izlaz
+ * na 46–55; katalog samo kaže koji raspon korisnik smije upisati/prihvatiti.
+ */
+export function effectiveFloorC(input: {
+  systemMinC?: number | null;
+  family?: BoilerFamily | null;
+  /** Vrijednost kad ni model ni dom ne daju pod. `null` = samo envelope. */
+  fallbackC?: number | null;
+}): number {
+  const familyMin = verifiedFloorOf(input.family);
+  const manual = clampToEnvelope(input.systemMinC);
+  const fallback = clampToEnvelope(input.fallbackC);
+
+  const candidates = [ENVELOPE_MIN_C, familyMin, manual].filter(
+    (value): value is number => value != null,
+  );
+
+  /*
+   * Ručni unos ima prednost nad katalogom: korisnik zna svoj kotao, a pod iz
+   * priručnika je za porodicu, ne za njegov primjerak.
+   */
+  if (manual != null) return Math.max(...candidates);
+
+  /*
+   * Bez ručnog unosa: pod iz kataloga ako je potvrđen, inače dotadašnja granica
+   * (motor 46). Ovdje se **ne** koristi `fallback` kad katalog ima pod — inače
+   * bi 46 pregazilo potvrđenih 30 i modularnost bi bila samo na papiru.
+   */
+  return Math.max(ENVELOPE_MIN_C, familyMin ?? fallback ?? ENVELOPE_MIN_C);
+}
+
+function clampToEnvelope(
+  value: number | null | undefined,
+): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  return Math.max(ENVELOPE_MIN_C, Math.min(ENVELOPE_MAX_C, value));
+}
+
+/**
+ * Pod iz kataloga — samo kad je podatak potvrđen iz priručnika.
+ *
+ * Izdvojeno da `effectiveFloorC` i budući pozivaoci ne moraju ponavljati isti
+ * uslov; `specStatus` je jedini dokaz da broj nije izmišljen.
+ */
+export function verifiedFloorOf(
+  family: BoilerFamily | null | undefined,
+): number | null {
+  if (family == null) return null;
+  if (family.specStatus !== 'VERIFIED_MANUAL') return null;
+  const value = family.heatingFlowMinC;
+  return value != null && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Pod iz kataloga, ali **bez obzira na `specStatus`** — za prikaz.
+ *
+ * Razlika je namjerna: korisnik smije unijeti broj i za model koji nije
+ * potvrđen (tada je granica njegov ručni unos, v. `effectiveFloorC`), ali
+ * aplikacija mu tada ne smije tvrditi „proizvođač kaže 30".
+ */
+export function manualFloorOf(
+  family: BoilerFamily | null | undefined,
+): number | null {
+  if (family == null) return null;
+  const value = family.heatingFlowMinC;
+  return value != null && Number.isFinite(value)
+    ? Math.max(ENVELOPE_MIN_C, Math.min(ENVELOPE_MAX_C, value))
+    : null;
+}

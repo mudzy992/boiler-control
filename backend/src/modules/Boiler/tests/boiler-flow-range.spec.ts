@@ -5,7 +5,18 @@ import {
   SYSTEM_MIN_CURRENT_FLOW_TEMP,
   resolveFlowTempRange,
 } from '../flow-range';
-import { SYSTEM_MIN_FLOW_C } from '../../Heating/strategies/base.strategy';
+import {
+  SYSTEM_MAX_FLOW_C,
+  SYSTEM_MIN_FLOW_C,
+} from '../../Heating/strategies/base.strategy';
+import {
+  BOILER_FAMILIES,
+  effectiveCeilingC,
+  effectiveFloorC,
+  findBoilerFamily,
+  manualFloorOf,
+  verifiedFloorOf,
+} from '../../BoilerCatalog/boiler-catalog';
 
 /**
  * `F13` (treći krug): korisnik i dalje vidi „Dozvoljeni raspon polazne: 48 °C do
@@ -24,7 +35,7 @@ describe('F13: raspon polazne po domu', () => {
   it('dom bez granica dobija raspon motora i izvor SYSTEM', () => {
     expect(
       resolveFlowTempRange({ minHeatingFlowC: null, maxHeatingFlowC: null }),
-    ).toEqual({
+    ).toMatchObject({
       min: SYSTEM_MIN_CURRENT_FLOW_TEMP,
       max: SYSTEM_MAX_CURRENT_FLOW_TEMP,
       source: 'SYSTEM',
@@ -51,7 +62,7 @@ describe('F13: raspon polazne po domu', () => {
   it('dom sa donjom 46 daje 46–55 — unos 47 °C više nije odbijen', () => {
     expect(
       resolveFlowTempRange({ minHeatingFlowC: 46, maxHeatingFlowC: null }),
-    ).toEqual({ min: 46, max: 55, source: 'HOME' });
+    ).toMatchObject({ min: 46, max: 55, source: 'HOME' });
   });
 
   it('dom ne može proširiti apsolutni raspon', () => {
@@ -69,7 +80,7 @@ describe('F13: raspon polazne po domu', () => {
   it('naopak dom (min > max) ne zaključava korisnika — vraća se sistemski raspon', () => {
     expect(
       resolveFlowTempRange({ minHeatingFlowC: 54, maxHeatingFlowC: 40 }),
-    ).toEqual({
+    ).toMatchObject({
       min: SYSTEM_MIN_CURRENT_FLOW_TEMP,
       max: SYSTEM_MAX_CURRENT_FLOW_TEMP,
       source: 'SYSTEM',
@@ -77,7 +88,7 @@ describe('F13: raspon polazne po domu', () => {
   });
 
   it('novi korisnik bez profila dobija sistemski raspon', () => {
-    expect(resolveFlowTempRange(null)).toEqual({
+    expect(resolveFlowTempRange(null)).toMatchObject({
       min: SYSTEM_MIN_CURRENT_FLOW_TEMP,
       max: 55,
       source: 'SYSTEM',
@@ -87,6 +98,221 @@ describe('F13: raspon polazne po domu', () => {
   it('gornja granica doma se poštuje, ali ne preko 55', () => {
     expect(
       resolveFlowTempRange({ minHeatingFlowC: 46, maxHeatingFlowC: 52 }),
-    ).toEqual({ min: 46, max: 52, source: 'HOME' });
+    ).toMatchObject({ min: 46, max: 52, source: 'HOME' });
+  });
+});
+
+/**
+ * Šesti krug (2026-11-21): granice su **podatak po tipu bojlera**, ne dvije
+ * konstante. Do sada je gornja strana već išla kroz katalog
+ * (`effectiveCeilingC`), a donja je bila tvrdih 46 za svaki kotao — iako
+ * katalog za potvrđene modele zna stvarni pod (Vaillant ecoTEC: 30 °C).
+ *
+ * Ovi testovi zaključavaju tri stvari:
+ *  1. potvrđen model **spušta** donju granicu (i to se vidi kroz `source`);
+ *  2. nepotvrđen model **ne izmišlja** granicu — ostaje korisnikov ručni unos;
+ *  3. raspon **ne dira motor**: isti ulaz u motor daje isti izlaz, prije i
+ *     poslije promjene granica.
+ */
+describe('šesti krug: raspon polazne po tipu bojlera', () => {
+  const vaillant = findBoilerFamily('vaillant-ecotec-plus-vuw');
+  const boschW = findBoilerFamily('bosch-condens-7000-w');
+
+  beforeAll(() => {
+    // Katalog se učitava iz JSON-a; ako padne, `BOILER_FAMILIES` je prazan i
+    // svi testovi ispod mjere pogrešnu stvar — zato tvrdnja na početku.
+    expect(BOILER_FAMILIES.length).toBeGreaterThan(0);
+    expect(vaillant?.specStatus).toBe('VERIFIED_MANUAL');
+    expect(boschW?.specStatus).toBe('TO_VERIFY');
+  });
+
+  it('potvrđen model nosi svoj pod, a nepotvrđen ne nosi ništa', () => {
+    expect(verifiedFloorOf(vaillant)).toBe(30);
+    expect(verifiedFloorOf(boschW)).toBeNull();
+    expect(verifiedFloorOf(null)).toBeNull();
+  });
+
+  it('dom sa potvrđenim modelom dobija pod iz kataloga i izvor BOILER', () => {
+    const range = resolveFlowTempRange({
+      minHeatingFlowC: null,
+      maxHeatingFlowC: null,
+      boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+    });
+
+    expect(range.min).toBe(30);
+    expect(range.max).toBe(55);
+    expect(range.source).toBe('BOILER');
+    expect(range.boilerFloorC).toBe(30);
+  });
+
+  it('dom bez modela ostaje na 46 — ništa se ne mijenja zatečenim korisnicima', () => {
+    expect(
+      resolveFlowTempRange({
+        minHeatingFlowC: null,
+        maxHeatingFlowC: null,
+        boilerCatalogId: null,
+      }),
+    ).toEqual({
+      min: SYSTEM_MIN_CURRENT_FLOW_TEMP,
+      max: SYSTEM_MAX_CURRENT_FLOW_TEMP,
+      source: 'SYSTEM',
+      boilerFloorC: null,
+      boilerManualFloorC: null,
+    });
+  });
+
+  it('nepotvrđen model ne mijenja raspon — granicu daje korisnikov ručni unos', () => {
+    const bezUnosa = resolveFlowTempRange({
+      minHeatingFlowC: null,
+      maxHeatingFlowC: null,
+      boilerCatalogId: 'bosch-condens-7000-w',
+    });
+    expect(bezUnosa.min).toBe(SYSTEM_MIN_CURRENT_FLOW_TEMP);
+    expect(bezUnosa.source).toBe('SYSTEM');
+    expect(bezUnosa.boilerFloorC).toBeNull();
+
+    const saUnosom = resolveFlowTempRange({
+      minHeatingFlowC: 41,
+      maxHeatingFlowC: null,
+      boilerCatalogId: 'bosch-condens-7000-w',
+    });
+    expect(saUnosom).toEqual({
+      min: 41,
+      max: 55,
+      source: 'HOME',
+      boilerFloorC: null,
+      boilerManualFloorC: null,
+    });
+  });
+
+  it('dom bez modela u katalogu ostaje ručno podesiv (40–52)', () => {
+    expect(
+      resolveFlowTempRange({
+        minHeatingFlowC: 40,
+        maxHeatingFlowC: 52,
+        boilerCatalogId: null,
+      }),
+    ).toMatchObject({ min: 40, max: 52, source: 'HOME' });
+  });
+
+  it('korisnikov viši pod nadjačava katalog i izvor je HOME, ne BOILER', () => {
+    const range = resolveFlowTempRange({
+      minHeatingFlowC: 48,
+      maxHeatingFlowC: null,
+      boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+    });
+
+    expect(range.min).toBe(48);
+    expect(range.source).toBe('HOME');
+    // Pod iz kataloga se i dalje vraća — za objašnjenje, ne za granicu.
+    expect(range.boilerFloorC).toBe(30);
+  });
+
+  it('katalog nikad ne probija envelope 30–55', () => {
+    for (const family of BOILER_FAMILIES) {
+      const range = resolveFlowTempRange({
+        minHeatingFlowC: null,
+        maxHeatingFlowC: null,
+        boilerCatalogId: family.id,
+      });
+      expect(range.min).toBeGreaterThanOrEqual(ABSOLUTE_MIN_FLOW_C);
+      expect(range.max).toBeLessThanOrEqual(ABSOLUTE_MAX_FLOW_C);
+      expect(range.min).toBeLessThanOrEqual(range.max);
+    }
+  });
+
+  it('gornja granica iz kataloga je već bila modularna i siječe se na 55', () => {
+    // Vaillant navodi max 80 °C — envelope to svodi na 55.
+    expect(effectiveCeilingC({ family: vaillant })).toBe(55);
+    expect(effectiveCeilingC({ systemMaxC: 52, family: vaillant })).toBe(52);
+    expect(effectiveCeilingC({ systemMaxC: 70, family: null })).toBe(55);
+  });
+
+  it('effectiveFloorC poštuje sva tri pravila', () => {
+    // model 30 + motor 46 → motor je viši, ali fallback se koristi samo bez modela.
+    expect(effectiveFloorC({ family: vaillant, fallbackC: 46 })).toBe(30);
+    expect(effectiveFloorC({ family: null, fallbackC: 46 })).toBe(46);
+    expect(effectiveFloorC({ family: null, fallbackC: null })).toBe(30);
+    // profil 40 + model 30 → 40
+    expect(
+      effectiveFloorC({ systemMinC: 40, family: vaillant, fallbackC: 46 }),
+    ).toBe(40);
+    // ništa ne smije ispod envelope-a
+    expect(effectiveFloorC({ systemMinC: 5, family: null, fallbackC: 5 })).toBe(
+      30,
+    );
+  });
+
+  it('manualFloorOf daje broj i za nepotvrđen model, ali ga ne tvrdi kao dokaz', () => {
+    expect(manualFloorOf(vaillant)).toBe(30);
+    expect(manualFloorOf(boschW)).toBeNull();
+    expect(verifiedFloorOf(boschW)).toBeNull();
+  });
+
+  /*
+   * Uslov koji je korisnik postavio uz zahtjev: **ne smije uticati na formulu i
+   * learning**.
+   *
+   * Dokaz je mjerenje, ne tvrdnja: motor se poziva (pravi `ProfileStrategy`,
+   * ne maketa) sa istim ulazom i parametrima dok se raspon mijenja. Test pada
+   * čim se katalog umiješa u `finalTemp`.
+   */
+  it('raspon ne dira motor: isti ulaz daje isti finalTemp bez obzira na granice', () => {
+    const { ProfileStrategy } =
+      jest.requireActual<typeof import('../../Heating/strategies/profile.strategy')>(
+        '../../Heating/strategies/profile.strategy',
+      );
+    const strategy = new ProfileStrategy();
+
+    const input = {
+      weather: { tempMin: -2, tempMax: 4, windSpeed: 3, humidity: 60 },
+      homeProfile: {
+        floorArea: 120,
+        ceilingHeight: 2.6,
+        insulationType: 'STANDARD',
+        insulationThickness: 5,
+        windowType: 'DOUBLE_GLAZED',
+        heatingType: 'RADIATOR',
+        constructionYear: 1998,
+        hasFloorHeating: false,
+        targetMorningTemp: 22,
+        targetDayTemp: 21,
+        targetNightTemp: 19,
+        rooms: [],
+      },
+      roomTemp: 19,
+      targetTemp: 22,
+      events: [],
+      hour: 7,
+    } as unknown as Parameters<ProfileStrategy['calculate']>[0];
+
+    const baseline = strategy.calculate(input);
+
+    // Isti motor, isti ulaz — ali raspon se mijenja (katalog / ručni unos).
+    const ranges = [
+      resolveFlowTempRange({
+        minHeatingFlowC: null,
+        maxHeatingFlowC: null,
+        boilerCatalogId: 'vaillant-ecotec-plus-vuw',
+      }),
+      resolveFlowTempRange({
+        minHeatingFlowC: 30,
+        maxHeatingFlowC: 55,
+        boilerCatalogId: null,
+      }),
+      resolveFlowTempRange({
+        minHeatingFlowC: 51,
+        maxHeatingFlowC: 55,
+        boilerCatalogId: 'bosch-condens-7000-w',
+      }),
+    ];
+    expect(new Set(ranges.map((range) => range.min)).size).toBeGreaterThan(1);
+
+    const after = strategy.calculate(input);
+
+    expect(after).toEqual(baseline);
+    // Formula ostaje unutar granica motora — katalog je ne pomjera.
+    expect(baseline.finalTemp).toBeGreaterThanOrEqual(SYSTEM_MIN_FLOW_C);
+    expect(baseline.finalTemp).toBeLessThanOrEqual(SYSTEM_MAX_FLOW_C);
   });
 });

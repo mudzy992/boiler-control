@@ -96,6 +96,7 @@ export const DashboardPage = (): JSX.Element => {
               weather={d.weatherDisplay}
               boiler={d.data.boiler}
               onSetTemp={d.openSetTemp}
+              flowRange={flowRange}
             />
             <RecommendationBreakdown
               breakdown={d.data.recommendation?.breakdown}

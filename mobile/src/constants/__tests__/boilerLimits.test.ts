@@ -59,6 +59,16 @@ describe('F13 raspon polazne vode na mobilnom', () => {
     expect(resolveFlowRange(raw)).toEqual(expected);
   });
 
+  /*
+   * Šesti krug: granica je podatak po tipu bojlera, pa server vraća i
+   * `source: 'BOILER'` kad pod dolazi iz kataloga. Klijent ga mora prenijeti.
+   */
+  it("prenosi izvor BOILER iz kataloga, ne svodi ga na SYSTEM", () => {
+    const range = resolveFlowRange({ min: 30, max: 55, source: 'BOILER' });
+    expect(range).toEqual({ min: 30, max: 55, source: 'BOILER' });
+    expect(isWithinCurrentFlowTempRange(30, range)).toBe(true);
+  });
+
   it('apsolutne granice odgovaraju backendnom DTO-u', () => {
     expect(ABSOLUTE_MIN_FLOW_TEMP).toBe(30);
     expect(ABSOLUTE_MAX_FLOW_TEMP).toBe(55);

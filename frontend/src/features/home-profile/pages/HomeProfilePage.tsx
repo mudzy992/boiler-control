@@ -15,6 +15,7 @@ import {
   catalogBrands,
   familiesForBrand,
   familyLabel,
+  flowBoundsForFamily,
   isKnownFamilyId,
   outputOptions,
   selectionHint,
@@ -274,6 +275,16 @@ export const HomeProfilePage: React.FC = () => {
     [catalog, brand],
   );
   const powers = outputOptions(catalog?.families, form.boilerCatalogId);
+
+  /*
+   * Pod i tavan polazne za odabrani model (šesti krug). Jedan izvor za oba
+   * polja — inače bi donja i gornja granica mogle pokazati dvije slike istog
+   * kotla. Kad modela nema u katalogu, granicu upisuje korisnik sam.
+   */
+  const flowBounds = flowBoundsForFamily(
+    catalog?.families,
+    form.boilerCatalogId,
+  );
 
   /** Promjena marke briše porodicu, jer porodica pripada marki. */
   const onBrandChange = useCallback((value: string) => {
@@ -662,6 +673,17 @@ export const HomeProfilePage: React.FC = () => {
             />
             <p className="text-xs text-text-secondary">
               {t("homeProfile.minHeatingFlowCHint")}
+            </p>
+            <p className="text-xs text-text-secondary">
+              {flowBounds.fromCatalog
+                ? t("homeProfile.flowBoundsFromCatalog", {
+                    min: flowBounds.min,
+                    max: flowBounds.max,
+                  })
+                : t("homeProfile.flowBoundsManual", {
+                    min: flowBounds.min,
+                    max: flowBounds.max,
+                  })}
             </p>
           </div>
           <div className="space-y-1">

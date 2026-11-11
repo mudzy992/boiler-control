@@ -10,6 +10,7 @@ import {
   ENVELOPE_MIN_C,
   findBoilerFamily,
   isFlowAdviceAllowed,
+  verifiedFloorOf,
 } from '../BoilerCatalog/boiler-catalog';
 import { CreateHomeProfileDto } from './dto/create-home-profile.dto';
 import { UpdateHomeProfileDto } from './dto/update-home-profile.dto';
@@ -139,6 +140,17 @@ export class HomeProfileService {
         flowAdviceAllowed: isFlowAdviceAllowed(family),
         heatingFlowMinC: family.heatingFlowMinC,
         heatingFlowMaxC: family.heatingFlowMaxC,
+        /*
+         * Šesti krug: granica je podatak **po tipu bojlera**, pa klijent mora
+         * znati dvije stvari koje se lako pobrkaju:
+         *  - `heatingFlowMinC`/`heatingFlowMaxC` = broj iz priručnika (može biti
+         *    `null` kod nepotvrđenog modela — tada nema podatka, ne nula);
+         *  - `verifiedFloorC` = pod koji aplikacija **smije** primijeniti;
+         *    `null` za nepotvrđen model.
+         * Za model kojeg nema u katalogu korisnik upisuje granicu ručno
+         * (`HomeProfile.minHeatingFlowC`), pa porodica tada ne daje ništa.
+         */
+        verifiedFloorC: verifiedFloorOf(family),
         notes: family.notes,
       })),
     };

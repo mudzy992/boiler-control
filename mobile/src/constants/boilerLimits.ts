@@ -27,12 +27,18 @@ export const MAX_CURRENT_FLOW_TEMP = 55;
 export const ABSOLUTE_MIN_FLOW_TEMP = 30;
 export const ABSOLUTE_MAX_FLOW_TEMP = 55;
 
-export type FlowRangeSource = 'HOME' | 'SYSTEM';
+export type FlowRangeSource = 'HOME' | 'BOILER' | 'SYSTEM';
 
 export interface FlowRange {
   min: number;
   max: number;
-  /** `HOME` = dom ima svoje granice; `SYSTEM` = važi zadani raspon. */
+  /**
+   * `HOME` = granicu daje dom (ručni unos), `BOILER` = potvrđeni pod iz
+   * kataloga za taj tip bojlera, `SYSTEM` = važi zadani raspon.
+   *
+   * Šesti krug: granica je **podatak po tipu bojlera**, pa ekran mora znati
+   * odakle broj dolazi — inače bi korisnik mislio da je 30 °C njegov podatak.
+   */
   source: FlowRangeSource;
 }
 
@@ -67,11 +73,14 @@ export function resolveFlowRange(raw: unknown): FlowRange {
 
   if (!valid) return DEFAULT_FLOW_RANGE;
 
-  return {
-    min,
-    max,
-    source: candidate?.source === 'HOME' ? 'HOME' : 'SYSTEM',
-  };
+  const source: FlowRangeSource =
+    candidate?.source === 'HOME'
+      ? 'HOME'
+      : candidate?.source === 'BOILER'
+        ? 'BOILER'
+        : 'SYSTEM';
+
+  return { min, max, source };
 }
 
 export function isWithinCurrentFlowTempRange(

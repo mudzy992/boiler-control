@@ -139,6 +139,26 @@ describe("F13: raspon polazne po domu", () => {
     expect(resolveFlowRange(raw)).toEqual(expected);
   });
 
+  /*
+   * Šesti krug: granica je **podatak po tipu bojlera**, pa server uz raspon
+   * vraća i `source: "BOILER"` kad je pod došao iz kataloga. Klijent ga mora
+   * prenijeti dalje — inače bi ekran tvrdio da je 30 °C korisnikov podatak.
+   */
+  it("prenosi izvor BOILER iz kataloga, ne svodi ga na SYSTEM", () => {
+    const range = resolveFlowRange({ min: 30, max: 55, source: "BOILER" });
+
+    expect(range).toEqual({ min: 30, max: 55, source: "BOILER" });
+    expect(validateFlowTempInput(30, range)).toEqual({ ok: true, value: 30 });
+  });
+
+  it("nepoznat izvor pada na SYSTEM, ali granice ostaju", () => {
+    expect(resolveFlowRange({ min: 32, max: 50, source: "X" })).toEqual({
+      min: 32,
+      max: 50,
+      source: "SYSTEM",
+    });
+  });
+
   it("poruka o rasponu koristi granice doma, ne tvrde 48/55", () => {
     const message = flowTempRangeMessage({ min: 46, max: 52, source: "HOME" });
     expect(message).toContain("46");

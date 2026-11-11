@@ -1,8 +1,8 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  MAX_CURRENT_FLOW_TEMP,
-  MIN_CURRENT_FLOW_TEMP,
+  DEFAULT_FLOW_RANGE,
+  type FlowRange,
 } from '@/constants/boilerLimits';
 import { Button } from '@/shared/components/ui/Button';
 import { Card, CardContent } from '@/shared/components/ui/Card';
@@ -13,12 +13,21 @@ interface DashboardSystemCardsProps {
   weather: WeatherDisplay | null;
   boiler: Boiler;
   onSetTemp: () => void;
+  /**
+   * Raspon iz `GET /api/boiler/flow-range` (šesti krug).
+   *
+   * Prije je ovdje pisalo `MIN/MAX_CURRENT_FLOW_TEMP` — dvije konstante, pa je
+   * kartica tvrdila „46–55" i kad server za taj kotao dozvoljava 30–55. Broj
+   * koji se prikaže mora biti isti broj koji forma prihvata.
+   */
+  flowRange?: FlowRange;
 }
 
 export const DashboardSystemCards = ({
   weather,
   boiler,
   onSetTemp,
+  flowRange = DEFAULT_FLOW_RANGE,
 }: DashboardSystemCardsProps): JSX.Element => {
   const { t } = useTranslation();
   const actual =
@@ -109,8 +118,8 @@ export const DashboardSystemCards = ({
           </Button>
           <p className="text-xs text-muted-foreground">
             {t('tempDialog.range', {
-              min: MIN_CURRENT_FLOW_TEMP,
-              max: MAX_CURRENT_FLOW_TEMP,
+              min: flowRange.min,
+              max: flowRange.max,
             })}
           </p>
         </CardContent>

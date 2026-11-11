@@ -59,7 +59,11 @@ describe("i18n — inicijalizacija", () => {
     // nije slala, pa je donja granica uvijek ostala zadana 48 i predlog od
     // 46 °C je i dalje bio odbijen) + `reports.historyCyclesFromEvents` (izvor
     // broja ciklusa u tabeli historije).
-    expect(en.length).toBe(496);
+    //
+    // 496 → 498 (šesti krug): `homeProfile.flowBoundsFromCatalog`,
+    // `flowBoundsManual` — granica polazne je podatak **po tipu bojlera**, pa
+    // forma mora reći odakle broj dolazi (katalog ili korisnikov ručni unos).
+    expect(en.length).toBe(498);
   });
 });
 

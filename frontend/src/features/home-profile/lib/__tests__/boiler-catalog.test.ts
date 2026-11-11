@@ -5,6 +5,7 @@ import {
   catalogGroups,
   familiesForBrand,
   familyLabel,
+  flowBoundsForFamily,
   isKnownFamilyId,
   outputOptions,
   selectionHint,
@@ -234,5 +235,75 @@ describe('brandOfFamily', () => {
     expect(brandOfFamily(families, 'nepostoji')).toBe('');
     expect(brandOfFamily(families, null)).toBe('');
     expect(brandOfFamily(null, 'vaillant-ecotec-plus-vuw')).toBe('');
+  });
+});
+
+/**
+ * Šesti krug (2026-11-21): granica polazne je podatak po tipu bojlera.
+ *
+ * Forma ne smije ponuditi raspon koji katalog ne tvrdi, ali ne smije ni
+ * zaključati korisnika čijeg modela nema u katalogu — tada granicu upisuje sam.
+ */
+describe('flowBoundsForFamily', () => {
+  it('potvrđen model sužava polje na svoj pod i 55 (katalog navodi 80)', () => {
+    expect(flowBoundsForFamily([family()], 'vaillant-ecotec-plus-vuw')).toEqual({
+      min: 30,
+      max: 55,
+      fromCatalog: true,
+      manual: false,
+    });
+  });
+
+  it('nepotvrđen model ne nosi broj — polje je ručno unutar 30–55', () => {
+    const families = [
+      family({
+        id: 'bosch-condens-7000-w',
+        specStatus: 'TO_VERIFY',
+        flowAdviceAllowed: false,
+        heatingFlowMinC: null,
+        heatingFlowMaxC: null,
+      }),
+    ];
+
+    expect(flowBoundsForFamily(families, 'bosch-condens-7000-w')).toEqual({
+      min: 30,
+      max: 55,
+      fromCatalog: false,
+      manual: true,
+    });
+  });
+
+  it('modela nema u katalogu — korisnik unosi granicu ručno', () => {
+    expect(
+      flowBoundsForFamily([family()], 'moj-stari-kotao'),
+    ).toMatchObject({ fromCatalog: false, manual: true });
+    expect(flowBoundsForFamily(null, null)).toMatchObject({
+      min: 30,
+      max: 55,
+      manual: true,
+    });
+  });
+
+  it('katalog nikad ne proširuje envelope 30–55', () => {
+    const sirok = family({
+      id: 'sirok',
+      heatingFlowMinC: 20,
+      heatingFlowMaxC: 90,
+    });
+
+    expect(flowBoundsForFamily([sirok], 'sirok')).toMatchObject({
+      min: 30,
+      max: 55,
+      fromCatalog: true,
+    });
+  });
+
+  it('PARTIAL model sa brojevima se ne prihvata kao potvrđen', () => {
+    const partial = family({ id: 'partial', specStatus: 'PARTIAL' });
+
+    expect(flowBoundsForFamily([partial], 'partial')).toMatchObject({
+      fromCatalog: false,
+      manual: true,
+    });
   });
 });

@@ -6,6 +6,8 @@ import {
   familiesForBrand,
   familyChoices,
   familyLabel,
+  flowBoundChoices,
+  flowBoundsForFamily,
   isKnownFamilyId,
   outputChoices,
   outputOptions,
@@ -167,5 +169,63 @@ describe('boilerSelectionError — porodica × snaga', () => {
   it('kad katalog nije učitan ne tvrdi ništa o snazi', () => {
     // Katalog može pasti (mreža); tada forma ne smije izmišljati grešku.
     expect(boilerSelectionError(null, 'vaillant-ecotec-pro-vuw', 24)).toBeNull();
+  });
+});
+
+/**
+ * Šesti krug (2026-11-21): granica polazne je podatak po tipu bojlera.
+ *
+ * Ista pravila kao web forma — dvije aplikacije ne smiju drugačije tumačiti
+ * granicu istog kotla. Kad modela nema u katalogu, granicu upisuje korisnik.
+ */
+describe('flowBoundsForFamily', () => {
+  const catalog: BoilerCatalog = {
+    version: 1,
+    envelope: { minC: 30, maxC: 55 },
+    families: [
+      family(),
+      family({
+        id: 'bosch-condens-7000-w',
+        brand: 'Bosch',
+        specStatus: 'TO_VERIFY',
+        flowAdviceAllowed: false,
+        outputsKw: null,
+        heatingFlowMinC: null,
+        heatingFlowMaxC: null,
+      }),
+    ],
+  };
+
+  it('potvrđen model sužava raspon na svoj pod, tavan ostaje 55', () => {
+    expect(flowBoundsForFamily(catalog, 'vaillant-ecotec-pro-vuw')).toEqual({
+      min: 30,
+      max: 55,
+      fromCatalog: true,
+      manual: false,
+    });
+  });
+
+  it('nepotvrđen model i nepoznat id ostaju ručno podesivi', () => {
+    expect(flowBoundsForFamily(catalog, 'bosch-condens-7000-w')).toMatchObject({
+      fromCatalog: false,
+      manual: true,
+    });
+    expect(flowBoundsForFamily(catalog, 'nema-ga')).toMatchObject({
+      min: 30,
+      max: 55,
+      manual: true,
+    });
+  });
+
+  it('opcije polja pokrivaju cijeli raspon i imaju praznu vrijednost', () => {
+    const choices = flowBoundChoices(
+      flowBoundsForFamily(catalog, 'vaillant-ecotec-pro-vuw'),
+      'nije postavljeno',
+    );
+
+    expect(choices[0]).toEqual({ value: '', label: 'nije postavljeno' });
+    expect(choices[1].value).toBe('30');
+    expect(choices[choices.length - 1].value).toBe('55');
+    expect(choices).toHaveLength(27);
   });
 });

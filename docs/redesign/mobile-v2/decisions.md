@@ -1071,6 +1071,55 @@ Dokazi: `boiler-flow-range.spec.ts` 8 (uključujući „predlog od 47.7 prolazi"
 prihvata 47.7). Mutacija: vraćena 48 u `mobile/src/constants/boilerLimits.ts`
 rušila je 5 testova u 3 fajla.
 
+**Šesti krug (2026-11-21): granica polazne je podatak, ne konstanta.**
+
+Nalaz: „i dalje smo fiksni na 48 min (isto i na web)" — i, tačnije, na **46**,
+za *svaki* kotao. Gornja granica je od početka išla kroz katalog
+(`effectiveCeilingC({ systemMaxC, family })` = `min(55, profil, model)`), a donja
+je bila dvije tvrde konstante (`SYSTEM_MIN_FLOW_C = 46` u motoru i ista vrijednost
+kao zadana granica unosa u `flow-range.ts`). Katalog za potvrđene modele navodi
+stvarni pod — Vaillant ecoTEC `30`, Bosch Condens 7000 WP `30` — pa je 46 bila
+**nedosljednost, ne odluka**.
+
+Popravka ide u tri sloja, svaki sa svojim dokazom:
+
+1. **`effectiveFloorC({ systemMinC, family, fallbackC })`** u
+   `BoilerCatalog/boiler-catalog.ts` — ogledalo `effectiveCeilingC`:
+   `max(30, pod iz kataloga, ručni unos)`. Pod iz kataloga ulazi **samo** kad je
+   `specStatus === 'VERIFIED_MANUAL'` i broj postoji (`verifiedFloorOf`);
+   `TO_VERIFY`/`PARTIAL` ne nose brojeve, pa ne mogu postati granica.
+2. **`resolveFlowTempRange(home)`** sada prima i `boilerCatalogId` i obje strane
+   izvodi iz kataloga. Novi izvor `source: 'BOILER'` kaže da je granica iz
+   priručnika — bez njega bi ekran pripisao 30 °C korisniku. Kad dom upiše svoju
+   granicu, izvor ostaje `HOME` (korisnik je konkretniji od porodice).
+3. **Ručni unos kao fallback**: modela nema u katalogu (`boilerCatalogId == null`)
+   ili model nije potvrđen → granicu daje `HomeProfile.minHeatingFlowC`, a bez nje
+   motor (46). Time modularnost ne zaključava nikoga.
+
+Uslov koji je vlasnik postavio uz zahtjev — **ne smije uticati na formulu i
+learning** — provjerava se mjerenjem, ne tvrdnjom: `ProfileStrategy.calculate()`
+se poziva sa istim ulazom dok se raspon mijenja (katalog, ručni 30–55, ručni
+51–55) i `finalTemp` mora biti **identičan**. `base.strategy.ts` nije mijenjan.
+
+Oba klijenta sada imaju polja granica u formi doma: web
+(`flowBoundsForFamily` u `features/home-profile/lib/boiler-catalog.ts`) i mobilni
+(`flowBoundsForFamily` + `flowBoundChoices` u `screens/home/boilerCatalog.ts`),
+sa istim pravilima i istim tekstom („Katalog za ovaj kotao navodi 30–55 °C" /
+„nema potvrđene vrijednosti — upišite granice sami"). Kartica na Početnoj web
+verzije više ne ispisuje konstante 46–55 nego raspon sa servera.
+
+Dokazi: `boiler-flow-range.spec.ts` **19** (8 starih + 11 novih, uključujući
+„raspon ne dira motor"), `boiler-catalog.test.ts` (web) **26**,
+`boilerCatalog.test.ts` (mobilni) — `flowBoundsForFamily` 3 nova,
+`heatingPolicy.test.ts` 16, `boilerLimits.test.ts` (mobilni) — `BOILER` izvor.
+
+CI: run `42920655959` je pao na `DailyHistoryService` (9 testova / 2 suite-a) — ne
+zbog logike, nego zato što je **stub u testu ostao na starom obliku servisa**
+(poslije `F13` servis čita i `HeatingEvent` i zonu doma). Stub je dopunjen
+(`heatingEvent.findMany`, `weatherTimezone`, `user.timezone`) → 29/29;
+commit `13c8c61`. Pouka za dalje: poslije svake izmjene servisa provjeriti sve
+`new *Service(prisma as never)` stubove (`grep "as never"`).
+
 ## 4. Status provedbe
 
 | Faza | Status | Dokaz |

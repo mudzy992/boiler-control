@@ -98,6 +98,70 @@ async function main() {
       out();
     }
 
+    /*
+     * §10 plana `PLAN-formula-v2.md`: F2 traži `nightMinC`, a jedan raniji
+     * upit je vratio `0` — i to je dvosmisleno. `0` može značiti „nema
+     * `daily-2` redova uopšte" ili „ima redova, ali nijedan nema noć". Prvo
+     * znači da pisac ne radi (F2 se ne smije pustiti), drugo da noć ne stiže
+     * (uzrok je `nightMinSource` ili kratak satni niz). Zato se ovdje
+     * razlaže, umjesto da se pogađa.
+     */
+    const night = await soft(
+      'F2: noć u dnevnom zapisu (daily-2)',
+      `SELECT count(*) AS days,
+              count(*) FILTER (WHERE "nightMinC" IS NOT NULL) AS with_night,
+              count(*) FILTER (
+                WHERE COALESCE((params -> 'forecast' ->> 'nightHoursUsed')::int, 0) >= 8
+              ) AS full_night,
+              count(*) FILTER (WHERE "dayMaxC" IS NOT NULL) AS with_day_max,
+              min("localDate") AS first_date,
+              max("localDate") AS last_date
+         FROM "DailyRecord"
+        WHERE "modelVersion" = 'daily-2'`,
+    );
+    if (night) {
+      const row = night[0];
+      const verdict =
+        Number(row.days) === 0
+          ? 'NEMA `daily-2` redova — pisac ne piše u produkciji, F2 se NE pušta'
+          : Number(row.with_night) === 0
+            ? 'ima redova, ali nijedan nema noć — provjeri `nightMinSource` (DAILY_MIN?) i satni niz'
+            : Number(row.full_night) < Number(row.with_night)
+              ? 'noć postoji, ali djelimična (`nightHoursUsed < 8`) — `O_ref` je slabiji nego što izgleda'
+              : 'noć postoji u svim redovima — uslov za F2 je ispunjen';
+      out(
+        `**F2 noć:** ${row.days} \`daily-2\` dana, sa noći **${row.with_night}**, ` +
+          `puna noć (\`params.forecast.nightHoursUsed >= 8\`) **${row.full_night}**, ` +
+          `sa dnevnim maksimumom (\`dayMaxC\`, za \`O_ref\`) **${row.with_day_max}** ` +
+          `(${day(row.first_date)} → ${day(row.last_date)})`,
+      );
+      out(`→ ${verdict}`);
+      notice(`F2: ${verdict}`);
+      out();
+    }
+
+    /*
+     * F3.4 (greška prognoze) traži oba polja: koliko je `nightMinC` promašio
+     * izmjereni `nightMinOutdoorMeasuredC`. Ovaj upit samo mjeri da li je
+     * uzorak dovoljan za tu analizu — samu analizu radi posebna skripta.
+     */
+    const nightError = await soft(
+      'F3.4: greška noćne prognoze',
+      `SELECT count(*) AS pairs,
+              round(avg(ABS("nightMinC" - "nightMinOutdoorMeasuredC"))::numeric, 2) AS mean_abs_error,
+              round(max(ABS("nightMinC" - "nightMinOutdoorMeasuredC"))::numeric, 2) AS worst
+         FROM "DailyRecord"
+        WHERE "nightMinC" IS NOT NULL
+          AND "nightMinOutdoorMeasuredC" IS NOT NULL`,
+    );
+    if (nightError && Number(nightError[0].pairs) > 0) {
+      out(
+        `**F3.4:** ${nightError[0].pairs} dana sa oba polja; prosječna greška noći ` +
+          `${nightError[0].mean_abs_error} K, najgora ${nightError[0].worst} K`,
+      );
+      out();
+    }
+
     // --- izvor 1: ciklusi grijanja --------------------------------------
     const events = await soft(
       'HeatingEvent po danu',

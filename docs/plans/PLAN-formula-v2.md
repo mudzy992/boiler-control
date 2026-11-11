@@ -506,6 +506,17 @@ WHERE "modelVersion" = 'daily-2'
   AND "localDate" >= (CURRENT_DATE - 7)::text;
 ```
 
+**Automatizovano (2026-11-07):** isti razlikovni upit je sada dio
+`backend/scripts/backfill-coverage.cjs` (`baseline` job, read-only, sekcija
+„F2: noć u dnevnom zapisu"). Skripta ne samo broji, nego i **presuđuje**:
+`0` redova → „F2 se ne pušta"; ima redova bez noći → „provjeri
+`nightMinSource`"; noć djelimična → „`O_ref` je slabiji nego što izgleda".
+Uz to mjeri i `dayMaxC` (potreban za `O_ref` mješavinu) i F3.4 parove
+(`nightMinC` vs `nightMinOutdoorMeasuredC`, prosječna i najgora greška).
+Pokretanje: `gh workflow run backend-build.yml -f baseline=true`.
+
+Ručni upit ostaje za slučaj kad se gleda van CI-ja:
+
 **Rezultat `0` je dvosmislen i to je blokada, ne prepreka.** `0` može značiti
 (i) nema `daily-2` redova uopšte — pisac još ne piše u produkciji, ili (ii) ima
 redova ali nijedan nema `nightMinC`. Upit ne razlikuje ta dva slučaja. Zato

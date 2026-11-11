@@ -152,7 +152,8 @@ async function main() {
     const recent = await soft(
       'zadnjih 14 dana',
       `SELECT "localDate" AS d, coalesce("modelVersion", '(bez)') AS model,
-              "nightMinC", "dayMaxC", "proposedFlowTemp", "skipReason"
+              "nightMinC", "dayMaxC", "proposedFlowTemp", "skipReason",
+              "proposedAt", "updatedAt"
          FROM "DailyRecord"
         ORDER BY "localDate" DESC
         LIMIT 14`,
@@ -175,6 +176,15 @@ async function main() {
         'zadnjih 14 dana: ' +
           recent
             .map((row) => `${row.d.slice(5)} ${row.model}`)
+            .reverse()
+            .join(' | '),
+      );
+      // Kada je red **upisan**, ne za koji dan. Bez ovoga se ne razlikuje
+      // „pisac ne radi po novom kodu" od „red je nastao prije deploy-a".
+      notice(
+        'upisano (updatedAt): ' +
+          recent
+            .map((row) => `${row.d.slice(5)} ${String(row.updatedAt).slice(0, 16)}`)
             .reverse()
             .join(' | '),
       );

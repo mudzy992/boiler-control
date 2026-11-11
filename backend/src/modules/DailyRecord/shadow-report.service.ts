@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import {
-  shadowReport,
-  type ShadowReport,
-  type ShadowRow,
-} from './shadow-report';
+import { shadowReport, type ShadowReport } from './shadow-report';
 
 /**
  * Čitanje shadow perioda (`24` §6.5) — **samo čita**.
@@ -68,6 +64,6 @@ export class ShadowReportService {
       },
     });
 
-    return { homeProfileId, ...shadowReport(rows as ShadowRow[]) };
+    return { homeProfileId, ...shadowReport(rows) };
   }
 }

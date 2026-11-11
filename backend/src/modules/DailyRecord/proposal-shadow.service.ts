@@ -14,7 +14,6 @@ import {
   decideProposal,
   shortCycleFloorFrom,
   type ControllerDecision,
-  type ModelState,
   type OutcomeSignals,
 } from './proposal-controller';
 
@@ -310,7 +309,7 @@ export class ProposalShadowService {
       shortCycleFloorC,
       maxFlowC: ceiling,
       flowAdviceAllowed: isFlowAdviceAllowed(family),
-      modelState: (model?.state ?? 'COLD_START') as ModelState,
+      modelState: model?.state ?? 'COLD_START',
       exploration: exploration.direction,
       heatTimeFloorC,
     });

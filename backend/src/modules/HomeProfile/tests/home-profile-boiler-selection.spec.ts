@@ -1,3 +1,4 @@
+import type { CreateHomeProfileDto } from '../dto/create-home-profile.dto';
 import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
 import { HomeProfileService } from '../home.profile.service';
@@ -17,7 +18,10 @@ import { findBoilerFamily } from '../../BoilerCatalog/boiler-catalog';
  * međupoljno: DTO ne zna katalog, pa se ne može dokazati na DTO nivou.
  */
 
-const VALID = {
+// Tip je eksplicitan: litere u `VALID` (`'EPS'`, `'RADIATOR'`) bi bez njega
+// ostale `string`, pa `service.create` ne bi primio objekat za `tsc` — iako
+// test radi, jer enum vrijednosti su iste kao te literale.
+const VALID: CreateHomeProfileDto = {
   floorArea: 150,
   ceilingHeight: 2.6,
   insulationType: 'EPS',
@@ -63,7 +67,9 @@ function makeService(existing: Record<string, unknown> | null = null) {
   return { service, created, updated, prisma };
 }
 
-async function createError(dto: Record<string, unknown>): Promise<string> {
+async function createError(
+  dto: Partial<CreateHomeProfileDto>,
+): Promise<string> {
   const { service } = makeService();
   try {
     await service.create(1, { ...VALID, ...dto });

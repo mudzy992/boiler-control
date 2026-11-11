@@ -187,13 +187,24 @@ describe('DailyHistoryService', () => {
     const count = jest
       .fn()
       .mockResolvedValue(options.total ?? (options.rows ?? []).length);
+    /*
+     * `F13` (treći krug): servis sada čita i `HeatingEvent` (ciklusi za dane
+     * koje obračun nije stigao) i traži zonu doma. Stub mora imati oba, inače
+     * test pada na `prisma.heatingEvent.findMany is not a function` — ne zato
+     * što je logika pogrešna, nego zato što je stub ostao na starom obliku.
+     * CI je to pokazao (run 42920655959).
+     */
+    const heatingEvent = { findMany: jest.fn().mockResolvedValue([]) };
     const prisma = {
       homeProfile: {
-        findFirst: jest
-          .fn()
-          .mockResolvedValue(options.home === undefined ? { id: 7 } : options.home),
+        findFirst: jest.fn().mockResolvedValue(
+          options.home === undefined
+            ? { id: 7, weatherTimezone: 'Europe/Sarajevo', user: { timezone: null } }
+            : options.home,
+        ),
       },
       dailyRecord: { findMany, count },
+      heatingEvent,
     };
     return { service: new DailyHistoryService(prisma as never), findMany, count };
   }
@@ -275,8 +286,15 @@ describe('DailyHistoryService — straničenje (`36`)', () => {
     const findMany = jest.fn().mockResolvedValue(rows);
     const count = jest.fn().mockResolvedValue(total);
     const prisma = {
-      homeProfile: { findFirst: jest.fn().mockResolvedValue({ id: 7 }) },
+      homeProfile: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 7,
+          weatherTimezone: 'Europe/Sarajevo',
+          user: { timezone: null },
+        }),
+      },
       dailyRecord: { findMany, count },
+      heatingEvent: { findMany: jest.fn().mockResolvedValue([]) },
     };
     return { service: new DailyHistoryService(prisma as never), findMany, count };
   }

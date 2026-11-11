@@ -10,7 +10,11 @@ name: Mobile CI
 on:
   workflow_dispatch:
   push:
-    branches: [main, arena/da41e5ba-boiler-control]
+    # `arena/**` kao `backend-build.yml` i `frontend-ci.yml`: `backend-audit.yml`
+    # ima svoj mobile job, ali samo za grane koje su u njemu nabrojane, a ovaj
+    # workflow je jedini koji vrti mobilne **testove** (418) i lint. Bez `arena/**`
+    # promjena u `mobile/` ostaje neprovjerena do merge-a.
+    branches: [main, 'arena/**', arena/da41e5ba-boiler-control]
     paths:
       - 'mobile/**'
       - '.github/workflows/mobile-ci.yml'

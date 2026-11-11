@@ -83,7 +83,19 @@ jobs:
           if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
             echo "Keš pogodio — browser je već tu."
           else
-            npx playwright install --with-deps chromium
+            # Tri pokušaja: preuzimanje ide sa jednog CDN-a (`playwright.azureedge.net`),
+            # a 2026-11-07 je taj CDN bio nedostupan ~2 h i oborio je i ovaj
+            # workflow i `backend-audit.yml` — na kodu koji je sat prije prolazio.
+            # Jedan mrežni pad ne smije značiti „kod je loš".
+            for attempt in 1 2 3; do
+              if npx playwright install --with-deps chromium; then
+                exit 0
+              fi
+              echo "Pokušaj $attempt nije uspio; čekam 20 s." >&2
+              sleep 20
+            done
+            echo "Playwright browser nije preuzet ni poslije 3 pokušaja." >&2
+            exit 1
           fi
 
       - name: E2E (built bundle)

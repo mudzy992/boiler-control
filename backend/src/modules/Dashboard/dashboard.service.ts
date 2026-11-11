@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
   PayloadTooLargeException,
   ServiceUnavailableException,
@@ -57,6 +58,7 @@ export interface DailyFlowSummary extends DailyFlowDto {
 
 @Injectable()
 export class DashboardService {
+  private readonly logger = new Logger(DashboardService.name);
   private readonly DEFAULT_CITY = 'Visoko';
 
   constructor(
@@ -77,7 +79,17 @@ export class DashboardService {
     // =====================
 
     const weather = userId ? null : await this.getLatestWeather();
-    const flowTemp = await this.boilerService.calculateFlowTemp(userId);
+    // Isti razlog kao u `homeDailyFlow`: bez vremena formula nema ulaz, ali to
+    // nije greška klijenta nego nedostupan spoljni servis. Dashboard tada daje
+    // `0` (što DTO već tretira kao „nema predloga"), a ne 500.
+    const flowTemp = await this.boilerService
+      .calculateFlowTemp(userId)
+      .catch((error: unknown) => {
+        this.logger.warn(
+          `Formula nije dostupna za anonimni dashboard (${(error as Error)?.message ?? error}).`,
+        );
+        return null;
+      });
 
     if (!userId) {
       return {
@@ -90,7 +102,7 @@ export class DashboardService {
           weather,
           recommendation: {
             date: Date.now(),
-            recommendedFlowTemp: flowTemp.flowTemp,
+            recommendedFlowTemp: flowTemp?.flowTemp ?? 0,
 
             source: 'LIVE_CALCULATION',
           },
@@ -855,7 +867,18 @@ export class DashboardService {
           nightUndershootC: true,
         },
       }),
-      this.boilerService.calculateFlowTemp(userId),
+      // Formula traži vrijeme sa Open-Meteo. Ako servis ne odgovori, `weather`
+      // servis baci grešku — a dashboard je tada vraćao **500** ulogovanom
+      // korisniku, iako jutarnji predlog za dan već postoji u `DailyRecord`-u i
+      // ne zavisi od mreže. Zato se pad formule degradira u `null`: `anchorDailyFlow`
+      // već ima ispravno ponašanje za taj slučaj (`basis: 'NONE'` kad nema ni
+      // jutarnjeg predloga, inače predlog ostaje glavni broj).
+      this.boilerService.calculateFlowTemp(userId).catch((error: unknown) => {
+        this.logger.warn(
+          `Formula nije dostupna za dashboard (${(error as Error)?.message ?? error}); koristi se samo jutarnji predlog.`,
+        );
+        return null;
+      }),
     ]);
 
     /*
@@ -865,9 +888,12 @@ export class DashboardService {
      * izmišlja mjerenje da bi se opravdala promjena — suprotno bi bilo gore od
      * oscilacije koju ovo pravilo uklanja.
      */
+    const formulaFlowC =
+      formula && formula.flowTemp > 0 ? formula.flowTemp : null;
+
     const anchor = anchorDailyFlow({
       morningFlowC: record?.proposedFlowTemp ?? null,
-      currentFlowC: formula.flowTemp > 0 ? formula.flowTemp : null,
+      currentFlowC: formulaFlowC,
       today:
         record?.outcomeAt == null
           ? null
@@ -881,7 +907,7 @@ export class DashboardService {
     return {
       localDate,
       morningFlowC: anchor.flowC,
-      currentFlowC: formula.flowTemp > 0 ? formula.flowTemp : null,
+      currentFlowC: formulaFlowC,
       basis: anchor.basis,
       changed: anchor.changed,
       change: anchor.change,

@@ -96,6 +96,17 @@ async function renderScreen() {
   return { result, queryClient };
 }
 
+/**
+ * Koliko se čeka pojava sadržaja sheeta.
+ *
+ * `Sheet` montira sadržaj poslije animacije, a zadani `findBy*` čeka 1 s. Na
+ * opterećenom CI runneru (2 jezgre, više paralelnih workers) to povremeno nije
+ * dovoljno — test je 2026-11-07 pao na CI-ju i prošao na rerun-u bez promjene
+ * koda. Zato je granica podignuta i **ispisana u imenu** kad se prekorači:
+ * flaky gejt se počne ignorisati, a onda ne štiti ništa.
+ */
+const SHEET_TIMEOUT_MS = 15_000;
+
 describe('F7 Plin — radnje koje su izgledale mrtve', () => {
   it('plus u zaglavlju otvara sheet za dodavanje očitanja', async () => {
     const { result, queryClient } = await renderScreen();
@@ -104,13 +115,12 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
 
     // Tražimo SADRŽAJ sheeta, ne `showAddModal`: forma ima svoje polje, koje
     // postoji samo kad je sheet stvarno montiran u vidljivom stanju.
-    // Eksplicitan timeout: `Sheet` montira sadržaj tek poslije animacije, a
-    // zadani `findBy*` čeka 1 s. Na opterećenom CI runneru (2 jezgre, više
-    // paralelnih workers) to povremeno nije dovoljno i test padne kao „sheet se
-    // ne otvara" — iako se otvori. Flaky test u CI-ju je gori od nikakvog, jer
-    // se crveni znak počne ignorisati.
     expect(
-      await result.findByPlaceholderText('gas.counterValuePlaceholder', {}, { timeout: 5000 }),
+      await result.findByPlaceholderText(
+        'gas.counterValuePlaceholder',
+        {},
+        { timeout: SHEET_TIMEOUT_MS },
+      ),
     ).toBeTruthy();
     await result.unmount();
     queryClient.clear();
@@ -121,18 +131,28 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
 
     // Zaglavlje liste (i meni u njemu) postoji tek kad očitanja stignu, pa se
     // čeka pojava umjesto pretpostavke da je list već izrenderovan.
-    const trigger = await result.findByTestId('gas-filter-menu', {}, { timeout: 5000 });
+    const trigger = await result.findByTestId(
+      'gas-filter-menu',
+      {},
+      { timeout: SHEET_TIMEOUT_MS },
+    );
     fireEvent.press(trigger);
-    const optionMonth = await result.findByTestId('gas-filter-option-month', {}, { timeout: 5000 });
+    const optionMonth = await result.findByTestId(
+      'gas-filter-option-month',
+      {},
+      { timeout: SHEET_TIMEOUT_MS },
+    );
     expect(optionMonth).toBeTruthy();
 
     fireEvent.press(optionMonth);
     // Poslije izbora, trigger pokazuje novi period umjesto starog. `waitFor`
     // jer dodir mijenja state, a `Sheet` se zatvara u istom prolazu.
-    await waitFor(() =>
-      expect(result.getByTestId('gas-filter-menu').props.accessibilityLabel).toContain(
-        'gas.filterMonth',
-      ),
+    await waitFor(
+      () =>
+        expect(result.getByTestId('gas-filter-menu').props.accessibilityLabel).toContain(
+          'gas.filterMonth',
+        ),
+      { timeout: SHEET_TIMEOUT_MS },
     );
 
     await result.unmount();

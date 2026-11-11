@@ -36,6 +36,70 @@ export interface paths {
         patch: operations["HeatingAnomalyController_updateAnomaly"];
         trace?: never;
     };
+    "/api/app-releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppReleaseController_list"];
+        put?: never;
+        post: operations["AppReleaseController_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/app-releases/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppReleaseController_latest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/app-releases/{id}/apk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppReleaseController_download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/app-releases/{id}/published": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AppReleaseController_setPublished"];
+        trace?: never;
+    };
     "/api/app/config": {
         parameters: {
             query?: never;
@@ -1632,6 +1696,11 @@ export interface components {
         };
         HealthWarningDto: {
             /**
+             * @description Broj koji poruka nosi (ciklusi, anomalije), da ga klijent prevede sam.
+             * @example 2
+             */
+            count?: number;
+            /**
              * @description Nivo ozbiljnosti.
              * @example warning
              * @enum {string}
@@ -1643,11 +1712,21 @@ export interface components {
              */
             message: string;
             /**
+             * @description Prag na koji se broj odnosi, u minutama (npr. 90).
+             * @example 90
+             */
+            threshold?: number;
+            /**
              * @description Stabilan identifikator pravila, za lokalizaciju na klijentu.
              * @example targetShortfall
              * @enum {string}
              */
             type: "shortCycles" | "longCycles" | "targetShortfall" | "targetOvershoot" | "anomalies";
+            /**
+             * @description Prosječno odstupanje u °C, za `targetShortfall`/`targetOvershoot`.
+             * @example 2
+             */
+            valueC?: number;
         };
         /** @enum {string} */
         HomeProfileHeatingType: "RADIATOR" | "UNDERFLOOR" | "MIXED";
@@ -1752,7 +1831,7 @@ export interface components {
         };
         SetCurrentTempDto: {
             /**
-             * @description User confirmed current boiler flow temperature (°C)
+             * @description User confirmed current boiler flow temperature (°C). Effective range is set per home (HomeProfile.minHeatingFlowC..maxHeatingFlowC) and is within 30–55.
              * @example 52.5
              */
             currentFlowTemp: number;
@@ -1931,6 +2010,95 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateHeatingAnomalyDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppReleaseController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppReleaseController_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppReleaseController_latest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppReleaseController_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppReleaseController_setPublished: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

@@ -1730,6 +1730,11 @@
       },
       "HealthWarningDto": {
         "properties": {
+          "count": {
+            "description": "Broj koji poruka nosi (ciklusi, anomalije), da ga klijent prevede sam.",
+            "example": 2,
+            "type": "number"
+          },
           "level": {
             "description": "Nivo ozbiljnosti.",
             "enum": [
@@ -1745,6 +1750,11 @@
             "example": "Ciljna temperatura se ne dostiže - prosječno zaostajanje: 2.0°C",
             "type": "string"
           },
+          "threshold": {
+            "description": "Prag na koji se broj odnosi, u minutama (npr. 90).",
+            "example": 90,
+            "type": "number"
+          },
           "type": {
             "description": "Stabilan identifikator pravila, za lokalizaciju na klijentu.",
             "enum": [
@@ -1756,6 +1766,11 @@
             ],
             "example": "targetShortfall",
             "type": "string"
+          },
+          "valueC": {
+            "description": "Prosječno odstupanje u °C, za `targetShortfall`/`targetOvershoot`.",
+            "example": 2,
+            "type": "number"
           }
         },
         "required": [
@@ -2056,10 +2071,10 @@
       "SetCurrentTempDto": {
         "properties": {
           "currentFlowTemp": {
-            "description": "User confirmed current boiler flow temperature (°C)",
+            "description": "User confirmed current boiler flow temperature (°C). Effective range is set per home (HomeProfile.minHeatingFlowC..maxHeatingFlowC) and is within 30–55.",
             "example": 52.5,
             "maximum": 55,
-            "minimum": 48,
+            "minimum": 30,
             "type": "number"
           }
         },
@@ -2626,6 +2641,92 @@
         ],
         "tags": [
           "Anomalies"
+        ]
+      }
+    },
+    "/api/app-releases": {
+      "get": {
+        "operationId": "AppReleaseController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AppRelease"
+        ]
+      },
+      "post": {
+        "operationId": "AppReleaseController_upload",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AppRelease"
+        ]
+      }
+    },
+    "/api/app-releases/latest": {
+      "get": {
+        "operationId": "AppReleaseController_latest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AppRelease"
+        ]
+      }
+    },
+    "/api/app-releases/{id}/apk": {
+      "get": {
+        "operationId": "AppReleaseController_download",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AppRelease"
+        ]
+      }
+    },
+    "/api/app-releases/{id}/published": {
+      "patch": {
+        "operationId": "AppReleaseController_setPublished",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AppRelease"
         ]
       }
     },

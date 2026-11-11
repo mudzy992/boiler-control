@@ -46,8 +46,25 @@ function makeService(
   const dashboardWeather = {
     getV2DashboardWeather: jest.fn().mockResolvedValue(v2Weather),
   };
+  /*
+   * `F14` (jedna polazna za cijeli dan) je uveo `homeDailyFlow`, a time i dva
+   * nova čitanja: zonu korisnika i današnji `DailyRecord`. Stub je ostao samo
+   * na `weatherCache`, pa je `getDashboard` padao na `this.prisma.user` —
+   * klasa greške „servis čita više nego što stub daje" (isti uzrok kao
+   * `DailyHistoryService`, run 42920655959). CI je to pokazao na run-u
+   * 42981488213.
+   */
+  const prisma = {
+    weatherCache,
+    user: {
+      findUnique: jest
+        .fn()
+        .mockResolvedValue({ timezone: 'Europe/Sarajevo' }),
+    },
+    dailyRecord: { findFirst: jest.fn().mockResolvedValue(null) },
+  };
   const service = Reflect.construct(DashboardService, [
-    { weatherCache },
+    prisma,
     boilerService,
     weatherService,
     {},
@@ -55,6 +72,7 @@ function makeService(
   ]) as DashboardService;
   return {
     service,
+    prisma,
     weatherCache,
     weatherService,
     boilerService,

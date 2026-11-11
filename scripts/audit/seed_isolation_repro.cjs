@@ -22,6 +22,7 @@ if (process.argv.includes('--help')) {
 const expectedRefs = [
   'refs/heads/arena/1bfee051-boiler-control',
   'refs/heads/arena/c9961f17-boiler-control',
+  'refs/heads/arena/456ec6f2-boiler-control',
 ];
 if (
   process.argv.length !== 3 ||

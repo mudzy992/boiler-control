@@ -2880,6 +2880,25 @@
         ]
       }
     },
+    "/api/boiler/flow-range": {
+      "get": {
+        "operationId": "BoilerController_getFlowRange",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Boiler"
+        ]
+      }
+    },
     "/api/boiler/history": {
       "get": {
         "operationId": "BoilerController_getHistory",

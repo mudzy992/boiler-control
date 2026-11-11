@@ -18,6 +18,7 @@ const path = require('node:path');
 const ALLOWED_REFS = [
   'refs/heads/arena/1bfee051-boiler-control',
   'refs/heads/arena/c9961f17-boiler-control',
+  'refs/heads/arena/456ec6f2-boiler-control',
 ];
 const INDEX_NAME = 'HeatingEvent_deviceId_timestampStart_idx';
 const WEATHER_INDEX_NAME = 'WeatherCache_city_fetchedAt_idx';

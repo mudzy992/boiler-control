@@ -38,6 +38,14 @@ module.exports = {
 
   clearMocks: true,
 
+  // Zadanih 5000 ms po testu je manje od granice na koju sami testovi čekaju.
+  // `gasOpenSheets` čeka `SHEET_TIMEOUT_MS = 15_000` i lokalno traje ~3,8 s, ali
+  // na opterećenom CI runneru pređe 5 s — i tada Jest ubije test **prije** nego
+  // `findBy*` dođe do svoje granice, pa poruka izgleda kao da sheet nikad nije
+  // montiran, a stvarno je isteklo vrijeme testa. Zato je Jest limit veći od
+  // najveće granice koju testovi koriste.
+  testTimeout: 20_000,
+
   collectCoverageFrom: [
     'src/services/**/*.{ts,tsx}',
     'src/components/gas/**/*.{ts,tsx}',

@@ -633,6 +633,12 @@ Dokaz da nije kod: `frontend-ci.yml` nije bio mijenjan, a pao je u 13:51 poslije
 uspjeha u 13:48. Rješenje: keš browsera po `hashFiles('frontend/package-lock.json')`
 (`69738dc`) + tri pokušaja sa 20 s pauze (`f3b269a`).
 
+**Stanje na kraju (commit `1a92842`, 15:50 UTC):** Audit checks ✓, Frontend CI ✓,
+Mobile CI ✓, Secret scan ✓, Backend build ✓. Baseline `43093726920` ponovljen
+na tom commitu i daje isto kao u §10.3 — `304` dana, `daily-2` **0**,
+zadnji `daily-1` upisan `11-11 05:00`. Gejt je zelen i mjeri tačno ono što
+treba; nema više dijagnostike koja visi.
+
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
 **drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je

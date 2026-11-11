@@ -31,7 +31,10 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, arena/da41e5ba-boiler-control]
+    # `arena/**` kao u `frontend-ci.yml`: radna grana mora biti pokrivena, inače
+    # se backend ne testira dok se ne spoji — a pad (run `42920655959`) se otkrije
+    # tek poslije merge-a. Fiksna grana je ostala zbog starih run-ova.
+    branches: [main, 'arena/**', arena/da41e5ba-boiler-control]
     paths:
       - 'backend/**'
       - '.github/workflows/backend-build.yml'

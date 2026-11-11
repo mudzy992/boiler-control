@@ -4,9 +4,10 @@ Status: **F1 implementiran; F2 implementiran, CI zelen (2026-11-07), nije pušte
 u produkciju**; F3–F5 nijesu. **Blokada je dijagnostikovana (§10.1): pisac
 `daily-2` još ne piše u produkciji** — `DailyRecord` ima 304 dana, ali svi su
 backfill (`backfill-events-1`, 301) ili `daily-1` (3). Bez `daily-2` nema
-`nightMinC`, pa se F2 ne pušta; prvi korak je **F1.6**, a ne F3 — i on se
-svodi na puštanje pisca, jer je `backfill_apply` izvršen 2026-11-07 i upisao
-**0 redova** (§10.2: historija je već popunjena). Odluka vlasnika
+`nightMinC`, pa se F2 ne pušta. `backfill_apply` je izvršen (§10.2: 0 redova,
+historija je već popunjena), a **uzrok je redoslijed upisa** (§10.3): pisac
+preskače dan koji već ima red, pa `daily-2` može nastati tek za prvi dan bez
+reda — **11-12**. Čekanje ide od tog datuma, ne od backfill-a. Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.
@@ -579,6 +580,37 @@ bile tvrdnje u kodu):
 - jedna transakcija (`BEGIN`/`COMMIT`, `ROLLBACK` na grešku),
 - `ON CONFLICT ("homeProfileId", "localDate") DO NOTHING` — ponovni run ne
   pravi duplikate.
+
+### 10.3 Zašto `daily-2` ne nastaje i poslije redeploya (2026-11-07)
+
+Poslije redeploya baseline je ponovo mjeren (`43031117171`, `43032181999`) i
+`daily-2` je i dalje **0**. Uzrok nije ni kod ni deploy — nego **redoslijed
+upisa**. Dokazi, po datumu:
+
+| dan | model | upisan (UTC) |
+|---|---|---|
+| 10-29 … 11-08 | `backfill-events-1` | 09.11. 11:19 (svih 11 u istoj minuti) |
+| 11-09 | `daily-1` | **11.11. 02:20** |
+| 11-10 | `daily-1` | **11.11. 02:20** |
+| 11-11 | `daily-1` | **11.11. 05:00** |
+
+F1 (`daily-2`) je commitovan **11.11. u 11:23 UTC** — poslije svih ovih upisa.
+Zato:
+
+1. **Dva reda u istoj minuti** znače da ih nije napisao cron (koji piše jedan
+   dan za tekući dan), nego backfill za prošle dane.
+2. Pisac **preskače dan za koji red već postoji**, bez obzira na
+   `modelVersion` (`daily.recommendation.service.ts`, `written` skup). Dakle
+   dan koji je jednom rekonstruisan ostaje `backfill-events-1` zauvijek.
+3. `daily-2` može nastati **samo za dan koji još nema red** — dakle za
+   **11-12**, prvi dan poslije deploya.
+
+**Mjerni prozor se pomjera:** ne „poslije nekoliko dana od backfill-a", nego
+**od prvog dana poslije 11.11. 11:23 UTC**. Prvi `daily-2` red se očekuje
+11-12 oko 06:00 lokalno (05:00 UTC zimi).
+
+Ovo je i dobar ishod: backfill je ostavio historiju, a pisac preuzima od prvog
+dana bez reda. Nema miješanja dvije verzije u istom danu.
 
 **Automatizovano (2026-11-07):** isti razlikovni upit je sada dio
 `backend/scripts/backfill-coverage.cjs` (`baseline` job, read-only, sekcija

@@ -4,8 +4,9 @@ Status: **F1 implementiran; F2 implementiran, CI zelen (2026-11-07), nije pušte
 u produkciju**; F3–F5 nijesu. **Blokada je dijagnostikovana (§10.1): pisac
 `daily-2` još ne piše u produkciji** — `DailyRecord` ima 304 dana, ali svi su
 backfill (`backfill-events-1`, 301) ili `daily-1` (3). Bez `daily-2` nema
-`nightMinC`, pa se F2 ne pušta; prvi korak je **F1.6** (backfill + puštanje
-pisca), a ne F3. Odluka vlasnika
+`nightMinC`, pa se F2 ne pušta; prvi korak je **F1.6**, a ne F3 — i on se
+svodi na puštanje pisca, jer je `backfill_apply` izvršen 2026-11-07 i upisao
+**0 redova** (§10.2: historija je već popunjena). Odluka vlasnika
 (2026-11-07): stara formula ide u penziju, nova (`HomeModel` + `DailyRecord`)
 postaje jedini put. Obim (dokumentovanje, planiranje, testiranje na CI prije
 produkcije) je vlasnikov zahtjev.
@@ -545,6 +546,39 @@ Ostali nalazi iz istog runa, korisni za F3:
 | `nightMinOutdoorMeasuredC` parova | 0 (nema `daily-2`) |
 | plin: 134 očitanja, 920,9 m³, medijana razmaka 1 dan | podaci za efikasnost postoje |
 | šema: 5/5 kolona postoji | F1 kolone su primijenjene u produkciji |
+
+### 10.2 `backfill_apply` izvršen (2026-11-07) — upisao 0 redova
+
+Pokrenuto sa `gh workflow run backend-build.yml -f backfill_apply=true`
+(run `43028503822`), sa produkcijskim kredencijalom za upis.
+
+| | prije | poslije |
+|---|---|---|
+| `DailyRecord` | 304 dana | **304 dana** |
+| `backfill-events-1` | 301 dan | **301 dan** |
+| `daily-1` | 3 dana | **3 dana** |
+| `daily-2` | 0 | **0** |
+| `backfill upis` | — | **0 redova** („postojećih 304 dana") |
+
+**Zašto 0:** rekonstrukcija ne nalazi nijedan dan koji još nema red. Izvori
+su prazni za sve dane koje bi dopunili (`ciklusi 0, plin 0, stepen-dan 0,
+predlog 0`), jer su ti dani već rekonstruisani u ranijem backfill-u. Upis je
+time **no-op, ne neuspjeh** — i to je dobar ishod: nema duplikata, nema
+prepisanih mjerenja.
+
+**Šta ovo mijenja za plan:** ništa dobro ni loše po F2 — F2 i dalje čeka
+`daily-2` redove. Ali **mijenja F1.6:** backfill više nije korak koji nešto
+donosi. Historija je popunjena; ono što nedostaje je **novi pisac**, ne stari
+dani. F1.6 se zato svodi na: pustiti pisac `daily-2` da radi, pa za nekoliko
+dana ponovo pokrenuti baseline i vidjeti §10.
+
+Sigurnosne osobine koje su se potvrdile u ovom runu (vrijedi zapisati, jer su
+bile tvrdnje u kodu):
+- upis traži **odvojen** kredencijal `DATABASE_URL_BACKFILL`; bez njega
+  skripta odbija `--apply` i ne pada na `DATABASE_URL`,
+- jedna transakcija (`BEGIN`/`COMMIT`, `ROLLBACK` na grešku),
+- `ON CONFLICT ("homeProfileId", "localDate") DO NOTHING` — ponovni run ne
+  pravi duplikate.
 
 **Automatizovano (2026-11-07):** isti razlikovni upit je sada dio
 `backend/scripts/backfill-coverage.cjs` (`baseline` job, read-only, sekcija

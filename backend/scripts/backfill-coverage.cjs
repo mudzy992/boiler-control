@@ -184,7 +184,13 @@ async function main() {
       notice(
         'upisano (updatedAt): ' +
           recent
-            .map((row) => `${row.d.slice(5)} ${String(row.updatedAt).slice(0, 16)}`)
+            .map(
+              (row) =>
+                `${row.d.slice(5)} ${new Date(row.updatedAt)
+                  .toISOString()
+                  .slice(5, 16)
+                  .replace('T', ' ')}`,
+            )
             .reverse()
             .join(' | '),
       );

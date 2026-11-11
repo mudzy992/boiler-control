@@ -168,6 +168,16 @@ async function main() {
         );
       }
       out();
+      // Kompaktna linija u CI anotaciju: tabela od 14 redova se u anotacijama
+      // odsijeca (GitHub prikazuje samo prvih nekoliko), a ovo je jedini
+      // pregled „ko je upisao koji dan" koji stigne do pregleda run-a.
+      notice(
+        'zadnjih 14 dana: ' +
+          recent
+            .map((row) => `${row.d.slice(5)} ${row.model}`)
+            .reverse()
+            .join(' | '),
+      );
     }
 
     /*

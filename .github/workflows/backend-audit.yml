@@ -2,7 +2,10 @@ name: Audit checks
 
 on:
   push:
-    branches: [arena/1bfee051-boiler-control, arena/c9961f17-boiler-control]
+    branches:
+      - arena/1bfee051-boiler-control
+      - arena/c9961f17-boiler-control
+      - arena/456ec6f2-boiler-control
   workflow_dispatch:
 
 permissions:
@@ -13,7 +16,8 @@ jobs:
     # Manual dispatch is restricted to the two recorded Arena session branches.
     if: >-
       github.ref == 'refs/heads/arena/1bfee051-boiler-control' ||
-      github.ref == 'refs/heads/arena/c9961f17-boiler-control'
+      github.ref == 'refs/heads/arena/c9961f17-boiler-control' ||
+      github.ref == 'refs/heads/arena/456ec6f2-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -185,7 +189,8 @@ jobs:
   frontend:
     if: >-
       github.ref == 'refs/heads/arena/1bfee051-boiler-control' ||
-      github.ref == 'refs/heads/arena/c9961f17-boiler-control'
+      github.ref == 'refs/heads/arena/c9961f17-boiler-control' ||
+      github.ref == 'refs/heads/arena/456ec6f2-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -287,7 +292,8 @@ jobs:
   mobile:
     if: >-
       github.ref == 'refs/heads/arena/1bfee051-boiler-control' ||
-      github.ref == 'refs/heads/arena/c9961f17-boiler-control'
+      github.ref == 'refs/heads/arena/c9961f17-boiler-control' ||
+      github.ref == 'refs/heads/arena/456ec6f2-boiler-control'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:

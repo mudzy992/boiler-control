@@ -1423,7 +1423,20 @@ izmjene.
 openapi-schema 27. Zaključan je tačan skup ključeva — aditivno ne znači „bilo
 šta smije ući".
 
-**Šta još nije urađeno i zašto.** `RecommendationBreakdown.tsx` (web i mobile)
-još ne prikazuje model. `baseCurveTemp: null` prolazi kroz tipove (F4.4 je
-ugovor), ali ekran treba izmjenu da bi prikazao „model" umjesto praznine — to je
-zadatak za web/mobile granu, ne za backend.
+**Lažno zelena `tsc` provjera (nalaz).** `npx tsc --noEmit` u `frontend/`
+prolazi za 0,4 s i ne prijavljuje ništa — jer je `tsconfig.json` samo
+`references`. Mjerodavno je `tsc -p tsconfig.app.json` (to je i `npm run build`
+i CI). Isto važi za mobilni: `tsc --noEmit -p tsconfig.json`. Prva provjera
+F4.4 na ekranu bila je zato lažno zelena; tek `tsconfig.app.json` pokazao je
+6 grešaka. **Ne vjerovati golorukom `tsc --noEmit`** — bez `-p` se ne
+provjerava ništa.
+
+**Rizik F4.4 je zatvoren na oba klijenta.** Web (`38c1b77`) i mobilni:
+`null` nikad ne postaje „0,0 °C" ni „NaN"; kad je motor `model`, redovi krive
+se **izostavljaju** (tabela puna crtica ne objašnjava ništa), a prikazuju se
+članovi izraza. Stari redovi (`engine = null`) prikazuju krivu kao i prije —
+`null` znači „ne zna se koji motor", ne „model".
+
+**Mobilni ima svoje tipove.** `mobile/src/types/Dashboard.ts` ne čita
+`frontend/src/types/api.d.ts`, pa ga `openapi:check` ne štiti. Isti ugovor je
+tamo prepisan ručno — to je dug koji ostaje (v. §7, tabela rizika).

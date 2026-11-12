@@ -39,7 +39,18 @@ const SOURCES = {
   'flow-bounds.ts': 'DailyRecord/flow-bounds.ts',
   'daily-balance.ts': 'HomeModel/daily-balance.ts',
   'flow-constants.ts': 'DailyRecord/flow-constants.ts',
+  'proposal-shadow.service.ts': 'DailyRecord/proposal-shadow.service.ts',
 };
+
+/**
+ * Konstante koje nijesu brojevi. U dokumentu se pišu kao `0`/`1` da tabela
+ * ostane jedna vrsta reda; ovdje se prevode u `false`/`true`.
+ *
+ * `DAY_GAIN_IN_PROPOSAL` je ovdje zato što je to **odluka**, a ne svojstvo
+ * izraza: kad se upali, `FORMULA.md` mora promijeniti jednačinu u §2a. Bez ove
+ * provjere dokument bi tvrdio „ne ulazi u predlog" i poslije uključivanja.
+ */
+const BOOLEANS = new Set(['DAY_GAIN_IN_PROPOSAL']);
 
 function readSource(file) {
   const rel = SOURCES[file];
@@ -59,6 +70,12 @@ function readSource(file) {
  */
 function readConst(source, name) {
   if (!source) return { value: null, error: 'fajl nije nađen' };
+  if (BOOLEANS.has(name)) {
+    const boolPattern = new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(true|false)\\s*;`);
+    const boolMatch = source.match(boolPattern);
+    if (!boolMatch) return { value: null, error: 'konstanta nije nađena (očekivano true/false)' };
+    return { value: boolMatch[1] === 'true' ? 1 : 0, error: null };
+  }
   const pattern = new RegExp(
     `export\\s+const\\s+${name}\\s*=\\s*(?:(-?[\\d.]+)|([A-Z_][A-Z0-9_]*))\\s*;`,
   );

@@ -79,6 +79,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
 **Dva paralelna sistema.** `DailyRecord` (novi, tačan) i `Recommendation`
 (stari, kriva) nastaju u različitim trenucima i sa različitim brojevima.
@@ -1089,3 +1090,44 @@ da prazna ablacija daje **isti** rezultat kao pokretanje bez prekidača (da
 prekidač nije neutralan), da isključena noćna granica **mijenja** bar jednu
 metriku (da granica nije mrtva), i da `u_day` stvarno varira (da ablacija nije
 tautologija). Traje ~0,5 s.
+
+### 10.15 `u_day` isključen iz predloga (2026-11-12, odluka vlasnika)
+
+**Odluka.** Vlasnik je poslije mjerenja iz §10.14 rekao „možeš odmah isključiti".
+`u_day` **ne ulazi** u predlog dok F3.1 ne pokaže da nosi.
+
+**Kako je ugašen.** Prekidač `DAY_GAIN_IN_PROPOSAL = false` u
+`proposal-shadow.service.ts`, primijenjen na **jednom mjestu** gdje član ulazi u
+izraz (`equilibriumFlow({ uDayC })`). Izraz nije mijenjan — `equilibrium-flow.ts`
+i dalje podržava član, sa testovima; gasi se poziv, ne formula.
+
+**Zašto prekidač a ne brisanje.** Procjena se **nastavlja računati**
+(`HomeModel.uDayC`, `estimateDayGain`) i log je ispisuje uz oznaku „(ne ulazi u
+predlog)". Bez toga bi odluka izgubila dokaz: kad F3.1 za 8 dana pokaže da
+član nosi ili ne nosi, nema podataka da se to kaže. Uključivanje je tada
+`true`, bez ponovnog pisanja i bez prazne historije.
+
+**`null`, a ne `0`.** Isključen član šalje `null`. `0` bi tvrdio „izmjeren je
+nulti dobitak" — to je druga tvrdnja i pogrešna.
+
+**Log.** Prije popravke, sa ugašenim članom, log bi pisao `u_day 0.0 K` i time
+**sakrio** izmjereno. Sada log nosi `u_day <mjereno> K (ne ulazi u predlog)`.
+
+**Dokaz da prekidač djeluje u oba smjera.**
+- `false` ⇒ `proposal-shadow.service.spec.ts` **35/35**; testovi sada tvrde da je
+  odluka **ista** sa dobitkom i bez njega (sa `uDayC: 2` i bez, oba 44,04 °C).
+- `true` privremeno ⇒ **padaju 3 testa** (ista vrijednost, negativan dobitak,
+  granica koraka). Dakle uključivanje ne može proći tiho.
+- `formula_doc_check.cjs` sada provjerava i `DAY_GAIN_IN_PROPOSAL`
+  (`true` ⇒ `✗ dokument 0 ≠ kod 1`), pa ni dokument ne može ostati na staroj
+  tvrdnji „član ulazi u izraz".
+
+**Jedan nalaz usput.** Test „korak spuštanja ograničava dnevnu promjenu" je
+očekivao 44,00 °C a dobio 44,04 °C. To je **ispravno** ponašanje kontrolera:
+kad je ravnotežna između granice koraka (45 − 1 = 44) i prošle polazne (45),
+uzima se ravnotežna — promjena je 0,96 K, tj. manja od punog koraka. Stari
+broj je važio samo zato što je `u_day` spuštao ravnotežnu ispod granice. Test
+je popravljen sa obrazloženjem, ne prilagođen naslijepo.
+
+**Kada se vraća.** Kad F3.1 (mjerljivo od **2026-11-20**) pokaže da polazna bez
+člana sistematski prelazi ono što model traži na danima sa dobitkom.

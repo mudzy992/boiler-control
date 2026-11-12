@@ -44,7 +44,7 @@ s      = slopeCiHigh   dok je days < 20
          slopeS        inače
          nepoznat days → tretira se kao mlad (konzervativno)
 c      = internalGainC   (null → 0, ne izmišlja se)
-u_day  = uDayC           (null → 0)
+u_day  = uDayC           (null → 0; **isključen iz predloga**, v. §2a)
 ```
 
 **Zašto `O_ref` nije samo noć.** Polazna upravlja cijelim danom. Noć je
@@ -57,6 +57,25 @@ zapisuje kao izvor (`NIGHT` vs `NIGHT_DAY_BLEND`).
 daje prenisku polaznu, a preniska polazna je hladna kuća. Dok model ima manje
 od 20 dana, greška nagiba je velika, pa se bira granica koja grije više. Poslije
 20 dana koristi se tačka procjene (`slopeS`).
+
+**§2a — `u_day` je izmjeren, ali ne ulazi u predlog (2026-11-12).**
+
+Odluka vlasnika poslije mjerenja F3.3 (`docs/plans/PLAN-formula-v2.md` §10.14).
+Prekidač je `DAY_GAIN_IN_PROPOSAL` u `proposal-shadow.service.ts` i sada je
+`false` — dakle izraz se u proizvodnji računa kao
+`F_eq = T_cilj + s·(T_cilj − O_ref) − c`.
+
+Mjerenje koje je dovelo do toga: `u_day` popravlja **najgori** podbačaj na
+lakoj kući (1,70 → 1,29 K) i ne pogoršava ga na teškoj, ali na srednjoj
+povećava **broj** dana sa podbačajem (4 → 5 od 50) i spušta polaznu 1,1 K bez
+dokaza da je bila previsoka. Član trguje prosječnom marginom za dane sa
+dobitkom — a to je trgovina koju treba dokazati na stvarnim podacima (F3.1),
+ne u simulaciji.
+
+Procjena se **nastavlja računati** (`HomeModel.uDayC`) i log je ispisuje uz
+oznaku „(ne ulazi u predlog)", da se odluka može provjeriti iz zapisa. `null` a
+ne `0` je namjerno: `null` znači „nema člana", dok bi `0` tvrdio izmjereni
+nulti dobitak.
 
 **Zašto `− (c + u_day)` a ne `− c − u_day`.** Oba člana su **dobici** i oba
 spuštaju polaznu. Pišu se kao jedan član namjerno: razdvojeno se lako desi da se
@@ -196,6 +215,7 @@ provjera pada.
 | konstanta | vrijednost | fajl |
 |---|---|---|
 | `DAY_REFERENCE_WEIGHT` | 0.3 | `equilibrium-flow.ts` |
+| `DAY_GAIN_IN_PROPOSAL` | 0 | `proposal-shadow.service.ts` |
 | `SLOPE_CONSERVATIVE_MAX_DAYS` | 20 | `equilibrium-flow.ts` |
 | `STEP_UP_K` | 1.5 | `proposal-controller.ts` |
 | `STEP_DOWN_K` | 1.0 | `proposal-controller.ts` |
@@ -224,7 +244,8 @@ provjera pada.
 - Ne tvrdi da je kuća jednokapacitivna. Model pretpostavlja jedan volumen i
   jedan nagib; kuća sa dvije zone ima dva.
 - Ne modeluje sunce, PTV, otvoren prozor ni unutrašnje izvore po satu. Zato
-  postoji `u_day` kao **jedan dnevni član**, a ne satni profil.
+  postoji `u_day` kao **jedan dnevni član**, a ne satni profil — i taj član
+  trenutno ne ulazi u predlog (§2a).
 - Ne tvrdi da je interval pouzdanosti kalibrisan dok to nije izmjereno (F3.1).
 - Ne tvrdi da minimalna modulacija kotla postoji u modelu — nema je.
 

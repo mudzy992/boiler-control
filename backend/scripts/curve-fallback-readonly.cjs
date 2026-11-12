@@ -229,11 +229,24 @@ async function main() {
      */
     const { rows } = await client.query(
       `WITH days AS (
-         SELECT generate_series(
-           (CURRENT_DATE - ($1::int || ' days')::interval)::date,
-           CURRENT_DATE,
-           '1 day'
-         )::text AS "localDate"
+         /*
+          * ::text MORA biti unutar to_char, ne na kraju poziva.
+          *
+          * Prvi pokusaj je bio generate_series(date, date, interval)::text.
+          * Postgres tada bira **timestamp** overload (jer je korak interval),
+          * pa ::text daje 2026-10-09 00:00:00+00 — a DailyRecord.localDate
+          * je YYYY-MM-DD. Join po tekstu zato promasi SVE redove, i svaki
+          * kuca-dan izgleda kao NO_RECORD. Dijagnostika je to razotkrila:
+          * 56 redova u prozoru, 56 spojenih po userId, a grid nalazi 0.
+          */
+         SELECT to_char(
+           generate_series(
+             (CURRENT_DATE - ($1::int || ' days')::interval)::date,
+             CURRENT_DATE,
+             '1 day'
+           ),
+           'YYYY-MM-DD'
+         ) AS "localDate"
        ),
        homes AS (
          SELECT id AS "homeProfileId", "userId", "createdAt"::date::text AS "createdOn"

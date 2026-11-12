@@ -3,15 +3,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { DailyOutcomeService } from './daily-outcome.service';
 import { equilibriumFlow } from './equilibrium-flow';
 import { effectiveShortCycleFloor } from './short-cycle-floor';
-import { explorationFor } from './exploration';
+import { decideProposalFromInputs } from './proposal-decision';
 import { flowForHeatTime } from './heat-time';
 import {
   effectiveCeilingC,
   findBoilerFamily,
-  isFlowAdviceAllowed,
 } from '../BoilerCatalog/boiler-catalog';
 import {
-  decideProposal,
   shortCycleFloorFrom,
   type ControllerDecision,
   type OutcomeSignals,
@@ -213,6 +211,11 @@ export class ProposalShadowService {
     // `equilibrium-flow.ts` — čist, sa verzijom koja ide u `params`, jer se
     // ovdje nekad nalazio nepotpun: `c` nije oduziman, a referenca je bila
     // samo najhladniji sat noći iako polazna pokriva cijeli dan.
+    //
+    // F4.2: računa se **zajedničkom** funkcijom (`proposal-decision.ts`), istom
+    // koju može koristiti i writer. Ovdje se ne mijenja ništa: isti ulazi, isti
+    // izraz. Dupliranje bi značilo da se poslije porede dvije implementacije,
+    // a ne dva pristupa.
     const equilibrium = equilibriumFlow({
       targetRoomC: target,
       nightMinC,
@@ -308,16 +311,19 @@ export class ProposalShadowService {
           })
         : null;
 
-    // Istraživanje se dopušta samo kad je rezerva dokazana i noć nije hladna.
-    const exploration = explorationFor({
-      recentOvershootC: recentOutcomes.map((row) => row.overshootC),
-      nightMinC,
-      exploredYesterday: previous?.shadowExplorationDirection === 'LOWER',
-      hasPreviousFlow: previousFlowC != null,
-    });
-
-    const decision = decideProposal({
-      modelFlowC,
+    /*
+     * F4.2: **odluka se donosi zajedničkom funkcijom**, istom koju writer
+     * koristi kad je `PROPOSAL_ENGINE=model`. Izdvojeno je samo ono što je
+     * čisto — sve što traži bazu ostalo je gore, u prikupljanju ulaza.
+     *
+     * `daysSinceChange` ostaje `await` ovdje jer čita bazu; zato se predaje kao
+     * vrijednost, a ne kao funkcija.
+     */
+    const { decision } = decideProposalFromInputs({
+      modelFlow: {
+        modelFlowC,
+        equilibrium,
+      },
       previousFlowC,
       daysSinceChange: await this.daysSinceChange(
         homeProfileId,
@@ -325,13 +331,15 @@ export class ProposalShadowService {
         previousFlowC,
       ),
       outcome,
-      night: { floorC: night.floorC, basis: night.basis },
+      night,
       shortCycleFloorC,
-      maxFlowC: ceiling,
-      flowAdviceAllowed: isFlowAdviceAllowed(family),
+      ceilingC: ceiling,
+      family,
       modelState: model?.state ?? 'COLD_START',
-      exploration: exploration.direction,
       heatTimeFloorC,
+      recentOvershootC: recentOutcomes.map((row) => row.overshootC),
+      nightMinC,
+      exploredYesterday: previous?.shadowExplorationDirection === 'LOWER',
     });
 
     await this.prisma.dailyRecord.updateMany({

@@ -244,6 +244,24 @@ jobs:
       - name: Shadow report self-test (F3.7)
         run: node scripts/shadow-report-readonly.cjs --self-test
 
+      # F3.1: pokrivenost intervala pouzdanosti. Uslov za F2/F4 iz plana — puštanje
+      # modela bez izmjerene pokrivenosti je zamjena jedne neprovjerene vrijednosti
+      # drugom. Radi i kad nema dovoljno dana: tada kaže NOT_ENOUGH_DAYS, ne pada.
+      - name: CI coverage self-test (F3.1)
+        run: node scripts/ci-coverage-readonly.cjs --self-test
+
+      - name: CI coverage (F3.1, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/ci-coverage-readonly.cjs
+          result=$?
+          if [ "$result" -ne 0 ]; then
+            echo "::error title=F3.1 CI coverage::skripta je pala (exit $result) — uzrok je u logu koraka."
+          fi
+          exit "$result"
+
       - name: Shadow vs. predlog (F3.7, read-only)
         env:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}

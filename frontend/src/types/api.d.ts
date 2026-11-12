@@ -1773,11 +1773,16 @@ export interface components {
             interval: number;
         };
         RecommendationBreakdownDto: {
-            appliedOffsets: components["schemas"]["RecommendationAppliedOffsetsDto"];
-            /** @description Base heating-curve temperature, in °C. */
-            baseCurveTemp: number;
+            appliedOffsets: components["schemas"]["RecommendationAppliedOffsetsDto"] | null;
+            /** @description Base heating-curve temperature, in °C. null when engine is "model" — there is no curve in that path. A number would be invented; 0 would render as "0.00 °C" on clients. */
+            baseCurveTemp: number | null;
             /** @description Engine confidence, 0..1. */
             confidence: number;
+            /**
+             * @description F4.3: which engine produced finalTemp. null for rows written before F4.3 — an old row does not claim an engine it never recorded.
+             * @enum {string|null}
+             */
+            engine: "curve" | "model" | null;
             /** @description Expected heat time in minutes, if available. */
             expectedHeatTimeMin: number | null;
             /** @description Final recommended flow temperature, in °C. */
@@ -1789,15 +1794,41 @@ export interface components {
              * @enum {string}
              */
             mode: "FULL" | "PROFILE_ONLY" | "ANONYMOUS";
+            /** @description F4.3: equilibrium terms, present only when engine is "model". */
+            model: components["schemas"]["RecommendationModelBreakdownDto"] | null;
             /** @description Learning sample count, if available. */
             samples: number | null;
             /**
-             * @description Snapshot schema version.
-             * @example 1
+             * @description Snapshot schema version (2 since F4.3).
+             * @example 2
              */
             version: number;
-            /** @description Weighted external temperature used by the curve, in °C. */
-            weightedExternalTemp: number;
+            /** @description Weighted external temperature used by the curve, in °C. null for engine "model". */
+            weightedExternalTemp: number | null;
+        };
+        RecommendationModelBreakdownDto: {
+            /** @description Daily gain u_day actually applied, in °C (0 when disabled). */
+            dayGainC: number;
+            /** @description Equilibrium flow before the controller, in °C. */
+            equilibriumFlowC: number | null;
+            /** @description Internal gains c, in °C equivalent. */
+            internalGainC: number;
+            /** @description Reference outdoor temperature, in °C. */
+            outdoorRefC: number | null;
+            /**
+             * @description Whether the reference is night only or night+day blend.
+             * @enum {string|null}
+             */
+            outdoorRefSource: "NIGHT" | "NIGHT_DAY_BLEND" | null;
+            /** @description Why the equilibrium flow is null or bounded (NO_NIGHT, NO_SLOPE, …). */
+            reasons: string[];
+            /** @description House slope s. */
+            slopeS: number | null;
+            /**
+             * @description Which slope was used — CI high bound while the model is young.
+             * @enum {string|null}
+             */
+            slopeSource: "CI_HIGH" | "POINT" | null;
         };
         RecommendationResponseDto: {
             /** @description Additive FE2-10 explanation snapshot. Null for recommendations created before the snapshot column existed. */

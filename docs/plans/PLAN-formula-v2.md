@@ -81,6 +81,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
@@ -385,8 +386,8 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 |---|---|---|---|
 | F4.1 | **✓ urađeno** — `PROPOSAL_ENGINE=curve\|model` (env), default `curve` dok F1–F3 ne prođu | `daily-record.writer.ts` | oba puta pokrivena testom |
 | F4.2 | Model put: `proposedFlowTemp = decideProposal(...)` umjesto `FlowTemperatureEngine.calculate` | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
-| F4.3 | `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
-| F4.4 | Kad je `engine='model'`, `baseCurveTemp` **nije** izmišljen — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
+| F4.3 | **✓ urađeno (backend)** — `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
+| F4.4 | **✓ urađeno (ugovor)** — `baseCurveTemp` je `null` kad je `engine='model'`; ekran (web+mobile) ostaje | — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
 | F4.5 | `/boiler/sync` (`calculateFlowTemp`) i `ThermostatPoll` prestaju zvati krivu; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
 | F4.6 | `HeatingRecommendationService` prestaje pisati `Recommendation` (ostaje samo `intervalLearning`) ili se gasi | `heating.recommendation.service.ts:161` | test: jedan pisac `Recommendation` redova |
 | F4.7 | Brisanje `Heating/engine` i `Heating/strategies` + njihovih testova | — | `grep` vraća 0 hitova; suite zelen |
@@ -1387,3 +1388,42 @@ predlog za danas je važniji od konfiguracije, a izbor je već siguran.
 najvažniji provjerava da tipfeler ne prođe tiho, i da `writer` zaista čita
 prekidač i upisuje `engine` u `params` (dva testa čitaju izvor, jer bi inače
 prekidač mogao postojati a ne biti spojen).
+
+### 10.22 F4.3/F4.4 — breakdown nosi motor, kriva je `null` a ne `0`
+
+**Zašto verzija 2, a ne polja bez verzije.** Breakdown je jedini dio ugovora koji
+klijent čita da **objasni** broj. Ako polja rastu a `version` stoji, klijent ne
+može reći „ovo je stari snimak" i mora pogađati po prisustvu polja. Zato `2`,
+a stari redovi ostaju čitljivi jer su polja aditivna.
+
+**`engine: null` nije isto što `engine: 'curve'`.** Red zapisan prije F4.3 nije
+tvrdio koji ga je motor dao. Upisati `'curve'` značilo bi izmisliti podatak o
+prošlosti — a upravo se ta prošlost poredi u F3.7.
+
+**F4.4 — `null`, ne `0`.** Ovo je najveći rizik u planu jer dira ekran. `0` bi
+klijentu dao „0,00 °C" i to bi izgledalo kao kvar, a ne kao „ovaj put nema
+krive". Zato `baseCurveTemp`, `weightedExternalTemp` i `appliedOffsets` postaju
+`null` kad je motor `model`, a `model` nosi članove izraza.
+
+**Zašto odvojen objekat `model`.** Šest polja razbacano po breakdown-u znači da
+klijent provjerava šest stvari na `null`. Jedan objekat znači jednu provjeru:
+`model !== null` ⇒ prikaži model.
+
+**`finalTemp` i `confidence` se ne mijenjaju zbog motora.** Breakdown je
+**snimak**, ne proračun. Test to zaključava — inače bi „popravljanje" breakdown-a
+moglo tiho promijeniti broj koji korisnik vidi.
+
+**Ugovor je regenerisan i provjeren.** Lokalno nema generisanog Prisma klijenta,
+pa je za generisanje korišten privremeni stub u `src/generated/prisma`
+(u `.gitignore`, nije ušao u commit). Prije commita: `openapi:generate -- --check`
+exit 0 i `openapi-schema.spec.ts` 27/27. Diff ugovora sadrži **samo** F4.3
+izmjene.
+
+**Testovi:** breakdown 7 (3 stara ažurirana + 4 nova), write-sites 3,
+openapi-schema 27. Zaključan je tačan skup ključeva — aditivno ne znači „bilo
+šta smije ući".
+
+**Šta još nije urađeno i zašto.** `RecommendationBreakdown.tsx` (web i mobile)
+još ne prikazuje model. `baseCurveTemp: null` prolazi kroz tipove (F4.4 je
+ugovor), ali ekran treba izmjenu da bi prikazao „model" umjesto praznine — to je
+zadatak za web/mobile granu, ne za backend.

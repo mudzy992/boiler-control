@@ -10,7 +10,9 @@ beforeAll(async () => {
 });
 
 const breakdown: RecommendationBreakdownData = {
-  version: 1,
+  version: 2,
+  engine: 'curve',
+  model: null,
   mode: 'FULL',
   intervalKey: 'weekday_morning',
   baseCurveTemp: 51.2,
@@ -77,5 +79,58 @@ describe('FE2-10 RecommendationBreakdown', () => {
     expect(
       screen.queryByText('Expected heat-up time'),
     ).not.toBeInTheDocument();
+  });
+
+  /**
+   * F4.4 — najvažniji test u ovoj izmjeni.
+   *
+   * Modelski put nema krivu. Ako ekran prikaže „0.0°C", korisnik to čita kao
+   * kvar grijanja, a ne kao „ovaj put preporuku daje model". Zato se traži
+   * odsustvo nule, a ne prisustvo crtice: formatiranje se može promijeniti,
+   * ali izmišljena nula ne smije nikad.
+   */
+  it('modelski put ne prikazuje krivu i nikad izmišljenu nulu', () => {
+    render(
+      <RecommendationBreakdown
+        breakdown={{
+          ...breakdown,
+          engine: 'model',
+          baseCurveTemp: null,
+          weightedExternalTemp: null,
+          appliedOffsets: null,
+          model: {
+            slopeS: 0.94,
+            slopeSource: 'CI_HIGH',
+            internalGainC: 1.02,
+            dayGainC: 0,
+            outdoorRefC: -3.4,
+            outdoorRefSource: 'NIGHT_DAY_BLEND',
+            equilibriumFlowC: 44.04,
+            reasons: [],
+          },
+        }}
+      />,
+    );
+
+    // Redovi krive nestaju — nema ih sa crticom, nema ih uopšte.
+    expect(screen.queryByText('Base curve')).toBeNull();
+    expect(screen.queryByText('Weighted external temperature')).toBeNull();
+    expect(screen.queryByText('Home profile correction')).toBeNull();
+
+    // Nema nijedne izmišljene nule.
+    expect(screen.queryByText('0.0°C')).toBeNull();
+    expect(screen.queryByText('+0.00°C')).toBeNull();
+
+    // A ono što je broj zaista dalo — jeste tu.
+    expect(screen.getByText('44.0°C')).toBeTruthy();
+    expect(screen.getByText(/0.94/)).toBeTruthy();
+  });
+
+  it('stari red bez engine (null) prikazuje krivu kao i prije', () => {
+    // Redovi zapisani prije F4.3 nemaju `engine`. Ne smiju nestati sa ekrana:
+    // `null` znači „ne zna se koji motor", ne „model".
+    render(<RecommendationBreakdown breakdown={{ ...breakdown, engine: null }} />);
+    expect(screen.getByText('Base curve')).toBeTruthy();
+    expect(screen.getByText('51.2°C')).toBeTruthy();
   });
 });

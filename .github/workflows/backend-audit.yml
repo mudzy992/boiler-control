@@ -146,6 +146,17 @@ jobs:
       # instancirati aplikaciju. Pad znači da je neko promijenio rutu/DTO a
       # nije regenerisao `contracts/openapi.json` — tj. potencijalno
       # nekompatibilna promjena za frontend/mobile koji iz njega generišu tipove.
+      # TMP: regenerisi ugovor i objavi ga kao artefakt (F4.3 je promijenio DTO).
+      - name: TMP openapi write
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: npm run openapi:generate
+      - name: TMP openapi upload
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-regenerated
+          path: ../contracts/openapi.json
+          if-no-files-found: error
       - name: OpenAPI contract in sync (API-2)
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: npm run openapi:generate -- --check

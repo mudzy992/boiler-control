@@ -18,9 +18,83 @@ export class RecommendationAppliedOffsetsDto {
  * FE2-10: structured explanation snapshot persisted with new recommendations.
  * Old rows may have `breakdown: null`; clients must not reconstruct the formula.
  */
+/**
+ * F4.3 — članovi ravnotežnog izraza, kad je motor `model`.
+ *
+ * Namjerno odvojen objekat, a ne polja razbacana po breakdown-u: klijent tada
+ * može prikazati model **ako postoji** (`model !== null`), bez provjere šest
+ * pojedinačnih polja na `null`.
+ */
+export class RecommendationModelBreakdownDto {
+  @ApiProperty({ type: Number, nullable: true, description: 'House slope s.' })
+  slopeS!: number | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    enum: ['CI_HIGH', 'POINT'],
+    description: 'Which slope was used — CI high bound while the model is young.',
+  })
+  slopeSource!: 'CI_HIGH' | 'POINT' | null;
+
+  @ApiProperty({ description: 'Internal gains c, in °C equivalent.' })
+  internalGainC!: number;
+
+  @ApiProperty({
+    description: 'Daily gain u_day actually applied, in °C (0 when disabled).',
+  })
+  dayGainC!: number;
+
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description: 'Reference outdoor temperature, in °C.',
+  })
+  outdoorRefC!: number | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    enum: ['NIGHT', 'NIGHT_DAY_BLEND'],
+    description: 'Whether the reference is night only or night+day blend.',
+  })
+  outdoorRefSource!: 'NIGHT' | 'NIGHT_DAY_BLEND' | null;
+
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description: 'Equilibrium flow before the controller, in °C.',
+  })
+  equilibriumFlowC!: number | null;
+
+  @ApiProperty({
+    type: [String],
+    description: 'Why the equilibrium flow is null or bounded (NO_NIGHT, NO_SLOPE, …).',
+  })
+  reasons!: string[];
+}
+
 export class RecommendationBreakdownDto {
-  @ApiProperty({ description: 'Snapshot schema version.', example: 1 })
+  @ApiProperty({ description: 'Snapshot schema version (2 since F4.3).', example: 2 })
   version!: number;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    enum: ['curve', 'model'],
+    description:
+      'F4.3: which engine produced finalTemp. null for rows written before F4.3 — ' +
+      'an old row does not claim an engine it never recorded.',
+  })
+  engine!: 'curve' | 'model' | null;
+
+  @ApiProperty({
+    type: () => RecommendationModelBreakdownDto,
+    nullable: true,
+    description:
+      'F4.3: equilibrium terms, present only when engine is "model".',
+  })
+  model!: RecommendationModelBreakdownDto | null;
 
   @ApiProperty({
     description: 'Engine mode used for the recommendation.',
@@ -35,16 +109,26 @@ export class RecommendationBreakdownDto {
   })
   intervalKey!: string | null;
 
-  @ApiProperty({ description: 'Base heating-curve temperature, in °C.' })
-  baseCurveTemp!: number;
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description:
+      'Base heating-curve temperature, in °C. null when engine is "model" — ' +
+      'there is no curve in that path. A number would be invented; 0 would ' +
+      'render as "0.00 °C" on clients.',
+  })
+  baseCurveTemp!: number | null;
 
   @ApiProperty({
-    description: 'Weighted external temperature used by the curve, in °C.',
+    type: Number,
+    nullable: true,
+    description:
+      'Weighted external temperature used by the curve, in °C. null for engine "model".',
   })
-  weightedExternalTemp!: number;
+  weightedExternalTemp!: number | null;
 
-  @ApiProperty({ type: () => RecommendationAppliedOffsetsDto })
-  appliedOffsets!: RecommendationAppliedOffsetsDto;
+  @ApiProperty({ type: () => RecommendationAppliedOffsetsDto, nullable: true })
+  appliedOffsets!: RecommendationAppliedOffsetsDto | null;
 
   @ApiProperty({ description: 'Final recommended flow temperature, in °C.' })
   finalTemp!: number;

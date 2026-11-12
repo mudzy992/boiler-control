@@ -395,7 +395,7 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 | F4.5 | **✓ kod** — `resolveDailyFlow`; `/boiler/sync` i polling vraćaju zapisani predlog (mjereno 10/27 prije izmjene) |; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
 | F4.6 | `HeatingRecommendationService` prestaje pisati `Recommendation` (ostaje samo `intervalLearning`) ili se gasi | `heating.recommendation.service.ts:161` | test: jedan pisac `Recommendation` redova |
 | F4.7 | Brisanje `Heating/engine` i `Heating/strategies` + njihovih testova | — | `grep` vraća 0 hitova; suite zelen |
-| F4.8 | `minHeatingFlowC` default se usklađuje sa modelom (sada 46 iz krive) | `flow-range.ts` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
+| F4.8 | **✓ kod** — granica unosa = fizički pod (30), ne pod krive (46); mjereno `MODEL_BELOW_OLD_FLOOR` 1/1, 13,1 K (§10.27) | `flow-range.ts:SYSTEM_MIN_CURRENT_FLOW_TEMP` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
 
 **Rizik (najveći u cijelom planu):** F4.4 mijenja ono što korisnik vidi.
 `baseCurveTemp` je danas uvijek broj; `null` traži izmjenu na webu **i** mobilnom,
@@ -1625,3 +1625,58 @@ zbog refaktora, a ne zbog razilaženja s kodom.
 bez noćne prognoze ostaje 45 uz `engine=curve`; zadano `curve` **ne poziva**
 prikupljanje), `proposal-decision` 7, `DailyRecord` **397/397**, `tsc` 0,
 `eslint` 0, `FORMULA.md` gejt: 22 konstante.
+
+### 10.27 F4.8 — granica unosa nije smjela biti granica krive
+
+**Nalaz prije izmjene.** Zadana donja granica unosa bila je
+`SYSTEM_MIN_FLOW_C = 46` — granica **krive**. Bilo je tačno dok je kriva jedini
+računač. Model daje niže; za tipičnu kuću (`s = 0,9`, `c = 1 K`, cilj
+22 °C) izmjereno na `equilibrium-flow.ts`:
+
+| noćna temp | `F_eq` |
+|---|---|
+| +5 °C | **34,7 °C** |
+| 0 °C | 39,2 °C |
+| −5 °C | 43,7 °C |
+| −10 °C | 48,2 °C |
+| −15 °C | 52,7 °C |
+
+Unos zaključan na 46 pri noći na +5 °C znači da korisnik **ne može
+prihvatiti vlastiti predlog**. To je ista greška kao „zadano 48 vs. predlog
+47,7“ iz `F13`, samo dublje: 34,7 prema 46 je **11,3 K**.
+
+**Šta se mijenja, a šta ne.** `SYSTEM_MIN_CURRENT_FLOW_TEMP` postaje
+`ABSOLUTE_MIN_FLOW_C` (30) — fizički pod. Mijenja se **samo ono što korisnik
+smije upisati**. Motor i dalje klampuje svoj izlaz na 46–55; garant „raspon ne
+dira motor“ postoji i ostaje zelen. `SYSTEM_MIN_FLOW_C` ostaje dostupan
+(re-export) jer je i dalje granica **motora**, drugi pojam od granice **unosa**
+— i to je razlika koju je F4.8 otkrio: dva broja su izgledala kao jedan.
+
+**Mjerenje je prvo dalo nulu, i nula je bila pogrešno pročitana.**
+`flow-floor-gap-readonly.cjs`, run `43285799640`: **56 predloga, 0 ispod 46 °C**.
+Izgledalo je kao „nema problema“. Nije: do F4.8 su predloge dale kriva i
+kontroler, a oba su klampovana na 46. Izmjereno na motoru — noć +15 °C daje
+**tačno 46,0** — dakle kriva **ne može** dati ispod 46 ni teoretski. Brojanje
+zatečenih predloga zato mjeri **klamp, ne problem**. Presuda je preimenovana u
+`NONE_BELOW_BY_CLAMP` i sada izričito kaže da F4.8 time nije zatvoren.
+
+**Prava mjera je preračun, ne brojanje.** `model-floor-gap-readonly.cjs`
+računa `F_eq` na **istim ulazima** koje zapis nosi
+(`params.input.forecast.nightMinC`/`dayMaxC`) — ne na današnjoj prognozi, koja
+se od tada promijenila. Run `43287531318`:
+
+- `MODEL_BELOW_OLD_FLOOR`: **1/1** dana sa ulazima, `F_eq` **32,9 °C**,
+  **13,1 K** ispod stare granice, **0** ispod novog poda (30).
+- Pokrivenost uzorka: **1 dan od 56** — ostali nemaju zapisanu noćnu prognozu.
+  Zato je nalaz **smjer, ne udio**, i izlaz to sada ispisuje uz upozorenje.
+- Referentni nagib je **imenovan u izlazu** (`s = 0,9`, `c = 1 K`): model kuće
+  nije u `params`, pa je broj donja granica reda veličine, ne broj po danu.
+
+**Dvije greške u izvještavanju, obje uhvaćene, obje popravljene.** Prva verzija
+je brojala „ispod granice“ samo kao „ispod 30“, pa bi 34,7 — ključni slučaj
+F4.8 — ostalo **neizbrojano**; self-test je to uhvatio. Isto je ostalo u
+`ratio`, koje je uz 1/1 ispod granice ispisalo **0,0 %**; popravljeno i
+pokriveno testom. Self-test: **15/15**.
+
+**Testovi:** `boiler-flow-range` 20/20 (+1: modelski predlog od 34,7 prolazi
+kroz **zadani** raspon), `Boiler`+`BoilerCatalog` 60/60, `tsc` 0, `eslint` 0.

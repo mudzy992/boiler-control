@@ -277,6 +277,40 @@ jobs:
           fi
           exit "$result"
 
+      # F3.4: greska prognoze noci — nightMinC vs nightMinOutdoorMeasuredC.
+      # Prvo bez baze: ako statistika padne na sintetici, to se mora vidjeti
+      # prije konekcije (inace izgleda kao problem baze).
+      - name: Forecast error self-test (F3.4)
+        run: node scripts/forecast-error-readonly.cjs --self-test
+
+      - name: Forecast error (F3.4, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/forecast-error-readonly.cjs
+          result=$?
+          if [ "$result" -ne 0 ]; then
+            echo "::error title=F3.4 forecast::skripta je pala (exit $result) — uzrok je u logu koraka."
+          fi
+          exit "$result"
+
+      # F3.5: saturacija — koliko dana predlog i kotao rade na granici.
+      - name: Saturation self-test (F3.5)
+        run: node scripts/saturation-readonly.cjs --self-test
+
+      - name: Saturation (F3.5, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/saturation-readonly.cjs
+          result=$?
+          if [ "$result" -ne 0 ]; then
+            echo "::error title=F3.5 saturation::skripta je pala (exit $result) — uzrok je u logu koraka."
+          fi
+          exit "$result"
+
       # Dry-run: ista logika koja bi i upisivala, ali bez upisa. Ovdje se vidi
       # koliko bi redova nastalo i od kojih izvora, prije nego se odluči.
       - name: Backfill daily records (dry-run, read-only)

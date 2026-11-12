@@ -81,6 +81,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
@@ -382,7 +383,7 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 
 | # | Posao | Gdje | Mjera |
 |---|---|---|---|
-| F4.1 | `PROPOSAL_ENGINE=curve\|model` (env), default `curve` dok F1–F3 ne prođu | `daily-record.writer.ts` | oba puta pokrivena testom |
+| F4.1 | **✓ urađeno** — `PROPOSAL_ENGINE=curve\|model` (env), default `curve` dok F1–F3 ne prođu | `daily-record.writer.ts` | oba puta pokrivena testom |
 | F4.2 | Model put: `proposedFlowTemp = decideProposal(...)` umjesto `FlowTemperatureEngine.calculate` | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
 | F4.3 | `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
 | F4.4 | Kad je `engine='model'`, `baseCurveTemp` **nije** izmišljen — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
@@ -1355,3 +1356,34 @@ izvora.
 **Usput.** `LoadedHome` nije imao `minHeatingFlowC`/`maxHeatingFlowC`, iako ih
 `include: { user: true }` učitava. Tip ih je prećutkivao — dodati su, jer bez
 njih granica doma nije mogla ni da se imenuje.
+
+### 10.21 F4.1 — prekidač `PROPOSAL_ENGINE` (zadano `curve`)
+
+**Zašto prekidač prije ijedne promjene ponašanja.** Prelazak na model dira ono
+što korisnik vidi. Bez prekidača bi rollback značio novo izdanje **i** pitanje
+šta je u međuvremenu upisano u bazu — a `DailyRecord` bi već nosio predloge iz
+modelskog puta. Sa prekidačem se vraća jednom riječju u okruženju, a redovi
+ostaju uporedivi jer svaki nosi `params.engine`.
+
+**Zadano je `curve`**, dakle deploy ne mijenja ništa. To nije stidljivost nego
+uslov: dok F3.1 ne izmjeri pokrivenost intervala pouzdanosti, model nije
+provjeren na stvarnim podacima.
+
+**Tipfeler se odbija, ne ignorše.** `PROPOSAL_ENGINE=modl` **ne** pada tiho na
+`curve` — vraća `problem`, writer ga loguje, a vrijednost ostaje sigurna.
+Razlika je bitna: tiho ignorisan tipfeler znači da čovjek misli da je model
+pušten, a razlika se vidi tek na računu za gas mjesec dana kasnije. Zato
+`true`/`1`/`on` **nijesu** prihvaćeni kao `model`, iako prekidač izgleda kao
+bulov.
+
+**Ime `PROPOSAL_ENGINE`, ne `FORMULA`.** „Formula" je u ovom projektu korištena
+za staru krivu *i* za novi izraz — ime okruženja bilo bi dvosmisleno. „Engine"
+imenuje mjesto u kodu (`FlowTemperatureEngine`), ne matematiku.
+
+**Prekid se ne dešava.** Ako je vrijednost neispravna, predlog se **ne** obara:
+predlog za danas je važniji od konfiguracije, a izbor je već siguran.
+
+**Testovi** (`proposal-engine.spec.ts`, 9). Nijedan ne provjerava samo čitanje —
+najvažniji provjerava da tipfeler ne prođe tiho, i da `writer` zaista čita
+prekidač i upisuje `engine` u `params` (dva testa čitaju izvor, jer bi inače
+prekidač mogao postojati a ne biti spojen).

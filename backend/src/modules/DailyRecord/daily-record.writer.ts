@@ -4,6 +4,7 @@ import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine
 import type { FlowTempInput } from '../Heating/engine/types';
 import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
 import { describeFlowClamp } from './clamp-log';
+import { resolveProposalEngine } from './proposal-engine';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 import type { DailyWeatherInput } from '../Weather/daily-weather-input';
 import {
@@ -405,6 +406,20 @@ export class DailyRecordWriter {
       weather: { tempMin: weather.tempMin, tempMax: weather.tempMax },
     };
 
+    // F4.1: koji motor proizvodi predlog. Zadano je `curve` — dakle ovaj
+    // prekidač **ne mijenja ponašanje** dok se ne postavi drugačije.
+    //
+    // Zašto prekidač, a ne izdanje: prelazak na model dira ono što korisnik
+    // vidi, pa mora moći da se vrati jednom riječju u okruženju, bez rollbacka
+    // baze (koja bi u međuvremenu dobila predloge iz modelskog puta).
+    const engineChoice = resolveProposalEngine();
+    if (engineChoice.problem) {
+      // Ne pada se: predlog za danas je važniji od konfiguracije, a izbor je
+      // već siguran (zadano = staro ponašanje). Ali se vidi u logu, jer bi
+      // tiho ignorisan tipfeler izgledao kao „model je pušten".
+      this.logger.warn(`Kuća ${home.id}: ${engineChoice.problem}`);
+    }
+
     const result = FlowTemperatureEngine.calculate(input);
     const proposedFlowTemp = clampFlowTemp(result.finalTemp);
 
@@ -440,6 +455,9 @@ export class DailyRecordWriter {
     // (`17` §11, "reproducibilnost"). Bez ovoga je zapis tvrdnja bez dokaza.
     const params = jsonSnapshot({
       version: 1,
+      // F4.1: motor ide u zapis. Bez toga se poslije ne može reći koji je put
+      // dao broj, a upravo se dva puta upoređuju (F3.7).
+      engine: engineChoice.engine,
       timeZone: context.timeZone,
       timeZoneSource: context.timeZoneSource,
       input: {

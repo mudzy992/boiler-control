@@ -81,6 +81,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
@@ -389,7 +390,7 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 | F4.2 | Model put: `proposedFlowTemp = decideProposal(...)` umjesto `FlowTemperatureEngine.calculate` | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
 | F4.3 | **✓ urađeno (backend)** — `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
 | F4.4 | **✓ urađeno (ugovor)** — `baseCurveTemp` je `null` kad je `engine='model'`; ekran (web+mobile) ostaje | — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
-| F4.5 | **mjereno** (10/27 kuća-dana vidljivo, max 2,76 K) — `/boiler/sync` (`calculateFlowTemp`) i `ThermostatPoll` prestaju zvati krivu; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
+| F4.5 | **✓ kod** — `resolveDailyFlow`; `/boiler/sync` i polling vraćaju zapisani predlog (mjereno 10/27 prije izmjene) |; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
 | F4.6 | `HeatingRecommendationService` prestaje pisati `Recommendation` (ostaje samo `intervalLearning`) ili se gasi | `heating.recommendation.service.ts:161` | test: jedan pisac `Recommendation` redova |
 | F4.7 | Brisanje `Heating/engine` i `Heating/strategies` + njihovih testova | — | `grep` vraća 0 hitova; suite zelen |
 | F4.8 | `minHeatingFlowC` default se usklađuje sa modelom (sada 46 iz krive) | `flow-range.ts` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
@@ -1501,3 +1502,41 @@ treba da preusmjeri na zapisani `DailyRecord`.
 
 **Mjerenje ostaje u CI-ju** (`baseline` job, `workflow_dispatch`), da se poslije
 F4.5 može ponoviti istim brojevima i uporediti.
+
+### 10.24 F4.5 — izmjena koda: jedan broj za dan
+
+**Mjerenje je pokazalo problem, ne uzrok.** Oscilacija (10/27 kuća-dana,
+max 2,76 K) nije dolazila iz `anchorDailyFlow` — on od F14 već čuva jutarnji
+broj. Dolazila je iz `BoilerService.calculateFlowTemp`, koji **računa iznova**
+na svakom pozivu, a njegov broj ide na kotao (`/boiler/sync`) i u
+`BoilerHistory` (polling).
+
+**Rješenje je jedna čista funkcija, `resolveDailyFlow`** (`daily-flow.ts`), bez
+baze i sata. Pravilo „jedan broj za dan" mora važiti na **svakom** mjestu koje
+broj predlaže; da je metoda na jednom servisu, drugo mjesto bi imalo svoju
+kopiju — a dvije kopije istog pravila se raziđu prvom izmjenom.
+
+**Pravilo, po redu:**
+1. Zapisani predlog važi bez obzira koliko formula odstupa. Drift se **i dalje
+   mjeri** — bez toga bi se izgubio podatak iza cijelog F4.5 mjerenja.
+2. Dokaz (izmjeren manjak) je **jedini** razlog da broj ode gore. Spuštanje
+   usred dana nije dozvoljeno ni sa dokazom.
+3. `outcomeAt == null` **nije** dokaz nule: „nije se još mjerilo" ≠ „izmjereno
+   je 0". Da se to pomiješa, manjak nikad ne bi podigao broj.
+4. Nema zapisa ⇒ motorov broj, i to se **kaže** (`CURVE`) — ne tvrdi se da je
+   jutro potvrdilo formulu.
+
+**`calculateFlowTemp` sada vraća i `flowSource` i `curveFlowTemp`.** `flowTemp`
+je broj koji ide na kotao; `curveFlowTemp` je ono što motor računa sada. Bez
+drugog polja se ne može reći je li se formula razišla s predlogom.
+
+**Posljedica koju je uhvatio test, ne čitanje koda.** Dashboard je čitao
+`formula.flowTemp` kao `currentFlowC`. Od F4.5 bi to bio **zapisani predlog**,
+pa bi `formulaDriftC` uvijek bio 0 i mjerenje bi tiho nestalo. Sada čita
+`curveFlowTemp`. Da test nije pisan prije spajanja, ovo bi prošlo CI zeleno i
+tek bi sljedeće mjerenje pokazalo nulu bez uzroka.
+
+**Zašto mjerenje ostaje.** Ponoviti istu skriptu poslije izmjene i uporediti
+brojeve: prije `OSCILLATION_VISIBLE` (10/27, max 2,76 K), poslije se očekuje
+`STABLE` ili `OSCILLATION_INVISIBLE`. Ako se ne promijeni, uzrok je drugdje i
+to je nalaz, ne neuspjeh.

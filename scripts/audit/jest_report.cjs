@@ -44,6 +44,17 @@ try {
     }
     const location = text.match(/(?:test|src)\/[\w./-]+\.spec\.ts:\d+:\d+/);
     if (location) hints.push(location[0]);
+    /*
+     * `SHEET_DIAG[...]`: stanje ekrana koje test sam opiše kad padne. Sadržaj
+     * dolazi iz testID-ova i placeholder-a, tj. iz imena u kodu, ne iz
+     * korisničkih podataka — ali se i ovdje propušta kroz allowlist znakova,
+     * da anotacija ne može prenijeti ništa drugo.
+     */
+    const sheetDiag = text.match(/SHEET_DIAG\[([^\]\r\n]{0,300})\]/);
+    if (sheetDiag) {
+      const clean = sheetDiag[1].replace(/[^\w|=;.\-]/g, '');
+      if (clean) hints.push(`SHEET_DIAG[${clean}]`);
+    }
     const prop = text.match(/Cannot read properties of (undefined|null) \(reading ['"]([\w]+)['"]\)/);
     if (prop) hints.push(`Cannot read ${prop[2]} of ${prop[1]}`);
     return [...new Set(hints)].slice(0, 6).join('; ');

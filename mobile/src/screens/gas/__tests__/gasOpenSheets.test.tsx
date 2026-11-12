@@ -141,12 +141,19 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
       const placeholder = (tree.match(/"placeholder":"([^"]*)"/g) ?? []).map(
         (hit) => hit.slice(15, -1),
       );
+      /*
+       * Marker je namjerno u jednom redu i sa fiksnim imenom: `jest_report.cjs`
+       * ga izvlači u GitHub anotaciju. Artefakti i logovi se u ovom okruženju
+       * ne mogu preuzeti (`blob.core.windows.net` je blokiran), pa je anotacija
+       * jedini kanal koji stvarno stiže — a bez nje je svaki pad isti: „unable
+       * to find placeholder".
+       */
       throw new Error(
         [
-          String((error as Error)?.message ?? error).slice(0, 300),
-          `testID: ${testIds.slice(0, 12).join(',') || '(nijedan)'}`,
-          `placeholder: ${placeholder.slice(0, 6).join(',') || '(nijedan)'}`,
-          `stablo: ${tree.length} B`,
+          String((error as Error)?.message ?? error).slice(0, 200),
+          `SHEET_DIAG[testID=${testIds.slice(0, 10).join('|') || '-'}` +
+            `;placeholder=${placeholder.slice(0, 5).join('|') || '-'}` +
+            `;treeBytes=${tree.length}]`,
         ].join(' | '),
       );
     }

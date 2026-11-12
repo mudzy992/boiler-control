@@ -247,7 +247,17 @@ jobs:
       - name: Shadow vs. predlog (F3.7, read-only)
         env:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
-        run: node scripts/shadow-report-readonly.cjs
+        run: |
+          set +e
+          node scripts/shadow-report-readonly.cjs
+          result=$?
+          # Anotacije u ovom repou nose samo prvih ~8 linija koraka, a `pg`
+          # greške su višelinijske — pa se neprijavljeni pad pretvara u
+          # pogađanje. Jedna linija je dovoljna da se uzrok imenuje.
+          if [ "$result" -ne 0 ]; then
+            echo "::error title=F3.7 shadow::skripta je pala (exit $result) — uzrok je u logu koraka."
+          fi
+          exit "$result"
 
       # Dry-run: ista logika koja bi i upisivala, ali bez upisa. Ovdje se vidi
       # koliko bi redova nastalo i od kojih izvora, prije nego se odluči.

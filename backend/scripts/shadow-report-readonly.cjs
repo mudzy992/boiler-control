@@ -145,9 +145,23 @@ async function main() {
   await client.connect();
 
   try {
-    await client.query('SET TRANSACTION READ ONLY');
+    /*
+     * Read-only se proglašava **unutar** transakcije: `SET TRANSACTION` van
+     * `BEGIN`-a baca `SET TRANSACTION can only be used in transaction blocks`.
+     * Prvi run je pao tačno na tome, a anotacije nijesu rekle uzrok.
+     */
     await client.query('BEGIN');
+    await client.query('SET TRANSACTION READ ONLY');
 
+    /*
+     * `localDate` je `VARCHAR(10)`, ne `DATE` (namjerno — v. komentar u šemi:
+     * `DATE` bi se kroz UTC pomjerio). Zato se poredi kao **tekst**, a `from`
+     * ide kao parametar tipa text. Prvi pokušaj je koristio `$1::date` i
+     * Postgres je odbio `character varying >= date`.
+     *
+     * `YYYY-MM-DD` se leksikografski sortira isto kao hronološki, pa je
+     * poređenje tekstom tačno za ovaj format.
+     */
     const { rows } = await client.query(
       `SELECT "localDate",
               "proposedFlowTemp",
@@ -159,7 +173,7 @@ async function main() {
               "shadowAt",
               "modelVersion"
          FROM "DailyRecord"
-        WHERE $1::date IS NULL OR "localDate" >= $1
+        WHERE $1::text IS NULL OR "localDate" >= $1::text
         ORDER BY "localDate"`,
       [from],
     );

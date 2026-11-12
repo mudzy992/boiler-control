@@ -52,6 +52,9 @@ if (process.argv.includes('--help')) {
   console.log(`Upotreba: DATABASE_URL_READONLY=... node scripts/daily-flow-oscillation-readonly.cjs [opcije]
 
   --days=N         koliko dana unazad (zadano 60)
+  --since=YYYY-MM-DD
+                   mjeri samo od tog datuma (za ponovno mjerenje poslije
+                   deploya; bez toga prozor uvijek hvata i staro ponasanje)
   --json           mašinski čitljiv izlaz
   --self-test      provjeri klasifikaciju na sintetičkim danima, bez baze
   --help           ova poruka
@@ -66,6 +69,25 @@ function argValue(name, fallback) {
   if (!hit) return fallback;
   const value = Number(hit.slice(name.length + 3));
   return Number.isFinite(value) ? value : fallback;
+}
+
+/**
+ * Donja granica prozora.
+ *
+ * Bez ovoga ponovno mjerenje poslije F4.5 daje **iste brojeve** kao prije —
+ * jer prozor od 60 dana i dalje sadrži dane kad je stari kod radio. To nije
+ * dokaz da izmjena nije pomogla; to je dokaz da se mjerilo pogrešan prozor.
+ * Zato `--since`: mjeri se samo ono što je nastalo poslije deploya.
+ */
+function sinceDate() {
+  const hit = process.argv.find((a) => a.startsWith('--since='));
+  if (!hit) return null;
+  const raw = hit.slice('--since='.length).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    console.error(`--since mora biti YYYY-MM-DD, dobio sam "${raw}".`);
+    process.exit(2);
+  }
+  return raw;
 }
 
 /**
@@ -236,6 +258,10 @@ async function main() {
     return;
   }
 
+  // Validacija argumenata prije URL-a: pogrešan datum je greška u pozivu, a
+  // ne u okruženju — poruka mora reći to.
+  const since = sinceDate();
+
   const url = process.env.DATABASE_URL_READONLY;
   if (!url) {
     console.error(
@@ -280,12 +306,13 @@ async function main() {
            ROUND(b."suggestedTemp"::numeric, 2) AS "flow"
          FROM "BoilerHistory" b
          WHERE b."createdAt" >= CURRENT_DATE - ($1::int || ' days')::interval
+           AND ($2::date IS NULL OR b."createdAt" >= $2::date)
            AND b."suggestedTemp" IS NOT NULL
          GROUP BY 1, 2, 3
        ) d
        GROUP BY 1, 2
        ORDER BY 2 DESC, 1`,
-      [days],
+      [days, since],
     );
 
     await client.query('COMMIT');
@@ -297,7 +324,10 @@ async function main() {
       console.log(JSON.stringify({ summary, ...decision }, null, 2));
     } else {
       console.log('F4.5 — oscilacija polazne kroz dan');
-      console.log(`  prozor:                 ${days} dana`);
+      console.log(
+        `  prozor:                 ${days} dana` +
+          (since ? ` (od ${since})` : ''),
+      );
       console.log(`  kuća-dana:              ${summary.days}`);
       console.log(`  sa više vrijednosti:    ${summary.withMultiple}`);
       if (summary.ratio !== null) {

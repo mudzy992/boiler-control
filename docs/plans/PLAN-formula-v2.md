@@ -81,6 +81,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.5 | **kod urađen, gejt otvoren do deploya** — ponovljeno mjerenje mora ići sa `--since=<deploy>` | §10.25 |
 | F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
@@ -1540,3 +1541,32 @@ tek bi sljedeće mjerenje pokazalo nulu bez uzroka.
 brojeve: prije `OSCILLATION_VISIBLE` (10/27, max 2,76 K), poslije se očekuje
 `STABLE` ili `OSCILLATION_INVISIBLE`. Ako se ne promijeni, uzrok je drugdje i
 to je nalaz, ne neuspjeh.
+
+### 10.25 F4.5 — zašto ponovljeno mjerenje daje iste brojeve (i šta je pravi gejt)
+
+**Ponovljeno mjerenje poslije izmjene koda (run `43277288749`) dalo je
+identične brojeve:** 10/27 kuća-dana, max 2,76 K, prosjek 0,86 K.
+
+**To nije dokaz da izmjena nije pomogla — to je dokaz da se mjerio pogrešan
+prozor.** Mjerenje čita `BoilerHistory`, historiju, a prozor od 60 dana uvijek
+sadrži dane kad je stari kod radio. Isti ulaz ⇒ isti izlaz; ništa se nije
+promijenilo ni treba da se promijeni.
+
+**Zato je dodan `--since=YYYY-MM-DD`** (i ulaz `drift_since` u workflow-u).
+Mjerenje poslije deploya mora gledati **samo dane koji su nastali poslije**
+deploya. Bez toga bi se svako buduće mjerenje zauvijek vraćalo na iste brojeve
+i izgledalo kao da izmjena ne radi.
+
+**Gejt za F4.5 zato glasi, tačno:**
+- **prije** (run `43246164833`, cijeli prozor): `OSCILLATION_VISIBLE`,
+  10/27, max 2,76 K — stanje je izmjereno;
+- **poslije** (`--since=<datum deploya>`, prozor od najmanje 7 dana):
+  `STABLE` ili `OSCILLATION_INVISIBLE` — ako nije, uzrok je drugdje i **to je
+  nalaz**, ne neuspjeh;
+- mjerenje se ne izvršava lokalno, nego u `baseline` jobu, istim brojevima.
+
+**Zašto se gejt ne može zatvoriti danas.** Kod nije u produkciji, a historija se
+ne može prepisati — mjerenje je read-only i ne izmišlja podatke. Do deploya se
+može tvrditi samo: pravilo je u kodu (12 testova), spajanje je dokazano testom
+(motorovih 45 **ne** ide na kotao kad zapis kaže 48), i mjerenje je spremno da
+se ponovi istim brojevima.

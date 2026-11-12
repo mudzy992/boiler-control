@@ -26,6 +26,14 @@ on:
       # ne smiju dijeliti jednu odluku: `baseline=true` nikad ne piše, a
       # `backfill_apply=true` traži `DATABASE_URL_BACKFILL` i upisuje redove za
       # prošle dane. Prvo se u istom jobu ispiše dry-run, pa se upisuje.
+      # F4.5 ponovno mjerenje: mjeri samo od datuma deploya. Bez ovoga prozor
+      # od 60 dana uvijek sadrzi i dane kad je stari kod radio, pa ponovljeno
+      # mjerenje daje ISTE brojeve i ne dokazuje nista.
+      drift_since:
+        description: 'F4.5: mjeri oscilaciju samo od ovog datuma (YYYY-MM-DD)'
+        type: string
+        required: false
+        default: ''
       backfill_apply:
         description: 'UPIŠI rekonstruisane DailyRecord redove u produkciju'
         type: boolean
@@ -242,7 +250,11 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: |
           set +e
-          node scripts/daily-flow-oscillation-readonly.cjs > "$RUNNER_TEMP/osc.log" 2>&1
+          SINCE_ARG=""
+          if [ -n "${{ inputs.drift_since }}" ]; then
+            SINCE_ARG="--since=${{ inputs.drift_since }}"
+          fi
+          node scripts/daily-flow-oscillation-readonly.cjs $SINCE_ARG > "$RUNNER_TEMP/osc.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/osc.log"
           # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.

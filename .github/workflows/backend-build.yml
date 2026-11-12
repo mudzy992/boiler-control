@@ -249,7 +249,11 @@ jobs:
           grep -E "^  " "$RUNNER_TEMP/osc.log" \
             | while IFS= read -r line; do echo "::notice::F4.5$line"; done
           if [ "$code" -ne 0 ]; then
-            echo "::error::F4.5 mjerenje nije prošlo (exit $code)"
+            # Uzrok mora stici do anotacije: bez toga se vidi samo "nije
+            # proslo", a ne zasto — a upravo je uzrok nalaz.
+            echo "::error::F4.5 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/osc.log" \
+              | while IFS= read -r line; do echo "::error::F4.5 uzrok: $line"; done
           fi
 
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —

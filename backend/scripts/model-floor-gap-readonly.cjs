@@ -136,7 +136,12 @@ function summarize(rows) {
     valid,
     /** Koliko bi ih bilo ispod stare granice (46) — dakle blokirano. */
     belowOldFloor: buckets.BELOW_SYSTEM_FLOOR + buckets.BETWEEN_FLOORS,
-    ratio: valid === 0 ? null : buckets.BELOW_SYSTEM_FLOOR / valid,
+    // Ista greska kao `belowOldFloor` u prvoj verziji: udio mora biti udio
+    // SVEga ispod stare granice, a ne samo onoga ispod fizickog poda.
+    ratio:
+      valid === 0
+        ? null
+        : (buckets.BELOW_SYSTEM_FLOOR + buckets.BETWEEN_FLOORS) / valid,
     minC: allFlows.length ? Math.min(...allFlows) : null,
     maxC: allFlows.length ? Math.max(...allFlows) : null,
     /** Najveća razlika između stare granice i modelovog zahtjeva. */
@@ -262,6 +267,14 @@ async function runSelfTest() {
     console.log(`${ok ? 'OK  ' : 'FAIL'} classify(${value}) = ${got} (ocekivano ${expect})`);
   }
 
+  // Udio mora brojati i pojas 30-46, ne samo ispod 30.
+  const ratioCase = summarize([{ flowC: 34.7 }, { flowC: 50 }]);
+  const ratioOk = Math.abs(ratioCase.ratio - 0.5) < 1e-9;
+  if (!ratioOk) failed++;
+  console.log(
+    `${ratioOk ? 'OK  ' : 'FAIL'} udio ispod 46 = ${ratioCase.ratio} (ocekivano 0.5)`,
+  );
+
   if (failed > 0) {
     console.error(`\n${failed} slucajeva nije proslo.`);
     process.exit(1);
@@ -297,7 +310,12 @@ async function main() {
      * `->>` vraća `NULL` i za „nema ključa" i za JSON `null`; to je ovdje
      * ispravno: oba znače „nema noćne prognoze".
      */
-    const { rows } = await client.query(
+    /*
+   * Pokrivenost uzorka se mjeri odvojeno od nalaza. Mjereno run `43287531318`:
+   * 1 dan od 56 ima `params.input.forecast.nightMinC`. Ako se to prećuti,
+   * `1/1` izgleda kao da je mjerenje obuhvatilo 60 dana — a nije.
+   */
+  const { rows } = await client.query(
       `SELECT
          d."localDate" AS "localDate",
          (d.params->'input'->'forecast'->>'nightMinC')::float8 AS "nightMinC",
@@ -325,11 +343,24 @@ async function main() {
     const summary = summarize(computed);
     const decision = verdict(summary);
 
+    /*
+     * Upozorenje o pokrivenosti: nalaz vrijedi za dane sa ulazima, ne za
+     * prozor. `MODEL_BELOW_OLD_FLOOR` na 1 od 56 dana je **smjer**, ne udio —
+     * i izlaz to mora reći, inače se čita kao da je 100 % prozora.
+     */
+    const coverage = {
+      withInputs: summary.valid,
+      days: summary.days,
+      ratio: summary.days === 0 ? null : summary.valid / summary.days,
+      thin: summary.valid > 0 && summary.valid / Math.max(summary.days, 1) < 0.5,
+    };
+
     if (process.argv.includes('--json')) {
       console.log(
         JSON.stringify(
           {
             summary,
+            coverage,
             ...decision,
             reference: { slopeS: REF_SLOPE, internalGainC: REF_INTERNAL_GAIN_C, targetC: REF_TARGET_C },
             rows: computed.length,
@@ -359,7 +390,19 @@ async function main() {
         console.log(`  max razlika:             ${summary.maxGapK.toFixed(1)} K ispod granice`);
       }
       console.log(`  ispod ${NEW_FLOOR_C} °C (novi pod):  ${summary.belowSystemFloor}`);
+      if (coverage.ratio !== null) {
+        console.log(
+          `  pokrivenost uzorka:      ${coverage.withInputs}/${coverage.days} ` +
+            `(${(coverage.ratio * 100).toFixed(1)} % ima zapisanu nocnu prognozu)`,
+        );
+      }
       console.log(`\n  ${decision.verdict}: ${decision.reason}`);
+      if (coverage.thin) {
+        console.log(
+          `\n  PAZNJA: nalaz vrijedi za ${coverage.withInputs} dan(a), ne za cijeli ` +
+            `prozor od ${coverage.days}. To je SMJER, ne udio.`,
+        );
+      }
     }
   } finally {
     await client.end();

@@ -164,6 +164,52 @@ async function main() {
       }
     }
 
+    /*
+     * F3.6 / F5.2: ključevi po kojima učenje pamti.
+     *
+     * `intervalKey` se danas računa iz **serverskog** sata (`new Date()` u tri
+     * servisa) i formata `dayType_part`. Mjeri se koliko ključeva ima manje od
+     * 3 uzorka — jer ključ sa 2 uzorka nije učenje nego slučajnost — i koliko
+     * dana uopšte postoji. Bez ovog broja se format ključa ne smije mijenjati
+     * (F5.2), jer bi promjena razdvojila historiju na dva formata.
+     */
+    const learning = await soft(
+      'F3.6: ključevi učenja',
+      `SELECT "intervalKey",
+              count(*)::int                    AS days,
+              sum("samples")::int              AS samples,
+              min("samples")::int              AS min_samples,
+              round(avg("confidence")::numeric, 3) AS avg_confidence
+         FROM "HeatingIntervalLearning"
+        GROUP BY "intervalKey"
+        ORDER BY "intervalKey"`,
+    );
+    if (learning) {
+      out('## F3.6: ključevi učenja (`intervalKey`)');
+      out();
+      out('| ključ | redova | uzoraka | min uzoraka | prosj. confidence |');
+      out('|---|---|---|---|---|');
+      for (const row of learning) {
+        out(
+          `| \`${row.intervalKey}\` | ${row.days} | ${num(row.samples)} | ` +
+            `${row.min_samples} | ${num(row.avg_confidence, 3)} |`,
+        );
+      }
+      out();
+      const thin = learning.filter((row) => row.min_samples < 3);
+      const totalSamples = learning.reduce(
+        (sum, row) => sum + Number(row.samples ?? 0),
+        0,
+      );
+      notice(
+        `F3.6: ${learning.length} ključeva, ${totalSamples} uzoraka ukupno, ` +
+          `${thin.length} sa < 3 uzorka` +
+          (thin.length
+            ? ` (${thin.map((r) => `${r.intervalKey}=${r.min_samples}`).join(', ')})`
+            : ''),
+      );
+    }
+
     const night = await soft(
       'F2: noć u dnevnom zapisu (daily-2)',
       `SELECT count(*) AS days,

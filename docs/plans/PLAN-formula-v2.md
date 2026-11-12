@@ -756,6 +756,64 @@ zato što je zapis nastao u 06:00 lokalno, a noć je „minimalna temperatura u
 satima prije zore". Puna noć (`nightHoursUsed >= 8`) se očekuje za 11-13, jer
 tada satni niz pokriva cijelu noć između dva zapisa.
 
+### 10.8 F3.8 izmjereno — `DWELL` je odluka, `STEP_DOWN` preko 2 nema efekta
+
+`scripts/audit/controller_sensitivity.cjs` (novo) vrti grid 4 × 3 × 3 kuće,
+60 dana, kroz **iste** module koje koristi proizvod. Puni izvještaj:
+`docs/audit/F3.8-osjetljivost.md`.
+
+Mehanizam mjerenja bez kopije formule: `decideProposal` čita `STEP_UP_K`,
+`STEP_DOWN_K` i `DWELL_DAYS` iz svog modula pri svakom pozivu, pa
+`controller_sim.cjs --params=` zamijeni te vrijednosti za jedan prolaz. U
+proizvodni kod **nije** dodan prekidač — on ne treba proizvodu, treba mjerenju.
+
+| nalaz | broj |
+|---|---|
+| prekršaji granice komfora (1 K) ili tvrdih granica | **0** u svih 12 kombinacija × 3 kuće |
+| `DWELL=7` vs `DWELL=3`, ciklusa/dan (`light`/`medium`/`heavy`) | **39,6 / 19,5 / 11,3** vs 27,3 / 14,0 / 8,1 |
+| `DWELL=7` konačna polazna | +1,5 K na svakoj kući |
+| `STEP_DOWN` 2 i 3 | **identični** redovi na svakoj kući |
+| `STEP_DOWN=0,5` | najviše ciklusa (44,5 / 23,0 / 13,2 na dan) |
+
+**Zaključak:** `DWELL=3` (sadašnja vrijednost) je bolji od 7 na oba mjerenja —
+manje ciklusa i niža polazna. `STEP_DOWN>2` nema efekta jer se odluka skupi na
+ravnotežnu polaznu bez obzira na veličinu koraka; veličina koraka mijenja samo
+**koliko dana** treba. Dakle pragovi nijesu proizvoljni: `DWELL` je stvarna
+odluka, a `STEP_DOWN` je odluka samo između 0,5 i 2.
+
+Dvije pogrešne metrike na putu do ovoga — zapisane su u skripti, jer je pouka
+važnija od brojeva: prvo se mjerila samo konačna polazna (pa su 2 i 3 izgledali
+identično **zbog** toga, a ne uprkos), pa se 20-dnevni tranzijent proglasio
+nalazom. Sada se mjeri i dan dostizanja, uz marginalne tabele preko drugog
+praga. CI čuva samo `--self-test` (~6 s), jer pun grid traje ~7 min.
+
+### 10.9 F3.7 prvi izvještaj — podizanja su `NO_MODEL`, ne nalaz o modelu
+
+Shadow nad stvarnim podacima (run `43178842590`):
+
+```
+F3.7 shadow: NOT_ENOUGH_DAYS, 3/4 dana sa razlikom
+             (spušta 1, podiže 2), neobjašnjeno 0, blokirano modelom 0
+F3.7: svaka razlika ima razlog
+F3.7: kontroler diže polaznu na 2/3 dana
+      (2026-11-10 NO_MODEL, 2026-11-12 NO_MODEL)
+```
+
+Ovo je **dobra** vijest, ali se mora čitati pažljivo. „Podiže 2 dana" zvuči kao
+da kontroler grije više nego formula; u stvari oba dana nose `NO_MODEL` — dakle
+model još ne postoji, pa kontroler ne odlučuje nego ostaje pri prethodnoj
+vrijednosti. To je ispravno ponašanje, ne neslaganje.
+
+Uz to: **nijedna razlika nije bez razloga** (`neobjašnjeno 0`) i **nijedan dan
+nije blokiran `MODEL_UNVERIFIED`** — dakle model bojlera je potvrđen iz
+kataloga, pa F2 neće stati na tom pravilu.
+
+Presuda `NOT_ENOUGH_DAYS` je stanje, ne nalaz: `SHADOW_MIN_DAYS` je 21, a shadow
+postoji za 4 dana. Backfill dani (301) ga nemaju i nikad ga neće imati — v. §10.3.
+
+**Mjerni prozor za F3.7** zato ide od 11-10 (prvi dan sa shadow-om), a ne od
+backfill-a. 21 dan se navršava **2026-11-30**.
+
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
 **drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je

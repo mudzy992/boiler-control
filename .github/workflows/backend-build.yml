@@ -268,6 +268,29 @@ jobs:
               | while IFS= read -r line; do echo "::error::F4.5 uzrok: $line"; done
           fi
 
+      # F4.6: dva pisca `Recommendation` redova — writer (jutarnji predlog) i
+      # `HeatingRecommendationService` (kriva, na svakom dogadjaju grijanja).
+      # Mjeri se koliko se broj koji klijent cita razilazi s predlogom.
+      - name: F4.6 razlika preporuke i predloga (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          SINCE_ARG=""
+          if [ -n "${{ inputs.drift_since }}" ]; then
+            SINCE_ARG="--since=${{ inputs.drift_since }}"
+          fi
+          node scripts/recommendation-drift-readonly.cjs $SINCE_ARG > "$RUNNER_TEMP/rec.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/rec.log"
+          grep -E "^  " "$RUNNER_TEMP/rec.log" \
+            | while IFS= read -r line; do echo "::notice::F4.6$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.6 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/rec.log" \
+              | while IFS= read -r line; do echo "::error::F4.6 uzrok: $line"; done
+          fi
+
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —
       # mjeri se prije nego se napiše ijedan backfill red.
       - name: Backfill coverage (read-only)

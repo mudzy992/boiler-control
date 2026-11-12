@@ -253,6 +253,11 @@ async function main() {
     await client.query('BEGIN');
 
     /*
+     * Kolona u bazi je `suggestedTemp`, ne `suggestedFlowTemp`: sema ima
+     * `@map("suggestedTemp")`, pa polje Prisme i kolona nemaju isto ime. Prvo
+     * pokretanje je palo na `column b.suggestedFlowTemp does not exist` —
+     * ime se čita iz seme, ne po pamćenju.
+     *
      * Grupa je `(userId, dan)` — `BoilerHistory` nema `homeProfileId`, a
      * korisnik ima jednu kuću u praksi. Ograničenje je zapisano u nalazu, ne
      * prećutano: ako korisnik ima više kuća, ovo bi ih spojilo. Kolona se ne
@@ -266,16 +271,16 @@ async function main() {
       `SELECT
          d."userId" AS "homeProfileId",
          d."day" AS "localDate",
-         COUNT(*)::int AS distinct,
+         COUNT(*)::int AS "distinct",
          (MAX(d."flow") - MIN(d."flow"))::float8 AS "spreadC"
        FROM (
          SELECT
            b."userId",
            to_char(b."createdAt", 'YYYY-MM-DD') AS "day",
-           ROUND(b."suggestedFlowTemp"::numeric, 2) AS "flow"
+           ROUND(b."suggestedTemp"::numeric, 2) AS "flow"
          FROM "BoilerHistory" b
          WHERE b."createdAt" >= CURRENT_DATE - ($1::int || ' days')::interval
-           AND b."suggestedFlowTemp" IS NOT NULL
+           AND b."suggestedTemp" IS NOT NULL
          GROUP BY 1, 2, 3
        ) d
        GROUP BY 1, 2

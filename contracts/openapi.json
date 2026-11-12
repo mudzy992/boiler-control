@@ -1915,15 +1915,31 @@
       "RecommendationBreakdownDto": {
         "properties": {
           "appliedOffsets": {
-            "$ref": "#/components/schemas/RecommendationAppliedOffsetsDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationAppliedOffsetsDto"
+              }
+            ],
+            "nullable": true,
+            "type": "object"
           },
           "baseCurveTemp": {
-            "description": "Base heating-curve temperature, in °C.",
+            "description": "Base heating-curve temperature, in °C. null when engine is \"model\" — there is no curve in that path. A number would be invented; 0 would render as \"0.00 °C\" on clients.",
+            "nullable": true,
             "type": "number"
           },
           "confidence": {
             "description": "Engine confidence, 0..1.",
             "type": "number"
+          },
+          "engine": {
+            "description": "F4.3: which engine produced finalTemp. null for rows written before F4.3 — an old row does not claim an engine it never recorded.",
+            "enum": [
+              "curve",
+              "model"
+            ],
+            "nullable": true,
+            "type": "string"
           },
           "expectedHeatTimeMin": {
             "description": "Expected heat time in minutes, if available.",
@@ -1948,23 +1964,36 @@
             ],
             "type": "string"
           },
+          "model": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationModelBreakdownDto"
+              }
+            ],
+            "description": "F4.3: equilibrium terms, present only when engine is \"model\".",
+            "nullable": true,
+            "type": "object"
+          },
           "samples": {
             "description": "Learning sample count, if available.",
             "nullable": true,
             "type": "number"
           },
           "version": {
-            "description": "Snapshot schema version.",
-            "example": 1,
+            "description": "Snapshot schema version (2 since F4.3).",
+            "example": 2,
             "type": "number"
           },
           "weightedExternalTemp": {
-            "description": "Weighted external temperature used by the curve, in °C.",
+            "description": "Weighted external temperature used by the curve, in °C. null for engine \"model\".",
+            "nullable": true,
             "type": "number"
           }
         },
         "required": [
           "version",
+          "engine",
+          "model",
           "mode",
           "intervalKey",
           "baseCurveTemp",
@@ -1974,6 +2003,69 @@
           "confidence",
           "samples",
           "expectedHeatTimeMin"
+        ],
+        "type": "object"
+      },
+      "RecommendationModelBreakdownDto": {
+        "properties": {
+          "dayGainC": {
+            "description": "Daily gain u_day actually applied, in °C (0 when disabled).",
+            "type": "number"
+          },
+          "equilibriumFlowC": {
+            "description": "Equilibrium flow before the controller, in °C.",
+            "nullable": true,
+            "type": "number"
+          },
+          "internalGainC": {
+            "description": "Internal gains c, in °C equivalent.",
+            "type": "number"
+          },
+          "outdoorRefC": {
+            "description": "Reference outdoor temperature, in °C.",
+            "nullable": true,
+            "type": "number"
+          },
+          "outdoorRefSource": {
+            "description": "Whether the reference is night only or night+day blend.",
+            "enum": [
+              "NIGHT",
+              "NIGHT_DAY_BLEND"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "reasons": {
+            "description": "Why the equilibrium flow is null or bounded (NO_NIGHT, NO_SLOPE, …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "slopeS": {
+            "description": "House slope s.",
+            "nullable": true,
+            "type": "number"
+          },
+          "slopeSource": {
+            "description": "Which slope was used — CI high bound while the model is young.",
+            "enum": [
+              "CI_HIGH",
+              "POINT"
+            ],
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "slopeS",
+          "slopeSource",
+          "internalGainC",
+          "dayGainC",
+          "outdoorRefC",
+          "outdoorRefSource",
+          "equilibriumFlowC",
+          "reasons"
         ],
         "type": "object"
       },

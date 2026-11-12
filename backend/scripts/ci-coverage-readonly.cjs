@@ -85,6 +85,24 @@ const notice = (message) => {
   const flat = String(message).replace(/[\r\n]+/g, ' ').replace(/%/g, '%25');
   console.log(`::notice::${flat}`);
 };
+/**
+ * Značenje razloga odbijanja, sa pragom iz modula. Bez ovoga „4 dana odbijena"
+ * izgleda kao kvar, a u stvari je najčešće `INCOMPLETE`: uzorak na 1 min daje
+ * 288 tačaka dnevno, a fit traži 80 % pokrivenosti — dakle 231 uzorak. Dom koji
+ * je izašao iz sezone ili je bio bez struje pola dana ne može da prođe, i to je
+ * ispravno. Razlika je važna jer određuje šta se popravlja: podatke ili model.
+ */
+const REJECTION_MEANING = {
+  INCOMPLETE: `uzoraka < 80 % od 288 (dnevni niz ne pokriva dan)`,
+  NO_OUTDOOR: 'nijedan uzorak nema vanjsku temperaturu',
+  NO_HEATING: 'nijedan uzorak nije pod grijanjem (sezona ili režim)',
+  FLOW_MISSING: 'polazna nedostaje na > 10 % uzoraka grijanja',
+  NO_TARGET: 'nema ciljne sobne temperature tog dana',
+  DUTY: 'udio grijanja van 5–98 % (dan nije ni grijao ni bio isključen)',
+  WEAK_SIGNAL: 'razlika soba−vani < 5 K (nema signala za nagib)',
+  NOT_IN_BALANCE: 'soba > 2 K od cilja (dan nije u ravnoteži, fit ga ne želi)',
+};
+
 const pct = (part, whole) =>
   whole === 0 ? '—' : `${((part / whole) * 100).toFixed(1)} %`;
 
@@ -360,9 +378,17 @@ async function main() {
       if (home.rejected.length) {
         const reasons = new Map();
         for (const entry of home.rejected) {
-          reasons.set(entry.reason, (reasons.get(entry.reason) ?? 0) + 1);
+          const list = reasons.get(entry.reason) ?? [];
+          list.push(entry.localDate);
+          reasons.set(entry.reason, list);
         }
-        out(`Razlozi odbijanja: ${[...reasons.entries()].map(([r, n]) => `\`${r}\` ${n}`).join(', ')}`);
+        out('| razlog | dana | dani | zašto (prag iz `daily-balance`) |');
+        out('|---|---|---|---|');
+        for (const [reason, days] of reasons) {
+          out(
+            `| \`${reason}\` | ${days.length} | ${days.join(', ')} | ${REJECTION_MEANING[reason] ?? '—'} |`,
+          );
+        }
         out();
       }
       notice(

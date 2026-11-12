@@ -109,11 +109,25 @@ async function renderScreen() {
       </AppThemeProvider>
     </QueryClientProvider>,
   );
-  // Isti razlog kao `SHEET_TIMEOUT_MS` niže: zadani `findBy*` čeka 1 s, a na
-  // opterećenom runneru prvo renderovanje ekrana (fontovi, tema, upit) pređe
-  // to. Kad to istekne, test padne **prije** prve asertacije — i poruka tada
-  // izgleda kao da sheet ne radi, iako ekran još nije ni nacrtan.
-  await result.findByText('gas.title', {}, { timeout: SHEET_TIMEOUT_MS });
+  /*
+   * Čeka se **sadržaj liste**, ne naslov.
+   *
+   * `gas.title` postoji i u stanju učitavanja (zaglavlje se crta iznad
+   * skeletonа), pa je `findByText('gas.title')` prolazio dok je ekran još bio u
+   * `isLoading` — a u toj grani dugme „+" ne postoji. Lokalno bez `--coverage`
+   * je podatak stizao dovoljno brzo da razlika ne bude vidljiva; u auditu
+   * (`--coverage`, sporije izvršavanje) test je padao sa
+   * `SHEET_DIAG[testID=gas-readings-header;label=-;treeBytes=4467]` — samo
+   * skeleton, nijedan label.
+   *
+   * `gas-filter-menu` postoji **samo** kad su podaci stigli, pa je on ispravna
+   * tačka sinhronizacije.
+   */
+  await result.findByTestId(
+    'gas-filter-menu',
+    {},
+    { timeout: SHEET_TIMEOUT_MS },
+  );
   return { result, queryClient };
 }
 

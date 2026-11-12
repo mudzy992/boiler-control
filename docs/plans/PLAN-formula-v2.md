@@ -77,7 +77,7 @@ može ni ocijeniti.
 | F3.4 — greška prognoze | **skripta urađena**; podataka ima za 4 dana ⇒ prvi broj **2026-11-13** | §10.17 |
 | F3.5 — saturacija | **izmjereno**: 5/302 dana na granici, 0 `CAPACITY` | §10.16 |
 | F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
-| F4 — penzionisanje krive | **nije početo**, blokirano F3.1 | — |
+| F4 — penzionisanje krive | **djelimično**: F4.1–F4.6 i F4.8 urađeni; **F4.7 blokiran** — stara kriva ima 2 živa potrošača | §10.21–§10.27 |
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
@@ -87,6 +87,9 @@ može ni ocijeniti.
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
+| F4.6 | **urađeno**: `HeatingRecommendationService` više ne piše `Recommendation`; mjereno 15/54 dana, max 3,74 K | §10.26b |
+| F4.8 | **urađeno**: granica unosa = fizički pod (30), ne pod krive (46); mjereno 32,9 °C gdje je unos bio zaključan | §10.27 |
+| F4.7 | **BLOKIRANO**: `Boiler/boiler.service.ts:16` i `DailyRecord/daily-record.writer.ts:3` još zovu staru krivu | — |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
@@ -1625,6 +1628,34 @@ zbog refaktora, a ne zbog razilaženja s kodom.
 bez noćne prognoze ostaje 45 uz `engine=curve`; zadano `curve` **ne poziva**
 prikupljanje), `proposal-decision` 7, `DailyRecord` **397/397**, `tsc` 0,
 `eslint` 0, `FORMULA.md` gejt: 22 konstante.
+
+### 10.26b F4.6 — jedan pisac `Recommendation` redova
+
+**Tvrdnja koja se mjerila.** Dva mjesta su pisala `Recommendation`:
+`DailyRecordWriter` (u istoj transakciji kao zapis) i
+`HeatingRecommendationService`. Ako pišu oba, „jedan pisac po redu“ ne
+vrijedi, a red koji korisnik vidi zavisi od toga koji je zadnji.
+
+**Mjerenje prije izmjene** (`recommendation-drift-readonly.cjs`, run
+`43282265347`, 60 dana): uporedivih **54** dana, razlikuje se **23 (42,6 %)**;
+isto / zaokruženo / vidljivo **31 / 8 / 15**; |razlika| max **3,74 K**,
+prosjek **0,50 K** ⇒ **`DIFF_VISIBLE`**. Dakle nije kozmetika — 15 dana se
+korisniku vidio drugi broj nego što ga zapis nosi.
+
+**Izmjena.** Servis prestaje pisati `Recommendation` i prestaje zvati motor.
+**Učenje ostaje** (`heatingIntervalLearning.updateMany`) — to je jedini vlasnik
+tog reda i ne dira se. Uklonjeni su i importi koji su time postali mrtvi.
+
+**Dokaz je statika, ne tvrdnja.** `recommendation-write-sites.spec.ts` ima 4
+testa: nema pisanja pri izvršavanju, **i** staticka provjera izvora —
+`recommendation.create`/`.update` ne smiju postojati u servisu, a
+`tx.recommendation.create` mora postojati u writer-u. Bez statickog dijela,
+test bi prošao i da neko vrati pisanje u granu koja se u testu ne izvršava.
+Test koji je provjeravao uklonjeni weather put je obrisan (`git rm`), jer bi
+inače „zelen“ branio put koga nema.
+
+**Testovi:** write-sites 4/4, `HeatingRecommendation` 33/33, backend
+**1696/1696** (138 suite) na `3c20534`.
 
 ### 10.27 F4.8 — granica unosa nije smjela biti granica krive
 

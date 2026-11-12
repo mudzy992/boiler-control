@@ -224,6 +224,8 @@ async function main() {
      * je kuća postojala bez zapisa. Bez druge strane `NO_RECORD` se nikad ne
      * pojavi (upit po `DailyRecord` ne može naći red koga nema), pa bi nalaz
      * uvijek bio „motor nije potreban" — tiha greška u korist brisanja.
+     *
+     * Spaja se po **`userId`**, ne po `homeProfileId`: v. dijagnostiku niže.
      */
     const { rows } = await client.query(
       `WITH days AS (
@@ -234,11 +236,11 @@ async function main() {
          )::text AS "localDate"
        ),
        homes AS (
-         SELECT id AS "homeProfileId", "createdAt"::date::text AS "createdOn"
+         SELECT id AS "homeProfileId", "userId", "createdAt"::date::text AS "createdOn"
          FROM "HomeProfile"
        ),
        grid AS (
-         SELECT h."homeProfileId", d."localDate"
+         SELECT h."homeProfileId", h."userId", d."localDate"
          FROM homes h
          CROSS JOIN days d
          WHERE d."localDate" >= h."createdOn"
@@ -250,10 +252,32 @@ async function main() {
          r."proposedFlowTemp"::float8 AS "proposedFlowTemp"
        FROM grid g
        LEFT JOIN "DailyRecord" r
-         ON r."homeProfileId" = g."homeProfileId"
+         ON r."userId" = g."userId"
         AND r."localDate" = g."localDate"
        ORDER BY g."localDate", g."homeProfileId"`,
       [days],
+    );
+
+    /*
+     * Dijagnostika koja je morala postojati prije povjerenja u nalaz.
+     *
+     * Prvi run je dao `61/61 kuća-dana bez zapisa` — nemoguće, jer je
+     * `recommendation-drift` na istom prozoru čitao 54 dana iz `DailyRecord`.
+     * Uzrok je veza: spajanje po `homeProfileId` promaši redove čiji profil
+     * više ne postoji ili je zamijenjen. Zato se spaja po `userId` — isto kao
+     * `recommendation-drift`, `daily-flow-oscillation` i ostale skripte.
+     *
+     * Ovaj upit mjeri je li to bio uzrok, umjesto da se pretpostavi.
+     */
+    const diag = await client.query(
+      `SELECT
+         (SELECT count(*)::int FROM "DailyRecord") AS "dailyRecordRows",
+         (SELECT count(DISTINCT "homeProfileId")::int FROM "DailyRecord") AS "dailyRecordHomes",
+         (SELECT count(*)::int FROM "HomeProfile") AS "homeProfiles",
+         (SELECT count(*)::int
+            FROM "DailyRecord" r
+            LEFT JOIN "HomeProfile" h ON h.id = r."homeProfileId"
+           WHERE h.id IS NULL) AS "orphanRows"`,
     );
 
     await client.query('COMMIT');
@@ -267,9 +291,10 @@ async function main() {
 
     const summary = summarize(normalized);
     const decision = verdict(summary);
+    const link = diag.rows[0];
 
     if (process.argv.includes('--json')) {
-      console.log(JSON.stringify({ summary, ...decision }, null, 2));
+      console.log(JSON.stringify({ summary, link: diag.rows[0], ...decision }, null, 2));
     } else {
       console.log('F4.7 korak 1 — koliko bi ostalo bez broja bez motora');
       console.log(`  prozor:                  ${days} dana`);
@@ -281,6 +306,11 @@ async function main() {
       if (summary.fallbackRatio !== null) {
         console.log(`  udio:                    ${(summary.fallbackRatio * 100).toFixed(1)} %`);
       }
+      console.log(
+        `\n  veza: DailyRecord redova ${link.dailyRecordRows}, kuća u njima ` +
+          `${link.dailyRecordHomes}, HomeProfile redova ${link.homeProfiles}, ` +
+          `redova bez profila ${link.orphanRows}`,
+      );
       console.log(`\n  ${decision.verdict}: ${decision.reason}`);
     }
   } finally {

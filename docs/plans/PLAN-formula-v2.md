@@ -814,6 +814,38 @@ postoji za 4 dana. Backfill dani (301) ga nemaju i nikad ga neće imati — v. �
 **Mjerni prozor za F3.7** zato ide od 11-10 (prvi dan sa shadow-om), a ne od
 backfill-a. 21 dan se navršava **2026-11-30**.
 
+### 10.10 F3.1 izmjereno — model se još ne može fitingovati, i to nije greška modela
+
+`backend/scripts/ci-coverage-readonly.cjs` (novo) mjeri pokrivenost intervala
+pouzdanosti kroz iste module koje koristi proizvod (`fitDailyBalance`,
+`buildDayRow`). Rezultat (run `43182703213`):
+
+```
+F3.1 dom 3: NOT_ENOUGH_DAYS (0/8 dana, odbijeno 4: INCOMPLETE 2, NO_OUTDOOR 2)
+```
+
+**Nijedan dan nije prošao filtere fita**, pa se pokrivenost ne može izmjeriti.
+Ali razlozi su mjerljivi i oni mijenjaju ono što bi se popravljalo:
+
+| razlog | dana | prag iz `daily-balance` | šta znači |
+|---|---|---|---|
+| `INCOMPLETE` | 2 | uzoraka < 80 % od 288 | dnevni niz ne pokriva dan (231 uzorak je minimum) |
+| `NO_OUTDOOR` | 2 | nijedan uzorak bez vanjske temperature | vanjska temp. nije stigla u uzorke tih dana |
+
+Ovo **nije** kvar modela: nema dovoljno dana sa punim uzorkovanjem. Zaključak
+koji se ne smije izvesti je „model ne radi" — model nije ni dobio priliku.
+Zaključak koji se smije izvesti: **F3.1 je mjerljiva tek kad se skupi 8 dana sa
+punim dnevnim nizom**, a to je vezano za pouzdanost pollinga, ne za formulu.
+
+Zašto je metoda leave-one-out a ne samo in-sample: in-sample pokrivenost je na
+danima na kojima je model fitovan, pa je po pravilu previsoka. Samo taj broj bi
+bio samozavaravanje, a cijeli smisao F3.1 je da se prije puštanja zna da interval
+nije sistematski pogrešan.
+
+**Mjerni prozor:** F3.1 čeka 8 dana sa punim nizom **nakon** 11-12. Uz današnje
+stanje to je najranije **2026-11-20**; ako `INCOMPLETE` nastavi, uzrok je polling
+i tada se popravlja njega, ne model.
+
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
 **drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je

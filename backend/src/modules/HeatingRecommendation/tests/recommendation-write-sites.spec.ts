@@ -64,6 +64,12 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
             floorArea: 150,
             learningOffset: 0.25,
             learningConfidence: 0.72,
+            // F5.2: `zoneForDevice` čita zonu kuće, pa korisnika, pa fallback.
+            // Bez zone u mock-u ključ pada na `Europe/Sarajevo`; 01.11.2026 je
+            // nedjelja, pa je ključ `weekend_morning` umjesto `weekday_morning`,
+            // a učenje se ne nađe (`samples: 0`).
+            weatherTimezone: null,
+            user: { timezone: 'Europe/Sarajevo' },
             intervalLearnings: [intervalLearning],
           },
         }),
@@ -82,7 +88,15 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
     await makeService(prisma).processHeatingEvent({
       userId: 1,
       deviceId: 10,
-      timestampStart: new Date('2026-11-01T06:00:00.000Z'),
+      /*
+       * 02.11.2026 je **ponedjeljak** — namjerno. Do sada je ovdje bio
+       * 01.11.2026, koji je nedjelja, pa je ključ ispravno bio
+       * `weekend_morning`, a test je očekivao `weekday_morning`. Test je dakle
+       * tvrdio nešto što kod nikad nije radio; pad je otkriven tek kad je F5.2
+       * doveo zonu u jednačinu (prije toga je pitanje bilo „koji sat", a ne
+       * „koji dan", pa se razlika nije vidjela).
+       */
+      timestampStart: new Date('2026-11-02T06:00:00.000Z'),
       roomCurrentTemp: 20,
       roomTargetTemp: 22,
       boilerFlowTemp: 50,
@@ -134,7 +148,15 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
     await makeService(prisma).processHeatingEvent({
       userId: 1,
       deviceId: 10,
-      timestampStart: new Date('2026-11-01T06:00:00.000Z'),
+      /*
+       * 02.11.2026 je **ponedjeljak** — namjerno. Do sada je ovdje bio
+       * 01.11.2026, koji je nedjelja, pa je ključ ispravno bio
+       * `weekend_morning`, a test je očekivao `weekday_morning`. Test je dakle
+       * tvrdio nešto što kod nikad nije radio; pad je otkriven tek kad je F5.2
+       * doveo zonu u jednačinu (prije toga je pitanje bilo „koji sat", a ne
+       * „koji dan", pa se razlika nije vidjela).
+       */
+      timestampStart: new Date('2026-11-02T06:00:00.000Z'),
       roomCurrentTemp: 20,
       roomTargetTemp: 22,
       boilerFlowTemp: 50,
@@ -183,7 +205,15 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
     await makeService(prisma).processHeatingEvent({
       userId: 1,
       deviceId: 10,
-      timestampStart: new Date('2026-11-01T06:00:00.000Z'),
+      /*
+       * 02.11.2026 je **ponedjeljak** — namjerno. Do sada je ovdje bio
+       * 01.11.2026, koji je nedjelja, pa je ključ ispravno bio
+       * `weekend_morning`, a test je očekivao `weekday_morning`. Test je dakle
+       * tvrdio nešto što kod nikad nije radio; pad je otkriven tek kad je F5.2
+       * doveo zonu u jednačinu (prije toga je pitanje bilo „koji sat", a ne
+       * „koji dan", pa se razlika nije vidjela).
+       */
+      timestampStart: new Date('2026-11-02T06:00:00.000Z'),
       roomCurrentTemp: 20,
       roomTargetTemp: 22,
       boilerFlowTemp: 50,

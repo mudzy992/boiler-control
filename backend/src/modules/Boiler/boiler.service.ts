@@ -180,16 +180,29 @@ export class BoilerService {
       );
 
       const candidates = intervalKey ? intervalKeyCandidates(intervalKey) : [];
-      const intervalLearning = intervalKey
-        ? await this.prisma.heatingIntervalLearning.findFirst({
-            where: {
-              homeProfileId,
-              intervalKey: { in: candidates },
-            },
-            // Noviji format ima prednost ako postoje oba reda.
-            orderBy: { intervalKey: 'desc' },
-          })
-        : null;
+      /*
+       * Prioritet se bira u kodu, ne u `orderBy`.
+       *
+       * `orderBy: { intervalKey: 'desc' }` je izgledalo kao „noviji format ima
+       * prednost", ali je poredilo **tekst**: `weekday_afternoon` > `1_afternoon`
+       * je slučajno tačno za cifre, a netačno bi bilo za bilo koji drugi v2
+       * prefiks. Redoslijed iz `intervalKeyCandidates` je već kanonski-prvi, pa
+       * se po njemu i bira.
+       */
+      const intervalRows =
+        intervalKey && candidates.length
+          ? await this.prisma.heatingIntervalLearning.findMany({
+              where: { homeProfileId, intervalKey: { in: candidates } },
+            })
+          : [];
+      const intervalLearning =
+        candidates
+          .map((key) =>
+            intervalRows.find(
+              (row: { intervalKey: string }) => row.intervalKey === key,
+            ),
+          )
+          .find(Boolean) ?? null;
 
       if (intervalLearning) {
         intervalLearningInput = {

@@ -33,7 +33,20 @@ export class HeatingRecommendationService {
     // 1️⃣ Fetch last interval learning for this device's home profile
     const device = await this.prisma.thermostatDevice.findUnique({
       where: { id: event.deviceId },
-      include: { homeProfile: { include: { intervalLearnings: true } } },
+      /*
+       * `user.timezone` mora biti uz dom: `zoneForDevice` čita zonu kuće, pa
+       * korisnika, pa fallback. Bez ovog uključivanja zona je uvijek padala na
+       * `Europe/Sarajevo` i ključ je tiho promašivao interval — za korisnika u
+       * drugoj zoni to je pogrešan dio dana, bez ijedne greške u logu.
+       */
+      include: {
+        homeProfile: {
+          include: {
+            intervalLearnings: true,
+            user: { select: { timezone: true } },
+          },
+        },
+      },
     });
     if (!device || !device.homeProfile) return;
 

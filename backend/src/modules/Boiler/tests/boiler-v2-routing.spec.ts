@@ -38,14 +38,15 @@ function makeHarness(v2Weather: { tempMin: number; tempMax: number } | null) {
         seasonMode: 'WINTER',
       }),
     },
+    // F5.2: `calculateFlowTemp` sada čita učenje po ključu intervala
+    // (`findMany` sa kandidatima), a ne po jednom ključu (`findUnique`). Mock
+    // mora imati onu metodu koju kod stvarno zove — `findUnique` je ostavljen
+    // jer ga zove `getOrCreate`, ali ga ovaj test ne dostiže.
     heatingIntervalLearning: {
       findUnique: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     heatingEvent: { findMany: jest.fn().mockResolvedValue([]) },
-    // F5.2: `calculateFlowTemp` sada čita učenje po ključu intervala. Mock bez
-    // ove tabele pada na `findMany is not a function` — što je tačno uhvatio CI,
-    // jer je promjena diraла put koji test pokriva.
-    heatingIntervalLearning: { findMany: jest.fn().mockResolvedValue([]) },
   };
   const legacyWeather = {
     getTodayWeather: jest.fn().mockResolvedValue({ temp_min: 8, temp_max: 12 }),

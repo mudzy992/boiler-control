@@ -47,6 +47,11 @@ function makeHarness(v2Weather: { tempMin: number; tempMax: number } | null) {
       findMany: jest.fn().mockResolvedValue([]),
     },
     heatingEvent: { findMany: jest.fn().mockResolvedValue([]) },
+    // F4.5: `calculateFlowTemp` sada traži današnji zapis prije nego vrati
+    // broj. `null` = zapisa nema, pa je motorov broj jedini — zato ovi testovi
+    // i dalje provjeravaju weather routing, a ne izbor broja (to radi
+    // `daily-flow.spec.ts`).
+    dailyRecord: { findFirst: jest.fn().mockResolvedValue(null) },
   };
   const legacyWeather = {
     getTodayWeather: jest.fn().mockResolvedValue({ temp_min: 8, temp_max: 12 }),
@@ -119,5 +124,54 @@ describe('BoilerService weather routing', () => {
     expect(engineCalculate).toHaveBeenCalledWith(
       expect.objectContaining({ weather: { tempMin: 8, tempMax: 12 } }),
     );
+  });
+
+  /*
+   * F4.5 — najvažnija provjera u ovom fajlu.
+   *
+   * Ostali testovi imaju `dailyRecord = null`, pa dokazuju samo da se ništa ne
+   * ruši. Ovaj dokazuje da izbor **radi**: kad za danas postoji predlog, motorov
+   * broj (45) NE ide na kotao — ide 48 iz zapisa. Bez ovog testa bi F4.5 mogao
+   * biti „spojen" a da i dalje vraća motorov broj.
+   */
+  describe('F4.5 — danas važi zapisani predlog, ne motorov broj', () => {
+    it('vraća predlog iz zapisa i imenuje izvor', async () => {
+      const { service, prisma } = makeHarness(null);
+      prisma.dailyRecord.findFirst.mockResolvedValue({
+        proposedFlowTemp: 48,
+        outcomeAt: null,
+        undershootC: null,
+        nightUndershootC: null,
+      });
+
+      const result = await service.calculateFlowTemp(1);
+
+      expect(result.flowTemp).toBe(48);
+      expect(result.flowSource).toBe('DAILY_RECORD');
+      // Motorov broj ostaje vidljiv — bez toga se ne zna je li se formula
+      // razišla sa predlogom.
+      expect(result.curveFlowTemp).toBe(45);
+    });
+
+    it('bez zapisa vraća motorov broj i to kaže', async () => {
+      const { service } = makeHarness(null);
+
+      const result = await service.calculateFlowTemp(1);
+
+      expect(result.flowTemp).toBe(45);
+      expect(result.flowSource).toBe('CURVE');
+    });
+
+    it('traži zapis za lokalni dan kuće, ne za serverski', async () => {
+      // F5.2 je već uklonio serverski sat iz ključa intervala; isti razlog
+      // važi ovdje: u 00:30 po UTC-u u Sarajevu je već novi dan.
+      const { service, prisma } = makeHarness(null);
+
+      await service.calculateFlowTemp(1);
+
+      const where = prisma.dailyRecord.findFirst.mock.calls[0][0].where;
+      expect(where.homeProfileId).toBe(10);
+      expect(where.localDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
   });
 });

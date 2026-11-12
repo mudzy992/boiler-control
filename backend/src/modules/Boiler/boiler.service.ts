@@ -16,9 +16,30 @@ import {
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { MetricsService } from '../../common/metrics.service';
 import { resolveFlowTempRange } from './flow-range';
+import { resolveDailyFlow } from '../DailyRecord/daily-flow';
+import {
+  localDateKey,
+  resolveHomeTimeZone,
+} from '../DailyRecord/proposal-schedule';
 
 export interface FlowTempCalculationResult {
   flowTemp: number;
+  /**
+   * F4.5: odakle je `flowTemp`.
+   *
+   * `DAILY_RECORD` — broj je iz današnjeg `DailyRecord`-a (jutarnji predlog ili
+   * izmjena uz izmjereni dokaz). To je broj koji se smije postaviti i prikazati.
+   * `CURVE` — zapisa za danas nema, pa je ovo ono što motor računa sada.
+   * `NONE` — grijanje je isključeno (sezona), broj je 0.
+   */
+  flowSource: 'DAILY_RECORD' | 'CURVE' | 'NONE';
+  /**
+   * F4.5: šta je motor izračunao **sada**, nezavisno od toga šta danas važi.
+   *
+   * Ostaje u rezultatu jer je jedini način da se vidi je li se formula razišla
+   * sa predlogom. Broj koji ide na kotao je `flowTemp`; ovaj je informacija.
+   */
+  curveFlowTemp: number;
   confidence: number;
   mode: 'ANONYMOUS' | 'PROFILE_ONLY' | 'FULL';
   expectedHeatTimeMin?: number;
@@ -264,13 +285,88 @@ export class BoilerService {
       `[BoilerCalc] User=${userId ?? 'ANON'} | Mode=${mode} | Interval=${intervalKey} | FlowTemp=${result.finalTemp}`,
     );
 
+    /*
+     * F4.5: **koji broj danas važi** — odluka je u `resolveDailyFlow`, ne
+     * ovdje.
+     *
+     * Mjerenje (run `43246164833`) pokazalo je 10 od 27 kuća-dana sa
+     * pomjeranjem > 0,5 K (max 2,76 K). Uzrok je bio ovaj `return`: motor
+     * računa iznova, pa `/boiler/sync` i polling dobiju drugi broj nego ujutro.
+     * Sada je mjerodavan zapisani predlog, a motorov broj ostaje u
+     * `curveFlowTemp` — da se razlika vidi, ali da ne ide na kotao.
+     *
+     * Kad predloga za danas nema (kuća bez profila, dan prije prvog predloga,
+     * anonimni poziv), koristi se motorov broj i to se otvoreno kaže
+     * (`CURVE`) — ne tvrdi se da je jutro potvrdilo formulu.
+     */
+    const daily = await this.resolveDailyFlowFor(
+      userId,
+      profile?.id ?? null,
+      // Motorov broj ulazi kao drugi kandidat: bez njega bi drift bio
+      // nemjerljiv (uvijek `null`), a fallback bi bio `NONE` iako broj postoji.
+      result.finalTemp,
+    );
+
     return {
-      flowTemp: result.finalTemp,
+      // `daily.flowC` je već motorov broj kad zapisa nema (`CURVE`), pa
+      // dvostruki fallback nije potreban — ali ostaje da tip ne bi bio
+      // `number | null`.
+      flowTemp: daily.flowC ?? result.finalTemp,
+      flowSource: daily.source,
+      curveFlowTemp: result.finalTemp,
       confidence: result.confidence,
       mode,
       expectedHeatTimeMin,
       ...(intervalKey ? { intervalKey } : {}),
     };
+  }
+
+  /**
+   * Današnji zapis, sveden na ulaz `resolveDailyFlow`.
+   *
+   * Greška baze se **ne** pretvara u tiho `null`: to bi značilo „nema predloga",
+   * pa bi motorov broj otišao na kotao — tačno ono što F4.5 uklanja. Umjesto
+   * toga se greška diže, jer je bez zapisa odluka nemoguća.
+   */
+  private async resolveDailyFlowFor(
+    userId: number | undefined,
+    homeProfileId: number | null,
+    curveFlowC: number | null,
+  ): Promise<ReturnType<typeof resolveDailyFlow>> {
+    if (!userId || homeProfileId == null) {
+      // Bez kuće nema zapisa — ali i tada se odluka donosi na jednom mjestu.
+      return resolveDailyFlow({ record: null, curveFlowC });
+    }
+
+    const zone = resolveHomeTimeZone({
+      homeTimeZone: null,
+      userTimeZone: await this.userTimeZoneFor(userId),
+    });
+    const localDate = localDateKey(new Date(), zone.zone);
+
+    const record = await this.prisma.dailyRecord.findFirst({
+      where: { homeProfileId, localDate },
+      select: {
+        proposedFlowTemp: true,
+        outcomeAt: true,
+        undershootC: true,
+        nightUndershootC: true,
+      },
+    });
+
+    return resolveDailyFlow({
+      record: record ?? null,
+      curveFlowC,
+      ceilingC: null,
+    });
+  }
+
+  private async userTimeZoneFor(userId: number): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    return user?.timezone ?? null;
   }
 
   private createOffResult(
@@ -280,6 +376,9 @@ export class BoilerService {
     this.logger.log(`[BoilerCalc] Seasonality -> HEATING OFF`);
     return {
       flowTemp: 0,
+      // F4.5: grijanje je isključeno — nula nije ni predlog ni formula.
+      flowSource: 'NONE',
+      curveFlowTemp: 0,
       confidence: 1,
       mode,
       expectedHeatTimeMin: 0,

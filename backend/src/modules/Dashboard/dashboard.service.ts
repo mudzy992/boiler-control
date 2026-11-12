@@ -888,8 +888,16 @@ export class DashboardService {
      * izmišlja mjerenje da bi se opravdala promjena — suprotno bi bilo gore od
      * oscilacije koju ovo pravilo uklanja.
      */
+    /*
+     * F4.5: ovdje se traži **motorov** broj, ne onaj koji danas važi.
+     *
+     * `calculateFlowTemp().flowTemp` je od F4.5 zapisani predlog kad zapis
+     * postoji — pa bi `formulaDriftC` uvijek bio 0 i mjerenje bi tiho nestalo.
+     * `curveFlowTemp` je ono što motor računa sada, a drift je upravo razlika
+     * između toga i jutra.
+     */
     const formulaFlowC =
-      formula && formula.flowTemp > 0 ? formula.flowTemp : null;
+      formula && formula.curveFlowTemp > 0 ? formula.curveFlowTemp : null;
 
     const anchor = anchorDailyFlow({
       morningFlowC: record?.proposedFlowTemp ?? null,

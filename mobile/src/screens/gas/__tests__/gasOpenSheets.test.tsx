@@ -92,8 +92,52 @@ async function renderScreen() {
       </AppThemeProvider>
     </QueryClientProvider>,
   );
-  await result.findByText('gas.title');
+  // Isti razlog kao `SHEET_TIMEOUT_MS` niže: zadani `findBy*` čeka 1 s, a na
+  // opterećenom runneru prvo renderovanje ekrana (fontovi, tema, upit) pređe
+  // to. Kad to istekne, test padne **prije** prve asertacije — i poruka tada
+  // izgleda kao da sheet ne radi, iako ekran još nije ni nacrtan.
+  await result.findByText('gas.title', {}, { timeout: SHEET_TIMEOUT_MS });
   return { result, queryClient };
+}
+
+/**
+ * Pri svakom padu dodaje stanje ekrana u poruku (`SHEET_DIAG[...]`), pa
+ * `jest_report.cjs` to prenese u anotaciju.
+ *
+ * Zašto omotava **cijelo** tijelo, a ne samo traženje polja: prvi pokušaj je
+ * imao `try/catch` samo oko `findByPlaceholderText`, a pad je bio prije njega
+ * (`getByLabelText`, ili samo renderovanje) — pa je anotacija ostala bez
+ * dijagnostike. Ovako nema putanje koja padne bez opisa.
+ */
+async function withSheetDiag<T>(
+  result: { toJSON: () => unknown },
+  body: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await body();
+  } catch (error) {
+    const tree = JSON.stringify(result.toJSON());
+    const testIds = [
+      ...new Set(
+        (tree.match(/"testID":"([^"]+)"/g) ?? []).map((hit) => hit.slice(10, -1)),
+      ),
+    ];
+    const labels = [
+      ...new Set(
+        (tree.match(/"accessibilityLabel":"([^"]*)"/g) ?? []).map((hit) =>
+          hit.slice(24, -1),
+        ),
+      ),
+    ];
+    throw new Error(
+      [
+        String((error as Error)?.message ?? error).slice(0, 180),
+        `SHEET_DIAG[testID=${testIds.slice(0, 10).join('|') || '-'}` +
+          `;label=${labels.slice(0, 8).join('|') || '-'}` +
+          `;treeBytes=${tree.length}]`,
+      ].join(' | '),
+    );
+  }
 }
 
 /**
@@ -111,52 +155,18 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
   it('plus u zaglavlju otvara sheet za dodavanje očitanja', async () => {
     const { result, queryClient } = await renderScreen();
 
-    fireEvent.press(result.getByLabelText('gas.addReading'));
+    await withSheetDiag(result, async () => {
+      fireEvent.press(result.getByLabelText('gas.addReading'));
 
-    // Tražimo SADRŽAJ sheeta, ne `showAddModal`: forma ima svoje polje, koje
-    // postoji samo kad je sheet stvarno montiran u vidljivom stanju.
-    //
-    // `try/catch` nije da bi test preživio pad — nego da poruka kaže **šta je
-    // na ekranu** kad padne. Dosadašnja poruka („unable to find placeholder")
-    // nije razlikovala tri bitno različita uzroka: sheet se nije otvorio, sheet
-    // se otvorio ali forma nije, ili je test pao iz drugog razloga. Bez toga se
-    // nagađalo kroz nekoliko uzastopnih CI padova.
-    try {
+      // Tražimo SADRŽAJ sheeta, ne `showAddModal`: forma ima svoje polje, koje
+      // postoji samo kad je sheet stvarno montiran u vidljivom stanju.
       await result.findByPlaceholderText(
         'gas.counterValuePlaceholder',
         {},
         { timeout: SHEET_TIMEOUT_MS },
       );
-    } catch (error) {
-      // `toJSON()` daje cijelo stablo (host elementi + testID-ovi), pa poruka
-      // pokaže je li sheet uopšte montiran i šta je u njemu.
-      const tree = JSON.stringify(result.toJSON());
-      const testIds = [
-        ...new Set(
-          (tree.match(/"testID":"([^"]+)"/g) ?? []).map((hit) =>
-            hit.slice(10, -1),
-          ),
-        ),
-      ];
-      const placeholder = (tree.match(/"placeholder":"([^"]*)"/g) ?? []).map(
-        (hit) => hit.slice(15, -1),
-      );
-      /*
-       * Marker je namjerno u jednom redu i sa fiksnim imenom: `jest_report.cjs`
-       * ga izvlači u GitHub anotaciju. Artefakti i logovi se u ovom okruženju
-       * ne mogu preuzeti (`blob.core.windows.net` je blokiran), pa je anotacija
-       * jedini kanal koji stvarno stiže — a bez nje je svaki pad isti: „unable
-       * to find placeholder".
-       */
-      throw new Error(
-        [
-          String((error as Error)?.message ?? error).slice(0, 200),
-          `SHEET_DIAG[testID=${testIds.slice(0, 10).join('|') || '-'}` +
-            `;placeholder=${placeholder.slice(0, 5).join('|') || '-'}` +
-            `;treeBytes=${tree.length}]`,
-        ].join(' | '),
-      );
-    }
+    });
+
     await result.unmount();
     queryClient.clear();
   });
@@ -164,31 +174,33 @@ describe('F7 Plin — radnje koje su izgledale mrtve', () => {
   it('red „Period" otvara listu perioda i mijenja prikaz', async () => {
     const { result, queryClient } = await renderScreen();
 
-    // Zaglavlje liste (i meni u njemu) postoji tek kad očitanja stignu, pa se
-    // čeka pojava umjesto pretpostavke da je list već izrenderovan.
-    const trigger = await result.findByTestId(
-      'gas-filter-menu',
-      {},
-      { timeout: SHEET_TIMEOUT_MS },
-    );
-    fireEvent.press(trigger);
-    const optionMonth = await result.findByTestId(
-      'gas-filter-option-month',
-      {},
-      { timeout: SHEET_TIMEOUT_MS },
-    );
-    expect(optionMonth).toBeTruthy();
+    await withSheetDiag(result, async () => {
+      // Zaglavlje liste (i meni u njemu) postoji tek kad očitanja stignu, pa se
+      // čeka pojava umjesto pretpostavke da je list već izrenderovan.
+      const trigger = await result.findByTestId(
+        'gas-filter-menu',
+        {},
+        { timeout: SHEET_TIMEOUT_MS },
+      );
+      fireEvent.press(trigger);
+      const optionMonth = await result.findByTestId(
+        'gas-filter-option-month',
+        {},
+        { timeout: SHEET_TIMEOUT_MS },
+      );
+      expect(optionMonth).toBeTruthy();
 
-    fireEvent.press(optionMonth);
-    // Poslije izbora, trigger pokazuje novi period umjesto starog. `waitFor`
-    // jer dodir mijenja state, a `Sheet` se zatvara u istom prolazu.
-    await waitFor(
-      () =>
-        expect(result.getByTestId('gas-filter-menu').props.accessibilityLabel).toContain(
-          'gas.filterMonth',
-        ),
-      { timeout: SHEET_TIMEOUT_MS },
-    );
+      fireEvent.press(optionMonth);
+      // Poslije izbora, trigger pokazuje novi period umjesto starog. `waitFor`
+      // jer dodir mijenja state, a `Sheet` se zatvara u istom prolazu.
+      await waitFor(
+        () =>
+          expect(
+            result.getByTestId('gas-filter-menu').props.accessibilityLabel,
+          ).toContain('gas.filterMonth'),
+        { timeout: SHEET_TIMEOUT_MS },
+      );
+    });
 
     await result.unmount();
     queryClient.clear();

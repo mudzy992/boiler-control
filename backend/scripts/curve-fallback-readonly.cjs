@@ -277,7 +277,18 @@ async function main() {
          (SELECT count(*)::int
             FROM "DailyRecord" r
             LEFT JOIN "HomeProfile" h ON h.id = r."homeProfileId"
-           WHERE h.id IS NULL) AS "orphanRows"`,
+           WHERE h.id IS NULL) AS "orphanRows",
+         (SELECT count(DISTINCT "userId")::int FROM "DailyRecord") AS "dailyRecordUsers",
+         (SELECT count(DISTINCT "userId")::int FROM "HomeProfile") AS "homeProfileUsers",
+         (SELECT count(*)::int FROM "DailyRecord"
+           WHERE "localDate" >= to_char(CURRENT_DATE - ($1::int || ' days')::interval, 'YYYY-MM-DD')) AS "windowRecords",
+         (SELECT count(*)::int FROM "DailyRecord" r
+            JOIN "HomeProfile" h ON h."userId" = r."userId"
+           WHERE r."localDate" >= to_char(CURRENT_DATE - ($1::int || ' days')::interval, 'YYYY-MM-DD')) AS "matchedByUser",
+         (SELECT count(*)::int FROM "DailyRecord" r
+            JOIN "HomeProfile" h ON h.id = r."homeProfileId"
+           WHERE r."localDate" >= to_char(CURRENT_DATE - ($1::int || ' days')::interval, 'YYYY-MM-DD')) AS "matchedByHome"`,
+      [days],
     );
 
     await client.query('COMMIT');
@@ -309,7 +320,10 @@ async function main() {
       console.log(
         `\n  veza: DailyRecord redova ${link.dailyRecordRows}, kuća u njima ` +
           `${link.dailyRecordHomes}, HomeProfile redova ${link.homeProfiles}, ` +
-          `redova bez profila ${link.orphanRows}`,
+          `redova bez profila ${link.orphanRows}; ` +
+          `userId u zapisima ${link.dailyRecordUsers}, u profilima ${link.homeProfileUsers}; ` +
+          `u prozoru redova ${link.windowRecords}, spojeno po userId ${link.matchedByUser}, ` +
+          `po homeProfileId ${link.matchedByHome}`,
       );
       console.log(`\n  ${decision.verdict}: ${decision.reason}`);
     }

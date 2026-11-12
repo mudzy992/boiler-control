@@ -67,9 +67,14 @@ jobs:
         # `if: failure()`, pa je dovoljno da postoji kad zatreba.
         run: npx jest --ci --json --outputFile="$RUNNER_TEMP/mobile-ci-jest.json"
 
-      # Bez ovoga je pad ovdje bio nedijagnostikovan: logovi joba se ne mogu
-      # preuzeti (`gh run view --log` vraća praznu arhivu), a anotacije nose
-      # samo ime testa. Isti razlog kao u `backend-audit.yml`.
+      # Anotacija **mora** ići prije artefakta: `upload-artifact` se u ovom
+      # okruženju ne može preuzeti (0 bajtova uz blokiran blob), pa je anotacija
+      # jedini kanal koji stvarno stiže do čitača. Isti reporter kao u
+      # `backend-audit.yml`, da poruka bude ista u oba workflowa.
+      - name: Jest report (on failure)
+        if: failure()
+        run: node ../scripts/audit/jest_report.cjs "$RUNNER_TEMP/mobile-ci-jest.json"
+
       - name: Jest result (on failure)
         if: failure()
         uses: actions/upload-artifact@v4

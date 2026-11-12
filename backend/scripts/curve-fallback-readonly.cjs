@@ -377,6 +377,14 @@ async function main() {
     if (process.argv.includes('--json')) {
       console.log(JSON.stringify({ summary, link: diag.rows[0], ...decision }, null, 2));
     } else {
+      /*
+       * SAZETAK je prva linija namjerno. GitHub drzi najvise 10 anotacija po
+       * koraku, a ranije je presuda bila ZADNJA linija i bila je odrezana —
+       * mjerenje je prolazilo a nalaz se nije vidio. Prvo ono sto se cita.
+       */
+      console.log(
+        `  SAZETAK: ${decision.verdict} — ${summary.fallback}/${summary.houseDays} kuća-dana bez predloga`,
+      );
       console.log('F4.7 korak 1 — koliko bi ostalo bez broja bez motora');
       console.log(`  prozor:                  ${days} dana`);
       console.log(`  kuća-dana:               ${summary.houseDays} (${summary.homes} kuća, ${summary.days} dana)`);

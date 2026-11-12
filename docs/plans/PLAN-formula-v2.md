@@ -74,6 +74,8 @@ može ni ocijeniti.
 | F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`; mjerljivo od **2026-11-20** | §10.10 |
 | F3.3 — ablacija | **urađeno**: `--ablate`, `--table`, `--self-test` | §10.14 |
 | F3.7 — shadow vs. proposed | **izmjereno**: podizanja su `NO_MODEL`; drugi prozor **2026-11-30** | §10.9 |
+| F3.4 — greška prognoze | **skripta urađena**; podataka ima za 4 dana ⇒ prvi broj **2026-11-13** | §10.17 |
+| F3.5 — saturacija | **izmjereno**: 5/302 dana na granici, 0 `CAPACITY` | §10.16 |
 | F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
 | F4 — penzionisanje krive | **nije početo**, blokirano F3.1 | — |
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
@@ -360,8 +362,8 @@ Nijedna ne mijenja podatke.
 | F3.1 | **Pokrivenost CI** | „95 % interval je stvarno 95 %" — koliko % dana padne unutar `[ciLow, ciHigh]` | novi `scripts/audit/ci_coverage.cjs`: za svaki dan sa modelom, uporedi stvarni `y` sa intervalom |
 | F3.2 | **Kalibracija** | Brier score za `confidence` (mora biti bolji od stalnog 0,5) | isto, plus `confidence` iz `HeatingIntervalLearning` |
 | F3.3 | **✓ urađeno** — **Ablacija** | koji član stvarno nosi odluku | `learning_sim.cjs --ablate=uday\|cihigh\|nightfloor\|shortcycle` |
-| F3.4 | **Greška prognoze** | `dF/dO = s ≈ 1` ⇒ 1 K greške u noći = 1 K u polaznoj | `nightMinC` vs `nightMinOutdoorMeasuredC`, histogram razlike |
-| F3.5 | **Saturacija** | koliko % zimskih dana radi na `maxFlowC` | iz `DailyRecord.shadowFlowC` vs `HomeProfile.maxHeatingFlowC` |
+| F3.4 | **✓ skripta** — **Greška prognoze** | `dF/dO = s ≈ 1` ⇒ 1 K greške u noći = 1 K u polaznoj | `nightMinC` vs `nightMinOutdoorMeasuredC`, histogram razlike |
+| F3.5 | **✓ izmjereno** — **Saturacija** | koliko % zimskih dana radi na `maxFlowC` | iz `DailyRecord.shadowFlowC` vs `HomeProfile.maxHeatingFlowC` |
 | F3.6 | **Drift `intervalKey`** | koliko ključeva ima `samples < 3` | `HeatingIntervalLearning` group by `intervalKey` |
 | F3.7 | **Shadow vs. proposed** | koliko se kontroler razlikuje od krive i da li bi bio bolji | već postoji `shadow-report.service.ts`; treba samo CLI izvještaj |
 | F3.8 | **Osjetljivost** | grid `STEP_UP/STEP_DOWN` × `DWELL` | `controller_sim.cjs` sa `--grid` |
@@ -1131,3 +1133,73 @@ je popravljen sa obrazloženjem, ne prilagođen naslijepo.
 
 **Kada se vraća.** Kad F3.1 (mjerljivo od **2026-11-20**) pokaže da polazna bez
 člana sistematski prelazi ono što model traži na danima sa dobitkom.
+
+### 10.16 F3.5 — saturacija izmjereno: kuća nije na granici, i to je nalaz
+
+**Mjereno** (`saturation-readonly.cjs`, baseline run `43220294408`):
+
+```
+F3.5: 302 dana, 5 na granici, 0 CAPACITY, 0/1 domova
+```
+
+5 od 302 dana (1,7 %) predlog je bio na gornjoj granici, i **nijedan** od tih
+dana nije bio hladan. Presuda doma: **`AT_LIMIT_SOMETIMES`**, ne `CAPACITY`.
+
+**Zašto je to dobra vijest, a ne prazno mjerenje.** `CAPACITY` bi značio da kuća
+traži više nego što kotao daje — tada nijedna formula ne pomaže i F4 (puštanje
+modela) ne bi imao smisla raditi prije izolacije. Nula takvih dana znači da
+gornja granica nije ono što ograničava sistem, pa je prostor za spuštanje
+polazne stvarno otvoren.
+
+**Šta mjerenje razlikuje** (i zašto dvije kolone a ne jedna): predlog na granici
+govori šta je **formula** tražila; kotao na granici govori šta je **sistem**
+radio. Prvo bez drugog je mišljenje, drugo bez prvog ne kaže je li formula
+previsoko računala. Zato presuda ima četiri ishoda, a ne „procenat na granici".
+
+**Ograničenje koje se ne prećutkuje.** Za 301 backfillovan dan nema satnih
+uzoraka, pa `maxFlowSetC` (kotao izmjereno na granici) postoji samo za dane sa
+uzorcima — dakle mjerenje „kotao na granici" je za sada tanko, a „predlog na
+granici" je puno. To je zapisano u izlazu skripte, ne u fusnoti.
+
+---
+
+### 10.17 F3.4 — prognoza noći se još ne može ocijeniti, i uzrok je izmjeren
+
+**Prvi run** (`43219575015`): `F3.4: nema dana sa prognozom i mjerenjem`.
+**Drugi run** poslije dodate rezerve (mjerenje iz satnih uzoraka): isti ishod.
+Zato je uzrok izmjeren, ne pretpostavljen (privremena dijagnostika, poslije
+uklonjena — nije dio mjernog seta):
+
+```
+DIAG ThermostatObservation samples=902 days=4 2026-11-09 09:25 .. 2026-11-12 12:40
+DIAG model=backfill-events-1 measured=false outcome=true days=301 2026-01-05..2026-11-08
+     daysWithSamples=0 avgSamples=0 avgNightSamples=0
+DIAG model=daily-1 outcome=true days=3 2026-11-09..2026-11-11
+     daysWithSamples=3 avgSamples=254 avgNightSamples=72
+DIAG model=daily-2 outcome=false days=1 2026-11-12 daysWithSamples=1 avgNightSamples=72
+```
+
+**Tri činjenice iz toga:**
+
+1. `nightMinOutdoorMeasuredC` je `false` na **svih 305 dana** — kolonu ne piše
+   nijedan put koji je do sada radio na historiji.
+2. 301 od 305 dana je `backfill-events-1`, a `backfill-reconstruction.ts`
+   izričito ne piše tu kolonu (v. `missing.push(...)`). To nije propust: backfill
+   nema satni niz, pa nema iz čega izmjeriti noć.
+3. **Satni uzorci postoje za 4 dana** (2026-11-09 → 11-12), svi sa ~72 noćna
+   uzorka. Dakle mjerenje **nije nemoguće**, samo ima 4 dana — ispod praga od 5.
+
+**Zaključak.** F3.4 nije neuspjelo mjerenje nego mjerenje koje čeka uzorke. Prvi
+dan sa satnim nizom je **2026-11-09**, pa:
+
+- sa 5 dana uzoraka (dakle **2026-11-13**) izlazi prvi broj, iako tanki;
+- sa 8 dana (**2026-11-16**) ima smisla čitati ga kao grešku prognoze.
+
+**Rezerva je ipak zadržana.** Iako sada ne pomaže, ona je ono što će poslije
+omogućiti da se greška prognoze mjeri **bez** čekanja dnevnog obračuna za svaki
+dan — a ukloniti je znači vratiti se na jedno mjesto koje tiho ne piše kolonu.
+
+**Pouka.** „Nema podataka" nije nalaz. Nalaz je „nema podataka **zato što** je
+301 dan backfill bez satnog niza, a uzorci postoje na 4 dana". Prvi ispis je
+trošio rundu CI-ja i nije rekao ništa što se može provjeriti; drugi kaže kada
+će se moći provjeriti.

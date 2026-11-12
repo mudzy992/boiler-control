@@ -410,13 +410,57 @@ async function main() {
     out();
 
     if (homes.length === 0) {
-      out('**Nema nijednog dana sa oba polja** (`nightMinC` i `nightMinOutdoorMeasuredC`).');
+      // Prazan izlaz mora imenovati **uzrok**, ne samo reci da nema podataka.
+      // Prvi run je vratio „nema se šta mjeriti" bez objašnjenja, pa je sljedeći
+      // korak bio pogađanje. Zato se ovdje broji šta postoji: dane sa prognozom,
+      // dane sa uzorcima i dane sa obračunom.
+      const { rows: shape } = await client.query(`
+        SELECT count(*)::int AS "forecastDays",
+               count(*) FILTER (WHERE r."outcomeAt" IS NOT NULL)::int AS "outcomeDays",
+               count(*) FILTER (WHERE r."nightMinOutdoorMeasuredC" IS NOT NULL)::int AS "measuredDays"
+          FROM "DailyRecord" r
+         WHERE r."nightMinC" IS NOT NULL
+      `);
+      const { rows: obs } = await client.query(`
+        SELECT count(*)::int AS samples,
+               count(DISTINCT to_char("at" AT TIME ZONE 'Europe/Sarajevo', 'YYYY-MM-DD'))::int AS days,
+               min("at")::text AS "firstAt",
+               max("at")::text AS "lastAt"
+          FROM "ThermostatObservation"
+      `);
+      const f = shape[0] ?? { forecastDays: 0, outcomeDays: 0, measuredDays: 0 };
+      const o = obs[0] ?? { samples: 0, days: 0 };
+
+      out('## Zašto nema podataka (izmjereno, ne pretpostavljeno)');
+      out();
+      out('| šta | vrijednost |');
+      out('|---|---|');
+      out(`| dana sa prognozom \`nightMinC\` | **${f.forecastDays}** |`);
+      out(`| dana sa obračunom \`outcomeAt\` | **${f.outcomeDays}** |`);
+      out(`| dana sa izmjerenim minimumom (kolona) | **${f.measuredDays}** |`);
+      out(`| satnih uzoraka ukupno | **${o.samples}** |`);
+      out(`| dana sa satnim uzorcima | **${o.days}** |`);
+      out(
+        `| prvi / zadnji uzorak | ${String(o.firstAt).slice(0, 10)} / ${String(o.lastAt).slice(0, 10)} |`,
+      );
       out();
       out(
-        'To nije kvar skripte. `nightMinOutdoorMeasuredC` piše `DailyOutcomeService` ' +
-          'poslije prvog obračuna dana; dok ga nema, greška prognoze nema osnova.',
+        'Greška prognoze traži **prognozu i mjerenje za istu noć**. Kolona ' +
+          '`nightMinOutdoorMeasuredC` se ne popunjava retroaktivno, a satni uzorci ' +
+          'postoje samo za dane otkad se pišu — za backfillovanu historiju nema ni ' +
+          'jednog uzorka, pa se noć ne može izmjeriti ni iz uzoraka.',
       );
-      notice('F3.4: nema dana sa prognozom i mjerenjem — nema se šta mjeriti');
+      out();
+      out(
+        '**Šta to znači za plan:** F3.4 nije „neuspjelo mjerenje" nego mjerenje ' +
+          'koje čeka uzorke. Prvi dan sa uzorcima je dan kad se satni niz počeo ' +
+          'pisati; greška prognoze je mjerljiva poslije nekoliko takvih noći.',
+      );
+      notice(
+        `F3.4: nema dana sa prognozom i mjerenjem — prognoza ${f.forecastDays}, ` +
+          `obračun ${f.outcomeDays}, kolona ${f.measuredDays}, ` +
+          `uzorci ${o.samples} na ${o.days} dana (${String(o.firstAt).slice(0, 10)}→${String(o.lastAt).slice(0, 10)})`,
+      );
       return;
     }
 

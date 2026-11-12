@@ -78,17 +78,41 @@ export interface RecommendationAppliedOffsets {
   events: number;
 }
 
+/**
+ * F4.3 — članovi ravnotežnog izraza, kad preporuku daje model.
+ *
+ * `null` znači „nema podatka", ne nula: model ponekad nema noćnu prognozu ili
+ * fit, pa se taj red i ne prikazuje.
+ */
+export interface RecommendationModelBreakdown {
+  slopeS: number | null;
+  slopeSource: 'CI_HIGH' | 'POINT' | null;
+  internalGainC: number;
+  dayGainC: number;
+  outdoorRefC: number | null;
+  outdoorRefSource: 'NIGHT' | 'NIGHT_DAY_BLEND' | null;
+  equilibriumFlowC: number | null;
+  reasons: string[];
+}
+
 export interface RecommendationBreakdown {
   version: number;
+  /** F4.3: `null` za zapise prije F4.3 — ne tvrdi koji ga je motor dao. */
+  engine: 'curve' | 'model' | null;
   mode: 'FULL' | 'PROFILE_ONLY' | 'ANONYMOUS';
   intervalKey: string | null;
-  baseCurveTemp: number;
-  weightedExternalTemp: number;
-  appliedOffsets: RecommendationAppliedOffsets;
+  /**
+   * F4.4: `null` kad je `engine = 'model'` — modelski put nema krivu.
+   * Prikazati `0` bilo bi izmišljanje broja („0,0°C" čita se kao kvar).
+   */
+  baseCurveTemp: number | null;
+  weightedExternalTemp: number | null;
+  appliedOffsets: RecommendationAppliedOffsets | null;
   finalTemp: number;
   confidence: number;
   samples: number | null;
   expectedHeatTimeMin: number | null;
+  model: RecommendationModelBreakdown | null;
 }
 
 export interface Recommendation {

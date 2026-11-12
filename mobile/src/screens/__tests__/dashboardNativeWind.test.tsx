@@ -59,7 +59,9 @@ const dashboard: DashboardResponse = {
       recommendedFlowTemp: 51,
       confidenceScore: 0.72,
       breakdown: {
-        version: 1,
+        version: 2,
+        engine: 'curve',
+        model: null,
         mode: 'FULL',
         intervalKey: 'weekday_morning',
         baseCurveTemp: 51,

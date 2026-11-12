@@ -46,22 +46,43 @@ export const RecommendationBreakdown = React.memo(function RecommendationBreakdo
   const temp = (value: number) => `${formatNumber(value, 1)}°C`;
   const offset = (value: number) => `${value > 0 ? '+' : ''}${formatNumber(value, 2)}°C`;
 
+  /**
+   * F4.4: `null` se NE pretvara u `0`. `formatNumber(null)` bi dao „NaN" ili
+   * „0,0" — oboje je izmišljen broj. Crtica kaže istinu: „ovdje nema podatka".
+   */
+  const tempOrDash = (value: number | null) => (value === null ? '—' : temp(value));
+
   type Row = { key: string; label: string; value: string; tone?: 'signal' };
 
+  /*
+   * F4.4: kad preporuku daje model, krive nema. Njeni redovi se izostavljaju
+   * (ne prikazuju kao crtice) — tabela puna crtica ne objašnjava ništa, a
+   * članovi modela objašnjavaju.
+   */
+  const isModel = breakdown.engine === 'model';
+
   const rows: Row[] = [
-    { key: 'baseCurve', label: t('recommendation.baseCurve'), value: temp(breakdown.baseCurveTemp) },
-    {
-      key: 'weightedExternal',
-      label: t('recommendation.weightedExternal'),
-      value: temp(breakdown.weightedExternalTemp),
-    },
+    ...(isModel
+      ? []
+      : ([
+          {
+            key: 'baseCurve',
+            label: t('recommendation.baseCurve'),
+            value: tempOrDash(breakdown.baseCurveTemp),
+          },
+          {
+            key: 'weightedExternal',
+            label: t('recommendation.weightedExternal'),
+            value: tempOrDash(breakdown.weightedExternalTemp),
+          },
+        ] as Row[])),
     /*
      * `36`: offseti su opcioni. Stariji zapisi (`types/Dashboard.ts`: „Older
      * rows may omit it or send null") nemaju `appliedOffsets`, a kartica je na
      * takvom redu rušila cijelu Početnu (`Cannot read properties of undefined
      * (reading 'home')`). Red se izostavlja — bolje bez reda nego bez ekrana.
      */
-    ...(breakdown.appliedOffsets
+    ...(!isModel && breakdown.appliedOffsets
       ? ([
           {
             key: 'homeOffset',
@@ -109,6 +130,55 @@ export const RecommendationBreakdown = React.memo(function RecommendationBreakdo
       label: t('recommendation.expectedHeatTime'),
       value: `${formatNumber(breakdown.expectedHeatTimeMin, 0)} min`,
     });
+  }
+
+  /*
+   * F4.3: članovi modela. Preskaču se `null` članovi (nema noćne prognoze ili
+   * fita) — red sa crticom za svaki od njih tvrdi „izmjereno, ali nula".
+   */
+  const model = breakdown.model;
+  if (model) {
+    if (model.slopeS !== null) {
+      rows.push({
+        key: 'modelSlope',
+        label: t('recommendation.modelSlope'),
+        value: `${formatNumber(model.slopeS, 2)} ${
+          model.slopeSource === 'CI_HIGH'
+            ? t('recommendation.modelSlopeCi')
+            : t('recommendation.modelSlopePoint')
+        }`,
+      });
+    }
+    if (model.outdoorRefC !== null) {
+      rows.push({
+        key: 'modelOutdoorRef',
+        label: t('recommendation.modelOutdoorRef'),
+        value: `${temp(model.outdoorRefC)} ${
+          model.outdoorRefSource === 'NIGHT_DAY_BLEND'
+            ? t('recommendation.modelRefBlend')
+            : t('recommendation.modelRefNight')
+        }`,
+      });
+    }
+    rows.push({
+      key: 'modelInternalGain',
+      label: t('recommendation.modelInternalGain'),
+      value: `−${formatNumber(model.internalGainC, 2)}°C`,
+    });
+    if (model.dayGainC !== 0) {
+      rows.push({
+        key: 'modelDayGain',
+        label: t('recommendation.modelDayGain'),
+        value: `−${formatNumber(model.dayGainC, 2)}°C`,
+      });
+    }
+    if (model.equilibriumFlowC !== null) {
+      rows.push({
+        key: 'modelEquilibrium',
+        label: t('recommendation.modelEquilibrium'),
+        value: temp(model.equilibriumFlowC),
+      });
+    }
   }
 
   return (

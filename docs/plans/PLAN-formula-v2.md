@@ -9,6 +9,11 @@ historija je već popunjena), a **uzrok je redoslijed upisa** (§10.3): pisac
 preskače dan koji već ima red, pa `daily-2` može nastati tek za prvi dan bez
 reda — **11-12**. Čekanje ide od tog datuma, ne od backfill-a.
 
+**Prvi `daily-2` dan je nastao** (§10.7): 11-12, upisan `05:00 UTC` = 06:00
+lokalno, dakle **prije** današnjeg deploya u 07:42 — prethodni redeploy je
+stvarno uzeo F1 kod. Noć u tom danu je djelimična (`nightHoursUsed < 8`), pa se
+puna noć očekuje 11-13.
+
 Gejt je **zelen u cijelosti** (§10.6, `d04dfab`): Audit, Frontend CI, Mobile CI,
 Secret scan, Backend build. Usput su popravljena dva stvarna kvara koja su se
 krila iza crvenog CI-ja: mobilni `testTimeout` (§10.4) i `/api/dashboard` koji je
@@ -699,6 +704,57 @@ nijesu bili preuzimljivi** (`gh run view --log` vraća praznu arhivu), a
 anotacije nose samo ime testa. Zato sada oba mobilna workflowa dodaju Jest JSON
 kao artefakt pri padu (`b33f033`, `d04dfab`) — dijagnostika prestaje da bude
 nagađanje.
+
+### 10.7 Prvi `daily-2` dan nastao — 11-12, prije današnjeg deploya
+
+Predviđanje iz §10.3 se potvrdilo: baseline `43170154084` (2026-11-12 06:43 UTC)
+daje `305` dana i prvi red po novom piscu:
+
+```
+11-12  daily-2  (tabela zadnjih 14 dana)
+porijeklo: model=daily-2 → 1 dan
+```
+
+**Ali sat upisa mijenja tumačenje.** Red je upisan `11-12 05:00 UTC` = **06:00
+lokalno** (CET). Vlasnik je izmjene pustio u produkciju u **07:42 lokalno** =
+06:42 UTC. Dakle red je nastao **1 h 42 min prije** današnjeg deploya, iz koda
+koji je već bio na produkciji — i nosi `daily-2`. To je nezavisan dokaz da je
+**prethodni** redeploy (11-11, poslije F1 commita u 11:23 UTC) stvarno uzeo F1
+kod. Današnji deploy zato ništa ne mijenja; on je dodatna sigurnost, ne uslov.
+
+Isti run pokazuje i mehaniku obračuna ishoda: `11-11` sada ima `updatedAt
+11-12 02:20 UTC` = **03:20 lokalno**, što je sat obračuna prethodnog dana iz
+plana. Red je nastao u 05:00, a obračunat u 02:20 sljedećeg dana — dvije odvojene
+faze, kako je i zamišljeno.
+
+#### Operativno pravilo koje ovo otkriva
+
+Pisac piše dan **samo između 06:00 i 12:00 lokalno** (`isWithinProposalWindow`).
+Izvan tog prozora dan se i dalje bilježi, ali sa `skipReason: 'MISSED_WINDOW'` —
+**bez predloga**. A pošto pisac preskače dan koji već ima red (§10.3), takav dan
+je za mjerenje izgubljen trajno.
+
+Zato: **deploy (ili restart) poslije 12:00 lokalno, na dan koji još nema zapis,
+znači izgubljen dan za F2/F3.** Deploy u 07:42 je bio bezbjedan jer je zapis već
+postojao. Pravilo za dalje: puštati izmjene pisca **prije 06:00 ili poslije
+12:00 lokalno**, nikad između ako zapis još nije nastao.
+
+Notifikacija o dnevnoj prognozi koju je vlasnik dobio danas odgovara tom zapisu —
+`DAILY_RECOMMENDATION` se šalje jednom po UTC danu (`startOfUtcDay`), pa restart
+u 07:42 ne pravi drugu.
+
+#### Stanje mjerenja poslije prvog dana
+
+| stavka | vrijednost | značenje |
+|---|---|---|
+| `daily-2` dana | **1** (11-12) | pisac radi u produkciji |
+| noć u tom danu | **postoji, ali djelimična** (`nightHoursUsed < 8`) | `O_ref` je slabiji nego što izgleda |
+| `daily-2` sa `nightMinOutdoorMeasuredC` | još **0** | F3.4 i dalje nemjerljiva |
+
+Djelimična noć je očekivana za prvi dan: satni niz za 11-12 pokriva samo dio noći
+zato što je zapis nastao u 06:00 lokalno, a noć je „minimalna temperatura u
+satima prije zore". Puna noć (`nightHoursUsed >= 8`) se očekuje za 11-13, jer
+tada satni niz pokriva cijelu noć između dva zapisa.
 
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u

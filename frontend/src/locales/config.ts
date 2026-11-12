@@ -528,6 +528,17 @@ const enUS = {
     heatTime: "Expected heat-up time",
     mode: "Mode",
     interval: "Interval",
+    // F4.3 — modelski put. Nazivi prate izraz, ne kod: korisnik traži
+    // „zašto ova polazna", a ne imena promjenljivih.
+    modelSlope: "House heat-loss slope",
+    modelSlopeCi: "(conservative estimate)",
+    modelSlopePoint: "(measured)",
+    modelOutdoorRef: "Reference outdoor temperature",
+    modelRefBlend: "(night + day)",
+    modelRefNight: "(night only)",
+    modelInternalGain: "Internal gains",
+    modelDayGain: "Daily gain (sun / guests)",
+    modelEquilibrium: "Equilibrium flow",
   },
   homeProfile: {
     title: "Home Profile",
@@ -1096,6 +1107,15 @@ const bsBS = {
     heatTime: "Očekivano vrijeme zagrijavanja",
     mode: "Režim",
     interval: "interval",
+    modelSlope: "Nagib gubitaka doma",
+    modelSlopeCi: "(konzervativna procjena)",
+    modelSlopePoint: "(izmjereno)",
+    modelOutdoorRef: "Referentna vanjska temperatura",
+    modelRefBlend: "(noć + dan)",
+    modelRefNight: "(samo noć)",
+    modelInternalGain: "Unutrašnji dobici",
+    modelDayGain: "Dnevni dobitak (sunce / gosti)",
+    modelEquilibrium: "Ravnotežna polazna",
   },
   homeProfile: {
     title: "Profil doma",

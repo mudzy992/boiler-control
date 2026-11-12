@@ -229,6 +229,33 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: node scripts/baseline-readonly.cjs
 
+      # F4.5: koliko različitih polaznih vrijednosti kotao dobije u istom danu.
+      # Mjeri se PRIJE nego se dirne `/boiler/sync` — inače se proizvodni kod
+      # mijenja na osnovu mišljenja, a ne broja.
+      #
+      # Prvi pokušaj je čitao `DailyRecord.params.formulaDriftC` i vratio
+      # `NO_DRIFT_RECORDED: 56 dana, 0 sa kolonom` — kolona se ne piše. Zato se
+      # sada mjeri `BoilerHistory.suggestedFlowTemp`: broj koji je stvarno
+      # otišao kotlu, bez zavisnosti od toga šta writer upisuje.
+      - name: F4.5 oscilacija polazne (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/daily-flow-oscillation-readonly.cjs > "$RUNNER_TEMP/osc.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/osc.log"
+          # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.
+          grep -E "^  " "$RUNNER_TEMP/osc.log" \
+            | while IFS= read -r line; do echo "::notice::F4.5$line"; done
+          if [ "$code" -ne 0 ]; then
+            # Uzrok mora stici do anotacije: bez toga se vidi samo "nije
+            # proslo", a ne zasto — a upravo je uzrok nalaz.
+            echo "::error::F4.5 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/osc.log" \
+              | while IFS= read -r line; do echo "::error::F4.5 uzrok: $line"; done
+          fi
+
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —
       # mjeri se prije nego se napiše ijedan backfill red.
       - name: Backfill coverage (read-only)

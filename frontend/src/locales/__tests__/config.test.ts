@@ -63,7 +63,13 @@ describe("i18n — inicijalizacija", () => {
     // 496 → 498 (šesti krug): `homeProfile.flowBoundsFromCatalog`,
     // `flowBoundsManual` — granica polazne je podatak **po tipu bojlera**, pa
     // forma mora reći odakle broj dolazi (katalog ili korisnikov ručni unos).
-    expect(en.length).toBe(498);
+    //
+    // 498 → 507 (F4.3): devet ključeva modelskog puta u breakdown-u
+    // (`modelSlope`, `modelSlopeCi`, `modelSlopePoint`, `modelOutdoorRef`,
+    // `modelRefBlend`, `modelRefNight`, `modelInternalGain`, `modelDayGain`,
+    // `modelEquilibrium`). Bez njih bi modelski put prikazivao sirove ključeve
+    // umjesto objašnjenja — a objašnjenje je i bio razlog breakdown-a.
+    expect(en.length).toBe(507);
   });
 });
 

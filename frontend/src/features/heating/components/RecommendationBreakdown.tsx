@@ -20,6 +20,79 @@ const formatOffset = (value: number): string => {
 };
 
 /**
+ * F4.4 — vrijednost koje **nema**.
+ *
+ * `null` u breakdown-u nije nula: modelski put nema krivu, pa nema ni „bazne
+ * krivulje". Prikazati `0,0°C` značilo bi tvrditi da je kriva izračunata i da
+ * iznosi nula — korisnik bi to čitao kao kvar. Crtica kaže „ovdje nema
+ * podatka", što je istina.
+ */
+const NO_VALUE = '—';
+
+const formatTempOrDash = (value: number | null): string =>
+  value === null ? NO_VALUE : formatTemp(value);
+
+type ModelBreakdown = NonNullable<
+  RecommendationBreakdownData['model']
+>;
+
+/**
+ * F4.3 — članovi ravnotežnog izraza kao redovi tabele.
+ *
+ * Prikazuje se **samo ono što postoji**. Modelski put je mlad: nekad nema
+ * noćne prognoze (`outdoorRefC = null`), nekad nema fita krive (`slopeS =
+ * null`). Red sa crticom za takav član tvrdi „izmjereno, ali nula" — a to nije
+ * istina. Zato se `null` članovi preskaču, a `reasons` kaže zašto.
+ */
+const modelRows = (
+  model: ModelBreakdown | null,
+  t: (key: string) => string,
+): Array<{ label: string; value: string }> => {
+  if (!model) return [];
+
+  const rows: Array<{ label: string; value: string }> = [];
+
+  if (model.slopeS !== null) {
+    rows.push({
+      label: t('recommendation.modelSlope'),
+      // Izvor je bitan: dok je model mlad, koristi se gornja granica intervala
+      // pouzdanosti, pa nagib nije „tačka" nego namjerno konzervativan broj.
+      value:
+        model.slopeSource === 'CI_HIGH'
+          ? `${model.slopeS.toFixed(2)} ${t('recommendation.modelSlopeCi')}`
+          : `${model.slopeS.toFixed(2)} ${t('recommendation.modelSlopePoint')}`,
+    });
+  }
+  if (model.outdoorRefC !== null) {
+    rows.push({
+      label: t('recommendation.modelOutdoorRef'),
+      value: `${formatTemp(model.outdoorRefC)} ${
+        model.outdoorRefSource === 'NIGHT_DAY_BLEND'
+          ? t('recommendation.modelRefBlend')
+          : t('recommendation.modelRefNight')
+      }`,
+    });
+  }
+  rows.push({
+    label: t('recommendation.modelInternalGain'),
+    value: `−${model.internalGainC.toFixed(2)}°C`,
+  });
+  if (model.dayGainC !== 0) {
+    rows.push({
+      label: t('recommendation.modelDayGain'),
+      value: `−${model.dayGainC.toFixed(2)}°C`,
+    });
+  }
+  if (model.equilibriumFlowC !== null) {
+    rows.push({
+      label: t('recommendation.modelEquilibrium'),
+      value: formatTemp(model.equilibriumFlowC),
+    });
+  }
+  return rows;
+};
+
+/**
  * FE2-10: prikaz ISKLJUČIVO iz backend breakdown snapshot-a.
  */
 export const RecommendationBreakdown = ({
@@ -30,29 +103,46 @@ export const RecommendationBreakdown = ({
 
   if (!breakdown) return null;
 
+  // F4.4: dvije grane, a ne „ista tabela sa prazninama". Kad je motor `model`,
+  // krive nema — pa se ne prikazuju njena tri reda sa crticama, nego članovi
+  // izraza koji su broj zaista dali. Tabela sa šest crtica ne objašnjava ništa.
+  const isModel = breakdown.engine === 'model';
+
+  const offsets = breakdown.appliedOffsets;
+
   const rows: Array<{ label: string; value: string }> = [
-    { label: t('recommendation.baseCurve'), value: formatTemp(breakdown.baseCurveTemp) },
-    {
-      label: t('recommendation.weightedExternalTemp'),
-      value: formatTemp(breakdown.weightedExternalTemp),
-    },
-    {
-      label: t('recommendation.homeOffset'),
-      value: formatOffset(breakdown.appliedOffsets.home),
-    },
-    {
-      label: t('recommendation.intervalOffset'),
-      value: formatOffset(breakdown.appliedOffsets.interval),
-    },
-    {
-      label: t('recommendation.eventsOffset'),
-      value: formatOffset(breakdown.appliedOffsets.events),
-    },
+    ...(isModel
+      ? []
+      : [
+          {
+            label: t('recommendation.baseCurve'),
+            value: formatTempOrDash(breakdown.baseCurveTemp),
+          },
+          {
+            label: t('recommendation.weightedExternalTemp'),
+            value: formatTempOrDash(breakdown.weightedExternalTemp),
+          },
+          {
+            label: t('recommendation.homeOffset'),
+            value: offsets ? formatOffset(offsets.home) : NO_VALUE,
+          },
+          {
+            label: t('recommendation.intervalOffset'),
+            value: offsets ? formatOffset(offsets.interval) : NO_VALUE,
+          },
+          {
+            label: t('recommendation.eventsOffset'),
+            value: offsets ? formatOffset(offsets.events) : NO_VALUE,
+          },
+        ]),
     { label: t('recommendation.finalTemp'), value: formatTemp(breakdown.finalTemp) },
     {
       label: t('recommendation.confidence'),
       value: `${Math.round(breakdown.confidence * 100)}%`,
     },
+    // F4.3: članovi izraza. `null` se preskače (npr. nema noćne prognoze) —
+    // red sa crticom za svaki `null` član samo bi zatrpao tabelu.
+    ...modelRows(breakdown.model, t),
   ];
 
   if (breakdown.samples !== null) {

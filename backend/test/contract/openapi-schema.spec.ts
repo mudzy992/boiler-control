@@ -450,17 +450,31 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
       expect(schemas['RecommendationResponseDto'].required ?? []).not.toContain(
         'breakdown',
       );
+      // F4.3: `engine` i `model` ulaze u javni ugovor. Skup je zaključan da
+      // se polje ne može dodati a da ga klijenti ne dobiju u ugovoru.
       expect(propsOf('RecommendationBreakdownDto').sort()).toEqual([
         'appliedOffsets',
         'baseCurveTemp',
         'confidence',
+        'engine',
         'expectedHeatTimeMin',
         'finalTemp',
         'intervalKey',
         'mode',
+        'model',
         'samples',
         'version',
         'weightedExternalTemp',
+      ]);
+      expect(propsOf('RecommendationModelBreakdownDto').sort()).toEqual([
+        'dayGainC',
+        'equilibriumFlowC',
+        'internalGainC',
+        'outdoorRefC',
+        'outdoorRefSource',
+        'reasons',
+        'slopeS',
+        'slopeSource',
       ]);
       expect(propsOf('RecommendationAppliedOffsetsDto').sort()).toEqual([
         'events',

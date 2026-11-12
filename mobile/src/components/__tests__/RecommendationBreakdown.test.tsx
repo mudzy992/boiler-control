@@ -7,7 +7,9 @@ jest.mock('../../hooks/useTranslation', () => ({
 }));
 
 const fullBreakdown: BreakdownData = {
-  version: 1,
+  version: 2,
+  engine: 'curve',
+  model: null,
   mode: 'FULL',
   intervalKey: 'weekday_morning',
   baseCurveTemp: 51.123456,
@@ -83,6 +85,56 @@ describe('MO2-15 RecommendationBreakdown', () => {
     expect(queryByText('recommendation.intervalOffset')).toBeNull();
     expect(queryByText('recommendation.eventsOffset')).toBeNull();
     expect(getByText('51.0°C')).toBeTruthy();
+  });
+
+  /**
+   * F4.4 — isti ugovor kao web, isti rizik: `null` u `baseCurveTemp` ne smije
+   * postati „0.0°C". Na mobilnom je dodatna opasnost `formatNumber(null)` koji
+   * tiho daje „NaN" — dakle test traži ODSUSTVO nule, ne prisustvo crtice.
+   */
+  it('modelski put ne prikazuje krivu i nikad izmisljenu nulu', async () => {
+    const { queryByText, getByText } = await render(
+      <RecommendationBreakdown
+        breakdown={{
+          ...fullBreakdown,
+          engine: 'model',
+          baseCurveTemp: null,
+          weightedExternalTemp: null,
+          appliedOffsets: null,
+          model: {
+            slopeS: 0.94,
+            slopeSource: 'CI_HIGH',
+            internalGainC: 1.02,
+            dayGainC: 0,
+            outdoorRefC: -3.4,
+            outdoorRefSource: 'NIGHT_DAY_BLEND',
+            equilibriumFlowC: 44.04,
+            reasons: [],
+          },
+        }}
+      />
+    );
+
+    expect(queryByText('recommendation.baseCurve')).toBeNull();
+    expect(queryByText('recommendation.weightedExternal')).toBeNull();
+    expect(queryByText('recommendation.homeOffset')).toBeNull();
+
+    // Nijedna izmisljena nula, ni NaN.
+    expect(queryByText('0.0°C')).toBeNull();
+    expect(queryByText(/NaN/)).toBeNull();
+
+    // A clanovi modela — jesu tu.
+    expect(getByText('44.0°C')).toBeTruthy();
+    expect(getByText(/0.94/)).toBeTruthy();
+  });
+
+  it('stari zapis bez engine prikazuje krivu kao i prije', async () => {
+    // `null` znaci "ne zna se koji motor", ne "model" — red ne smije nestati.
+    const { getByText } = await render(
+      <RecommendationBreakdown breakdown={{ ...fullBreakdown, engine: null }} />
+    );
+    expect(getByText('recommendation.baseCurve')).toBeTruthy();
+    expect(getByText('51.1°C')).toBeTruthy();
   });
 
   it('renders nothing without a backend breakdown', async () => {

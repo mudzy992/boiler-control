@@ -89,7 +89,7 @@ može ni ocijeniti.
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
 | F4.6 | **urađeno**: `HeatingRecommendationService` više ne piše `Recommendation`; mjereno 15/54 dana, max 3,74 K | §10.26b |
 | F4.8 | **urađeno**: granica unosa = fizički pod (30), ne pod krive (46); mjereno 32,9 °C gdje je unos bio zaključan | §10.27 |
-| F4.7 | **BLOKIRANO**: 4 živa potrošača (ne 2) — v. tabelu u §10.28; migracija u 4 koraka | §10.28 |
+| F4.7 | **BLOKIRANO**: 4 živa potrošača (§10.28) + mjereno da je motor **živi fallback** 5/61 dana, praznina 2026-10-06…10 (§10.29) | §10.28, §10.29 |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
@@ -1752,3 +1752,41 @@ svaki sljedeći uzima zdravo stanje prethodnog:
 **Gejt za početak:** korak 1 ima svoje mjerenje. Do tada F4.7 ostaje
 blokiran, a `grep` u tabeli ostaje neispunjen **namjerno** — lažno zelenilo
 bilo bi gore od otvorene stavke.
+
+### 10.29 F4.7 korak 1 — motor je i dalje živi fallback (5/61)
+
+**Šta se mjerilo.** F4.7 traži da `Heating/engine` nestane. Prvo se mora znati
+koliko puta je motor bio **jedini broj**: u `boiler.service` on je fallback kad
+za danas nema `DailyRecord`-a ili predloga. Mjeri se po **kuća-danu**
+(`curve-fallback-readonly.cjs`).
+
+**Tri pogrešna nalaza prije tačnog — i zašto su popravljena, a ne zataškana.**
+
+| run | nalaz | zašto nije bio tačan |
+|---|---|---|
+| `43305122303` | 61/61 bez zapisa | spajalo se po `homeProfileId`; skripte u repou spajaju po `userId` |
+| `43311754595` | isto, i poslije popravke veze | `generate_series(date, date, interval)::text` daje **timestamp** `2026-10-09 00:00:00+00`, a `localDate` je `YYYY-MM-DD` — join po tekstu promaši sve |
+| `43316724988` | 5/61, presuda odrezana | GitHub drži **10 anotacija** po koraku; presuda je bila zadnja linija |
+
+**Dijagnostika je bila ta koja je našla drugu grešku, ne pretpostavka.** Uz
+nalaz se mjeri i veza: `56` redova u prozoru, `56` spojenih po `userId`, `56` po
+`homeProfileId`, `0` siročadi. Kad se to ne slaže sa `0` u gridu, greška je u
+**gridu**, ne u vezi — i tako je nađen `to_char`. Bez tog reda nalaz bi bio
+uvjerljiv i netačan.
+
+**Tačan nalaz** (run `43318671541`, 60 dana, 1 kuća):
+
+- **56/61** kuća-dana ima jutarnji predlog; **0** zapisa bez predloga;
+- **5** dana **bez zapisa**: `2026-10-06` … `2026-10-10`;
+- prvi zapisani dan: **2026-09-13** — dakle praznina je **poslije** prvog
+  zapisa, pa je to **živa zavisnost**, ne artefakt početka rada;
+- presuda: **`CURVE_IS_LIVE_FALLBACK`**.
+
+Pošto je praznina u sredini rada, brisanje motora bi tih 5 dana ostavilo bez
+polazne — a to je tačno ono što F4.7 ne smije uraditi. **Zato F4.7 korak 1 nije
+završen** i brisanje ostaje blokirano.
+
+**Pet dana je malo, i to je dio nalaza.** Ne tvrdi se da je uzorak velik; tvrdi
+se da praznina postoji, da je identificirana po datumu, i da je ne treba
+pripisati početku rada kad nije.
+

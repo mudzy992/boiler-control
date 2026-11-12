@@ -1,4 +1,5 @@
 import { FlowTempInput } from '../engine/types';
+import { overshootCorrectionFrom } from '../../HeatingRecommendation/overshoot-learning';
 import { ProfileStrategy } from './profile.strategy';
 
 export class FullStrategy extends ProfileStrategy {
@@ -12,14 +13,28 @@ export class FullStrategy extends ProfileStrategy {
     // 2. Interval Offset
     let intervalOffset = 0;
     if (input.intervalLearning) {
-      const overshootCorrection = input.intervalLearning.avgOvershoot ?? 0;
+      // F5.4: premašivanje ulazi **jednom**.
+      //
+      // Ranije je glasilo `offset + avgOvershoot * 0.5`, a `offset` je i sam
+      // pokretni prosjek **istog mjerenja** (`overshoot` u
+      // `heating.recommendation.service.ts`). Isti broj je tako ulazio 1,5
+      // puta, bez ijednog mjesta u kodu gdje se to vidi kao odluka.
+      //
+      // Sada: `offset` nosi ukupno odstupanje u oba smjera (i podbačaj), a
+      // premašivanje nosi **samo** 90. percentil premašivanja, sa težinom
+      // unutar `overshootCorrectionFrom`. Redovi prije F5.4 nemaju percentil
+      // ⇒ korekcija je `null` ⇒ ne dodaje se ništa; stara vrijednost se ne
+      // vraća kao zamjena, jer je upravo ona bila drugi put.
       const reachTimeCorrection = input.intervalLearning.avgReachTimeMin
         ? this.reachTimeAdjustment(input.intervalLearning.avgReachTimeMin)
         : 0;
+      const overshootCorrection = overshootCorrectionFrom(
+        input.intervalLearning.p90OvershootC,
+      );
 
       intervalOffset =
         (input.intervalLearning.offset ?? 0) +
-        overshootCorrection * 0.5 +
+        (overshootCorrection ?? 0) +
         reachTimeCorrection * 0.2;
 
       if (input.intervalKey?.includes('morning')) intervalOffset *= 0.6;

@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
 import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
+import { describeFlowClamp } from './clamp-log';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 import type { DailyWeatherInput } from '../Weather/daily-weather-input';
 import {
@@ -127,6 +128,13 @@ type LoadedHome = {
   floorArea: number;
   learningOffset: number;
   learningConfidence: number | null;
+  /**
+   * Granice doma (`F13`). `include: { user: true }` učitava cijeli profil, pa
+   * su dostupne — tip ih je samo prećutkivao. Trebaju F5.5: bez njih se klamp
+   * na granicu doma ne može razlikovati od klampa na fizičku granicu kotla.
+   */
+  minHeatingFlowC: number | null;
+  maxHeatingFlowC: number | null;
   seasonMode: SeasonMode;
   weatherTimezone: string | null;
   user: {
@@ -399,6 +407,28 @@ export class DailyRecordWriter {
 
     const result = FlowTemperatureEngine.calculate(input);
     const proposedFlowTemp = clampFlowTemp(result.finalTemp);
+
+    // F5.5: klamp ide u **log**, ne samo u `params`. Tri različita razloga
+    // (fizička granica, granica doma, dnevna promjena) do sada su izgledala
+    // isto: „polazna je 55, traženo je 58". Bez imena se korisničko
+    // podešavanje čita kao kvar motora, a dnevno usporavanje kao odsijecanje.
+    const clampReport = describeFlowClamp({
+      rawC: result.finalTemp,
+      clampedC: proposedFlowTemp,
+      systemMinC: FLOW_TEMP_MIN_C,
+      systemMaxC: FLOW_TEMP_MAX_C,
+      homeMinC: home.minHeatingFlowC ?? null,
+      homeMaxC: home.maxHeatingFlowC ?? null,
+    });
+    if (clampReport.applied) {
+      // `warn` a ne `log`: klamp na fizičkoj granici je signal da motor traži
+      // nemoguće, a ne rutina. Granica doma je očekivana, ali se i ona mora
+      // vidjeti — po tome se razlikuje „korisnik tako želi" od „motor griješi".
+      this.logger.warn(
+        `Kuća ${home.id} ${context.localDate}: ${clampReport.message} ` +
+          `(mode ${input.mode}${intervalKey ? `, interval ${intervalKey}` : ''})`,
+      );
+    }
     const breakdown = buildRecommendationBreakdown(result, {
       mode: input.mode,
       intervalKey,
@@ -432,10 +462,17 @@ export class DailyRecordWriter {
       result,
       breakdown,
       clamp: {
-        applied: proposedFlowTemp !== result.finalTemp,
+        // F5.5: `bound` je **isti** izvor kao log (`clamp-log.ts`), da zapis i
+        // log ne mogu reći različito. `applied` dolazi iz istog izvještaja, pa
+        // ni prag od 0,001 K nije dupliran.
+        applied: clampReport.applied,
+        bound: clampReport.bound,
+        cutK: clampReport.cutK,
         rawFinalTemp: result.finalTemp,
         minC: FLOW_TEMP_MIN_C,
         maxC: FLOW_TEMP_MAX_C,
+        homeMinC: home.minHeatingFlowC ?? null,
+        homeMaxC: home.maxHeatingFlowC ?? null,
       },
     });
 

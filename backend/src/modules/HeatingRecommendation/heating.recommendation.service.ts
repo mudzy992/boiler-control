@@ -7,6 +7,8 @@ import {
   intervalKeyForDevice,
 } from '../Heating/interval-key';
 import { buildRecommendationBreakdown } from './recommendation-breakdown';
+import { intervalConfidence } from './learning-confidence';
+import { nextPercentile } from './overshoot-learning';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 
 export interface HeatingEventData {
@@ -99,22 +101,48 @@ export class HeatingRecommendationService {
           overshoot) /
         newSamples;
 
-      const newConfidence = Math.min(
-        1,
-        ((intervalLearning.confidence ?? 0.1) *
-          (intervalLearning.samples ?? 0) +
-          0.1) /
-          newSamples,
-      );
+      // F5.3: `confidence` se **računa iz dokaza**, a ne akumulira.
+      //
+      // Stara linija je bila pokretni prosjek sa fiksnim prirastom 0,1, čija je
+      // fiksna tačka 0,1 — pa je poslije 320 uzoraka `confidence` bio 0,1000
+      // iako ulazi u 35 % health score-a. Izmjereno, ne procijenjeno.
+      //
+      // Odstupanje uzoraka od modela mjeri se **istim brojem koji se već
+      // akumulira**: `avgOvershoot` je prosječno premašivanje cilja u tom
+      // dijelu dana, pa je njegova apsolutna vrijednost razumna mjera
+      // neslaganja. Standardno odstupanje bi bilo tačnije, ali bi tražilo da
+      // pamtimo svaki uzorak — a interval je jedan red u bazi.
+      // F5.4: percentil premašivanja, iz istih uzoraka iz kojih nastaje prosjek.
+      //
+      // Zašto se ovdje vidi samo jedan novi uzorak: `HeatingIntervalLearning`
+      // je **jedan red** po intervalu, pa istoriju uzoraka ne pamtimo. Zato se
+      // percentil računa iz dva izvora koja se ne gube:
+      //   - već zapisan `p90OvershootC` (prethodni percentil),
+      //   - novi uzorak i `avgOvershoot` kao procjena repa prije nego se
+      //     skupi `OVERSHOOT_MIN_SAMPLES`.
+      // Dok uzoraka ima manje od praga, `estimateOvershootCorrection` vraća
+      // `null` i percentil se **ne mijenja** — bolje ne tvrditi nego izmisliti
+      // percentil iz dva broja.
+      const p90OvershootC = nextPercentile({
+        previousP90: intervalLearning.p90OvershootC,
+        samples: newSamples,
+        newSample: overshoot,
+      });
+
+      const residualStd = Math.abs(newAvgOvershoot);
+      const { confidence: newConfidence, reason: confidenceReason } =
+        intervalConfidence({ samples: newSamples, residualStd });
 
       await this.prisma.heatingIntervalLearning.updateMany({
         where: { id: intervalLearning.id },
         data: {
           avgReachTimeMin: newAvgReach,
           avgOvershoot: newAvgOvershoot,
+          p90OvershootC,
           offset: newOffset,
           samples: newSamples,
           confidence: newConfidence,
+          residualStd,
           lastUpdated: new Date(),
         },
       });
@@ -122,7 +150,9 @@ export class HeatingRecommendationService {
       this.logger.debug(
         `[HeatingRecommendation] Updated IntervalLearning ${intervalKey} | reachTime=${reachTime.toFixed(
           2,
-        )} | overshoot=${overshoot.toFixed(2)}`,
+        )} | overshoot=${overshoot.toFixed(2)} | ` +
+          `confidence=${newConfidence.toFixed(3)} (residual ${residualStd.toFixed(2)} K` +
+          `${confidenceReason === 'OK' ? '' : `, ${confidenceReason}`})`,
       );
     }
 
@@ -164,7 +194,10 @@ export class HeatingRecommendationService {
       intervalLearning: {
         offset: intervalLearning.offset,
         confidence: intervalLearning.confidence,
-        avgOvershoot: intervalLearning.avgOvershoot,
+        // F5.4: motor čita percentil, ne prosjek. Prosjek ostaje u zapisu (API
+        // i dashboard ga prikazuju), ali u odluku više ne ulazi — v.
+        // `overshoot-learning.ts`.
+        p90OvershootC: intervalLearning.p90OvershootC,
         avgReachTimeMin: intervalLearning.avgReachTimeMin,
       },
       recentEvents: [],

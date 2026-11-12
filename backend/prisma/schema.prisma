@@ -287,6 +287,14 @@ model HeatingIntervalLearning {
   avgOvershoot    Float
   offset          Float       @default(0)
   confidence      Float       @default(0)
+  /// F5.4: 90. percentil premašivanja cilja (K). Prosjek (`avgOvershoot`) je
+  /// nosio dva dana od 5 K kao tipske dane. `null` = red prije F5.4 ili manje
+  /// od `OVERSHOOT_MIN_SAMPLES` uzoraka.
+  p90OvershootC   Float?
+  /// F5.3: izmjereno odstupanje uzoraka od modela, u °C (`intervalConfidence`).
+  /// `null` = nije izmjereno ⇒ `confidence = 0` (neprovjeren model se ne
+  /// proglašava pouzdanim). V. `learning-confidence.ts`.
+  residualStd     Float?
   samples         Int         @default(0)
   lastUpdated     DateTime    @default(now())
   homeProfile     HomeProfile @relation(fields: [homeProfileId], references: [id])

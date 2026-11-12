@@ -209,7 +209,9 @@ export class BoilerService {
           offset: intervalLearning.offset,
           confidence: intervalLearning.confidence,
           avgReachTimeMin: intervalLearning.avgReachTimeMin,
-          avgOvershoot: intervalLearning.avgOvershoot,
+          // F5.4: motor čita percentil, ne prosjek — inače bi premašivanje
+          // ponovo ulazilo dvaput (jednom kroz `offset`, jednom kroz ovo).
+          p90OvershootC: intervalLearning.p90OvershootC,
         };
         expectedHeatTimeMin = intervalLearning.avgReachTimeMin ?? undefined;
         mode = 'FULL';

@@ -31,7 +31,19 @@ export interface HomeProfileInput {
 export interface IntervalLearningInput {
   offset: number;
   confidence: number;
+  /**
+   * @deprecated F5.4: premašivanje je ulazilo **dvaput** (`offset` i ovo, sa
+   * težinama 1 i 0,5). Polje ostaje jer ga čita API ugovor i dashboard, ali
+   * **strategija ga više ne koristi** — koristi `p90OvershootC`.
+   */
   avgOvershoot?: number;
+  /**
+   * F5.4: 90. percentil premašivanja (K). Zamjenjuje `avgOvershoot` u
+   * strategiji: prosjek je nosio dva dana od 5 K kao da su tipični dani.
+   * `null`/`undefined` = nema mjerenja (red prije F5.4) ⇒ korekcija se ne
+   * primjenjuje, a stara vrijednost se **ne** vraća kao zamjena.
+   */
+  p90OvershootC?: number | null;
   avgReachTimeMin?: number;
   samples?: number;
 }

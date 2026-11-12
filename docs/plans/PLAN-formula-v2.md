@@ -74,11 +74,14 @@ može ni ocijeniti.
 | F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`; mjerljivo od **2026-11-20** | §10.10 |
 | F3.3 — ablacija | **urađeno**: `--ablate`, `--table`, `--self-test` | §10.14 |
 | F3.7 — shadow vs. proposed | **izmjereno**: podizanja su `NO_MODEL`; drugi prozor **2026-11-30** | §10.9 |
+| F3.4 — greška prognoze | **skripta urađena**; podataka ima za 4 dana ⇒ prvi broj **2026-11-13** | §10.17 |
+| F3.5 — saturacija | **izmjereno**: 5/302 dana na granici, 0 `CAPACITY` | §10.16 |
 | F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
 | F4 — penzionisanje krive | **nije početo**, blokirano F3.1 | — |
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
 **Dva paralelna sistema.** `DailyRecord` (novi, tačan) i `Recommendation`
@@ -360,8 +363,8 @@ Nijedna ne mijenja podatke.
 | F3.1 | **Pokrivenost CI** | „95 % interval je stvarno 95 %" — koliko % dana padne unutar `[ciLow, ciHigh]` | novi `scripts/audit/ci_coverage.cjs`: za svaki dan sa modelom, uporedi stvarni `y` sa intervalom |
 | F3.2 | **Kalibracija** | Brier score za `confidence` (mora biti bolji od stalnog 0,5) | isto, plus `confidence` iz `HeatingIntervalLearning` |
 | F3.3 | **✓ urađeno** — **Ablacija** | koji član stvarno nosi odluku | `learning_sim.cjs --ablate=uday\|cihigh\|nightfloor\|shortcycle` |
-| F3.4 | **Greška prognoze** | `dF/dO = s ≈ 1` ⇒ 1 K greške u noći = 1 K u polaznoj | `nightMinC` vs `nightMinOutdoorMeasuredC`, histogram razlike |
-| F3.5 | **Saturacija** | koliko % zimskih dana radi na `maxFlowC` | iz `DailyRecord.shadowFlowC` vs `HomeProfile.maxHeatingFlowC` |
+| F3.4 | **✓ skripta** — **Greška prognoze** | `dF/dO = s ≈ 1` ⇒ 1 K greške u noći = 1 K u polaznoj | `nightMinC` vs `nightMinOutdoorMeasuredC`, histogram razlike |
+| F3.5 | **✓ izmjereno** — **Saturacija** | koliko % zimskih dana radi na `maxFlowC` | iz `DailyRecord.shadowFlowC` vs `HomeProfile.maxHeatingFlowC` |
 | F3.6 | **Drift `intervalKey`** | koliko ključeva ima `samples < 3` | `HeatingIntervalLearning` group by `intervalKey` |
 | F3.7 | **Shadow vs. proposed** | koliko se kontroler razlikuje od krive i da li bi bio bolji | već postoji `shadow-report.service.ts`; treba samo CLI izvještaj |
 | F3.8 | **Osjetljivost** | grid `STEP_UP/STEP_DOWN` × `DWELL` | `controller_sim.cjs` sa `--grid` |
@@ -409,9 +412,9 @@ ostavlja dashboard sa brojem koji nitko ne održava.
 |---|---|---|
 | F5.1 | Jedan modul konstanti (`FLOW_MIN/MAX`, dead zone 1,0 K, tolerancije) + contract test | ista konstanta danas u `flow-bounds.ts:12`, `base.strategy.ts:8`, `day-outcome.ts:27`, `thermostat.polling.service.ts:49` |
 | F5.2 | `getIntervalKey()` sa `User.timezone`; jedan format ključa | `boiler.service.ts:240`, `heating.recommendation.service.ts:210` koriste server `new Date()` |
-| F5.3 | `confidence` prestaje biti monotona: `n/(n+5)·max(0, 1 − residualStd/2)` | F7; ulazi u health score sa 35 % |
-| F5.4 | Overshoot se uči jednom (percentil, ne prosjek) | sada dvaput: `HeatingRecommendation` EMA + `0,5·avgOvershoot` u `full.strategy.ts:15` |
-| F5.5 | Log svakog klampa sa razlogom | danas se clamp vidi samo u `params.clamp`, ne u logu |
+| F5.3 | **✓ urađeno** — `confidence` prestaje biti monotona: `n/(n+10)·max(0, 1 − residualStd/2)` | F7; ulazi u health score sa 35 % |
+| F5.4 | **✓ urađeno** — Overshoot se uči jednom (p90, ne prosjek) | sada dvaput: `HeatingRecommendation` EMA + `0,5·avgOvershoot` u `full.strategy.ts:15` |
+| F5.5 | **✓ urađeno** — Log svakog klampa sa razlogom (`clamp-log.ts`) | danas se clamp vidi samo u `params.clamp`, ne u logu |
 | F5.6 | **✓ urađeno** — `docs/FORMULA.md` jedna stranica: jednačine, konstante, opravdanje | sada rasuto po komentarima i „§" referencama |
 
 ---
@@ -1131,3 +1134,224 @@ je popravljen sa obrazloženjem, ne prilagođen naslijepo.
 
 **Kada se vraća.** Kad F3.1 (mjerljivo od **2026-11-20**) pokaže da polazna bez
 člana sistematski prelazi ono što model traži na danima sa dobitkom.
+
+### 10.16 F3.5 — saturacija izmjereno: kuća nije na granici, i to je nalaz
+
+**Mjereno** (`saturation-readonly.cjs`, baseline run `43220294408`):
+
+```
+F3.5: 302 dana, 5 na granici, 0 CAPACITY, 0/1 domova
+```
+
+5 od 302 dana (1,7 %) predlog je bio na gornjoj granici, i **nijedan** od tih
+dana nije bio hladan. Presuda doma: **`AT_LIMIT_SOMETIMES`**, ne `CAPACITY`.
+
+**Zašto je to dobra vijest, a ne prazno mjerenje.** `CAPACITY` bi značio da kuća
+traži više nego što kotao daje — tada nijedna formula ne pomaže i F4 (puštanje
+modela) ne bi imao smisla raditi prije izolacije. Nula takvih dana znači da
+gornja granica nije ono što ograničava sistem, pa je prostor za spuštanje
+polazne stvarno otvoren.
+
+**Šta mjerenje razlikuje** (i zašto dvije kolone a ne jedna): predlog na granici
+govori šta je **formula** tražila; kotao na granici govori šta je **sistem**
+radio. Prvo bez drugog je mišljenje, drugo bez prvog ne kaže je li formula
+previsoko računala. Zato presuda ima četiri ishoda, a ne „procenat na granici".
+
+**Ograničenje koje se ne prećutkuje.** Za 301 backfillovan dan nema satnih
+uzoraka, pa `maxFlowSetC` (kotao izmjereno na granici) postoji samo za dane sa
+uzorcima — dakle mjerenje „kotao na granici" je za sada tanko, a „predlog na
+granici" je puno. To je zapisano u izlazu skripte, ne u fusnoti.
+
+---
+
+### 10.17 F3.4 — prognoza noći se još ne može ocijeniti, i uzrok je izmjeren
+
+**Prvi run** (`43219575015`): `F3.4: nema dana sa prognozom i mjerenjem`.
+**Drugi run** poslije dodate rezerve (mjerenje iz satnih uzoraka): isti ishod.
+**Završni run** (`43221828031`, bez dijagnostike):
+
+```
+F3.4: nema dana sa prognozom i mjerenjem — prognoza 1, obračun 0, kolona 0,
+      uzorci 904 na 4 dana (2026-11-09→2026-11-12)
+```
+
+Dakle: `nightMinC` ima **1** dan (11-12, `daily-2`), obračun ( `outcomeAt` ) **0**
+dana, izmjerena kolona **0** dana, satni uzorci na **4** dana. Greška prognoze
+traži dan sa **oba** prva polja — a takvog dana nema ni jedan. Ovo je prvi ispis
+koji se može provjeriti: svaki broj ima ime i može se ponoviti upitom.
+Zato je uzrok izmjeren, ne pretpostavljen (privremena dijagnostika, poslije
+uklonjena — nije dio mjernog seta):
+
+```
+DIAG ThermostatObservation samples=902 days=4 2026-11-09 09:25 .. 2026-11-12 12:40
+DIAG model=backfill-events-1 measured=false outcome=true days=301 2026-01-05..2026-11-08
+     daysWithSamples=0 avgSamples=0 avgNightSamples=0
+DIAG model=daily-1 outcome=true days=3 2026-11-09..2026-11-11
+     daysWithSamples=3 avgSamples=254 avgNightSamples=72
+DIAG model=daily-2 outcome=false days=1 2026-11-12 daysWithSamples=1 avgNightSamples=72
+```
+
+**Tri činjenice iz toga:**
+
+1. `nightMinOutdoorMeasuredC` je `false` na **svih 305 dana** — kolonu ne piše
+   nijedan put koji je do sada radio na historiji.
+2. 301 od 305 dana je `backfill-events-1`, a `backfill-reconstruction.ts`
+   izričito ne piše tu kolonu (v. `missing.push(...)`). To nije propust: backfill
+   nema satni niz, pa nema iz čega izmjeriti noć.
+3. **Satni uzorci postoje za 4 dana** (2026-11-09 → 11-12), svi sa ~72 noćna
+   uzorka. Dakle mjerenje **nije nemoguće**, samo ima 4 dana — ispod praga od 5.
+
+**Zaključak.** F3.4 nije neuspjelo mjerenje nego mjerenje koje čeka uzorke. Prvi
+dan sa satnim nizom je **2026-11-09**, pa:
+
+- **2026-11-13** (5 dana uzoraka) izlazi prvi broj, iako tanki;
+- **2026-11-16** (8 dana) ima smisla čitati ga kao grešku prognoze.
+
+Ali uzorci sami nijesu dovoljni: treba i `nightMinC` **za te iste dane**, a on
+sada postoji za 1 dan. Zato F3.4 ima **dva** uslova, ne jedan: uzorke *i*
+dnevni pisac. Drugi uslov je vezan za F1 pisac (`daily-2`), koji radi od 11-12 —
+pa se oba uslova stižu otprilike u isto vrijeme.
+
+**Rezerva je ipak zadržana.** Iako sada ne pomaže, ona je ono što će poslije
+omogućiti da se greška prognoze mjeri **bez** čekanja dnevnog obračuna za svaki
+dan — a ukloniti je znači vratiti se na jedno mjesto koje tiho ne piše kolonu.
+
+**Pouka.** „Nema podataka" nije nalaz. Nalaz je „nema podataka **zato što** je
+301 dan backfill bez satnog niza, a uzorci postoje na 4 dana". Prvi ispis je
+trošio rundu CI-ja i nije rekao ništa što se može provjeriti; drugi kaže kada
+će se moći provjeriti.
+
+### 10.18 F5.3 — `confidence` je bio konstanta, ne mjera
+
+**Izmjereno prije popravke.** Stara formula:
+
+```
+conf' = min(1, (conf·n + 0,1) / (n+1))
+```
+
+To je pokretni prosjek sa **fiksnim prirastom 0,1**, pa mu je fiksna tačka
+0,1 — ako krene od 0,1, tu i ostaje. Pušteno kroz 320 koraka:
+
+```
+samples=  1 confidence=0.1000
+samples= 20 confidence=0.1000
+samples=320 confidence=0.1000
+```
+
+Dakle broj koji nosi **35 % health score-a** (`HEALTH_WEIGHTS.learningConfidence`)
+nije mjerio ništa. To je najgora vrsta greške: mjera koja izgleda kao mjera.
+
+**Novi izraz** (`learning-confidence.ts`):
+
+```
+conf = (n / (n + 10)) · max(0, 1 − residualStd / 2,0)
+```
+
+- prvi član: **koliko dokaza ima** — 0 uzoraka ⇒ 0, 10 uzoraka ⇒ 0,5;
+- drugi član: **koliko se slažu** — `max(0, …)` je namjerno: odstupanje iznad
+  2 K mora pasti na **nulu**, a ne na malu vrijednost, jer bi „skoro pouzdano"
+  kroz 35 % težine dao pokvaren model sa visokim skorom;
+- nepoznat `residualStd` **nije** savršeno slaganje nego nula slaganja.
+
+`residualStd` se mjeri **istim brojem koji se već akumulira** (`|avgOvershoot|`):
+standardno odstupanje bi tražilo da pamtimo svaki uzorak, a interval je jedan red.
+
+**Migracija** `20261121100000_interval_confidence_and_p90`: dodaje
+`HeatingIntervalLearning.residualStd` (nullable). Postojeći redovi ostaju `NULL`
+⇒ `confidence = 0`, dakle „neprovjereno" — namjerno, umjesto da naslijede staru
+tihu konstantu.
+
+**Testovi** (`learning-confidence.spec.ts`, 9): prvi ide do **320 uzoraka** jer
+bi kratak niz prošao i sa starom formulom — to je jedini način da test hvata
+regresiju koju treba da hvata.
+
+**Nalaz usput, veći od F5.3.** `confidence` se u strategijama i **ne koristi** za
+interval: `full.strategy.ts` množi `homeProfile.confidence` (što je
+`HomeProfile.learningConfidence`), a `intervalLearning.confidence` ide samo u
+`recommendation-breakdown` i health score. Drugim riječima, `confidence` je do
+sada bio isključivo **prikaz**, a ne ulaz u odluku — pa je popravka uticala na
+health score, ne na polaznu. Zapisano da se ne pročita kao veći zahvat nego što
+jeste.
+
+---
+
+### 10.19 F5.4 — premašivanje je ulazilo 1,5 puta
+
+**Putanja koja je bila dvostruka.** U `heating.recommendation.service.ts`:
+
+```
+overshoot = T_soba_trenutno − T_soba_cilj
+offset        ← pokretni prosjek `overshoot`
+avgOvershoot  ← pokretni prosjek `overshoot`     ← isti broj, druga kolona
+```
+
+a `full.strategy.ts` ih je sabirao:
+
+```
+intervalOffset = offset + avgOvershoot·0,5 + …
+```
+
+Isti mjereni broj, 1,5 puta, bez ijednog mjesta u kodu gdje se to vidi kao
+odluka.
+
+**Ispravka.** `offsets` ne mijenja značenje: `offset` nosi ukupno odstupanje u
+oba smjera (i podbačaj). Premašivanje sada nosi **90. percentil** kroz novo
+polje `p90OvershootC` i `overshootCorrectionFrom()`. `avgOvershoot` ostaje u
+bazi i u API-ju (dashboard ga prikazuje), ali **prestaje ulaziti u odluku** — u
+tipu je označen `@deprecated`.
+
+**Zašto percentil.** Prosjek nosi dva dana od 5 K kao tipske dane: 25 dana po
+0,1 K + 2 dana po 5 K daje prosjek **0,46 K**, pa bi se polazna spuštala zbog
+dva dana koja nijesu bila greška modela. Medijana bi ih ignorisala, ali bi
+ignorisala i sistematsko premašivanje. 90. percentil odgovara na pitanje
+„koliko visoko premašuje **kad** premašuje" — a to je ono što korekcija treba.
+
+**Težina 0,5 i granica 2 K** su ostale (ista logika kao stara `* 0.5`), ali sada
+**jednom** i sa imenom. Granica je `MAX_DAILY_CHANGE_K` reda veličine: veća
+korekcija bi bila veći skok nego što kontroler smije napraviti u danu, pa bi
+broj u zapisu bio lažan.
+
+**Tekući percentil, ne tačan.** `HeatingIntervalLearning` je jedan red po
+intervalu, pa se 90. percentil iz skupa ne može izračunati. `nextPercentile()`
+drži tekuću vrijednost: ispod `OVERSHOOT_MIN_SAMPLES = 5` **ne mijenja ništa**
+(percentil od dva uzorka je maksimum tih dvaju — isti problem, drugo ime), a
+iznad praga rep podiže **za pola razlike** a spušta **za desetinu**. Asimetrija
+je odluka: kad rep poraste kuća se pregrijava i treba reagovati odmah; kad
+padne, dokaz slabije stoji.
+
+**Testovi** (`overshoot-learning.spec.ts`, 13), uključujući jedan koji čita
+`full.strategy.ts` i pada ako se `avgOvershoot` vrati u kod (u komentaru smije
+ostati).
+
+---
+
+### 10.20 F5.5 — klamp je bio broj bez razloga
+
+**Problem.** Klamp se vidio samo u `params.clamp`:
+`{ applied, rawFinalTemp, minC, maxC }`. Iz toga se broj može **rekonstruisati**,
+ali ne i reći **zašto** je odsječen — a tri razloga traže tri različite akcije:
+
+| razlog | šta znači | akcija |
+|---|---|---|
+| fizička granica kotla (30/55) | motor traži nemoguće | nalaz o motoru ili podacima |
+| granica doma (`min/maxHeatingFlowC`) | korisnik tako želi | nije greška |
+| dnevna promjena (±2 K) | namjerno usporavanje | nije odsjecanje |
+
+Bez imena, sva tri su u logu izgledala isto: „polazna je 55, traženo je 58".
+
+**Ispravka** (`clamp-log.ts`). `describeFlowClamp()` vraća `applied`, `bound`,
+`cutK` i jednu liniju za log. Granica se traži **od najspecifičnije ka
+najopštijoj**: ako je dom postavio granicu i klamp je na njoj, to je granica doma
+— iako je i ona unutar sistema. Suprotno bi svako podešavanje korisnika
+izgledalo kao kvar motora. Dom iznad fizičke granice se prijavljuje kao
+sistemska (jer je stvarno odsjekla sistemska).
+
+**Jedan izvor za log i zapis.** `params.clamp` sada koristi **isti** izvještaj
+(`clampReport.applied/bound/cutK`) umjesto svog poređenja
+`proposedFlowTemp !== result.finalTemp`. Bez toga bi prag od 0,001 K mogao da se
+razide, pa bi zapis tvrdio klamp kojeg log nema. Test to zaključava čitanjem
+izvora.
+
+**Usput.** `LoadedHome` nije imao `minHeatingFlowC`/`maxHeatingFlowC`, iako ih
+`include: { user: true }` učitava. Tip ih je prećutkivao — dodati su, jer bez
+njih granica doma nije mogla ni da se imenuje.

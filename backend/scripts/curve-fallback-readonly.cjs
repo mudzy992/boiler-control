@@ -85,7 +85,29 @@ function summarize(rows) {
     fallbackRatio: total === 0 ? null : fallback / total,
     homes: new Set(rows.map((r) => r.homeProfileId)).size,
     days: new Set(rows.map((r) => r.localDate)).size,
+    /*
+     * GDJE su dani bez zapisa? Razlika odlucuje o F4.7:
+     *  - svi PRIJE prvog zapisa  -> motor je bio fallback samo za dane kad
+     *    zapisa jos nije bilo (pocetak rada). Uklanjanje motora tada ne ostavlja
+     *    AKTIVNU kucu bez broja; ti dani su vec prosli.
+     *  - ima ih POSLIJE prvog zapisa -> ziva zavisnost; motor i dalje nosi
+     *    polaznu, i brisanje bi je oborilo.
+     */
+    firstRecordDate: rows
+      .filter((r) => r.hasRecord)
+      .map((r) => r.localDate)
+      .sort()[0] ?? null,
+    noRecordDates: rows
+      .filter((r) => classify(r.hasRecord, r.proposedFlowTemp) === 'NO_RECORD')
+      .map((r) => r.localDate),
   };
+}
+
+/** Jesu li svi dani bez zapisa prije prvog zapisanog dana? */
+function noRecordAllHistorical(summary) {
+  if (summary.noRecordDates.length === 0) return null;
+  if (summary.firstRecordDate === null) return false;
+  return summary.noRecordDates.every((d) => d < summary.firstRecordDate);
 }
 
 function verdict(summary) {
@@ -100,12 +122,22 @@ function verdict(summary) {
         `fallback ni jednom; brisanje ne bi ostavilo nikoga bez broja`,
     };
   }
+  const historical = noRecordAllHistorical(summary);
+  if (historical === true) {
+    return {
+      verdict: 'CURVE_ONLY_BEFORE_RECORDS',
+      reason:
+        `${summary.fallback}/${summary.houseDays} kuća-dana bez predloga, i SVI su prije ` +
+        `prvog zapisanog dana (${summary.firstRecordDate}). Motor je bio fallback samo ` +
+        `za dane kad zapisa još nije bilo — brisanje ne ostavlja aktivnu kuću bez broja`,
+    };
+  }
   return {
-    verdict: 'CURVE_IS_FALLBACK',
+    verdict: 'CURVE_IS_LIVE_FALLBACK',
     reason:
       `${summary.fallback}/${summary.houseDays} kuća-dana (${(summary.fallbackRatio * 100).toFixed(1)} %) ` +
-      `nema predlog — motor je bio jedini broj. To je GORNJA GRANICA broja ` +
-      `poziva, ne broj poziva`,
+      `nema predlog, a ima ih i POSLIJE prvog zapisa (${summary.firstRecordDate}) — ` +
+      `motor i dalje nosi polaznu. To je GORNJA GRANICA broja poziva, ne broj poziva`,
   };
 }
 
@@ -152,12 +184,37 @@ async function runSelfTest() {
         { hasRecord: true, proposedFlowTemp: 47, homeProfileId: 1, localDate: '2026-11-01' },
         { hasRecord: true, proposedFlowTemp: null, homeProfileId: 1, localDate: '2026-11-02' },
       ],
-      expect: 'CURVE_IS_FALLBACK',
+      expect: 'CURVE_IS_LIVE_FALLBACK',
     },
     {
       name: 'nema zapisa uopste',
       rows: [{ hasRecord: false, proposedFlowTemp: null, homeProfileId: 1, localDate: '2026-11-03' }],
-      expect: 'CURVE_IS_FALLBACK',
+      expect: 'CURVE_IS_LIVE_FALLBACK',
+    },
+    {
+      /*
+       * Kljucni slucaj za F4.7: dani bez zapisa su svi PRIJE prvog zapisa.
+       * Tada motor nije ziva zavisnost nego fallback za pocetak rada — i
+       * presuda to mora reci drugacije, inace mjerenje zaustavlja brisanje
+       * bez razloga.
+       */
+      name: 'bez zapisa samo prije prvog zapisa',
+      rows: [
+        { hasRecord: false, proposedFlowTemp: null, homeProfileId: 1, localDate: '2026-10-01' },
+        { hasRecord: false, proposedFlowTemp: null, homeProfileId: 1, localDate: '2026-10-02' },
+        { hasRecord: true, proposedFlowTemp: 47, homeProfileId: 1, localDate: '2026-10-03' },
+      ],
+      expect: 'CURVE_ONLY_BEFORE_RECORDS',
+    },
+    {
+      // A jedan dan bez zapisa POSLIJE prvog zapisa vraca nalaz u zivu zavisnost.
+      name: 'praznina poslije prvog zapisa',
+      rows: [
+        { hasRecord: true, proposedFlowTemp: 47, homeProfileId: 1, localDate: '2026-10-01' },
+        { hasRecord: false, proposedFlowTemp: null, homeProfileId: 1, localDate: '2026-10-02' },
+        { hasRecord: true, proposedFlowTemp: 47, homeProfileId: 1, localDate: '2026-10-03' },
+      ],
+      expect: 'CURVE_IS_LIVE_FALLBACK',
     },
   ];
   for (const c of cases) {
@@ -338,6 +395,12 @@ async function main() {
           `u prozoru redova ${link.windowRecords}, spojeno po userId ${link.matchedByUser}, ` +
           `po homeProfileId ${link.matchedByHome}`,
       );
+      if (summary.noRecordDates.length) {
+        console.log(`  dani bez zapisa:         ${summary.noRecordDates.join(', ')}`);
+      }
+      if (summary.firstRecordDate) {
+        console.log(`  prvi zapisani dan:       ${summary.firstRecordDate}`);
+      }
       console.log(`\n  ${decision.verdict}: ${decision.reason}`);
     }
   } finally {

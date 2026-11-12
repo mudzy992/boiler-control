@@ -243,6 +243,51 @@ const ERROR_SQL = `
    ORDER BY r."homeProfileId", r."localDate"
 `;
 
+/**
+ * Rezerva: izmjereni noćni minimum iz **satnih uzoraka**, kad kolona
+ * `nightMinOutdoorMeasuredC` nije popunjena.
+ *
+ * Zašto ovo postoji: kolonu piše samo `DailyOutcomeService` (jednom dnevno), a
+ * `backfill-reconstruction.ts` je izričito ne piše — pa 301 od 305 dana u
+ * produkciji nema tu vrijednost, iako **uzorci za nju postoje**. Bez rezerve bi
+ * F3.4 čekao mjesec dana da backfillovani dani dobiju obračun, iako se greška
+ * prognoze može izmjeriti odmah.
+ *
+ * Isti prozor kao `day-outcome.ts` (`NIGHT_START_LOCAL_HOUR` 22 →
+ * `NIGHT_END_LOCAL_HOUR` 6) i **ista zona** kao ostatak repo-a. Granica je
+ * namjerno ista: ako se prozor raziđe, mjeri se druga noć, a razlika izgleda
+ * kao greška prognoze.
+ *
+ * Kolona ostaje prvi izvor. Rezerva se koristi samo za dane gdje je `null`, i
+ * to se u izlazu imenuje (`source`), da se dva broja ne pomiješaju tiho.
+ */
+const FALLBACK_NIGHT_SQL = `
+  WITH night AS (
+    SELECT r."homeProfileId",
+           r."localDate",
+           min(o."outdoorTempC")::float8 AS "measuredC",
+           count(o."outdoorTempC")::int AS "samples"
+      FROM "DailyRecord" r
+      JOIN "ThermostatObservation" o
+        ON o."homeProfileId" = r."homeProfileId"
+       AND (
+         -- Noć pripada danu u koji se uliva: 22:00 prethodnog dana → 06:00 ovog.
+         (o."at" AT TIME ZONE 'Europe/Sarajevo') >=
+           ((r."localDate"::timestamp - interval '2 hours') AT TIME ZONE 'Europe/Sarajevo')
+         AND (o."at" AT TIME ZONE 'Europe/Sarajevo') <
+           ((r."localDate"::timestamp + interval '6 hours') AT TIME ZONE 'Europe/Sarajevo')
+       )
+     WHERE r."nightMinC" IS NOT NULL
+       AND r."nightMinOutdoorMeasuredC" IS NULL
+       AND o."outdoorTempC" IS NOT NULL
+     GROUP BY 1, 2
+  )
+  SELECT "homeProfileId", "localDate", "measuredC", "samples"
+    FROM night
+   WHERE "samples" >= 8
+   ORDER BY 1, 2
+`;
+
 async function main() {
   const client = new Client({ connectionString: url, ssl: false });
   await client.connect();
@@ -251,10 +296,56 @@ async function main() {
     await client.query('BEGIN');
     await client.query('SET TRANSACTION READ ONLY');
 
-    const { rows } = await client.query(ERROR_SQL);
+    const { rows: fromColumn } = await client.query(ERROR_SQL);
+    const { rows: fromSamples } = await client.query(FALLBACK_NIGHT_SQL);
 
+    // Kolona je prvi izvor; rezerva popunjava samo dane gdje je `null`.
+    const rows = [
+      ...fromColumn.map((row) => ({ ...row, source: 'COLUMN' })),
+      ...fromSamples
+        .filter(
+          (row) =>
+            !fromColumn.some(
+              (c) =>
+                c.homeProfileId === row.homeProfileId &&
+                c.localDate === row.localDate,
+            ),
+        )
+        .map((row) => ({
+          homeProfileId: row.homeProfileId,
+          localDate: row.localDate,
+          forecastC: null,
+          measuredC: row.measuredC,
+          errorC: null,
+          source: 'NIGHT_SAMPLES',
+        })),
+    ];
+
+    // Rezervi treba i prognoza iz istog reda; dohvata se jednim upitom, da se
+    // ne spoji pogrešan dan sa pogrešnom noći.
+    if (rows.some((row) => row.source === 'NIGHT_SAMPLES')) {
+      const { rows: forecasts } = await client.query(
+        `SELECT "homeProfileId", "localDate", "nightMinC"::float8 AS "forecastC"
+           FROM "DailyRecord"
+          WHERE "nightMinC" IS NOT NULL`,
+      );
+      const byKey = new Map(
+        forecasts.map((f) => [`${f.homeProfileId}|${f.localDate}`, f.forecastC]),
+      );
+      for (const row of rows) {
+        if (row.source === 'NIGHT_SAMPLES') {
+          row.forecastC = byKey.get(`${row.homeProfileId}|${row.localDate}`) ?? null;
+          row.errorC =
+            row.forecastC == null || row.measuredC == null
+              ? null
+              : row.forecastC - row.measuredC;
+        }
+      }
+    }
+
+    const usable = rows.filter((row) => row.errorC != null);
     const byHome = new Map();
-    for (const row of rows) {
+    for (const row of usable) {
       const list = byHome.get(row.homeProfileId) ?? [];
       list.push(row);
       byHome.set(row.homeProfileId, list);
@@ -267,8 +358,15 @@ async function main() {
         ...analysis,
         // Zadnjih pet dana se ispisuje imenom: prosjek skriva da je posljednji
         // dan bio najgori, a to je jedino što se može odmah popraviti.
+        // Izvor se nosi dalje: bez toga se broj iz kolone i broj iz uzoraka
+        // sabiraju kao da su ista stvar.
+        sources: {
+          COLUMN: list.filter((r) => r.source === 'COLUMN').length,
+          NIGHT_SAMPLES: list.filter((r) => r.source === 'NIGHT_SAMPLES').length,
+        },
         recent: list.slice(-5).map((r) => ({
           localDate: r.localDate,
+          source: r.source,
           forecastC: round(r.forecastC, 1),
           measuredC: round(r.measuredC, 1),
           errorC: round(r.errorC, 2),
@@ -346,6 +444,12 @@ async function main() {
         `- iznad poredljivog praga (${COMPARABLE_TOLERANCE_K} K): **${num(home.shareBeyondTolerancePct, 1)} %** dana`,
       );
       out();
+      out(
+        `Izvori mjerenja: **${home.sources.COLUMN}** iz obračuna dana ` +
+          `(\`nightMinOutdoorMeasuredC\`), **${home.sources.NIGHT_SAMPLES}** iz satnih uzoraka ` +
+          '(22–06, ≥ 8 uzoraka).',
+      );
+      out();
       out('| kanta | dana | udio |');
       out('|---|---|---|');
       for (const bucket of home.histogram) {
@@ -355,11 +459,12 @@ async function main() {
       if (home.recent.length) {
         out('Zadnjih dana:');
         out();
-        out('| dan | prognoza | izmjereno | razlika |');
-        out('|---|---|---|---|');
+        out('| dan | prognoza | izmjereno | razlika | izvor |');
+        out('|---|---|---|---|---|');
         for (const row of home.recent) {
           out(
-            `| ${row.localDate} | ${num(row.forecastC, 1)} °C | ${num(row.measuredC, 1)} °C | ${num(row.errorC, 2)} K |`,
+            `| ${row.localDate} | ${num(row.forecastC, 1)} °C | ${num(row.measuredC, 1)} °C | ` +
+              `${num(row.errorC, 2)} K | ${row.source === 'COLUMN' ? 'obračun' : 'satni uzorci'} |`,
           );
         }
         out();

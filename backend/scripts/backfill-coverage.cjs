@@ -106,6 +106,64 @@ async function main() {
      * (uzrok je `nightMinSource` ili kratak satni niz). Zato se ovdje
      * razlaže, umjesto da se pogađa.
      */
+    /*
+     * F3.7: koji su to dani i u kojem smjeru. Sažetak („3/4 sa razlikom") ne
+     * kaže ništa o tome **zašto** kontroler podiže — a podizanje na osnovu 3
+     * dana je upravo ono što treba vidjeti prije puštanja modela.
+     */
+    const shadowDays = await soft(
+      'F3.7: shadow dani po smjeru',
+      `SELECT "localDate",
+              "modelVersion",
+              "proposedFlowTemp",
+              "shadowFlowC",
+              round(("shadowFlowC" - "proposedFlowTemp")::numeric, 2) AS delta,
+              "shadowAction",
+              "shadowReasons"
+         FROM "DailyRecord"
+        WHERE "shadowFlowC" IS NOT NULL AND "proposedFlowTemp" IS NOT NULL
+        ORDER BY "localDate"`,
+    );
+    if (shadowDays) {
+      out('## F3.7: shadow dani (odluka kontrolera vs. predlog)');
+      out();
+      out('| dan | model | predlog | odluka | Δ | akcija | razlozi |');
+      out('|---|---|---|---|---|---|---|');
+      for (const row of shadowDays) {
+        out(
+          `| ${row.localDate} | ${row.modelVersion ?? '—'} | ` +
+            `${num(row.proposedFlowTemp, 1)} | ${num(row.shadowFlowC, 1)} | ` +
+            `${num(row.delta, 2)} | ${row.shadowAction ?? '—'} | ` +
+            `${row.shadowReasons ?? '—'} |`,
+        );
+      }
+      out();
+      const raised = shadowDays.filter((r) => Number(r.delta) > 0.05);
+      if (raised.length) {
+        notice(
+          `F3.7: kontroler diže polaznu na ${raised.length}/${shadowDays.length} dana ` +
+            `(${raised.map((r) => `${r.localDate} ${r.shadowReasons ?? '?'}`).join(', ')}) — ` +
+            'na malom uzorku to je posljedica nedostatka podataka, ne nalaz; provjeriti razloge',
+        );
+      }
+      const missing = await soft(
+        'F3.7: shadow bez razloga',
+        `SELECT "localDate" FROM "DailyRecord"
+          WHERE "shadowFlowC" IS NOT NULL
+            AND "shadowFlowC" <> "proposedFlowTemp"
+            AND ("shadowReasons" IS NULL OR "shadowReasons" = '')
+          ORDER BY "localDate"`,
+      );
+      if (missing && missing.length) {
+        notice(
+          `F3.7: ${missing.length} dana sa razlikom i BEZ razloga ` +
+            `(${missing.map((r) => r.localDate).join(', ')}) — to je greška, ne ušteda`,
+        );
+      } else {
+        notice('F3.7: svaka razlika ima razlog');
+      }
+    }
+
     const night = await soft(
       'F2: noć u dnevnom zapisu (daily-2)',
       `SELECT count(*) AS days,

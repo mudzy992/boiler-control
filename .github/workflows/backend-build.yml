@@ -229,6 +229,24 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: node scripts/baseline-readonly.cjs
 
+      # F4.5: koliko se polazna koju korisnik vidi razilazi od jutarnjeg
+      # predloga. Mjeri se PRIJE nego se dirne `/boiler/sync` — inače se
+      # proizvodni kod mijenja na osnovu mišljenja, a ne broja.
+      - name: F4.5 drift polazne (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/formula-drift-readonly.cjs > "$RUNNER_TEMP/drift.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/drift.log"
+          # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.
+          grep -E "^  " "$RUNNER_TEMP/drift.log" \
+            | while IFS= read -r line; do echo "::notice::F4.5$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.5 mjerenje nije prošlo (exit $code)"
+          fi
+
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —
       # mjeri se prije nego se napiše ijedan backfill red.
       - name: Backfill coverage (read-only)

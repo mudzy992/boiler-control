@@ -81,6 +81,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.2 | **urađeno**: zajednička odluka izdvojena; writer uzima `F_eq`, ne kontroler | §10.26 |
 | F4.5 | **kod urađen, gejt otvoren do deploya** — ponovljeno mjerenje mora ići sa `--since=<deploy>` | §10.25 |
 | F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
@@ -388,7 +389,7 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 | # | Posao | Gdje | Mjera |
 |---|---|---|---|
 | F4.1 | **✓ urađeno** — `PROPOSAL_ENGINE=curve\|model` (env), default `curve` dok F1–F3 ne prođu | `daily-record.writer.ts` | oba puta pokrivena testom |
-| F4.2 | Model put: `proposedFlowTemp = decideProposal(...)` umjesto `FlowTemperatureEngine.calculate` | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
+| F4.2 | **✓ urađeno** — model put uzima `F_eq` (kontroler je relativni, v. §10.26) | | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
 | F4.3 | **✓ urađeno (backend)** — `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
 | F4.4 | **✓ urađeno (ugovor)** — `baseCurveTemp` je `null` kad je `engine='model'`; ekran (web+mobile) ostaje | — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
 | F4.5 | **✓ kod** — `resolveDailyFlow`; `/boiler/sync` i polling vraćaju zapisani predlog (mjereno 10/27 prije izmjene) |; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
@@ -1570,3 +1571,57 @@ ne može prepisati — mjerenje je read-only i ne izmišlja podatke. Do deploya 
 može tvrditi samo: pravilo je u kodu (12 testova), spajanje je dokazano testom
 (motorovih 45 **ne** ide na kotao kad zapis kaže 48), i mjerenje je spremno da
 se ponovi istim brojevima.
+
+### 10.26 F4.2 — izdvajanje odluke i nalaz koji je to promijenio
+
+**Zašto poziv shadow servisa nije bio moguć.** `ProposalShadowService.evaluate()`
+**čita** `DailyRecord` (`nightMinC`, `dayMaxC`) — red koji writer tek treba da
+napiše. Writer radi prije shadow-a (`daily.recommendation.service` piše predlog
+na `:76`, shadow zove na `:95`). Poziv bi bio i ciklična zavisnost i odluka o
+redu koji ne postoji.
+
+**Rješenje: `nightMinC`/`dayMaxC` postaju ulaz, ne upit.** Shadow ih čita iz
+zapisa, writer iz prognoze koju upravo upisuje — iste vrijednosti, različit
+izvor. Prikupljanje je izdvojeno u `ProposalInputsService`, odluka u
+`proposal-decision.ts` (dva sloja, jer servis ima `await`-ove **između**
+izračuna: `daysSinceChange`, `nightFloorFor`).
+
+**Ponašanje shadow-a je nepromijenjeno i to je dokazano, ne tvrđeno.**
+387 testova `DailyRecord` modula prošlo je **bez izmjene ijednog testa** — to je
+jedini uvjerljiv dokaz da izdvajanje nije promjena formule. Uz to
+`proposal-decision.spec` poredi izdvojeni put sa putem prepisanim **doslovno**
+onako kako je stajao u `evaluate()`.
+
+### Nalaz: `decideProposal` je relativni kontroler, ne apsolutni broj
+
+Ovo je otkriveno tek pri spajanju writer-a, i bez toga bi F4.2 bio „spojen" a
+nefunkcionalan:
+
+- `decideProposal` polazi od **prošle polazne** i pomjera je za korak kad ima
+  izmjereni dokaz. Bez ishoda vraća `previous` uz `HOLD/NO_OUTCOME`
+  (`proposal-controller.ts:215`).
+- U 06:00, kad writer piše predlog, ishoda **nema** — obračun ide u 03:20 **za
+  prethodni dan**. Zato je prvi pokušaj dao tačno:
+  `flowC null, action HOLD, reasons ['NO_OUTCOME']` — model put bi zauvijek
+  vraćao `null` i nikad ne bi radio.
+- **Apsolutni** broj za dan je ravnotežna polazna `F_eq`
+  (`equilibrium-flow.ts`). Kontroler je sloj **iznad** nje koji shadow mjeri.
+
+Writer zato uzima `F_eq`; kontroler ostaje u shadow-u. Da je test pisan poslije
+spajanja, greška bi prošla CI zeleno (model put „spojen", vraća `null`).
+
+**`params.engine` nosi stvarno korišten motor**, ne traženi. Ako je tražen
+`model` a model nije dao broj (nema noćne prognoze), zapis kaže `curve` — inače
+bi se poslije tvrdilo da je modelski put radio. Test to zaključava i **brani**
+staru formu (`not.toContain('engine: engineChoice.engine')`).
+
+**Konstante su premještene, ne duplirane.** `DAY_GAIN_IN_PROPOSAL` i
+`DEFAULT_TARGET_ROOM_C` treba i novi servis, pa su u `flow-constants.ts`, a
+`proposal-shadow.service` ih re-exportuje. `formula_doc_check.cjs` ih zato
+traži na novom mjestu, a `FORMULA.md` je ažuriran — inače bi F5.6 gejt padao
+zbog refaktora, a ne zbog razilaženja s kodom.
+
+**Testovi:** `daily-record-writer` +3 (model daje **46,74** a ne krivinih 45;
+bez noćne prognoze ostaje 45 uz `engine=curve`; zadano `curve` **ne poziva**
+prikupljanje), `proposal-decision` 7, `DailyRecord` **397/397**, `tsc` 0,
+`eslint` 0, `FORMULA.md` gejt: 22 konstante.

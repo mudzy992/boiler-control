@@ -77,9 +77,26 @@ const reading = {
   hasInvoicePdf: false,
 };
 
-async function renderScreen() {
+/**
+ * Mock se postavlja **u `beforeEach`**, ne u `renderScreen()`.
+ *
+ * `jest.config.js` ima `clearMocks: true`, što briše i implementacije mockova
+ * prije svakog testa. Kada je postavljanje bilo u `renderScreen()`, radilo je
+ * samo ako `renderScreen()` uspije — a prvi test je čekao `gas.title` sa 1 s
+ * (vidi `renderScreen` niže) i padao **prije** nego što je mock uopšte
+ * postavljen. Drugi test je prolazio jer je njegov `renderScreen()` išao drugi.
+ *
+ * Tiket: `SHEET_DIAG[testID=gas-readings-header;label=-;treeBytes=4467]` —
+ * nijedan label i samo skeleton znače „podaci nisu stigli", ne „sheet ne radi".
+ * Time se isključuje cijela teorija o `Sheet`-u: ekran nikad nije ni izašao iz
+ * `isLoading`.
+ */
+beforeEach(() => {
   jest.mocked(apiClient.getGasReadings).mockResolvedValue([reading]);
   jest.mocked(apiClient.getGasAnalysis).mockResolvedValue({});
+});
+
+async function renderScreen() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });

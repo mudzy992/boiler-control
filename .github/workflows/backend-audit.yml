@@ -189,6 +189,14 @@ jobs:
       - name: FORMULA.md matches code (F5.6)
         if: ${{ !cancelled() }}
         run: node ../scripts/audit/formula_doc_check.cjs
+      # F3.3: ablacioni prekidaci moraju STVARNO djelovati. Ne mjeri se nista o
+      # kuci ovdje — provjerava se da `--ablate` nije postao ukras: prazna
+      # ablacija mora dati isti rezultat kao bez prekidaca, iskljucena nocna
+      # granica mora promijeniti bar jednu metriku, a `u_day` mora varirati
+      # (inace je njegova ablacija tautologija). Traje ~0,5 s.
+      - name: Ablation toggles actually act (F3.3)
+        if: ${{ !cancelled() }}
+        run: node ../scripts/audit/learning_sim.cjs --days=20 --self-test
       - name: Existing integration tests
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

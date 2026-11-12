@@ -343,7 +343,7 @@ Nijedna ne mijenja podatke.
 |---|---|---|---|
 | F3.1 | **Pokrivenost CI** | „95 % interval je stvarno 95 %" — koliko % dana padne unutar `[ciLow, ciHigh]` | novi `scripts/audit/ci_coverage.cjs`: za svaki dan sa modelom, uporedi stvarni `y` sa intervalom |
 | F3.2 | **Kalibracija** | Brier score za `confidence` (mora biti bolji od stalnog 0,5) | isto, plus `confidence` iz `HeatingIntervalLearning` |
-| F3.3 | **Ablacija** | koji član stvarno nosi odluku | `learning_sim.cjs --ablate=uday\|cihigh\|nightfloor\|shortcycle` |
+| F3.3 | **✓ urađeno** — **Ablacija** | koji član stvarno nosi odluku | `learning_sim.cjs --ablate=uday\|cihigh\|nightfloor\|shortcycle` |
 | F3.4 | **Greška prognoze** | `dF/dO = s ≈ 1` ⇒ 1 K greške u noći = 1 K u polaznoj | `nightMinC` vs `nightMinOutdoorMeasuredC`, histogram razlike |
 | F3.5 | **Saturacija** | koliko % zimskih dana radi na `maxFlowC` | iz `DailyRecord.shadowFlowC` vs `HomeProfile.maxHeatingFlowC` |
 | F3.6 | **Drift `intervalKey`** | koliko ključeva ima `samples < 3` | `HeatingIntervalLearning` group by `intervalKey` |
@@ -1004,3 +1004,73 @@ Ručno provjereno i u drugom smjeru: `CURVE_MIN_FLOW_C` privremeno na `47` u kod
 `FORMULA.md matches code (F5.6)` u `backend-audit.yml`, odmah iza F3.8 i
 namjerno **bez** zavisnosti od `prepare` (dokument i kod su isti bez
 PostgreSQL-a).
+
+### 10.14 F3.3 — ablacija: koji član stvarno nosi odluku
+
+**Zašto.** Do sada se svaki član mogao gasiti pojedinačno (`--c=0`,
+`--dayref=0`, `--conservative=0`), ali **pravila kontrolera** — noćna granica i
+kratki ciklusi — bila su uvijek uključena. Zato se nije moglo reći da li se
+brojevi mijenjaju zbog formule ili zbog granice koja ih prepisuje: granica je
+bila maska preko svega ispod nje. F3.3 dodaje `--ablate=uday|cihigh|nightfloor|shortcycle`.
+
+**Prvo nalaz o samom mjerenju.** Prva verzija `u_day`-a davala je uvijek nulu
+(±0,1 K) — jer je simulirana kuća imala **konstantne** dobitke (200 W). Ablacija
+člana koji je po konstrukciji nula „pokazuje da član ništa ne mijenja", a to
+nije nalaz nego tautologija. Zato kuća sada ima dnevne dobitke ±450 W sa **sporim
+udjelom** (period 9 dana, kao sunčan period) i malim dnevnim šumom. Na čistom
+dnevnom šumu `u_day` (medijana 7 dana) mjerio bi veličinu koje u kući nema, pa
+bi ablacija „dokazala" da član nešto kvari. Nakon toga `u_day` stoji u
+**−1,3…+0,9 K**, unutar projektne granice ±2 K (`DAY_GAIN_CAP_C`) — dakle mjeri
+ono za šta je napravljen.
+
+**Mjereno** (`node scripts/audit/learning_sim.cjs --days=60 --table`):
+
+| postavka | light | medium | heavy |
+|---|---|---|---|
+| ništa (zlatni) | 37,1 °C · 23,03/d · 7/50 · 1,70 K | 40,4 · 17,75 · 5/50 · 1,32 | 42,9 · 5,35 · 0/50 · 0,96 |
+| bez `u_day` | 37,2 · 23,28 · **4/50** · 1,29 | 41,5 · 17,88 · 4/50 · 1,32 | 42,7 · 5,38 · 0/50 · 0,89 |
+| bez CI gornje | 37,4 · **17,62** · **12/50** · 1,71 | 40,7 · **13,72** · **11/50** · 1,35 | 42,6 · **3,97** · **3/50** · 1,14 |
+| bez noćne granice | 37,0 · 22,22 · **12/50** · **2,25** | 41,2 · 16,92 · **10/50** · **1,69** | 42,9 · 5,10 · **6/50** · 1,14 |
+| bez kratkih ciklusa | 37,1 · 23,03 · 7/50 · 1,70 | 40,4 · 17,75 · 5/50 · 1,32 | 42,9 · 5,35 · 0/50 · 0,96 |
+| bez svih | 36,9 · 16,53 · **14/50** · 2,20 | 41,4 · 12,87 · 10/50 · 1,55 | 42,4 · 3,52 · **10/50** · 1,57 |
+
+**Šta tabela kaže.**
+
+1. **Noćna granica je najveći pojedinačni nosilac komfora.** Bez nje podbačaj
+   skače na svakoj kući (7→12, 5→10, 0→6 od 50 dana) i najgori podbačaj raste
+   na 2,25 K. To je i očekivano: granica postoji upravo zato što prosječan dan
+   ne pokriva najhladniji sat.
+2. **Gornja CI granica nosi učenje, ne komfor.** Bez nje ciklusi padaju
+   (23,03→17,62; 17,75→13,72; 5,35→3,97) i podbačaj raste — dakle konzervativni
+   nagib **proizvodi** više ciklusa. To je cijena, ne kvar: mlad model sa
+   potcijenjenim nagibom grije previše i ciklusira. `SLOPE_CONSERVATIVE_MAX_DAYS`
+   je zato mjera kompromisa, ne optimizacija.
+3. **`u_day` je jedini član koji djeluje u obje strane.** Sa njim je najgori
+   podbačaj manji na light (1,70 → 1,29) i heavy (0,96 → 0,89), jednak na
+   medium (1,32), a broj dana sa podbačajem je **veći** na medium (4 → 5 od 50).
+   Uzrok je vidljiv iz polazne: `u_day` spušta polaznu (medium 41,5 → 40,4), pa
+   na kući koja nije previsoko griјаla smanjuje rezervu — a na kući koja jest
+   (light, polazna 37,2 → 37,1) popravlja najgori slučaj. To je **nalaz, ne
+   bug**: član trguje prosječnom marginom za dane sa dobitkom. **Odluka:**
+   `u_day` ostaje uključen (projektna odluka iz `17` §13), ali se sada **mjeri**;
+   ako F3.1 pokaže isti obrazac na stvarnim podacima, gasi se postavljanjem
+   `HomeModel.uDayC = null` — bez promjene formule i bez novog prekidača u
+   proizvodnom kodu.
+4. **Kratki ciklusi u simulaciji ne mijenjaju ništa** (isti red sa i bez): medijana
+   ciklusa je 15–81 min, tj. uvijek iznad `SHORT_CYCLE_MIN = 6`. To **nije**
+   dokaz da je pravilo suvišno u produkciji — u produkciji su kratki ciklusi
+   izmjereni (F3.8 ih mjeri preko `controller_sim`), a ovdje ih simulirana kuća
+   ne proizvodi. Zapisano da se ne pročita kao „pravilo ne radi".
+
+**Zlatni brojevi prepisani** (`formula_v2_golden.json`): `flowEnd` light 37,1
+(isto), medium 40,4 (bilo 41,4), heavy 42,9 (bilo 42,6); `cyclesPerDay` i
+`undershootDaysAfter10` po tabeli. Uzrok je **promjena simulirane kuće** (dnevni
+dobici), ne formula — zato snimak sada nosi `settings.dayGain = true` i polje
+`why`, da sljedeći `--write` bez objašnjenja bude vidljiv u diffu.
+
+**Gate.** `node ../scripts/audit/learning_sim.cjs --self-test` u
+`backend-audit.yml` (korak `Ablation toggles actually act (F3.3)`): provjerava
+da prazna ablacija daje **isti** rezultat kao pokretanje bez prekidača (da
+prekidač nije neutralan), da isključena noćna granica **mijenja** bar jednu
+metriku (da granica nije mrtva), i da `u_day` stvarno varira (da ablacija nije
+tautologija). Traje ~0,5 s.

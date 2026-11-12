@@ -172,6 +172,15 @@ jobs:
       - name: Equilibrium controller golden (F2)
         if: ${{ !cancelled() }}
         run: node ../scripts/audit/formula_v2_golden.cjs
+      # F3.8: pragovi kontrolera (`STEP_UP`, `STEP_DOWN`, `DWELL`) moraju
+      # stvarno uticati na odluku. Gate je namjerno `--self-test`, ne pun grid:
+      # grid traje ~7 min i izvještava, a ovdje se čuva jedna stvar koja se
+      # lako pokvari tiho — da `--params=` prestane da mijenja odluku (npr. ako
+      # kontroler počne čitati prag iz vrijednosti uhvaćene pri importu). Tada
+      # bi grid davao iste redove i izgledao uredno.
+      - name: Controller sensitivity self-test (F3.8)
+        if: ${{ !cancelled() }}
+        run: node ../scripts/audit/controller_sensitivity.cjs --self-test
       - name: Existing integration tests
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         run: |

@@ -38,6 +38,62 @@ Bez mreže, baze i izmjene aplikacijskog koda.`);
 }
 
 const asJson = process.argv.includes('--json');
+
+/*
+ * F3.8 (osjetljivost): `decideProposal` čita `STEP_UP_K`, `STEP_DOWN_K` i
+ * `DWELL_DAYS` iz svog modula pri **svakom** pozivu. Zato se vrijednost za
+ * jedan prolaz može promijeniti upisom u `exports` tog modula — bez kopije
+ * kontrolera i bez izmjene aplikacijskog koda (modul se učitava `transpile-only`
+ * i izvršava iz `src/`).
+ *
+ * Namjerno se ne dodaje parametar u `decideProposal`: proizvod ne treba da ima
+ * prekidač za podešavanje praga, a mjerenje ga treba.
+ */
+const PARAM_ARG = process.argv.find((a) => a.startsWith('--params='));
+
+function effectiveParams() {
+  return {
+    STEP_UP: controllerModule.STEP_UP_K,
+    STEP_DOWN: controllerModule.STEP_DOWN_K,
+    DWELL: controllerModule.DWELL_DAYS,
+  };
+}
+
+function paramOverrides() {
+  if (!PARAM_ARG) return null;
+  const out = {};
+  for (const pair of PARAM_ARG.slice('--params='.length).split(',')) {
+    const [key, raw] = pair.split('=');
+    if (!['STEP_UP', 'STEP_DOWN', 'DWELL'].includes(key)) {
+      throw new Error(`Nepoznat parametar: ${key} (dozvoljeno: STEP_UP, STEP_DOWN, DWELL)`);
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value <= 0) {
+      throw new Error(`Vrijednost za ${key} mora biti broj > 0, dobijeno: ${raw}`);
+    }
+    out[key] = value;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/** Postavi privremene vrijednosti; vraća funkciju za vraćanje. */
+function withParams(controller, overrides) {
+  if (!overrides) return () => {};
+  const map = {
+    STEP_UP: 'STEP_UP_K',
+    STEP_DOWN: 'STEP_DOWN_K',
+    DWELL: 'DWELL_DAYS',
+  };
+  const saved = {};
+  for (const [key, value] of Object.entries(overrides)) {
+    const name = map[key];
+    saved[name] = controller[name];
+    controller[name] = value;
+  }
+  return () => {
+    for (const [name, value] of Object.entries(saved)) controller[name] = value;
+  };
+}
 const trace = process.argv.includes('--trace');
 const daysArg = process.argv.find((a) => a.startsWith('--days='));
 const days = daysArg ? Number(daysArg.split('=')[1]) : 60;
@@ -55,13 +111,11 @@ const {
 const {
   nightFloorFrom,
 } = require(path.join(root, 'backend/src/modules/DailyRecord/flow-bounds.ts'));
-const {
-  decideProposal,
-  shortCycleFloorFrom,
-} = require(path.join(
+const controllerModule = require(path.join(
   root,
   'backend/src/modules/DailyRecord/proposal-controller.ts',
 ));
+const { decideProposal, shortCycleFloorFrom } = controllerModule;
 const {
   buildDayRow,
   fitDailyBalance,
@@ -492,6 +546,8 @@ function verify(results) {
 }
 
 // --- izlaz ---------------------------------------------------------------
+const overrides = paramOverrides();
+const restoreParams = withParams(controllerModule, overrides);
 const results = [];
 for (const [name, house] of Object.entries(HOUSES)) {
   const run = simulate(house);
@@ -522,10 +578,24 @@ for (const [name, house] of Object.entries(HOUSES)) {
     : undefined;
 }
 
+restoreParams();
 const violations = verify(results);
 
 if (asJson) {
-  console.log(JSON.stringify({ days, results, violations }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        days,
+        params: overrides
+          ? { ...effectiveParams(), ...overrides }
+          : effectiveParams(),
+        results,
+        violations,
+      },
+      null,
+      2,
+    ),
+  );
 } else {
   console.log(`Kontroler u zatvorenoj petlji — ${days} dana, stvarni moduli.\n`);
   for (const r of results) {

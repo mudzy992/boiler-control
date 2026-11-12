@@ -391,9 +391,16 @@ async function main() {
         }
         out();
       }
+      const reasonTally = new Map();
+      for (const entry of home.rejected) {
+        reasonTally.set(entry.reason, (reasonTally.get(entry.reason) ?? 0) + 1);
+      }
       notice(
         `F3.1 dom ${home.homeProfileId}: ${home.verdict} (${home.days}/${MIN_DAYS} dana, ` +
-          `odbijeno ${home.rejected.length})`,
+          `odbijeno ${home.rejected.length}: ` +
+          `${
+            [...reasonTally.entries()].map(([r, n]) => `${r} ${n}`).join(', ') || 'nijedan'
+          })`,
       );
       continue;
     }

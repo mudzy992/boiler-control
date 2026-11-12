@@ -396,7 +396,7 @@ ostavlja dashboard sa brojem koji nitko ne održava.
 | F5.3 | `confidence` prestaje biti monotona: `n/(n+5)·max(0, 1 − residualStd/2)` | F7; ulazi u health score sa 35 % |
 | F5.4 | Overshoot se uči jednom (percentil, ne prosjek) | sada dvaput: `HeatingRecommendation` EMA + `0,5·avgOvershoot` u `full.strategy.ts:15` |
 | F5.5 | Log svakog klampa sa razlogom | danas se clamp vidi samo u `params.clamp`, ne u logu |
-| F5.6 | `FORMULA.md` — jedna stranica: jednačine, konstante, opravdanje | sada rasuto po komentarima i „§" referencama |
+| F5.6 | **✓ urađeno** — `docs/FORMULA.md` jedna stranica: jednačine, konstante, opravdanje | sada rasuto po komentarima i „§" referencama |
 
 ---
 
@@ -930,3 +930,77 @@ Zatim **F3.4** (greška prognoze: `nightMinC` vs `nightMinOutdoorMeasuredC`) —
 jedina analiza koja se može uraditi odmah, jer mjereno polje već postoji iz
 `day-outcome.ts`. Bez nje se ne zna da li `− c` u F2 treba ići sa dnevnom
 referencom ili ostati na noći.
+
+### 10.12 F5.2 — modul je već bio spojen; migracija ključeva nije potrebna
+
+**Nalaz.** F5.2 je u planu stajala kao posao („`getIntervalKey()` sa
+`User.timezone`; jedan format ključa"), ali posao je već bio urađen:
+`backend/src/modules/Heating/interval-key.ts` postoji i **spojen je** u četiri
+mjesta — `Boiler/boiler.service.ts`, `HeatingRecommendation/heating.recommendation.service.ts`,
+`DailyRecord` i `proposal-schedule`. Pretraga nije našla nijednu preostalu kopiju
+logike `dayPart` izvan tog modula.
+
+Ono što je zaista nedostajalo nije kod, nego **mjerenje**: da li u produkciji
+postoje intervali zapisani u oba formata (kanonski `weekday_morning` i v1
+`1_morning`). Bez tog broja se odluka o migraciji donosila na osnovu osjećaja.
+
+**Mjerenje** (`backend/scripts/backfill-coverage.cjs`, novi odjeljak F5.2:
+`byFormat` + `splitPairs` — JOIN po istom intervalu u oba formata), baseline run
+`43187045233`:
+
+```
+F5.2: nema razdvojene historije (0 intervala u oba formata)
+F3.6: 10 ključeva, 234 uzorka ukupno, 6 sa < 3 uzorka
+      (weekday_1_afternoon=0, weekday_1_late_morning=1, weekday_1_morning=2,
+       weekday_1_night=2, weekend_2_evening=1, weekend_2_night=0)
+```
+
+**Zaključak.** Migracija ključeva se **ne radi**. Stari v1 ključevi nijesu
+„drugi format istog intervala" nego stari intervali koje novi kod više ne piše;
+`intervalKeyCandidates` ih i dalje čita, pa nema izgubljenog učenja, a nema ni
+dvostrukog zapisa koji bi trebalo spajati. Šest od deset ključeva ima manje od
+tri uzorka — učenje je rijetko, ali to je pitanje količine podataka, ne formata.
+
+**Šta je popravljeno usput** (i zašto je to bio pravi posao): `findFirst` sa
+`orderBy: { intervalKey: 'desc' }` poredi **tekst**, pa je birao `weekend_*`
+ispred `weekday_*` bez obzira na to koji je interval stvarno tražen. Sada
+`boiler.service.ts` čita `findMany` i bira po `intervalKeyCandidates`
+(kanonski-prvi). Uz to, dom učitan bez `user.timezone` tiho je padao na
+`Europe/Sarajevo` i promašivao interval — zato `include.homeProfile` sada nosi
+`user: { select: { timezone: true } }`.
+
+**Pouka.** Zadatak formulisan kao „napiši modul" može biti već urađen; zadatak
+formulisan kao „dokaži da nema razdvojene historije" nije. Plan je zato bolje
+pisati kao **tvrdnju koju treba izmjeriti** nego kao posao koji treba obaviti.
+
+---
+
+### 10.13 F5.6 — `FORMULA.md` i provjera koja pada kad dokument ostarje
+
+**Šta je urađeno.** `docs/FORMULA.md` — jedna stranica: dnevni bilans iz kojeg
+izraz izlazi, sam izraz sa opravdanjem svakog člana, redoslijed pravila
+kontrolera, tvrde granice sa vlasnikom po granici, filteri učenja, noćni
+minimum, ključ intervala i odjeljak „šta ovaj sistem **ne** tvrdi".
+
+**Zašto provjera, a ne samo dokument.** Dokument sa brojevima je najlakše mjesto
+da tiho postane laž: kod se promijeni u jednom fajlu, dokument ostane na starom
+broju, i niko to ne primijeti jer dokument niko ne izvršava. Zato
+`scripts/audit/formula_doc_check.cjs` **čita kod** (regexom, jer traži doslovno
+`export const NAME = <broj>`) i poredi sa tabelom §8 i sa devet brojeva
+navedenih u prozi. Provjera pada i kad uputa u dokumentu vodi na nepostojeći
+fajl — mrtva uputa je gora od nijedne.
+
+**Dokaz da provjera nije ukras.** `backend/src/modules/DailyRecord/tests/formula-doc.spec.ts`
+ima tri testa: (1) pravi dokument se slaže sa kodom; (2) dokument sadrži
+jednačinu i granice; (3) ista provjera, na **kopiji** dokumenta sa
+`DWELL_DAYS = 4`, pada i imenuje `DWELL_DAYS` (`dokument 4 ≠ kod 3`). Kopija ide
+u `os.tmpdir()`; pravi dokument se ne dira, jer test koji kvari pravi fajl je
+test koji nekad ostane pokvaren.
+
+Ručno provjereno i u drugom smjeru: `CURVE_MIN_FLOW_C` privremeno na `47` u kodu
+⇒ `✗ CURVE_MIN_FLOW_C: dokument 46 ≠ kod 47`, exit 1; vraćeno na `46` ⇒ exit 0.
+
+**Gate.** `node ../scripts/audit/formula_doc_check.cjs` je korak
+`FORMULA.md matches code (F5.6)` u `backend-audit.yml`, odmah iza F3.8 i
+namjerno **bez** zavisnosti od `prepare` (dokument i kod su isti bez
+PostgreSQL-a).

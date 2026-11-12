@@ -56,12 +56,11 @@ async function main() {
     const { rows } = await client.query(SQL);
     await client.query('COMMIT');
 
-    console.log('| modelVersion | hasMeasured | hasOutcome | dana | prvi | zadnji | dana sa uzorcima | avg uzoraka | avg noćnih |');
-    console.log('|---|---|---|---|---|---|---|---|---|');
     for (const r of rows) {
       console.log(
-        `| ${r.modelVersion ?? '—'} | ${r.hasMeasured} | ${r.hasOutcome} | ${r.days} | ` +
-          `${r.firstDay} | ${r.lastDay} | ${r.daysWithSamples} | ${r.avgSamples ?? '—'} | ${r.avgNightSamples ?? '—'} |`,
+        `::notice::DIAG model=${r.modelVersion ?? '-'} measured=${r.hasMeasured} outcome=${r.hasOutcome} ` +
+          `days=${r.days} ${r.firstDay}..${r.lastDay} daysWithSamples=${r.daysWithSamples} ` +
+          `avgSamples=${r.avgSamples ?? '-'} avgNightSamples=${r.avgNightSamples ?? '-'}`,
       );
     }
 
@@ -75,7 +74,7 @@ async function main() {
     const o = obs.rows[0];
     console.log('');
     console.log(
-      `ThermostatObservation: ${o.samples} uzoraka na ${o.days} dana, ${o.first} → ${o.last}`,
+      `::notice::DIAG ThermostatObservation samples=${o.samples} days=${o.days} ${o.first}..${o.last}`,
     );
   } finally {
     await client.end();

@@ -1167,6 +1167,17 @@ granici" je puno. To je zapisano u izlazu skripte, ne u fusnoti.
 
 **Prvi run** (`43219575015`): `F3.4: nema dana sa prognozom i mjerenjem`.
 **Drugi run** poslije dodate rezerve (mjerenje iz satnih uzoraka): isti ishod.
+**Završni run** (`43221828031`, bez dijagnostike):
+
+```
+F3.4: nema dana sa prognozom i mjerenjem — prognoza 1, obračun 0, kolona 0,
+      uzorci 904 na 4 dana (2026-11-09→2026-11-12)
+```
+
+Dakle: `nightMinC` ima **1** dan (11-12, `daily-2`), obračun ( `outcomeAt` ) **0**
+dana, izmjerena kolona **0** dana, satni uzorci na **4** dana. Greška prognoze
+traži dan sa **oba** prva polja — a takvog dana nema ni jedan. Ovo je prvi ispis
+koji se može provjeriti: svaki broj ima ime i može se ponoviti upitom.
 Zato je uzrok izmjeren, ne pretpostavljen (privremena dijagnostika, poslije
 uklonjena — nije dio mjernog seta):
 
@@ -1192,8 +1203,13 @@ DIAG model=daily-2 outcome=false days=1 2026-11-12 daysWithSamples=1 avgNightSam
 **Zaključak.** F3.4 nije neuspjelo mjerenje nego mjerenje koje čeka uzorke. Prvi
 dan sa satnim nizom je **2026-11-09**, pa:
 
-- sa 5 dana uzoraka (dakle **2026-11-13**) izlazi prvi broj, iako tanki;
-- sa 8 dana (**2026-11-16**) ima smisla čitati ga kao grešku prognoze.
+- **2026-11-13** (5 dana uzoraka) izlazi prvi broj, iako tanki;
+- **2026-11-16** (8 dana) ima smisla čitati ga kao grešku prognoze.
+
+Ali uzorci sami nijesu dovoljni: treba i `nightMinC` **za te iste dane**, a on
+sada postoji za 1 dan. Zato F3.4 ima **dva** uslova, ne jedan: uzorke *i*
+dnevni pisac. Drugi uslov je vezan za F1 pisac (`daily-2`), koji radi od 11-12 —
+pa se oba uslova stižu otprilike u isto vrijeme.
 
 **Rezerva je ipak zadržana.** Iako sada ne pomaže, ona je ono što će poslije
 omogućiti da se greška prognoze mjeri **bez** čekanja dnevnog obračuna za svaki

@@ -239,6 +239,11 @@ jobs:
       # F3.7: shadow vs. predlog nad stvarnim podacima. Pušta istu funkciju koju
       # koristi HTTP ruta (`shadow-report.ts`), samo čita bazu direktno — pa se
       # izvještaj dobija i bez prijavljivanja na aplikaciju. Samo SELECT.
+      # Prvo bez baze: ako modul ne može da se učita (tsconfig, transpile), pad
+      # mora da bude imenovan prije konekcije — inače izgleda kao problem baze.
+      - name: Shadow report self-test (F3.7)
+        run: node scripts/shadow-report-readonly.cjs --self-test
+
       - name: Shadow vs. predlog (F3.7, read-only)
         env:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}

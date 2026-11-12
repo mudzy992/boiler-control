@@ -36,6 +36,7 @@ if (process.argv.includes('--help')) {
   --from=YYYY-MM-DD   prvi dan (uključivo)
   --to=YYYY-MM-DD     zadnji dan (uključivo)
   --json              mašinski čitljiv izlaz
+  --self-test         provjeri učitavanje modula i funkciju, bez baze
   --help              ova poruka
 
 Čita DailyRecord i pušta istu funkciju koju koristi HTTP ruta
@@ -43,8 +44,10 @@ if (process.argv.includes('--help')) {
   process.exit(0);
 }
 
+const selfTest = process.argv.includes('--self-test');
+
 const url = process.env.DATABASE_URL_READONLY;
-if (!url) {
+if (!url && !selfTest) {
   console.error('DATABASE_URL_READONLY nije postavljen.');
   process.exit(2);
 }
@@ -79,6 +82,63 @@ const notice = (message) => {
   const flat = String(message).replace(/[\r\n]+/g, ' ').replace(/%/g, '%25');
   console.log(`::notice::${flat}`);
 };
+
+/**
+ * Provjera bez baze: modul se učita, funkcija postoji i na poznatom ulazu daje
+ * poznat izlaz. Namjerno ide **prije** konekcije, jer se kvar na učitavanju
+ * (tsconfig, transpile) inače prijavi kao „skripta je pala" bez ijedne riječi o
+ * uzroku — a anotacije i logovi u ovom repou nijesu pouzdani.
+ */
+function runSelfTest() {
+  const problems = [];
+  if (typeof shadowReport !== 'function') {
+    problems.push('shadowReport nije funkcija');
+  }
+  if (typeof SHADOW_MIN_DAYS !== 'number') {
+    problems.push('SHADOW_MIN_DAYS nije broj');
+  }
+  const rows = [
+    {
+      localDate: '2026-01-01',
+      proposedFlowTemp: 45,
+      shadowFlowC: 43,
+      shadowAction: 'LOWER',
+      shadowReasons: 'COMFORT_HOLD',
+      shadowVersion: 'shadow-2',
+      shadowExploration: false,
+      shadowAt: new Date(),
+    },
+    {
+      localDate: '2026-01-02',
+      proposedFlowTemp: 44,
+      shadowFlowC: 44,
+      shadowAction: 'HOLD',
+      shadowReasons: null,
+      shadowVersion: 'shadow-2',
+      shadowExploration: false,
+      shadowAt: new Date(),
+    },
+  ];
+  const report = shadowReport(rows);
+  if (report.differences !== 1 || report.lowered !== 1) {
+    problems.push(
+      `očekivano 1 razlika i 1 spuštanje, dobijeno ${report.differences}/${report.lowered}`,
+    );
+  }
+  if (report.unexplained.length !== 0) {
+    problems.push(`očekivano 0 neobjašnjenih, dobijeno ${report.unexplained.length}`);
+  }
+  if (problems.length) {
+    console.error('Samotest NIJE prošao:');
+    for (const problem of problems) console.error(`  - ${problem}`);
+    process.exit(1);
+  }
+  console.log(
+    `Samotest prošao: modul se učita, shadowReport() daje ${report.differences} razliku, ` +
+      `presuda ${report.verdict}.`,
+  );
+  process.exit(0);
+}
 
 async function main() {
   const client = new Client({ connectionString: url });
@@ -211,6 +271,8 @@ async function main() {
     await client.end();
   }
 }
+
+if (selfTest) runSelfTest();
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.stack : String(error));

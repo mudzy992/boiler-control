@@ -88,7 +88,12 @@ function collect() {
     days: DAYS,
     // Iste postavke koje skripta koristi kao zadane; ako se promijene, mijenja
     // se i snimak — i to se vidi u diffu.
-    settings: { c: true, dayRef: true, conservativeDays: 20 },
+    // `u_day` je u snimak ušao sa F3.3: bez njega je simulirana kuća imala
+    // konstantne dobitke, pa je `u_day` bio uvijek 0 i njegova ablacija nije
+    // dokazivala ništa. `dayGain` označava da dobici variraju (±450 W, spori
+    // udio period 9 dana) — v. §10.14 u planu.
+    settings: { c: true, dayRef: true, conservativeDays: 20, dayGain: true },
+    why: 'F3.3: dnevni dobici variraju; zlatni brojevi prepisani uz dokaz ablacije (§10.14)',
     houses: Object.fromEntries(HOUSES.map((h) => [h, runSim(h)])),
   };
 }

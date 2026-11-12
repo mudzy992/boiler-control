@@ -65,6 +65,21 @@ može ni ocijeniti.
 | `Boiler/boiler.service.ts` | kriva po zahtjevu, `getIntervalKey()` sa server `new Date()` | **koristi `User.timezone` nigdje** |
 | `HeatingRecommendation/*` | EMA učenje overshoota, `confidence` monotona | piše `Recommendation` redove paralelno sa `DailyRecord` |
 
+### 1.1 Stanje po fazama (2026-11-12)
+
+| Faza | Stanje | Dokaz |
+|---|---|---|
+| F1 — podaci | **urađeno**, `nightMinC`/`dayMaxC` se pišu; backfill izvršen | §10.1, §10.2, §10.7 |
+| F2 — formula | **urađeno u kodu**, ostaje u shadow režimu | §10.3, `formula_v2_golden.cjs` |
+| F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`; mjerljivo od **2026-11-20** | §10.10 |
+| F3.3 — ablacija | **urađeno**: `--ablate`, `--table`, `--self-test` | §10.14 |
+| F3.7 — shadow vs. proposed | **izmjereno**: podizanja su `NO_MODEL`; drugi prozor **2026-11-30** | §10.9 |
+| F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
+| F4 — penzionisanje krive | **nije početo**, blokirano F3.1 | — |
+| F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
+| F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
+| F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+
 **Dva paralelna sistema.** `DailyRecord` (novi, tačan) i `Recommendation`
 (stari, kriva) nastaju u različitim trenucima i sa različitim brojevima.
 Klijenti čitaju `Recommendation.breakdown.baseCurveTemp` — dakle **staro**.
@@ -343,7 +358,7 @@ Nijedna ne mijenja podatke.
 |---|---|---|---|
 | F3.1 | **Pokrivenost CI** | „95 % interval je stvarno 95 %" — koliko % dana padne unutar `[ciLow, ciHigh]` | novi `scripts/audit/ci_coverage.cjs`: za svaki dan sa modelom, uporedi stvarni `y` sa intervalom |
 | F3.2 | **Kalibracija** | Brier score za `confidence` (mora biti bolji od stalnog 0,5) | isto, plus `confidence` iz `HeatingIntervalLearning` |
-| F3.3 | **Ablacija** | koji član stvarno nosi odluku | `learning_sim.cjs --ablate=uday\|cihigh\|nightfloor\|shortcycle` |
+| F3.3 | **✓ urađeno** — **Ablacija** | koji član stvarno nosi odluku | `learning_sim.cjs --ablate=uday\|cihigh\|nightfloor\|shortcycle` |
 | F3.4 | **Greška prognoze** | `dF/dO = s ≈ 1` ⇒ 1 K greške u noći = 1 K u polaznoj | `nightMinC` vs `nightMinOutdoorMeasuredC`, histogram razlike |
 | F3.5 | **Saturacija** | koliko % zimskih dana radi na `maxFlowC` | iz `DailyRecord.shadowFlowC` vs `HomeProfile.maxHeatingFlowC` |
 | F3.6 | **Drift `intervalKey`** | koliko ključeva ima `samples < 3` | `HeatingIntervalLearning` group by `intervalKey` |
@@ -396,7 +411,7 @@ ostavlja dashboard sa brojem koji nitko ne održava.
 | F5.3 | `confidence` prestaje biti monotona: `n/(n+5)·max(0, 1 − residualStd/2)` | F7; ulazi u health score sa 35 % |
 | F5.4 | Overshoot se uči jednom (percentil, ne prosjek) | sada dvaput: `HeatingRecommendation` EMA + `0,5·avgOvershoot` u `full.strategy.ts:15` |
 | F5.5 | Log svakog klampa sa razlogom | danas se clamp vidi samo u `params.clamp`, ne u logu |
-| F5.6 | `FORMULA.md` — jedna stranica: jednačine, konstante, opravdanje | sada rasuto po komentarima i „§" referencama |
+| F5.6 | **✓ urađeno** — `docs/FORMULA.md` jedna stranica: jednačine, konstante, opravdanje | sada rasuto po komentarima i „§" referencama |
 
 ---
 
@@ -930,3 +945,147 @@ Zatim **F3.4** (greška prognoze: `nightMinC` vs `nightMinOutdoorMeasuredC`) —
 jedina analiza koja se može uraditi odmah, jer mjereno polje već postoji iz
 `day-outcome.ts`. Bez nje se ne zna da li `− c` u F2 treba ići sa dnevnom
 referencom ili ostati na noći.
+
+### 10.12 F5.2 — modul je već bio spojen; migracija ključeva nije potrebna
+
+**Nalaz.** F5.2 je u planu stajala kao posao („`getIntervalKey()` sa
+`User.timezone`; jedan format ključa"), ali posao je već bio urađen:
+`backend/src/modules/Heating/interval-key.ts` postoji i **spojen je** u četiri
+mjesta — `Boiler/boiler.service.ts`, `HeatingRecommendation/heating.recommendation.service.ts`,
+`DailyRecord` i `proposal-schedule`. Pretraga nije našla nijednu preostalu kopiju
+logike `dayPart` izvan tog modula.
+
+Ono što je zaista nedostajalo nije kod, nego **mjerenje**: da li u produkciji
+postoje intervali zapisani u oba formata (kanonski `weekday_morning` i v1
+`1_morning`). Bez tog broja se odluka o migraciji donosila na osnovu osjećaja.
+
+**Mjerenje** (`backend/scripts/backfill-coverage.cjs`, novi odjeljak F5.2:
+`byFormat` + `splitPairs` — JOIN po istom intervalu u oba formata), baseline run
+`43187045233`:
+
+```
+F5.2: nema razdvojene historije (0 intervala u oba formata)
+F3.6: 10 ključeva, 234 uzorka ukupno, 6 sa < 3 uzorka
+      (weekday_1_afternoon=0, weekday_1_late_morning=1, weekday_1_morning=2,
+       weekday_1_night=2, weekend_2_evening=1, weekend_2_night=0)
+```
+
+**Zaključak.** Migracija ključeva se **ne radi**. Stari v1 ključevi nijesu
+„drugi format istog intervala" nego stari intervali koje novi kod više ne piše;
+`intervalKeyCandidates` ih i dalje čita, pa nema izgubljenog učenja, a nema ni
+dvostrukog zapisa koji bi trebalo spajati. Šest od deset ključeva ima manje od
+tri uzorka — učenje je rijetko, ali to je pitanje količine podataka, ne formata.
+
+**Šta je popravljeno usput** (i zašto je to bio pravi posao): `findFirst` sa
+`orderBy: { intervalKey: 'desc' }` poredi **tekst**, pa je birao `weekend_*`
+ispred `weekday_*` bez obzira na to koji je interval stvarno tražen. Sada
+`boiler.service.ts` čita `findMany` i bira po `intervalKeyCandidates`
+(kanonski-prvi). Uz to, dom učitan bez `user.timezone` tiho je padao na
+`Europe/Sarajevo` i promašivao interval — zato `include.homeProfile` sada nosi
+`user: { select: { timezone: true } }`.
+
+**Pouka.** Zadatak formulisan kao „napiši modul" može biti već urađen; zadatak
+formulisan kao „dokaži da nema razdvojene historije" nije. Plan je zato bolje
+pisati kao **tvrdnju koju treba izmjeriti** nego kao posao koji treba obaviti.
+
+---
+
+### 10.13 F5.6 — `FORMULA.md` i provjera koja pada kad dokument ostarje
+
+**Šta je urađeno.** `docs/FORMULA.md` — jedna stranica: dnevni bilans iz kojeg
+izraz izlazi, sam izraz sa opravdanjem svakog člana, redoslijed pravila
+kontrolera, tvrde granice sa vlasnikom po granici, filteri učenja, noćni
+minimum, ključ intervala i odjeljak „šta ovaj sistem **ne** tvrdi".
+
+**Zašto provjera, a ne samo dokument.** Dokument sa brojevima je najlakše mjesto
+da tiho postane laž: kod se promijeni u jednom fajlu, dokument ostane na starom
+broju, i niko to ne primijeti jer dokument niko ne izvršava. Zato
+`scripts/audit/formula_doc_check.cjs` **čita kod** (regexom, jer traži doslovno
+`export const NAME = <broj>`) i poredi sa tabelom §8 i sa devet brojeva
+navedenih u prozi. Provjera pada i kad uputa u dokumentu vodi na nepostojeći
+fajl — mrtva uputa je gora od nijedne.
+
+**Dokaz da provjera nije ukras.** `backend/src/modules/DailyRecord/tests/formula-doc.spec.ts`
+ima tri testa: (1) pravi dokument se slaže sa kodom; (2) dokument sadrži
+jednačinu i granice; (3) ista provjera, na **kopiji** dokumenta sa
+`DWELL_DAYS = 4`, pada i imenuje `DWELL_DAYS` (`dokument 4 ≠ kod 3`). Kopija ide
+u `os.tmpdir()`; pravi dokument se ne dira, jer test koji kvari pravi fajl je
+test koji nekad ostane pokvaren.
+
+Ručno provjereno i u drugom smjeru: `CURVE_MIN_FLOW_C` privremeno na `47` u kodu
+⇒ `✗ CURVE_MIN_FLOW_C: dokument 46 ≠ kod 47`, exit 1; vraćeno na `46` ⇒ exit 0.
+
+**Gate.** `node ../scripts/audit/formula_doc_check.cjs` je korak
+`FORMULA.md matches code (F5.6)` u `backend-audit.yml`, odmah iza F3.8 i
+namjerno **bez** zavisnosti od `prepare` (dokument i kod su isti bez
+PostgreSQL-a).
+
+### 10.14 F3.3 — ablacija: koji član stvarno nosi odluku
+
+**Zašto.** Do sada se svaki član mogao gasiti pojedinačno (`--c=0`,
+`--dayref=0`, `--conservative=0`), ali **pravila kontrolera** — noćna granica i
+kratki ciklusi — bila su uvijek uključena. Zato se nije moglo reći da li se
+brojevi mijenjaju zbog formule ili zbog granice koja ih prepisuje: granica je
+bila maska preko svega ispod nje. F3.3 dodaje `--ablate=uday|cihigh|nightfloor|shortcycle`.
+
+**Prvo nalaz o samom mjerenju.** Prva verzija `u_day`-a davala je uvijek nulu
+(±0,1 K) — jer je simulirana kuća imala **konstantne** dobitke (200 W). Ablacija
+člana koji je po konstrukciji nula „pokazuje da član ništa ne mijenja", a to
+nije nalaz nego tautologija. Zato kuća sada ima dnevne dobitke ±450 W sa **sporim
+udjelom** (period 9 dana, kao sunčan period) i malim dnevnim šumom. Na čistom
+dnevnom šumu `u_day` (medijana 7 dana) mjerio bi veličinu koje u kući nema, pa
+bi ablacija „dokazala" da član nešto kvari. Nakon toga `u_day` stoji u
+**−1,3…+0,9 K**, unutar projektne granice ±2 K (`DAY_GAIN_CAP_C`) — dakle mjeri
+ono za šta je napravljen.
+
+**Mjereno** (`node scripts/audit/learning_sim.cjs --days=60 --table`):
+
+| postavka | light | medium | heavy |
+|---|---|---|---|
+| ništa (zlatni) | 37,1 °C · 23,03/d · 7/50 · 1,70 K | 40,4 · 17,75 · 5/50 · 1,32 | 42,9 · 5,35 · 0/50 · 0,96 |
+| bez `u_day` | 37,2 · 23,28 · **4/50** · 1,29 | 41,5 · 17,88 · 4/50 · 1,32 | 42,7 · 5,38 · 0/50 · 0,89 |
+| bez CI gornje | 37,4 · **17,62** · **12/50** · 1,71 | 40,7 · **13,72** · **11/50** · 1,35 | 42,6 · **3,97** · **3/50** · 1,14 |
+| bez noćne granice | 37,0 · 22,22 · **12/50** · **2,25** | 41,2 · 16,92 · **10/50** · **1,69** | 42,9 · 5,10 · **6/50** · 1,14 |
+| bez kratkih ciklusa | 37,1 · 23,03 · 7/50 · 1,70 | 40,4 · 17,75 · 5/50 · 1,32 | 42,9 · 5,35 · 0/50 · 0,96 |
+| bez svih | 36,9 · 16,53 · **14/50** · 2,20 | 41,4 · 12,87 · 10/50 · 1,55 | 42,4 · 3,52 · **10/50** · 1,57 |
+
+**Šta tabela kaže.**
+
+1. **Noćna granica je najveći pojedinačni nosilac komfora.** Bez nje podbačaj
+   skače na svakoj kući (7→12, 5→10, 0→6 od 50 dana) i najgori podbačaj raste
+   na 2,25 K. To je i očekivano: granica postoji upravo zato što prosječan dan
+   ne pokriva najhladniji sat.
+2. **Gornja CI granica nosi učenje, ne komfor.** Bez nje ciklusi padaju
+   (23,03→17,62; 17,75→13,72; 5,35→3,97) i podbačaj raste — dakle konzervativni
+   nagib **proizvodi** više ciklusa. To je cijena, ne kvar: mlad model sa
+   potcijenjenim nagibom grije previše i ciklusira. `SLOPE_CONSERVATIVE_MAX_DAYS`
+   je zato mjera kompromisa, ne optimizacija.
+3. **`u_day` je jedini član koji djeluje u obje strane.** Sa njim je najgori
+   podbačaj manji na light (1,70 → 1,29) i heavy (0,96 → 0,89), jednak na
+   medium (1,32), a broj dana sa podbačajem je **veći** na medium (4 → 5 od 50).
+   Uzrok je vidljiv iz polazne: `u_day` spušta polaznu (medium 41,5 → 40,4), pa
+   na kući koja nije previsoko griјаla smanjuje rezervu — a na kući koja jest
+   (light, polazna 37,2 → 37,1) popravlja najgori slučaj. To je **nalaz, ne
+   bug**: član trguje prosječnom marginom za dane sa dobitkom. **Odluka:**
+   `u_day` ostaje uključen (projektna odluka iz `17` §13), ali se sada **mjeri**;
+   ako F3.1 pokaže isti obrazac na stvarnim podacima, gasi se postavljanjem
+   `HomeModel.uDayC = null` — bez promjene formule i bez novog prekidača u
+   proizvodnom kodu.
+4. **Kratki ciklusi u simulaciji ne mijenjaju ništa** (isti red sa i bez): medijana
+   ciklusa je 15–81 min, tj. uvijek iznad `SHORT_CYCLE_MIN = 6`. To **nije**
+   dokaz da je pravilo suvišno u produkciji — u produkciji su kratki ciklusi
+   izmjereni (F3.8 ih mjeri preko `controller_sim`), a ovdje ih simulirana kuća
+   ne proizvodi. Zapisano da se ne pročita kao „pravilo ne radi".
+
+**Zlatni brojevi prepisani** (`formula_v2_golden.json`): `flowEnd` light 37,1
+(isto), medium 40,4 (bilo 41,4), heavy 42,9 (bilo 42,6); `cyclesPerDay` i
+`undershootDaysAfter10` po tabeli. Uzrok je **promjena simulirane kuće** (dnevni
+dobici), ne formula — zato snimak sada nosi `settings.dayGain = true` i polje
+`why`, da sljedeći `--write` bez objašnjenja bude vidljiv u diffu.
+
+**Gate.** `node ../scripts/audit/learning_sim.cjs --self-test` u
+`backend-audit.yml` (korak `Ablation toggles actually act (F3.3)`): provjerava
+da prazna ablacija daje **isti** rezultat kao pokretanje bez prekidača (da
+prekidač nije neutralan), da isključena noćna granica **mijenja** bar jednu
+metriku (da granica nije mrtva), i da `u_day` stvarno varira (da ablacija nije
+tautologija). Traje ~0,5 s.

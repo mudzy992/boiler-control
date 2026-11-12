@@ -28,6 +28,7 @@
 'use strict';
 
 const assert = require('node:assert');
+const { execFileSync } = require('node:child_process');
 
 // --- fiksne postavke sistema (iz koda, ne pretpostavke) -------------------
 const DEAD_ZONE = 1.0;          // thermostat.polling.service.ts:48 (vlasnik: uvijek 1)
@@ -57,6 +58,10 @@ if (args.includes('--help')) {
   --c=<0|1>         oduzimaj izmjereni c u ravnotežnoj polaznoj (default 1)
   --dayref=<0|1>    referenca 0,7·noć + 0,3·dnevni maks (default 1)
   --conservative=n  gornja CI granica prvih n dana (default 20, 0 = nikad)
+  --ablate=<lista>  isključi članove: uday, cihigh, nightfloor, shortcycle
+                    (zarezom; prazno = ništa isključeno)
+  --table           puna tabela ablacije za sve tri kuće
+  --self-test       samo provjeri da prekidači stvarno djeluju (traje par s)
   --trace           ispiši polaznu po danu
   --json            mašinski čitljiv izlaz
   --help            ova poruka
@@ -105,11 +110,11 @@ const flag = (name, def) => {
   return v;
 };
 
-const known = new Set(['--json', '--trace', '--help']);
+const known = new Set(['--json', '--trace', '--help', '--table', '--self-test']);
 const bad = args.filter(
   (a) =>
     !known.has(a) &&
-    !/^--(days|house|scenario|c|dayref|conservative)=/.test(a),
+    !/^--(days|house|scenario|c|dayref|conservative|ablate)=/.test(a),
 );
 if (bad.length) {
   console.error(`Nepoznat argument "${bad[0]}"; koristite --help`);
@@ -129,6 +134,53 @@ const USE_DAY_REF = flag('dayref', 1) === 1;
 const CONSERVATIVE_DAYS = flag('conservative', 20);
 /** Isti udio kao `DAY_REFERENCE_WEIGHT` u `equilibrium-flow.ts`. */
 const DAY_WEIGHT = 0.3;
+/** Kratki ciklus: ista granica kao `SHORT_CYCLE_MIN` u `proposal-controller.ts`. */
+const SHORT_CYCLE_MIN = 6;
+
+/**
+ * F3.3 — ablacija: koji član stvarno nosi odluku.
+ *
+ * Do sada se svaki član mogao mijenjati pojedinačno (`--c=0`, `--dayref=0`,
+ * `--conservative=0`), ali nije bilo načina da se **isključi pravilo kontrolera**
+ * — noćna granica i kratki ciklusi bili su uvijek uključeni. Zato se nije moglo
+ * reći da li se brojevi mijenjaju zbog formule ili zbog granice koja ih
+ * prepisuje: granica je bila maska preko svega ispod nje.
+ *
+ * `--ablate=<lista>` gasi članove; sve što nije navedeno ostaje kako je.
+ * Prazno (`--ablate=`) znači „ništa isključeno" — to je zlatni broj, i
+ * `--self-test` provjerava da je taj broj **isti** kao bez prekidača.
+ *
+ *   uday        oduzmi `u_day` (`HomeModel.day-gain.ts`)
+ *   cihigh      ne koristi gornju CI granicu nagiba dok je model mlad
+ *   nightfloor  ne primjenjuj noćni minimum kao tvrdu granicu
+ *   shortcycle  ne podiži zbog kratkih ciklusa
+ */
+const ABLATE_NAMES = ['uday', 'cihigh', 'nightfloor', 'shortcycle'];
+function parseAblation(list) {
+  const out = { uday: true, cihigh: true, nightfloor: true, shortcycle: true };
+  const items = list.split(',').map((x) => x.trim()).filter(Boolean);
+  for (const item of items) {
+    if (!ABLATE_NAMES.includes(item)) {
+      console.error(
+        `Nepoznata ablacija "${item}"; poznate: ${ABLATE_NAMES.join(', ')}`,
+      );
+      process.exit(2);
+    }
+    out[item] = false; // isključeno
+  }
+  return out;
+}
+const ablationArg = (args.find((a) => a.startsWith('--ablate=')) ?? '--ablate=').split('=')[1];
+const ABLATION = parseAblation(ablationArg);
+const ablateMode = args.some((a) => a.startsWith('--ablate='));
+
+/** Koji nagib ide u izraz — isti izbor kao `chooseSlope()` u `equilibrium-flow.ts`. */
+function chooseSlope(model, day, ablation) {
+  if (!ablation.cihigh) return model.s;
+  return model.ci && day < CONSERVATIVE_DAYS && model.ci[1] >= model.s
+    ? model.ci[1]
+    : model.s;
+}
 
 const HOUSES = {
   light: { C: 4e6, k1: 212, k2: 160, label: 'laka konstrukcija' },
@@ -273,6 +325,14 @@ function estimateModel(obs, flowByDay) {
     ? [boots[Math.floor(boots.length * 0.05)], boots[Math.floor(boots.length * 0.95)]]
     : null;
 
+  // Ostatak po danu — ulaz za `u_day`. Fit je `y = s·x + intercept`, pa je
+  // ostatak `y − predviđeno`; dobitak je suprotnog znaka (v. day-gain.ts).
+  const residByDay = new Map();
+  for (let i = 0; i < rows.length; i++) {
+    const predicted = fit.slope * rows[i].x + fit.intercept;
+    residByDay.set(rows[i].day, rows[i].y - predicted);
+  }
+
   return {
     s: fit.slope > 0.1 && fit.slope < 3 ? fit.slope : null,
     c: Number.isFinite(fit.intercept) ? -fit.intercept : null,
@@ -280,7 +340,42 @@ function estimateModel(obs, flowByDay) {
     days: rows.length,
     mad: fit.mad,
     method: 'energy-signature',
+    residByDay,
   };
+}
+
+/**
+ * `u_day` iz ostatka — isti izraz kao `HomeModel/day-gain.ts`.
+ *
+ *   predviđeno = s·x − c        (x = cilj − vanjska, iz istog fita)
+ *   ostatak    = y − predviđeno (y = stvarno predato grijanje tog dana)
+ *   dobitak    = −ostatak
+ *
+ * Medijana zadnjih 7 dana, granica ±2 K, bez 4 dana nema broja (`null`).
+ * Ovo postoji zbog `--ablate=uday`: bez njega se tvrdi da član „ne mijenja
+ * mnogo" a nikad nije ni izmjeren. Fit u `estimateModel` ga ne daje jer je
+ * `c` već u njemu; `u_day` je **dnevni dodatak** na prosječan dan.
+ */
+const DAY_GAIN_CAP_C = 2;
+const DAY_GAIN_WINDOW_DAYS = 7;
+const DAY_GAIN_MIN_DAYS = 4;
+
+function dayGainFrom(residByDay, flowByDay, day) {
+  const points = [];
+  for (const [d, resid] of residByDay) {
+    if (d >= day) continue;
+    // Ostatak je u jedinicama polazne (fit je y = s·x − c), pa je dobitak
+    // direktno −ostatak; nema preračunavanja u sobnu temperaturu ovdje.
+    points.push({ d, gainC: -resid });
+  }
+  points.sort((a, b) => a.d - b.d);
+  const recent = points.slice(-DAY_GAIN_WINDOW_DAYS);
+  if (recent.length < DAY_GAIN_MIN_DAYS) return null;
+  const values = recent.map((p) => p.gainC);
+  const raw = median(values);
+  return Math.round(
+    Math.min(DAY_GAIN_CAP_C, Math.max(-DAY_GAIN_CAP_C, raw)) * 10,
+  ) / 10;
 }
 
 // derivacijska metoda — zadržana kao kontrolna, očekuje se da podbaci
@@ -301,10 +396,35 @@ function derivativeWindows(obs) {
 }
 
 // --- simulacija -----------------------------------------------------------
-function simulate(house, scenario) {
+// Unutrašnji dobici: 200 W bazno + dnevna varijacija (sunce, gosti, kuhanje).
+//
+// Bez varijacije `u_day` je uvijek nula i `--ablate=uday` ne dokazuje ništa:
+// ablacija člana koji je po konstrukciji nula „pokazuje da član ništa ne
+// mijenja" — a to nije nalaz nego tautologija. Varijacija je istog reda kao
+// ±1–2 K ekvivalenta polazne iz `17` §1.
+const qIntBase = 200;                        // W
+const Q_INT_DAY_SPREAD = 450;                // W, ± oko baze (sunce kroz prozor)
+
+/**
+ * Dnevni dobitak (sunce, gosti, kuhanje), ±450 W oko 200 W baze.
+ *
+ * Spori udio ima period od 9 dana (sunčan period), plus mali dnevni šum. Spori
+ * udio je namjeran: `u_day` je **medijana zadnjih 7 dana** i mjeri dobitke koji
+ * traju. Na bijelom šumu bi mjerio ništa i ablacija bi „dokazala" da član ne
+ * radi — a dokazala bi samo da simulirana kuća nema šta da izmjeri.
+ *
+ * Nema `resetSeed` zavisnosti: deterministički po danu, pa dva pokretanja sa
+ * istim `--days` daju isti niz bez obzira na to šta je prije izračunato.
+ */
+function dayIntGain(day) {
+  const slow = Math.cos((2 * Math.PI * day) / 9);
+  return qIntBase + Q_INT_DAY_SPREAD * (0.55 * slow + 0.45 * (2 * rnd() - 1));
+}
+
+function simulate(house, scenario, ablation = ABLATION) {
   resetSeed();
   const { C, k1, k2 } = house;
-  const qInt = 200;                          // W
+
   const trueA = (k1 / C) * 3600;
   const trueB = (k2 / C) * 3600;
 
@@ -325,7 +445,19 @@ function simulate(house, scenario) {
   for (let day = 0; day < days; day++) {
     const { min, max } = dayMinMax(day);
     const nightMin = nightMinFor(day);
+    // Dobitak tog dana. Računa se prije modela da bi isti broj važio i za fit i
+    // za izraz (inače bi fit i primjena gledali dvije različite kuće).
+    //
+    // Varijacija **traje danima**, kao sunčan period ili gosti koji ostaju:
+    // `u_day` je medijana zadnjih 7 dana, pa na čistom dnevnom šumu mjeri
+    // veličinu koje u kući nema. To bi bio artefakt modela, ne nalaz o članu.
+    const qInt = dayIntGain(day);
     const model = day >= 1 ? estimateModel(obs, flowByDay) : { s: null };
+    // `u_day` se računa samo kad ga ablacija ne gasi i kad model ima fit —
+    // inače ostaje `undefined` i izraz ga tretira kao 0 (kao `null` u kodu).
+    if (model.s !== null && model.residByDay && ABLATION.uday) {
+      model.uDay = dayGainFrom(model.residByDay, flowByDay, day);
+    }
 
     let next;
     if (scenario === 'formula') {
@@ -336,13 +468,11 @@ function simulate(house, scenario) {
         // F2: isti izraz kao `backend/src/modules/DailyRecord/equilibrium-flow.ts`
         //   F_eq = T + s·(T − O_ref) − c
         // `--c=0` / `--dayref=0` reprodukuju staro ponašanje za poređenje.
-        const slope =
-          model.ci && day < CONSERVATIVE_DAYS && model.ci[1] >= model.s
-            ? model.ci[1]
-            : model.s;
+        const slope = chooseSlope(model, day, ablation);
         const oRef = USE_DAY_REF ? (1 - DAY_WEIGHT) * nightMin + DAY_WEIGHT * max : nightMin;
         const cTerm = USE_C && typeof model.c === 'number' ? model.c : 0;
-        base = TARGET_ROOM + slope * (TARGET_ROOM - oRef) - cTerm;
+        const uTerm = ablation.uday && typeof model.uDay === 'number' ? model.uDay : 0;
+        base = TARGET_ROOM + slope * (TARGET_ROOM - oRef) - cTerm - uTerm;
       } else {
         base = formulaFlow(min, max);
       }
@@ -352,7 +482,17 @@ function simulate(house, scenario) {
       const prev = dayLog[dayLog.length - 1];
       if (prev && lastProposal !== null && day - lastChangeDay >= DWELL_DAYS) {
         const undershoot = TARGET_ROOM - prev.minRoom;
-        if (undershoot > EPS_UNDERSHOOT) {
+        // Kratki ciklusi: dan sa medijanom kraćom od SHORT_CYCLE_MIN traži
+        // korak gore, i to prije provjere udobnosti (spuštanje ih je i
+        // proizvelo). `--ablate=shortcycle` gasi samo taj razlog.
+        const shortCycles =
+          ablation.shortcycle && typeof prev.medianCycle === 'number'
+            ? prev.medianCycle < SHORT_CYCLE_MIN
+            : false;
+        if (shortCycles) {
+          next = Math.min(lastProposal + STEP_UP, base + 2);
+          lastChangeDay = day;
+        } else if (undershoot > EPS_UNDERSHOOT) {
           next = Math.min(lastProposal + STEP_UP, base + 2);
           lastChangeDay = day;
         } else if (prev.minRoom >= TARGET_ROOM - EPS_UNDERSHOOT) {
@@ -363,14 +503,14 @@ function simulate(house, scenario) {
       }
 
       // noćni minimum je tvrda granica
-      if (model.s !== null) {
-        const slope =
-          model.ci && day < CONSERVATIVE_DAYS && model.ci[1] >= model.s
-            ? model.ci[1]
-            : model.s;
+      if (!ablation.nightfloor) {
+        // ablacija: granica se ne primjenjuje, da se vidi nosi li odluku
+      } else if (model.s !== null) {
+        const slope = chooseSlope(model, day, ablation);
         const oRef = USE_DAY_REF ? (1 - DAY_WEIGHT) * nightMin + DAY_WEIGHT * max : nightMin;
         const cTerm = USE_C && typeof model.c === 'number' ? model.c : 0;
-        const guard = TARGET_ROOM + slope * (TARGET_ROOM - oRef) - cTerm;
+        const uTerm = ablation.uday && typeof model.uDay === 'number' ? model.uDay : 0;
+        const guard = TARGET_ROOM + slope * (TARGET_ROOM - oRef) - cTerm - uTerm;
         if (guard > next && guard <= FLOW_MAX) next = guard;
       }
     }
@@ -382,6 +522,12 @@ function simulate(house, scenario) {
     let dayMinRoom = room;
     let reachedAtMin = null;
     let dayCycles = 0;
+    // Trajanja ciklusa tog dana — ulaz za pravilo `SHORT_CYCLES`. Bez ovoga
+    // `--ablate=shortcycle` nema šta da isključi: pravilo bi uvijek vuklo
+    // `undefined`, tiho se nikad ne bi primijenilo, a ablacija bi izgledala
+    // kao „pravilo ne mijenja ništa".
+    const dayCycleDurations = [];
+    let dayCycleStart = null;
 
     for (let m = 0; m < 1440; m++) {
       const tMin = day * 1440 + m;
@@ -396,7 +542,13 @@ function simulate(house, scenario) {
       if (heating !== heatingPrev) {
         if (tMin - lastSwitchMin >= MIN_SWITCH_MIN) {
           lastSwitchMin = tMin;
-          if (heating) dayCycles++;
+          if (heating) {
+            dayCycles++;
+            dayCycleStart = tMin;
+          } else if (dayCycleStart !== null) {
+            dayCycleDurations.push(tMin - dayCycleStart);
+            dayCycleStart = null;
+          }
         } else {
           heating = heatingPrev;
         }
@@ -426,13 +578,20 @@ function simulate(house, scenario) {
       prevHeatingForRecord = heating;
     }
 
+    // Ciklus koji je u toku na kraju dana ima poznato trajanje do ponoći —
+    // kraće od stvarnog, ali nikad duže, pa ne može lažno prijaviti kratak
+    // ciklus kao dug. Suprotno bi blokiralo učenje tiho.
+    if (dayCycleStart !== null) dayCycleDurations.push(day * 1440 + 1440 - dayCycleStart);
+
     dayLog.push({
       day, flow,
       minRoom: dayMinRoom,
       reachedMin: reachedAtMin,
       cycles: dayCycles,
+      medianCycle: dayCycleDurations.length ? median(dayCycleDurations) : null,
       nightMin,
       modelS: model.s,
+      modelU: typeof model.uDay === 'number' ? model.uDay : null,
     });
   }
 
@@ -521,8 +680,10 @@ function run(scenario) {
       minRoom: round(d.minRoom, 2),
       reachedMin: d.reachedMin,
       cycles: d.cycles,
+      medianCycle: d.medianCycle,
       nightMin: round(d.nightMin, 1),
       modelS: d.modelS === null ? null : round(d.modelS, 3),
+      modelU: d.modelU,
     })),
   };
 }
@@ -592,3 +753,107 @@ if (ctl) {
   }
 }
 console.log('Tvrdnje prošle.');
+
+// --- F3.3 ablacija ---------------------------------------------------------
+/**
+ * Ablacija: isključi jedan član, vidi šta se promijeni.
+ *
+ * `--ablate=<lista>` gasi navedene članove i ispisuje samo taj jedan red — to
+ * je ručni režim. Bez `--ablate` i sa `--table`, ispisuje se puna tabela
+ * (svaki član posebno, pa svi zajedno), jer se jedino tako vidi **koji član
+ * nosi odluku**, a ne samo da neki od njih nešto mijenja.
+ *
+ * `--self-test` ne mjeri ništa o kući: provjerava da prekidači **stvarno
+ * djeluju**. To je jedina stvar koja se ovdje može tiho pokvariti — ako
+ * `--ablate` prestane da mijenja izraz (npr. jer se član čita iz zaglavlja
+ * modula), tabela bi izgledala uredno a svi redovi bi bili isti.
+ */
+const ABLATE_SETS = [
+  ['ništa (zlatni)', ''],
+  ['bez u_day', 'uday'],
+  ['bez CI gornje', 'cihigh'],
+  ['bez noćne granice', 'nightfloor'],
+  ['bez kratkih ciklusa', 'shortcycle'],
+  ['bez svih', 'uday,cihigh,nightfloor,shortcycle'],
+];
+
+function ablateRow(house, list) {
+  const output = execFileSync(
+    process.execPath,
+    [
+      __filename,
+      `--days=${days}`,
+      `--house=${house}`,
+      '--scenario=controller',
+      '--json',
+      `--ablate=${list}`,
+    ],
+    { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+  );
+  const result = JSON.parse(output).results[0];
+  const u = result.dayLog.map((d) => d.modelU).filter((x) => typeof x === 'number');
+  return {
+    end: result.flow.end,
+    cycles: result.cycles.perDayMean,
+    undershoot: `${result.comfort.undershootDaysAfter10}/${result.comfort.daysAfter10}`,
+    worst: result.comfort.worstUndershoot,
+    uRange: u.length ? [Math.min(...u), Math.max(...u)] : null,
+  };
+}
+
+if (args.includes('--self-test')) {
+  // Dvije provjere, obje o tome da prekidač djeluje:
+  //  1. prazna ablacija mora dati ISTI rezultat kao pokretanje bez prekidača;
+  //  2. isključivanje noćne granice mora promijeniti bar jednu metriku — ako ne
+  //     promijeni, granica je mrtva ili je prekidač prikopčan na pogrešno mjesto.
+  const same = JSON.stringify(ablationArg) === JSON.stringify('');
+  assert.ok(same, 'self-test mora ići bez --ablate');
+  const baseline = run('controller');
+  const viaFlag = ablateRow(houseKey, '');
+  assert.strictEqual(
+    viaFlag.end,
+    baseline.flow.end,
+    'prazna ablacija je promijenila polaznu — prekidač nije neutralan',
+  );
+  const noFloor = ablateRow(houseKey, 'nightfloor');
+  const changed =
+    noFloor.end !== baseline.flow.end ||
+    noFloor.cycles !== baseline.cycles.perDayMean ||
+    noFloor.worst !== baseline.comfort.worstUndershoot;
+  assert.ok(changed, 'isključena noćna granica nije promijenila nijednu metriku');
+
+  // `u_day` mora stvarno varirati — inače njegova ablacija ne dokazuje ništa.
+  const u = baseline.dayLog.map((d) => d.modelU).filter((x) => typeof x === 'number');
+  assert.ok(u.length > 0, 'u_day nikad nije izračunat');
+  assert.ok(
+    Math.max(...u) > 0.1 && Math.min(...u) < -0.1,
+    'u_day ne varira — ablacija bi bila tautologija',
+  );
+
+  console.log('F3.3 self-test: prekidači djeluju, u_day varira.');
+  process.exit(0);
+}
+
+if (args.includes('--table') || ablateMode) {
+  const houses = ablateMode ? [houseKey] : ['light', 'medium', 'heavy'];
+  for (const house of houses) {
+    console.log(`Ablacija — kuća "${house}", ${days} dana`);
+    console.log('  ' + pad('postavka', 22) + pad('polazna', 9) + pad('cikl/dan', 10) + pad('podbačaj', 10) + pad('najgori', 9) + 'u_day');
+    for (const [label, list] of ABLATE_SETS) {
+      if (ablateMode && list !== ablationArg) continue;
+      const row = ablateRow(house, list);
+      const u = row.uRange ? `${row.uRange[0]}…${row.uRange[1]}` : '—';
+      console.log(
+        '  ' +
+          pad(label, 22) +
+          pad(row.end, 9) +
+          pad(row.cycles, 10) +
+          pad(row.undershoot, 10) +
+          pad(row.worst, 9) +
+          u,
+      );
+    }
+    console.log('');
+  }
+}
+

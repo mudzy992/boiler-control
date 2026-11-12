@@ -7,38 +7,40 @@
   "settings": {
     "c": true,
     "dayRef": true,
-    "conservativeDays": 20
+    "conservativeDays": 20,
+    "dayGain": true
   },
+  "why": "F3.3: dnevni dobici variraju; zlatni brojevi prepisani uz dokaz ablacije (§10.14)",
   "houses": {
     "light": {
       "house": "light",
       "flowEnd": 37.1,
-      "cyclesPerDay": 17.78,
-      "undershootDaysAfter10": 0,
+      "cyclesPerDay": 23.03,
+      "undershootDaysAfter10": 7,
       "daysAfter10": 50,
-      "worstUndershoot": 0.8,
+      "worstUndershoot": 1.7,
       "daysOverTmax": 0,
-      "modelSlope": 0.767
+      "modelSlope": 0.703
     },
     "medium": {
       "house": "medium",
-      "flowEnd": 41.4,
-      "cyclesPerDay": 13.52,
-      "undershootDaysAfter10": 0,
+      "flowEnd": 40.4,
+      "cyclesPerDay": 17.75,
+      "undershootDaysAfter10": 5,
       "daysAfter10": 50,
-      "worstUndershoot": 0.8,
+      "worstUndershoot": 1.32,
       "daysOverTmax": 0,
-      "modelSlope": 0.947
+      "modelSlope": 0.889
     },
     "heavy": {
       "house": "heavy",
-      "flowEnd": 42.6,
-      "cyclesPerDay": 4.32,
+      "flowEnd": 42.9,
+      "cyclesPerDay": 5.35,
       "undershootDaysAfter10": 0,
       "daysAfter10": 50,
-      "worstUndershoot": 0.76,
+      "worstUndershoot": 0.96,
       "daysOverTmax": 0,
-      "modelSlope": 1.027
+      "modelSlope": 0.928
     }
   }
 }

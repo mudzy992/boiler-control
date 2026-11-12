@@ -1,4 +1,5 @@
 import { localParts } from '../Dashboard/analytics-export';
+import { intervalKey } from '../Heating/interval-key';
 
 /**
  * Pravila "kada dnevni zapis nastaje" — čiste funkcije, bez baze i bez sata.
@@ -99,9 +100,17 @@ export function localDateKey(now: Date, zone: string): string {
  * interval.
  */
 export function intervalKeyForLocalDate(localDate: string): string {
-  const [year, month, day] = localDate.split('-').map(Number);
-  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-  return `${weekday === 0 || weekday === 6 ? 'weekend' : 'weekday'}_morning`;
+  /*
+   * F5.2: ključ dolazi iz `Heating/interval-key.ts`. Ostaje ovdje kao tanak
+   * omotač jer ga zove `daily-record.writer` i testira `proposal-schedule`;
+   * pravilo (format, podjela dana, računanje dana u sedmici) je na jednom mjestu.
+   *
+   * Sat je 6 (`PROPOSAL_LOCAL_HOUR`) jer dnevni zapis nastaje ujutro — to je
+   * jedino vrijeme koje zapis zaista poznaje. Prije je to bilo upisano kao
+   * `_morning` u samom formatu, pa je isti pojam imao dva imena: `morning` iz
+   * servisa i „uvijek morning" iz zapisa.
+   */
+  return intervalKey({ localDate, timeZone: DEFAULT_HOME_TIME_ZONE }) ?? '';
 }
 
 /** Minute od lokalne ponoći (0–1439). */

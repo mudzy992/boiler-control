@@ -236,6 +236,14 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: node scripts/backfill-coverage.cjs
 
+      # F3.7: shadow vs. predlog nad stvarnim podacima. Pušta istu funkciju koju
+      # koristi HTTP ruta (`shadow-report.ts`), samo čita bazu direktno — pa se
+      # izvještaj dobija i bez prijavljivanja na aplikaciju. Samo SELECT.
+      - name: Shadow vs. predlog (F3.7, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: node scripts/shadow-report-readonly.cjs
+
       # Dry-run: ista logika koja bi i upisivala, ali bez upisa. Ovdje se vidi
       # koliko bi redova nastalo i od kojih izvora, prije nego se odluči.
       - name: Backfill daily records (dry-run, read-only)

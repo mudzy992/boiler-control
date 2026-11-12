@@ -196,6 +196,45 @@ async function main() {
         );
       }
       out();
+      /*
+       * F5.2: koliko je historije **razdvojeno** po formatu.
+       *
+       * `HeatingIntervalLearning` ima jedinstveni indeks
+       * `(homeProfileId, intervalKey)`, pa `weekday_1_afternoon` (v1: dan kao
+       * broj) i `weekday_afternoon` (v2: tip dana) žive kao **dva reda** za isti
+       * interval. Dok se to ne spoji, učenje za isti dio dana se broji dvaput
+       * odvojeno, pa nijedan red ne skupi dovoljno uzoraka.
+       *
+       * Broji se po kući, jer se spajanje radi nad istom kućom i istim ključem.
+       */
+      const byFormat = { canonical: [], legacy: [] };
+      for (const row of learning) {
+        const isLegacy = /^[0-6]_(night|morning|late_morning|afternoon|evening)$/.test(
+          row.intervalKey,
+        );
+        (isLegacy ? byFormat.legacy : byFormat.canonical).push(row.intervalKey);
+      }
+      const splitPairs = await soft(
+        'F5.2: razdvojena historija po formatu',
+        `SELECT l."homeProfileId",
+                l."intervalKey"                 AS legacy_key,
+                c."intervalKey"                 AS canonical_key,
+                l."samples"                     AS legacy_samples,
+                c."samples"                     AS canonical_samples
+           FROM "HeatingIntervalLearning" l
+           JOIN "HeatingIntervalLearning" c
+             ON c."homeProfileId" = l."homeProfileId"
+            AND l."intervalKey" ~ '^[0-6]_'
+            AND c."intervalKey" = (
+              CASE
+                WHEN substring(l."intervalKey" from 1 for 1) IN ('0', '6')
+                  THEN 'weekend_'
+                ELSE 'weekday_'
+              END
+            ) || substring(l."intervalKey" from 3)
+          ORDER BY l."homeProfileId", l."intervalKey"`,
+      );
+
       const thin = learning.filter((row) => row.min_samples < 3);
       const totalSamples = learning.reduce(
         (sum, row) => sum + Number(row.samples ?? 0),
@@ -208,6 +247,43 @@ async function main() {
             ? ` (${thin.map((r) => `${r.intervalKey}=${r.min_samples}`).join(', ')})`
             : ''),
       );
+      out(
+        `**F5.2 format:** kanonskih (v2) ključeva **${byFormat.canonical.length}**, ` +
+          `starih (v1, dan kao broj) **${byFormat.legacy.length}**` +
+          (byFormat.legacy.length
+            ? ` — ${byFormat.legacy.map((k) => `\`${k}\``).join(', ')}`
+            : ''),
+      );
+      if (splitPairs) {
+        out();
+        if (splitPairs.length === 0) {
+          out(
+            'Nijedan interval nema **oba** formata — historija nije razdvojena, ' +
+              'pa migracija ključeva nije potrebna. Stari ključevi su samo stariji ' +
+              'intervali koje novi kod više ne piše.',
+          );
+          notice('F5.2: nema razdvojene historije (0 intervala u oba formata)');
+        } else {
+          out('| kuća | stari ključ | uzoraka | kanonski ključ | uzoraka |');
+          out('|---|---|---|---|---|');
+          for (const row of splitPairs) {
+            out(
+              `| ${row.homeProfileId} | \`${row.legacy_key}\` | ${row.legacy_samples} | ` +
+                `\`${row.canonical_key}\` | ${row.canonical_samples} |`,
+            );
+          }
+          const merged = splitPairs.reduce(
+            (sum, row) => sum + Number(row.legacy_samples ?? 0) + Number(row.canonical_samples ?? 0),
+            0,
+          );
+          notice(
+            `F5.2: ${splitPairs.length} intervala u OBA formata — spajanjem bi ` +
+              `${splitPairs.map((r) => `${r.legacy_key}+${r.canonical_key}`).join(', ')} ` +
+              `imali ${merged} uzoraka zajedno; migracija je potrebna`,
+          );
+        }
+      }
+      out();
     }
 
     const night = await soft(

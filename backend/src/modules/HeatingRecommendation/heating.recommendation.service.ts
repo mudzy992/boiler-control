@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { FlowTempInput, FlowCalcMode } from '../Heating/engine/types';
+import {
+  intervalKeyCandidates,
+  intervalKeyForDevice,
+} from '../Heating/interval-key';
 import { buildRecommendationBreakdown } from './recommendation-breakdown';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 
@@ -33,7 +37,20 @@ export class HeatingRecommendationService {
     });
     if (!device || !device.homeProfile) return;
 
-    const intervalKey = this.getIntervalKey();
+    /*
+     * F5.2: ključ se računa u zoni kuće, ne u zoni servera, i dolazi iz jednog
+     * modula (`Heating/interval-key.ts`). Ranije je ovdje bila sopstvena kopija
+     * sa `new Date().getHours()` — ista logika, ali serverski sat.
+     */
+    const intervalKey =
+      intervalKeyForDevice(device, event.timestampStart ?? new Date()) ??
+      undefined;
+    if (!intervalKey) {
+      this.logger.warn(
+        `Interval ključ nije određen za uređaj ${event.deviceId} (nema zone) — preskačem učenje.`,
+      );
+      return;
+    }
     const intervalLearning = this.getOrCreateIntervalLearning(
       device.homeProfile,
       intervalKey,
@@ -188,8 +205,14 @@ export class HeatingRecommendationService {
 
   /** Helper: get or create interval learning */
   private getOrCreateIntervalLearning(homeProfile: any, intervalKey: string) {
+    /*
+     * Traže se i stariji formati (`1_afternoon`) — v. `intervalKeyCandidates`.
+     * Bez toga bi prva izmjena formata izgledala kao „učenje je izgubljeno", jer
+     * jedinstveni indeks `(homeProfileId, intervalKey)` ne spaja formate sam.
+     */
+    const candidates = intervalKeyCandidates(intervalKey);
     let learning = homeProfile.intervalLearnings?.find(
-      (i) => i.intervalKey === intervalKey,
+      (i: { intervalKey: string }) => candidates.includes(i.intervalKey),
     );
     if (!learning) {
       learning = {
@@ -204,21 +227,6 @@ export class HeatingRecommendationService {
       homeProfile.intervalLearnings.push(learning);
     }
     return learning;
-  }
-
-  /** Simple interval key based on time & day */
-  private getIntervalKey(): string {
-    const now = new Date();
-    const hour = now.getHours();
-    const weekday = now.getDay();
-    let part = 'night';
-    if (hour >= 6 && hour < 9) part = 'morning';
-    else if (hour >= 9 && hour < 12) part = 'late_morning';
-    else if (hour >= 12 && hour < 17) part = 'afternoon';
-    else if (hour >= 17 && hour < 22) part = 'evening';
-
-    const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
-    return `${dayType}_${part}`;
   }
 
   /**

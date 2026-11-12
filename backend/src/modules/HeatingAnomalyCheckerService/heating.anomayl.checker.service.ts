@@ -4,6 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../Notification/notifications.service';
 import { subDays } from 'date-fns';
+import { intervalKeyForDevice } from '../Heating/interval-key';
 import { HeatingRecommendationService } from '../HeatingRecommendation/heating.recommendation.service';
 import { StructuredLogger } from '../../common/structured-logger';
 import { AnomalyDetectionService } from '../../common/anomaly-detection.service';
@@ -23,6 +24,14 @@ type HeatingEventWithThermostat = {
     id: number;
     userId: number;
     homeProfileId: number;
+    /**
+     * Zona kuće (F5.2). Anomalija se mjeri u lokalnom vremenu, pa joj zona
+     * treba isto kao i dnevnom zapisu — ranije je ključ računat serverskim satom.
+     */
+    homeProfile?: {
+      weatherTimezone?: string | null;
+      user?: { timezone?: string | null } | null;
+    } | null;
   };
 };
 
@@ -54,7 +63,20 @@ export class HeatingAnomalyCheckerService {
     try {
       const openEvents = await this.prisma.heatingEvent.findMany({
         where: { timestampEnd: null, isAnomaly: false },
-        include: { thermostat: true },
+        // Zona kuće treba za `intervalKey` (F5.2) — bez nje bi ključ pao na
+        // serverski sat, a anomalija bi se mjerila u pogrešnom dijelu dana.
+        include: {
+          thermostat: {
+            include: {
+              homeProfile: {
+                select: {
+                  weatherTimezone: true,
+                  user: { select: { timezone: true } },
+                },
+              },
+            },
+          },
+        },
       });
 
       for (const event of openEvents as HeatingEventWithThermostat[]) {
@@ -82,7 +104,20 @@ export class HeatingAnomalyCheckerService {
           },
           anomalyCheckedAt: null,
         },
-        include: { thermostat: true },
+        // Zona kuće treba za `intervalKey` (F5.2) — bez nje bi ključ pao na
+        // serverski sat, a anomalija bi se mjerila u pogrešnom dijelu dana.
+        include: {
+          thermostat: {
+            include: {
+              homeProfile: {
+                select: {
+                  weatherTimezone: true,
+                  user: { select: { timezone: true } },
+                },
+              },
+            },
+          },
+        },
       });
 
       for (const event of recentEvents as HeatingEventWithThermostat[]) {
@@ -105,7 +140,10 @@ export class HeatingAnomalyCheckerService {
     phase: 'OPEN' | 'CLOSED',
   ) {
     try {
-      const intervalKey = this.getIntervalKey(event.timestampStart);
+      const intervalKey = this.getIntervalKey(
+        event.timestampStart,
+        event.thermostat,
+      );
 
       const historyAll = await this.prisma.heatingEvent.findMany({
         where: {
@@ -119,7 +157,9 @@ export class HeatingAnomalyCheckerService {
 
       // filtriraj po intervalKey u kodu
       const history = historyAll.filter(
-        (h) => this.getIntervalKey(h.timestampStart) === intervalKey,
+        (h) =>
+          this.getIntervalKey(h.timestampStart, event.thermostat) ===
+          intervalKey,
       );
 
       if (!history.length) return;
@@ -240,7 +280,20 @@ export class HeatingAnomalyCheckerService {
           timestampEnd: null,
           ...(userId ? { thermostat: { userId } } : {}),
         },
-        include: { thermostat: true },
+        // Zona kuće treba za `intervalKey` (F5.2) — bez nje bi ključ pao na
+        // serverski sat, a anomalija bi se mjerila u pogrešnom dijelu dana.
+        include: {
+          thermostat: {
+            include: {
+              homeProfile: {
+                select: {
+                  weatherTimezone: true,
+                  user: { select: { timezone: true } },
+                },
+              },
+            },
+          },
+        },
       });
     } catch (error) {
       this.logger.error('Error fetching open anomalies', error);
@@ -272,7 +325,20 @@ export class HeatingAnomalyCheckerService {
       // na provjeri, ne tiho proći.
       const event = await this.prisma.heatingEvent.findFirst({
         where: { id: eventId, thermostat: { userId } },
-        include: { thermostat: true },
+        // Zona kuće treba za `intervalKey` (F5.2) — bez nje bi ključ pao na
+        // serverski sat, a anomalija bi se mjerila u pogrešnom dijelu dana.
+        include: {
+          thermostat: {
+            include: {
+              homeProfile: {
+                select: {
+                  weatherTimezone: true,
+                  user: { select: { timezone: true } },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!event) {
@@ -342,17 +408,31 @@ export class HeatingAnomalyCheckerService {
     }
   }
 
-  /** Interval key helper */
-  private getIntervalKey(timestamp: Date): string {
-    const hour = timestamp.getHours();
-    const weekday = timestamp.getDay();
-    let part = 'night';
-    if (hour >= 6 && hour < 9) part = 'morning';
-    else if (hour >= 9 && hour < 12) part = 'late_morning';
-    else if (hour >= 12 && hour < 17) part = 'afternoon';
-    else if (hour >= 17 && hour < 22) part = 'evening';
-
-    const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
-    return `${dayType}_${part}`;
+  /**
+   * Interval key helper — F5.2: jedan modul, jedna zona.
+   *
+   * Ranije je ovdje bila treća identična kopija sa `timestamp.getHours()`, dakle
+   * serverski sat. Sada sat dolazi iz zone uređaja, a format iz
+   * `Heating/interval-key.ts`.
+   *
+   * Vraća `''` kad zona nije poznata: pozivalac poredi ključeve između
+   * događaja, pa prazan ključ znači „ne grupiši" — što je bolje od toga da se
+   * događaji iz različitih dijelova dana nađu u istoj grupi.
+   */
+  private getIntervalKey(
+    timestamp: Date,
+    thermostat?: {
+      homeProfile?: {
+        weatherTimezone?: string | null;
+        user?: { timezone?: string | null } | null;
+      } | null;
+    },
+  ): string {
+    return (
+      intervalKeyForDevice(
+        { homeProfile: thermostat?.homeProfile ?? null },
+        timestamp,
+      ) ?? ''
+    );
   }
 }

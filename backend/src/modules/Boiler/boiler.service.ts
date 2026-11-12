@@ -9,6 +9,10 @@ import {
 } from '../Heating/engine/types';
 import { WeatherService } from '../Weather/weather.service';
 import { BoilerWeatherService } from '../Weather/boiler-weather.service';
+import {
+  intervalKeyCandidates,
+  intervalKeyForDevice,
+} from '../Heating/interval-key';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import { MetricsService } from '../../common/metrics.service';
 import { resolveFlowTempRange } from './flow-range';
@@ -18,7 +22,11 @@ export interface FlowTempCalculationResult {
   confidence: number;
   mode: 'ANONYMOUS' | 'PROFILE_ONLY' | 'FULL';
   expectedHeatTimeMin?: number;
-  intervalKey: string;
+  /**
+   * Ključ intervala učenja. Može biti `undefined` kad se zona ne može odrediti —
+   * bolje bez ključa nego sa ključem iz serverskog sata (F5.2).
+   */
+  intervalKey?: string;
 }
 
 export interface SetCurrentTempResult {
@@ -56,7 +64,12 @@ export class BoilerService {
    * ⚠️ Pure calculation only – NO persistence here.
    */
   async calculateFlowTemp(userId?: number): Promise<FlowTempCalculationResult> {
-    const intervalKey = this.getIntervalKey();
+    /*
+     * F5.2: ključ se računa u zoni kuće/korisnika (`Heating/interval-key.ts`), ne
+     * serverskim satom. Zona se zna tek poslije `homeProfile` upita, pa se ključ
+     * računa tamo — a do tada je `null` i koristi se samo u grani koja ga ima.
+     */
+    let intervalKey: string | null = null;
 
     let mode: FlowTempInput['mode'] = 'ANONYMOUS';
 
@@ -143,15 +156,40 @@ export class BoilerService {
     let expectedHeatTimeMin: number | undefined = undefined;
 
     if (homeProfileId) {
-      const intervalLearning =
-        await this.prisma.heatingIntervalLearning.findUnique({
-          where: {
-            homeProfileId_intervalKey: {
-              homeProfileId,
-              intervalKey,
-            },
+      /*
+       * Zona: kuća, pa korisnik, pa zadana (`zoneForDevice`). Ključ se traži
+       * preko svih poznatih formata (`intervalKeyCandidates`) — stariji redovi su
+       * upisani kao `1_afternoon`, a jedinstveni indeks ih ne spaja sam.
+       */
+      // Zona korisnika se čita samo ovdje (a ne uz vremensku prognozu): potrebna
+      // je za ključ, i to samo kad dom postoji. Jedan upit više, ali bez njega bi
+      // ključ pao na zadanu zonu i tiho promašio interval.
+      const owner = await this.prisma.user.findUnique({
+        where: { id: userId! },
+        select: { timezone: true },
+      });
+
+      intervalKey = intervalKeyForDevice(
+        {
+          homeProfile: {
+            weatherTimezone: profile?.weatherTimezone ?? null,
+            user: { timezone: owner?.timezone ?? null },
           },
-        });
+        },
+        new Date(),
+      );
+
+      const candidates = intervalKey ? intervalKeyCandidates(intervalKey) : [];
+      const intervalLearning = intervalKey
+        ? await this.prisma.heatingIntervalLearning.findFirst({
+            where: {
+              homeProfileId,
+              intervalKey: { in: candidates },
+            },
+            // Noviji format ima prednost ako postoje oba reda.
+            orderBy: { intervalKey: 'desc' },
+          })
+        : null;
 
       if (intervalLearning) {
         intervalLearningInput = {
@@ -195,7 +233,7 @@ export class BoilerService {
     // -----------------------------
     const input: FlowTempInput = {
       mode,
-      intervalKey,
+      ...(intervalKey ? { intervalKey } : {}),
       homeProfile: homeProfileInput,
       intervalLearning: intervalLearningInput,
       recentEvents: recentEventsInput,
@@ -216,12 +254,12 @@ export class BoilerService {
       confidence: result.confidence,
       mode,
       expectedHeatTimeMin,
-      intervalKey,
+      ...(intervalKey ? { intervalKey } : {}),
     };
   }
 
   private createOffResult(
-    intervalKey: string,
+    intervalKey: string | null,
     mode: any,
   ): FlowTempCalculationResult {
     this.logger.log(`[BoilerCalc] Seasonality -> HEATING OFF`);
@@ -230,29 +268,13 @@ export class BoilerService {
       confidence: 1,
       mode,
       expectedHeatTimeMin: 0,
-      intervalKey,
+      ...(intervalKey ? { intervalKey } : {}),
     };
   }
 
   // -----------------------------
   // Interval key helper
   // -----------------------------
-  private getIntervalKey(): string {
-    const now = new Date();
-    const hour = now.getHours();
-    const weekday = now.getDay();
-
-    let part = 'night';
-    if (hour >= 6 && hour < 9) part = 'morning';
-    else if (hour >= 9 && hour < 12) part = 'late_morning';
-    else if (hour >= 12 && hour < 17) part = 'afternoon';
-    else if (hour >= 17 && hour < 22) part = 'evening';
-
-    const dayType = weekday === 0 || weekday === 6 ? 'weekend' : 'weekday';
-
-    return `${dayType}_${part}`;
-  }
-
   /**
    * Fetch boiler history for a user
    */

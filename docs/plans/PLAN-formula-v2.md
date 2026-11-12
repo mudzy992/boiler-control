@@ -89,7 +89,7 @@ može ni ocijeniti.
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
 | F4.6 | **urađeno**: `HeatingRecommendationService` više ne piše `Recommendation`; mjereno 15/54 dana, max 3,74 K | §10.26b |
 | F4.8 | **urađeno**: granica unosa = fizički pod (30), ne pod krive (46); mjereno 32,9 °C gdje je unos bio zaključan | §10.27 |
-| F4.7 | **BLOKIRANO**: `Boiler/boiler.service.ts:16` i `DailyRecord/daily-record.writer.ts:3` još zovu staru krivu | — |
+| F4.7 | **BLOKIRANO**: 4 živa potrošača (ne 2) — v. tabelu u §10.28; migracija u 4 koraka | §10.28 |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
@@ -397,7 +397,7 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 | F4.4 | **✓ urađeno (ugovor)** — `baseCurveTemp` je `null` kad je `engine='model'`; ekran (web+mobile) ostaje | — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
 | F4.5 | **✓ kod** — `resolveDailyFlow`; `/boiler/sync` i polling vraćaju zapisani predlog (mjereno 10/27 prije izmjene) |; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
 | F4.6 | `HeatingRecommendationService` prestaje pisati `Recommendation` (ostaje samo `intervalLearning`) ili se gasi | `heating.recommendation.service.ts:161` | test: jedan pisac `Recommendation` redova |
-| F4.7 | Brisanje `Heating/engine` i `Heating/strategies` + njihovih testova | — | `grep` vraća 0 hitova; suite zelen |
+| F4.7 | **⚠ blokirano** — brisanje traži 4 koraka migracije prije (`§10.28`); danas 4 živa potrošača | `Heating/engine` (2 fajla), `Heating/strategies` (5) | `grep` vraća 0 hitova; suite zelen |
 | F4.8 | **✓ kod** — granica unosa = fizički pod (30), ne pod krive (46); mjereno `MODEL_BELOW_OLD_FLOOR` 1/1, 13,1 K (§10.27) | `flow-range.ts:SYSTEM_MIN_CURRENT_FLOW_TEMP` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
 
 **Rizik (najveći u cijelom planu):** F4.4 mijenja ono što korisnik vidi.
@@ -1711,3 +1711,44 @@ pokriveno testom. Self-test: **15/15**.
 
 **Testovi:** `boiler-flow-range` 20/20 (+1: modelski predlog od 34,7 prolazi
 kroz **zadani** raspon), `Boiler`+`BoilerCatalog` 60/60, `tsc` 0, `eslint` 0.
+
+### 10.28 F4.7 — zašto brisanje nije urađeno (dokaz, ne procjena)
+
+F4.7 u tabeli traži `grep` sa **0 hitova**. Mjereno 2026-11-12 na
+`ec2016b` — hitova nema 0:
+
+| mjesto | šta koristi | zašto je živo |
+|---|---|---|
+| `Boiler/boiler.service.ts:16` | `FlowTemperatureEngine.calculate` | `/boiler/sync` — motor je **fallback** kad zapisa nema, i daje `curveFlowTemp` |
+| `DailyRecord/daily-record.writer.ts:3` | isto | writer u `PROPOSAL_ENGINE=curve` režimu (zadano) |
+| `Boiler/flow-range.ts:48,53` | `SYSTEM_MAX/MIN_FLOW_C` | re-export; granice motora |
+| `HeatingRecommendation/recommendation-breakdown.ts:1` | tipovi | `FlowTempResult` u breakdown-u |
+
+Izvršenje F4.7 kako piše oborilo bi **i** `/boiler/sync` i jutarnji predlog u
+zadanom režimu. Zato F4.7 nije urađen; to nije odgađanje nego nalaz.
+
+**Šta F4.7 zaista traži, po redu.** Nijedan korak se ne smije preskočiti, jer
+svaki sljedeći uzima zdravo stanje prethodnog:
+
+1. **`boiler.service` prestaje zvati motor.** Danas je motor tu na dva načina:
+   kao fallback (`daily.flowC ?? result.finalTemp`) i kao `curveFlowTemp` za
+   drift na dashboardu (`dashboard.service.ts:900`). Oba se rješavaju
+   *prije* brisanja: fallback postaje `NONE` (ne izmišljati broj — isto
+   pravilo kao `resolveDailyFlow`), a drift se mjeri iz zapisa, ne iz motora.
+   **Mjerenje prije:** koliko `/boiler/sync` poziva padne u fallback, jer to je
+   broj korisnika koji bi ostao bez polazne.
+2. **`PROPOSAL_ENGINE` zadano postaje `model`**, pa `curve` grane u writer-u
+   prestaju biti zadane. **Mjerenje prije:** `params.engine` po danu — koliko
+   zapisa nosi `curve`, a koliko `model`; prelazak je dozvoljen tek kad model
+   daje broj na svim danima gdje kriva daje.
+3. **Granice krive nestaju.** `CURVE_MIN_FLOW_C` je već imenovan kao vlasništvo
+   krive (`flow-constants.ts`), pa njegovo uklanjanje ide zajedno sa krivom —
+   inače ostaje broj bez vlasnika, tačno ono što F5.1 zabranjuje.
+   Re-exporti u `flow-range.ts:48,53` tada moraju nestati u **istoj** izmjeni.
+4. **Tipovi sele u trajno mjesto.** `FlowTempResult`/`FlowCalcMode` koristi
+   `recommendation-breakdown`; ne smiju se brisati zajedno s motorom, nego
+   preseliti — inače F4.4 (`baseCurveTemp: null`) gubi tip.
+
+**Gejt za početak:** korak 1 ima svoje mjerenje. Do tada F4.7 ostaje
+blokiran, a `grep` u tabeli ostaje neispunjen **namjerno** — lažno zelenilo
+bilo bi gore od otvorene stavke.

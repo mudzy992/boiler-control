@@ -94,11 +94,25 @@ function verdict(summary) {
     return { verdict: 'NO_PROPOSALS', reason: `${summary.days} dana, nijedan sa predlogom` };
   }
   if (summary.belowOldFloor === 0) {
+    /*
+     * NULA JE OČEKIVANA i sama po sebi ne dokazuje ništa.
+     *
+     * Mjereno run `43285799640`: 56 predloga, 0 ispod 46 °C. Ali do F4.8 su
+     * predloge dale **kriva** i **kontroler**, a oba su klampovana na donju
+     * granicu 46 (`SYSTEM_MIN_FLOW_C`). Izmjereno na motoru: noć +15 °C daje
+     * tačno 46,0 — dakle kriva **ne može** dati ispod 46 ni teoretski.
+     *
+     * Zato ova nula ne mjeri problem, nego klamp. Problem je u tome što model
+     * daje 34,7 za iste uslove, pa bi predlog bio odbijen pri unosu. Prava
+     * mjera je zato **preračun** iz zapisanih ulaza `F_eq`-om, a ne brojanje
+     * zatečenih predloga — to je drugi korak F4.8.
+     */
     return {
-      verdict: 'NONE_BELOW',
+      verdict: 'NONE_BELOW_BY_CLAMP',
       reason:
         `${summary.valid} predloga, nijedan ispod ${OLD_FLOOR_C} °C — ` +
-        `F4.8 nema šta popraviti na ovom uzorku`,
+        `ali to je POSLJEDICA klampa: kriva i kontroler ne mogu dati ispod ` +
+        `${OLD_FLOOR_C}. Nula ne mjeri problem; F4.8 nije time zatvoren`,
     };
   }
   return {
@@ -117,7 +131,7 @@ async function runSelfTest() {
     {
       name: 'svi iznad',
       rows: [{ flowC: 50 }, { flowC: 46 }],
-      expect: 'NONE_BELOW',
+      expect: 'NONE_BELOW_BY_CLAMP',
     },
     {
       name: 'ima ispod',
@@ -127,7 +141,7 @@ async function runSelfTest() {
     {
       name: 'granica tacno 46 nije ispod',
       rows: [{ flowC: 46 }],
-      expect: 'NONE_BELOW',
+      expect: 'NONE_BELOW_BY_CLAMP',
     },
   ];
 

@@ -310,6 +310,25 @@ jobs:
               | while IFS= read -r line; do echo "::error::F4.8 uzrok: $line"; done
           fi
 
+      # F4.8, prava mjera: prva skripta broji ZATEČENE predloge, a oni su do
+      # F4.8 dolazili iz klampovane krive (ne mogu ispod 46) -> nula mjeri
+      # klamp, ne problem. Ova preracunava F_eq na ISTIM ulazima iz zapisa.
+      - name: F4.8 sta bi model trazio na zapisanim ulazima (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/model-floor-gap-readonly.cjs > "$RUNNER_TEMP/model.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/model.log"
+          grep -E "^  " "$RUNNER_TEMP/model.log" \
+            | while IFS= read -r line; do echo "::notice::F4.8m$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.8 mjerenje modela nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/model.log" \
+              | while IFS= read -r line; do echo "::error::F4.8m uzrok: $line"; done
+          fi
+
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —
       # mjeri se prije nego se napiše ijedan backfill red.
       - name: Backfill coverage (read-only)

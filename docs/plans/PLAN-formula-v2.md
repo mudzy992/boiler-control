@@ -81,6 +81,7 @@ može ni ocijeniti.
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
@@ -388,7 +389,7 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 | F4.2 | Model put: `proposedFlowTemp = decideProposal(...)` umjesto `FlowTemperatureEngine.calculate` | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
 | F4.3 | **✓ urađeno (backend)** — `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
 | F4.4 | **✓ urađeno (ugovor)** — `baseCurveTemp` je `null` kad je `engine='model'`; ekran (web+mobile) ostaje | — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
-| F4.5 | `/boiler/sync` (`calculateFlowTemp`) i `ThermostatPoll` prestaju zvati krivu; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
+| F4.5 | **mjereno** (10/27 kuća-dana vidljivo, max 2,76 K) — `/boiler/sync` (`calculateFlowTemp`) i `ThermostatPoll` prestaju zvati krivu; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
 | F4.6 | `HeatingRecommendationService` prestaje pisati `Recommendation` (ostaje samo `intervalLearning`) ili se gasi | `heating.recommendation.service.ts:161` | test: jedan pisac `Recommendation` redova |
 | F4.7 | Brisanje `Heating/engine` i `Heating/strategies` + njihovih testova | — | `grep` vraća 0 hitova; suite zelen |
 | F4.8 | `minHeatingFlowC` default se usklađuje sa modelom (sada 46 iz krive) | `flow-range.ts` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
@@ -1440,3 +1441,63 @@ se **izostavljaju** (tabela puna crtica ne objašnjava ništa), a prikazuju se
 **Mobilni ima svoje tipove.** `mobile/src/types/Dashboard.ts` ne čita
 `frontend/src/types/api.d.ts`, pa ga `openapi:check` ne štiti. Isti ugovor je
 tamo prepisan ručno — to je dug koji ostaje (v. §7, tabela rizika).
+
+### 10.23 F4.5 — koliko se broj zaista mijenjao kroz dan (mjerenje, run `43246164833`)
+
+**Nalog je bio: prvo izmjeriti, pa dirati `/boiler/sync`.** Mjerenje je
+urađeno prije ijedne izmjene proizvodnog koda.
+
+**Prvi pokušaj je bio bezvrijedan i to se imenuje.** Skripta je čitala
+`DailyRecord.params.formulaDriftC`. Rezultat (run `43241653802`):
+`NO_DRIFT_RECORDED: 56 dana, 0 sa kolonom`. Tačno — ali dokazano bespredmetno:
+`daily-record.writer.ts` tu kolonu **ne piše** (`grep`: 0 hitova). Da se dodao
+upis, mjerila bi se **vlastita izmjena**, a ne stanje.
+
+**Zato se mjeri ono što sistem već bilježi:** `BoilerHistory.suggestedTemp` —
+broj koji je otišao kotlu, sa vremenom. Različite vrijednosti **istog dana** su
+oscilacija koju je korisnik vidio na displeju, bez obzira ko ju je proizveo.
+
+**Rezultat (60 dana, run `43246164833`):**
+
+| mjera | vrijednost |
+|---|---|
+| kuća-dana | 27 |
+| sa više od jedne vrijednosti | 11 (40,7 %) |
+| raspon > 0,5 K (**vidljivo**) | **10** |
+| samo zaokruživanje (< 0,5 K) | 1 |
+| jedna vrijednost | 16 |
+| raspon max / prosjek | **2,76 K** / 0,86 K |
+
+**Presuda: `OSCILLATION_VISIBLE`.** 10 od 27 kuća-dana ima pomjeranje veće od
+0,5 K — dakle korisnik **vidi** drugi broj. Najveće pomjeranje je 2,76 K, što je
+više od pola stepena na displeju kotla i više od cijelog stepena razlike u
+toplini.
+
+**Šta ovo mjerenje NE tvrdi.** Ne mjeri je li promjena bila **opravdana**
+(izmjeren manjak) — `BoilerHistory` ne nosi razlog. Ne tvrdi se ni da svaka
+promjena dolazi od krive: isti broj može doći iz korisnikovog rasporeda ili iz
+`anchorDailyFlow`. Mjeri se **veličina problema**, ne njegov uzrok.
+
+**Ograničenje uzorka, zapisano a ne prećutano.** `BoilerHistory` nema
+`homeProfileId`, pa je grupa `(userId, dan)`; korisnik sa više kuća bio bi
+spojen. Kolona se **ne dodaje samo radi mjerenja** — to bi bila izmjena šeme
+koja služi mjerenju, a ne proizvodu. 27 kuća-dana u 60 dana je mali uzrok:
+presuda je „problem postoji i vidljiv je", ne „problem je velik".
+
+**Zašto to mijenja nalaz o F4.5.** U kodu `anchorDailyFlow`
+(`morning-anchor.ts`) **već** čuva jutarnji broj: dokaz (manjak) je jedini
+razlog da broj ode gore, spuštanje usred dana nije dozvoljeno. Dakle dashboard
+je već popravljen. Ono što oscilira je **`BoilerService.calculateFlowTemp`**,
+koji `/boiler/sync` i `ThermostatPoll` zovu direktno — a to je ono što F4.5
+treba da preusmjeri na zapisani `DailyRecord`.
+
+**Dvije greške u prvim pokušajima, obje poučne:**
+1. Prvi run je rekao samo „exit 1". Anotacija je hvatala linije sa dva razmaka,
+   pa uzrok (`column b.suggestedFlowTemp does not exist`) nije stigao do
+   anotacije. Popravljeno: uzrok pada ide u `::error::`.
+2. Kolona u bazi je `suggestedTemp`, ne `suggestedFlowTemp` — sema ima
+   `@map("suggestedTemp")`, pa polje Prisme i kolona nemaju isto ime. Ime je
+   provjereno u migraciji, ne po pamćenju.
+
+**Mjerenje ostaje u CI-ju** (`baseline` job, `workflow_dispatch`), da se poslije
+F4.5 može ponoviti istim brojevima i uporediti.

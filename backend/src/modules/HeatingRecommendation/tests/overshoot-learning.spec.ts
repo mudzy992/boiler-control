@@ -141,7 +141,11 @@ describe('F5.4 overshoot-learning', () => {
       });
       expect(up).toBeCloseTo(2, 6); // pola razlike gore
       expect(down).toBeCloseTo(2.8, 6); // desetina razlike dolje
-      expect(up - 1).toBeGreaterThan(3 - down);
+      // Tip je `number | null` (nema uzoraka ⇒ nema broja), pa se sužava prije
+      // aritmetike — inače `tsc` pada na TS18047 iako je vrijednost broj.
+      expect(up).not.toBeNull();
+      expect(down).not.toBeNull();
+      expect((up as number) - 1).toBeGreaterThan(3 - (down as number));
     });
 
     it('prvi uzorak poslije praga postavlja vrijednost', () => {

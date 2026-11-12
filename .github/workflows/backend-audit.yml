@@ -154,8 +154,10 @@ jobs:
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
+          # Apsolutna putanja: upload-artifact ne dozvoljava `../` u putanji
+          # (prvi pokušaj je pao sa "Relative pathing '.' and '..' is not allowed").
           name: openapi-regenerated
-          path: ../contracts/openapi.json
+          path: ${{ github.workspace }}/contracts/openapi.json
           if-no-files-found: error
       - name: OpenAPI contract in sync (API-2)
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}

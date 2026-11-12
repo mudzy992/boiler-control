@@ -110,7 +110,12 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
     expect(data.recommendedFlowTemp).toBe(engineResult.finalTemp);
     expect(data.confidenceScore).toBe(engineResult.confidence);
     expect(data.breakdown).toEqual({
-      version: 1,
+      // F4.3: snapshot je verzija 2 i nosi `engine`/`model`. Ovdje `engine`
+      // nije proslijeđen (`null`) jer `HeatingRecommendationService` još piše
+      // iz krive — F4.6 ga gasi kao pisca.
+      version: 2,
+      engine: null,
+      model: null,
       mode: 'FULL',
       intervalKey: 'weekday_morning',
       baseCurveTemp: engineResult.baseCurveTemp,
@@ -166,7 +171,7 @@ describe('FE2-10 HeatingRecommendationService write sites', () => {
     const data = prisma.recommendation.update.mock.calls[0][0].data;
     expect(data.recommendedFlowTemp).toBe(engineResult.finalTemp);
     expect(data.breakdown.finalTemp).toBe(engineResult.finalTemp);
-    expect(data.breakdown.version).toBe(1);
+    expect(data.breakdown.version).toBe(2);
     expect(data.breakdown.samples).toBe(0);
     expect(data.breakdown.expectedHeatTimeMin).toBe(0);
   });

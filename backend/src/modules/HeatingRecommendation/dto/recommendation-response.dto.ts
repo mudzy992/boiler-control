@@ -33,7 +33,8 @@ export class RecommendationModelBreakdownDto {
     type: String,
     nullable: true,
     enum: ['CI_HIGH', 'POINT'],
-    description: 'Which slope was used — CI high bound while the model is young.',
+    description:
+      'Which slope was used — CI high bound while the model is young.',
   })
   slopeSource!: 'CI_HIGH' | 'POINT' | null;
 
@@ -69,13 +70,17 @@ export class RecommendationModelBreakdownDto {
 
   @ApiProperty({
     type: [String],
-    description: 'Why the equilibrium flow is null or bounded (NO_NIGHT, NO_SLOPE, …).',
+    description:
+      'Why the equilibrium flow is null or bounded (NO_NIGHT, NO_SLOPE, …).',
   })
   reasons!: string[];
 }
 
 export class RecommendationBreakdownDto {
-  @ApiProperty({ description: 'Snapshot schema version (2 since F4.3).', example: 2 })
+  @ApiProperty({
+    description: 'Snapshot schema version (2 since F4.3).',
+    example: 2,
+  })
   version!: number;
 
   @ApiProperty({

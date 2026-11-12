@@ -79,7 +79,8 @@ export function buildRecommendationBreakdown(
     // F4.4: modelski put nema krivu. `null` je tvrdnja „krive nema" i klijent
     // je prikazuje kao odsustvo, dok bi `0` bio izmišljen broj („0,00 °C").
     baseCurveTemp: engine === 'model' ? null : result.baseCurveTemp,
-    weightedExternalTemp: engine === 'model' ? null : result.weightedExternalTemp,
+    weightedExternalTemp:
+      engine === 'model' ? null : result.weightedExternalTemp,
     appliedOffsets:
       engine === 'model'
         ? null

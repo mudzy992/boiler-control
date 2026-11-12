@@ -291,6 +291,25 @@ jobs:
               | while IFS= read -r line; do echo "::error::F4.6 uzrok: $line"; done
           fi
 
+      # F4.8: koliko je zapisanih predloga bilo ispod donje granice unosa
+      # (46 °C, granica krive). Ako ih ima, korisnik nije mogao prihvatiti
+      # vlastiti predlog — ista greska kao "zadano 48 vs. predlog 47,7".
+      - name: F4.8 predlozi ispod granice unosa (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/flow-floor-gap-readonly.cjs > "$RUNNER_TEMP/floor.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/floor.log"
+          grep -E "^  " "$RUNNER_TEMP/floor.log" \
+            | while IFS= read -r line; do echo "::notice::F4.8$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.8 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/floor.log" \
+              | while IFS= read -r line; do echo "::error::F4.8 uzrok: $line"; done
+          fi
+
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —
       # mjeri se prije nego se napiše ijedan backfill red.
       - name: Backfill coverage (read-only)

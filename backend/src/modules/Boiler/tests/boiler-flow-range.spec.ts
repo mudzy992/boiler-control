@@ -48,9 +48,30 @@ describe('F13: raspon polazne po domu', () => {
    * vrijednosti odbijen sa „mora biti između 48 i 55". Zadana granica je bila
    * viša od onoga što motor predlaže — ponuda koja se ne može prihvatiti.
    */
-  it('zadana donja granica nije viša od najnižeg predloga motora', () => {
+  /*
+   * F4.8: zadana granica unosa prati **fizički** pod, ne pod krive.
+   *
+   * Do F4.8 je bilo 46 (granica motora) — i to je bilo ispravno dok je kriva
+   * bila jedini računač. Model daje niže: za tipičnu kuću (s = 0,9, c = 1 K,
+   * cilj 22 °C) `F_eq` je 34,7 pri noći na +5 °C. Unos zaključan na 46 znači
+   * da korisnik ne može prihvatiti vlastiti predlog — ista greška kao „zadano
+   * 48 vs. predlog 47,7", samo dublje.
+   *
+   * Motor i dalje klampuje svoj izlaz na 46–55 (`SYSTEM_MIN_FLOW_C`); to čuva
+   * test „raspon ne dira motor" niže. Ovdje se tvrdi samo granica **unosa**.
+   */
+  it('zadana donja granica prati fizički pod, ne pod krive', () => {
+    expect(SYSTEM_MIN_CURRENT_FLOW_TEMP).toBe(ABSOLUTE_MIN_FLOW_C);
+    expect(SYSTEM_MIN_CURRENT_FLOW_TEMP).toBe(30);
+    // I dalje ne viša od onoga što motor predlaže na svom minimumu.
     expect(SYSTEM_MIN_CURRENT_FLOW_TEMP).toBeLessThanOrEqual(SYSTEM_MIN_FLOW_C);
-    expect(SYSTEM_MIN_CURRENT_FLOW_TEMP).toBe(46);
+  });
+
+  it('modelski predlog od 34,7 °C prolazi kroz zadani raspon', () => {
+    // Mjerenje iz §10.27: noć +5 °C, s = 0,9, c = 1 K, cilj 22 °C.
+    const range = resolveFlowTempRange(null);
+    expect(34.7).toBeGreaterThanOrEqual(range.min);
+    expect(34.7).toBeLessThanOrEqual(range.max);
   });
 
   it('predlog od 47.7 °C prolazi kroz zadani raspon', () => {

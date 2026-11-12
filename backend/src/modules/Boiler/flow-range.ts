@@ -1,4 +1,3 @@
-import { SYSTEM_MIN_FLOW_C } from '../Heating/strategies/base.strategy';
 import {
   effectiveCeilingC,
   effectiveFloorC,
@@ -46,19 +45,46 @@ import {
  * prihvatiti. Dokaz za to je u `tests/boiler-flow-range.spec.ts`
  * („raspon ne dira motor").
  */
-export {
-  SYSTEM_MIN_FLOW_C,
-  SYSTEM_MAX_FLOW_C,
-} from '../Heating/strategies/base.strategy';
+export { SYSTEM_MAX_FLOW_C } from '../Heating/strategies/base.strategy';
 
-/** Zadana donja granica kad ni dom ni katalog ne daju svoju — granica motora. */
-export const SYSTEM_MIN_CURRENT_FLOW_TEMP = SYSTEM_MIN_FLOW_C;
-/** Zadana gornja granica kad dom nema svoju. */
-export const SYSTEM_MAX_CURRENT_FLOW_TEMP = 55;
+// Re-export: `SYSTEM_MIN_FLOW_C` (46) je i dalje granica **motora** i drugi je
+// pojam od granice **unosa** (`SYSTEM_MIN_CURRENT_FLOW_TEMP`, F4.8). Ostaje
+// dostupan odavde jer su ga potrošači dosad odavde uzimali.
+export { SYSTEM_MIN_FLOW_C } from '../Heating/strategies/base.strategy';
+
 /** Apsolutni raspon — dom smije suziti, nikad proširiti. */
 export const ABSOLUTE_MIN_FLOW_C = 30;
 export const ABSOLUTE_MAX_FLOW_C = 55;
 
+/**
+ * Zadana donja granica kad ni dom ni katalog ne daju svoju.
+ *
+ * **F4.8: to je apsolutni pod, ne pod krive.** Do F4.8 ovdje je stajala granica
+ * motora (`SYSTEM_MIN_FLOW_C = 46`, iz `base.strategy.ts`), jer je kriva bila
+ * jedini računač. Model daje niže — za tipičnu kuću (s = 0,9, c = 1 K, cilj
+ * 22 °C) ravnotežna polazna je:
+ *
+ * | noć | `F_eq` |
+ * |---|---|
+ * | +5 °C | **34,7** |
+ * | 0 °C | **39,2** |
+ * | −5 °C | **43,7** |
+ * | −10 °C | 48,2 |
+ *
+ * Dakle pri noći na +5 °C model traži 34,7, a unos je bio zaključan na 46 —
+ * **ponuda koja se ne može prihvatiti** (ista greška kao zadano 48 vs.
+ * predlog 47,7 u `F13`). Granica unosa zato prati **fizički** pod (30 °C), a ne
+ * pod krive.
+ *
+ * Zašto ovo ne otvara mogućnost da korisnik upiše prenisko: pod modela i dalje
+ * važi (`effectiveFloorC` uzima katalog i profil), a **motor** i dalje klampuje
+ * svoj izlaz na 46–55 — dok se kriva koristi, njen izlaz se ne mijenja. Ovo
+ * mijenja samo šta korisnik smije **upisati**, i to je razlika koju test u
+ * `boiler-flow-range.spec` („raspon ne dira motor") čuva.
+ */
+export const SYSTEM_MIN_CURRENT_FLOW_TEMP = ABSOLUTE_MIN_FLOW_C;
+/** Zadana gornja granica kad dom nema svoju. */
+export const SYSTEM_MAX_CURRENT_FLOW_TEMP = 55;
 /** Odakle je granica došla — korisniku se to mora moći reći. */
 export type FlowRangeSource = 'HOME' | 'BOILER' | 'SYSTEM';
 

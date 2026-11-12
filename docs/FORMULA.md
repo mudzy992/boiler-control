@@ -61,7 +61,8 @@ od 20 dana, greška nagiba je velika, pa se bira granica koja grije više. Posli
 **§2a — `u_day` je izmjeren, ali ne ulazi u predlog (2026-11-12).**
 
 Odluka vlasnika poslije mjerenja F3.3 (`docs/plans/PLAN-formula-v2.md` §10.14).
-Prekidač je `DAY_GAIN_IN_PROPOSAL` u `proposal-shadow.service.ts` i sada je
+Prekidač je `DAY_GAIN_IN_PROPOSAL` u `flow-constants.ts` (od F4.2; do tada u
+`proposal-shadow.service.ts`, koja ga i dalje re-exportuje) i sada je
 `false` — dakle izraz se u proizvodnji računa kao
 `F_eq = T_cilj + s·(T_cilj − O_ref) − c`.
 
@@ -215,7 +216,7 @@ provjera pada.
 | konstanta | vrijednost | fajl |
 |---|---|---|
 | `DAY_REFERENCE_WEIGHT` | 0.3 | `equilibrium-flow.ts` |
-| `DAY_GAIN_IN_PROPOSAL` | 0 | `proposal-shadow.service.ts` |
+| `DAY_GAIN_IN_PROPOSAL` | 0 | `flow-constants.ts` |
 | `SLOPE_CONSERVATIVE_MAX_DAYS` | 20 | `equilibrium-flow.ts` |
 | `STEP_UP_K` | 1.5 | `proposal-controller.ts` |
 | `STEP_DOWN_K` | 1.0 | `proposal-controller.ts` |

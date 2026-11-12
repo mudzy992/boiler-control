@@ -5,6 +5,8 @@ import type { FlowTempInput } from '../Heating/engine/types';
 import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
 import { describeFlowClamp } from './clamp-log';
 import { resolveProposalEngine } from './proposal-engine';
+import { ProposalInputsService } from './proposal-inputs.service';
+import { decideDailyProposal } from './proposal-decision';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
 import type { DailyWeatherInput } from '../Weather/daily-weather-input';
 import {
@@ -168,6 +170,15 @@ export class DailyRecordWriter {
   constructor(
     private readonly prisma: PrismaService,
     private readonly recommendationWeather: RecommendationWeatherService,
+    /**
+     * F4.2: prikupljanje ulaza i odluka su izdvojeni, pa writer može dati
+     * **istu** odluku kao shadow kontroler — bez poziva shadow servisa (koji
+     * čita zapis koji writer tek piše).
+     *
+     * `null` je dozvoljen: kad je `PROPOSAL_ENGINE=curve` (zadano), writer ga
+     * ne treba, a testovi i dalje mogu instancirati servis bez njega.
+     */
+    private readonly proposalInputs?: ProposalInputsService,
   ) {}
 
   async writeForHome(
@@ -365,6 +376,93 @@ export class DailyRecordWriter {
     }
   }
 
+  /**
+   * F4.2 — predlog iz model puta.
+   *
+   * **Koji broj: `F_eq`, a ne `decideProposal`.** Ovo je razlika koja se lako
+   * pogriješi, pa je zapisana ovdje: `decideProposal` je **relativni
+   * kontroler** — polazi od prošle polazne i pomjera je za korak kad postoji
+   * izmjereni dokaz. Bez ishoda vraća `previous` uz `HOLD/NO_OUTCOME`, a u
+   * 06:00 ishoda **nema** (obračun ide u 03:20 za prethodni dan). Da writer
+   * koristi kontroler, model put bi zauvijek davao `null` — što je prvi test
+   * i pokazao (`flowC null, action HOLD, reasons ['NO_OUTCOME']`).
+   *
+   * Apsolutni broj za dan je ravnotežna polazna (`F2`, `equilibrium-flow.ts`),
+   * a kontroler je sloj **iznad** nje koji shadow mjeri. Zato writer uzima
+   * `F_eq`, a kontroler ostaje u shadow-u.
+   *
+   * Vraća `{ flowC: null }` kad broj nije pouzdan — `null` znači „ostani na
+   * krivoj", dok bi izmišljen broj značio da se model put pušta bez osnova.
+   */
+  private async tryModelProposal(
+    engine: 'curve' | 'model',
+    home: LoadedHome,
+    context: RecordContext,
+    weather: DailyWeatherInput,
+    now: Date,
+  ): Promise<{ flowC: number | null }> {
+    if (engine !== 'model') return { flowC: null };
+
+    if (!this.proposalInputs) {
+      // Konfiguracija traži model, ali servis nije spojen. To je greška u
+      // sastavljanju modula, ne u podacima — zato se vidi kao `warn`, a
+      // predlog ostaje na krivoj (sigurno ponašanje).
+      this.logger.warn(
+        `Kuća ${home.id}: PROPOSAL_ENGINE=model, ali ProposalInputsService ` +
+          `nije spojen; predlog ostaje na krivoj.`,
+      );
+      return { flowC: null };
+    }
+
+    const inputs = await this.proposalInputs.gather({
+      homeProfileId: home.id,
+      localDate: context.localDate,
+      now,
+      // Writer ima **prognozu** koju upisuje; shadow čita ono što je upisano.
+      // Iste vrijednosti, različit izvor — zato su ulaz, a ne upit u funkciji.
+      nightMinC: weather.nightMinC ?? null,
+      dayMaxC: weather.dayMaxC ?? null,
+      // `T_max` pod traži uzorak sobe koji u trenutku pisanja predloga još nije
+      // dio zapisa. `null` = nema poda; ne izmišlja se.
+      withHeatTimeFloor: false,
+    });
+
+    // Isti izraz kao shadow — preko zajedničke funkcije. `decideDailyProposal`
+    // daje i `decision`, ali on ovdje nije mjerodavan (v. obrazloženje gore).
+    const { equilibrium } = decideDailyProposal({
+      homeProfileId: home.id,
+      localDate: context.localDate,
+      now,
+      targetRoomC: inputs.targetRoomC,
+      nightMinC: weather.nightMinC ?? null,
+      dayMaxC: weather.dayMaxC ?? null,
+      maxFlowC: inputs.maxFlowC,
+      boilerCatalogId: inputs.boilerCatalogId,
+      model: inputs.model as never,
+      nightFloor: inputs.nightFloor,
+      shortCycleFloorC: inputs.shortCycleFloorC,
+      daysSinceChange: inputs.daysSinceChange,
+      previousFlowC: inputs.previousFlowC,
+      outcome: inputs.outcome,
+      heatTimeFloorC: inputs.heatTimeFloorC,
+      recentOvershootC: inputs.recentOvershootC,
+      exploredYesterday: inputs.exploredYesterday,
+      dayGainInProposal: this.proposalInputs.dayGainInProposal,
+    });
+
+    if (equilibrium.flowC == null) {
+      // Bez noćne prognoze nema ravnotežne polazne. To nije greška: bez osnova
+      // se ne mijenja ništa, a `params.engine` kaže šta je bilo.
+      this.logger.log(
+        `Kuća ${home.id} ${context.localDate}: model nije dao broj ` +
+          `(${equilibrium.reasons.join('+') || 'bez razloga'}); predlog ostaje na krivoj.`,
+      );
+      return { flowC: null };
+    }
+
+    return { flowC: equilibrium.flowC };
+  }
+
   private async persistProposal(
     context: RecordContext,
     home: LoadedHome,
@@ -421,7 +519,30 @@ export class DailyRecordWriter {
     }
 
     const result = FlowTemperatureEngine.calculate(input);
-    const proposedFlowTemp = clampFlowTemp(result.finalTemp);
+
+    /*
+     * F4.2: **model put**. Kad je `PROPOSAL_ENGINE=model`, predlog ne dolazi
+     * iz krive nego iz `decideDailyProposal` — iste funkcije koju shadow
+     * kontroler zove, pa se dvije vrijednosti mogu porediti kao dva pristupa,
+     * a ne dvije kopije istog pravila.
+     *
+     * Fallback je namjeran i **nije tih**: ako model put ne može dati broj
+     * (nema noćne prognoze, nema modela, nema servisa), predlog ostaje na
+     * krivoj i to se vidi u `params.engine` kao `curve`. Bolje staro
+     * ponašanje sa objašnjenjem nego prazan predlog.
+     */
+    const modelProposal = await this.tryModelProposal(
+      engineChoice.engine,
+      home,
+      context,
+      weather,
+      now,
+    );
+    const engineUsed = modelProposal.flowC == null ? 'curve' : 'model';
+
+    const proposedFlowTemp = clampFlowTemp(
+      modelProposal.flowC ?? result.finalTemp,
+    );
 
     // F5.5: klamp ide u **log**, ne samo u `params`. Tri različita razloga
     // (fizička granica, granica doma, dnevna promjena) do sada su izgledala
@@ -457,7 +578,7 @@ export class DailyRecordWriter {
       version: 1,
       // F4.1: motor ide u zapis. Bez toga se poslije ne može reći koji je put
       // dao broj, a upravo se dva puta upoređuju (F3.7).
-      engine: engineChoice.engine,
+      engine: engineUsed,
       timeZone: context.timeZone,
       timeZoneSource: context.timeZoneSource,
       input: {

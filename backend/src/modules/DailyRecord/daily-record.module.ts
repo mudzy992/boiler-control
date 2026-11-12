@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WeatherModule } from '../Weather/weather.module';
 import { HomeModelModule } from '../HomeModel/home-model.module';
+import { ProposalInputsService } from './proposal-inputs.service';
 import { DailyRecordWriter } from './daily-record.writer';
 import { DailyOutcomeService } from './daily-outcome.service';
 import { ProposalShadowService } from './proposal-shadow.service';
@@ -26,11 +27,17 @@ import { DailyHistoryController } from './daily-history.controller';
   controllers: [ShadowReportController, DailyHistoryController],
   providers: [
     DailyRecordWriter,
+    ProposalInputsService,
     DailyOutcomeService,
     ProposalShadowService,
     ShadowReportService,
     DailyHistoryService,
   ],
-  exports: [DailyRecordWriter, DailyOutcomeService, ProposalShadowService],
+  exports: [
+    DailyRecordWriter,
+    DailyOutcomeService,
+    ProposalShadowService,
+    ProposalInputsService,
+  ],
 })
 export class DailyRecordModule {}

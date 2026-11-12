@@ -55,6 +55,8 @@ function setup(options: {
   v2Weather?: unknown;
   cachedWeather?: unknown;
   uniqueViolation?: boolean;
+  /** F4.2: prikupljanje ulaza za model put; `undefined` = nije spojen. */
+  proposalInputs?: unknown;
 }) {
   const dailyRecords: any[] = [];
   const recommendations: any[] = [];
@@ -111,7 +113,11 @@ function setup(options: {
       ),
   };
 
-  const writer = new DailyRecordWriter(prisma as any, weather as any);
+  const writer = new DailyRecordWriter(
+    prisma as any,
+    weather as any,
+    options.proposalInputs as any,
+  );
   return { writer, prisma, weather, tx, dailyRecords, recommendations };
 }
 
@@ -524,5 +530,108 @@ describe('granice', () => {
         currentBoilerFlowTempSetAt: null,
       }),
     ).toEqual({ c: 50, since: null, source: 'USER' });
+  });
+
+  /*
+   * F4.2 — model put mora STVARNO dati broj, ne samo biti spojen.
+   *
+   * `proposal-engine.spec` dokazuje da writer čita prekidač. Ovaj dokazuje da
+   * kad je `PROPOSAL_ENGINE=model` i ulazi postoje, predlog **nije** motorov
+   * broj (45), nego odluka iz zajedničke funkcije.
+   */
+  describe('F4.2 — PROPOSAL_ENGINE=model', () => {
+    const original = process.env.PROPOSAL_ENGINE;
+
+    afterEach(() => {
+      if (original === undefined) delete process.env.PROPOSAL_ENGINE;
+      else process.env.PROPOSAL_ENGINE = original;
+    });
+
+    const inputs = () => ({
+      targetRoomC: 22,
+      previousFlowC: null,
+      daysSinceChange: null,
+      outcome: null,
+      shortCycleFloorC: null,
+      recentOvershootC: [],
+      exploredYesterday: false,
+      heatTimeFloorC: null,
+      model: {
+        state: 'TRACKING',
+        slopeS: 0.9,
+        slopeCiHigh: 1.1,
+        days: 40,
+        internalGainC: 1,
+        uDayC: null,
+        shortCycleFloorC: null,
+        shortCycleFloorAt: null,
+      },
+      maxFlowC: null,
+      boilerCatalogId: null,
+      uDayMeasuredC: null,
+      nightFloor: { floorC: null, basis: 'NO_FORECAST' },
+      shortCycleFloorEvent: null,
+      expiredAfterDays: null,
+    });
+
+    it('predlog dolazi iz modelskog puta, ne iz krive', async () => {
+      process.env.PROPOSAL_ENGINE = 'model';
+      const proposalInputs = {
+        gather: jest.fn().mockResolvedValue(inputs()),
+        dayGainInProposal: false,
+      };
+      const { writer, dailyRecords } = setup({
+        proposalInputs,
+        // Prognoza mora imati noć, inače model nema ravnotežnu polaznu.
+        v2Weather: {
+          tempMin: -9,
+          tempMax: -1,
+          nightMinC: -9,
+          dayMaxC: -1,
+        },
+      });
+
+      const result = await writer.writeForHome(10, NOW_IN_WINDOW);
+
+      // Kriva daje 45; model sa s=0,9 i noći -9 mora dati drugi broj.
+      expect(result.proposedFlowTemp).not.toBe(45);
+      expect(result.proposedFlowTemp).not.toBeNull();
+
+      const stored = dailyRecords[0];
+      expect(stored.params.engine).toBe('model');
+      // Broj je onaj koji izraz zaista daje za ove ulaze — ne „bilo koji
+      // drugi". Bez ovoga bi test prolazio i da model vrati slučajan broj.
+      expect(result.proposedFlowTemp).toBeCloseTo(46.74, 1);
+    });
+
+    it('bez noćne prognoze model ne daje broj — predlog ostaje na krivoj', async () => {
+      process.env.PROPOSAL_ENGINE = 'model';
+      const proposalInputs = {
+        gather: jest.fn().mockResolvedValue(inputs()),
+        dayGainInProposal: false,
+      };
+      const { writer, dailyRecords } = setup({
+        proposalInputs,
+        v2Weather: { tempMin: -9, tempMax: -1 },
+      });
+
+      const result = await writer.writeForHome(10, NOW_IN_WINDOW);
+
+      // Fallback NIJE tiho: broj je krivin, a `engine` to i kaže.
+      expect(result.proposedFlowTemp).toBe(45);
+      expect(dailyRecords[0].params.engine).toBe('curve');
+    });
+
+    it('zadano (curve) ne dira model put ni kad je servis spojen', async () => {
+      delete process.env.PROPOSAL_ENGINE;
+      const proposalInputs = { gather: jest.fn(), dayGainInProposal: false };
+      const { writer, dailyRecords } = setup({ proposalInputs });
+
+      const result = await writer.writeForHome(10, NOW_IN_WINDOW);
+
+      expect(result.proposedFlowTemp).toBe(45);
+      expect(proposalInputs.gather).not.toHaveBeenCalled();
+      expect(dailyRecords[0].params.engine).toBe('curve');
+    });
   });
 });

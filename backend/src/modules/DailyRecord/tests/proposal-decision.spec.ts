@@ -155,12 +155,23 @@ describe('F4.2 proposal-decision', () => {
     // Kad je član isključen, dobitak dana je 0; kad je uključen, nije.
     expect(off.equilibrium.dayGainAppliedC).toBe(0);
     expect(on.equilibrium.dayGainAppliedC).toBeGreaterThan(0);
-    // Isključen član ⇒ polazna nije niža nego sa uključenim. `flowC` može biti
-    // `null` (nema noćne prognoze), pa se prvo tvrdi da broj postoji — inače
-    // poređenje `null <= null` prolazi a ništa ne dokazuje.
-    expect(off.equilibrium.flowC).not.toBeNull();
-    expect(on.equilibrium.flowC).not.toBeNull();
-    expect(on.equilibrium.flowC).toBeLessThanOrEqual(off.equilibrium.flowC);
+    /*
+     * Isključen član ⇒ polazna nije niža nego sa uključenim. `flowC` može biti
+     * `null` (nema noćne prognoze), pa se prvo tvrdi da broj postoji — inače
+     * poređenje `null <= null` prolazi a ništa ne dokazuje.
+     *
+     * Vrijednosti se izdvajaju u varijable umjesto `as number`: `tsc` traži
+     * sužavanje, a eslint brani nepotreban assertion — ovako oba prolaze i
+     * provjera je stvarna, ne tipografska.
+     */
+    const offFlow = off.equilibrium.flowC;
+    const onFlow = on.equilibrium.flowC;
+    expect(offFlow).not.toBeNull();
+    expect(onFlow).not.toBeNull();
+    if (offFlow === null || onFlow === null) {
+      throw new Error('flowC ne smije biti null za ove ulaze');
+    }
+    expect(onFlow).toBeLessThanOrEqual(offFlow);
   });
 
   it('granica sistema se primjenjuje prije odluke, ne poslije', () => {

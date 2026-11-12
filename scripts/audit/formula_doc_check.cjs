@@ -40,6 +40,13 @@ const SOURCES = {
   'daily-balance.ts': 'HomeModel/daily-balance.ts',
   'flow-constants.ts': 'DailyRecord/flow-constants.ts',
   'proposal-shadow.service.ts': 'DailyRecord/proposal-shadow.service.ts',
+  /*
+   * F4.2: `DAY_GAIN_IN_PROPOSAL` je premješten u `flow-constants.ts` (treba ga
+   * i `proposal-inputs.service`), a `proposal-shadow.service` ga **re-exportuje**
+   * da stari potrošači ne pucaju. Provjera zato mora tražiti izvor, a ne
+   * mjesto re-exporta — inače bi gejt padao zbog refaktora, a ne zbog toga što
+   * se dokument razišao s kodom.
+   */
 };
 
 /**

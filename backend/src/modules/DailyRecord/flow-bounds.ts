@@ -1,4 +1,9 @@
 import { UNDERSHOOT_TOLERANCE_K } from './day-outcome';
+import {
+  BOILER_FLOW_MAX_C,
+  BOILER_FLOW_MIN_C,
+  MAX_DAILY_CHANGE_K,
+} from './flow-constants';
 
 /**
  * Tvrde granice predloga (`17` §8.2, §8.4).
@@ -9,15 +14,16 @@ import { UNDERSHOOT_TOLERANCE_K } from './day-outcome';
  * kopiju pravila.
  */
 
-export const FLOW_MIN_C = 30;
-export const FLOW_MAX_C = 55;
-
-/**
- * Najveća promjena po danu. Nije fizička granica nego protiv-oscilirajuća:
- * bez nje bi jedan loš dan mogao vratiti polaznu gore 8 °C, a sljedeći je
- * spustiti isto toliko.
+/*
+ * Vrijednosti se izvoze odavde jer ih kontroler i testovi tako zovu, ali ih
+ * **posjeduje** `flow-constants.ts` (F5.1). Raspon je fizički (`30–55`), ne
+ * raspon stare krive (`46–55`) — kriva je uža jer ispod 46 nema smisla za
+ * radijatore, a model može predložiti niže. Prije ovog izdvajanja ta razlika
+ * nije bila vidljiva nigdje osim u dva broja u dva fajla.
  */
-export const MAX_DAILY_CHANGE_K = 2;
+export const FLOW_MIN_C = BOILER_FLOW_MIN_C;
+export const FLOW_MAX_C = BOILER_FLOW_MAX_C;
+export { MAX_DAILY_CHANGE_K };
 
 /**
  * Zašto je broj promijenjen — ide u objašnjenje uz predlog, ne u log.

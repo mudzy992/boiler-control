@@ -1,12 +1,21 @@
+import {
+  CURVE_MAX_FLOW_C,
+  CURVE_MIN_FLOW_C,
+} from '../../DailyRecord/flow-constants';
 import { FlowTempInput, FlowTempResult } from '../engine/types';
 import { HeatingCalculationStrategy } from './heating.strategy.interface';
 
 /**
  * Sistemski raspon motora. Donja je 46 jer ispod toga kriva prestaje da ima
  * smisla za radijatore; dom je može podići (`minFlowC`), nikad spustiti ispod.
+ *
+ * Vrijednost dolazi iz `DailyRecord/flow-constants.ts` (F5.1) — tu je i
+ * objašnjenje zašto je **uža** od fizičke granice bojlera (`30–55`) koju
+ * koristi model. Bez tog mjesta je razlika izgledala kao neslaganje dva dijela
+ * sistema, a bila je namjerna.
  */
-export const SYSTEM_MIN_FLOW_C = 46;
-export const SYSTEM_MAX_FLOW_C = 55;
+export const SYSTEM_MIN_FLOW_C = CURVE_MIN_FLOW_C;
+export const SYSTEM_MAX_FLOW_C = CURVE_MAX_FLOW_C;
 
 export abstract class BaseHeatingStrategy implements HeatingCalculationStrategy {
   calculate(input: FlowTempInput): FlowTempResult {

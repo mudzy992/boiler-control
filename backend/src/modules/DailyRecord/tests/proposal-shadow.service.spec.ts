@@ -264,6 +264,15 @@ describe('ProposalShadowService — odluka', () => {
 });
 
 describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
+  // `u_day` je **iskljucen** iz predloga od 2026-11-12 (odluka vlasnika poslije
+  // mjerenja F3.3, v. PLAN §10.14). Do tada su ovi testovi vozili izraz kroz
+  // kontroler i tvrdili razliku od 2 K; to vise nije ponasanje proizvoda.
+  //
+  // Testovi nijesu obrisani nego preokrenuti: prvi sada tvrdi da je odluka
+  // ISTA sa i bez dobitka (dokaz da je clan zaista iskljucen), a obrazlozenje
+  // clanova ostaje u `equilibrium-flow.spec.ts` gdje mu je i mjesto. Tako
+  // ukljucivanje (`DAY_GAIN_IN_PROPOSAL = true`) pada na jednom jasnom testu,
+  // a ne prodje tiho.
   // Stvarni model nosi oba nagiba iz istog fita (F2 traži tačku-procjenu).
   const fitted = {
     state: 'TRACKING',
@@ -292,7 +301,7 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
       changed: null,
     });
 
-  it('dan sa dobitkom traži nižu polaznu — za isti dan, ista noć', async () => {
+  it('je isključen: odluka je ista sa dobitkom i bez njega', async () => {
     // Bez dobitka: 21 + 0,96·(21 − (−3)) = 44,04.
     const without = await arrange({ ...fitted, uDayC: null }).service.evaluate(
       10,
@@ -300,7 +309,7 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
       NOW,
     );
 
-    // Sa 2 K dobitka (sunce, gosti): 42,04.
+    // Sa 2 K dobitka (sunce, gosti) — koji **ne ulazi** u predlog.
     const sunny = await arrange({ ...fitted, uDayC: 2 }).service.evaluate(
       10,
       DAY,
@@ -308,24 +317,23 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
     );
 
     expect(without.decision?.flowC).toBeCloseTo(44.04, 2);
-    expect(sunny.decision?.flowC).toBeCloseTo(42.04, 2);
-    expect(
-      (without.decision!.flowC ?? 0) - (sunny.decision!.flowC ?? 0),
-    ).toBeCloseTo(2, 2);
+    expect(sunny.decision?.flowC).toBeCloseTo(44.04, 2);
+    // Ne „približno isto" nego ista vrijednost: prekidač mora biti binaran.
+    expect(sunny.decision?.flowC).toBe(without.decision?.flowC);
   });
 
-  it('negativan dobitak (hladniji dan od modela) podiže polaznu', async () => {
+  it('negativan dobitak ne podiže polaznu dok je član isključen', async () => {
     const colder = await arrange({ ...fitted, uDayC: -1.5 }).service.evaluate(
       10,
       DAY,
       NOW,
     );
 
-    // 44,04 + 1,5 = 45,54.
-    expect(colder.decision?.flowC).toBeCloseTo(45.54, 2);
+    // Bilo bi 45,54 da član ulazi; sada ostaje ravnotežna 44,04.
+    expect(colder.decision?.flowC).toBeCloseTo(44.04, 2);
   });
 
-  it('korak spuštanja i dalje ograničava dnevnu promjenu — dobitak ne preskače ±2 K', async () => {
+  it('korak spuštanja i dalje ograničava dnevnu promjenu', async () => {
     // Prošla polazna 45, dobitak 2 K: ravnotežna je 42,04, ali dnevna granica
     // dozvoljava najviše 2 K niže, a korak je 1 K — pa odluka ne pada na 42.
     const { service } = setup({
@@ -340,8 +348,12 @@ describe('ProposalShadowService — dnevni dobitak (`u_day`)', () => {
       changed: { localDate: '2026-10-30' },
     });
 
+    // Ravnotežna je 44,04 (dobitak ne ulazi) i ona je **između** granice
+    // koraka (45 − 1 = 44) i prošle polazne (45). Kontroler tada uzima
+    // ravnotežnu: promjena je 0,96 K, tj. manja od punog koraka — spuštanje
+    // staje na prvom broju koji je siguran, a ne ide korak po korak.
     const result = await service.evaluate(10, DAY, NOW);
-    expect(result.decision?.flowC).toBe(44);
+    expect(result.decision?.flowC).toBeCloseTo(44.04, 2);
   });
 
   it('bez procjene (`uDayC` nedefinisan) ponašanje je kao prije koraka 7', async () => {

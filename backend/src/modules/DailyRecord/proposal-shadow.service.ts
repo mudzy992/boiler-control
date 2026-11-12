@@ -37,6 +37,23 @@ import {
 export const SHADOW_VERSION = 'shadow-2';
 
 /**
+ * Da li `u_day` ulazi u predlog. **Trenutno ne.**
+ *
+ * F3.3 je izmjerio da `u_day` popravlja najgori podbačaj na lakim kućama
+ * (1,70 → 1,29 K), ali ga na srednjim **pogoršava kao broj dana** podbačaja
+ * (4 → 5 od 50) i spušta polaznu za 1,1 K bez dokaza da je bila previsoka.
+ * Odluka vlasnika (2026-11-12): član se gasi dok F3.1 ne pokaže da nosi.
+ *
+ * Zašto prekidač a ne brisanje koda: procjena ostaje da se **mjeri** —
+ * `HomeModel.uDayC` se i dalje računa i upisuje, a log ispisuje izmjereno
+ * (označeno da ne ulazi u predlog). Uključivanje se zato svodi na `true`, bez
+ * ponovnog pisanja izraza i bez gubitka historije.
+ * Nošenje prekidača kao imenovane konstante, a ne kao zakomentarisane linije u
+ * pozivu, je namjerno: pretraga za `uDayC` ovdje mora naći odgovor, ne trag.
+ */
+export const DAY_GAIN_IN_PROPOSAL = false;
+
+/**
  * Cilj sobne temperature kad profil ne kaže ništa. Nije preporuka nego
  * nedostatak podatka: bez njega se ravnotežna polazna ne može izračunati, a
  * izmišljati je značilo bi predložiti broj bez osnova.
@@ -204,7 +221,10 @@ export class ProposalShadowService {
       slopeCiHigh: model?.slopeCiHigh ?? null,
       modelDays: model?.days ?? null,
       internalGainC: model?.internalGainC ?? null,
-      uDayC: model?.uDayC ?? null,
+      // Prekidač, jer je uključivanje odluka vlasnika, a ne svojstvo izraza.
+      // Isključeno ⇒ `null`, a ne `0`: `null` znači „nema člana", dok bi `0`
+      // tvrdio izmjereni nulti dobitak. V. obrazloženje uz konstantu.
+      uDayC: DAY_GAIN_IN_PROPOSAL ? (model?.uDayC ?? null) : null,
     });
     const modelFlowC = equilibrium.flowC;
 
@@ -331,6 +351,10 @@ export class ProposalShadowService {
     // tražio 42,3" ne može ni potvrditi ni osporiti — a `c` i `u_day` su dva
     // broja koja se lako zamijene ili oduzmu dvaput.
     const eq = equilibrium.terms;
+    // Izmjereno, a ne primijenjeno: kad je član isključen, `dayGainAppliedC` je
+    // 0 i log bi tvrdio da dobitka nema. Mjerenje postoji i mora se vidjeti —
+    // inače se odluka o isključivanju ne bi mogla ni provjeriti iz zapisa.
+    const uDayMeasured = model?.uDayC ?? null;
     this.logger.log(
       `Shadow kuća ${homeProfileId} ${localDate}: ` +
         `F_eq ${eq == null ? '—' : eq.slopeTermC.toFixed(1) + ' K + cilj'} ` +
@@ -339,7 +363,8 @@ export class ProposalShadowService {
         `ref ${equilibrium.outdoorRefC?.toFixed(1) ?? '—'} °C` +
         `${equilibrium.outdoorRefSource === 'NIGHT_DAY_BLEND' ? ' (noć+dan)' : ''}, ` +
         `c ${equilibrium.internalGainAppliedC.toFixed(2)} K, ` +
-        `u_day ${equilibrium.dayGainAppliedC.toFixed(1)} K` +
+        `u_day ${uDayMeasured == null ? '—' : uDayMeasured.toFixed(1)} K` +
+        `${DAY_GAIN_IN_PROPOSAL ? '' : ' (ne ulazi u predlog)'}` +
         `${equilibrium.reasons.length ? ` [${equilibrium.reasons.join('+')}]` : ''}, ` +
         `formula ${record.proposedFlowTemp ?? '—'} °C, kontroler ` +
         `${decision.flowC ?? '—'} °C (${decision.action}` +

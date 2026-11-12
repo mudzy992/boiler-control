@@ -846,6 +846,44 @@ nije sistematski pogrešan.
 stanje to je najranije **2026-11-20**; ako `INCOMPLETE` nastavi, uzrok je polling
 i tada se popravlja njega, ne model.
 
+### 10.11 `gasOpenSheets` — šesta dijagnoza je bila tačna
+
+Test je padao **šest** puta i pet dijagnoza je bilo pogrešno. Lanac, redom:
+
+| pokušaj | hipoteza | zašto nije bila tačna |
+|---|---|---|
+| 1 | test je spor | `SHEET_TIMEOUT_MS` 15 s nije pomogao |
+| 2 | razlika u instalaciji | `--ignore-scripts` nije pomogao (i vraćen) |
+| 3 | Jest `testTimeout` 5 s | **stvarna greška**, ali ne i jedina |
+| 4 | padne prije `try/catch` | tačno, ali dijagnostika je ostala prazna |
+| 5 | `clearMocks` briše mock | **stvarna greška**, ali ne i jedina |
+| 6 | `renderScreen` čeka naslov koji postoji i u skeletonu | **ovo je bilo zadnje** |
+
+Zadnja tri su bila stvarna kvara i sva tri su morala biti popravljena. Ono što
+ih je držalo skrivenim nije bio kod nego **nedostatak mjerenja**:
+
+1. logovi joba se ne mogu preuzeti;
+2. artefakti se ne mogu preuzeti (`blob.core.windows.net` blokiran, 0 bajtova);
+3. `jest_report.cjs` svjesno ne ispisuje sirove poruke (da ne procuri vrijednost
+   iz testa), a anotacije nosе samo prvih ~8 linija.
+
+Zato je ključni potez bio premjestiti **dijagnostiku u anotaciju**: test pri
+padu baca jednu liniju `SHEET_DIAG[testID=...;label=...;treeBytes=...]`, a
+izvlači je reporter uz allowlist znakova. Prvi put kad je to proradilo, uzrok je
+bio očit u jednom pogledu:
+
+```
+SHEET_DIAG[testID=gas-readings-header;label=-;treeBytes=4467]
+```
+
+Nijedan `accessibilityLabel` i 4467 B stabla = ekran je u skeleton stanju.
+Dakle dugme „+" nikad nije postojalo, a cijela teorija o `Sheet` primitivu je
+bila pogrešna.
+
+**Pravilo:** kad padne test koji prolazi lokalno, **prvo se uloži u to da uzrok
+bude vidljiv**, pa se popravlja. Pet popravki bez mjerenja su bile skuplje od
+jedne mjere koja uzrok učini čitljivim.
+
 **Pravilo koje izlazi iz oba:** kad gejt padne na koraku koji nije `test`/`lint`/
 `tsc` (instalacija, preuzimanje, mreža), prvo se poredi **isti** korak u
 **drugom** workflowu na **istom** commitu. Ako tamo prolazi, uzrok je

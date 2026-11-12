@@ -65,6 +65,21 @@ može ni ocijeniti.
 | `Boiler/boiler.service.ts` | kriva po zahtjevu, `getIntervalKey()` sa server `new Date()` | **koristi `User.timezone` nigdje** |
 | `HeatingRecommendation/*` | EMA učenje overshoota, `confidence` monotona | piše `Recommendation` redove paralelno sa `DailyRecord` |
 
+### 1.1 Stanje po fazama (2026-11-12)
+
+| Faza | Stanje | Dokaz |
+|---|---|---|
+| F1 — podaci | **urađeno**, `nightMinC`/`dayMaxC` se pišu; backfill izvršen | §10.1, §10.2, §10.7 |
+| F2 — formula | **urađeno u kodu**, ostaje u shadow režimu | §10.3, `formula_v2_golden.cjs` |
+| F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`; mjerljivo od **2026-11-20** | §10.10 |
+| F3.3 — ablacija | **urađeno**: `--ablate`, `--table`, `--self-test` | §10.14 |
+| F3.7 — shadow vs. proposed | **izmjereno**: podizanja su `NO_MODEL`; drugi prozor **2026-11-30** | §10.9 |
+| F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
+| F4 — penzionisanje krive | **nije početo**, blokirano F3.1 | — |
+| F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
+| F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
+| F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+
 **Dva paralelna sistema.** `DailyRecord` (novi, tačan) i `Recommendation`
 (stari, kriva) nastaju u različitim trenucima i sa različitim brojevima.
 Klijenti čitaju `Recommendation.breakdown.baseCurveTemp` — dakle **staro**.

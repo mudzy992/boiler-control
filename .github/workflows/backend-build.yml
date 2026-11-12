@@ -280,6 +280,11 @@ jobs:
       # F3.4: greska prognoze noci — nightMinC vs nightMinOutdoorMeasuredC.
       # Prvo bez baze: ako statistika padne na sintetici, to se mora vidjeti
       # prije konekcije (inace izgleda kao problem baze).
+      - name: TMP night samples diagnose
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: node scripts/tmp-night-diagnose.cjs
+
       - name: Forecast error self-test (F3.4)
         run: node scripts/forecast-error-readonly.cjs --self-test
 

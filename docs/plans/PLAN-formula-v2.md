@@ -74,7 +74,7 @@ može ni ocijeniti.
 | F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`, `NO_OUTDOOR 3` — isti korijen kao F3.4 (v. §10.31) | §10.10, §10.31 |
 | F3.3 — ablacija | **urađeno**: `--ablate`, `--table`, `--self-test` | §10.14 |
 | F3.7 — shadow vs. proposed | **izmjereno**: podizanja su `NO_MODEL`; drugi prozor **2026-11-30** | §10.9 |
-| F3.4 — greška prognoze | **blokirano flagom**: 1113 uzoraka, nijedan sa `outdoorTempC`; treba `WEATHER_POLL_V2=on` (§10.30) | §10.17, §10.30 |
+| F3.4 — greška prognoze | **flag uključen, lanac radi**; ostaje `MIN_DAYS=5` parova → prvi broj ~**2026-11-18** (§10.33) | §10.17, §10.30, §10.33 |
 | F3.5 — saturacija | **izmjereno**: 5/303 dana na granici, 0 `CAPACITY` | §10.16 |
 | F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
 | F4 — penzionisanje krive | **djelimično**: F4.1–F4.6 i F4.8 urađeni; **F4.7 blokiran** — stara kriva ima 2 živa potrošača | §10.21–§10.27 |
@@ -1872,4 +1872,102 @@ otvoreni — blokirani **imenovanim** uzrokom, ne čekanjem.
 **Veza koja se dosad nije vidjela:** F3.1 je odbijao 5 dana sa `NO_OUTDOOR 3` —
 to je **isti** korijen. Uključivanje flaga i potvrda lokacije otvaraju **oba**
 mjerenja odjednom.
+
+### 10.32 Šta zaista pokreće punjenje keša (i zašto „potvrdi lokaciju” nije dovoljno)
+
+**Provjereno čitanjem poziva, ne pretpostavkom.** `getCachedWeather`
+(`weather-v2.service.ts:208`) radi ovako:
+
+1. `assertEnabled()` — traži `WEATHER_LOCATION_V2`;
+2. `confirmedLocation()` — traži svih 8 polja;
+3. **pročita** `WeatherV2Cache`; ako reda nema → **`null`**, i tu staje.
+
+Dakle **keš puni isključivo `getWeather()`**, a njega zove samo
+`GET /api/weather/v2/current/:homeProfileId` (`weather.controller.ts:96`).
+Nema crona, nema intervala:
+
+```
+grep -rn "getWeather(" | grep -v weather-v2.service   ->  samo controller
+grep -rn "@Cron|setInterval" src/modules/Weather      ->  nista
+```
+
+Svi read-only potrošači traže **keš** i ne pune ga:
+`polling-weather.service.ts:30`, `boiler-weather.service.ts:21`,
+`dashboard-weather.service.ts:70`, `recommendation-weather.service.ts:24`.
+
+**Posljedica za podešavanje.** Samo potvrđena lokacija **ne daje**
+`outdoorTempC`. Treba i **jedan poziv** `GET /v2/current/{id}` poslije potvrde —
+inače `getCachedWeather` zauvijek vraća `null` i polling nema šta upisati.
+To je lako propustiti jer izgleda kao da se keš puni sam.
+
+**`WEATHER_SWR_ENABLED=off` je ispravno za prvo punjenje.** Bez SWR-a `getWeather`
+radi `await this.refresh(...)` **sinhrono** (`:269`) — keš je pun kad odgovor
+stigne. Sa SWR-om bi prvi poziv vratio `null`-ish stanje i punjenje bi otišlo u
+pozadinu. Za provjeru da lanac radi, `off` je bolji.
+
+**Svježina je uslov za upis, ne za broj noći.** `toResponse` (`:350`) skriva
+`current` kad je keš stariji od `WEATHER_CURRENT_HIDDEN_AFTER_MINUTES`
+(zadano **60**), a `PollingWeatherService` prihvata samo konačan
+`current.temperatureC`. Dakle **keš mora biti mlađi od 60 min** u trenutku
+polling ciklusa; inače `outdoorTempC` ostaje `null` iako je lokacija potvrđena.
+
+Kako se to održava: polling bucket je češći od 60 min, pa normalno korištenje
+aplikacije (dashboard/prognoza) obnavlja keš. Ali ako niko ne otvori
+prognozu, keš ostari i `outdoorTempC` opet pada na `null` — tiho.
+
+**Zato F3.4 poslije uključivanja treba mjeriti, ne pretpostaviti:**
+`UZORCI_BEZ_OUTDOOR` mora preći u broj veći od nule. Ako ostane nula uz
+potvrđenu lokaciju, uzrok je **star keš**, i to je novo mjerenje, ne ista greška.
+
+### 10.33 Flag uključen — lanac radi, ostaje čekanje (mjereno)
+
+**Postavljeno u produkciji (2026-11-13):** `WEATHER_LOCATION_V2=on`,
+`WEATHER_POLL_V2=on`, `WEATHER_SWR_ENABLED=off`. Lokacija potvrđena:
+`Visoko, Federation of Bosnia and Herzegovina` — `providerId 3187609`,
+**43.98889, 18.17806**, `Europe/Sarajevo`, `confirmedAt 08:59:47Z`.
+
+**Zašto taj kandidat, a ne drugi.** Pretraga „Visoko” dala je **5** kandidata.
+Po koordinatama:
+
+| `providerId` | udaljenost | napomena |
+|---|---|---|
+| **3187609** (FBiH) | **0 km** | izabran |
+| 3256948 (RS) | 67,3 km | **isto ime, ista zona** — vidi se samo po koordinatama |
+| 3187607 (Varaždin, HR) | 276,2 km | |
+| 8555020 (Zelenikovo, MK) | 358,5 km | |
+| 784385 (Prilep, MK) | 413,1 km | |
+
+Kandidat iz RS-a ima **istu zonu** (`Europe/Sarajevo`), pa se greška po vremenu
+ne bi primijetila — samo po geografskoj širini. Zato se lokacija provjerava
+koordinatama, ne državom ni imenom.
+
+**Lanac je potvrđen dvama mjerenjima, prije i poslije.**
+
+| | prije (`43385118170`) | poslije (`43397850858`) |
+|---|---|---|
+| readiness | `TREBA_LOKACIJU` 0/1 | **`FLAG_DOVOLJAN` 1/1** |
+| F3.4 uzrok | `UZORCI_BEZ_OUTDOOR` | **`NEDOVOLJNO_PAROVA`** |
+| outdoorTempC | nijedan uzorak | **ulazi** |
+
+Promjena **uzroka** je dokaz, a ne broj: `outdoorTempC` je počeo ulaziti u
+uzorke, pa je nestala blokada koju je skripta imenovala, a ostala je druga
+(„malo parova”). Da flag nije radio, uzrok bi ostao isti.
+
+**Šta se sada čeka — tačno, ne okvirno:**
+
+| korak | kad |
+|---|---|
+| `outdoorTempC` u uzorke | svaki polling ciklus (radi) |
+| `nightMinOutdoorMeasuredC` za **završene** dane | `@Cron('20 3 * * *')` — **03:20 UTC** |
+| prag F3.4 | `MIN_DAYS = 5` parova |
+
+Dakle prvi parovi nastaju u noći **14.11.**, a peti tek oko **18.11.** F3.4 tada
+prvi put daje broj. Do tada je svaki run `NEDOVOLJNO_PAROVA` — i to je
+**očekivano stanje**, ne greška.
+
+**Jedan uslov koji se mora održavati.** `toResponse` skriva `current` kad je keš
+stariji od `WEATHER_CURRENT_HIDDEN_AFTER_MINUTES` (**60**), a polling prihvata
+samo konačan `temperatureC`. Ako se keš ne obnovi (niko ne otvori prognozu),
+`outdoorTempC` tiho pada na `null`. Zato će F3.4 poslije 18.11. moći i da
+**opadne** ako keš stari — i taj pad treba čitati kao nalaz o kešu, ne o formuli.
 

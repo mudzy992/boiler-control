@@ -27,13 +27,27 @@ import { StructuredLogger } from '../../common/structured-logger';
  * broj se **ignoriše** (ostaje zadano), jer timeout od 0 ili `NaN` ne bi
  * puknuo na očit — pretvorio bi se u beskonačno čekanje.
  */
-export function weatherHttpTimeoutMs(
-  raw: string | undefined = process.env.WEATHER_HTTP_TIMEOUT_MS,
-): number {
-  const DEFAULT_MS = 10_000;
-  if (raw === undefined || raw.trim() === '') return DEFAULT_MS;
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_MS;
+export const DEFAULT_WEATHER_HTTP_TIMEOUT_MS = 10_000;
+
+export function weatherHttpTimeoutMs(raw?: string): number {
+  /*
+   * `raw === undefined` se **razlikuje** od `raw = default` u potpisu.
+   *
+   * Sa defaultom u potpisu, `weatherHttpTimeoutMs(undefined)` bi tiho procitao
+   * `process.env` i test „zadano kad env nije postavljen" pao bi na runneru
+   * gdje je env postavljen (run `43410034818`: 1 failed / 1708, samo taj test).
+   * Sada je pravilo eksplicitno: **bez argumenta = env**, `undefined`/`''` =
+   * zadano. Time se funkcija može testirati bez zavrtanja kroz globalno stanje.
+   */
+  const value =
+    arguments.length === 0 ? process.env.WEATHER_HTTP_TIMEOUT_MS : raw;
+  if (value === undefined || value.trim() === '') {
+    return DEFAULT_WEATHER_HTTP_TIMEOUT_MS;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_WEATHER_HTTP_TIMEOUT_MS;
+  }
   return Math.floor(parsed);
 }
 @Injectable()

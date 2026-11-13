@@ -169,12 +169,46 @@ function verdict(summary, diag) {
       };
     }
     if ((d.rowsInWindow ?? 0) === 0) {
+      /*
+       * Druga razlika, i ona mijenja PREPORUKU.
+       *
+       * `BoilerHistory` red nastaje **samo pri pocetku grijanja**
+       * (`polling.service.ts:504`, grana `handleHeatingStart`). Znaci: nema
+       * redova u prozoru NE mora znaciti "prozor je prekratak" — moze
+       * znaciti da se danas nije grijalo (topao dan, ljeto, kuca prazna).
+       *
+       * To su suprotni sljedeci koraci:
+       *   grijanja IMA, redova NEMA  -> polling upis ne radi, gledaj kod
+       *   grijanja NEMA             -> ceka se hladniji dan, kod je u redu
+       *
+       * Prvi gejt run (43404381843) je vratio "prozor je prekratak" i to je
+       * bila pretpostavka, ne nalaz: zadnji red je bio 2026-11-12, a dan
+       * deploya 2026-11-13.
+       */
+      const heatingToday = d.heatingToday;
+      if (heatingToday === 0) {
+        return {
+          verdict: 'CEMA_HLADNIJI_DAN',
+          reason:
+            `${d.totalRows} redova ukupno, zadnji ${String(d.lastRowAt).slice(0, 10)}; ` +
+            `dan danas nema grijanja (0 HeatingEvent poslije ponoci) — ` +
+            `red nastaje SAMO pri pocetku grijanja, pa se mjeri prvog hladnijeg dana`,
+        };
+      }
+      if (heatingToday === null || heatingToday === undefined) {
+        return {
+          verdict: 'NEMA_U_PROZORU',
+          reason:
+            `${d.totalRows} redova ukupno, ali nijedan poslije ` +
+            `${d.since ?? 'početka prozora'} (zadnji ${String(d.lastRowAt).slice(0, 10)}) — ` +
+            `grijanje nije provjereno`,
+        };
+      }
       return {
-        verdict: 'NEMA_U_PROZORU',
+        verdict: 'UZROK_U_KODU',
         reason:
-          `${d.totalRows} redova ukupno, ali nijedan poslije ` +
-          `${d.since ?? 'početka prozora'} (zadnji ${String(d.lastRowAt).slice(0, 10)}) — ` +
-          `prozor je prekratak, ne kod`,
+          `${heatingToday} grijanja poslije ponoci, a 0 redova u BoilerHistory — ` +
+          `upis pri pocetku grijanja ne radi`,
       };
     }
     return {
@@ -231,6 +265,32 @@ async function runSelfTest() {
       rows: [],
       diag: { totalRows: 305, rowsInWindow: 12, rowsWithSuggested: 0 },
       expect: 'NEMA_POLAZNE',
+    },
+    {
+      // Kljucni slucaj poslije deploya: 432 reda, zadnji jucer, grijanja danas 0.
+      name: 'grijanja nema danas',
+      rows: [],
+      diag: {
+        totalRows: 432,
+        rowsInWindow: 0,
+        since: '2026-11-13',
+        lastRowAt: '2026-11-12T22:10:00Z',
+        heatingToday: 0,
+      },
+      expect: 'CEMA_HLADNIJI_DAN',
+    },
+    {
+      // Grijanje JE pocelo, a reda nema -> to je greska u kodu, ne u vremenu.
+      name: 'grijanje ima, reda nema',
+      rows: [],
+      diag: {
+        totalRows: 432,
+        rowsInWindow: 0,
+        since: '2026-11-13',
+        lastRowAt: '2026-11-12T22:10:00Z',
+        heatingToday: 3,
+      },
+      expect: 'UZROK_U_KODU',
     },
     {
       name: 'stabilno',
@@ -386,7 +446,10 @@ async function main() {
            WHERE "suggestedTemp" IS NOT NULL) AS "rowsWithSuggested",
          (SELECT max("createdAt")::text FROM "BoilerHistory") AS "lastRowAt",
          (SELECT max("createdAt")::text FROM "BoilerHistory"
-           WHERE "suggestedTemp" IS NOT NULL) AS "lastSuggestedAt"`,
+           WHERE "suggestedTemp" IS NOT NULL) AS "lastSuggestedAt",
+         (SELECT count(*)::int FROM "HeatingEvent"
+           WHERE "timestampStart" >= CURRENT_DATE) AS "heatingToday",
+         (SELECT max("timestampStart")::text FROM "HeatingEvent") AS "lastHeatingAt"`,
       [days, since],
     );
     const diag = { ...(diagRows[0] ?? {}), since };
@@ -419,7 +482,8 @@ async function main() {
       console.log(
         `  dijagnostika:           ukupno ${diag.totalRows}, u prozoru ` +
           `${diag.rowsInWindow}, sa predlogom ${diag.rowsWithSuggested}, ` +
-          `zadnji red ${String(diag.lastRowAt).slice(0, 16)}`,
+          `zadnji red ${String(diag.lastRowAt).slice(0, 16)}, ` +
+          `grijanja danas ${diag.heatingToday} (zadnje ${String(diag.lastHeatingAt).slice(0, 16)})`,
       );
       console.log(`\n  ${decision.verdict}: ${decision.reason}`);
     }

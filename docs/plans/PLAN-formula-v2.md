@@ -82,7 +82,7 @@ može ni ocijeniti.
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
 | F4.2 | **urađeno**: zajednička odluka izdvojena; writer uzima `F_eq`, ne kontroler | §10.26 |
-| F4.5 | **kod urađen, gejt otvoren do deploya** — ponovljeno mjerenje mora ići sa `--since=<deploy>` | §10.25 |
+| F4.5 | **kod ✓, `--since` ✓** — prvo mjerenje prvog dana sa grijanjem (13.11. bilo 0 grijanja, §10.34) | §10.25, §10.34 |
 | F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
@@ -1970,4 +1970,91 @@ stariji od `WEATHER_CURRENT_HIDDEN_AFTER_MINUTES` (**60**), a polling prihvata
 samo konačan `temperatureC`. Ako se keš ne obnovi (niko ne otvori prognozu),
 `outdoorTempC` tiho pada na `null`. Zato će F3.4 poslije 18.11. moći i da
 **opadne** ako keš stari — i taj pad treba čitati kao nalaz o kešu, ne o formuli.
+
+### 10.34 F4.5 gejt — `--since` radi, ali dan bez grijanja ne mjeri ništa
+
+**Kad je mjerljivo.** Deploy u `main` (`1c56f4a`, **05:13 UTC** / 06:13 lokalno).
+Predlog se piše od **06:00 lokalno** (`PROPOSAL_LOCAL_HOUR = 6`), pa je
+**današnji zapis nastao poslije deploya** — dakle današnji `DailyRecord` je
+prvi pod novim kodom. `--since=2026-11-13` je zato tačan datum, ne približan.
+
+**Prvi pokušaj (`43402878050`): `NO_DAYS`.** Bez ijednog reda u prozoru. To je
+bilo **nepotpuno**, i to dvaput:
+
+1. `NO_DAYS` nije razlikovao tri stanja (`NEMA_UOPSTE` / `NEMA_U_PROZORU` /
+   `NEMA_POLAZNE`) — a rješavaju se različito. Dodato u `b12e10b`.
+2. Druga verzija (`43404381843`) rekla je „prozor je prekratak, ne kod” —
+   i **to je bila pretpostavka**. Provjereno u kodu: `BoilerHistory` red
+   nastaje **samo pri početku grijanja** (`polling.service.ts:504`, grana
+   `handleHeatingStart`). Odsustvo redova zato ne znači samo „preuzak prozor”.
+
+**Tačan nalaz** (`43405672403`, `--since=2026-11-13`):
+
+> `CEMA_HLADNIJI_DAN: 432 redova ukupno, zadnji 2026-11-12; dan danas nema
+> grijanja (0 HeatingEvent poslije ponoći)`
+
+Mjeri se **i** `HeatingEvent`, ne samo `BoilerHistory`, jer dvoje ima
+**suprotne** sljedeće korake:
+
+| grijanja danas | redova u prozoru | presuda | šta raditi |
+|---|---|---|---|
+| **0** | 0 | `CEMA_HLADNIJI_DAN` | čekati hladniji dan **— kod je u redu** |
+| > 0 | 0 | `UZROK_U_KODU` | upis pri početku grijanja ne radi |
+
+Bez te razlike bi nula bila pročitana kao „popravka nije uspjela” i F4.5 bi
+bio vraćen na početak bez razloga. 13.11. je u Visokom bio topao dan
+(dnevni maksimum **19,6 °C** po prognozi iz `curl`-a) — grijanje se nije
+uključilo, pa oscilacija polazne nije ni mogla nastati.
+
+**Stanje gejta:** `--since` je **ispravan i spreman**; prvo mjerenje je
+**prvog dana kad se grije**. Do tada nijedan broj o oscilaciji — ni dobar ni
+loš — ne postoji, i to je tačno ono što izlaz sada kaže.
+
+### 10.35 Dashboard testovi — pad zbog mreže, ne zbog koda
+
+**Šta je izgledalo kao regresija.** `GET /api/dashboard` pao je u
+ugovornom **i** integracionom testu, **tri runa zaredom**
+(`43407186825`, `43408463451`) — pa to više nije bilo „flaky”.
+
+**Dokaz da nije kod:**
+
+| činjenica | vrijednost |
+|---|---|
+| isti commit `287f0d5`, push run `43405579621` | **success** |
+| isti commit `287f0d5`, dispatch run `43405672403` | **failure** |
+| `git diff 865d2f8..HEAD -- backend/src backend/test` | **prazno** |
+
+Nula promjena u kodu između zelenog i crvenog runa ⇒ promjena je u **vremenu**,
+ne u ponašanju.
+
+**Uzrok, izmjeren a ne pretpostavljen.** Ugovorni i integracioni testovi dižu
+pun `AppModule` i **ne mockuju mrežu** (`grep jest.mock` — nema). Lanac:
+
+```
+GET /api/dashboard -> DashboardService -> BoilerService.calculateFlowTemp
+                   -> Weather -> Open-Meteo          (3x u lancu)
+adapter timeout: 10 s   |   jest testTimeout: 30 s
+```
+
+Kad provajder spor, jedan zahtjev čeka do 10 s, a dashboard ga zove **tri
+puta** — suite pređe 30 s i padne kao „Test suite failed to run — exceeded
+timeout”, iako test nije pogrešan. Ovo je i ranije bilo poznato: komentar u
+`jest.config.js` već objašnjava dizanje praga sa 5 s na 30 s iz istog razloga.
+
+**Popravka: podesivost, ne dizanje praga naslijepo.** `weatherHttpTimeoutMs()`
+čita `WEATHER_HTTP_TIMEOUT_MS`, zadano **10 000** — produkcija nepromijenjena.
+CI test job postavlja **1 500**, pa test ne čeka provajdera.
+
+**Neispravna vrijednost se odbija, i to je suština.** `timeout: 0` u axios-u ne
+znači „nula milisekundi” nego **bez timeouta** — vječno čekanje, gore od
+greške. Zato `0`, negativno i `NaN` padaju na zadano; test pokriva **baš tu
+granicu** (11 testova).
+
+**Test je usput našao pravu grešku u mojoj popravci.** Prva verzija je imala
+default u potpisu (`raw = process.env...`), pa je `weatherHttpTimeoutMs(undefined)`
+tiho čitao env i test „zadano kad env nije postavljen” pao je na CI-u
+(`43410034818`: 1 failed / 1708). Pravilo je sada eksplicitno: **bez argumenta =
+env**, `undefined`/`''` = zadano.
+
+**Stanje:** `1708/1708`, 139 suite, na `0716a1c`.
 

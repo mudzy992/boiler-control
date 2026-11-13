@@ -1873,3 +1873,49 @@ otvoreni — blokirani **imenovanim** uzrokom, ne čekanjem.
 to je **isti** korijen. Uključivanje flaga i potvrda lokacije otvaraju **oba**
 mjerenja odjednom.
 
+### 10.32 Šta zaista pokreće punjenje keša (i zašto „potvrdi lokaciju” nije dovoljno)
+
+**Provjereno čitanjem poziva, ne pretpostavkom.** `getCachedWeather`
+(`weather-v2.service.ts:208`) radi ovako:
+
+1. `assertEnabled()` — traži `WEATHER_LOCATION_V2`;
+2. `confirmedLocation()` — traži svih 8 polja;
+3. **pročita** `WeatherV2Cache`; ako reda nema → **`null`**, i tu staje.
+
+Dakle **keš puni isključivo `getWeather()`**, a njega zove samo
+`GET /api/weather/v2/current/:homeProfileId` (`weather.controller.ts:96`).
+Nema crona, nema intervala:
+
+```
+grep -rn "getWeather(" | grep -v weather-v2.service   ->  samo controller
+grep -rn "@Cron|setInterval" src/modules/Weather      ->  nista
+```
+
+Svi read-only potrošači traže **keš** i ne pune ga:
+`polling-weather.service.ts:30`, `boiler-weather.service.ts:21`,
+`dashboard-weather.service.ts:70`, `recommendation-weather.service.ts:24`.
+
+**Posljedica za podešavanje.** Samo potvrđena lokacija **ne daje**
+`outdoorTempC`. Treba i **jedan poziv** `GET /v2/current/{id}` poslije potvrde —
+inače `getCachedWeather` zauvijek vraća `null` i polling nema šta upisati.
+To je lako propustiti jer izgleda kao da se keš puni sam.
+
+**`WEATHER_SWR_ENABLED=off` je ispravno za prvo punjenje.** Bez SWR-a `getWeather`
+radi `await this.refresh(...)` **sinhrono** (`:269`) — keš je pun kad odgovor
+stigne. Sa SWR-om bi prvi poziv vratio `null`-ish stanje i punjenje bi otišlo u
+pozadinu. Za provjeru da lanac radi, `off` je bolji.
+
+**Svježina je uslov za upis, ne za broj noći.** `toResponse` (`:350`) skriva
+`current` kad je keš stariji od `WEATHER_CURRENT_HIDDEN_AFTER_MINUTES`
+(zadano **60**), a `PollingWeatherService` prihvata samo konačan
+`current.temperatureC`. Dakle **keš mora biti mlađi od 60 min** u trenutku
+polling ciklusa; inače `outdoorTempC` ostaje `null` iako je lokacija potvrđena.
+
+Kako se to održava: polling bucket je češći od 60 min, pa normalno korištenje
+aplikacije (dashboard/prognoza) obnavlja keš. Ali ako niko ne otvori
+prognozu, keš ostari i `outdoorTempC` opet pada na `null` — tiho.
+
+**Zato F3.4 poslije uključivanja treba mjeriti, ne pretpostaviti:**
+`UZORCI_BEZ_OUTDOOR` mora preći u broj veći od nule. Ako ostane nula uz
+potvrđenu lokaciju, uzrok je **star keš**, i to je novo mjerenje, ne ista greška.
+

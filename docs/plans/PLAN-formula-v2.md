@@ -71,11 +71,11 @@ može ni ocijeniti.
 |---|---|---|
 | F1 — podaci | **urađeno**, `nightMinC`/`dayMaxC` se pišu; backfill izvršen | §10.1, §10.2, §10.7 |
 | F2 — formula | **urađeno u kodu**, ostaje u shadow režimu | §10.3, `formula_v2_golden.cjs` |
-| F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`; mjerljivo od **2026-11-20** | §10.10 |
+| F3.1 — pokrivenost | **izmjereno**: `NOT_ENOUGH_DAYS (0/8)`, `NO_OUTDOOR 3` — isti korijen kao F3.4 (v. §10.31) | §10.10, §10.31 |
 | F3.3 — ablacija | **urađeno**: `--ablate`, `--table`, `--self-test` | §10.14 |
 | F3.7 — shadow vs. proposed | **izmjereno**: podizanja su `NO_MODEL`; drugi prozor **2026-11-30** | §10.9 |
-| F3.4 — greška prognoze | **skripta urađena**; podataka ima za 4 dana ⇒ prvi broj **2026-11-13** | §10.17 |
-| F3.5 — saturacija | **izmjereno**: 5/302 dana na granici, 0 `CAPACITY` | §10.16 |
+| F3.4 — greška prognoze | **blokirano flagom**: 1113 uzoraka, nijedan sa `outdoorTempC`; treba `WEATHER_POLL_V2=on` (§10.30) | §10.17, §10.30 |
+| F3.5 — saturacija | **izmjereno**: 5/303 dana na granici, 0 `CAPACITY` | §10.16 |
 | F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
 | F4 — penzionisanje krive | **djelimično**: F4.1–F4.6 i F4.8 urađeni; **F4.7 blokiran** — stara kriva ima 2 živa potrošača | §10.21–§10.27 |
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
@@ -1789,4 +1789,87 @@ završen** i brisanje ostaje blokirano.
 **Pet dana je malo, i to je dio nalaza.** Ne tvrdi se da je uzorak velik; tvrdi
 se da praznina postoji, da je identificirana po datumu, i da je ne treba
 pripisati početku rada kad nije.
+
+### 10.30 F3.4 — ne čeka kalendar, nego `WEATHER_POLL_V2` (i CI je to krio)
+
+**Nalaz.** Mjerenje `43379496307`: F3.4 „nema dana sa prognozom i mjerenjem”,
+uz **1110 satnih uzoraka na 5 dana** i `nightMinOutdoorMeasuredC = 0`.
+
+Skripta je to opisivala kao „čeka uzorke”, i iz toga slijedi pogrešan sljedeći
+korak: *sačekaj još dana*. Ali uzoraka **ima**. Skripta ih samo nije pitala imaju
+li `outdoorTempC`.
+
+**Lanac, dokazan čitanjem koda:**
+
+| korak | mjesto |
+|---|---|
+| `nightMinOutdoorMeasuredC` traži `outdoorTempC` na uzorku | `day-outcome.ts:312` |
+| `outdoorTempC` piše polling | `thermostat.polling.service.ts:398` |
+| vraća `null` kad je `WEATHER_POLL_V2` isključen | `polling-weather.service.ts:24` |
+| a **zadano je `off`** | `backend/.env.example:43`, `env.md:71` |
+
+Dakle kolona se ne popunjava dok je flag isključen — **čekanje ne mijenja
+ništa**. To nije isto kao „čeka kalendar”, a razlika je odluka: prvo je jedna
+env varijabla, drugo je 5+ dana.
+
+**Potvrđeno mjerenjem, ne zaključkom** (`43380962071`):
+`1113 uzoraka na 5 dana, nijedan nema outdoorTempC` ⇒
+`UZROCI_BEZ_OUTDOOR`. Skripta sada imenuje jedan od tri uzroka
+(`UZROCI_BEZ_OUTDOOR` / `NEMA_UZORAKA` / `NEDOVOLJNO_PAROVA`), jer prva dva
+izgledaju isto (nula), a rješavaju se različito.
+
+**Šta je ovo krivalo: CI je tiho odbacivao zadnja mjerenja.** GitHub prima
+**50 anotacija po job-u** i odbacuje ostatak bez greške. Baseline job ima 9
+mjerenja, a svako je emitovalo svaku liniju sa dva razmaka kao zasebnu
+anotaciju (~10 po mjerenju). Zato **F3.4 i F3.5 nijednom nisu stigli do
+anotacija** — a log job-a se u ovom okruženju ne može preuzeti, pa nalaz
+nije bio vidljiv nigdje. Redoslijed koraka je odlučivao koji se nalaz vidi.
+
+**Popravka:** `scripts/ci/emit_notice.sh` — jedna anotacija po mjerenju, sa
+prefiksom i presudom prvom. Svih 5 postojećih mjerenja preseljeno (bilo ~10
+anotacija, sada 1), F3.4 i F3.5 dobili anotaciju. Rezultat: **9 mjerenja → 30
+anotacija** ukupno, daleko ispod limita, i nijedno mjerenje više ne zavisi od
+toga je li prvo ili zadnje u jobu.
+
+**Odluka koja ostaje vlasniku:** da bi F3.4 dao broj, `WEATHER_POLL_V2=on` mora
+biti u produkcijskom env-u. To nije izmjena koda i ne može se uraditi iz
+repoua — zato F3.4 ostaje otvoren sa **imenovanim** uzrokom, a ne sa „čeka se”.
+
+### 10.31 `WEATHER_POLL_V2` — šta tačno treba (izmjereno, ne pretpostavljeno)
+
+**Pitanje:** je li F3.4 blokiran samo flagom? **Ne.** Mjerenje
+`43385118170` (`weather-v2-readiness-readonly.cjs`):
+
+> `TREBA_LOKACIJU — 0/1 profila potvrđeno`, profil 3 fali **svih 8 polja**
+> (`weatherLatitude`, `weatherLongitude`, `weatherTimezone`,
+> `weatherLocationProvider`, `weatherLocationProviderId`,
+> `weatherLocationLabel`, `weatherLocationName`, `weatherLocationConfirmedAt`)
+
+**Lanac, dokazan čitanjem koda.** Flag sam ne daje broj; treba **potvrđena
+lokacija**, jer `confirmedLocation()` (`weather-v2.service.ts:86`) traži **svih
+osam** polja i vraća `null` ako ijedno fali — šest popunjenih je isto što i nula.
+
+| korak | uslov | gdje |
+|---|---|---|
+| 1. flag | `WEATHER_LOCATION_V2=on` **i** `WEATHER_POLL_V2=on` | env |
+| 2. lokacija | 8/8 polja u `HomeProfile` | `POST /weather/v2/locations/:id/confirm` |
+| 3. keš | `getCachedWeather` **ne dohvata**, samo čita | `weather-v2.service.ts:208` |
+| 4. upis | `outdoorTempC` u `ThermostatObservation` | `polling.service.ts:398` |
+| 5. par | `nightMinOutdoorMeasuredC` za **završene** dane | `day-outcome.ts:312` |
+
+**Provajder ne traži API ključ.** `WEATHER_V2_PROVIDER = 'open-meteo'`
+(`weather-v2.types.ts:1`), a `openmeteo-v2.provider.ts:15` zove javni
+`api.open-meteo.com`. Nema tajne koju treba nabaviti.
+
+**Rok poslije flaga se ne izmišlja.** `nightMinOutdoorMeasuredC` se popunjava
+za **završene** dane (`outcomeAt`), pa se prvi parovi noći broje od **sljedeće
+noći**, a F3.4 traži `MIN_DAYS` parova. Flag dakle ne daje broj istog dana.
+
+**Uzrok nije u repou.** Nijedan od pet koraka se ne mijenja kodom; prvi je env
+varijabla, drugi je korisnička radnja u aplikaciji. Zato F3.4 i F3.1 ostaju
+otvoreni — blokirani **imenovanim** uzrokom, ne čekanjem.
+
+**Veza koja se dosad nije vidjela:** F3.1 je odbijao 5 dana sa `NO_OUTDOOR 3` —
+to je **isti** korijen. Uključivanje flaga i potvrda lokacije otvaraju **oba**
+mjerenja odjednom.
 

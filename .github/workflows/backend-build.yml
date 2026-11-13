@@ -257,9 +257,9 @@ jobs:
           node scripts/daily-flow-oscillation-readonly.cjs $SINCE_ARG > "$RUNNER_TEMP/osc.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/osc.log"
-          # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.
-          grep -E "^  " "$RUNNER_TEMP/osc.log" \
-            | while IFS= read -r line; do echo "::notice::F4.5$line"; done
+          # JEDNA anotacija (v. scripts/ci/emit_notice.sh): GitHub prima 50
+          # po job-u i tiho odbacuje ostalo, pa su zadnja mjerenja nestajala.
+          bash scripts/ci/emit_notice.sh F4.5 "$RUNNER_TEMP/osc.log"
           if [ "$code" -ne 0 ]; then
             # Uzrok mora stici do anotacije: bez toga se vidi samo "nije
             # proslo", a ne zasto — a upravo je uzrok nalaz.
@@ -283,8 +283,7 @@ jobs:
           node scripts/recommendation-drift-readonly.cjs $SINCE_ARG > "$RUNNER_TEMP/rec.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/rec.log"
-          grep -E "^  " "$RUNNER_TEMP/rec.log" \
-            | while IFS= read -r line; do echo "::notice::F4.6$line"; done
+          bash scripts/ci/emit_notice.sh F4.6 "$RUNNER_TEMP/rec.log"
           if [ "$code" -ne 0 ]; then
             echo "::error::F4.6 mjerenje nije proslo (exit $code)"
             tail -5 "$RUNNER_TEMP/rec.log" \
@@ -302,8 +301,7 @@ jobs:
           node scripts/flow-floor-gap-readonly.cjs > "$RUNNER_TEMP/floor.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/floor.log"
-          grep -E "^  " "$RUNNER_TEMP/floor.log" \
-            | while IFS= read -r line; do echo "::notice::F4.8$line"; done
+          bash scripts/ci/emit_notice.sh F4.8 "$RUNNER_TEMP/floor.log"
           if [ "$code" -ne 0 ]; then
             echo "::error::F4.8 mjerenje nije proslo (exit $code)"
             tail -5 "$RUNNER_TEMP/floor.log" \
@@ -321,8 +319,7 @@ jobs:
           node scripts/model-floor-gap-readonly.cjs > "$RUNNER_TEMP/model.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/model.log"
-          grep -E "^  " "$RUNNER_TEMP/model.log" \
-            | while IFS= read -r line; do echo "::notice::F4.8m$line"; done
+          bash scripts/ci/emit_notice.sh F4.8m "$RUNNER_TEMP/model.log"
           if [ "$code" -ne 0 ]; then
             echo "::error::F4.8 mjerenje modela nije proslo (exit $code)"
             tail -5 "$RUNNER_TEMP/model.log" \
@@ -339,8 +336,7 @@ jobs:
           node scripts/curve-fallback-readonly.cjs > "$RUNNER_TEMP/fallback.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/fallback.log"
-          grep -E "^  " "$RUNNER_TEMP/fallback.log" \
-            | while IFS= read -r line; do echo "::notice::F4.7$line"; done
+          bash scripts/ci/emit_notice.sh F4.7 "$RUNNER_TEMP/fallback.log"
           if [ "$code" -ne 0 ]; then
             echo "::error::F4.7 mjerenje nije proslo (exit $code)"
             tail -5 "$RUNNER_TEMP/fallback.log" \
@@ -398,6 +394,26 @@ jobs:
       # F3.4: greska prognoze noci — nightMinC vs nightMinOutdoorMeasuredC.
       # Prvo bez baze: ako statistika padne na sintetici, to se mora vidjeti
       # prije konekcije (inace izgleda kao problem baze).
+      # F3.4/F3.1 blokada: koliko je koraka do prvog outdoorTempC. Flag sam ne
+      # pomaze ako lokacija nije potvrdjena (confirmedLocation trazi svih 8 polja).
+      - name: Weather v2 readiness self-test (F3.4)
+        run: node scripts/weather-v2-readiness-readonly.cjs --self-test
+
+      - name: Weather v2 readiness (F3.4, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/weather-v2-readiness-readonly.cjs > "$RUNNER_TEMP/wv2.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/wv2.log"
+          bash scripts/ci/emit_notice.sh "WEATHER " "$RUNNER_TEMP/wv2.log"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::WEATHER readiness mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/wv2.log" \
+              | while IFS= read -r line; do echo "::error::WEATHER uzrok: $line"; done
+          fi
+
       - name: Forecast error self-test (F3.4)
         run: node scripts/forecast-error-readonly.cjs --self-test
 
@@ -406,8 +422,12 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: |
           set +e
-          node scripts/forecast-error-readonly.cjs
+          node scripts/forecast-error-readonly.cjs > "$RUNNER_TEMP/f34.log" 2>&1
           result=$?
+          cat "$RUNNER_TEMP/f34.log"
+          # F3.4 je dosad ispisivala samo u log, a log job-a se ovdje ne moze
+          # preuzeti — pa se nalaz nije vidio nigdje. Sada ide u anotaciju.
+          bash scripts/ci/emit_notice.sh "F3.4 " "$RUNNER_TEMP/f34.log"
           if [ "$result" -ne 0 ]; then
             echo "::error title=F3.4 forecast::skripta je pala (exit $result) — uzrok je u logu koraka."
           fi
@@ -422,8 +442,10 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: |
           set +e
-          node scripts/saturation-readonly.cjs
+          node scripts/saturation-readonly.cjs > "$RUNNER_TEMP/f35.log" 2>&1
           result=$?
+          cat "$RUNNER_TEMP/f35.log"
+          bash scripts/ci/emit_notice.sh "F3.5 " "$RUNNER_TEMP/f35.log"
           if [ "$result" -ne 0 ]; then
             echo "::error title=F3.5 saturation::skripta je pala (exit $result) — uzrok je u logu koraka."
           fi

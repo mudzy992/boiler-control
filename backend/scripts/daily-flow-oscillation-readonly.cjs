@@ -141,11 +141,47 @@ function summarize(rows) {
  * izlaz koji kaže „nema se šta mjeriti" ne razlikuje „nitko nije imao
  * preporuku" od „historija se ne piše".
  */
-function verdict(summary) {
+function verdict(summary, diag) {
   if (summary.days === 0) {
+    /*
+     * NULA MORA IMENOVATI UZROK.
+     *
+     * Prvi run poslije deploya (43402878050) dao je samo "nijedna kuca-dan
+     * u prozoru nema BoilerHistory red". To ne razlikuje tri stanja koja se
+     * rjesavaju razlicito:
+     *
+     *   NEMA_UOPSTE      tabela je prazna -> polling ne pise, problem u kodu
+     *   NEMA_U_PROZORU   redova ima, ali svi su prije `--since` -> prozor je
+     *                    prekratak; mjerenje treba pomjeriti, ne popravljati kod
+     *   NEMA_POLAZNE     redova ima u prozoru, ali nijedan nema
+     *                    `suggestedTemp` -> polling pise, ali bez broja
+     *
+     * Bez ovoga se "nema podataka" cita kao "popravka nije uspjela" ili kao
+     * "nema grijanja", a to su suprotni zakljucci iz istog izlaza.
+     */
+    const d = diag ?? {};
+    if ((d.totalRows ?? 0) === 0) {
+      return {
+        verdict: 'NEMA_UOPSTE',
+        reason:
+          'tabela "BoilerHistory" je prazna — polling ne piše redove, ' +
+          'uzrok je u kodu ili rasporedu, ne u prozoru',
+      };
+    }
+    if ((d.rowsInWindow ?? 0) === 0) {
+      return {
+        verdict: 'NEMA_U_PROZORU',
+        reason:
+          `${d.totalRows} redova ukupno, ali nijedan poslije ` +
+          `${d.since ?? 'početka prozora'} (zadnji ${String(d.lastRowAt).slice(0, 10)}) — ` +
+          `prozor je prekratak, ne kod`,
+      };
+    }
     return {
-      verdict: 'NO_DAYS',
-      reason: 'nijedna kuća-dan u prozoru nema BoilerHistory red',
+      verdict: 'NEMA_POLAZNE',
+      reason:
+        `${d.rowsInWindow} redova u prozoru, ali nijedan sa \`suggestedTemp\` — ` +
+        `polling piše, ali bez predloga`,
     };
   }
   if (summary.withMultiple === 0) {
@@ -178,7 +214,24 @@ async function runSelfTest() {
   // Sintetika pokriva svaki ishod presude; bez ovoga bi skripta mogla biti
   // „zelena" samo zato što nikad nije vidjela nijedan slučaj.
   const cases = [
-    { name: 'prazno', rows: [], expect: 'NO_DAYS' },
+    /*
+     * Tri nule, tri uzroka. Bez ovih slucaja skripta bi mogla vratiti jednu
+     * presudu za sva tri stanja — a to je greska koju je run 43402878050
+     * pokazao na stvarnim podacima.
+     */
+    { name: 'nema redova uopste', rows: [], diag: { totalRows: 0 }, expect: 'NEMA_UOPSTE' },
+    {
+      name: 'redova ima, nijedan u prozoru',
+      rows: [],
+      diag: { totalRows: 305, rowsInWindow: 0, since: '2026-11-13', lastRowAt: '2026-11-11T22:00:00Z' },
+      expect: 'NEMA_U_PROZORU',
+    },
+    {
+      name: 'redova ima u prozoru, bez predloga',
+      rows: [],
+      diag: { totalRows: 305, rowsInWindow: 12, rowsWithSuggested: 0 },
+      expect: 'NEMA_POLAZNE',
+    },
     {
       name: 'stabilno',
       rows: [
@@ -221,7 +274,7 @@ async function runSelfTest() {
 
   let failed = 0;
   for (const c of cases) {
-    const got = verdict(summarize(c.rows));
+    const got = verdict(summarize(c.rows), c.diag);
     const ok = got.verdict === c.expect;
     if (!ok) failed++;
     console.log(`${ok ? 'OK  ' : 'FAIL'} ${c.name}: ${got.verdict} (ocekivano ${c.expect})`);
@@ -318,7 +371,27 @@ async function main() {
     await client.query('COMMIT');
 
     const summary = summarize(rows);
-    const decision = verdict(summary);
+
+    /*
+     * Ista dijagnostika kao kod F4.7: kad je nula, mora se znati STA je nula.
+     * Mjeri se ukupno redova, redova u prozoru, i koliko ih ima `suggestedTemp`.
+     */
+    const { rows: diagRows } = await client.query(
+      `SELECT
+         (SELECT count(*)::int FROM "BoilerHistory") AS "totalRows",
+         (SELECT count(*)::int FROM "BoilerHistory"
+           WHERE "createdAt" >= CURRENT_DATE - ($1::int || ' days')::interval
+             AND ($2::date IS NULL OR "createdAt" >= $2::date)) AS "rowsInWindow",
+         (SELECT count(*)::int FROM "BoilerHistory"
+           WHERE "suggestedTemp" IS NOT NULL) AS "rowsWithSuggested",
+         (SELECT max("createdAt")::text FROM "BoilerHistory") AS "lastRowAt",
+         (SELECT max("createdAt")::text FROM "BoilerHistory"
+           WHERE "suggestedTemp" IS NOT NULL) AS "lastSuggestedAt"`,
+      [days, since],
+    );
+    const diag = { ...(diagRows[0] ?? {}), since };
+
+    const decision = verdict(summary, diag);
 
     if (process.argv.includes('--json')) {
       console.log(JSON.stringify({ summary, ...decision }, null, 2));
@@ -343,6 +416,11 @@ async function main() {
             `${summary.meanSpreadC.toFixed(2)} K`,
         );
       }
+      console.log(
+        `  dijagnostika:           ukupno ${diag.totalRows}, u prozoru ` +
+          `${diag.rowsInWindow}, sa predlogom ${diag.rowsWithSuggested}, ` +
+          `zadnji red ${String(diag.lastRowAt).slice(0, 16)}`,
+      );
       console.log(`\n  ${decision.verdict}: ${decision.reason}`);
     }
   } finally {

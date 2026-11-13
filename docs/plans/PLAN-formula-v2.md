@@ -2058,3 +2058,57 @@ env**, `undefined`/`''` = zadano.
 
 **Stanje:** `1708/1708`, 139 suite, na `0716a1c`.
 
+### 10.36 Keš presušuje — noću neće biti mjerenja bez novog poziva
+
+**Nalaz koji mijenja plan za noć.** Mjereno `43421691000`:
+
+> `FLAG_DOVOLJAN 1/1` **|** `SAZETAK-svjezina: 1 sati ima outdoorTempC, 35 nema`
+
+Dakle lokacija je potvrđena i flag radi, ali `outdoorTempC` postoji u **jednom
+satu od 36**. To nije protivrječje — dva su različita pitanja:
+
+| pitanje | odgovor |
+|---|---|
+| je li lanac ispravan? | **jeste** (`FLAG_DOVOLJAN`) |
+| ima li keš podataka sada? | **ne** (35 od 36 sati bez) |
+
+**Uzrok, dokazan čitanjem:**
+
+```
+getWeather()        PUNI keš   <- zove SAMO GET /api/weather/v2/current
+getCachedWeather()  ČITA keš   <- zovu polling, boiler, dashboard, recommendation
+nema crona, nema intervala (grep u §10.32)
+```
+
+Keš se puni **samo kad neko otvori karticu vremena u aplikaciji**. Keš je
+svjež **60 min** (`WEATHER_CURRENT_HIDDEN_AFTER_MINUTES`), a obnavlja se samo
+novim pozivom. Mjerenje pokazuje upravo to: jedan sat sa podacima (kad je
+lokacija potvrđena i pozvan `GET /v2/current`), 35 bez.
+
+**Šta to znači za noćas.** Polling radi svake minute, uzorak svakih 5 min
+(`OBSERVATION_INTERVAL_MIN = 5`). Ali svaki ciklus čita **keš**, a ne dohvata.
+Ako niko ne otvori aplikaciju, `outdoorTempC` ostaje `null` **iako je sve
+ispravno podešeno**. Tada `nightMinOutdoorMeasuredC` ne nastaje i F3.4 čeka
+dalje.
+
+**To nije greška — to je svojstvo dizajna koje plan nije imao na umu.** F3.4
+je zamišljen kao pasivno mjerenje, a stvarno traži da neko otvara prognozu.
+Razlika je odluka, ne detalj.
+
+**Opcije, sa cijenom:**
+
+1. **Ručno**: otvoriti karticu vremena u aplikaciji **prije 06:00**. Najjeftinije
+   (≈ nula posla), ali mjerenje zavisi od ljudske radnje — i prestat će čim se
+   zaboravi. Za F3.4 dovoljno; za dugoročno ne.
+2. **Cron u API-ju** koji zove `getWeather` (ne `getCachedWeather`) za aktivne
+   domove, npr. svakih 30 min. Rješava trajno, ali dodaje mrežni poziv i novi
+   raspored — to je **izmjena koda** i traži svoje mjerenje (koliko poziva, koji
+   trošak, šta ako provajder padne).
+3. **Proširiti prozor svježine** (`WEATHER_CURRENT_HIDDEN_AFTER_MINUTES` gore).
+   Ne rješava: keš i dalje treba **jedan** poziv da uopšte nastane. Samo odlaže.
+
+**Preporuka za noćas:** opcija 1 — otvoriti prognozu u aplikaciji prije
+06:00 — jer daje prvi stvarni par noći bez ijedne izmjene koda. Ako to
+preskočimo, F3.4 i F4.5 ostaju bez podataka **iako je sve ispravno**, pa se
+sutra neće moći razlikovati „nema grijanja” od „nema keša”.
+

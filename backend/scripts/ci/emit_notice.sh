@@ -51,6 +51,13 @@ summary=$(grep -m1 '^  SAZETAK:' "$LOG" 2>/dev/null || true)
 # ono sto odlucuje koliko je koraka; bez toga sazetak kaze "treba lokaciju"
 # a ne kaze ni gdje je stalo.
 detail=$(grep -m1 '^    profil ' "$LOG" 2>/dev/null || true)
+# Svjezina kesa je DRUGO pitanje od presude: lokacija moze biti potvrdjena a
+# outdoorTempC ipak null ako kes nije osvjezen u zadnjih 60 min. Bez ovoga bi
+# se "flag je dovoljan" citalo kao "nocas ce sigurno biti mjerenja".
+freshness=$(grep -m1 'SAZETAK-svjezina:' "$LOG" 2>/dev/null || true)
+if [ -n "$freshness" ]; then
+  summary="$summary | $freshness"
+fi
 if [ -n "$summary" ] && [ -n "$detail" ]; then
   summary="$summary | $detail"
 fi

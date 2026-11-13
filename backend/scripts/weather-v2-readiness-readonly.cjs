@@ -274,6 +274,55 @@ async function main() {
 
     console.log(`\n  ${decision.verdict}: ${decision.reason}`);
     console.log(`\n  rok: ${OUTCOME_NOTE}`);
+
+    /*
+     * DRUGO MJERENJE: koliko uzoraka IMA outdoorTempC, po satu.
+     *
+     * Ovo je odvojeno pitanje od "je li lokacija potvrdjena". Lanac je:
+     *   getCachedWeather -> currentHidden kad je kes stariji od 60 min
+     *   -> PollingWeatherService vrati null -> outdoorTempC null
+     * A kes puni ISKLJUCIVO GET /v2/current (v. plan 10.32), koji niko ne
+     * zove nocu. Zato potvrdjena lokacija nije dovoljna: treba i svjezina.
+     *
+     * Mjeri se po satu, jer se tako vidi da li outdoorTempC PRESUSUJE nakon
+     * 60 min od zadnjeg citanja — a to je ono sto odlucuje hoce li nocas
+     * nastati nightMinOutdoorMeasuredC.
+     */
+    const { rows: byHour } = await client.query(
+      `SELECT
+         to_char("at" AT TIME ZONE 'Europe/Sarajevo', 'YYYY-MM-DD HH24') AS "hour",
+         count(*)::int AS "samples",
+         count(*) FILTER (WHERE "outdoorTempC" IS NOT NULL)::int AS "withOutdoor"
+       FROM "ThermostatObservation"
+       WHERE "at" >= now() - interval '36 hours'
+       GROUP BY 1
+       ORDER BY 1 DESC
+       LIMIT 36`,
+    );
+
+    const withAny = byHour.filter((r) => r.withOutdoor > 0);
+    const without = byHour.filter((r) => r.withOutdoor === 0);
+
+    console.log('\n  ## outdoorTempC po satu (zadnjih 36 h, lokalno Europe/Sarajevo)');
+    for (const r of byHour.slice(0, 12)) {
+      console.log(
+        `    ${r.hour}: ${r.withOutdoor}/${r.samples} uzoraka ima outdoorTempC`,
+      );
+    }
+    console.log(
+      `\n    sati sa barem jednim: ${withAny.length}, sati bez ijednog: ${without.length}`,
+    );
+    if (withAny.length && without.length) {
+      const firstWith = withAny[withAny.length - 1].hour;
+      console.log(
+        `    prvi sat sa outdoorTempC: ${firstWith} — sve prije toga je null ` +
+          `(kes je tada bio prazan, prije potvrde lokacije)`,
+      );
+    }
+    console.log(
+      `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC, ` +
+        `${without.length} nema`,
+    );
   } finally {
     await client.end();
   }

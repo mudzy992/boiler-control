@@ -77,13 +77,19 @@ može ni ocijeniti.
 | F3.4 — greška prognoze | **skripta urađena**; podataka ima za 4 dana ⇒ prvi broj **2026-11-13** | §10.17 |
 | F3.5 — saturacija | **izmjereno**: 5/302 dana na granici, 0 `CAPACITY` | §10.16 |
 | F3.8 — osjetljivost | **urađeno**: `DWELL` 7 ⇒ 3× više ciklusa | §10.8 |
-| F4 — penzionisanje krive | **nije početo**, blokirano F3.1 | — |
+| F4 — penzionisanje krive | **djelimično**: F4.1–F4.6 i F4.8 urađeni; **F4.7 blokiran** — stara kriva ima 2 živa potrošača | §10.21–§10.27 |
 | F5.1 — konstante | **urađeno**, jedan modul + contract test | §10.11 |
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
+| F4.2 | **urađeno**: zajednička odluka izdvojena; writer uzima `F_eq`, ne kontroler | §10.26 |
+| F4.5 | **kod urađen, gejt otvoren do deploya** — ponovljeno mjerenje mora ići sa `--since=<deploy>` | §10.25 |
+| F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
 | F4.1 | **urađeno**: prekidač `PROPOSAL_ENGINE`, zadano `curve` (deploy ne mijenja ništa) | §10.21 |
+| F4.6 | **urađeno**: `HeatingRecommendationService` više ne piše `Recommendation`; mjereno 15/54 dana, max 3,74 K | §10.26b |
+| F4.8 | **urađeno**: granica unosa = fizički pod (30), ne pod krive (46); mjereno 32,9 °C gdje je unos bio zaključan | §10.27 |
+| F4.7 | **BLOKIRANO**: 4 živa potrošača (§10.28) + mjereno da je motor **živi fallback** 5/61 dana, praznina 2026-10-06…10 (§10.29) | §10.28, §10.29 |
 | F5.3–F5.5 | **urađeno**: `confidence` iz dokaza, premašivanje jednom (p90), klamp imenovan | §10.18–10.20 |
 | `u_day` u predlogu | **isključen** (`DAY_GAIN_IN_PROPOSAL = false`), procjena se i dalje mjeri | §10.14, §10.15 |
 
@@ -386,13 +392,13 @@ Ovo je dio koji dira ugovor prema klijentima, pa ide u koracima sa prekidačem.
 | # | Posao | Gdje | Mjera |
 |---|---|---|---|
 | F4.1 | **✓ urađeno** — `PROPOSAL_ENGINE=curve\|model` (env), default `curve` dok F1–F3 ne prođu | `daily-record.writer.ts` | oba puta pokrivena testom |
-| F4.2 | Model put: `proposedFlowTemp = decideProposal(...)` umjesto `FlowTemperatureEngine.calculate` | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
+| F4.2 | **✓ urađeno** — model put uzima `F_eq` (kontroler je relativni, v. §10.26) | | `writer.ts:331` | test: isti ulaz ⇒ isti izlaz kao shadow odluka istog dana |
 | F4.3 | **✓ urađeno (backend)** — `Recommendation.breakdown` dobija `engine: 'model'` + polja `s`, `c`, `ciLow/High`, `flow`, `reasons` | `recommendation-breakdown.ts` + DTO | OpenAPI se regeneriše; `frontend` tipovi (`openapi:check`) prolaze |
 | F4.4 | **✓ urađeno (ugovor)** — `baseCurveTemp` je `null` kad je `engine='model'`; ekran (web+mobile) ostaje | — polje dobija `null` i klijent prikazuje model | `RecommendationBreakdown.tsx` (web + mobile) | vizuelni test: nema „0,00 °C" |
-| F4.5 | **mjereno** (10/27 kuća-dana vidljivo, max 2,76 K) — `/boiler/sync` (`calculateFlowTemp`) i `ThermostatPoll` prestaju zvati krivu; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
+| F4.5 | **✓ kod** — `resolveDailyFlow`; `/boiler/sync` i polling vraćaju zapisani predlog (mjereno 10/27 prije izmjene) |; vraćaju posljednji `DailyRecord` | `boiler.service.ts:208`, `thermostat.polling.service.ts:267` | test: polling ne piše novi broj usred dana |
 | F4.6 | `HeatingRecommendationService` prestaje pisati `Recommendation` (ostaje samo `intervalLearning`) ili se gasi | `heating.recommendation.service.ts:161` | test: jedan pisac `Recommendation` redova |
-| F4.7 | Brisanje `Heating/engine` i `Heating/strategies` + njihovih testova | — | `grep` vraća 0 hitova; suite zelen |
-| F4.8 | `minHeatingFlowC` default se usklađuje sa modelom (sada 46 iz krive) | `flow-range.ts` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
+| F4.7 | **⚠ blokirano** — brisanje traži 4 koraka migracije prije (`§10.28`); danas 4 živa potrošača | `Heating/engine` (2 fajla), `Heating/strategies` (5) | `grep` vraća 0 hitova; suite zelen |
+| F4.8 | **✓ kod** — granica unosa = fizički pod (30), ne pod krive (46); mjereno `MODEL_BELOW_OLD_FLOOR` 1/1, 13,1 K (§10.27) | `flow-range.ts:SYSTEM_MIN_CURRENT_FLOW_TEMP` | test: predlog uvijek unutar raspona koji korisnik smije upisati |
 
 **Rizik (najveći u cijelom planu):** F4.4 mijenja ono što korisnik vidi.
 `baseCurveTemp` je danas uvijek broj; `null` traži izmjenu na webu **i** mobilnom,
@@ -1501,3 +1507,286 @@ treba da preusmjeri na zapisani `DailyRecord`.
 
 **Mjerenje ostaje u CI-ju** (`baseline` job, `workflow_dispatch`), da se poslije
 F4.5 može ponoviti istim brojevima i uporediti.
+
+### 10.24 F4.5 — izmjena koda: jedan broj za dan
+
+**Mjerenje je pokazalo problem, ne uzrok.** Oscilacija (10/27 kuća-dana,
+max 2,76 K) nije dolazila iz `anchorDailyFlow` — on od F14 već čuva jutarnji
+broj. Dolazila je iz `BoilerService.calculateFlowTemp`, koji **računa iznova**
+na svakom pozivu, a njegov broj ide na kotao (`/boiler/sync`) i u
+`BoilerHistory` (polling).
+
+**Rješenje je jedna čista funkcija, `resolveDailyFlow`** (`daily-flow.ts`), bez
+baze i sata. Pravilo „jedan broj za dan" mora važiti na **svakom** mjestu koje
+broj predlaže; da je metoda na jednom servisu, drugo mjesto bi imalo svoju
+kopiju — a dvije kopije istog pravila se raziđu prvom izmjenom.
+
+**Pravilo, po redu:**
+1. Zapisani predlog važi bez obzira koliko formula odstupa. Drift se **i dalje
+   mjeri** — bez toga bi se izgubio podatak iza cijelog F4.5 mjerenja.
+2. Dokaz (izmjeren manjak) je **jedini** razlog da broj ode gore. Spuštanje
+   usred dana nije dozvoljeno ni sa dokazom.
+3. `outcomeAt == null` **nije** dokaz nule: „nije se još mjerilo" ≠ „izmjereno
+   je 0". Da se to pomiješa, manjak nikad ne bi podigao broj.
+4. Nema zapisa ⇒ motorov broj, i to se **kaže** (`CURVE`) — ne tvrdi se da je
+   jutro potvrdilo formulu.
+
+**`calculateFlowTemp` sada vraća i `flowSource` i `curveFlowTemp`.** `flowTemp`
+je broj koji ide na kotao; `curveFlowTemp` je ono što motor računa sada. Bez
+drugog polja se ne može reći je li se formula razišla s predlogom.
+
+**Posljedica koju je uhvatio test, ne čitanje koda.** Dashboard je čitao
+`formula.flowTemp` kao `currentFlowC`. Od F4.5 bi to bio **zapisani predlog**,
+pa bi `formulaDriftC` uvijek bio 0 i mjerenje bi tiho nestalo. Sada čita
+`curveFlowTemp`. Da test nije pisan prije spajanja, ovo bi prošlo CI zeleno i
+tek bi sljedeće mjerenje pokazalo nulu bez uzroka.
+
+**Zašto mjerenje ostaje.** Ponoviti istu skriptu poslije izmjene i uporediti
+brojeve: prije `OSCILLATION_VISIBLE` (10/27, max 2,76 K), poslije se očekuje
+`STABLE` ili `OSCILLATION_INVISIBLE`. Ako se ne promijeni, uzrok je drugdje i
+to je nalaz, ne neuspjeh.
+
+### 10.25 F4.5 — zašto ponovljeno mjerenje daje iste brojeve (i šta je pravi gejt)
+
+**Ponovljeno mjerenje poslije izmjene koda (run `43277288749`) dalo je
+identične brojeve:** 10/27 kuća-dana, max 2,76 K, prosjek 0,86 K.
+
+**To nije dokaz da izmjena nije pomogla — to je dokaz da se mjerio pogrešan
+prozor.** Mjerenje čita `BoilerHistory`, historiju, a prozor od 60 dana uvijek
+sadrži dane kad je stari kod radio. Isti ulaz ⇒ isti izlaz; ništa se nije
+promijenilo ni treba da se promijeni.
+
+**Zato je dodan `--since=YYYY-MM-DD`** (i ulaz `drift_since` u workflow-u).
+Mjerenje poslije deploya mora gledati **samo dane koji su nastali poslije**
+deploya. Bez toga bi se svako buduće mjerenje zauvijek vraćalo na iste brojeve
+i izgledalo kao da izmjena ne radi.
+
+**Gejt za F4.5 zato glasi, tačno:**
+- **prije** (run `43246164833`, cijeli prozor): `OSCILLATION_VISIBLE`,
+  10/27, max 2,76 K — stanje je izmjereno;
+- **poslije** (`--since=<datum deploya>`, prozor od najmanje 7 dana):
+  `STABLE` ili `OSCILLATION_INVISIBLE` — ako nije, uzrok je drugdje i **to je
+  nalaz**, ne neuspjeh;
+- mjerenje se ne izvršava lokalno, nego u `baseline` jobu, istim brojevima.
+
+**Zašto se gejt ne može zatvoriti danas.** Kod nije u produkciji, a historija se
+ne može prepisati — mjerenje je read-only i ne izmišlja podatke. Do deploya se
+može tvrditi samo: pravilo je u kodu (12 testova), spajanje je dokazano testom
+(motorovih 45 **ne** ide na kotao kad zapis kaže 48), i mjerenje je spremno da
+se ponovi istim brojevima.
+
+### 10.26 F4.2 — izdvajanje odluke i nalaz koji je to promijenio
+
+**Zašto poziv shadow servisa nije bio moguć.** `ProposalShadowService.evaluate()`
+**čita** `DailyRecord` (`nightMinC`, `dayMaxC`) — red koji writer tek treba da
+napiše. Writer radi prije shadow-a (`daily.recommendation.service` piše predlog
+na `:76`, shadow zove na `:95`). Poziv bi bio i ciklična zavisnost i odluka o
+redu koji ne postoji.
+
+**Rješenje: `nightMinC`/`dayMaxC` postaju ulaz, ne upit.** Shadow ih čita iz
+zapisa, writer iz prognoze koju upravo upisuje — iste vrijednosti, različit
+izvor. Prikupljanje je izdvojeno u `ProposalInputsService`, odluka u
+`proposal-decision.ts` (dva sloja, jer servis ima `await`-ove **između**
+izračuna: `daysSinceChange`, `nightFloorFor`).
+
+**Ponašanje shadow-a je nepromijenjeno i to je dokazano, ne tvrđeno.**
+387 testova `DailyRecord` modula prošlo je **bez izmjene ijednog testa** — to je
+jedini uvjerljiv dokaz da izdvajanje nije promjena formule. Uz to
+`proposal-decision.spec` poredi izdvojeni put sa putem prepisanim **doslovno**
+onako kako je stajao u `evaluate()`.
+
+### Nalaz: `decideProposal` je relativni kontroler, ne apsolutni broj
+
+Ovo je otkriveno tek pri spajanju writer-a, i bez toga bi F4.2 bio „spojen" a
+nefunkcionalan:
+
+- `decideProposal` polazi od **prošle polazne** i pomjera je za korak kad ima
+  izmjereni dokaz. Bez ishoda vraća `previous` uz `HOLD/NO_OUTCOME`
+  (`proposal-controller.ts:215`).
+- U 06:00, kad writer piše predlog, ishoda **nema** — obračun ide u 03:20 **za
+  prethodni dan**. Zato je prvi pokušaj dao tačno:
+  `flowC null, action HOLD, reasons ['NO_OUTCOME']` — model put bi zauvijek
+  vraćao `null` i nikad ne bi radio.
+- **Apsolutni** broj za dan je ravnotežna polazna `F_eq`
+  (`equilibrium-flow.ts`). Kontroler je sloj **iznad** nje koji shadow mjeri.
+
+Writer zato uzima `F_eq`; kontroler ostaje u shadow-u. Da je test pisan poslije
+spajanja, greška bi prošla CI zeleno (model put „spojen", vraća `null`).
+
+**`params.engine` nosi stvarno korišten motor**, ne traženi. Ako je tražen
+`model` a model nije dao broj (nema noćne prognoze), zapis kaže `curve` — inače
+bi se poslije tvrdilo da je modelski put radio. Test to zaključava i **brani**
+staru formu (`not.toContain('engine: engineChoice.engine')`).
+
+**Konstante su premještene, ne duplirane.** `DAY_GAIN_IN_PROPOSAL` i
+`DEFAULT_TARGET_ROOM_C` treba i novi servis, pa su u `flow-constants.ts`, a
+`proposal-shadow.service` ih re-exportuje. `formula_doc_check.cjs` ih zato
+traži na novom mjestu, a `FORMULA.md` je ažuriran — inače bi F5.6 gejt padao
+zbog refaktora, a ne zbog razilaženja s kodom.
+
+**Testovi:** `daily-record-writer` +3 (model daje **46,74** a ne krivinih 45;
+bez noćne prognoze ostaje 45 uz `engine=curve`; zadano `curve` **ne poziva**
+prikupljanje), `proposal-decision` 7, `DailyRecord` **397/397**, `tsc` 0,
+`eslint` 0, `FORMULA.md` gejt: 22 konstante.
+
+### 10.26b F4.6 — jedan pisac `Recommendation` redova
+
+**Tvrdnja koja se mjerila.** Dva mjesta su pisala `Recommendation`:
+`DailyRecordWriter` (u istoj transakciji kao zapis) i
+`HeatingRecommendationService`. Ako pišu oba, „jedan pisac po redu“ ne
+vrijedi, a red koji korisnik vidi zavisi od toga koji je zadnji.
+
+**Mjerenje prije izmjene** (`recommendation-drift-readonly.cjs`, run
+`43282265347`, 60 dana): uporedivih **54** dana, razlikuje se **23 (42,6 %)**;
+isto / zaokruženo / vidljivo **31 / 8 / 15**; |razlika| max **3,74 K**,
+prosjek **0,50 K** ⇒ **`DIFF_VISIBLE`**. Dakle nije kozmetika — 15 dana se
+korisniku vidio drugi broj nego što ga zapis nosi.
+
+**Izmjena.** Servis prestaje pisati `Recommendation` i prestaje zvati motor.
+**Učenje ostaje** (`heatingIntervalLearning.updateMany`) — to je jedini vlasnik
+tog reda i ne dira se. Uklonjeni su i importi koji su time postali mrtvi.
+
+**Dokaz je statika, ne tvrdnja.** `recommendation-write-sites.spec.ts` ima 4
+testa: nema pisanja pri izvršavanju, **i** staticka provjera izvora —
+`recommendation.create`/`.update` ne smiju postojati u servisu, a
+`tx.recommendation.create` mora postojati u writer-u. Bez statickog dijela,
+test bi prošao i da neko vrati pisanje u granu koja se u testu ne izvršava.
+Test koji je provjeravao uklonjeni weather put je obrisan (`git rm`), jer bi
+inače „zelen“ branio put koga nema.
+
+**Testovi:** write-sites 4/4, `HeatingRecommendation` 33/33, backend
+**1696/1696** (138 suite) na `3c20534`.
+
+### 10.27 F4.8 — granica unosa nije smjela biti granica krive
+
+**Nalaz prije izmjene.** Zadana donja granica unosa bila je
+`SYSTEM_MIN_FLOW_C = 46` — granica **krive**. Bilo je tačno dok je kriva jedini
+računač. Model daje niže; za tipičnu kuću (`s = 0,9`, `c = 1 K`, cilj
+22 °C) izmjereno na `equilibrium-flow.ts`:
+
+| noćna temp | `F_eq` |
+|---|---|
+| +5 °C | **34,7 °C** |
+| 0 °C | 39,2 °C |
+| −5 °C | 43,7 °C |
+| −10 °C | 48,2 °C |
+| −15 °C | 52,7 °C |
+
+Unos zaključan na 46 pri noći na +5 °C znači da korisnik **ne može
+prihvatiti vlastiti predlog**. To je ista greška kao „zadano 48 vs. predlog
+47,7“ iz `F13`, samo dublje: 34,7 prema 46 je **11,3 K**.
+
+**Šta se mijenja, a šta ne.** `SYSTEM_MIN_CURRENT_FLOW_TEMP` postaje
+`ABSOLUTE_MIN_FLOW_C` (30) — fizički pod. Mijenja se **samo ono što korisnik
+smije upisati**. Motor i dalje klampuje svoj izlaz na 46–55; garant „raspon ne
+dira motor“ postoji i ostaje zelen. `SYSTEM_MIN_FLOW_C` ostaje dostupan
+(re-export) jer je i dalje granica **motora**, drugi pojam od granice **unosa**
+— i to je razlika koju je F4.8 otkrio: dva broja su izgledala kao jedan.
+
+**Mjerenje je prvo dalo nulu, i nula je bila pogrešno pročitana.**
+`flow-floor-gap-readonly.cjs`, run `43285799640`: **56 predloga, 0 ispod 46 °C**.
+Izgledalo je kao „nema problema“. Nije: do F4.8 su predloge dale kriva i
+kontroler, a oba su klampovana na 46. Izmjereno na motoru — noć +15 °C daje
+**tačno 46,0** — dakle kriva **ne može** dati ispod 46 ni teoretski. Brojanje
+zatečenih predloga zato mjeri **klamp, ne problem**. Presuda je preimenovana u
+`NONE_BELOW_BY_CLAMP` i sada izričito kaže da F4.8 time nije zatvoren.
+
+**Prava mjera je preračun, ne brojanje.** `model-floor-gap-readonly.cjs`
+računa `F_eq` na **istim ulazima** koje zapis nosi
+(`params.input.forecast.nightMinC`/`dayMaxC`) — ne na današnjoj prognozi, koja
+se od tada promijenila. Run `43287531318`:
+
+- `MODEL_BELOW_OLD_FLOOR`: **1/1** dana sa ulazima, `F_eq` **32,9 °C**,
+  **13,1 K** ispod stare granice, **0** ispod novog poda (30).
+- Pokrivenost uzorka: **1 dan od 56** — ostali nemaju zapisanu noćnu prognozu.
+  Zato je nalaz **smjer, ne udio**, i izlaz to sada ispisuje uz upozorenje.
+- Referentni nagib je **imenovan u izlazu** (`s = 0,9`, `c = 1 K`): model kuće
+  nije u `params`, pa je broj donja granica reda veličine, ne broj po danu.
+
+**Dvije greške u izvještavanju, obje uhvaćene, obje popravljene.** Prva verzija
+je brojala „ispod granice“ samo kao „ispod 30“, pa bi 34,7 — ključni slučaj
+F4.8 — ostalo **neizbrojano**; self-test je to uhvatio. Isto je ostalo u
+`ratio`, koje je uz 1/1 ispod granice ispisalo **0,0 %**; popravljeno i
+pokriveno testom. Self-test: **15/15**.
+
+**Testovi:** `boiler-flow-range` 20/20 (+1: modelski predlog od 34,7 prolazi
+kroz **zadani** raspon), `Boiler`+`BoilerCatalog` 60/60, `tsc` 0, `eslint` 0.
+
+### 10.28 F4.7 — zašto brisanje nije urađeno (dokaz, ne procjena)
+
+F4.7 u tabeli traži `grep` sa **0 hitova**. Mjereno 2026-11-12 na
+`ec2016b` — hitova nema 0:
+
+| mjesto | šta koristi | zašto je živo |
+|---|---|---|
+| `Boiler/boiler.service.ts:16` | `FlowTemperatureEngine.calculate` | `/boiler/sync` — motor je **fallback** kad zapisa nema, i daje `curveFlowTemp` |
+| `DailyRecord/daily-record.writer.ts:3` | isto | writer u `PROPOSAL_ENGINE=curve` režimu (zadano) |
+| `Boiler/flow-range.ts:48,53` | `SYSTEM_MAX/MIN_FLOW_C` | re-export; granice motora |
+| `HeatingRecommendation/recommendation-breakdown.ts:1` | tipovi | `FlowTempResult` u breakdown-u |
+
+Izvršenje F4.7 kako piše oborilo bi **i** `/boiler/sync` i jutarnji predlog u
+zadanom režimu. Zato F4.7 nije urađen; to nije odgađanje nego nalaz.
+
+**Šta F4.7 zaista traži, po redu.** Nijedan korak se ne smije preskočiti, jer
+svaki sljedeći uzima zdravo stanje prethodnog:
+
+1. **`boiler.service` prestaje zvati motor.** Danas je motor tu na dva načina:
+   kao fallback (`daily.flowC ?? result.finalTemp`) i kao `curveFlowTemp` za
+   drift na dashboardu (`dashboard.service.ts:900`). Oba se rješavaju
+   *prije* brisanja: fallback postaje `NONE` (ne izmišljati broj — isto
+   pravilo kao `resolveDailyFlow`), a drift se mjeri iz zapisa, ne iz motora.
+   **Mjerenje prije:** koliko `/boiler/sync` poziva padne u fallback, jer to je
+   broj korisnika koji bi ostao bez polazne.
+2. **`PROPOSAL_ENGINE` zadano postaje `model`**, pa `curve` grane u writer-u
+   prestaju biti zadane. **Mjerenje prije:** `params.engine` po danu — koliko
+   zapisa nosi `curve`, a koliko `model`; prelazak je dozvoljen tek kad model
+   daje broj na svim danima gdje kriva daje.
+3. **Granice krive nestaju.** `CURVE_MIN_FLOW_C` je već imenovan kao vlasništvo
+   krive (`flow-constants.ts`), pa njegovo uklanjanje ide zajedno sa krivom —
+   inače ostaje broj bez vlasnika, tačno ono što F5.1 zabranjuje.
+   Re-exporti u `flow-range.ts:48,53` tada moraju nestati u **istoj** izmjeni.
+4. **Tipovi sele u trajno mjesto.** `FlowTempResult`/`FlowCalcMode` koristi
+   `recommendation-breakdown`; ne smiju se brisati zajedno s motorom, nego
+   preseliti — inače F4.4 (`baseCurveTemp: null`) gubi tip.
+
+**Gejt za početak:** korak 1 ima svoje mjerenje. Do tada F4.7 ostaje
+blokiran, a `grep` u tabeli ostaje neispunjen **namjerno** — lažno zelenilo
+bilo bi gore od otvorene stavke.
+
+### 10.29 F4.7 korak 1 — motor je i dalje živi fallback (5/61)
+
+**Šta se mjerilo.** F4.7 traži da `Heating/engine` nestane. Prvo se mora znati
+koliko puta je motor bio **jedini broj**: u `boiler.service` on je fallback kad
+za danas nema `DailyRecord`-a ili predloga. Mjeri se po **kuća-danu**
+(`curve-fallback-readonly.cjs`).
+
+**Tri pogrešna nalaza prije tačnog — i zašto su popravljena, a ne zataškana.**
+
+| run | nalaz | zašto nije bio tačan |
+|---|---|---|
+| `43305122303` | 61/61 bez zapisa | spajalo se po `homeProfileId`; skripte u repou spajaju po `userId` |
+| `43311754595` | isto, i poslije popravke veze | `generate_series(date, date, interval)::text` daje **timestamp** `2026-10-09 00:00:00+00`, a `localDate` je `YYYY-MM-DD` — join po tekstu promaši sve |
+| `43316724988` | 5/61, presuda odrezana | GitHub drži **10 anotacija** po koraku; presuda je bila zadnja linija |
+
+**Dijagnostika je bila ta koja je našla drugu grešku, ne pretpostavka.** Uz
+nalaz se mjeri i veza: `56` redova u prozoru, `56` spojenih po `userId`, `56` po
+`homeProfileId`, `0` siročadi. Kad se to ne slaže sa `0` u gridu, greška je u
+**gridu**, ne u vezi — i tako je nađen `to_char`. Bez tog reda nalaz bi bio
+uvjerljiv i netačan.
+
+**Tačan nalaz** (run `43318671541`, 60 dana, 1 kuća):
+
+- **56/61** kuća-dana ima jutarnji predlog; **0** zapisa bez predloga;
+- **5** dana **bez zapisa**: `2026-10-06` … `2026-10-10`;
+- prvi zapisani dan: **2026-09-13** — dakle praznina je **poslije** prvog
+  zapisa, pa je to **živa zavisnost**, ne artefakt početka rada;
+- presuda: **`CURVE_IS_LIVE_FALLBACK`**.
+
+Pošto je praznina u sredini rada, brisanje motora bi tih 5 dana ostavilo bez
+polazne — a to je tačno ono što F4.7 ne smije uraditi. **Zato F4.7 korak 1 nije
+završen** i brisanje ostaje blokirano.
+
+**Pet dana je malo, i to je dio nalaza.** Ne tvrdi se da je uzorak velik; tvrdi
+se da praznina postoji, da je identificirana po datumu, i da je ne treba
+pripisati početku rada kad nije.
+

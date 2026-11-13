@@ -136,3 +136,27 @@ export const FLOW_CONSTANTS = [
     meaning: 'histereza uređaja, fizički podatak',
   },
 ] as const;
+
+/**
+ * Da li `u_day` ulazi u predlog. **Trenutno ne.**
+ *
+ * F3.3 je izmjerio da `u_day` popravlja najgori podbačaj na lakim kućama
+ * (1,70 → 1,29 K), ali ga na srednjim **pogoršava kao broj dana** podbačaja
+ * (4 → 5 od 50) i spušta polaznu za 1,1 K bez dokaza da je bila previsoka.
+ * Odluka vlasnika (2026-11-12): član se gasi dok F3.1 ne pokaže da nosi.
+ *
+ * Zašto prekidač a ne brisanje koda: procjena ostaje da se **mjeri** —
+ * `HomeModel.uDayC` se i dalje računa i upisuje, a log ispisuje izmjereno
+ * (označeno da ne ulazi u predlog). Uključivanje se zato svodi na `true`, bez
+ * ponovnog pisanja izraza i bez gubitka historije.
+ * Nošenje prekidača kao imenovane konstante, a ne kao zakomentarisane linije u
+ * pozivu, je namjerno: pretraga za `uDayC` ovdje mora naći odgovor, ne trag.
+ */
+export const DAY_GAIN_IN_PROPOSAL = false;
+
+/**
+ * Cilj sobne temperature kad profil ne kaže ništa. Nije preporuka nego
+ * nedostatak podatka: bez njega se ravnotežna polazna ne može izračunati, a
+ * izmišljati je značilo bi predložiti broj bez osnova.
+ */
+export const DEFAULT_TARGET_ROOM_C = 21;

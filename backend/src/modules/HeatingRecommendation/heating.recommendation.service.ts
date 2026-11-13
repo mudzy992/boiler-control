@@ -1,12 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
-import { FlowTempInput, FlowCalcMode } from '../Heating/engine/types';
 import {
   intervalKeyCandidates,
   intervalKeyForDevice,
 } from '../Heating/interval-key';
-import { buildRecommendationBreakdown } from './recommendation-breakdown';
 import { intervalConfidence } from './learning-confidence';
 import { nextPercentile } from './overshoot-learning';
 import { RecommendationWeatherService } from '../Weather/recommendation-weather.service';
@@ -156,96 +153,30 @@ export class HeatingRecommendationService {
       );
     }
 
-    const mode: FlowCalcMode = 'FULL';
-
-    let tempMin = 0;
-    let tempMax = 0;
-    const v2Weather = await this.recommendationWeather.getV2WeatherInput(
-      event.userId,
-      device.homeProfile.id,
-    );
-    if (v2Weather) {
-      tempMin = v2Weather.tempMin;
-      tempMax = v2Weather.tempMax;
-    } else {
-      const city = device.homeProfile.location;
-      const weather = city
-        ? await this.prisma.weatherCache.findFirst({
-            where: { city },
-            orderBy: { fetchedAt: 'desc' },
-          })
-        : null;
-      if (weather) {
-        tempMin = weather.temp_min!;
-        tempMax = weather.temp_max!;
-      }
-    }
-
-    // 4️⃣ Compute recommended flow temperature
-    const input: FlowTempInput = {
-      mode,
-      homeProfile: {
-        floorArea: device.homeProfile.floorArea,
-        learningOffset: device.homeProfile.learningOffset,
-        confidence: device.homeProfile.learningConfidence,
-        insulationFactor: 1,
-      },
-      intervalKey,
-      intervalLearning: {
-        offset: intervalLearning.offset,
-        confidence: intervalLearning.confidence,
-        // F5.4: motor čita percentil, ne prosjek. Prosjek ostaje u zapisu (API
-        // i dashboard ga prikazuju), ali u odluku više ne ulazi — v.
-        // `overshoot-learning.ts`.
-        p90OvershootC: intervalLearning.p90OvershootC,
-        avgReachTimeMin: intervalLearning.avgReachTimeMin,
-      },
-      recentEvents: [],
-      weather: { tempMin, tempMax }, // fallback, može dodati stvarne temp kasnije
-    };
-
-    const flowResult = FlowTemperatureEngine.calculate(input);
-    const breakdown = buildRecommendationBreakdown(flowResult, {
-      mode,
-      intervalKey,
-      samples: intervalLearning.samples ?? null,
-      expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? null,
-    });
-
-    // 5️⃣ Upsert recommendation za danas
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const existing = await this.prisma.recommendation.findFirst({
-      where: { userId: event.userId, date: { gte: today } },
-    });
-
-    if (!existing) {
-      await this.prisma.recommendation.create({
-        data: {
-          userId: event.userId,
-          date: today,
-          recommendedFlowTemp: flowResult.finalTemp,
-          expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? 0,
-          confidenceScore: flowResult.confidence,
-          breakdown,
-        },
-      });
-    } else {
-      await this.prisma.recommendation.update({
-        where: { id: existing.id },
-        data: {
-          recommendedFlowTemp: flowResult.finalTemp,
-          expectedHeatTimeMin: intervalLearning.avgReachTimeMin ?? 0,
-          confidenceScore: flowResult.confidence,
-          breakdown,
-          date: today,
-        },
-      });
-    }
-
+    /*
+     * F4.6 — **ovaj servis više ne piše `Recommendation`.**
+     *
+     * Bio je drugi pisac istih redova: `DailyRecordWriter` upiše jutarnji
+     * predlog u `DailyRecord` i `Recommendation` u istoj transakciji, a ovaj
+     * servis je `Recommendation` **prepisivao krivinom** na svakom događaju
+     * grijanja. Klijent čita `Recommendation`, pa je vidio krivu, a ne
+     * predlog.
+     *
+     * Mjerenje prije izmjene (run `43282265347`, 60 dana): **15 od 54** dana
+     * se razlikuje više od 0,5 K, najviše **3,74 K**. To nije kozmetika —
+     * to je drugi broj na ekranu.
+     *
+     * Pravilo „jedan pisac po redu" je jedino održivo: dok dva mjesta pišu
+     * isti red, posljednji pisac pobjeđuje, a to zavisi od redoslijeda događaja
+     * koji niko ne kontroliše.
+     *
+     * **Šta ostaje ovdje:** `HeatingIntervalLearning` (naučeni offset,
+     * pouzdanost, p90) — to je jedini vlasnik tog reda i ostaje. Učenje je
+     * jedina stvar koju ovaj servis treba da radi; predlog nije.
+     */
     this.logger.debug(
-      `[HeatingRecommendation] User ${event.userId} | FlowTemp=${flowResult.finalTemp}`,
+      `[HeatingRecommendation] User ${event.userId} | učenje intervala ` +
+        `ažurirano; predlog piše DailyRecordWriter (F4.6).`,
     );
   }
 

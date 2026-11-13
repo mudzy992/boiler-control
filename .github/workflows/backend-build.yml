@@ -26,6 +26,14 @@ on:
       # ne smiju dijeliti jednu odluku: `baseline=true` nikad ne piše, a
       # `backfill_apply=true` traži `DATABASE_URL_BACKFILL` i upisuje redove za
       # prošle dane. Prvo se u istom jobu ispiše dry-run, pa se upisuje.
+      # F4.5 ponovno mjerenje: mjeri samo od datuma deploya. Bez ovoga prozor
+      # od 60 dana uvijek sadrzi i dane kad je stari kod radio, pa ponovljeno
+      # mjerenje daje ISTE brojeve i ne dokazuje nista.
+      drift_since:
+        description: 'F4.5: mjeri oscilaciju samo od ovog datuma (YYYY-MM-DD)'
+        type: string
+        required: false
+        default: ''
       backfill_apply:
         description: 'UPIŠI rekonstruisane DailyRecord redove u produkciju'
         type: boolean
@@ -242,7 +250,11 @@ jobs:
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
         run: |
           set +e
-          node scripts/daily-flow-oscillation-readonly.cjs > "$RUNNER_TEMP/osc.log" 2>&1
+          SINCE_ARG=""
+          if [ -n "${{ inputs.drift_since }}" ]; then
+            SINCE_ARG="--since=${{ inputs.drift_since }}"
+          fi
+          node scripts/daily-flow-oscillation-readonly.cjs $SINCE_ARG > "$RUNNER_TEMP/osc.log" 2>&1
           code=$?
           cat "$RUNNER_TEMP/osc.log"
           # Anotacije, jer se log job-a u ovom okruženju ne može preuzeti.
@@ -254,6 +266,85 @@ jobs:
             echo "::error::F4.5 mjerenje nije proslo (exit $code)"
             tail -5 "$RUNNER_TEMP/osc.log" \
               | while IFS= read -r line; do echo "::error::F4.5 uzrok: $line"; done
+          fi
+
+      # F4.6: dva pisca `Recommendation` redova — writer (jutarnji predlog) i
+      # `HeatingRecommendationService` (kriva, na svakom dogadjaju grijanja).
+      # Mjeri se koliko se broj koji klijent cita razilazi s predlogom.
+      - name: F4.6 razlika preporuke i predloga (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          SINCE_ARG=""
+          if [ -n "${{ inputs.drift_since }}" ]; then
+            SINCE_ARG="--since=${{ inputs.drift_since }}"
+          fi
+          node scripts/recommendation-drift-readonly.cjs $SINCE_ARG > "$RUNNER_TEMP/rec.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/rec.log"
+          grep -E "^  " "$RUNNER_TEMP/rec.log" \
+            | while IFS= read -r line; do echo "::notice::F4.6$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.6 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/rec.log" \
+              | while IFS= read -r line; do echo "::error::F4.6 uzrok: $line"; done
+          fi
+
+      # F4.8: koliko je zapisanih predloga bilo ispod donje granice unosa
+      # (46 °C, granica krive). Ako ih ima, korisnik nije mogao prihvatiti
+      # vlastiti predlog — ista greska kao "zadano 48 vs. predlog 47,7".
+      - name: F4.8 predlozi ispod granice unosa (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/flow-floor-gap-readonly.cjs > "$RUNNER_TEMP/floor.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/floor.log"
+          grep -E "^  " "$RUNNER_TEMP/floor.log" \
+            | while IFS= read -r line; do echo "::notice::F4.8$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.8 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/floor.log" \
+              | while IFS= read -r line; do echo "::error::F4.8 uzrok: $line"; done
+          fi
+
+      # F4.8, prava mjera: prva skripta broji ZATEČENE predloge, a oni su do
+      # F4.8 dolazili iz klampovane krive (ne mogu ispod 46) -> nula mjeri
+      # klamp, ne problem. Ova preracunava F_eq na ISTIM ulazima iz zapisa.
+      - name: F4.8 sta bi model trazio na zapisanim ulazima (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/model-floor-gap-readonly.cjs > "$RUNNER_TEMP/model.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/model.log"
+          grep -E "^  " "$RUNNER_TEMP/model.log" \
+            | while IFS= read -r line; do echo "::notice::F4.8m$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.8 mjerenje modela nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/model.log" \
+              | while IFS= read -r line; do echo "::error::F4.8m uzrok: $line"; done
+          fi
+
+      # F4.7 korak 1: koliko kuca-dana nema zapisani predlog. Motor je bio
+      # jedini broj na tim danima; brisanje bi ih ostavilo bez polazne.
+      - name: F4.7 koliko bi ostalo bez broja bez motora (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/curve-fallback-readonly.cjs > "$RUNNER_TEMP/fallback.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/fallback.log"
+          grep -E "^  " "$RUNNER_TEMP/fallback.log" \
+            | while IFS= read -r line; do echo "::notice::F4.7$line"; done
+          if [ "$code" -ne 0 ]; then
+            echo "::error::F4.7 mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/fallback.log" \
+              | while IFS= read -r line; do echo "::error::F4.7 uzrok: $line"; done
           fi
 
       # Koliko se `DailyRecord`-a može rekonstruisati iz postojećih podataka —

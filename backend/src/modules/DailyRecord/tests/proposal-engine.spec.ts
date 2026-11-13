@@ -86,9 +86,15 @@ describe('F4.1 proposal-engine', () => {
       'utf8',
     );
 
-    it('writer čita prekidač i zapisuje koji je motor dao broj', () => {
+    it('writer čita prekidač i zapisuje koji je motor STVARNO dao broj', () => {
       expect(writer).toContain('resolveProposalEngine()');
-      expect(writer).toContain('engine: engineChoice.engine');
+      // F4.2: u `params` ide `engineUsed`, a ne traženi motor. Razlika je
+      // bitna: ako je tražen `model` a model nije dao broj (nema noćne
+      // prognoze), predlog je sa krive — i zapis to mora reći, inače bi se
+      // poslije tvrdilo da je modelski put radio.
+      expect(writer).toContain('const engineUsed =');
+      expect(writer).toContain('engine: engineUsed');
+      expect(writer).not.toContain('engine: engineChoice.engine');
     });
 
     it('nepoznata vrijednost se loguje, a predlog se ne obara', () => {

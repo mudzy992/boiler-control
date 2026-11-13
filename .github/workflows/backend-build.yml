@@ -189,6 +189,16 @@ jobs:
         run: npx prisma migrate deploy
 
       - name: Unit + contract tests
+        env:
+          # Ugovorni testovi dizu pun AppModule BEZ mock-a mreze, a
+          # GET /api/dashboard zove Open-Meteo TRI puta. Sa zadanim timeoutom
+          # od 10 s to je do 30 s po zahtjevu i suite predje testTimeout
+          # (30 s) — padne kao "exceeded timeout", iako kod nije pogresan.
+          #
+          # Mjereno: isti commit (287f0d5) zelen kao push run (43405579621),
+          # crven kao dispatch run (43405672403). Nije regresija, nego mreza.
+          # Zato ovdje kratko: test ne treba da ceka provajdera.
+          WEATHER_HTTP_TIMEOUT_MS: '1500'
         run: |
           set +e
           npx jest --runInBand --ci 2>&1 | tee "$RUNNER_TEMP/jest.log"

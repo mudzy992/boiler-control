@@ -82,7 +82,7 @@ može ni ocijeniti.
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
 | F4.2 | **urađeno**: zajednička odluka izdvojena; writer uzima `F_eq`, ne kontroler | §10.26 |
-| F4.5 | **kod urađen, gejt otvoren do deploya** — ponovljeno mjerenje mora ići sa `--since=<deploy>` | §10.25 |
+| F4.5 | **kod ✓, `--since` ✓** — prvo mjerenje prvog dana sa grijanjem (13.11. bilo 0 grijanja, §10.34) | §10.25, §10.34 |
 | F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |

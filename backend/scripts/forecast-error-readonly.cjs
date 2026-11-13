@@ -425,11 +425,30 @@ async function main() {
         SELECT count(*)::int AS samples,
                count(DISTINCT to_char("at" AT TIME ZONE 'Europe/Sarajevo', 'YYYY-MM-DD'))::int AS days,
                min("at")::text AS "firstAt",
-               max("at")::text AS "lastAt"
+               max("at")::text AS "lastAt",
+               /*
+                * UZROK, a ne samo posljedica.
+                *
+                * Prvi run je rekao "ceka uzorke" — i to je bilo tacno ali
+                * nepotpuno: uzoraka je bilo 1110 na 5 dana, a kolona
+                * nightMinOutdoorMeasuredC je i dalje 0. Razlika je u tome
+                * sto ta kolona trazi outdoorTempC na uzorku
+                * (day-outcome.ts:312), a outdoorTempC pise
+                * PollingWeatherService.getV2CurrentTemperature, koje vraca
+                * null dok je WEATHER_POLL_V2 iskljucen (zadano: off).
+                *
+                * Zato se ovdje mjeri koliko uzoraka IMA outdoor, a ne samo
+                * koliko ih ima ukupno. Bez toga "F3.4 ceka kalendar" i
+                * "F3.4 ceka env flag" izgledaju isto, a razlika je ogromna:
+                * prvo cekanje je 5 dana, drugo je nula dana i jedna varijabla.
+                */
+               count(*) FILTER (WHERE "outdoorTempC" IS NOT NULL)::int AS "withOutdoor",
+               count(DISTINCT to_char("at" AT TIME ZONE 'Europe/Sarajevo', 'YYYY-MM-DD'))
+                 FILTER (WHERE "outdoorTempC" IS NOT NULL)::int AS "daysWithOutdoor"
           FROM "ThermostatObservation"
       `);
       const f = shape[0] ?? { forecastDays: 0, outcomeDays: 0, measuredDays: 0 };
-      const o = obs[0] ?? { samples: 0, days: 0 };
+      const o = obs[0] ?? { samples: 0, days: 0, withOutdoor: 0, daysWithOutdoor: 0 };
 
       out('## Zašto nema podataka (izmjereno, ne pretpostavljeno)');
       out();
@@ -439,6 +458,9 @@ async function main() {
       out(`| dana sa obračunom \`outcomeAt\` | **${f.outcomeDays}** |`);
       out(`| dana sa izmjerenim minimumom (kolona) | **${f.measuredDays}** |`);
       out(`| satnih uzoraka ukupno | **${o.samples}** |`);
+      out(
+        `| uzoraka sa \`outdoorTempC\` | **${o.withOutdoor}** na ${o.daysWithOutdoor} dana |`,
+      );
       out(`| dana sa satnim uzorcima | **${o.days}** |`);
       out(
         `| prvi / zadnji uzorak | ${String(o.firstAt).slice(0, 10)} / ${String(o.lastAt).slice(0, 10)} |`,
@@ -456,11 +478,40 @@ async function main() {
           'koje čeka uzorke. Prvi dan sa uzorcima je dan kad se satni niz počeo ' +
           'pisati; greška prognoze je mjerljiva poslije nekoliko takvih noći.',
       );
+      /*
+       * Presuda imenuje UZROK. Dva uzroka izgledaju isto (nula), a razlikuju se
+       * po tome koliko se ceka:
+       *
+       *   UZORCI_BEZ_OUTDOOR  — uzorci postoje, ali bez outdoorTempC. Tada se
+       *     ne ceka kalendar, nego WEATHER_POLL_V2 (zadano off): kolona se
+       *     nikad ne popuni dok je flag iskljucen, pa "sacekaj jos dana" ne
+       *     mijenja nista.
+       *   NEMA_UZORAKA        — nema satnih uzoraka uopste; tada se ceka niz.
+       *
+       * Razlika je odluka, ne terminologija: prvi slucaj se rjesava jednom
+       * varijablom, drugi cekanjem.
+       */
+      const cause =
+        o.samples > 0 && (o.withOutdoor ?? 0) === 0
+          ? `UZORCI_BEZ_OUTDOOR — ${o.samples} uzoraka na ${o.days} dana, ` +
+            `nijedan nema outdoorTempC; outdoorTempC pise samo ` +
+            `PollingWeatherService, koje vraca null dok je WEATHER_POLL_V2 ` +
+            `iskljucen (zadano: off). Cekanje ne mijenja nista — treba flag`
+          : o.samples === 0
+            ? `NEMA_UZORAKA — nijedan satni uzorak; ceka se niz`
+            : `NEDOVOLJNO_PAROVA — ${f.forecastDays} dana sa prognozom, ` +
+              `${o.daysWithOutdoor} sa mjerenjem, prag ${MIN_DAYS}`;
+
       notice(
         `F3.4: nema dana sa prognozom i mjerenjem — prognoza ${f.forecastDays}, ` +
           `obračun ${f.outcomeDays}, kolona ${f.measuredDays}, ` +
-          `uzorci ${o.samples} na ${o.days} dana (${String(o.firstAt).slice(0, 10)}→${String(o.lastAt).slice(0, 10)})`,
+          `uzorci ${o.samples} na ${o.days} dana (${String(o.firstAt).slice(0, 10)}→${String(o.lastAt).slice(0, 10)}); ` +
+          `UZROK: ${cause}`,
       );
+      out();
+      out(`## Uzrok (imenovan, ne pretpostavljen)`);
+      out();
+      out(cause);
       return;
     }
 

@@ -2010,3 +2010,51 @@ uključilo, pa oscilacija polazne nije ni mogla nastati.
 **prvog dana kad se grije**. Do tada nijedan broj o oscilaciji — ni dobar ni
 loš — ne postoji, i to je tačno ono što izlaz sada kaže.
 
+### 10.35 Dashboard testovi — pad zbog mreže, ne zbog koda
+
+**Šta je izgledalo kao regresija.** `GET /api/dashboard` pao je u
+ugovornom **i** integracionom testu, **tri runa zaredom**
+(`43407186825`, `43408463451`) — pa to više nije bilo „flaky”.
+
+**Dokaz da nije kod:**
+
+| činjenica | vrijednost |
+|---|---|
+| isti commit `287f0d5`, push run `43405579621` | **success** |
+| isti commit `287f0d5`, dispatch run `43405672403` | **failure** |
+| `git diff 865d2f8..HEAD -- backend/src backend/test` | **prazno** |
+
+Nula promjena u kodu između zelenog i crvenog runa ⇒ promjena je u **vremenu**,
+ne u ponašanju.
+
+**Uzrok, izmjeren a ne pretpostavljen.** Ugovorni i integracioni testovi dižu
+pun `AppModule` i **ne mockuju mrežu** (`grep jest.mock` — nema). Lanac:
+
+```
+GET /api/dashboard -> DashboardService -> BoilerService.calculateFlowTemp
+                   -> Weather -> Open-Meteo          (3x u lancu)
+adapter timeout: 10 s   |   jest testTimeout: 30 s
+```
+
+Kad provajder spor, jedan zahtjev čeka do 10 s, a dashboard ga zove **tri
+puta** — suite pređe 30 s i padne kao „Test suite failed to run — exceeded
+timeout”, iako test nije pogrešan. Ovo je i ranije bilo poznato: komentar u
+`jest.config.js` već objašnjava dizanje praga sa 5 s na 30 s iz istog razloga.
+
+**Popravka: podesivost, ne dizanje praga naslijepo.** `weatherHttpTimeoutMs()`
+čita `WEATHER_HTTP_TIMEOUT_MS`, zadano **10 000** — produkcija nepromijenjena.
+CI test job postavlja **1 500**, pa test ne čeka provajdera.
+
+**Neispravna vrijednost se odbija, i to je suština.** `timeout: 0` u axios-u ne
+znači „nula milisekundi” nego **bez timeouta** — vječno čekanje, gore od
+greške. Zato `0`, negativno i `NaN` padaju na zadano; test pokriva **baš tu
+granicu** (11 testova).
+
+**Test je usput našao pravu grešku u mojoj popravci.** Prva verzija je imala
+default u potpisu (`raw = process.env...`), pa je `weatherHttpTimeoutMs(undefined)`
+tiho čitao env i test „zadano kad env nije postavljen” pao je na CI-u
+(`43410034818`: 1 failed / 1708). Pravilo je sada eksplicitno: **bez argumenta =
+env**, `undefined`/`''` = zadano.
+
+**Stanje:** `1708/1708`, 139 suite, na `0716a1c`.
+

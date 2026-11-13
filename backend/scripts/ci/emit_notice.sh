@@ -47,6 +47,13 @@ if [ -n "$own" ]; then
 fi
 
 summary=$(grep -m1 '^  SAZETAK:' "$LOG" 2>/dev/null || true)
+# Uz sazetak ide i RAZLOG kad ga ima u istoj formi — "fali 3 od 8 polja" je
+# ono sto odlucuje koliko je koraka; bez toga sazetak kaze "treba lokaciju"
+# a ne kaze ni gdje je stalo.
+detail=$(grep -m1 '^    profil ' "$LOG" 2>/dev/null || true)
+if [ -n "$summary" ] && [ -n "$detail" ]; then
+  summary="$summary | $detail"
+fi
 if [ -z "$summary" ]; then
   summary=$(grep -m1 -E '^  [A-Z][A-Z0-9_]{3,}: ' "$LOG" 2>/dev/null || true)
 fi

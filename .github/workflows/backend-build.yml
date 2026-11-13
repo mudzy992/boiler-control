@@ -394,6 +394,26 @@ jobs:
       # F3.4: greska prognoze noci — nightMinC vs nightMinOutdoorMeasuredC.
       # Prvo bez baze: ako statistika padne na sintetici, to se mora vidjeti
       # prije konekcije (inace izgleda kao problem baze).
+      # F3.4/F3.1 blokada: koliko je koraka do prvog outdoorTempC. Flag sam ne
+      # pomaze ako lokacija nije potvrdjena (confirmedLocation trazi svih 8 polja).
+      - name: Weather v2 readiness self-test (F3.4)
+        run: node scripts/weather-v2-readiness-readonly.cjs --self-test
+
+      - name: Weather v2 readiness (F3.4, read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/weather-v2-readiness-readonly.cjs > "$RUNNER_TEMP/wv2.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/wv2.log"
+          bash scripts/ci/emit_notice.sh "WEATHER " "$RUNNER_TEMP/wv2.log"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::WEATHER readiness mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/wv2.log" \
+              | while IFS= read -r line; do echo "::error::WEATHER uzrok: $line"; done
+          fi
+
       - name: Forecast error self-test (F3.4)
         run: node scripts/forecast-error-readonly.cjs --self-test
 

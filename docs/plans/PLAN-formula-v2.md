@@ -1971,3 +1971,42 @@ samo konačan `temperatureC`. Ako se keš ne obnovi (niko ne otvori prognozu),
 `outdoorTempC` tiho pada na `null`. Zato će F3.4 poslije 18.11. moći i da
 **opadne** ako keš stari — i taj pad treba čitati kao nalaz o kešu, ne o formuli.
 
+### 10.34 F4.5 gejt — `--since` radi, ali dan bez grijanja ne mjeri ništa
+
+**Kad je mjerljivo.** Deploy u `main` (`1c56f4a`, **05:13 UTC** / 06:13 lokalno).
+Predlog se piše od **06:00 lokalno** (`PROPOSAL_LOCAL_HOUR = 6`), pa je
+**današnji zapis nastao poslije deploya** — dakle današnji `DailyRecord` je
+prvi pod novim kodom. `--since=2026-11-13` je zato tačan datum, ne približan.
+
+**Prvi pokušaj (`43402878050`): `NO_DAYS`.** Bez ijednog reda u prozoru. To je
+bilo **nepotpuno**, i to dvaput:
+
+1. `NO_DAYS` nije razlikovao tri stanja (`NEMA_UOPSTE` / `NEMA_U_PROZORU` /
+   `NEMA_POLAZNE`) — a rješavaju se različito. Dodato u `b12e10b`.
+2. Druga verzija (`43404381843`) rekla je „prozor je prekratak, ne kod” —
+   i **to je bila pretpostavka**. Provjereno u kodu: `BoilerHistory` red
+   nastaje **samo pri početku grijanja** (`polling.service.ts:504`, grana
+   `handleHeatingStart`). Odsustvo redova zato ne znači samo „preuzak prozor”.
+
+**Tačan nalaz** (`43405672403`, `--since=2026-11-13`):
+
+> `CEMA_HLADNIJI_DAN: 432 redova ukupno, zadnji 2026-11-12; dan danas nema
+> grijanja (0 HeatingEvent poslije ponoći)`
+
+Mjeri se **i** `HeatingEvent`, ne samo `BoilerHistory`, jer dvoje ima
+**suprotne** sljedeće korake:
+
+| grijanja danas | redova u prozoru | presuda | šta raditi |
+|---|---|---|---|
+| **0** | 0 | `CEMA_HLADNIJI_DAN` | čekati hladniji dan **— kod je u redu** |
+| > 0 | 0 | `UZROK_U_KODU` | upis pri početku grijanja ne radi |
+
+Bez te razlike bi nula bila pročitana kao „popravka nije uspjela” i F4.5 bi
+bio vraćen na početak bez razloga. 13.11. je u Visokom bio topao dan
+(dnevni maksimum **19,6 °C** po prognozi iz `curl`-a) — grijanje se nije
+uključilo, pa oscilacija polazne nije ni mogla nastati.
+
+**Stanje gejta:** `--since` je **ispravan i spreman**; prvo mjerenje je
+**prvog dana kad se grije**. Do tada nijedan broj o oscilaciji — ni dobar ni
+loš — ne postoji, i to je tačno ono što izlaz sada kaže.
+

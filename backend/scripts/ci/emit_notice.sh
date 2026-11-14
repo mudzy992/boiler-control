@@ -58,6 +58,12 @@ freshness=$(grep -m1 'SAZETAK-svjezina:' "$LOG" 2>/dev/null || true)
 if [ -n "$freshness" ]; then
   summary="$summary | $freshness"
 fi
+# Starost kesa: opcija 3 mijenja samo SKRIVANJE, ne starost. Bez ovoga bi
+# "ukljuci prozor 24 h" izgledalo kao rjesenje, a kes bi bio isti.
+cache=$(grep -m1 'SAZETAK-kes:' "$LOG" 2>/dev/null || true)
+if [ -n "$cache" ]; then
+  summary="$summary | $cache"
+fi
 if [ -n "$summary" ] && [ -n "$detail" ]; then
   summary="$summary | $detail"
 fi

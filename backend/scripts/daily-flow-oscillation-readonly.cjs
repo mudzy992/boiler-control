@@ -459,6 +459,19 @@ async function main() {
     if (process.argv.includes('--json')) {
       console.log(JSON.stringify({ summary, ...decision }, null, 2));
     } else {
+      /*
+       * SAZETAK ide PRVI i nosi prozor. Zasto: `emit_notice.sh` bira prvu
+       * liniju sa dva razmaka, pa je dosad birana "prozor:" koja NIJE imala
+       * prefiks — i anotacija je ispadala bez prozora. Posljedica je bila
+       * stvarna: run 43586214803 (bez --since) i 43586987310 (sa --since)
+       * dali su razlicite presude (OSCILLATION_VISIBLE 10/29 vs STABLE 2),
+       * a jedina razlika je bila u tome sto se u prvoj anotaciji ne vidi
+       * da prozor uopste nije bio suzen.
+       */
+      console.log(
+        `  SAZETAK: ${decision.verdict} — prozor ${days} dana` +
+          (since ? ` od ${since}` : ' (CIJELI prozor)'),
+      );
       console.log('F4.5 — oscilacija polazne kroz dan');
       console.log(
         `  prozor:                 ${days} dana` +

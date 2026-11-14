@@ -2208,3 +2208,65 @@ lažnog nalaza bi slijedila pogrešna odluka o formuli.
 **Zaključak:** opcija 3 se **odbija na osnovu mjerenja**, ne mišljenja. Jedina
 opcija koja daje svjež podatak je pozadinsko osvježavanje (§10.36 opcija 2).
 
+### 10.40 Popravka: cron puni keš (`getWeather`), i dva pogrešna nalaza usput
+
+**Mjereno prije popravke** (`132499435860`, poslije `d7edb4d`):
+
+> `COVERAGE   SAZETAK: GUBITAK_JE_ZNACAJAN — outdoorTempC 0.8 %, NO_OUTDOOR 5 dana`
+
+i u istom runu `SAZETAK-svjezina: 1 sati ima outdoorTempC (2026-11-13 08), 35 nema`.
+
+**Uzrok, imenovan mehanizmom.** `WeatherV2Cache` puni **isključivo**
+`GET /api/weather/v2/current/:id` → `weather-v2.service.ts:233 getWeather`.
+Svi potrošači (`polling-weather.service.ts:30`, `boiler-weather.service.ts:21`,
+`dashboard-weather.service.ts:70`, `recommendation-weather.service.ts:24`) idu
+kroz `getCachedWeather` (`:208`), a to je **read-only** — ne poziva provajdera i ne
+piše. Bez korisničkog otvaranja prognoze keš stoji. Zato 5 dana bez uzorka nije
+kvar prognoze ni baze, nego **odsutan pozivalac**.
+
+**Popravka.** `WeatherCacheRefreshService` (`@Cron('*/5 * * * *')`, interni
+`lastRunAt`), interval `WEATHER_CACHE_REFRESH_MINUTES` **zadano 30 min**:
+
+- zove **`getWeather`** (puni), nikad `getCachedWeather` (čita) — test to
+  dokazuje servisom koji ima samo `getWeather`, pa bi zamjena bila `TypeError`;
+- samo `weatherLocationConfirmedAt != null` **i** `user.isActive`;
+- dedup po `cacheKey` (lat|lon|tz) ⇒ **1 lokacija = 48 poziva/dan**, bez API ključa;
+- greška jednog doma se loguje i ne ruši ostale;
+- isključen u `development`/`test`.
+
+**Zašto 30, a ne više.** `staleAfter` je 15 min (`WEATHER_STALE_AFTER_MINUTES`),
+`current` se skriva na 60 min (`WEATHER_CURRENT_HIDDEN_AFTER_MINUTES`). 30 min daje
+2× marginu prema `staleAfter` i drži `current` trajno vidljivim (30 < 60).
+
+**Dva pogrešna nalaza usput — zapisana, ne zataškana.**
+
+1. *Prva verzija mjerenja dala je `NEMA_GUBITKA — 0.8 %, NO_OUTDOOR 0 dana`.*
+   Uzrok je bio **izvor**: `ci-coverage-readonly.cjs` čita `DailyRecord.skipReason`,
+   a `NO_OUTDOOR` se **ne piše** u tu kolonu — nastaje u letu, u
+   `daily-balance.ts:133 reject('NO_OUTDOOR')`. Nula je bila posljedica pogrešnog
+   izvora, ne odsustva štete. Popravljeno u `d7edb4d`: mjeri se **dan bez ijednog
+   `outdoorTempC`** ⇒ `5 dana`.
+
+2. *`tsc` je prijavio `TS2339: Property 'homeProfile' does not exist on type 'PrismaService'`.*
+   Nije bio kvar tipova u servisu: `src/generated/prisma` je u `.gitignore`, a u
+   repou leži **stub** bez modela (`client.ts`, 10 linija). Isti poziv u
+   `weather-v2.service.ts:65` „prolazi” samo zato što je i on u 6.841 grešci stuba
+   koja se ne broji kao regresija. Generisanje ovdje ne ide (`binaries.prisma.sh`
+   nije dostupan), pa je servis tipiziran uskim interfejsom `ConfirmedLocationQuery`
+   + `@Inject(PrismaService)`.
+
+**Treći pogrešan nalaz, u samom testu.** Prva verzija DI testa tvrdila je
+`expect(metadata[0]).not.toBe(Object)` — a emituje se **baš `Object`**, i to je
+razlog zašto `@Inject` mora postojati. Druga verzija čitala je polje `token`;
+Nest bilježi **`{ index, param }`**. Tek treća verzija (`getOwnMetadata` +
+`param`) prolazi. Test sada dokazuje oba dijela: emitovani tip **jest** `Object`,
+i token **jest** `PrismaService`.
+
+**Provjere.** `jest src/modules/Weather` **121/121**; CI run `43613609421` ✓
+**1723/1723, 140 suite**; `eslint` 0 na dodanim fajlovima.
+
+**Šta ovo još NE dokazuje.** Keš u produkciji je na mjerenju `132504330948` još
+**`31 h star, vratio bi 18.282501220703125 °C`** — produkcija izvršava stari build,
+cron tamo još ne postoji. Dokaz popravke je **prvo mjerenje poslije deploya**:
+`SAZETAK-svjezina` mora pokazati `outdoorTempC` u **više od 1 sata od 36**, a
+`SAZETAK-kes` starost **< 60 min**. Do tada je popravka tvrdnja, ne nalaz.

@@ -319,8 +319,18 @@ async function main() {
           `(kes je tada bio prazan, prije potvrde lokacije)`,
       );
     }
+    /*
+     * KOJI sati imaju podatke, ne samo koliko ih je.
+     *
+     * Bez ovoga se "1 sati ima" ne moze razlikovati od:
+     *   - kes je osvjezen jutros  -> mjerenje je POCELO, treba samo nastaviti
+     *   - kes nije diran od jucer -> mjerenje NIJE ni pocelo
+     * Isti broj, suprotan zakljucak. Zato sat ide u sazetak.
+     */
+    const hoursWith = withAny.map((r) => r.hour).slice(-6);
     console.log(
-      `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC, ` +
+      `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC ` +
+        `(${hoursWith.length ? hoursWith.join(', ') : 'nijedan'}), ` +
         `${without.length} nema`,
     );
   } finally {

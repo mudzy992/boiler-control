@@ -328,6 +328,67 @@ async function main() {
      * Isti broj, suprotan zakljucak. Zato sat ide u sazetak.
      */
     const hoursWith = withAny.map((r) => r.hour).slice(-6);
+    /*
+     * STA BI OPCIJA 3 STVARNO UBACILA.
+     *
+     * Prosirenje `WEATHER_CURRENT_HIDDEN_AFTER_MINUTES` ne osvjezava kes —
+     * ono samo prestaje da skriva `current` kad kes ostari. Vrijednost u kesu
+     * je `payload.current.temperatureC` sa `fetchedAt`, i ona se NE mijenja
+     * dok neki poziv ne osvjezi.
+     *
+     * Zato se ovdje mjeri: koliko je kes star i KOJU bi temperaturu vratio da
+     * prozor nije ogranicen. Ako je to 30 h stara vrijednost, opcija 3 nije
+     * "bolje pokrivanje" nego upis stare temperature kao trenutne — a to je
+     * gore od praznog kesa, jer prazan kes daje NO_OUTDOOR (sigurno odbijanje),
+     * a star daje pogresan nagib modela (tiho).
+     */
+    const { rows: cacheRows } = await client.query(
+      `SELECT
+         "cacheKey",
+         "fetchedAt"::text AS "fetchedAt",
+         EXTRACT(EPOCH FROM (now() - "fetchedAt")) / 3600 AS "ageHours",
+         ("payload"#>>'{current,temperatureC}')::float8 AS "cacheTempC"
+       FROM "WeatherV2Cache"
+       ORDER BY "fetchedAt" DESC
+       LIMIT 3`,
+    );
+
+    console.log('\n  ## stanje kesa (opcija 3 ne mijenja OVO, samo skrivanje)');
+    if (cacheRows.length === 0) {
+      console.log('    kes je prazan — opcija 3 ne bi imala sta ni prikazati');
+    }
+    for (const c of cacheRows) {
+      console.log(
+        `    ${String(c.fetchedAt).slice(0, 16)} (${Number(c.ageHours).toFixed(1)} h star): ` +
+          `current.temperatureC = ${c.cacheTempC} °C`,
+      );
+    }
+
+    /*
+     * Poredjenje sa onim sto je stvarno izmjereno. Ovo je jedini nacin da se
+     * vidi razlika izmedju "podatak je star" i "podatak je pogresan".
+     */
+    const { rows: actualRows } = await client.query(
+      `SELECT
+         round(min("outdoorTempC")::numeric, 1)::float8 AS "minC",
+         round(max("outdoorTempC")::numeric, 1)::float8 AS "maxC"
+       FROM "ThermostatObservation"
+       WHERE "outdoorTempC" IS NOT NULL
+         AND "at" >= now() - interval '12 hours'`,
+    );
+    const actual = actualRows[0];
+    if (actual && actual.minC !== null) {
+      console.log(
+        `    stvarno izmjereno (12 h): ${actual.minC} … ${actual.maxC} °C`,
+      );
+    }
+
+    console.log(
+      `    SAZETAK-kes: ${cacheRows.length ? Number(cacheRows[0].ageHours).toFixed(0) + ' h star' : 'prazan'}` +
+        (cacheRows.length && cacheRows[0].cacheTempC !== null
+          ? `, vratio bi ${cacheRows[0].cacheTempC} °C`
+          : ''),
+    );
     console.log(
       `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC ` +
         `(${hoursWith.length ? hoursWith.join(', ') : 'nijedan'}), ` +

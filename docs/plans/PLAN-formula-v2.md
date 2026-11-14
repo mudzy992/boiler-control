@@ -2286,3 +2286,16 @@ mjere ponovo: cilj je `outdoorTempC` pokrivenost **> 50 %** (klasa
 `OUTDOOR_COVERED`), `NO_OUTDOOR` **0 dana** u novom prozoru, `SAZETAK-kes`
 starost **< 60 min**. Ako se to ne dogodi, uzrok je u cron-u (registracija,
 `WEATHER_CACHE_REFRESH_MINUTES`, ili `NODE_ENV`), ne u kešu.
+
+**Četvrti pogrešan nalaz, u istom testu.** Test „zadano je 30 kad env nije
+postavljen” prolazio je i kad čitanja env **uopšte nema** — pozivao je
+`refreshMinutes(undefined)`, dakle mjerio je granu za eksplicitan argument, a ne
+env putanju. Popravljeno (`refreshMinutes` čita env **samo** kad je pozvan bez
+argumenta, `arguments.length === 0`, isto kao `weatherHttpTimeoutMs`), a test
+sada ima dvije strane: `refreshMinutes()` uz `WEATHER_CACHE_REFRESH_MINUTES=7` daje
+**7** (env se stvarno čita), a `refreshMinutes(undefined)` daje **30** (funkcija se
+mjeri, ne okolina). Usput je uklonjena mrtva grana `minutes === null` — funkcija
+vraća `number`, nikad `null`.
+
+**Provjere poslije toga** (`43614293806`): ✓ CI **1725/1725, 140 suite**;
+`jest src/modules/Weather` **123/123** (14 → 16 testova u ovom specu).

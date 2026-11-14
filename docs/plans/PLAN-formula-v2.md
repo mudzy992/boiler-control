@@ -2343,3 +2343,33 @@ dok keš nije star**, a ne „zašto keš nije svjež".
 što je već izmjereno (`2026-11-14 16`: uzorci bez `outdoorTempC`, keš 14 min).
 Ako je uzrok (3), isto. Razlika se vidi tek iz flag-a u env-u, pa je **prvi
 korak provjera `WEATHER_POLL_V2` u Coolify env-u**, a ne nova izmjena koda.
+
+**Ispravka §10.41 — kandidat (1) je odbačen mjerenjem, a „5 od 6 sati" je bilo
+pogrešno pročitano.** Mjereno `132517710885` (16:55 UTC, cron prvi put bez
+korisnika) i `132518…` (17:11 UTC):
+
+```
+SAZETAK-kes: 0 min star (fetchedAt 16:55 UTC), vratio bi 4.882499694824219 °C
+SAZETAK-kes: 16 min star (fetchedAt 16:55 UTC), vratio bi 4.882499694824219 °C
+SAZETAK-svjezina: 3 sati ima outdoorTempC (2026-11-14 16, 2026-11-14 15, 2026-11-13 08), 33 nema
+SAZETAK-poslije-kesa: SVIJEZ_KES_RADI — 2/2 uzoraka poslije fetchedAt ima outdoorTempC
+```
+
+1. **Cron radi i bez korisnika.** Keš je osvježen u **16:55 UTC** i u 17:11 je
+   još **16 min star** — dakle nije ga punio nijedan korisnički poziv.
+2. **Lanac radi kad je keš svjež.** `SVIJEZ_KES_RADI 2/2` — svaki uzorak poslije
+   `fetchedAt` dobio je `outdoorTempC`. Time je **kandidat (1) iz §10.41
+   (`WEATHER_POLL_V2` nije `on`) odbačen**: da je flag ugašen, `2/2` ne bi bilo
+   moguće, jer `getV2CurrentTemperature` vraća `null` prije ijednog čitanja.
+3. **„5 od 6 sati bez `outdoorTempC`" nije bio kvar čitaoca.** Uzorci prije
+   16:55 imali su keš stariji od 60 min ⇒ `currentHidden` ⇒ `null`. Uz to su
+   sati u `byHour` **lokalni (UTC+1)**, a `fetchedAt` UTC — pa „sat 15" uopšte
+   ne znači „poslije osvježavanja". Mjerenje po satu je zato **neupućeno na ovo
+   pitanje** po konstrukciji, i to je razlog zašto je dodano
+   `SAZETAK-poslije-kesa` (`at > fetchedAt`), a ne još jedan sat u sažetku.
+
+**Stanje popravke: dokazano.** Prije deploya `31 h star, 18,28 °C`; poslije
+`0–16 min star, 4,88 °C`, i uzorci poslije osvježavanja imaju vrijednost.
+`outdoorTempC` pokrivenost je i dalje **1 %** u prozoru od 30 dana, ali to je
+očekivano: 33 sata bez podatka su **historija prije popravke**. Mjerenje
+pokrivenosti ima smisla tek na prozoru **poslije 14.11. 16:55 UTC**.

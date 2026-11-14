@@ -87,9 +87,9 @@ function verdict(summary) {
     return {
       verdict: 'GUBITAK_JE_ZNACAJAN',
       reason:
-        `${summary.rejectedNoOutdoor}/${summary.rejectedTotal} odbijenih dana je ` +
-        `zbog NO_OUTDOOR (${summary.coveragePercent} % uzoraka ima outdoorTempC) — ` +
-        `popravka ima mjerljiv razlog`,
+        `${summary.rejectedNoOutdoor}/${summary.observedDays} dana sa uzorcima nema ` +
+        `nijedan outdoorTempC (NO_OUTDOOR), pokrivenost uzoraka ` +
+        `${summary.coveragePercent} % — popravka ima mjerljiv razlog`,
     };
   }
   if (summary.rejectedNoOutdoor > 0) {
@@ -104,7 +104,7 @@ function verdict(summary) {
     verdict: 'NEMA_GUBITKA',
     reason:
       `${summary.samples} uzoraka, ${summary.coveragePercent} % ima outdoorTempC; ` +
-      `0 odbijenih dana zbog NO_OUTDOOR — popravka nije potrebna`,
+      `0 dana bez outdoorTempC — popravka nije potrebna`,
   };
 }
 
@@ -202,6 +202,34 @@ async function main() {
      * doslovno ime razloga iz `daily-balance.ts:133`, pa se broji po njemu —
      * a ne po pretpostavci šta bi razlog mogao biti.
      */
+    /*
+     * PRAVA MJERA `NO_OUTDOOR`, ista metoda kao F3.1.
+     *
+     * Prva verzija je brojala `DailyRecord.skipReason = 'NO_OUTDOOR'` i vratila
+     * **0 dana**, iako F3.1 na istim podacima prijavljuje `NO_OUTDOOR 3`.
+     * Razlika nije bila u podacima nego u metodi: `skipReason` popunjava
+     * writer za preskocene predloge, a `NO_OUTDOOR` nastaje u
+     * `buildDayRow`/`fitDailyBalance` pri RACUNANJU modela — sto F3.1 radi u
+     * letu iz `ThermostatObservation`, ne citanjem kolone.
+     *
+     * Zato se ovdje mjeri isto sto i F3.1: dan (lokalno) na kojem NIJEDAN
+     * uzorak nema `outdoorTempC`. To je tacno uslov iz `daily-balance.ts:133`.
+     */
+    const { rows: dayRows } = await client.query(
+      `SELECT
+         count(*)::int AS "days",
+         count(*) FILTER (WHERE "withOutdoor" = 0)::int AS "daysWithoutOutdoor"
+       FROM (
+         SELECT
+           to_char("at" AT TIME ZONE 'Europe/Sarajevo', 'YYYY-MM-DD') AS "day",
+           count(*) FILTER (WHERE "outdoorTempC" IS NOT NULL)::int AS "withOutdoor"
+         FROM "ThermostatObservation"
+         WHERE "at" >= now() - ($1::int || ' days')::interval
+         GROUP BY 1
+       ) d`,
+      [days],
+    );
+
     const { rows: skipRows } = await client.query(
       `SELECT
          coalesce("skipReason", '(bez razloga)') AS "reason",
@@ -228,8 +256,13 @@ async function main() {
     const samples = sampleRows[0]?.samples ?? 0;
     const withOutdoor = sampleRows[0]?.withOutdoor ?? 0;
     const rejectedTotal = skipRows.reduce((sum, r) => sum + r.days, 0);
-    const rejectedNoOutdoor =
-      skipRows.find((r) => r.reason === 'NO_OUTDOOR')?.days ?? 0;
+    /*
+     * Uzima se dan-izmjena, ne skipReason: v. komentar uz upit iznad.
+     * skipReason se i dalje ispisuje, ali samo kao KONTEKST — ako se ikad
+     * pojavi tamo, znaci da writer preskace predloge iz tog razloga.
+     */
+    const daysWithoutOutdoor = dayRows[0]?.daysWithoutOutdoor ?? 0;
+    const rejectedNoOutdoor = daysWithoutOutdoor;
 
     const summary = {
       samples,
@@ -238,6 +271,8 @@ async function main() {
       rejectedTotal,
       rejectedNoOutdoor,
       skipReasons: skipRows,
+      observedDays: dayRows[0]?.days ?? 0,
+      daysWithoutOutdoor,
       models: modelRows[0]?.models ?? 0,
       modelsWithoutSlope: modelRows[0]?.withoutSlope ?? 0,
       modelsNoDays: modelRows[0]?.noDays ?? 0,
@@ -262,7 +297,11 @@ async function main() {
       `  sa outdoorTempC:              ${summary.withOutdoor} (${summary.coveragePercent} %)`,
     );
     console.log(`  klasa:                        ${summary.sampleClass}`);
-    console.log(`  odbijenih dana (ukupno):      ${summary.rejectedTotal}`);
+    console.log(
+      `  dana sa uzorcima:             ${summary.observedDays}, bez outdoorTempC: ` +
+        `${summary.daysWithoutOutdoor}`,
+    );
+    console.log(`  odbijenih predloga (skipReason): ${summary.rejectedTotal}`);
     for (const r of summary.skipReasons) {
       console.log(`    ${r.reason}: ${r.days}`);
     }

@@ -147,6 +147,38 @@ const OUTCOME_NOTE =
   'nightMinOutdoorMeasuredC popunjava daily-outcome za ZAVRŠENE dane ' +
   '(outcomeAt), pa se prvi parovi noći broje od sljedeće noći — ne odmah';
 
+/**
+ * Razdvaja dva stanja koja u ukupnom broju izgledaju isto:
+ *
+ *   - **nema uzoraka** — polling ne piše (uređaj/ cron stao);
+ *   - **ima uzoraka, ali `outdoorTempC` je null** — keš se ne čita ili je
+ *     `current` skriven, iako je uzorak upisan.
+ *
+ * Bez ovoga "2 sata ima" ne kaže koji je od dva kvara. Prvo se gledaju
+ * zadnjih `hours`, jer stari sati prije popravke nemaju informaciju.
+ */
+function diagnoseHours(byHour, hours = 6) {
+  const recent = byHour.slice(0, hours);
+  const withSamples = recent.filter((r) => r.samples > 0);
+  const empty = recent.filter((r) => r.samples === 0);
+  const noOutdoor = withSamples.filter((r) => r.withOutdoor === 0);
+  const covered = withSamples.filter((r) => r.withOutdoor > 0);
+
+  let verdict;
+  if (recent.length === 0) verdict = 'NEMA_SATI';
+  else if (withSamples.length === 0) verdict = 'POLLING_NE_PISE';
+  else if (noOutdoor.length === 0) verdict = 'OUTDOOR_TEHCE';
+  else if (covered.length === 0) verdict = 'KES_SE_NE_CITA';
+  else verdict = 'DJELIMICNO';
+
+  const reason =
+    `zadnjih ${recent.length} h: ${withSamples.length} s uzorcima ` +
+    `(${covered.length} sa outdoorTempC, ${noOutdoor.length} bez), ` +
+    `${empty.length} bez ijednog uzorka`;
+
+  return { verdict, reason, hours: recent.length, noOutdoor: noOutdoor.length };
+}
+
 async function runSelfTest() {
   let failed = 0;
   const ok = (cond, label) => {
@@ -154,9 +186,17 @@ async function runSelfTest() {
     console.log(`${cond ? 'OK  ' : 'FAIL'} ${label}`);
   };
 
-  const full = Object.fromEntries(REQUIRED_FIELDS.map((f) => [f, f === 'weatherLatitude' || f === 'weatherLongitude' ? 44.2 : 'x']));
+  const full = Object.fromEntries(
+    REQUIRED_FIELDS.map((f) => [
+      f,
+      f === 'weatherLatitude' || f === 'weatherLongitude' ? 44.2 : 'x',
+    ]),
+  );
 
-  ok(classifyProfile({ ...full, id: 1 }) === 'CONFIRMED', 'svih 8 polja -> CONFIRMED');
+  ok(
+    classifyProfile({ ...full, id: 1 }) === 'CONFIRMED',
+    'svih 8 polja -> CONFIRMED',
+  );
 
   // Jedno polje fali -> NIJE confirmed. Ovo je kljucna provjera: "6 od 8"
   // mora pasti u PARTIAL, ne u CONFIRMED.
@@ -183,7 +223,8 @@ async function runSelfTest() {
 
   // Prazan string nije potvrda (kod trazi truthy).
   ok(
-    classifyProfile({ ...full, weatherLocationName: '', id: 1 }) !== 'CONFIRMED',
+    classifyProfile({ ...full, weatherLocationName: '', id: 1 }) !==
+      'CONFIRMED',
     'prazan string nije potvrda',
   );
 
@@ -191,12 +232,43 @@ async function runSelfTest() {
   ok(v1.verdict === 'FLAG_DOVOLJAN', 'jedan potvrdjen -> FLAG_DOVOLJAN');
 
   const v2 = verdict(
-    summarize([{ ...full, id: 1 }, { ...full, weatherLocationConfirmedAt: null, id: 2 }]),
+    summarize([
+      { ...full, id: 1 },
+      { ...full, weatherLocationConfirmedAt: null, id: 2 },
+    ]),
   );
   ok(v2.verdict === 'TREBA_POTVRDU', 'jedan bez potvrde -> TREBA_POTVRDU');
 
   const v3 = verdict(summarize([]));
   ok(v3.verdict === 'NO_PROFILES', 'prazno -> NO_PROFILES');
+
+  // Dijagnoza sati: ista ukupna slika, suprotan zakljucak.
+  const hour = (h, samples, withOutdoor) => ({
+    hour: `2026-11-14 ${h}`,
+    samples,
+    withOutdoor,
+  });
+  ok(
+    diagnoseHours([hour('16', 0, 0), hour('15', 0, 0)]).verdict ===
+      'POLLING_NE_PISE',
+    'nula uzoraka -> POLLING_NE_PISE (ne KES_SE_NE_CITA)',
+  );
+  ok(
+    diagnoseHours([hour('16', 12, 0), hour('15', 12, 0)]).verdict ===
+      'KES_SE_NE_CITA',
+    'uzorci bez outdoor -> KES_SE_NE_CITA',
+  );
+  ok(
+    diagnoseHours([hour('16', 12, 12), hour('15', 12, 11)]).verdict ===
+      'OUTDOOR_TEHCE',
+    'svi uzorci sa outdoor -> OUTDOOR_TEHCE',
+  );
+  ok(
+    diagnoseHours([hour('16', 12, 12), hour('15', 12, 0)]).verdict ===
+      'DJELIMICNO',
+    'mjesovito -> DJELIMICNO',
+  );
+  ok(diagnoseHours([]).verdict === 'NEMA_SATI', 'nema redova -> NEMA_SATI');
 
   if (failed > 0) {
     console.error(`\n${failed} slucajeva nije proslo.`);
@@ -214,7 +286,9 @@ async function main() {
 
   const url = process.env.DATABASE_URL_READONLY;
   if (!url) {
-    console.error('Nema DATABASE_URL_READONLY. Skripta samo čita; postavi read-only URL.');
+    console.error(
+      'Nema DATABASE_URL_READONLY. Skripta samo čita; postavi read-only URL.',
+    );
     process.exit(2);
   }
 
@@ -253,7 +327,9 @@ async function main() {
     const decision = verdict(summary);
 
     if (process.argv.includes('--json')) {
-      console.log(JSON.stringify({ summary, ...decision, note: OUTCOME_NOTE }, null, 2));
+      console.log(
+        JSON.stringify({ summary, ...decision, note: OUTCOME_NOTE }, null, 2),
+      );
       return;
     }
 
@@ -269,7 +345,9 @@ async function main() {
 
     for (const p of summary.perProfile) {
       if (p.status === 'CONFIRMED') continue;
-      console.log(`    profil ${p.homeProfileId}: ${p.status} — fali ${p.missing.join(', ')}`);
+      console.log(
+        `    profil ${p.homeProfileId}: ${p.status} — fali ${p.missing.join(', ')}`,
+      );
     }
 
     console.log(`\n  ${decision.verdict}: ${decision.reason}`);
@@ -303,7 +381,9 @@ async function main() {
     const withAny = byHour.filter((r) => r.withOutdoor > 0);
     const without = byHour.filter((r) => r.withOutdoor === 0);
 
-    console.log('\n  ## outdoorTempC po satu (zadnjih 36 h, lokalno Europe/Sarajevo)');
+    console.log(
+      '\n  ## outdoorTempC po satu (zadnjih 36 h, lokalno Europe/Sarajevo)',
+    );
     for (const r of byHour.slice(0, 12)) {
       console.log(
         `    ${r.hour}: ${r.withOutdoor}/${r.samples} uzoraka ima outdoorTempC`,
@@ -383,12 +463,26 @@ async function main() {
       );
     }
 
+    /*
+     * `fetchedAt` ide u sazetak, ne samo starost: 0 h star je i keš koji je
+     * osvježio korisnik prije 3 min i onaj koji je cron osvježio. Bez tacnog
+     * vremena ne moze se reci KO je punio — a to je jedino pitanje popravke.
+     */
+    const ageOf = (h) =>
+      h < 1 ? `${Math.round(h * 60)} min` : `${h.toFixed(1)} h`;
     console.log(
-      `    SAZETAK-kes: ${cacheRows.length ? Number(cacheRows[0].ageHours).toFixed(0) + ' h star' : 'prazan'}` +
+      `    SAZETAK-kes: ${cacheRows.length ? ageOf(Number(cacheRows[0].ageHours)) + ' star (fetchedAt ' + String(cacheRows[0].fetchedAt).slice(11, 16) + ' UTC)' : 'prazan'}` +
         (cacheRows.length && cacheRows[0].cacheTempC !== null
           ? `, vratio bi ${cacheRows[0].cacheTempC} °C`
           : ''),
     );
+    /*
+     * Ista slika, ali razlozena: "2 sata ima" izgleda isto kad polling stoji i
+     * kad se kes ne cita. Dijagnoza ide u sazetak jer log nije dostupan.
+     */
+    const diag = diagnoseHours(byHour);
+    console.log(`    SAZETAK-dijagnoza: ${diag.verdict} — ${diag.reason}`);
+
     console.log(
       `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC ` +
         `(${hoursWith.length ? hoursWith.join(', ') : 'nijedan'}), ` +

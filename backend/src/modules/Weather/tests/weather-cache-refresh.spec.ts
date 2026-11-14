@@ -20,7 +20,30 @@ describe('WeatherCacheRefreshService', () => {
   describe('refreshMinutes', () => {
     it('zadano je 30 kad env nije postavljen', () => {
       delete process.env.WEATHER_CACHE_REFRESH_MINUTES;
-      expect(WeatherCacheRefreshService.refreshMinutes(undefined)).toBe(30);
+      expect(WeatherCacheRefreshService.refreshMinutes()).toBe(30);
+    });
+
+    /*
+     * Bez ovoga bi test iznad prolazio i kad env čitanja uopšte nema:
+     * `refreshMinutes()` bez argumenta mora pročitati env, a ne vratiti
+     * konstantu. Ista zamka kao kod `weatherHttpTimeoutMs` (§10.35).
+     */
+    it('bez argumenta čita env, a ne vraća konstantu', () => {
+      process.env.WEATHER_CACHE_REFRESH_MINUTES = '7';
+      try {
+        expect(WeatherCacheRefreshService.refreshMinutes()).toBe(7);
+      } finally {
+        delete process.env.WEATHER_CACHE_REFRESH_MINUTES;
+      }
+    });
+
+    it('eksplicitan undefined ne pada na env (mjeri funkciju, ne okolinu)', () => {
+      process.env.WEATHER_CACHE_REFRESH_MINUTES = '7';
+      try {
+        expect(WeatherCacheRefreshService.refreshMinutes(undefined)).toBe(30);
+      } finally {
+        delete process.env.WEATHER_CACHE_REFRESH_MINUTES;
+      }
     });
 
     it('prazan string daje zadano', () => {

@@ -91,18 +91,25 @@ export class WeatherCacheRefreshService {
   ) {}
 
   /**
-   * Interval u minutama. `null` = pozadinsko osvježavanje **isključeno**.
+   * Interval u minutama (uvijek broj > 0 — nema „isključeno” stanja; isključivanje
+   * ide kroz `NODE_ENV` u `@Cron` opcijama, a ne kroz vrijednost intervala).
    *
    * Zašto podesivo: u testovima i lokalno cron ne treba da ide u mrežu, a u
    * produkciji 30 min je odabrano mjerenjem (v. zaglavlje). `0`, negativno i
    * `NaN` se odbijaju \u2014 isti razlog kao kod `weatherHttpTimeoutMs`: vrijednost
    * koja tiho postane 0 pretvori bi cron u petlju bez pauze.
    */
-  static refreshMinutes(
-    raw: string | undefined = process.env.WEATHER_CACHE_REFRESH_MINUTES,
-  ): number | null {
-    if (raw === undefined || raw.trim() === '') return 30;
-    const parsed = Number(raw);
+  static refreshMinutes(raw?: string): number {
+    /*
+     * `arguments.length` umjesto default vrijednosti u potpisu: default bi
+     * tiho čitao `process.env` **u trenutku poziva sa `undefined`**, pa bi
+     * test koji preda `undefined` zapravo mjerio okolinu, a ne funkciju.
+     * Ista greška je već popravljena kod `weatherHttpTimeoutMs` (§10.35).
+     */
+    const value =
+      arguments.length === 0 ? process.env.WEATHER_CACHE_REFRESH_MINUTES : raw;
+    if (value === undefined || value.trim() === '') return 30;
+    const parsed = Number(value);
     if (!Number.isFinite(parsed) || parsed <= 0) return 30;
     return Math.floor(parsed);
   }
@@ -202,7 +209,6 @@ export class WeatherCacheRefreshService {
   })
   async scheduledRefresh(now: Date = new Date()): Promise<void> {
     const minutes = WeatherCacheRefreshService.refreshMinutes();
-    if (minutes === null) return;
 
     const dueAt = this.lastRunAt + minutes * 60 * 1000;
     if (this.lastRunAt !== 0 && now.getTime() < dueAt) return;

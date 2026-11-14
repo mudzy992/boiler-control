@@ -424,6 +424,25 @@ jobs:
               | while IFS= read -r line; do echo "::error::WEATHER uzrok: $line"; done
           fi
 
+      # Prije popravke: koliko dana model kuce gubi zbog praznog outdoorTempC.
+      - name: Outdoor coverage self-test
+        run: node scripts/outdoor-coverage-readonly.cjs --self-test
+
+      - name: Outdoor coverage (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/outdoor-coverage-readonly.cjs > "$RUNNER_TEMP/cov.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/cov.log"
+          bash scripts/ci/emit_notice.sh "COVERAGE " "$RUNNER_TEMP/cov.log"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::COVERAGE mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/cov.log" \
+              | while IFS= read -r line; do echo "::error::COVERAGE uzrok: $line"; done
+          fi
+
       - name: Forecast error self-test (F3.4)
         run: node scripts/forecast-error-readonly.cjs --self-test
 

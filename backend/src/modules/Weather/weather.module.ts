@@ -11,6 +11,7 @@ import { RecommendationWeatherService } from './recommendation-weather.service';
 import { BoilerWeatherService } from './boiler-weather.service';
 import { PollingWeatherService } from './polling-weather.service';
 import { DashboardWeatherService } from './dashboard-weather.service';
+import { WeatherCacheRefreshService } from './weather-cache-refresh.service';
 
 @Module({
   imports: [PrismaModule, CommonModule],
@@ -24,6 +25,7 @@ import { DashboardWeatherService } from './dashboard-weather.service';
     BoilerWeatherService,
     PollingWeatherService,
     DashboardWeatherService,
+    WeatherCacheRefreshService,
   ],
   exports: [
     WeatherService,

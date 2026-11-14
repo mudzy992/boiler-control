@@ -64,6 +64,12 @@ cache=$(grep -m1 'SAZETAK-kes:' "$LOG" 2>/dev/null || true)
 if [ -n "$cache" ]; then
   summary="$summary | $cache"
 fi
+# Dijagnoza sati: "2 sata ima" izgleda isto kad polling ne piše i kad keš
+# postoji ali se ne čita. Bez ovoga se ta dva kvara ne razlikuju u anotaciji.
+diagnosis=$(grep -m1 'SAZETAK-dijagnoza:' "$LOG" 2>/dev/null || true)
+if [ -n "$diagnosis" ]; then
+  summary="$summary | $diagnosis"
+fi
 if [ -n "$summary" ] && [ -n "$detail" ]; then
   summary="$summary | $detail"
 fi

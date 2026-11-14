@@ -2169,3 +2169,42 @@ F3.4 ne može napredovati, ma koliko dana prošlo.
 (cron koji zove `getWeather`). Prva je već jednom propuštena — i to je
 **dokaz da mjerenje ne smije zavisiti od ljudske radnje**, ne samo neugodnost.
 
+### 10.39 Opcija 3 (duži prozor svježine) — izmjereno, i odbijena
+
+**Mjereno** `132439442805`:
+
+> `SAZETAK-kes: 27 h star, vratio bi 18.282501220703125 °C`
+
+**Šta bi opcija 3 uradila.** `WEATHER_CURRENT_HIDDEN_AFTER_MINUTES` postoji da
+**sakrije** `current` kad keš ostari (`weather-v2.service.ts:350`). Proširenje tog
+prozora ne osvježava ništa — samo prestaje skrivati. Vrijednost koja bi
+prošla je `payload.current.temperatureC` **sa `fetchedAt`**, dakle **18,3 °C**.
+
+**Koliko je to pogrešno.** Prognoza 13.11. (iz README-ovanog `curl`-a) za
+**14.11.**: 06:00 UTC **3,8 °C**, 09:00 UTC **5,7 °C**; noć hladna, kiša.
+Vrijednost iz keša: **18,3 °C** ⇒ greška **≈ 12–14 K**.
+
+**Zašto je to gore od praznog keša, a ne bolje.** Prazan keš daje `null`, pa
+`daily-balance.ts:133` baci `reject('NO_OUTDOOR')` — dan je **odbijen**, sigurno
+i vidljivo. Stara vrijednost daje **broj koji izgleda ispravno**, pa ulazi dalje:
+
+```
+stari 18,3 °C -> outdoorTempC na svakom uzorku (noću, kad je 3 °C)
+             -> nightMinOutdoorMeasuredC = 18,3   (pogrešno, tiho)
+             -> HomeModel.daily-balance: NO_OUTDOOR nestaje, dan se PRIHVATA
+             -> outdoorMeanC pogrešan -> slopeS i internalGainC pogrešni
+             -> F_eq pogrešan -> predlog polazne pogrešan
+```
+
+Odbijen dan je **vidljiv**; prihvaćen dan sa pogrešnim ulazom **nije**. Zato je
+opcija 3 zamjena jedne greške drugom, težom — i to upravo one vrste koju F4
+uklanja (podatak koji izgleda ispravan, a nije).
+
+**Šta bi F3.4 rekao.** `nightMinOutdoorMeasuredC` = 18,3 nasuprot prognozi
+~3,8 ⇒ greška prognoze **≈ 14,5 K**. F3.4 bi to prijavio kao **„prognoza je
+katastrofalna”**, i taj nalaz bi bio lažan — uzrok je keš, ne prognoza. Iz
+lažnog nalaza bi slijedila pogrešna odluka o formuli.
+
+**Zaključak:** opcija 3 se **odbija na osnovu mjerenja**, ne mišljenja. Jedina
+opcija koja daje svjež podatak je pozadinsko osvježavanje (§10.36 opcija 2).
+

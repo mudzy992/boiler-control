@@ -2270,3 +2270,19 @@ i token **jest** `PrismaService`.
 cron tamo još ne postoji. Dokaz popravke je **prvo mjerenje poslije deploya**:
 `SAZETAK-svjezina` mora pokazati `outdoorTempC` u **više od 1 sata od 36**, a
 `SAZETAK-kes` starost **< 60 min**. Do tada je popravka tvrdnja, ne nalaz.
+
+**Referentno stanje prije deploya** (`132504330948`, cijeli prozor):
+
+```
+COVERAGE   SAZETAK: GUBITAK_JE_ZNACAJAN — outdoorTempC 0.8 %, NO_OUTDOOR 5 dana
+F3.1 dom 3: NOT_ENOUGH_DAYS (0/8 dana, odbijeno 6: INCOMPLETE 2, NO_OUTDOOR 3, NO_TARGET 1)
+F4.5  SAZETAK: OSCILLATION_VISIBLE — prozor 60 dana (CIJELI prozor)
+WEATHER   SAZETAK-svjezina: 1 sati ima outdoorTempC (2026-11-13 08), 35 nema
+WEATHER   SAZETAK-kes: 31 h star, vratio bi 18.282501220703125 °C
+```
+
+Ovo je **jedina osnova za poređenje**. Poslije deploya se iste četiri linije
+mjere ponovo: cilj je `outdoorTempC` pokrivenost **> 50 %** (klasa
+`OUTDOOR_COVERED`), `NO_OUTDOOR` **0 dana** u novom prozoru, `SAZETAK-kes`
+starost **< 60 min**. Ako se to ne dogodi, uzrok je u cron-u (registracija,
+`WEATHER_CACHE_REFRESH_MINUTES`, ili `NODE_ENV`), ne u kešu.

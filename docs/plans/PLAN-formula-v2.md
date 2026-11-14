@@ -82,7 +82,7 @@ može ni ocijeniti.
 | F5.2 — ključ intervala | **bio već urađen**; mjerenje pokazalo da migracija nije potrebna | §10.12 |
 | F5.6 — `FORMULA.md` | **urađeno**, sa provjerom koja pada kad dokument ostarji | §10.13 |
 | F4.2 | **urađeno**: zajednička odluka izdvojena; writer uzima `F_eq`, ne kontroler | §10.26 |
-| F4.5 | **kod ✓, `--since` ✓** — prvo mjerenje prvog dana sa grijanjem (13.11. bilo 0 grijanja, §10.34) | §10.25, §10.34 |
+| F4.5 | **`--since` mjereno: `STABLE`**, 2 kuća-dana, svaki jednovrijednosan (prije: 10/29 `VISIBLE`) — v. §10.37 | §10.25, §10.34, §10.37 |
 | F4.5 | **urađeno**: `resolveDailyFlow` — jedan broj za dan; mjerenje prije: 10/27 vidljivo, max 2,76 K | §10.24 |
 | F4.5 | **mjereno**: 10/27 kuća-dana vidljivo pomjeranje, max 2,76 K; izmjena koda slijedi | §10.23 |
 | F4.3/F4.4 | **urađeno (backend)**: breakdown v2 nosi `engine`+`model`; kriva je `null`, ne `0` | §10.22 |
@@ -2111,4 +2111,61 @@ Razlika je odluka, ne detalj.
 06:00 — jer daje prvi stvarni par noći bez ijedne izmjene koda. Ako to
 preskočimo, F3.4 i F4.5 ostaju bez podataka **iako je sve ispravno**, pa se
 sutra neće moći razlikovati „nema grijanja” od „nema keša”.
+
+### 10.37 F4.5 gejt — prvi stvarni broj poslije deploya: `STABLE`
+
+**Mjereno** `132426023462`, `--since=2026-11-13`, 60-dnevni prozor sužen na
+dane poslije deploya:
+
+> `SAZETAK: STABLE — prozor 60 dana od 2026-11-13`
+> 2 kuća-dana, svaki sa **jednom** vrijednošću
+
+**Zašto je to dokaz, a ne slučajno zelena.** Prije F4.5 isti prozor je davao
+**`OSCILLATION_VISIBLE`: 10/29 kuća-dana, max 2,76 K** (§10.23). Sada su ta
+ista kuća-dana jednovrijednosna. Razlika je posljedica `resolveDailyFlow`, ne
+manjeg uzorka: 2 kuća-dana su **svi** dani poslije deploya, i na svima je broj
+bio jedan.
+
+**Uzorak je mali i tako se izvještava.** Dva dana ne dokazuju da oscilacija ne
+može nastati — dokazuju da **nije nastala** u jedinom prozoru koji je novi kod
+pokrio. Gejt ostaje otvoren za ponovno mjerenje; `STABLE` je nalaz o prozoru, ne
+trajna tvrdnja.
+
+### Nalaz: anotacija je gubila `--since`, pa je ista skripta davala suprotne presude
+
+**Dvije presude iz istog koda, različit zaključak:**
+
+| run | argument | presuda |
+|---|---|---|
+| `43586214803` | bez `--since` | `OSCILLATION_VISIBLE` **10/29**, max 2,76 K |
+| `43586987310` | `--since=2026-11-13` | `STABLE`, 2 kuća-dana |
+
+To **nije** protivrječnost u mjerenju — prvi prozor sadrži 27 dana starog koda.
+Ali anotacija to nije rekla: `emit_notice.sh` bira **prvu liniju sa dva
+razmaka**, a to je bila `prozor: 60 dana` — **bez** informacije da je prozor
+sužen. Anotacija je zato izgledala kao da mjeri isto.
+
+**Popravka:** `SAZETAK` je sada prva linija i **nosi prozor**:
+`STABLE — prozor 60 dana od 2026-11-13`, odnosno `(CIJELI prozor)` kad `--since`
+nije zadat. Isti broj bez konteksta prozora je bio pogrešivo pročitan jednom;
+više ne može.
+
+### 10.38 F3.4 — i dalje `NEDOVOLJNO_PAROVA`, i to je tačno
+
+**Mjereno** `132418490431`: `prognoza 3, obračun 2, kolona 0, uzorci 1445 na 6
+dana` ⇒ `NEDOVOLJNO_PAROVA` (3 dana sa prognozom, 1 sa mjerenjem, prag 5).
+
+**Keš nije bio osvježen.** `SAZETAK-svježina: 1 sati ima outdoorTempC
+(2026-11-13 08), 35 nema` — **isti sat kao dan prije**. Dakle otvaranje prognoze
+13.11. u 08:59 je ostalo jedini poziv; poslije toga keš nije obnavljan, pa je
+`outdoorTempC` padao na `null` čim je prošlo 60 min.
+
+**To potvrđuje §10.36 na stvarnim podacima, a ne teorijom.** Lanac radi
+(`FLAG_DOVOLJAN`), lokacija je potvrđena, uzoraka ima 1445 — ali mjerenja
+nema jer **keš nema podataka**. Bez ijednog novog poziva `GET /v2/current`
+F3.4 ne može napredovati, ma koliko dana prošlo.
+
+**Odluka koja ostaje:** opcija 1 iz §10.36 (ručno otvoriti prognozu) ili opcija 2
+(cron koji zove `getWeather`). Prva je već jednom propuštena — i to je
+**dokaz da mjerenje ne smije zavisiti od ljudske radnje**, ne samo neugodnost.
 

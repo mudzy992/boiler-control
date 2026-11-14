@@ -70,6 +70,11 @@ diagnosis=$(grep -m1 'SAZETAK-dijagnoza:' "$LOG" 2>/dev/null || true)
 if [ -n "$diagnosis" ]; then
   summary="$summary | $diagnosis"
 fi
+# Uzorci POSLIJE fetchedAt: jedini odgovor na "da li svjez kes daje vrijednost".
+after=$(grep -m1 'SAZETAK-poslije-kesa:' "$LOG" 2>/dev/null || true)
+if [ -n "$after" ]; then
+  summary="$summary | $after"
+fi
 if [ -n "$summary" ] && [ -n "$detail" ]; then
   summary="$summary | $detail"
 fi

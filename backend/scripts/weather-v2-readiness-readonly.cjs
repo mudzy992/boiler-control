@@ -483,6 +483,40 @@ async function main() {
     const diag = diagnoseHours(byHour);
     console.log(`    SAZETAK-dijagnoza: ${diag.verdict} — ${diag.reason}`);
 
+    /*
+     * ODGOVOR NA PITANJE KOJE SAT PO SEBI NE MOZE DATI.
+     *
+     * Sati u `byHour` su LOKALNI (Europe/Sarajevo), a `fetchedAt` je UTC. Uz
+     * to, sat u kojem je kes osvjezen sadrzi i uzorke PRIJE i POSLIJE
+     * osvjezavanja — pa "sat ima 0 sa outdoorTempC" ne dokazuje da svjez kes
+     * ne daje vrijednost.
+     *
+     * Zato se ovdje broje samo uzorci sa `at > fetchedAt`: ako i oni nemaju
+     * outdoorTempC, kes svjezina nije uzrok i problem je u citaocu
+     * (`WEATHER_POLL_V2`, `currentHidden`, oblika payload-a).
+     */
+    if (cacheRows.length > 0) {
+      const { rows: afterRows } = await client.query(
+        `SELECT
+           count(*)::int AS "samples",
+           count(*) FILTER (WHERE "outdoorTempC" IS NOT NULL)::int AS "withOutdoor"
+         FROM "ThermostatObservation"
+         WHERE "at" > $1::timestamptz`,
+        [cacheRows[0].fetchedAt],
+      );
+      const after = afterRows[0] || { samples: 0, withOutdoor: 0 };
+      const afterVerdict =
+        after.samples === 0
+          ? 'JOS_NEMA_UZORAKA_POSLI'
+          : after.withOutdoor === 0
+            ? 'SVIJEZ_KES_NE_DOSPIJEVA'
+            : 'SVIJEZ_KES_RADI';
+      console.log(
+        `    SAZETAK-poslije-kesa: ${afterVerdict} — ${after.withOutdoor}/${after.samples} ` +
+          `uzoraka poslije fetchedAt ima outdoorTempC`,
+      );
+    }
+
     console.log(
       `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC ` +
         `(${hoursWith.length ? hoursWith.join(', ') : 'nijedan'}), ` +

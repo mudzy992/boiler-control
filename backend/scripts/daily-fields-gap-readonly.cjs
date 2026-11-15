@@ -111,7 +111,8 @@ function summarize(days) {
   let verdict;
   if (days.length === 0) verdict = 'NEMA_DANA';
   else if (counts.PISAC > 0) verdict = 'PISAC_JE_UZROK';
-  else if (counts.NEMA_IZVORA > 0 || counts.MIJESANO > 0) verdict = 'IZVOR_JE_UZROK';
+  else if (counts.NEMA_IZVORA > 0 || counts.MIJESANO > 0)
+    verdict = 'IZVOR_JE_UZROK';
   else verdict = 'SVE_POTPUNO';
   return { verdict, counts, days: days.length };
 }
@@ -125,7 +126,8 @@ async function runSelfTest() {
 
   // Polje: redoslijed provjera je ono što se testira.
   ok(
-    judgeField({ stored: false, sourceReadings: 0, minReadings: 8 }) === 'NEMA_IZVORA',
+    judgeField({ stored: false, sourceReadings: 0, minReadings: 8 }) ===
+      'NEMA_IZVORA',
     'nula očitanja -> NEMA_IZVORA (ne PISAC)',
   );
   ok(
@@ -139,7 +141,8 @@ async function runSelfTest() {
     '8 od 8 a prazno -> PISAC',
   );
   ok(
-    judgeField({ stored: true, sourceReadings: 8, minReadings: 8 }) === 'POPUNJENO',
+    judgeField({ stored: true, sourceReadings: 8, minReadings: 8 }) ===
+      'POPUNJENO',
     '8 od 8 i popunjeno -> POPUNJENO',
   );
   // Plin: jedan red je dovoljan (prag 1), pa razlika mora postojati.
@@ -151,7 +154,8 @@ async function runSelfTest() {
 
   // Dan i sažetak.
   ok(
-    judgeDay({ hasRecord: true, gas: 'POPUNJENO', degree: 'POPUNJENO' }) === 'POTPUN',
+    judgeDay({ hasRecord: true, gas: 'POPUNJENO', degree: 'POPUNJENO' }) ===
+      'POTPUN',
     'oba popunjena -> POTPUN',
   );
   ok(
@@ -168,18 +172,21 @@ async function runSelfTest() {
     'jedno polje ima izvor a prazno -> PISAC (pisac ima prioritet)',
   );
   ok(
-    judgeDay({ hasRecord: false, gas: 'NEMA_IZVORA', degree: 'NEMA_IZVORA' }) ===
-      'NEMA_REDA',
+    judgeDay({
+      hasRecord: false,
+      gas: 'NEMA_IZVORA',
+      degree: 'NEMA_IZVORA',
+    }) === 'NEMA_REDA',
     'nema reda u DailyRecord -> NEMA_REDA',
   );
 
-  const s1 = summarize([
-    { verdict: 'POTPUN' },
-    { verdict: 'NEMA_IZVORA' },
-  ]);
+  const s1 = summarize([{ verdict: 'POTPUN' }, { verdict: 'NEMA_IZVORA' }]);
   ok(s1.verdict === 'IZVOR_JE_UZROK', 'mješano bez pisca -> IZVOR_JE_UZROK');
   const s2 = summarize([{ verdict: 'PISAC' }, { verdict: 'NEMA_IZVORA' }]);
-  ok(s2.verdict === 'PISAC_JE_UZROK', 'pisc + izvor -> PISAC_JE_UZROK (pisac prioritet)');
+  ok(
+    s2.verdict === 'PISAC_JE_UZROK',
+    'pisc + izvor -> PISAC_JE_UZROK (pisac prioritet)',
+  );
   ok(summarize([]).verdict === 'NEMA_DANA', 'prazno -> NEMA_DANA');
   ok(
     summarize([{ verdict: 'POTPUN' }]).verdict === 'SVE_POTPUNO',
@@ -202,7 +209,9 @@ async function main() {
 
   const url = process.env.DATABASE_URL_READONLY;
   if (!url) {
-    console.error('DATABASE_URL_READONLY nije postavljen — mjerenje nije pokrenuto.');
+    console.error(
+      'DATABASE_URL_READONLY nije postavljen — mjerenje nije pokrenuto.',
+    );
     process.exit(1);
   }
 
@@ -294,7 +303,9 @@ async function main() {
     const summary = summarize(measured);
 
     if (asJson) {
-      console.log(JSON.stringify({ windowDays: days, summary, rows: measured }, null, 2));
+      console.log(
+        JSON.stringify({ windowDays: days, summary, rows: measured }, null, 2),
+      );
       return;
     }
 
@@ -350,11 +361,57 @@ async function main() {
       }
     }
 
+    /*
+     * Sažetak MORA sadržavati sve presude koje postoje, ne tri izabrane.
+     * Prvo izdanje je ispisivalo samo PISAC/NEMA_IZVORA/POTPUN, pa je 9 dana
+     * klase MIJESANO nestalo iz anotacije — nalaz je bio kraći od uzorka.
+     */
+    const order = ['POTPUN', 'MIJESANO', 'PISAC', 'NEMA_IZVORA'];
+    const countsText = order
+      .map((k) => `${k} ${summary.counts[k] ?? 0}`)
+      .join(', ');
     console.log(
-      `\n  SAZETAK: ${summary.verdict} — ${summary.days} dana, ` +
-        `PISAC ${summary.counts.PISAC ?? 0}, NEMA_IZVORA ${summary.counts.NEMA_IZVORA ?? 0}, ` +
-        `POTPUN ${summary.counts.POTPUN ?? 0}`,
+      `\n  SAZETAK: ${summary.verdict} — ${summary.days} dana, ${countsText}`,
     );
+
+    /*
+     * Presuda klasa MIJESANO nosi DVA različita uzroka (jedno polje popunjeno,
+     * drugo bez izvora), pa se razlaže brojem — inače izgleda kao treći,
+     * neimenovani kvar.
+     */
+    const mijesano = measured.filter((r) => r.verdict === 'MIJESANO');
+    if (mijesano.length > 0) {
+      const gasSourceDegreeNone = mijesano.filter(
+        (r) => r.gas === 'POPUNJENO' && r.degree === 'NEMA_IZVORA',
+      ).length;
+      const gasNoneDegreeSourceEmpty = mijesano.filter(
+        (r) => r.degree === 'IZVOR_POSTOJI_POLJE_PRAZNO',
+      ).length;
+      console.log(
+        `    MIJESANO razloženo: plin popunjen + stepen bez izvora ${gasSourceDegreeNone}, ` +
+          `stepen ima izvor a prazan ${gasNoneDegreeSourceEmpty}, ostalo ${mijesano.length - gasSourceDegreeNone - gasNoneDegreeSourceEmpty}`,
+      );
+    }
+
+    /*
+     * Presude idu kao vlastiti `::notice::` — log CI-ja se iz ovog okruženja
+     * ne može preuzeti, pa je anotacija jedini kanal. Broj linija je ograničen:
+     * GitHub tiho odbacuje preko 50 anotacija po job-u, a baseline ih već ima.
+     */
+    const dates = (list) =>
+      list
+        .map((r) => `${r.localDate}(d${r.homeProfileId})`)
+        .sort()
+        .join(' ');
+    if (pisac.length > 0) {
+      console.log(`::notice::GAP PISAC datumi: ${dates(pisac)}`);
+    }
+    if (bezIzvora.length > 0) {
+      console.log(`::notice::GAP BEZ IZVORA datumi: ${dates(bezIzvora)}`);
+    }
+    if (mijesano.length > 0) {
+      console.log(`::notice::GAP MIJESANO datumi: ${dates(mijesano)}`);
+    }
   } finally {
     await client.end();
   }

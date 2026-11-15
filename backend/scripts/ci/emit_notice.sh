@@ -75,6 +75,12 @@ after=$(grep -m1 'SAZETAK-poslije-kesa:' "$LOG" 2>/dev/null || true)
 if [ -n "$after" ]; then
   summary="$summary | $after"
 fi
+# Stvarna svjezina: poslije-kesa gleda od jednog fetchedAt i ostaje zelen i kad
+# cron stane. Ovo mjeri razmak od zadnjeg POKRIVENOG uzorka.
+now_fresh=$(grep -m1 'SAZETAK-svjezina-sada:' "$LOG" 2>/dev/null || true)
+if [ -n "$now_fresh" ]; then
+  summary="$summary | $now_fresh"
+fi
 if [ -n "$summary" ] && [ -n "$detail" ]; then
   summary="$summary | $detail"
 fi

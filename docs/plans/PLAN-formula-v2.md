@@ -2615,3 +2615,42 @@ nema. To potvrđuje da su dva polja nezavisna, ne da nešto „ne radi".
 
 **Šta ostaje prije upisa.** Upis traži `--apply` i `DATABASE_URL_BACKFILL`
 (kredencijal koji smije pisati) — to je vlasnička radnja, a ne dio ovog commita.
+
+**Upis u produkciju — pao, transakcija se rollback-ovala.** Prvi pokušaj
+(`--apply --only-missing`) vratio je:
+
+```
+Backfill nije prošao: bind message supplies 3 parameters, but prepared
+statement "" requires 2
+```
+
+**Ništa nije upisano.** Ni ona 3 nova reda iz istog poziva (`2026-03-28`,
+`2026-08-29`, `2026-10-10`, svi `RECOMMENDATION`): upis je jedna transakcija,
+pa je greška u dopuni poništila i `INSERT`-ove. To je zaštita iz zaglavlja
+skripte („djelimičan backfill je stanje koje niko nije opisao") i ona je radila.
+
+**Uzrok — greška u §10.46, ne u podacima.** `buildCompletionUpdate` je vraćao
+`$1`/`$2` za `gasM3`/`degreeDays`, a pozivalac već koristi `$1`
+(`homeProfileId`) i `$2` (`localDate`) u `WHERE`. Upit je zato imao **3
+parametra a 2 placeholdera**. Isti tip greške kao prva verzija
+(`values.push(null)`), samo na drugom mjestu.
+
+**Zašto test nije uhvatio.** Test je provjeravao **samo fragment** (`sets`), gdje
+je `$1` bio ispravan. Fragment sam po sebi ne može otkriti sudar sa vanjskim
+placeholderima. Novi test sklapa **cijeli** upit sa `$1`/`$2` i tvrdi dvije
+stvari: broj parametara je **tačno** najveći `$n`, i placeholderi su **tačno**
+`$1..$n` bez preskoka i duplikata. Dokazano u oba smjera — na staroj verziji
+2 testa padaju, na popravci prolaze.
+
+**Popravka.** `firstPlaceholder` je parametar funkcije (pozivalac šalje `3`), pa
+funkcija ne pretvara ništa o vanjskom dijelu upita. Provjereno bez baze:
+
+```
+{"gasM3":5.6}                 | values: 3 | max $: 3 OK
+{"degreeDays":3}              | values: 3 | max $: 3 OK
+{"gasM3":5,"degreeDays":6}    | values: 4 | max $: 4 OK
+```
+
+**Stanje poslije popravke** (`43753148844`): `GAPFILL ... dopuna 7 (plin 7,
+stepen-dan 0)` — dry-run je isti kao prije, dakle popravka nije promijenila
+**šta** bi se upisalo, samo **kako**.

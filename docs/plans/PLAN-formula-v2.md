@@ -2654,3 +2654,45 @@ funkcija ne pretvara ništa o vanjskom dijelu upita. Provjereno bez baze:
 **Stanje poslije popravke** (`43753148844`): `GAPFILL ... dopuna 7 (plin 7,
 stepen-dan 0)` — dry-run je isti kao prije, dakle popravka nije promijenila
 **šta** bi se upisalo, samo **kako**.
+
+**Upis prošao** (`--apply --only-missing`, drugi pokušaj):
+
+```
+Upisano 3 redova (backfill-events-1).
+Dopunjeno 7 redova (plin/stepen-dan), od 7 predloženih
+::notice::backfill dopuna: 7/7 redova
+```
+
+**Mjerenje prije i poslije** (`43755561103`, ista skripta, isti prozor od 21 dana):
+
+| presuda | prije upisa | poslije upisa |
+|---|---|---|
+| `PISAC` | **7** | **0** |
+| `MIJESANO` | 9 | 16 |
+| `NEMA_IZVORA` | 5 | 5 |
+| `POTPUN` | 0 | 0 |
+| **sažetak** | **`PISAC_JE_UZROK`** | **`IZVOR_JE_UZROK`** |
+
+**7 dana prešlo je iz `PISAC` u `MIJESANO`, i to je očekivano.** `PISAC` znači
+„izvor postoji u oba polja a oba su prazna"; poslije dopune plin je popunjen
+(izvor postoji), a stepen-dan nije (izvor ne postoji — manje od 8 `externalTemp`
+očitanja). Dakle dan više nije kvar pisca, nego nedostatak izvora: **uzrok se
+promijenio, broj dana je isti (21)**.
+
+`GAPFILL` poslije upisa: `dopuna 0 (plin 0, stepen-dan 0)`,
+`postojećih 311 dana` (bilo 308 + 3 nova reda). Dopuna je idempotentna — drugi
+prolaz nema šta da uradi, jer `WHERE … IS NULL` više ne pronalazi prazna polja.
+
+**Pogrešna rečenica u sopstvenom izlazu, popravljena.** Prvo izdanje je pisalo
+„razlika je red koji je u međuvremenu već dobio vrijednost" **i kad razlike
+nema** (`7/7`). To je tvrdnja o uzroku koju brojevi ne nose: razlika može biti i
+red koji više ne postoji, ili `rowCount` koji Postgres ne prijavi. Sada se
+rečenica grana po broju: `7/7` → „svi predloženi redovi su dopunjeni", a kod
+razlike se **imenuje nekoliko mogućih uzroka** i upućuje na mjerenje, umjesto da
+se jedan proglasi činjenicom.
+
+**Šta ostaje otvoreno.** `POTPUN 0` — nijedan dan nema oba polja, i to sada nije
+kvar pisca nego **nedostatak izvora**: `degreeDays` traži ≥ 8 `externalTemp`
+očitanja u `BoilerHistory` po danu, a nijedan dan u prozoru ih nema. To je
+zasebno pitanje (koliko `BoilerHistory` redova uopšte nastaje po danu) i nije
+riješeno ovom popravkom.

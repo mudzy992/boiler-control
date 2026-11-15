@@ -501,10 +501,24 @@ async function main(): Promise<void> {
       await client.query('COMMIT');
       console.log(`Upisano ${collected.length} redova (${BACKFILL_VERSION}).`);
       if (pendingCompletions.length > 0) {
+        /*
+         * Rečenica opisuje SAMO ono što brojevi stvarno kažu.
+         *
+         * Prva verzija je uvijek pisala „razlika je red koji je u međuvremenu
+         * već dobio vrijednost" — i kad razlike nema (`7/7`). To je tvrdnja o
+         * uzroku koju brojevi ne nose: razlika može biti i red koji je u
+         * međuvremenu obrisan, ili `rowCount` koji Postgres ne prijavi.
+         */
+        const missed = pendingCompletions.length - completed;
+        const tail =
+          missed === 0
+            ? 'svi predloženi redovi su dopunjeni.'
+            : `${missed} nije dopunjeno — red je u međuvremenu dobio vrijednost ` +
+              `ili više ne postoji; ` +
+              `to se vidi u sljedećem mjerenju (GAP), ne pretpostavlja se ovdje.`;
         console.log(
-          `Dopunjeno ${completed} redova (plin/stepen-dan), od ` +
-            `${pendingCompletions.length} predloženih — razlika je red koji je ` +
-            `u međuvremenu već dobio vrijednost.`,
+          `Dopunjeno ${completed} od ${pendingCompletions.length} predloženih ` +
+            `redova (plin/stepen-dan): ${tail}`,
         );
       }
       notice(`backfill upisan: ${collected.length} redova`);

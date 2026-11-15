@@ -2564,3 +2564,54 @@ prosjek nije izmjeren po danu — to bi bila sljedeća, odvojena mjera.
 mora ili sam popunjavati `gasM3`/`degreeDays`, ili backfill mora dozvoliti
 **dopunu** postojećih redova za ta dva polja. Prvo je manji zahvat i ne dira
 istoriju; drugo mijenja backfill semantiku (`ON CONFLICT DO NOTHING`).
+
+### 10.46 Popravka B: `--only-missing` dopunjuje `gasM3`/`degreeDays`
+
+**Odluka vlasnika:** B — backfill dopunjuje **postojeće** redove, umjesto da
+live writer počne sam popunjavati polja. B vraća i onih 7 dana odmah, A bi
+vraćao samo od deploya nadalje.
+
+**Šta je urađeno.**
+
+- `completionFields(existing, reconstructed)` — čista funkcija, mijenja **samo**
+  polja koja su prazna; `null` se nikad ne upisuje, postojeća vrijednost se nikad
+  ne prepisuje, `0` je vrijednost a ne praznina.
+- `buildCompletionUpdate(patch)` — gradnja `UPDATE`-a izdvojena iz skripte, pa se
+  provjerava bez baze.
+- `--only-missing` — **zaseban prekidač**. Zatečeni backfill nikad ne dira
+  postojeći red i na to se oslanjaju raniji upisi; dopuna se uključuje izričito.
+- `UPDATE ... WHERE (...) "gasM3" IS NULL OR "degreeDays" IS NULL` — uslov
+  **ponavlja** pravilo na mjestu upisa, pa ni pogrešan patch ne može prepisati
+  vrijednost koja je u međuvremenu stigla.
+- CI korak `Backfill only-missing (dry-run)`: broj postoji **prije** upisa.
+
+**Zašto se mijenjaju dva polja, a ne cijeli red.** Ostala polja
+(`proposedFlowTemp`, `cycles`, `outcomeAt`, `shadow*`, `params`) nose ono što je
+izmjereno live — backfill ih ne može rekonstruisati i prepisao bi ih `null`-om.
+Dopuna zato ne dira ništa osim ta dva polja.
+
+**Greška u sopstvenom kodu, nađena i popravljena prije upisa.** Prva verzija
+upisa dodavala je uz svaku vrijednost i `values.push(null)` „da indeksi ostanu
+poravnati". Postgres takav upit odbija
+(`bind message supplies N parameters, but prepared statement requires M`) i
+obara **cijelu** transakciju dopune. Zato je gradnja SQL-a izdvojena u funkciju,
+a test tvrdi da je broj parametara **tačno** najveći `$n`. Prva verzija tog
+testa je pala na `join(' ')` — `sets` je niz, zarez dodaje pozivalac.
+
+**Dry-run protiv produkcije** (`43749172643`, samo čitanje):
+
+```
+GAPFILL backfill dry-run: 0 redova, postojećih 308 dana, dopuna 7 (plin 7, stepen-dan 0)
+```
+
+**Poklapa se sa mjerenjem.** `daily-fields-gap` je našao `PISAC` na **7** dana
+(09.–15.11.); dopuna predlaže tačno **7** redova. Raspodjela je takođe očekivana:
+**plin 7, stepen-dan 0** — plin ima izvor (jedno `GasReading` očitanje je dovoljno),
+a stepen-dan traži ≥ 8 `externalTemp` očitanja u `BoilerHistory`, kojih za te dane
+nema. To potvrđuje da su dva polja nezavisna, ne da nešto „ne radi".
+
+**Provjere.** `backfill-reconstruction.spec.ts` **28/28** (bilo 12); cijeli set
+**1548 prolazi, 8 skipped**; `tsc` bez greške na dodanim fajlovima; `eslint` 0.
+
+**Šta ostaje prije upisa.** Upis traži `--apply` i `DATABASE_URL_BACKFILL`
+(kredencijal koji smije pisati) — to je vlasnička radnja, a ne dio ovog commita.

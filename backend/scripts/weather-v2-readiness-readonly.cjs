@@ -148,6 +148,58 @@ const OUTCOME_NOTE =
   '(outcomeAt), pa se prvi parovi noći broje od sljedeće noći — ne odmah';
 
 /**
+ * Koliko je svježina STVARNO svježa.
+ *
+ * `SAZETAK-poslije-kesa` mjeri od **jednog** `fetchedAt`. Ako cron u 20:00
+ * stane, sutra ujutro bi ta linija i dalje pisala `SVIJEZ_KES_RADI`, jer je u
+ * 17:11 bilo `3/3` — **lažno zeleno**. Zato se ovdje mjeri razmak od
+ * **posljednjeg uzorka koji je imao `outdoorTempC`**, a ne od osvježavanja.
+ *
+ * Dvije stvari se razlikuju po tome koji je zadnji uzorak:
+ *   - uzoraka uopšte nema → `CITAOC_STAO` (polling ne piše);
+ *   - uzorci idu, ali bez vrijednosti → keš se ne čita ili je presušio.
+ */
+const FRESH_GAP_MIN = 75; // 60 min skrivanja + 5 min bucket + margina
+const STOPPED_SAMPLE_MIN = 15; // 3 propuštena bucketa
+
+function judgeCoverageGap({ minutesSinceCovered, minutesSinceSample }) {
+  if (minutesSinceSample === null) {
+    return {
+      verdict: 'NEMA_UZORAKA',
+      reason: 'u prozoru nema nijednog uzorka — polling ne piše',
+    };
+  }
+  if (minutesSinceCovered === null) {
+    return {
+      verdict: 'NEMA_POKRIVENOG',
+      reason: 'uzorci postoje, ali nijedan nema outdoorTempC',
+    };
+  }
+  const covered = Math.round(minutesSinceCovered);
+  const sample = Math.round(minutesSinceSample);
+  if (sample > STOPPED_SAMPLE_MIN) {
+    return {
+      verdict: 'CITAOC_STAO',
+      reason:
+        `zadnji uzorak je star ${sample} min — polling ne piše, ` +
+        `pa se o kešu ne može suditi`,
+    };
+  }
+  if (covered > FRESH_GAP_MIN) {
+    return {
+      verdict: 'PRESUSILO',
+      reason:
+        `uzorci idu (zadnji ${sample} min), ali zadnji sa outdoorTempC je star ` +
+        `${covered} min (prag ${FRESH_GAP_MIN}) — keš ne dospijeva`,
+    };
+  }
+  return {
+    verdict: 'SVIJEZE',
+    reason: `zadnji uzorak sa outdoorTempC je star ${covered} min (prag ${FRESH_GAP_MIN})`,
+  };
+}
+
+/**
  * Razdvaja dva stanja koja u ukupnom broju izgledaju isto:
  *
  *   - **nema uzoraka** — polling ne piše (uređaj/ cron stao);
@@ -269,6 +321,48 @@ async function runSelfTest() {
     'mjesovito -> DJELIMICNO',
   );
   ok(diagnoseHours([]).verdict === 'NEMA_SATI', 'nema redova -> NEMA_SATI');
+
+  /*
+   * Svjezina se mjeri od zadnjeg POKRIVENOG uzorka, ne od jednog fetchedAt.
+   * Slucaj koji ovo mora uhvatiti: kes je osvjezen u 17:00, cron stane, a
+   * ujutro uzorci i dalje idu (polling radi) — stara verzija bi rekla "radi".
+   */
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: null, minutesSinceSample: null })
+      .verdict === 'NEMA_UZORAKA',
+    'nema uzoraka -> NEMA_UZORAKA',
+  );
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: null, minutesSinceSample: 3 })
+      .verdict === 'NEMA_POKRIVENOG',
+    'uzorci bez vrijednosti -> NEMA_POKRIVENOG',
+  );
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: 10, minutesSinceSample: 40 })
+      .verdict === 'CITAOC_STAO',
+    'polling stao -> CITAOC_STAO (ne sudi se o kesu)',
+  );
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: 200, minutesSinceSample: 3 })
+      .verdict === 'PRESUSILO',
+    'uzorci idu, pokrivenost stara 200 min -> PRESUSILO',
+  );
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: 10, minutesSinceSample: 3 })
+      .verdict === 'SVIJEZE',
+    '10 min -> SVIJEZE',
+  );
+  // Granica: 75 min je jos svjeze, 76 nije.
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: 75, minutesSinceSample: 3 })
+      .verdict === 'SVIJEZE',
+    'granica 75 min -> SVIJEZE',
+  );
+  ok(
+    judgeCoverageGap({ minutesSinceCovered: 76, minutesSinceSample: 3 })
+      .verdict === 'PRESUSILO',
+    'granica 76 min -> PRESUSILO',
+  );
 
   if (failed > 0) {
     console.error(`\n${failed} slucajeva nije proslo.`);
@@ -516,6 +610,32 @@ async function main() {
           `uzoraka poslije fetchedAt ima outdoorTempC`,
       );
     }
+
+    /*
+     * STVARNA SVIEZINA, ne presuda iz jednog trenutka.
+     *
+     * `SAZETAK-poslije-kesa` gleda od jednog `fetchedAt`, pa poslije zastoja
+     * cron-a jos satima pise `SVIJEZ_KES_RADI`. Ovdje se mjeri razmak od
+     * zadnjeg uzorka **sa** `outdoorTempC` i od zadnjeg uzorka uopste — pa se
+     * "keš ne dospijeva" razlikuje od "polling je stao".
+     */
+    const { rows: gapRows } = await client.query(
+      `SELECT
+         EXTRACT(EPOCH FROM (now() - max("at") FILTER (WHERE "outdoorTempC" IS NOT NULL))) / 60 AS "sinceCovered",
+         EXTRACT(EPOCH FROM (now() - max("at"))) / 60 AS "sinceSample"
+       FROM "ThermostatObservation"
+       WHERE "at" >= now() - interval '24 hours'`,
+    );
+    const gap = gapRows[0] || { sinceCovered: null, sinceSample: null };
+    const judge = judgeCoverageGap({
+      minutesSinceCovered:
+        gap.sinceCovered === null ? null : Number(gap.sinceCovered),
+      minutesSinceSample:
+        gap.sinceSample === null ? null : Number(gap.sinceSample),
+    });
+    console.log(
+      `    SAZETAK-svjezina-sada: ${judge.verdict} — ${judge.reason}`,
+    );
 
     console.log(
       `    SAZETAK-svjezina: ${withAny.length} sati ima outdoorTempC ` +

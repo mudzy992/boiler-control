@@ -2507,3 +2507,60 @@ blokirati. Prag je `MIN_DAYS_FOR_FIT = 8` (`daily-balance.ts:33`).
 **F2 ostaje slab:** `noć postoji, ali djelimična (nightHoursUsed < 8)` — `O_ref`
 je izračunat iz manje od 8 sati, pa je slabiji nego što izgleda. To je nezavisno
 od keša i ostaje otvoreno.
+
+### 10.45 Zašto `plin` i `stepen-dan` fale — izmjereno po danu
+
+**Mjereno** `43746212916`, baseline job (skripta `daily-fields-gap-readonly.cjs`,
+21 dan, samo `SELECT`):
+
+```
+GAP PISAC_JE_UZROK — 21 dana, POTPUN 0, MIJESANO 9, PISAC 7, NEMA_IZVORA 5
+  PISAC:      2026-11-09 … 2026-11-15  (7 dana)
+  MIJESANO:   2026-10-29, 10-31, 11-01 … 11-07  (9 dana)
+  BEZ IZVORA: 2026-10-26, 10-27, 10-28, 10-30, 11-08  (5 dana)
+```
+
+**Presude su definisane tako da se ne mogu zamijeniti** (`judgeField`):
+
+| presuda | znači |
+|---|---|
+| `NEMA_IZVORA` | u `GasReading`/`BoilerHistory` nema redova za taj dan |
+| `IZVOR_ISPOD_PRAGA` | `externalTemp` očitanja < 8 (`backfill-reconstruction.ts:37`) |
+| `IZVOR_POSTOJI_POLJE_PRAZNO` | izvor postoji, a `DailyRecord` polje je `NULL` |
+| `POPUNJENO` | oboje ima vrijednost |
+
+**Nalaz 1 — `PISAC_JE_UZROK`, i to tačno od 09.11.** Sedam dana
+(09.–15.11.) ima **izvor** a polje je **prazno**. Uzrok nije podatak nego pisac:
+`gasM3` i `degreeDays` piše **isključivo** `scripts/backfill-daily-records.ts`
+(dokazano `grep`-om po `src/` — nijedan drugi fajl ih ne spominje), a live put
+`daily-record.writer.ts:628/706` ih **ne upisuje uopšte**. Backfill zauzvrat
+preskače dan koji već postoji (`backfill-daily-records.ts:269`). Zato dan
+nastao live-om ostaje bez tih polja **zauvijek**: nema nijednog
+`dailyRecord.update` koji bi ih dopunio.
+
+**Zašto granica pada baš na 08./09.11.** Ne zato što se podaci promijenili,
+nego zato što se promijenio **način nastanka reda**: do 08.11. dani su
+rekonstruisani backfillom (koji ta polja popunjava), od 09.11. nastaju live
+writerom (koji ih ne popunjava). Tabela to pokazuje kao `Rekonstruisano` vs
+`Izmjereno` — dvije oznake koje odgovaraju dvama piscima.
+
+**Nalaz 2 — `MIJESANO 9` nije treći kvar, nego dvije poznate stvari.**
+Razloženo brojem: plin popunjen a stepen-dan bez izvora (dani 29.10., 31.10.,
+01.–07.11.), i obrnuto. To je **isti uzrok kao `BEZ IZVORA 5`**: stepen-dan
+traži ≥ 8 `externalTemp` očitanja u `BoilerHistory` po danu, a plin traži
+**jedno** `GasReading` očitanje sa `consumption`. Dva polja imaju različite
+pragove i različite izvore, pa „oba fale" i „jedno fali" nisu isti nalaz.
+
+**Nalaz 3 — `POTPUN 0`.** Nijedan dan u prozoru nema oba polja popunjena.
+To znači da ni backfill nije bio potpun: za dane koje je rekonstruisao ili nije
+bilo plina, ili nije bilo ≥ 8 temperaturnih očitanja — nikad oboje.
+
+**Šta ovo NE dokazuje.** Ne mjeri se **koliko** bi vrijednosti bile tačne kad bi
+se polje dopunilo; mjeri se samo da izvor postoji. Za stepen-dan se zna formula
+(`max(0, 15 − prosjek(externalTemp))`, `backfill-reconstruction.ts:250`), ali
+prosjek nije izmjeren po danu — to bi bila sljedeća, odvojena mjera.
+
+**Popravka koja slijedi iz nalaza** (nije urađena, čeka odluku): live writer
+mora ili sam popunjavati `gasM3`/`degreeDays`, ili backfill mora dozvoliti
+**dopunu** postojećih redova za ta dva polja. Prvo je manji zahvat i ne dira
+istoriju; drugo mijenja backfill semantiku (`ON CONFLICT DO NOTHING`).

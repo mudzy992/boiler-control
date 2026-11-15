@@ -2420,3 +2420,45 @@ se **ne prepisuje** (`outcomeAt: null`), pa dan koji je već dobio `null` ostaje
 `null`. Prvi pouzdan par za F3.4 ostaje **17.11.** (§10.37), a pokrivenost ima
 smisla čitati na prozoru poslije 14.11. 16:55 UTC — 6,9 % je i dalje 30-dnevni
 prozor sa 33 sata historije bez podatka.
+
+### 10.43 Jutarnja provjera — jedna komanda, tri linije
+
+**Zašto zapisano.** Cron radi bez nas, ali **mjerenje ne**: `gh workflow run` mora
+neko pokrenuti. Ne postoji tajmer koji se sam aktivira. `schedule:` u GitHub
+Actions **ne pomaže dok se ne spoji na `main`** — scheduled workflows se
+izvršavaju isključivo iz workflow fajla na `default` grani, pa bi `schedule`
+dodan na `arena/**` granu bio tiho mrtav.
+
+**Komanda** (jedna, read-only, `baseline` job):
+
+```bash
+gh workflow run backend-build.yml --ref arena/456ec6f2-boiler-control -f baseline=true
+```
+
+pa anotacije iz `baseline` joba. **Tri linije se čitaju, ostalo se ignoriše:**
+
+| linija | zdravo | nezdravo | uzrok ako je nezdravo |
+|---|---|---|---|
+| `SAZETAK-kes: … star` | < 60 min | ≥ 60 min | cron ne ide (`NODE_ENV`, registracija, interval) |
+| `SAZETAK-svjezina-sada:` | `SVIJEZE` | `PRESUSILO` | keš presušuje između ciklusa — interval predug |
+| | | `CITAOC_STAO` | polling ne piše — **nije** kvar keša |
+| `SAZETAK-svjezina: N sati ima` | raste prema ~24 | stoji | vidi dvije linije iznad |
+
+**Šta se NE smije pročitati kao neuspjeh:**
+
+- `COVERAGE: GUBITAK_JE_ZNACAJAN — outdoorTempC x %, NO_OUTDOOR n dana` — prozor
+  je **30 dana** i sadrži 33 sata historije prije popravke. Smislen prozor je
+  poslije **14.11. 16:55 UTC**; prvi prozor od 3 dana je **17.11.**
+- `SAZETAK-poslije-kesa: JOS_NEMA_UZORAKA_POSLI 0/0` — normalno ako je mjerenje
+  unutar 5 min od `fetchedAt` (bucket je petominutni). Za to postoji
+  `SAZETAK-svjezina-sada`, koje ne zavisi od jednog `fetchedAt`.
+- `NO_OUTDOOR 4 dana` u F3.1 — isti 30-dnevni prozor, isti razlog.
+
+**Ako `SAZETAK-svjezina-sada` kaže `PRESUSILO`**, prvo se provjerava
+`WEATHER_CACHE_REFRESH_MINUTES` u kontejneru, pa `NODE_ENV`; **ne** se dira
+`WEATHER_CURRENT_HIDDEN_AFTER_MINUTES` (§10.39 — to je izmjereno kao štetnije).
+
+**Cijena čekanja.** Podaci se ne gube: `ThermostatObservation` se piše nezavisno
+od mjerenja. Ako cron padne noću, nalaz se vidi kad se izmjeri — izgubljeno je
+samo vrijeme do popravke, ne podatak. Zato mjerenje u 07:00 i u 10:00 daje isti
+broj sati pokrivenosti; razlika je samo koliko brzo se reaguje prije sljedeće noći.

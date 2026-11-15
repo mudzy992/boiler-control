@@ -316,3 +316,113 @@ export function summarise(rows: readonly BackfillRow[]): BackfillSummary {
     totalMissing: rows.reduce((sum, row) => sum + row.missing.length, 0),
   };
 }
+
+/**
+ * Dopuna **samo** `gasM3` i `degreeDays` na postojećem redu (§10.45).
+ *
+ * **Zašto postoji.** Live put (`daily-record.writer.ts`) ta dva polja ne
+ * upisuje uopšte, a `backfill` je preskakao svaki dan koji već postoji
+ * (`if (existing.has(localDate)) continue`). Rezultat je izmjeren: 7 dana
+ * (09.–15.11.) ima **izvor** a polje je prazno, i nijedan dan u 21 dan nema
+ * oba polja popunjena.
+ *
+ * **Zašto dopuna, a ne ponovni upis cijelog reda.** Ostala polja postojećeg
+ * reda (`proposedFlowTemp`, `cycles`, `outcomeAt`, `shadow*`, `params`) nose
+ * ono što je izmjereno live — backfill ih ne može rekonstruisati i prepisao
+ * bi ih `null`-om ili pogrešnom vrijednošću. Zato se mijenjaju tačno dva
+ * polja i ništa drugo.
+ *
+ * **Tri odbrane, svaka dokazana testom:**
+ *   1. Vrijednost `null` se **nikad** ne upisuje — prazno ostaje prazno.
+ *   2. Postojeća vrijednost se **nikad** ne prepisuje — dopuna nije korekcija;
+ *      ako backfill računa drugačije od live-a, to je nalaz, ne tiho prepisivanje.
+ *   3. Polje se ne popunjava ako izvor nije dovoljan (`null` u redu).
+ *
+ * Vraća tačno ono što treba poslati u `UPDATE`; prazan objekat znači „ne diraj
+ * red". Pozivalac zato ne mora sam ponavljati nijedno od tri pravila.
+ */
+export interface ExistingDailyFields {
+  gasM3: number | null;
+  degreeDays: number | null;
+}
+
+export function completionFields(
+  existing: ExistingDailyFields,
+  reconstructed: Pick<BackfillRow, 'gasM3' | 'degreeDays'>,
+): Partial<ExistingDailyFields> {
+  const patch: Partial<ExistingDailyFields> = {};
+  if (existing.gasM3 == null && reconstructed.gasM3 != null) {
+    patch.gasM3 = reconstructed.gasM3;
+  }
+  if (existing.degreeDays == null && reconstructed.degreeDays != null) {
+    patch.degreeDays = reconstructed.degreeDays;
+  }
+  return patch;
+}
+
+/** Koliko redova u nizu ima šta za dopunu — za sažetak prije upisa. */
+export function summariseCompletion(
+  items: ReadonlyArray<{
+    existing: ExistingDailyFields;
+    reconstructed: Pick<BackfillRow, 'gasM3' | 'degreeDays'>;
+  }>,
+): { rows: number; gas: number; degreeDays: number; both: number } {
+  let rows = 0;
+  let gas = 0;
+  let degreeDays = 0;
+  let both = 0;
+  for (const item of items) {
+    const patch = completionFields(item.existing, item.reconstructed);
+    const hasGas = patch.gasM3 !== undefined;
+    const hasDegree = patch.degreeDays !== undefined;
+    if (hasGas || hasDegree) rows += 1;
+    if (hasGas) gas += 1;
+    if (hasDegree) degreeDays += 1;
+    if (hasGas && hasDegree) both += 1;
+  }
+  return { rows, gas, degreeDays, both };
+}
+
+/**
+ * SQL za dopunu, izgrađen **iz** patcha — i provjeren bez baze.
+ *
+ * **Zašto funkcija, a ne inline string.** Prva verzija je uz svaku vrijednost
+ * dodavala i `values.push(null)` „da indeksi ostanu poravnati". To je tiho
+ * pokvarilo upit: Postgres odbija `bind message supplies N parameters, but
+ * prepared statement requires M` kad ima više parametara nego `$n` oznaka.
+ * Greška se ne vidi bez baze, a obara **cijelu** transakciju dopune.
+ *
+ * Zato se ovdje vraćaju `sets`, `where` i `params`, i test dokazuje da je broj
+ * parametara **tačno** najveći `$n` u tekstu. Pozivalac dodaje `$1` i `$2`
+ * (dom, datum) ispred `params`.
+ *
+ * `where` sadrži `"<polje>" IS NULL` za svako polje koje se mijenja: uslov
+ * ponavlja pravilo na mjestu upisa, pa ni pogrešan patch ne može prepisati
+ * vrijednost koja je u međuvremenu stigla.
+ */
+export function buildCompletionUpdate(
+  patch: Partial<ExistingDailyFields>,
+): { sets: string[]; where: string[]; params: number[] } | null {
+  const sets: string[] = [];
+  const where: string[] = [];
+  const params: number[] = [];
+
+  /*
+   * `!= null` a ne `!== undefined`: `completionFields` nikad ne vraća `null`,
+   * ali funkcija prima i objekat sačinjen ručno (test, drugi pozivalac) —
+   * upis `null`-a u polje koje je prazno nema smisla i ovdje se odbija.
+   */
+  if (patch.gasM3 != null) {
+    params.push(patch.gasM3);
+    sets.push(`"gasM3" = $${params.length}`);
+    where.push('"gasM3" IS NULL');
+  }
+  if (patch.degreeDays != null) {
+    params.push(patch.degreeDays);
+    sets.push(`"degreeDays" = $${params.length}`);
+    where.push('"degreeDays" IS NULL');
+  }
+
+  if (sets.length === 0) return null;
+  return { sets, where, params };
+}

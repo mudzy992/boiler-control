@@ -68,11 +68,15 @@ const out = (line = '') => {
   console.log(line);
 };
 const notice = (message) => {
-  const flat = String(message).replace(/[\r\n]+/g, ' ').replace(/%/g, '%25');
+  const flat = String(message)
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/%/g, '%25');
   console.log(`::notice::${flat}`);
 };
 const num = (value, digits = 1) =>
-  value == null || !Number.isFinite(Number(value)) ? '—' : Number(value).toFixed(digits);
+  value == null || !Number.isFinite(Number(value))
+    ? '—'
+    : Number(value).toFixed(digits);
 
 /* --- statistika ----------------------------------------------------------- */
 
@@ -87,7 +91,9 @@ const COMPARABLE_TOLERANCE_K = 2;
 const BUCKET_K = 1;
 
 const round = (value, digits = 2) =>
-  value == null || !Number.isFinite(value) ? null : Number(value.toFixed(digits));
+  value == null || !Number.isFinite(value)
+    ? null
+    : Number(value.toFixed(digits));
 
 function median(values) {
   if (!values.length) return null;
@@ -176,14 +182,18 @@ function runSelfTest() {
 
   // 1) Nula greške: bias 0, nema dana iznad praga.
   const flat = analyseErrors([0, 0, 0, 0, 0]);
-  if (flat.bias !== 0) problems.push(`nulti niz daje bias ${flat.bias}, očekivano 0`);
+  if (flat.bias !== 0)
+    problems.push(`nulti niz daje bias ${flat.bias}, očekivano 0`);
   if (flat.shareBeyondTolerancePct !== 0) {
-    problems.push(`nulti niz ima ${flat.shareBeyondTolerancePct} % iznad praga`);
+    problems.push(
+      `nulti niz ima ${flat.shareBeyondTolerancePct} % iznad praga`,
+    );
   }
 
   // 2) Sistematska greška: prognoza uvijek 1,5 K hladnija ⇒ bias +1,5, smjer COLDER.
   const biased = analyseErrors([1.5, 1.5, 1.5, 1.5, 1.5]);
-  if (biased.bias !== 1.5) problems.push(`sistematska greška daje bias ${biased.bias}`);
+  if (biased.bias !== 1.5)
+    problems.push(`sistematska greška daje bias ${biased.bias}`);
   if (biased.direction !== 'COLDER') {
     problems.push(`sistematska greška daje smjer ${biased.direction}`);
   }
@@ -192,7 +202,8 @@ function runSelfTest() {
   //    Ovo je razlog postojanja percentila; ako prosjek postane jedina mjera,
   //    ovaj test pada.
   const tails = analyseErrors([3, -3, 3, -3, 0]);
-  if (tails.bias !== 0) problems.push(`repovi daju bias ${tails.bias}, očekivano 0`);
+  if (tails.bias !== 0)
+    problems.push(`repovi daju bias ${tails.bias}, očekivano 0`);
   if (!(tails.p90AbsError >= 3)) {
     problems.push(`repovi daju p90 ${tails.p90AbsError}, očekivano ≥ 3`);
   }
@@ -202,11 +213,13 @@ function runSelfTest() {
 
   // 4) Percentil: za 1..10, p90 mora biti 9,1 (linearna interpolacija), a ne 10.
   const seq = percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 90);
-  if (Math.abs(seq - 9.1) > 1e-9) problems.push(`percentil 90 je ${seq}, očekivano 9.1`);
+  if (Math.abs(seq - 9.1) > 1e-9)
+    problems.push(`percentil 90 je ${seq}, očekivano 9.1`);
 
   // 5) Ispod praga dana: status mora reći šta je, ne pasti.
   const few = analyseErrors([0.5]);
-  if (few.status !== 'NOT_ENOUGH_DAYS') problems.push(`1 dan daje status ${few.status}`);
+  if (few.status !== 'NOT_ENOUGH_DAYS')
+    problems.push(`1 dan daje status ${few.status}`);
 
   if (problems.length) {
     console.error('Samotest NIJE prošao:');
@@ -330,11 +343,15 @@ async function main() {
           WHERE "nightMinC" IS NOT NULL`,
       );
       const byKey = new Map(
-        forecasts.map((f) => [`${f.homeProfileId}|${f.localDate}`, f.forecastC]),
+        forecasts.map((f) => [
+          `${f.homeProfileId}|${f.localDate}`,
+          f.forecastC,
+        ]),
       );
       for (const row of rows) {
         if (row.source === 'NIGHT_SAMPLES') {
-          row.forecastC = byKey.get(`${row.homeProfileId}|${row.localDate}`) ?? null;
+          row.forecastC =
+            byKey.get(`${row.homeProfileId}|${row.localDate}`) ?? null;
           row.errorC =
             row.forecastC == null || row.measuredC == null
               ? null
@@ -362,7 +379,8 @@ async function main() {
         // sabiraju kao da su ista stvar.
         sources: {
           COLUMN: list.filter((r) => r.source === 'COLUMN').length,
-          NIGHT_SAMPLES: list.filter((r) => r.source === 'NIGHT_SAMPLES').length,
+          NIGHT_SAMPLES: list.filter((r) => r.source === 'NIGHT_SAMPLES')
+            .length,
         },
         recent: list.slice(-5).map((r) => ({
           localDate: r.localDate,
@@ -447,8 +465,17 @@ async function main() {
                  FILTER (WHERE "outdoorTempC" IS NOT NULL)::int AS "daysWithOutdoor"
           FROM "ThermostatObservation"
       `);
-      const f = shape[0] ?? { forecastDays: 0, outcomeDays: 0, measuredDays: 0 };
-      const o = obs[0] ?? { samples: 0, days: 0, withOutdoor: 0, daysWithOutdoor: 0 };
+      const f = shape[0] ?? {
+        forecastDays: 0,
+        outcomeDays: 0,
+        measuredDays: 0,
+      };
+      const o = obs[0] ?? {
+        samples: 0,
+        days: 0,
+        withOutdoor: 0,
+        daysWithOutdoor: 0,
+      };
 
       out('## Zašto nema podataka (izmjereno, ne pretpostavljeno)');
       out();
@@ -581,7 +608,9 @@ async function main() {
       totalDays === 0
         ? null
         : withDays.reduce((acc, h) => acc + h.bias * h.days, 0) / totalDays;
-    const worstP90 = withDays.length ? Math.max(...withDays.map((h) => h.p90AbsError ?? 0)) : null;
+    const worstP90 = withDays.length
+      ? Math.max(...withDays.map((h) => h.p90AbsError ?? 0))
+      : null;
 
     out('## Sažetak');
     out();
@@ -590,8 +619,19 @@ async function main() {
         `p90 aps. greške ${num(worstP90, 2)} K, ` +
         `${withDays.filter((h) => h.status === 'NOT_ENOUGH_DAYS').length} dom(ova) sa < ${MIN_DAYS} dana`,
     );
+    /*
+     * Status MORA biti u anotaciji.
+     *
+     * `bias 0.31 K, prag 2 K` izgleda kao prolaz, a `status` je
+     * `NOT_ENOUGH_DAYS` (prag 5, izmjereno 1). Bez statusa se uspjeh cita iz
+     * broja koji je slucajno mali, a ne iz dovoljnosti uzorka — ista greska
+     * kao `NEMA_GUBITKA 0 dana` u §10.40.
+     */
+    const statuses = [...new Set(withDays.map((h) => h.status))];
     notice(
-      `F3.4: ${totalDays} dana, bias ${num(weightedBias, 2)} K, ` +
+      `F3.4: STATUS ${statuses.length ? statuses.join('/') : 'NEMA_DOMOVA'} — ` +
+        `${totalDays} dana${totalDays < MIN_DAYS ? ` (prag ${MIN_DAYS})` : ''}, ` +
+        `bias ${num(weightedBias, 2)} K, ` +
         `p90 ${num(worstP90, 2)} K, prag ${COMPARABLE_TOLERANCE_K} K`,
     );
   } finally {

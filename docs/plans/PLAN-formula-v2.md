@@ -2462,3 +2462,48 @@ pa anotacije iz `baseline` joba. **Tri linije se čitaju, ostalo se ignoriše:**
 od mjerenja. Ako cron padne noću, nalaz se vidi kad se izmjeri — izgubljeno je
 samo vrijeme do popravke, ne podatak. Zato mjerenje u 07:00 i u 10:00 daje isti
 broj sati pokrivenosti; razlika je samo koliko brzo se reaguje prije sljedeće noći.
+
+### 10.44 Jutro 15.11.: cron radi cijelu noć, prvi F3.4 par postoji
+
+**Mjereno** `43705840453`, baseline job `132786603793`, **15.11. 10:47 UTC**
+(= 11:47 lokalno). Prva noć pod cron-om je prošla.
+
+```
+SAZETAK-kes: 24 min star (fetchedAt 10:25 UTC), vratio bi 4.682499885559082 °C
+SAZETAK-svjezina-sada: SVIJEZE — zadnji uzorak sa outdoorTempC je star 4 min (prag 75)
+SAZETAK-poslije-kesa: SVIJEZ_KES_RADI — 4/4 uzoraka poslije fetchedAt ima outdoorTempC
+SAZETAK-dijagnoza: OUTDOOR_TEHCE — zadnjih 6 h: 6 s uzorcima (6 sa outdoorTempC, 0 bez)
+SAZETAK-svjezina: 19 sati ima outdoorTempC, 17 nema
+COVERAGE: GUBITAK_JE_ZNACAJAN — outdoorTempC 13.5 %, NO_OUTDOOR 4 dana
+F3.4: STATUS NOT_ENOUGH_DAYS — 1 dana (prag 5), bias 0.31 K, p90 0.31 K, prag 2 K
+F3.1 dom 3: NOT_ENOUGH_DAYS (0/8 dana, odbijeno 7: INCOMPLETE 2, NO_OUTDOOR 3, NO_TARGET 2)
+```
+
+**Napredak kroz tri mjerenja (isti 36-satni prozor):**
+
+| vrijeme | sati sa `outdoorTempC` | pokrivenost uzorka | `SAZETAK-svjezina-sada` |
+|---|---|---|---|
+| 14.11. 17:13 | 3 / 36 | 1 % | — |
+| 15.11. 00:34 | 9 / 36 | 6,9 % | `SVIJEZE` |
+| **15.11. 10:47** | **19 / 36** | **13,5 %** | **`SVIJEZE`** |
+
+**F3.4: prvi par postoji.** `1 dana, bias 0,31 K, p90 0,31 K` — noć 14./15.11. je
+prva sa `nightMinOutdoorMeasuredC`, i poklapa se sa prognozom na **0,31 K**, dok
+je poredljivi prag **2 K**. **Ali status je `NOT_ENOUGH_DAYS`** (prag 5): to je
+**jedan** dan, ne nalaz o prognozi. Peti par se očekuje oko **18.11.** (§10.37).
+
+**Pogrešan nalaz u mjerenju, popravljen.** Anotacija je do sada glasila
+`F3.4: 1 dana, bias 0.31 K, p90 0.31 K, prag 2 K` — bez `status`. To se čita kao
+„greška je ispod praga, prolaz", iako je presuda `NOT_ENOUGH_DAYS`. Isti obrazac
+kao `NEMA_GUBITKA 0 dana` (§10.40): broj koji je slučajno mali tumačen kao
+odsustvo problema. Sada anotacija počinje sa `STATUS`.
+
+**F3.1 nije napredovao i to je tačno.** `0/8 dana`, odbijeno 7: `INCOMPLETE 2`,
+`NO_OUTDOOR 3`, `NO_TARGET 2`. `NO_OUTDOOR 3` su dani **prije** popravke; novi
+dani (14. i 15.11.) su u prozoru ali kao `INCOMPLETE`/`NO_TARGET`, dakle
+**odbijeni iz drugih razloga** — pokrivenost `outdoorTempC` ih je prestala
+blokirati. Prag je `MIN_DAYS_FOR_FIT = 8` (`daily-balance.ts:33`).
+
+**F2 ostaje slab:** `noć postoji, ali djelimična (nightHoursUsed < 8)` — `O_ref`
+je izračunat iz manje od 8 sati, pa je slabiji nego što izgleda. To je nezavisno
+od keša i ostaje otvoreno.

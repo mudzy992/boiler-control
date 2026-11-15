@@ -403,15 +403,20 @@ async function main() {
         .map((r) => `${r.localDate}(d${r.homeProfileId})`)
         .sort()
         .join(' ');
-    if (pisac.length > 0) {
-      console.log(`::notice::GAP PISAC datumi: ${dates(pisac)}`);
-    }
-    if (bezIzvora.length > 0) {
-      console.log(`::notice::GAP BEZ IZVORA datumi: ${dates(bezIzvora)}`);
-    }
-    if (mijesano.length > 0) {
-      console.log(`::notice::GAP MIJESANO datumi: ${dates(mijesano)}`);
-    }
+    /*
+     * JEDNA `::notice::` linija, i to sa svime.
+     *
+     * `emit_notice.sh` uzima **prvu** liniju sa `::notice::` — prvo izdanje je
+     * imalo tri takve linije, pa je u anotaciju ušla lista datuma, a sažetak
+     * (presuda + brojevi) je ostao samo u logu koji se ne može preuzeti.
+     */
+    const segments = [
+      `${summary.verdict} — ${summary.days} dana, ${countsText}`,
+    ];
+    if (pisac.length > 0) segments.push(`PISAC: ${dates(pisac)}`);
+    if (mijesano.length > 0) segments.push(`MIJESANO: ${dates(mijesano)}`);
+    if (bezIzvora.length > 0) segments.push(`BEZ IZVORA: ${dates(bezIzvora)}`);
+    console.log(`::notice::GAP ${segments.join(' | ')}`);
   } finally {
     await client.end();
   }

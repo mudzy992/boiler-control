@@ -402,6 +402,18 @@ export function summariseCompletion(
  */
 export function buildCompletionUpdate(
   patch: Partial<ExistingDailyFields>,
+  /*
+   * Prvi slobodan broj placeholdera.
+   *
+   * **Zašto parametar, a ne konstanta.** `WHERE "homeProfileId" = $1 AND
+   * "localDate" = $2` troši `$1` i `$2`, pa vrijednosti koje ova funkcija
+   * generiše moraju početi od `$3`. Prva verzija je vraćala `$1`/`$2` za
+   * `gasM3`/`degreeDays`, pa je upit imao **3 parametra a 2 placeholdera** i
+   * Postgres ga je odbio (`bind message supplies 3 parameters, but prepared
+   * statement requires 2`) — što je oborilo cijelu transakciju dopune.
+   * Funkcija zato ne pretpostavlja ništa o vanjskom dijelu upita.
+   */
+  firstPlaceholder = 1,
 ): { sets: string[]; where: string[]; params: number[] } | null {
   const sets: string[] = [];
   const where: string[] = [];
@@ -414,12 +426,12 @@ export function buildCompletionUpdate(
    */
   if (patch.gasM3 != null) {
     params.push(patch.gasM3);
-    sets.push(`"gasM3" = $${params.length}`);
+    sets.push(`"gasM3" = $${firstPlaceholder + params.length - 1}`);
     where.push('"gasM3" IS NULL');
   }
   if (patch.degreeDays != null) {
     params.push(patch.degreeDays);
-    sets.push(`"degreeDays" = $${params.length}`);
+    sets.push(`"degreeDays" = $${firstPlaceholder + params.length - 1}`);
     where.push('"degreeDays" IS NULL');
   }
 

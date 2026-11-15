@@ -2373,3 +2373,50 @@ SAZETAK-poslije-kesa: SVIJEZ_KES_RADI — 2/2 uzoraka poslije fetchedAt ima outd
 `outdoorTempC` pokrivenost je i dalje **1 %** u prozoru od 30 dana, ali to je
 očekivano: 33 sata bez podatka su **historija prije popravke**. Mjerenje
 pokrivenosti ima smisla tek na prozoru **poslije 14.11. 16:55 UTC**.
+
+### 10.42 Cron drži keš kroz noć — prvi kontinuirani dokaz
+
+**Mjereno** `132521…` (run `43658767901`, 15.11. **00:34 UTC** = 01:34 lokalno),
+šest sati poslije prethodnog mjerenja:
+
+```
+SAZETAK-kes: 4 min star (fetchedAt 00:30 UTC), vratio bi -0.16750001907348633 °C
+SAZETAK-svjezina-sada: SVIJEZE — zadnji uzorak sa outdoorTempC je star 5 min (prag 75)
+SAZETAK-dijagnoza: OUTDOOR_TEHCE — zadnjih 6 h: 6 s uzorcima (6 sa outdoorTempC, 0 bez)
+SAZETAK-svjezina: 9 sati ima outdoorTempC (… 15, 16, 17, 18, 19, 20), 27 nema
+COVERAGE: GUBITAK_JE_ZNACAJAN — outdoorTempC 6.9 %, NO_OUTDOOR 4 dana
+```
+
+| | prije (14.11. 17:13) | sada (15.11. 00:34) |
+|---|---|---|
+| sati sa `outdoorTempC` | 3 / 36 | **9 / 36** |
+| dijagnoza zadnjih 6 h | `DJELIMICNO` 2/6 | **`OUTDOOR_TEHCE` 6/6** |
+| pokrivenost uzorka | 1 % | **6,9 %** |
+| keš | 4,88 °C (18 min) | **−0,17 °C (4 min)** |
+
+**Šta je time dokazano.** Keš je punjen **bez ijednog korisničkog poziva** kroz
+cijeli dan i noć: `fetchedAt 00:30 UTC` je ciklus cron-a, a ne posjeta. Svaki od
+**6 zadnjih sati** ima uzorke sa vrijednošću. Temperatura je pala na −0,2 °C, što
+je u skladu sa noći — dakle vrijednost prati stvarno stanje, nije zamrznuta.
+
+**Zašto `SAZETAK-poslije-kesa: JOS_NEMA_UZORAKA_POSLI 0/0` nije protivrječnost.**
+Zadnji uzorak je upisan prije `fetchedAt` u 00:30 (bucket je petominutni, a
+mjerenje je u 00:34), pa poslije tog trenutka još nema ni jednog uzorka. To je
+upravo slučaj zbog kojeg je dodano `SAZETAK-svjezina-sada`, koje mjeri razmak od
+**zadnjeg pokrivenog uzorka** (5 min) i ne zavisi od jednog `fetchedAt`.
+
+**Dodano mjerenje** (`SAZETAK-svjezina-sada`, presude `SVIJEZE` / `PRESUSILO` /
+`CITAOC_STAO` / `NEMA_POKRIVENOG` / `NEMA_UZORAKA`): stara linija
+`poslije-kesa` gleda od jednog `fetchedAt` i ostaje zelena i kad cron stane —
+sutra ujutro bi pisala `SVIJEZ_KES_RADI` na osnovu 17:11. Nova linija to ne
+može: mjeri razmak od zadnjeg uzorka **sa** vrijednošću, prag 75 min
+(60 skrivanja + petominutni bucket + margina). `CITAOC_STAO` (nema svježih
+uzoraka) i `PRESUSILO` (uzorci idu, pokrivenost stara) su namjerno odvojeni:
+prvo je kvar pollinga, drugo keša.
+
+**Šta još nije dokazano.** Noć **15./16.11.** je prva pokrivena noć; njen ishod
+upisuje `daily-outcome` **16.11. u 03:20 lokalno**, i `nightMinOutdoorMeasuredC`
+se **ne prepisuje** (`outcomeAt: null`), pa dan koji je već dobio `null` ostaje
+`null`. Prvi pouzdan par za F3.4 ostaje **17.11.** (§10.37), a pokrivenost ima
+smisla čitati na prozoru poslije 14.11. 16:55 UTC — 6,9 % je i dalje 30-dnevni
+prozor sa 33 sata historije bez podatka.

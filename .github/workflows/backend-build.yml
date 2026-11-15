@@ -443,6 +443,44 @@ jobs:
               | while IFS= read -r line; do echo "::error::COVERAGE uzrok: $line"; done
           fi
 
+      # Dry-run dopune: koliko redova bi `--only-missing` popunio, bez upisa.
+      # Ide PRIJE stvarnog upisa (§10.45) — broj mora postojati prije nego se
+      # produkcija mijenja.
+      - name: Backfill only-missing (dry-run)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          npx ts-node --transpile-only scripts/backfill-daily-records.ts \
+            --dry-run --only-missing > "$RUNNER_TEMP/gapfill.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/gapfill.log"
+          bash scripts/ci/emit_notice.sh "GAPFILL " "$RUNNER_TEMP/gapfill.log"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::GAPFILL dry-run nije prosao (exit $code)"
+          fi
+
+      # Zašto `gasM3`/`degreeDays` fale po danima: izvor ili pisac.
+      # Live writer ta polja ne upisuje uopšte, a backfill preskače postojeće
+      # dane — pa mjerenje mora reći koji je od dva uzroka po danu.
+      - name: Daily fields gap self-test
+        run: node scripts/daily-fields-gap-readonly.cjs --self-test
+
+      - name: Daily fields gap (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/daily-fields-gap-readonly.cjs > "$RUNNER_TEMP/gap.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/gap.log"
+          bash scripts/ci/emit_notice.sh "GAP " "$RUNNER_TEMP/gap.log"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::GAP mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/gap.log" \
+              | while IFS= read -r line; do echo "::error::GAP uzrok: $line"; done
+          fi
+
       - name: Forecast error self-test (F3.4)
         run: node scripts/forecast-error-readonly.cjs --self-test
 

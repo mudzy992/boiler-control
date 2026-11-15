@@ -4,6 +4,9 @@ import {
   MIN_OUTDOOR_SAMPLES_PER_DAY,
   reconstructDay,
   summarise,
+  completionFields,
+  summariseCompletion,
+  buildCompletionUpdate,
   type BackfillInput,
   type BackfillEvent,
 } from '../backfill-reconstruction';
@@ -294,5 +297,168 @@ describe('summarise', () => {
     expect(summary.withProposal).toBe(1);
     expect(summary.withDegreeDays).toBe(0);
     expect(summary.totalMissing).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * §10.45 — dopuna `gasM3`/`degreeDays` na postojećem redu.
+ *
+ * Izmjereno: 7 dana (09.–15.11.) ima izvor a polje je prazno, jer live writer
+ * ta polja ne upisuje. Dopuna ih vraća bez diranja ostalih polja.
+ *
+ * Testovi su napisani tako da padnu na **najgorem** ishodu, ne na lakšem:
+ * tiho prepisivanje postojeće vrijednosti i upis `null`-a.
+ */
+describe('completionFields — dopuna samo praznih polja', () => {
+  const nothing = { gasM3: null, degreeDays: null };
+
+  it('popunjava oba kad su oba prazna', () => {
+    expect(
+      completionFields(nothing, { gasM3: 6.64, degreeDays: 12.31 }),
+    ).toEqual({ gasM3: 6.64, degreeDays: 12.31 });
+  });
+
+  it('NIKAD ne prepisuje postojeću vrijednost', () => {
+    const patch = completionFields(
+      { gasM3: 5.6, degreeDays: 11.2 },
+      { gasM3: 9.9, degreeDays: 3.3 },
+    );
+    // Bitno je da je prazan objekat, a ne „ista vrijednost": prazan objekat
+    // znači da se red ne dira uopšte.
+    expect(patch).toEqual({});
+  });
+
+  it('popunjava samo polje koje je prazno, drugo ostavlja na miru', () => {
+    const patch = completionFields(
+      { gasM3: 5.6, degreeDays: null },
+      { gasM3: 9.9, degreeDays: 3.3 },
+    );
+    expect(patch).toEqual({ degreeDays: 3.3 });
+    expect(patch).not.toHaveProperty('gasM3');
+  });
+
+  it('NIKAD ne upisuje null — prazno ostaje prazno', () => {
+    expect(
+      completionFields(nothing, { gasM3: null, degreeDays: null }),
+    ).toEqual({});
+  });
+
+  it('null iz rekonstrukcije ne popunjava polje koje ima vrijednost', () => {
+    expect(
+      completionFields(
+        { gasM3: null, degreeDays: 11 },
+        { gasM3: null, degreeDays: null },
+      ),
+    ).toEqual({});
+  });
+
+  it('nula je vrijednost, ne praznina', () => {
+    // Stepen-dan 0 je legitiman (topao dan). Ako se 0 tretira kao prazno,
+    // polje bi se popunjavalo ponovo svakog dana.
+    expect(
+      completionFields(
+        { gasM3: null, degreeDays: null },
+        { gasM3: 0, degreeDays: 0 },
+      ),
+    ).toEqual({ gasM3: 0, degreeDays: 0 });
+    expect(
+      completionFields(
+        { gasM3: 0, degreeDays: 0 },
+        { gasM3: 4, degreeDays: 4 },
+      ),
+    ).toEqual({});
+  });
+});
+
+describe('summariseCompletion — brojevi prije upisa', () => {
+  it('broji redove, polja i parove odvojeno', () => {
+    const summary = summariseCompletion([
+      {
+        existing: { gasM3: null, degreeDays: null },
+        reconstructed: { gasM3: 1, degreeDays: 2 },
+      },
+      {
+        existing: { gasM3: 5, degreeDays: null },
+        reconstructed: { gasM3: 9, degreeDays: 2 },
+      },
+      {
+        existing: { gasM3: 5, degreeDays: 1 },
+        reconstructed: { gasM3: 9, degreeDays: 2 },
+      },
+      {
+        existing: { gasM3: null, degreeDays: null },
+        reconstructed: { gasM3: null, degreeDays: null },
+      },
+    ]);
+    // Red 1: oba. Red 2: samo stepen-dan. Red 3 i 4: ništa.
+    expect(summary).toEqual({ rows: 2, gas: 1, degreeDays: 2, both: 1 });
+  });
+
+  it('prazan ulaz daje nule, ne deljenje nulom', () => {
+    expect(summariseCompletion([])).toEqual({
+      rows: 0,
+      gas: 0,
+      degreeDays: 0,
+      both: 0,
+    });
+  });
+});
+
+/**
+ * §10.45 — SQL za dopunu, provjeren BEZ baze.
+ *
+ * Prva verzija upisa je uz svaku vrijednost dodavala i `values.push(null)`
+ * „da indeksi ostanu poravnati". Postgres takav upit odbija
+ * (`bind message supplies N parameters, but prepared statement requires M`),
+ * a greška se bez baze ne vidi i obara **cijelu** transakciju dopune.
+ *
+ * Zato se ovdje broji: broj parametara mora biti **tačno** najveći `$n`.
+ */
+describe('buildCompletionUpdate — SQL bez viska parametara', () => {
+  const maxPlaceholder = (text: string): number => {
+    const found = [...text.matchAll(/\$(\d+)/g)].map((m) => Number(m[1]));
+    return found.length === 0 ? 0 : Math.max(...found);
+  };
+
+  it('oba polja: dva parametra, dva placeholder-a, oba uslova IS NULL', () => {
+    const update = buildCompletionUpdate({ gasM3: 6.64, degreeDays: 12.31 })!;
+    expect(update.params).toEqual([6.64, 12.31]);
+    // `sets` je niz; zarez dodaje pozivalac pri `join(', ')`. Test tvrdi
+    // elemente, ne spojeni string — inače bi provjeravao tuđi format.
+    expect(update.sets).toEqual(['"gasM3" = $1', '"degreeDays" = $2']);
+    expect(update.sets.join(', ')).toBe('"gasM3" = $1, "degreeDays" = $2');
+    expect(update.where).toEqual(['"gasM3" IS NULL', '"degreeDays" IS NULL']);
+    expect(maxPlaceholder(update.sets.join(' '))).toBe(update.params.length);
+  });
+
+  it('samo plin: JEDAN parametar (ne dva) i placeholder $1', () => {
+    const update = buildCompletionUpdate({ gasM3: 5.6 })!;
+    expect(update.params).toEqual([5.6]);
+    expect(update.sets).toEqual(['"gasM3" = $1']);
+    // Ovo je test koji pada na `push(null)` verziji: tada bi params.length bio 2.
+    expect(update.params.length).toBe(maxPlaceholder(update.sets.join(' ')));
+  });
+
+  it('samo stepen-dan: jedan parametar, i on je $1 a ne $2', () => {
+    const update = buildCompletionUpdate({ degreeDays: 11 })!;
+    expect(update.params).toEqual([11]);
+    expect(update.sets).toEqual(['"degreeDays" = $1']);
+    expect(update.params.length).toBe(maxPlaceholder(update.sets.join(' ')));
+  });
+
+  it('prazan patch nema upit — ni UPDATE sa SET prazno', () => {
+    expect(buildCompletionUpdate({})).toBeNull();
+  });
+
+  it('null se ne upisuje — nema ni parametra ni placeholdera', () => {
+    expect(buildCompletionUpdate({ gasM3: null, degreeDays: null })).toBeNull();
+    const onlyDegree = buildCompletionUpdate({ gasM3: null, degreeDays: 3 })!;
+    expect(onlyDegree.params).toEqual([3]);
+    expect(onlyDegree.where).toEqual(['"degreeDays" IS NULL']);
+  });
+
+  it('nula se upisuje kao vrijednost', () => {
+    const update = buildCompletionUpdate({ gasM3: 0, degreeDays: 0 })!;
+    expect(update.params).toEqual([0, 0]);
   });
 });

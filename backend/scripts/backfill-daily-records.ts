@@ -26,8 +26,11 @@
 import { Client } from 'pg';
 import {
   BACKFILL_VERSION,
+  buildCompletionUpdate,
+  completionFields,
   reconstructDay,
   summarise,
+  summariseCompletion,
   type BackfillBoilerRow,
   type BackfillEvent,
   type BackfillGasReading,
@@ -41,6 +44,15 @@ import {
 
 interface Args {
   apply: boolean;
+  /**
+   * Dopuni samo `gasM3`/`degreeDays` na danima koji već postoje (§10.45).
+   *
+   * Zaseban prekidač, a ne dio zadanog ponašanja: zatečeni backfill **nikad**
+   * ne dira postojeći red, i to je svojstvo na koje se oslanjaju raniji
+   * upisi. Dopuna je drukčija operacija — mijenja red koji postoji — pa se
+   * uključuje izričito.
+   */
+  onlyMissing: boolean;
   from: string | null;
   to: string | null;
   homeProfileId: number | null;
@@ -50,6 +62,7 @@ interface Args {
 function parseArgs(argv: string[]): Args {
   const args: Args = {
     apply: false,
+    onlyMissing: false,
     from: null,
     to: null,
     homeProfileId: null,
@@ -64,6 +77,9 @@ function parseArgs(argv: string[]): Args {
         break;
       case '--dry-run':
         args.apply = false;
+        break;
+      case '--only-missing':
+        args.onlyMissing = true;
         break;
       case '--from':
         args.from = argv[++index] ?? null;
@@ -80,7 +96,7 @@ function parseArgs(argv: string[]): Args {
       case '--help':
         console.log(
           'Upotreba: backfill-daily-records [--dry-run|--apply] [--from YYYY-MM-DD] ' +
-            '[--to YYYY-MM-DD] [--home ID] [--limit N]',
+            '[--to YYYY-MM-DD] [--home ID] [--limit N] [--only-missing]',
         );
         process.exit(0);
         break;
@@ -133,7 +149,9 @@ async function main(): Promise<void> {
 
   try {
     if (!args.apply) {
-      await client.query('SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY');
+      await client.query(
+        'SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY',
+      );
     }
 
     const homes = (
@@ -163,10 +181,27 @@ async function main(): Promise<void> {
       withGas: 0,
       withDegreeDays: 0,
       withProposal: 0,
+      completions: 0,
+      completionGas: 0,
+      completionDegreeDays: 0,
     };
     let totalDefaultZone = 0;
     let totalExisting = 0;
-    const collected: Array<{ userId: number; homeProfileId: number; row: BackfillRow }> = [];
+    const collected: Array<{
+      userId: number;
+      homeProfileId: number;
+      row: BackfillRow;
+    }> = [];
+    /*
+     * Dopune idu odvojeno od novih redova jer rade **drugi** SQL: novi red je
+     * `INSERT`, dopuna je `UPDATE` sa uslovom. Miješanje bi dozvolilo da se
+     * dopuna izvrši kao `INSERT ... ON CONFLICT DO UPDATE` koji prepisuje.
+     */
+    const pendingCompletions: Array<{
+      homeProfileId: number;
+      localDate: string;
+      patch: ReturnType<typeof completionFields>;
+    }> = [];
 
     for (const home of homes) {
       const resolved = resolveHomeTimeZone({
@@ -243,13 +278,28 @@ async function main(): Promise<void> {
         )
       ).rows as BackfillRecommendation[];
 
-      const existing = new Set(
-        (
-          await client.query<{ localDate: string }>(
-            `SELECT "localDate" FROM "DailyRecord" WHERE "homeProfileId" = $1`,
-            [home.id],
-          )
-        ).rows.map((row) => row.localDate),
+      /*
+       * Postojeći dani se čitaju sa **vrijednostima** tih dva polja, ne samo
+       * kao skup datuma. Bez vrijednosti se ne može razlikovati „polje je
+       * prazno, dopuni ga" od „polje ima vrijednost, ne diraj ga" — a to je
+       * razlika između dopune i tihog prepisivanja.
+       */
+      const existingRows = (
+        await client.query<{
+          localDate: string;
+          gasM3: number | null;
+          degreeDays: number | null;
+        }>(
+          `SELECT "localDate", "gasM3", "degreeDays"
+           FROM "DailyRecord" WHERE "homeProfileId" = $1`,
+          [home.id],
+        )
+      ).rows;
+      const existing = new Map(
+        existingRows.map((row) => [
+          row.localDate,
+          { gasM3: row.gasM3, degreeDays: row.degreeDays },
+        ]),
       );
       totalExisting += existing.size;
 
@@ -265,8 +315,13 @@ async function main(): Promise<void> {
       }
 
       const rows: BackfillRow[] = [];
+      const completions: Array<{
+        localDate: string;
+        patch: ReturnType<typeof completionFields>;
+      }> = [];
       for (const localDate of [...days].sort()) {
-        if (existing.has(localDate)) continue;
+        const existingFields = existing.get(localDate);
+        if (existingFields && !args.onlyMissing) continue;
         const row = reconstructDay({
           localDate,
           zone,
@@ -278,17 +333,43 @@ async function main(): Promise<void> {
               (candidate) => localDateKey(candidate.date, zone) === localDate,
             ) ?? null,
         });
-        if (row) rows.push(row);
+        if (!row) continue;
+        if (existingFields) {
+          // Dan postoji: ne upisuje se novi red, dopunjuju se samo prazna polja.
+          const patch = completionFields(existingFields, row);
+          if (Object.keys(patch).length > 0) {
+            completions.push({ localDate, patch });
+          }
+          continue;
+        }
+        rows.push(row);
       }
 
       const summary = summarise(rows);
+      const completionSummary = summariseCompletion(
+        completions.map((item) => ({
+          existing: existing.get(item.localDate)!,
+          // Patch je već izračunat; za sažetak se broji ono što je u njemu.
+          reconstructed: {
+            gasM3: item.patch.gasM3 ?? null,
+            degreeDays: item.patch.degreeDays ?? null,
+          },
+        })),
+      );
       console.log(
         `- kuća #${home.id} (${zone}): ` +
           `${summary.days} dana za upis · ciklusi ${summary.withEvents} · plin ${summary.withGas} · ` +
           `stepen-dan ${summary.withDegreeDays} · predlog ${summary.withProposal} · ` +
-          `postojećih dana ${existing.size}`,
+          `postojećih dana ${existing.size}` +
+          (args.onlyMissing
+            ? ` · dopuna: ${completionSummary.rows} redova ` +
+              `(plin ${completionSummary.gas}, stepen-dan ${completionSummary.degreeDays})`
+            : ''),
       );
 
+      totals.completions += completionSummary.rows;
+      totals.completionGas += completionSummary.gas;
+      totals.completionDegreeDays += completionSummary.degreeDays;
       totals.withEvents += summary.withEvents;
       totals.withGas += summary.withGas;
       totals.withDegreeDays += summary.withDegreeDays;
@@ -298,13 +379,18 @@ async function main(): Promise<void> {
       for (const row of limited) {
         collected.push({ userId, homeProfileId: home.id, row });
       }
+      for (const item of completions) {
+        pendingCompletions.push({ homeProfileId: home.id, ...item });
+      }
       totalRows += limited.length;
     }
 
     console.log('');
     console.log(
       `Ukupno: **${totalRows}** redova za upis, ${totalExisting} dana već postoji` +
-        (totalDefaultZone > 0 ? `, ${totalDefaultZone} kuća sa zadanom zonom` : ''),
+        (totalDefaultZone > 0
+          ? `, ${totalDefaultZone} kuća sa zadanom zonom`
+          : ''),
     );
 
     if (collected.length > 0) {
@@ -323,7 +409,11 @@ async function main(): Promise<void> {
 
     notice(
       `backfill ${args.apply ? 'upis' : 'dry-run'}: ${totalRows} redova, ` +
-        `postojećih ${totalExisting} dana`,
+        `postojećih ${totalExisting} dana` +
+        (args.onlyMissing
+          ? `, dopuna ${totals.completions} (plin ${totals.completionGas}, ` +
+            `stepen-dan ${totals.completionDegreeDays})`
+          : ''),
     );
     notice(
       `backfill izvori: ciklusi ${totals.withEvents}, plin ${totals.withGas}, ` +
@@ -339,7 +429,7 @@ async function main(): Promise<void> {
       return;
     }
 
-    if (collected.length === 0) {
+    if (collected.length === 0 && pendingCompletions.length === 0) {
       console.log('Nema šta upisati.');
       return;
     }
@@ -385,9 +475,43 @@ async function main(): Promise<void> {
           ],
         );
       }
+      /*
+       * Dopuna: `UPDATE` sa uslovom `IS NULL` u `WHERE`.
+       *
+       * Uslov NIJE ukras — on ponavlja pravilo iz `completionFields` na mjestu
+       * gdje se stvarno piše. Time i greška pozivaoca (patch sa vrijednošću
+       * za polje koje je u međuvremenu popunjeno) ostaje bez efekta: prepisati
+       * postojeću vrijednost ne može ni jedan put.
+       */
+      let completed = 0;
+      for (const item of pendingCompletions) {
+        const update = buildCompletionUpdate(item.patch);
+        if (!update) continue;
+        const result = await client.query(
+          `UPDATE "DailyRecord"
+              SET ${update.sets.join(', ')}, "updatedAt" = now()
+            WHERE "homeProfileId" = $1 AND "localDate" = $2
+              AND (${update.where.join(' OR ')})`,
+          [item.homeProfileId, item.localDate, ...update.params],
+        );
+        completed += result.rowCount ?? 0;
+      }
+
       await client.query('COMMIT');
       console.log(`Upisano ${collected.length} redova (${BACKFILL_VERSION}).`);
+      if (pendingCompletions.length > 0) {
+        console.log(
+          `Dopunjeno ${completed} redova (plin/stepen-dan), od ` +
+            `${pendingCompletions.length} predloženih — razlika je red koji je ` +
+            `u međuvremenu već dobio vrijednost.`,
+        );
+      }
       notice(`backfill upisan: ${collected.length} redova`);
+      if (pendingCompletions.length > 0) {
+        notice(
+          `backfill dopuna: ${completed}/${pendingCompletions.length} redova`,
+        );
+      }
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

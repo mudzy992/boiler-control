@@ -420,6 +420,51 @@ describe('buildCompletionUpdate — SQL bez viska parametara', () => {
     return found.length === 0 ? 0 : Math.max(...found);
   };
 
+  /*
+   * GRANIČNI SLUČAJ KOJI JE PAO U PRODUKCIJI.
+   *
+   * Prva verzija je vraćala `$1`/`$2` za vrijednosti, a pozivalac je već
+   * koristio `$1`/`$2` za dom i datum — pa je upit imao 3 parametra a 2
+   * placeholdera. Postgres: `bind message supplies 3 parameters, but prepared
+   * statement requires 2`, i cijela transakcija se rollback-uje.
+   *
+   * Test zato broji parametre u **cijelom** upitu (sa vanjskim `$1`/`$2`), a ne
+   * u fragmentu — fragment sam po sebi ne može otkriti ovu grešku.
+   */
+  const fullStatement = (
+    patch: Parameters<typeof buildCompletionUpdate>[0],
+    first = 3,
+  ) => {
+    const update = buildCompletionUpdate(patch, first)!;
+    const sql = `UPDATE "DailyRecord" SET ${update.sets.join(', ')}, "updatedAt" = now()
+      WHERE "homeProfileId" = $1 AND "localDate" = $2 AND (${update.where.join(' OR ')})`;
+    const values = [3, '2026-11-09', ...update.params];
+    return { sql, values, update };
+  };
+
+  it('CIJELI upit: broj parametara = najveći $n (3 parametra, ne 2)', () => {
+    for (const patch of [
+      { gasM3: 5.6 },
+      { degreeDays: 3 },
+      { gasM3: 5, degreeDays: 6 },
+    ]) {
+      const { sql, values } = fullStatement(patch);
+      expect(values.length).toBe(maxPlaceholder(sql));
+      // Placeholder-i moraju biti TAČNO $1,$2,$3(,$4) — bez preskoka i duplikata.
+      const used = [
+        ...new Set([...sql.matchAll(/\$(\d+)/g)].map((m) => Number(m[1]))),
+      ].sort((a, b) => a - b);
+      expect(used).toEqual(
+        Array.from({ length: values.length }, (_, index) => index + 1),
+      );
+    }
+  });
+
+  it('vrijednosti kreću od $3, nikad od $1 (sudar sa dom/datum)', () => {
+    const { update } = fullStatement({ gasM3: 5.6 });
+    expect(update.sets).toEqual(['"gasM3" = $3']);
+  });
+
   it('oba polja: dva parametra, dva placeholder-a, oba uslova IS NULL', () => {
     const update = buildCompletionUpdate({ gasM3: 6.64, degreeDays: 12.31 })!;
     expect(update.params).toEqual([6.64, 12.31]);

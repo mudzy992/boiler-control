@@ -485,7 +485,8 @@ async function main(): Promise<void> {
        */
       let completed = 0;
       for (const item of pendingCompletions) {
-        const update = buildCompletionUpdate(item.patch);
+        // `$1` i `$2` su dom i datum — vrijednosti zato počinju od `$3`.
+        const update = buildCompletionUpdate(item.patch, 3);
         if (!update) continue;
         const result = await client.query(
           `UPDATE "DailyRecord"

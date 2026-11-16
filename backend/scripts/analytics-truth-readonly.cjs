@@ -218,15 +218,26 @@ async function main() {
     if (asJson) {
       console.log(JSON.stringify(result, null, 2));
     } else {
+      /*
+       * Jedna `SAZETAK:` linija sa SVE TRI presude.
+       *
+       * `emit_notice.sh` uzima **prvu** liniju koja nosi odluku — a GitHub
+       * prihvata 50 anotacija po job-u i tiho odbacuje ostatak. Tri odvojene
+       * linije zato ne bi bile tri anotacije, nego bi samo prva (M1) stigla do
+       * nalaza. Zato sve tri idu u jednu liniju, razdvojene sa `|`.
+       */
       console.log(`ANALITIKA prozor ${days} dana`);
       console.log(
-        `  M1 ${m1}: ${e.cycles} ciklusa, ${e.open} bez kraja | prosj. kako se prikazuje ${avgAsShown.toFixed(2)} min, samo zatvoreni ${avgIfClosedOnly.toFixed(2)} min`,
+        `  SAZETAK: M1 ${m1} (${e.cycles} ciklusa, ${e.open} bez kraja, prosj. ${avgAsShown.toFixed(2)} vs ${avgIfClosedOnly.toFixed(2)} min) | M2 ${m2} (${e.zero_current} nula u currentTemp od ${e.cycles}) | M3 ${m3} (${d.with_metrics}/${d.with_outcome} obracunatih dana ima metrike, ${d.with_gas} plin, ${d.with_degree_days} stepen-dan od ${d.days})`,
       );
       console.log(
-        `  M2 ${m2}: ${e.zero_current} nula u currentTemp, ${e.zero_target} nula u targetTemp (od ${e.cycles})`,
+        `  detalj M1: prosj. trajanje kako se prikazuje ${avgAsShown.toFixed(2)} min, samo zatvoreni ${avgIfClosedOnly.toFixed(2)} min`,
       );
       console.log(
-        `  M3 ${m3}: ${d.days} dana, ${d.with_outcome} sa outcomeAt, ${d.with_metrics} sa metrikama, ${d.with_gas} sa plinom, ${d.with_degree_days} sa stepen-danom`,
+        `  detalj M2: ${e.zero_current} nula u currentTemp, ${e.zero_target} nula u targetTemp (od ${e.cycles} dogadjaja)`,
+      );
+      console.log(
+        `  detalj M3: ${d.days} dana, ${d.with_outcome} sa outcomeAt, ${d.with_metrics} sa metrikama, ${d.with_gas} sa plinom, ${d.with_degree_days} sa stepen-danom`,
       );
     }
 

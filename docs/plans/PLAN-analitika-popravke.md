@@ -248,3 +248,60 @@ M4 PRAG_GA_ISKLJUCUJE   (32/32 ispod praga, prosj. 2.1 red/dan)
 trajanje koje korisnik vidi palo je sa 223,06 na **219,73 min** — iako se
 trajanje **nije promijenilo**, samo se imenilac povećao. To je tačno kvar iz
 audita §1.4, uhvaćen u stvarnom radu, a ne u testu. Popravka je B2.
+
+### Faza B — završena (`97e41af` … `9a34fac`)
+
+| # | šta je urađeno | test | dokaz da test hvata grešku |
+|---|---|---|---|
+| B1 | nula `< 5 °C` van prosjeka, uz `excludedZeroTemp` | `heating-totals.spec.ts` (8), `dashboard-summary-totals.spec.ts` (5) | sa starim servisom **5/5 pada** |
+| B2 | otvoren ciklus se mjeri do `now` | isto | isto |
+| B3 | `NotFoundException` umjesto golog `Error` | isto | isto |
+
+**Sabiranje je izdvojeno u `common/heating-totals.ts`**, jer su iste brojeve
+računala **tri** mjesta: `getHeatingSummary`, `analytics-export.ts` (`version=2`)
+i `version=1` izvoz (koji zove servis). Popravka na jednom mjestu ne bi bila
+popravka — a upravo se to do 16.11. i nije desilo.
+
+**Postojeći test je bio dokaz kvara, ne smetnja.** `analytics-export.spec.ts` je
+očekivao `avgIndoorTemp: 8.75` iz redova `20` i `-2.5` — dakle da temperatura
+sobe od −2,5 °C uđe u prosjek. Test je tvrdio kvar. Ažuriran je uz imenovanje
+zašto.
+
+### Granica koju je trebalo povući (i prvi pokušaj nije bio tačan)
+
+Prva verzija B1 vraćala je `null` i za **prazan raspon**. Integracioni test je
+pokazao da je to preširoko:
+
+| slučaj | prije | poslije | zašto |
+|---|---|---|---|
+| nema događaja | `0` | **`0`** (nepromijenjeno) | `totalCycles` već kaže da je prazno; nula ne tvrdi mjerenje |
+| ima događaja, nijedna temperatura nije mjerena | `0` | **`null`** | nula bi rekla „u sobi je 0 °C" |
+| ima mjerenja | prosjek | prosjek | — |
+
+Razlika je razlučiva po `totalCycles`, pa nije trebalo mijenjati postojeći ugovor.
+
+### Šta je mjerenje pokazalo poslije B
+
+Kapija `43841582208` (poslije A) je već pokazala kvar koji B2 rješava. Poslije B
+isti prozor daje otvoren ciklus uračunat u **trajanje**, pa prosjek prestaje da
+padne samim tim što je mjerenje palo usred grijanja.
+
+### CI: tri odvojena uzroka, ne jedan
+
+Faza B je otkrila tri stvari koje su izgledale kao jedan pad:
+
+1. **`OpenAPI contract in sync`** — nova polja u DTO-u mijenjaju šemu. `tsc` i
+   `eslint` su bili **0 grešaka**; pad je bio ugovor. Regenerisano generatorom
+   (`npm run openapi:generate`), ne ručno; `nullable: true` je sada u ugovoru.
+2. **Zaključan spisak polja** (`openapi-schema.spec.ts`) — polje koje se doda
+   bez odluke ovdje nije dio ugovora nego slučajnost. Ažurirano uz objašnjenje.
+3. **`Exceeded timeout` na `/api/dashboard`** — **nije** moja promjena. Dokaz:
+   - `9d11838` mijenja **samo** `contracts/openapi.json` i `api.d.ts`, i prvi put
+     pokazuje timeout — dakle ne može biti uzrok;
+   - **Backend build** (isti testovi, `1754/1754`) prolazi u 79 s, **Audit
+     checks** (isti testovi + `--coverage --runInBand`) padne u 138 s;
+   - ponovljen run istog commita (`9a34fac`) → **success**, korak 22 u 82 s.
+
+   Zaključak: nestabilnost uslova u Audit jobu (tajmaut na sporijem runnew),
+   ne regresija. Nije "popravljeno" jer nema šta da se popravi u kodu — ali je
+   zabilježeno da se ne bi gonilo kao greška.

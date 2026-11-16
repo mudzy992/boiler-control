@@ -481,6 +481,28 @@ jobs:
               | while IFS= read -r line; do echo "::error::GAP uzrok: $line"; done
           fi
 
+      # Da li analitika koju korisnik vidi odgovara podacima: otvoreni ciklusi
+      # podcjenjuju prosječno trajanje (`totalCycles` ih broji, `totalDurationMin`
+      # ne), nule u `roomCurrentTemp` ulaze u prosjek, i dnevne mjerne kolone
+      # postoje a nijedan endpoint ih ne čita. Tri presude, svaka imenuje uzrok.
+      - name: Analytics truth self-test
+        run: node scripts/analytics-truth-readonly.cjs --self-test
+
+      - name: Analytics truth (read-only)
+        env:
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+        run: |
+          set +e
+          node scripts/analytics-truth-readonly.cjs > "$RUNNER_TEMP/an.log" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/an.log"
+          bash scripts/ci/emit_notice.sh "ANALITIKA " "$RUNNER_TEMP/an.log"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::ANALITIKA mjerenje nije proslo (exit $code)"
+            tail -5 "$RUNNER_TEMP/an.log" \
+              | while IFS= read -r line; do echo "::error::ANALITIKA uzrok: $line"; done
+          fi
+
       - name: Forecast error self-test (F3.4)
         run: node scripts/forecast-error-readonly.cjs --self-test
 

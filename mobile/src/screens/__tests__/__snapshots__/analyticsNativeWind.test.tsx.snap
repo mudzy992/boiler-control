@@ -1151,28 +1151,6 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
               >
                 analytics.periodSummary
               </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#e8edf4",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#9aa6b6",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "letterSpacing": 1.1,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
-                analytics.noPreviousData
-              </Text>
             </View>
             <View
               accessible={false}
@@ -1277,7 +1255,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="analytics.heatingHours: 2.0 analytics.hrs, analytics.periodPrevious: — analytics.hrs"
+                accessibilityLabel="analytics.heatingHours: 2.0 analytics.hrs, analytics.periodPrevious: 2.5 analytics.hrs"
                 accessible={true}
                 style={
                   [
@@ -1435,7 +1413,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        2.5
                       </Text>
                       <Text
                         style={
@@ -1462,9 +1440,25 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#22c55e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  -20.0%
+                </Text>
               </View>
               <View
-                accessibilityLabel="analytics.sessions: 4 , analytics.periodPrevious: — "
+                accessibilityLabel="analytics.sessions: 4 , analytics.periodPrevious: 5 "
                 accessible={true}
                 style={
                   [
@@ -1600,14 +1594,30 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        5
                       </Text>
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#22c55e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  -20.0%
+                </Text>
               </View>
               <View
-                accessibilityLabel="analytics.avgDuration: 30.0 analytics.minutes, analytics.periodPrevious: — analytics.minutes"
+                accessibilityLabel="analytics.avgDuration: 30.0 analytics.minutes, analytics.periodPrevious: 30.0 analytics.minutes"
                 accessible={true}
                 style={
                   [
@@ -1765,7 +1775,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        30.0
                       </Text>
                       <Text
                         style={
@@ -1792,9 +1802,25 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#828d9e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  0.0%
+                </Text>
               </View>
               <View
-                accessibilityLabel="analytics.avgIndoor: 21.5 °C, analytics.periodPrevious: — °C"
+                accessibilityLabel="analytics.avgIndoor: 21.5 °C, analytics.periodPrevious: 21.1 °C"
                 accessible={true}
                 style={
                   [
@@ -1949,7 +1975,7 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        21.1
                       </Text>
                       <Text
                         style={
@@ -1976,6 +2002,22 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#f5a524",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  +1.9%
+                </Text>
               </View>
             </View>
           </View>
@@ -2077,20 +2119,86 @@ exports[`Analytics nativewind matches the dark snapshot 1`] = `
               </Text>
             </View>
             <View
-              accessibilityElementsHidden={true}
-              importantForAccessibility="no-hide-descendants"
+              accessibilityLabel="analytics.dailyHistoryEmpty. analytics.dailyHistoryEmptyHint"
+              accessibilityRole="alert"
+              accessible={true}
               style={
                 [
                   {
+                    "alignItems": "flex-start",
+                    "borderLeftWidth": 2,
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "paddingHorizontal": 11,
+                    "paddingVertical": 9,
+                  },
+                  {
                     "backgroundColor": "#111723",
-                    "borderRadius": 2,
-                    "height": 72,
-                    "width": "100%",
+                    "borderColor": "#1f2733",
+                    "borderLeftColor": "#38bdf8",
                   },
                   undefined,
                 ]
               }
-            />
+            >
+              <Text
+                accessibilityLabel="information-circle-outline"
+              >
+                information-circle-outline
+              </Text>
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 2,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                      },
+                    ]
+                  }
+                >
+                  analytics.dailyHistoryEmpty
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#e8edf4",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#9aa6b6",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 17.55,
+                      },
+                    ]
+                  }
+                >
+                  analytics.dailyHistoryEmptyHint
+                </Text>
+              </View>
+            </View>
           </View>
           <View
             style={
@@ -3479,28 +3587,6 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
               >
                 analytics.periodSummary
               </Text>
-              <Text
-                style={
-                  [
-                    {
-                      "color": "#111827",
-                      "fontFamily": undefined,
-                      "fontSize": 15,
-                      "lineHeight": 20,
-                    },
-                    null,
-                    {
-                      "color": "#4b5563",
-                      "fontFamily": "monospace",
-                      "fontSize": 11,
-                      "letterSpacing": 1.1,
-                      "textTransform": "uppercase",
-                    },
-                  ]
-                }
-              >
-                analytics.noPreviousData
-              </Text>
             </View>
             <View
               accessible={false}
@@ -3605,7 +3691,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                 </View>
               </View>
               <View
-                accessibilityLabel="analytics.heatingHours: 2.0 analytics.hrs, analytics.periodPrevious: — analytics.hrs"
+                accessibilityLabel="analytics.heatingHours: 2.0 analytics.hrs, analytics.periodPrevious: 2.5 analytics.hrs"
                 accessible={true}
                 style={
                   [
@@ -3763,7 +3849,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        2.5
                       </Text>
                       <Text
                         style={
@@ -3790,9 +3876,25 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#146e34",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  -20.0%
+                </Text>
               </View>
               <View
-                accessibilityLabel="analytics.sessions: 4 , analytics.periodPrevious: — "
+                accessibilityLabel="analytics.sessions: 4 , analytics.periodPrevious: 5 "
                 accessible={true}
                 style={
                   [
@@ -3928,14 +4030,30 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        5
                       </Text>
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#146e34",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  -20.0%
+                </Text>
               </View>
               <View
-                accessibilityLabel="analytics.avgDuration: 30.0 analytics.minutes, analytics.periodPrevious: — analytics.minutes"
+                accessibilityLabel="analytics.avgDuration: 30.0 analytics.minutes, analytics.periodPrevious: 30.0 analytics.minutes"
                 accessible={true}
                 style={
                   [
@@ -4093,7 +4211,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        30.0
                       </Text>
                       <Text
                         style={
@@ -4120,9 +4238,25 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#59616e",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  0.0%
+                </Text>
               </View>
               <View
-                accessibilityLabel="analytics.avgIndoor: 21.5 °C, analytics.periodPrevious: — °C"
+                accessibilityLabel="analytics.avgIndoor: 21.5 °C, analytics.periodPrevious: 21.1 °C"
                 accessible={true}
                 style={
                   [
@@ -4277,7 +4411,7 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                           ]
                         }
                       >
-                        —
+                        21.1
                       </Text>
                       <Text
                         style={
@@ -4304,6 +4438,22 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
                     </View>
                   </View>
                 </View>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#9e4808",
+                        "fontFamily": "monospace",
+                        "fontSize": 12,
+                        "lineHeight": 16,
+                      },
+                      null,
+                      undefined,
+                    ]
+                  }
+                >
+                  +1.9%
+                </Text>
               </View>
             </View>
           </View>
@@ -4405,20 +4555,86 @@ exports[`Analytics nativewind matches the light snapshot 1`] = `
               </Text>
             </View>
             <View
-              accessibilityElementsHidden={true}
-              importantForAccessibility="no-hide-descendants"
+              accessibilityLabel="analytics.dailyHistoryEmpty. analytics.dailyHistoryEmptyHint"
+              accessibilityRole="alert"
+              accessible={true}
               style={
                 [
                   {
+                    "alignItems": "flex-start",
+                    "borderLeftWidth": 2,
+                    "borderRadius": 3,
+                    "borderWidth": 1,
+                    "flexDirection": "row",
+                    "gap": 8,
+                    "paddingHorizontal": 11,
+                    "paddingVertical": 9,
+                  },
+                  {
                     "backgroundColor": "#f1f3f7",
-                    "borderRadius": 2,
-                    "height": 72,
-                    "width": "100%",
+                    "borderColor": "#dce0e8",
+                    "borderLeftColor": "#0369a1",
                   },
                   undefined,
                 ]
               }
-            />
+            >
+              <Text
+                accessibilityLabel="information-circle-outline"
+              >
+                information-circle-outline
+              </Text>
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 2,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                      },
+                    ]
+                  }
+                >
+                  analytics.dailyHistoryEmpty
+                </Text>
+                <Text
+                  style={
+                    [
+                      {
+                        "color": "#111827",
+                        "fontFamily": undefined,
+                        "fontSize": 15,
+                        "lineHeight": 20,
+                      },
+                      null,
+                      {
+                        "color": "#4b5563",
+                        "fontFamily": undefined,
+                        "fontSize": 13,
+                        "lineHeight": 17.55,
+                      },
+                    ]
+                  }
+                >
+                  analytics.dailyHistoryEmptyHint
+                </Text>
+              </View>
+            </View>
           </View>
           <View
             style={

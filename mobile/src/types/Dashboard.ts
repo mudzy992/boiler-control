@@ -279,4 +279,13 @@ export interface DailyHistoryResponse {
     lastDate: string | null;
   };
   truncated: boolean;
+  /**
+   * Ukupan broj zapisa za dom i period — osnova za „prikazano 14 od 312".
+   *
+   * Backend ga vraća (`daily-history.service.ts`, `total`), a tip ga do
+   * 16.11. nije deklarisao — pa mobilna kartica nije mogla reći koliko dana
+   * postoji, i pisala je „{{count}} dana zabilježeno" za dužinu stranice.
+   */
+  total?: number;
+  offset?: number;
 }

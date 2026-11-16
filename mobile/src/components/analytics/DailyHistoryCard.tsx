@@ -51,6 +51,27 @@ export const DailyHistoryCard = ({
 
   const report: DailyHistoryResponse | undefined = historyQuery.data;
   const rows = report?.rows ?? [];
+  /*
+   * Naslov mora reći da li je prikazan CIJELI period ili samo njegov kraj.
+   *
+   * `summary.days` je `rows.length` — dužina **stranice** (`limit`, na telefonu
+   * 14), ne broj zapisa koji postoji (`daily-history.ts:154`). Do 16.11. je
+   * kartica taj broj pisala kao „{{count}} dana zabilježeno", pa je korisnik sa
+   * 312 dana u bazi čitao da ima 14. Backend `truncated` i `total` vraća
+   * oduvijek; kartica ih nije čitala.
+   *
+   * Ako `total` iz nekog razloga ne stigne, rečenica **ne izmišlja** ukupan
+   * broj — ostaje poštena varijanta bez „od …".
+   */
+  const shownDays = report?.summary.days ?? 0;
+  const totalDays = report?.total;
+  const isTruncated = Boolean(report?.truncated) && typeof totalDays === 'number';
+  const summaryLine = isTruncated
+    ? t('analytics.dailyHistorySummaryTruncated', {
+        shown: shownDays,
+        total: totalDays,
+      })
+    : t('analytics.dailyHistorySummary', { count: shownDays });
   // Najnoviji dan prvi: na telefonu se traži „šta je bilo juče", ne početak.
   const newestFirst = [...rows].reverse();
 
@@ -77,9 +98,7 @@ export const DailyHistoryCard = ({
       {rows.length > 0 ? (
         <Panel>
           <View style={{ gap: space.xs, paddingBottom: space.sm }}>
-            <MonoLabel>
-              {t('analytics.dailyHistorySummary', { count: report?.summary.days ?? 0 })}
-            </MonoLabel>
+            <MonoLabel>{summaryLine}</MonoLabel>
             {report && report.summary.backfill > 0 ? (
               <MonoMeta tone="muted">
                 {t('analytics.dailyHistoryBackfill', {

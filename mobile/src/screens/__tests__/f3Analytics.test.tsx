@@ -1,6 +1,6 @@
 import mockReact from 'react';
 import { Text as mockNativeText } from 'react-native';
-import { fireEvent, render, waitFor, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import fs from 'fs';
 import path from 'path';
@@ -160,6 +160,50 @@ describe('F3 analitika', () => {
     await cleanup();
   });
 
+  /*
+   * A2 (audit analitike, §3.2). Kartica plina je do 16.11. sabirala **sva**
+   * očitanja: upit nije nosio raspon, pa su „Danas" i „Ova godina" davali iste
+   * brojke. Test ne gleda brojku na ekranu (ona zavisi od podataka), nego
+   * **ugovor prema serveru**: raspon mora stizati, i to isti onaj koji dobija
+   * `heating-summary`. Bez toga bi kartica i dalje govorila o drugom periodu.
+   */
+  it('A2: plinska kartica traži isti raspon kao heating-summary, i mijenja ga sa periodom', async () => {
+    const { cleanup } = await renderScreen();
+
+    const summaryArgs = jest.mocked(analyticsApi.getHeatingSummary).mock.calls[0][0];
+    const gasArgs = jest.mocked(apiClient.getGasReadings).mock.calls[0][0];
+
+    // 1. Raspon stiže do servera (prije popravke: `undefined`).
+    expect(gasArgs?.from).toBeDefined();
+    expect(gasArgs?.to).toBeDefined();
+
+    // 2. To je ISTI raspon koji dobija summary — dvije kartice ne smiju
+    //    govoriti o dva različita perioda.
+    expect(gasArgs?.from).toBe(summaryArgs.from);
+    expect(gasArgs?.to).toBe(summaryArgs.to);
+
+    await cleanup();
+  });
+
+  it('A2: promjena perioda mijenja raspon plina („Danas" ≠ „Ova godina")', async () => {
+    const { cleanup } = await renderScreen();
+
+    // Zadano je „Ovu sedmicu" (timeRange='week'); prebacujemo na „Danas".
+    fireEvent.press(screen.getByText('analytics.today'));
+
+    await waitFor(() => {
+      const calls = jest.mocked(apiClient.getGasReadings).mock.calls;
+      const firstFrom = calls[0][0]?.from;
+      const lastFrom = calls[calls.length - 1][0]?.from;
+      // Raspon se mora promijeniti; prije popravke oba su bila `undefined`
+      // pa je uslov bio `undefined === undefined` i test bi pao.
+      expect(lastFrom).toBeDefined();
+      expect(lastFrom).not.toBe(firstFrom);
+    });
+
+    await cleanup();
+  });
+
   it('prikazuje razliku u procentima kad prethodni period postoji', async () => {
     const { table, cleanup } = await renderScreen();
 
@@ -182,6 +226,42 @@ describe('F3 analitika', () => {
     expect(within(table).queryByText(/%$/)).toBeNull();
     // Sekcija nosi eksplicitnu poruku da prethodnih podataka nema.
     expect(await result.findByText('analytics.noPreviousData')).toBeTruthy();
+
+    await cleanup();
+  });
+
+  /**
+   * A3 (audit analitike, §3.3). Riječ „uzorci"/„samples" je na ovom ekranu
+   * značila tri različite stvari, pa dva broja nisu bila uporediva. Test ne
+   * provjerava prijevod (to bi bio test prevoda), nego **da ista riječ ne
+   * stoji uz dva različita broja** — ako neko vrati stari ključ, padne.
+   */
+  it('A3: ista oznaka „uzorci" ne stoji uz dva različita broja', async () => {
+    const { cleanup } = await renderScreen();
+
+    const source = fs.readFileSync(
+      path.join(__dirname, '../analytics/AnalyticsScreen.tsx'),
+      'utf8',
+    );
+
+    // KPI pouzdanosti: kumulativni `samples` jednog intervala.
+    expect(source).toContain("t('analytics.samplesValue'");
+    // Sekcija modela: broj DANA u periodu — drugi ključ, drugo ime.
+    expect(source).toContain("t('analytics.modelConfidenceLine'");
+
+    // Nijedan od dva ključa ne smije sadržavati riječ „samples"/„uzoraka" kao
+    // samostalan opis onog drugog. Prijevodi su ti koji to drže, pa se čitaju
+    // iz stvarnog rječnika, ne iz ključa.
+    const { __translationsForTest } = jest.requireActual('../../locales/config');
+    const en = __translationsForTest['en-US'].analytics;
+    const bs = __translationsForTest['bs-BS'].analytics;
+
+    expect(en.samplesValue).toContain('cumulative');
+    expect(en.modelConfidenceLine).toContain('days in period');
+    expect(en.samplesValue).not.toBe(en.modelConfidenceLine);
+
+    expect(bs.samplesValue).toContain('kumulativno');
+    expect(bs.modelConfidenceLine).toContain('dana u periodu');
 
     await cleanup();
   });

@@ -282,8 +282,17 @@ class ApiClientService {
    * Očitanja plina (`33`). Backend straniči; 200 je dovoljno za sve dosadašnje
    * podatke i sprječava da odgovor raste bez granice. Lista na ekranu traži
    * najnovija, a analitika radi na istom skupu.
+   *
+   * `from`/`to` postoje jer kartica „Potrošnja plina" na Analitici mora
+   * poštovati odabrani period: do 16.11. su „Danas" i „Ova godina" davali iste
+   * brojke, jer su se sabirala **sva** očitanja bez obzira na segment gore.
    */
-  async getGasReadings(params?: { limit?: number; offset?: number }) {
+  async getGasReadings(params?: {
+    limit?: number;
+    offset?: number;
+    from?: string;
+    to?: string;
+  }) {
     const response = await this.client.get('/gas/readings', {
       params: { limit: 200, ...params },
     });

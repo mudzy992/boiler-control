@@ -37,6 +37,7 @@ import { shouldForceLoginRedirectOn401 } from "./auth401";
 import type { BoilerCatalog } from "../features/home-profile/lib/boiler-catalog";
 import type {
   DailyHistoryResponse,
+  DailyMetricsResponse,
   ShadowReportResponse,
 } from "../features/reports/types";
 
@@ -784,6 +785,21 @@ export class ApiClient {
     offset?: number;
   }): Promise<DailyHistoryResponse> {
     const response = await this.client.get("/daily-record/history", { params });
+    return response.data;
+  }
+
+  /**
+   * C1 — dnevne mjerne kolone (`dutyPercent`, `overshootC`, `hysteresisK`, …).
+   *
+   * Vraća i `coverage` po koloni: mjerenje kaže 5/86 dana, pa ekran mora znati
+   * da li je praznina nedostatak podatka ili kvar.
+   */
+  async getDailyMetrics(params: {
+    homeProfileId: number;
+    from?: string;
+    to?: string;
+  }): Promise<DailyMetricsResponse> {
+    const response = await this.client.get("/daily-record/metrics", { params });
     return response.data;
   }
 

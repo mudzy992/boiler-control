@@ -1,7 +1,11 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { SecureStorage } from '../storage/SecureStorage';
 import { API_CONFIG } from '../../config/api.config';
-import type { DailyHistoryResponse, DashboardHealthResponse } from '../../types/Dashboard';
+import type {
+  DailyHistoryResponse,
+  DailyMetricsResponse,
+  DashboardHealthResponse,
+} from '../../types/Dashboard';
 import type { AccountExportResponse } from '../../types/AccountExport';
 import type {
   ConfirmWeatherLocationResponse,
@@ -61,7 +65,7 @@ class ApiClientService {
       },
       (error) => {
         return Promise.reject(error);
-      },
+      }
     );
 
     // Response interceptor: Handle 401 errors
@@ -95,7 +99,7 @@ class ApiClientService {
           // Note: Navigation to login should be handled by AuthContext
         }
         return Promise.reject(error);
-      },
+      }
     );
   }
 
@@ -213,7 +217,7 @@ class ApiClientService {
 
   async getWeatherLocationCandidates(
     homeProfileId: number,
-    query: string,
+    query: string
   ): Promise<WeatherLocationCandidatesResponse> {
     const response = await this.client.get(`/weather/v2/locations/${homeProfileId}`, {
       params: { query },
@@ -224,7 +228,7 @@ class ApiClientService {
   async confirmWeatherLocation(
     homeProfileId: number,
     query: string,
-    candidateId: string,
+    candidateId: string
   ): Promise<ConfirmWeatherLocationResponse> {
     const response = await this.client.post(`/weather/v2/locations/${homeProfileId}/confirm`, {
       query,
@@ -244,6 +248,19 @@ class ApiClientService {
     limit?: number;
   }): Promise<DailyHistoryResponse> {
     const response = await this.client.get('/daily-record/history', { params });
+    return response.data;
+  }
+
+  /**
+   * C1 — dnevne mjerne kolone. Vraća i pokrivenost po koloni, da ekran razlikuje
+   * „nije mjereno" od „ne radi".
+   */
+  async getDailyMetrics(params: {
+    homeProfileId: number;
+    from?: string;
+    to?: string;
+  }): Promise<DailyMetricsResponse> {
+    const response = await this.client.get('/daily-record/metrics', { params });
     return response.data;
   }
 
@@ -287,12 +304,7 @@ class ApiClientService {
    * poštovati odabrani period: do 16.11. su „Danas" i „Ova godina" davali iste
    * brojke, jer su se sabirala **sva** očitanja bez obzira na segment gore.
    */
-  async getGasReadings(params?: {
-    limit?: number;
-    offset?: number;
-    from?: string;
-    to?: string;
-  }) {
+  async getGasReadings(params?: { limit?: number; offset?: number; from?: string; to?: string }) {
     const response = await this.client.get('/gas/readings', {
       params: { limit: 200, ...params },
     });
@@ -360,7 +372,7 @@ class ApiClientService {
   async uploadGasInvoice(
     id: number,
     invoicePdf: { uri: string; name?: string; type?: string },
-    invoiceGasPriceExVat?: number,
+    invoiceGasPriceExVat?: number
   ) {
     const formData = new FormData();
     formData.append('invoicePdf', {

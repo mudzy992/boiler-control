@@ -15,6 +15,8 @@ import {
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DailyHistoryService, MAX_HISTORY_ROWS } from './daily-history.service';
+import { DailyMetricsService } from './daily-metrics.service';
+import { DailyMetricsResponseDto } from './dto/daily-metrics-response.dto';
 import { validatedWindow } from './shadow.report.controller';
 
 /**
@@ -32,6 +34,7 @@ import { validatedWindow } from './shadow.report.controller';
 export class DailyHistoryController {
   constructor(
     private readonly history: DailyHistoryService,
+    private readonly metrics: DailyMetricsService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -75,6 +78,46 @@ export class DailyHistoryController {
       limit: validatedLimit(limit),
       offset: validatedOffset(offset),
     });
+  }
+
+  /**
+   * Dnevne mjerne kolone (`dutyPercent`, `overshootC`, `hysteresisK`, …) — C1.
+   *
+   * Postoji jer su te kolone **mjerene i zapisane, a nijedan endpoint ih nije
+   * čitao** (§1.1 audita). Odgovor nosi i `coverage` po koloni: mjerenje kaže
+   * 5/86 dana, pa klijent mora znati da li praznina znači „nije mjereno" ili
+   * „ekran ne radi".
+   */
+  @Get('metrics')
+  @ApiQuery({ name: 'homeProfileId', required: false, type: Number })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
+  @ApiOkResponse({
+    description: 'Dnevne mjerne kolone sa pokrivenošću po koloni',
+    type: DailyMetricsResponseDto,
+  })
+  async dailyMetrics(
+    @Req() req,
+    @Query('homeProfileId') homeProfileId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const homeId = homeProfileId
+      ? Number(homeProfileId)
+      : await this.activeHomeProfileId(req.user.userId);
+
+    if (!Number.isInteger(homeId) || homeId <= 0) {
+      throw new BadRequestException(
+        'homeProfileId mora biti pozitivan cio broj',
+      );
+    }
+
+    return this.metrics.forHome(
+      req.user.userId,
+      homeId,
+      from || undefined,
+      to || undefined,
+    );
   }
 
   private async activeHomeProfileId(userId: number): Promise<number> {

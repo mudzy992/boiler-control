@@ -501,6 +501,144 @@
         ],
         "type": "object"
       },
+      "DailyMetricRowDto": {
+        "properties": {
+          "degreeHours": {
+            "description": "Stepen-sati u danu.",
+            "type": "number"
+          },
+          "dutyPercent": {
+            "description": "Procenat vremena pod gorionikom. Izostaje kad nije mjereno — izostanak nije nula.",
+            "type": "number"
+          },
+          "flowSetC": {
+            "description": "Zadata polazna temperatura, °C.",
+            "type": "number"
+          },
+          "heatRateCPerHour": {
+            "description": "Brzina zagrijavanja, K/h — mjeri ponašanje kotla.",
+            "type": "number"
+          },
+          "hysteresisAsymmetryK": {
+            "description": "Asimetrija histereze, K. Razlika gornje i donje granice.",
+            "type": "number"
+          },
+          "hysteresisK": {
+            "description": "Histereza, K.",
+            "type": "number"
+          },
+          "localDate": {
+            "description": "DB kolona `localDate`, `YYYY-MM-DD` (lokalni dan doma).",
+            "example": "2026-11-08",
+            "type": "string"
+          },
+          "medianCycleMin": {
+            "description": "DB kolona `medianCycleMin`.",
+            "type": "number"
+          },
+          "nightFlowC": {
+            "description": "Noćna polazna temperatura, °C.",
+            "type": "number"
+          },
+          "nightMinOutdoorMeasuredC": {
+            "description": "Najniža **izmjerena** vanjska temperatura noću, °C.",
+            "type": "number"
+          },
+          "nightUndershootC": {
+            "description": "Noćni podbačaj, K.",
+            "type": "number"
+          },
+          "overshootC": {
+            "description": "Prebačaj iznad cilja, K. `0` je mjerenje, izostanak nije.",
+            "type": "number"
+          },
+          "undershootC": {
+            "description": "Podbačaj ispod cilja, K.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "localDate"
+        ],
+        "type": "object"
+      },
+      "DailyMetricsCoverageDto": {
+        "properties": {
+          "bestFieldShare": {
+            "description": "Najbolje pokrivena kolona u procentima — broj po kojem se odlučuje ima li ekran smisla (prag 25 %).",
+            "example": 5.8,
+            "type": "number"
+          },
+          "byField": {
+            "description": "Po koloni: na koliko dana ima vrijednost. Ključevi su tačno `DAILY_METRIC_FIELDS`.",
+            "example": {
+              "degreeHours": 0,
+              "dutyPercent": 0,
+              "flowSetC": 0,
+              "heatRateCPerHour": 0,
+              "hysteresisAsymmetryK": 0,
+              "hysteresisK": 0,
+              "medianCycleMin": 0,
+              "nightFlowC": 0,
+              "nightMinOutdoorMeasuredC": 0,
+              "nightUndershootC": 0,
+              "overshootC": 0,
+              "undershootC": 0
+            },
+            "type": "object"
+          },
+          "days": {
+            "description": "Broj dana u prozoru (redova u `DailyRecord`).",
+            "type": "number"
+          },
+          "withOutcome": {
+            "description": "Koliko dana ima `outcomeAt` — obračunato.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "days",
+          "withOutcome",
+          "byField",
+          "bestFieldShare"
+        ],
+        "type": "object"
+      },
+      "DailyMetricsResponseDto": {
+        "properties": {
+          "coverage": {
+            "$ref": "#/components/schemas/DailyMetricsCoverageDto"
+          },
+          "from": {
+            "description": "Početak prozora ili `null` ako nije zadat.",
+            "example": "2026-01-01",
+            "nullable": true,
+            "type": "string"
+          },
+          "homeProfileId": {
+            "type": "number"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/DailyMetricRowDto"
+            },
+            "type": "array"
+          },
+          "to": {
+            "description": "Kraj prozora ili `null`.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "homeProfileId",
+          "from",
+          "to",
+          "rows",
+          "coverage"
+        ],
+        "type": "object"
+      },
       "DashboardAnalyticsExportFileDto": {
         "properties": {
           "content": {
@@ -3188,6 +3326,57 @@
         "responses": {
           "200": {
             "description": "Dnevni zapisi za dom i period, sa porijeklom"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Daily record"
+        ]
+      }
+    },
+    "/api/daily-record/metrics": {
+      "get": {
+        "operationId": "DailyHistoryController_dailyMetrics",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "homeProfileId",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyMetricsResponseDto"
+                }
+              }
+            },
+            "description": "Dnevne mjerne kolone sa pokrivenošću po koloni"
           }
         },
         "security": [

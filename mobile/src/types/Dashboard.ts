@@ -289,3 +289,43 @@ export interface DailyHistoryResponse {
   total?: number;
   offset?: number;
 }
+
+/**
+ * C1 — dnevne mjerne kolone (`GET /api/daily-record/metrics`).
+ *
+ * Te kolone su mjerene i zapisane, a do 16.11. ih nijedan endpoint nije čitao.
+ * Mjerno polje koje **izostaje** znači „nije mjereno" — nije `0` (dogovor B1).
+ * `coverage` je po koloni jer `dutyPercent` i `heatRateCPerHour` nemaju istu
+ * pokrivenost na istim danima (mjerenje: 5/86 dana).
+ */
+export type DailyMetricField =
+  | 'dutyPercent'
+  | 'medianCycleMin'
+  | 'overshootC'
+  | 'undershootC'
+  | 'hysteresisK'
+  | 'hysteresisAsymmetryK'
+  | 'heatRateCPerHour'
+  | 'nightUndershootC'
+  | 'nightMinOutdoorMeasuredC'
+  | 'nightFlowC'
+  | 'flowSetC'
+  | 'degreeHours';
+
+export type DailyMetricRow = { localDate: string } & Partial<Record<DailyMetricField, number>>;
+
+export interface DailyMetricsCoverage {
+  days: number;
+  withOutcome: number;
+  byField: Record<DailyMetricField, number>;
+  /** Najbolje pokrivena kolona, %. Prag 25 % odlučuje ima li ekran smisla. */
+  bestFieldShare: number;
+}
+
+export interface DailyMetricsResponse {
+  homeProfileId: number;
+  from: string | null;
+  to: string | null;
+  rows: DailyMetricRow[];
+  coverage: DailyMetricsCoverage;
+}

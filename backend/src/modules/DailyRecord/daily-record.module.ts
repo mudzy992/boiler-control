@@ -8,6 +8,7 @@ import { ProposalShadowService } from './proposal-shadow.service';
 import { ShadowReportService } from './shadow-report.service';
 import { ShadowReportController } from './shadow.report.controller';
 import { DailyHistoryService } from './daily-history.service';
+import { DailyMetricsService } from './daily-metrics.service';
 import { DailyHistoryController } from './daily-history.controller';
 
 /**
@@ -32,6 +33,7 @@ import { DailyHistoryController } from './daily-history.controller';
     ProposalShadowService,
     ShadowReportService,
     DailyHistoryService,
+    DailyMetricsService,
   ],
   exports: [
     DailyRecordWriter,

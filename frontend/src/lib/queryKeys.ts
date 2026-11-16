@@ -41,6 +41,13 @@ export const queryKeys = {
     offset: number,
     limit: number,
   ) => ["heating-events", "page", from, to, offset, limit] as const,
+  /**
+   * D1 — sažetak grijanja za raspon. Raspon i bucket su u ključu: bez toga bi
+   * prelazak sa sedmice na mjesec vratio **keširanu sedmicu** pod imenom
+   * mjeseca (isti kvar kao F3 na mobilnom, gdje upit nije nosio period).
+   */
+  heatingSummary: (from: string, to: string, bucket: "hour" | "day") =>
+    ["heating-summary", from, to, bucket] as const,
   gasReadingsPage: (from: string, to: string, offset: number, limit: number) =>
     ["gas-readings", "page", from, to, offset, limit] as const,
   boilerEvents: ["boiler-events"] as const,

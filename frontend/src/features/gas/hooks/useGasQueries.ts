@@ -67,16 +67,24 @@ export function useGasAnalysisQuery(options: {
 
   return useQuery({
     queryKey: queryKeys.gasAnalysis(rangeKey),
-    queryFn: async () => {
-      try {
-        return useDefaultReferenceRange
-          ? await apiClient.getGasAnalysis()
-          : await apiClient.getGasAnalysis(from, to);
-      } catch (err) {
-        console.error('Error fetching gas analysis:', err);
-        return {};
-      }
-    },
+    /*
+     * D2 (audit analitike §2, §4): greška se **ne guta**.
+     *
+     * Do 16.11. je `catch` vraćao `{}`, pa je upit bio „uspješan" i
+     * `analysisQuery.isError` **nikad** nije bio istinit. Zato je
+     * `QueryState` (`GasAnalyticsPage.tsx`) sa svojim error stanjem bio mrtav
+     * kod, a `GasAnalyticsMetrics` je iz `undefined` pravio nule
+     * (`?? 0`) — pa je pad servera izgledao kao **„0 m³, 0 €"**, tj. kao
+     * izmjereno. Nula koja glumi mjerenje ista je greška kao `null` → `0` u
+     * tabeli dnevne historije (A1).
+     *
+     * Sada greška ide dalje, React Query je vidi kao `isError`, i ekran
+     * pokazuje poruku sa „pokušaj ponovo" umjesto izmišljenih nula.
+     */
+    queryFn: () =>
+      useDefaultReferenceRange
+        ? apiClient.getGasAnalysis()
+        : apiClient.getGasAnalysis(from, to),
     staleTime: 1000 * 60 * 5,
   });
 }

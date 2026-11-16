@@ -309,6 +309,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/daily-record/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DailyHistoryController_dailyMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/daily-record/shadow-report": {
         parameters: {
             query?: never;
@@ -1317,6 +1333,78 @@ export interface components {
             /** @enum {string} */
             mode: "MANUAL" | "PROGRAM" | "OFF";
             vendor: string;
+        };
+        DailyMetricRowDto: {
+            /** @description Stepen-sati u danu. */
+            degreeHours?: number;
+            /** @description Procenat vremena pod gorionikom. Izostaje kad nije mjereno — izostanak nije nula. */
+            dutyPercent?: number;
+            /** @description Zadata polazna temperatura, °C. */
+            flowSetC?: number;
+            /** @description Brzina zagrijavanja, K/h — mjeri ponašanje kotla. */
+            heatRateCPerHour?: number;
+            /** @description Asimetrija histereze, K. Razlika gornje i donje granice. */
+            hysteresisAsymmetryK?: number;
+            /** @description Histereza, K. */
+            hysteresisK?: number;
+            /**
+             * @description DB kolona `localDate`, `YYYY-MM-DD` (lokalni dan doma).
+             * @example 2026-11-08
+             */
+            localDate: string;
+            /** @description DB kolona `medianCycleMin`. */
+            medianCycleMin?: number;
+            /** @description Noćna polazna temperatura, °C. */
+            nightFlowC?: number;
+            /** @description Najniža **izmjerena** vanjska temperatura noću, °C. */
+            nightMinOutdoorMeasuredC?: number;
+            /** @description Noćni podbačaj, K. */
+            nightUndershootC?: number;
+            /** @description Prebačaj iznad cilja, K. `0` je mjerenje, izostanak nije. */
+            overshootC?: number;
+            /** @description Podbačaj ispod cilja, K. */
+            undershootC?: number;
+        };
+        DailyMetricsCoverageDto: {
+            /**
+             * @description Najbolje pokrivena kolona u procentima — broj po kojem se odlučuje ima li ekran smisla (prag 25 %).
+             * @example 5.8
+             */
+            bestFieldShare: number;
+            /**
+             * @description Po koloni: na koliko dana ima vrijednost. Ključevi su tačno `DAILY_METRIC_FIELDS`.
+             * @example {
+             *       "degreeHours": 0,
+             *       "dutyPercent": 0,
+             *       "flowSetC": 0,
+             *       "heatRateCPerHour": 0,
+             *       "hysteresisAsymmetryK": 0,
+             *       "hysteresisK": 0,
+             *       "medianCycleMin": 0,
+             *       "nightFlowC": 0,
+             *       "nightMinOutdoorMeasuredC": 0,
+             *       "nightUndershootC": 0,
+             *       "overshootC": 0,
+             *       "undershootC": 0
+             *     }
+             */
+            byField: Record<string, never>;
+            /** @description Broj dana u prozoru (redova u `DailyRecord`). */
+            days: number;
+            /** @description Koliko dana ima `outcomeAt` — obračunato. */
+            withOutcome: number;
+        };
+        DailyMetricsResponseDto: {
+            coverage: components["schemas"]["DailyMetricsCoverageDto"];
+            /**
+             * @description Početak prozora ili `null` ako nije zadat.
+             * @example 2026-01-01
+             */
+            from: string | null;
+            homeProfileId: number;
+            rows: components["schemas"]["DailyMetricRowDto"][];
+            /** @description Kraj prozora ili `null`. */
+            to: string | null;
         };
         DashboardAnalyticsExportFileDto: {
             /** @description CSV tekst ili JSON tekst. Postojeci mobile cita ovaj string i dijeli ga kao fajl. */
@@ -2416,6 +2504,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    DailyHistoryController_dailyMetrics: {
+        parameters: {
+            query?: {
+                homeProfileId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dnevne mjerne kolone sa pokrivenošću po koloni */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyMetricsResponseDto"];
+                };
             };
         };
     };

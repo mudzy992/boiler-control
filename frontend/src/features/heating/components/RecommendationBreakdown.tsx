@@ -1,11 +1,11 @@
-import type { JSX } from 'react';
-import { useTranslation } from 'react-i18next';
-import { StatusBanner } from '@/shared/components/status-banner';
-import { Card, CardContent } from '@/shared/components/ui/Card';
-import type { components } from '../../../types/api';
+import type { JSX } from "react";
+import { useTranslation } from "react-i18next";
+import { StatusBanner } from "@/shared/components/status-banner";
+import { Card, CardContent } from "@/shared/components/ui/Card";
+import type { components } from "../../../types/api";
 
 export type RecommendationBreakdownData =
-  components['schemas']['RecommendationBreakdownDto'];
+  components["schemas"]["RecommendationBreakdownDto"];
 
 interface RecommendationBreakdownProps {
   breakdown?: RecommendationBreakdownData | null;
@@ -15,7 +15,7 @@ interface RecommendationBreakdownProps {
 const formatTemp = (value: number): string => `${value.toFixed(1)}°C`;
 
 const formatOffset = (value: number): string => {
-  const sign = value > 0 ? '+' : '';
+  const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}°C`;
 };
 
@@ -27,14 +27,12 @@ const formatOffset = (value: number): string => {
  * iznosi nula — korisnik bi to čitao kao kvar. Crtica kaže „ovdje nema
  * podatka", što je istina.
  */
-const NO_VALUE = '—';
+const NO_VALUE = "—";
 
 const formatTempOrDash = (value: number | null): string =>
   value === null ? NO_VALUE : formatTemp(value);
 
-type ModelBreakdown = NonNullable<
-  RecommendationBreakdownData['model']
->;
+type ModelBreakdown = NonNullable<RecommendationBreakdownData["model"]>;
 
 /**
  * F4.3 — članovi ravnotežnog izraza kao redovi tabele.
@@ -54,38 +52,38 @@ const modelRows = (
 
   if (model.slopeS !== null) {
     rows.push({
-      label: t('recommendation.modelSlope'),
+      label: t("recommendation.modelSlope"),
       // Izvor je bitan: dok je model mlad, koristi se gornja granica intervala
       // pouzdanosti, pa nagib nije „tačka" nego namjerno konzervativan broj.
       value:
-        model.slopeSource === 'CI_HIGH'
-          ? `${model.slopeS.toFixed(2)} ${t('recommendation.modelSlopeCi')}`
-          : `${model.slopeS.toFixed(2)} ${t('recommendation.modelSlopePoint')}`,
+        model.slopeSource === "CI_HIGH"
+          ? `${model.slopeS.toFixed(2)} ${t("recommendation.modelSlopeCi")}`
+          : `${model.slopeS.toFixed(2)} ${t("recommendation.modelSlopePoint")}`,
     });
   }
   if (model.outdoorRefC !== null) {
     rows.push({
-      label: t('recommendation.modelOutdoorRef'),
+      label: t("recommendation.modelOutdoorRef"),
       value: `${formatTemp(model.outdoorRefC)} ${
-        model.outdoorRefSource === 'NIGHT_DAY_BLEND'
-          ? t('recommendation.modelRefBlend')
-          : t('recommendation.modelRefNight')
+        model.outdoorRefSource === "NIGHT_DAY_BLEND"
+          ? t("recommendation.modelRefBlend")
+          : t("recommendation.modelRefNight")
       }`,
     });
   }
   rows.push({
-    label: t('recommendation.modelInternalGain'),
+    label: t("recommendation.modelInternalGain"),
     value: `−${model.internalGainC.toFixed(2)}°C`,
   });
   if (model.dayGainC !== 0) {
     rows.push({
-      label: t('recommendation.modelDayGain'),
+      label: t("recommendation.modelDayGain"),
       value: `−${model.dayGainC.toFixed(2)}°C`,
     });
   }
   if (model.equilibriumFlowC !== null) {
     rows.push({
-      label: t('recommendation.modelEquilibrium'),
+      label: t("recommendation.modelEquilibrium"),
       value: formatTemp(model.equilibriumFlowC),
     });
   }
@@ -106,7 +104,7 @@ export const RecommendationBreakdown = ({
   // F4.4: dvije grane, a ne „ista tabela sa prazninama". Kad je motor `model`,
   // krive nema — pa se ne prikazuju njena tri reda sa crticama, nego članovi
   // izraza koji su broj zaista dali. Tabela sa šest crtica ne objašnjava ništa.
-  const isModel = breakdown.engine === 'model';
+  const isModel = breakdown.engine === "model";
 
   const offsets = breakdown.appliedOffsets;
 
@@ -115,29 +113,32 @@ export const RecommendationBreakdown = ({
       ? []
       : [
           {
-            label: t('recommendation.baseCurve'),
+            label: t("recommendation.baseCurve"),
             value: formatTempOrDash(breakdown.baseCurveTemp),
           },
           {
-            label: t('recommendation.weightedExternalTemp'),
+            label: t("recommendation.weightedExternalTemp"),
             value: formatTempOrDash(breakdown.weightedExternalTemp),
           },
           {
-            label: t('recommendation.homeOffset'),
+            label: t("recommendation.homeOffset"),
             value: offsets ? formatOffset(offsets.home) : NO_VALUE,
           },
           {
-            label: t('recommendation.intervalOffset'),
+            label: t("recommendation.intervalOffset"),
             value: offsets ? formatOffset(offsets.interval) : NO_VALUE,
           },
           {
-            label: t('recommendation.eventsOffset'),
+            label: t("recommendation.eventsOffset"),
             value: offsets ? formatOffset(offsets.events) : NO_VALUE,
           },
         ]),
-    { label: t('recommendation.finalTemp'), value: formatTemp(breakdown.finalTemp) },
     {
-      label: t('recommendation.confidence'),
+      label: t("recommendation.finalTemp"),
+      value: formatTemp(breakdown.finalTemp),
+    },
+    {
+      label: t("recommendation.confidence"),
       value: `${Math.round(breakdown.confidence * 100)}%`,
     },
     // F4.3: članovi izraza. `null` se preskače (npr. nema noćne prognoze) —
@@ -146,11 +147,14 @@ export const RecommendationBreakdown = ({
   ];
 
   if (breakdown.samples !== null) {
-    rows.push({ label: t('recommendation.samples'), value: String(breakdown.samples) });
+    rows.push({
+      label: t("recommendation.samples"),
+      value: String(breakdown.samples),
+    });
   }
   if (breakdown.expectedHeatTimeMin !== null) {
     rows.push({
-      label: t('recommendation.heatTime'),
+      label: t("recommendation.heatTime"),
       value: `${breakdown.expectedHeatTimeMin.toFixed(0)} min`,
     });
   }
@@ -159,19 +163,19 @@ export const RecommendationBreakdown = ({
     <Card variant="elevated">
       <CardContent className="space-y-3 pt-4 sm:pt-5">
         <h3 className="text-sm font-semibold text-foreground">
-          {title ?? t('recommendation.title')}
+          {title ?? t("recommendation.title")}
         </h3>
-        <StatusBanner variant="info" message={t('recommendation.advisory')} />
+        <StatusBanner variant="info" message={t("recommendation.advisory")} />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <caption className="sr-only">{t('recommendation.caption')}</caption>
+            <caption className="sr-only">{t("recommendation.caption")}</caption>
             <thead>
               <tr className="text-xs text-muted-foreground">
                 <th scope="col" className="py-1 pr-3 text-left font-medium">
-                  {t('recommendation.item')}
+                  {t("recommendation.item")}
                 </th>
                 <th scope="col" className="py-1 pl-3 text-right font-medium">
-                  {t('recommendation.value')}
+                  {t("recommendation.value")}
                 </th>
               </tr>
             </thead>
@@ -193,10 +197,10 @@ export const RecommendationBreakdown = ({
           </table>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t('recommendation.mode')}: {breakdown.mode}
+          {t("recommendation.mode")}: {breakdown.mode}
           {breakdown.intervalKey
-            ? ` · ${t('recommendation.interval')}: ${breakdown.intervalKey}`
-            : ''}
+            ? ` · ${t("recommendation.interval")}: ${breakdown.intervalKey}`
+            : ""}
         </p>
       </CardContent>
     </Card>

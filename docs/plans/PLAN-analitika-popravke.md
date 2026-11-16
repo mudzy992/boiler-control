@@ -8,10 +8,10 @@ Ovaj dokument je **izvršni** plan: redoslijed, tačan fajl, test koji dokazuje,
 
 Dvije vrste popravaka:
 
-| vrsta | primjer | efekat na ekran |
-|---|---|---|
-| **prikaz laže** | „14 dana zabilježeno" za 312 dana | rečenica se mijenja, broj ostaje isti |
-| **broj je pogrešan** | `avgIndoorTemp` 0,31 K niži | **broj se mijenja** |
+| vrsta                | primjer                           | efekat na ekran                       |
+| -------------------- | --------------------------------- | ------------------------------------- |
+| **prikaz laže**      | „14 dana zabilježeno" za 312 dana | rečenica se mijenja, broj ostaje isti |
+| **broj je pogrešan** | `avgIndoorTemp` 0,31 K niži       | **broj se mijenja**                   |
 
 Ako broj ide prvi, korisnik vidi da mu se brojka promijenila bez objašnjenja, a
 lažna rečenica ostaje. Zato: **prvo laž, pa broj.** Faze su zato A → B → C → D, i
@@ -35,7 +35,7 @@ Nijedan broj se ne mijenja. Samo se uklanja tvrdnja koju podaci ne nose.
   rečenica ostaje bez „od ukupno" radije nego da izmisli broj.
 - **Test:** `mobile/src/components/analytics/__tests__/DailyHistoryCard.test.tsx`
   (nov) — `truncated: true` **mora** dati rečenicu sa oba broja; `truncated:
-  false` mora dati staru rečenicu.
+false` mora dati staru rečenicu.
 - **Prije/poslije:** isti odgovor (14 redova, `truncated: true`) → prije „14
   dana zabilježeno", poslije „prikazano 14 od 312".
 
@@ -176,17 +176,17 @@ Nijedan broj se ne mijenja. Samo se uklanja tvrdnja koju podaci ne nose.
 
 ## Redoslijed izvršenja i mjerenje
 
-| # | faza | mijenja broj? | test | mjerenje poslije |
-|---|---|---|---|---|
-| 1 | A1 | ne | `DailyHistoryCard.test.tsx` | — |
-| 2 | A2 | ne (mijenja **šta** se sabira) | `f3Analytics.test.tsx` | — |
-| 3 | A3 | ne | `f3Analytics.test.tsx` | — |
-| 4 | B3 | ne | `dashboard-heating-events.spec.ts` | — |
-| 5 | B1 | **da** (+0,31 K) | `dashboard-summary-temp.spec.ts` | M2 → `NEMA_NULA` ili `NULA_VAN_PROSJEKA` |
-| 6 | B2 | **da** (samo sa otvorenim) | isti | M1 ostaje `NEMA_OTVORENIH`, ali presuda više ne zavisi od sreće |
-| 7 | D2 | ne | `gasAnalyticsError.test.tsx` | — |
-| 8 | C1 | da (novi ekran) | `daily-metrics.spec.ts` | M3 `withMetrics` ne smije pasti |
-| 9 | D1 | da (novi ekran) | — | — |
+| #   | faza | mijenja broj?                  | test                               | mjerenje poslije                                                |
+| --- | ---- | ------------------------------ | ---------------------------------- | --------------------------------------------------------------- |
+| 1   | A1   | ne                             | `DailyHistoryCard.test.tsx`        | —                                                               |
+| 2   | A2   | ne (mijenja **šta** se sabira) | `f3Analytics.test.tsx`             | —                                                               |
+| 3   | A3   | ne                             | `f3Analytics.test.tsx`             | —                                                               |
+| 4   | B3   | ne                             | `dashboard-heating-events.spec.ts` | —                                                               |
+| 5   | B1   | **da** (+0,31 K)               | `dashboard-summary-temp.spec.ts`   | M2 → `NEMA_NULA` ili `NULA_VAN_PROSJEKA`                        |
+| 6   | B2   | **da** (samo sa otvorenim)     | isti                               | M1 ostaje `NEMA_OTVORENIH`, ali presuda više ne zavisi od sreće |
+| 7   | D2   | ne                             | `gasAnalyticsError.test.tsx`       | —                                                               |
+| 8   | C1   | da (novi ekran)                | `daily-metrics.spec.ts`            | M3 `withMetrics` ne smije pasti                                 |
+| 9   | D1   | da (novi ekran)                | —                                  | —                                                               |
 
 **Kapija:** poslije svake faze `analytics-truth-readonly.cjs` mora dati **istu ili
 bolju** presudu. Ako M2 pređe iz `NULA_U_PROSJEKU` u nešto drugo a M3 padne,
@@ -213,11 +213,11 @@ popravka je pokvarila mjerenje — i to se vidi u CI-ju, ne u utisku.
 
 ### Faza A — završena (commit `348d97c`)
 
-| # | šta je urađeno | test | dokaz da test hvata grešku |
-|---|---|---|---|
-| A1 | `dailyHistorySummaryTruncated` + `total` u mobilnom tipu | `DailyHistoryCard.test.tsx` (3) | sa starom karticom **1/3 pada** |
-| A2 | raspon plina = `dateRange`, u ključu i u pozivu | `f3Analytics.test.tsx` (+2) | sa starim kodom **2/2 padaju** |
-| A3 | tri imena za tri broja | `f3Analytics.test.tsx` (+1) | traži `cumulative`/`dana u periodu` u stvarnom rječniku |
+| #   | šta je urađeno                                           | test                            | dokaz da test hvata grešku                              |
+| --- | -------------------------------------------------------- | ------------------------------- | ------------------------------------------------------- |
+| A1  | `dailyHistorySummaryTruncated` + `total` u mobilnom tipu | `DailyHistoryCard.test.tsx` (3) | sa starom karticom **1/3 pada**                         |
+| A2  | raspon plina = `dateRange`, u ključu i u pozivu          | `f3Analytics.test.tsx` (+2)     | sa starim kodom **2/2 padaju**                          |
+| A3  | tri imena za tri broja                                   | `f3Analytics.test.tsx` (+1)     | traži `cumulative`/`dana u periodu` u stvarnom rječniku |
 
 Uz A2 je došla i straža koja nije bila u planu: **jedno očitanje u periodu
 nije „0 m³"** nego „za potrošnju su potrebna dva". Prije popravke taj slučaj
@@ -251,11 +251,11 @@ audita §1.4, uhvaćen u stvarnom radu, a ne u testu. Popravka je B2.
 
 ### Faza B — završena (`97e41af` … `9a34fac`)
 
-| # | šta je urađeno | test | dokaz da test hvata grešku |
-|---|---|---|---|
-| B1 | nula `< 5 °C` van prosjeka, uz `excludedZeroTemp` | `heating-totals.spec.ts` (8), `dashboard-summary-totals.spec.ts` (5) | sa starim servisom **5/5 pada** |
-| B2 | otvoren ciklus se mjeri do `now` | isto | isto |
-| B3 | `NotFoundException` umjesto golog `Error` | isto | isto |
+| #   | šta je urađeno                                    | test                                                                 | dokaz da test hvata grešku      |
+| --- | ------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------- |
+| B1  | nula `< 5 °C` van prosjeka, uz `excludedZeroTemp` | `heating-totals.spec.ts` (8), `dashboard-summary-totals.spec.ts` (5) | sa starim servisom **5/5 pada** |
+| B2  | otvoren ciklus se mjeri do `now`                  | isto                                                                 | isto                            |
+| B3  | `NotFoundException` umjesto golog `Error`         | isto                                                                 | isto                            |
 
 **Sabiranje je izdvojeno u `common/heating-totals.ts`**, jer su iste brojeve
 računala **tri** mjesta: `getHeatingSummary`, `analytics-export.ts` (`version=2`)
@@ -272,11 +272,11 @@ zašto.
 Prva verzija B1 vraćala je `null` i za **prazan raspon**. Integracioni test je
 pokazao da je to preširoko:
 
-| slučaj | prije | poslije | zašto |
-|---|---|---|---|
-| nema događaja | `0` | **`0`** (nepromijenjeno) | `totalCycles` već kaže da je prazno; nula ne tvrdi mjerenje |
-| ima događaja, nijedna temperatura nije mjerena | `0` | **`null`** | nula bi rekla „u sobi je 0 °C" |
-| ima mjerenja | prosjek | prosjek | — |
+| slučaj                                         | prije   | poslije                  | zašto                                                       |
+| ---------------------------------------------- | ------- | ------------------------ | ----------------------------------------------------------- |
+| nema događaja                                  | `0`     | **`0`** (nepromijenjeno) | `totalCycles` već kaže da je prazno; nula ne tvrdi mjerenje |
+| ima događaja, nijedna temperatura nije mjerena | `0`     | **`null`**               | nula bi rekla „u sobi je 0 °C"                              |
+| ima mjerenja                                   | prosjek | prosjek                  | —                                                           |
 
 Razlika je razlučiva po `totalCycles`, pa nije trebalo mijenjati postojeći ugovor.
 
@@ -306,6 +306,87 @@ Faza B je otkrila tri stvari koje su izgledale kao jedan pad:
    ne regresija. Nije "popravljeno" jer nema šta da se popravi u kodu — ali je
    zabilježeno da se ne bi gonilo kao greška.
 
+### Faza D2 — završena (`2d87dce`)
+
+| #   | šta je urađeno                            | test                             | dokaz da test hvata grešku                                    |
+| --- | ----------------------------------------- | -------------------------------- | ------------------------------------------------------------- |
+| D2  | greška iz `useGasAnalysisQuery` ide dalje | `gasAnalyticsError.test.tsx` (2) | stari hook → **test 1 pada**; stare metrike → **test 2 pada** |
+
+**Kvar je bio dvostruk, i to je ono što je promaklo auditu.** `catch` je vraćao
+`{}`, pa `isError` nikad nije bio istinit — ali i da je bio, metrike su iz
+`undefined` pravile nule (`?? 0`, sedam puta). Popravka jednog bez drugog ne bi
+promijenila ono što korisnik vidi. Zato su dva testa, i svaki pada na **svoj**
+kvar.
+
+`consumptionFromReferenceM3 ?? totalGas ?? 0` je pritom bio i semantički
+pogrešan: `0` iz referentnog očitanja je **mjerenje** i morao je pobijediti
+`totalGas`, a ne propasti u njega kao „nema vrijednosti". Sada je to `typeof`
+provjera, ne `??`.
+
+### Faza C1 — završena (`fcf489b`)
+
+| #   | šta je urađeno                                            | test                          | dokaz da test hvata grešku                                   |
+| --- | --------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------ |
+| C1  | `GET /api/daily-record/metrics` nad 12 mjernih kolona     | `daily-metrics.spec.ts` (6)   | `null` → `0` i izostanak pokrivenosti po koloni padaju odmah |
+| C1  | ugovor: `DailyMetricsResponseDto` + generisani `api.d.ts` | `openapi-schema.spec.ts` (27) | 200 bez šeme daje `content?: never`                          |
+| C1  | klijenti: web + mobil `getDailyMetrics`                   | `tsc` čist na oba             | —                                                            |
+
+**Zašto odgovor nosi pokrivenost po koloni.** Mjerenje (M3) kaže **5/86**
+dana ima metrike. Ekran koji je prazan na 81 od 86 dana ne razlikuje se od
+pokvarenog ekrana — osim ako uz podatke ne ide broj. Pokrivenost je zato **po
+koloni**, ne ukupna: `dutyPercent` i `heatRateCPerHour` nemaju isti broj dana.
+
+**Polje koje izostaje nije `null`.** Isti dogovor kao B1: dan bez mjerenja nema
+ključ, a `null` bi tvrdio da je mjereno i da je vrijednost nepoznata. Zato su u
+DTO-u mjerna polja `required: false`, a ne `nullable`.
+
+**Dvije stvari koje je ugovor otkrio, a `tsc` ne bi:**
+
+1. endpoint bez odgovor-DTO dobija `200` **bez šeme** — `history` i
+   `shadow-report` to već imaju, pa `api.d.ts` za njih ima `content?: never`;
+2. `from: string | null` bez `type: String` daje u `api.d.ts`
+   `Record<string, never>` — generator iz unije pročita samo `null`.
+
+### Faza D1 — završena (`ddf759a`)
+
+| #   | šta je urađeno                                                  | test                               | dokaz da test hvata grešku              |
+| --- | --------------------------------------------------------------- | ---------------------------------- | --------------------------------------- |
+| D1  | `heating-period.ts`: raspon po lokalnom danu + prethodni period | `heating-period.test.ts` (8)       | granice mjeseca/godine i UTC-pomak dana |
+| D1  | `Segmented` (radiogroup) + `HeatingPeriodSummary`               | `heatingPeriodScreen.test.tsx` (3) | fiksiran period → **test 1 pada**       |
+
+**Prenos sa mobilnog nije kopija.** Mobilni `getPreviousDateRange` pomjera
+`new Date()` u milisekundama, pa mu „prethodni mjesec" traje koliko i tekući
+(31 dan u januaru → 31 dan u decembru) i sedmica klizi po dobu dana. Web računa
+po **lokalnom danu**: prethodna sedmica za 01.–07.11. je 25.–31.10., granica je
+ponoć, a godina je 365 dana unazad (`setFullYear(-1)` bi na 29.02. dao 366 dana).
+
+**Procenat se ne računa za temperaturu.** 20 °C → 21 °C nije „+5 %" nego +1 K:
+procenat na Celzijusu zavisi od nule skale. Za cikluse i trajanje procenat
+jeste odgovor; za temperaturu je razlika u kelvinima.
+
+**Ograničenja idu uz tabelu, ne u tooltip.** `openCycles` (B2) i
+`excludedZeroTemp` (B1) se ispisuju ispod tabele: bez njih trajanje izgleda
+tačnije nego što jeste.
+
+### Kapija poslije C1/D1 — mjerenje `43857447424`
+
+```
+M1 NEMA_OTVORENIH (67 ciklusa, 0 bez kraja, prosj. 220.51 vs 220.51 min)
+M2 NULA_U_PROSJEKU (1 nula od 67, prikazano 20.32 vs stvarno 20.63, razlika 0.31 K)
+M3 METRIKE_RIJETKE (5/86 obračunatih dana ima metrike, 20 plin od 87)
+M4 PRAG_GA_ISKLJUCUJE (32 dana sa outdoorTempC, 32 ispod praga 8, stepen-dan upisan 0/87)
+```
+
+**Sve četiri presude su identične onima poslije B — i to je očekivano, jer C1 i
+D1 ne mijenjaju ni jedan postojeći broj.** C1 **dodaje** kanal (nijedan
+postojeći upit ga ne koristi), a D1 mijenja **web prikaz**, a skripta mjeri
+bazu i backend. Kapija je zato ovdje dokaz da nije pokvareno, ne da je
+popravljeno.
+
+**M3 ostaje `METRIKE_RIJETKE` i tek sada je djelotvoran.** Do C1 nije bilo
+načina da se 5/86 vidi ikako osim ovom skriptom; od C1 to isto kaže endpoint, pa
+klijent može odlučiti da ekran ne prikazuje mjernu karticu dok ne pređe 25 %.
+
 ### Kapija poslije B — mjerenje `43851109488` **ne mjeri popravku**
 
 ```
@@ -325,11 +406,11 @@ bilo otvorenog ciklusa. **Mjerenje ovdje ne može razlikovati „nema otvorenih"
 
 Zato je za fazu B dokaz **test**, ne mjerenje:
 
-| kvar | kako je dokazan |
-|---|---|
-| B1 | `dashboard-summary-totals.spec.ts` — 5/5 pada sa starim servisom |
-| B2 | isto; + `heating-totals.spec.ts` tvrdi da je prosjek **isti** prije i poslije zatvaranja ciklusa |
-| B3 | isto — `NotFoundException` vs goli `Error` |
+| kvar | kako je dokazan                                                                                  |
+| ---- | ------------------------------------------------------------------------------------------------ |
+| B1   | `dashboard-summary-totals.spec.ts` — 5/5 pada sa starim servisom                                 |
+| B2   | isto; + `heating-totals.spec.ts` tvrdi da je prosjek **isti** prije i poslije zatvaranja ciklusa |
+| B3   | isto — `NotFoundException` vs goli `Error`                                                       |
 
 **Ovo je ograničenje mjerenja, ne nalaz.** Da bi mjerenje moglo provjeriti B,
 trebalo bi čitati **odgovor endpointa**, a ne bazu. To je sljedeći korak ako se

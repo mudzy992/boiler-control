@@ -2696,3 +2696,85 @@ kvar pisca nego **nedostatak izvora**: `degreeDays` traži ≥ 8 `externalTemp`
 očitanja u `BoilerHistory` po danu, a nijedan dan u prozoru ih nema. To je
 zasebno pitanje (koliko `BoilerHistory` redova uopšte nastaje po danu) i nije
 riješeno ovom popravkom.
+
+---
+
+## §10.47 — Audit analitike: mjerenje, i zatvaranje pitanja iz §10.46
+
+**Zahtjev (16.11.):** utvrditi (a) može li se analitika unaprijediti, (b) prikazuje
+li **web** pravu analitiku, (c) prikazuje li **mobilni** pravu i adekvatnu
+analitiku **u svim karticama**. Svaka tvrdnja dokazana, uzrok razdvojen brojem.
+
+**Izvještaj:** `docs/plans/AUDIT-analitika.md`. **Mjerenje:**
+`backend/scripts/analytics-truth-readonly.cjs` (read-only, `--self-test` 17/17),
+run `43833708635`, anotacija `ANALITIKA`.
+
+### Zatvoreno pitanje iz §10.46
+
+§10.46 je ostavio: „`POTPUN 0` — otvoreno: koliko `BoilerHistory` redova nastaje
+po danu."
+
+**Odgovor (M4): prosječno 2,1 red/dan, maksimalno 5.** Prag je 8
+(`backfill-reconstruction.ts:37`). **32 dana ima `outdoorTempC` i svih 32 je
+ispod praga.** Presuda `PRAG_GA_ISKLJUCUJE` — ne `PODATKA_NEMA` i ne
+`PISAC_GA_PRESKACE`.
+
+To znači: `degreeDays` **neće** se popuniti ni kad izvor bude savršen za ono što
+izvor danas daje. Popravka nije ni pisac ni izvor — **prag je taj koji gasi
+polje**, i to se ne rješava dopunom redova. Odluka: **prag se ne dira** (2,1
+uzorka/dan nije dnevni prosjek; spuštanje praga na 2 bilo bi ista greška kao
+nula u prosjeku iz M2). Polje ostaje `null` dok polling ne bude ≥ 8/dan.
+
+### Šta je mjerenje pokazalo o prikazu
+
+| mjerenje | presuda | broj |
+|---|---|---|
+| M1 otvoreni ciklusi | `NEMA_OTVORENIH` | 0/66 — prosjek tačan **danas**, kvar strukturni |
+| M2 `avgIndoorTemp` | `NULA_U_PROSJEKU` | 1 nula od 66 → prikaz **0,31 K niži** (20,31 vs 20,62) |
+| M3 dnevne metrike | `METRIKE_RIJETKE` | 5/86 (6 %) dana |
+| M4 `degreeDays` | `PRAG_GA_ISKLJUCUJE` | 32/32 dana ispod praga, prosj. 2,1 red/dan |
+
+**Najveći nalaz nije greška u broju, nego kanal koji ne postoji.** `DailyRecord`
+nosi 20+ mjernih kolona (`dutyPercent`, `overshootC`, `hysteresisK`,
+`nightUndershootC`, `heatRateCPerHour`, …) i **nijedan analitički endpoint ih ne
+čita** — svi `api/dashboard/*` vraćaju isključivo `HeatingEvent`. Zato ekran
+„Analitika" ne može odgovoriti ni na jedno pitanje o ponašanju kotla.
+
+Redoslijed popravke je zato obavezan: **prvo kanal, pa podatak** — kanal je 100 %
+nevidljiv, a podatak je 5/86. Obrnut redoslijed daje praznu karticu na 81 danu i
+izgleda kao da popravka nije radila.
+
+### Web vs. mobil — dva proizvoda nad istim backendom
+
+| | web | mobilni |
+|---|---|---|
+| period grijanja | **fiksan** (1 dan / 30 dana) | **bira se** (dan/sedmica/mjesec/godina) |
+| poređenje sa prethodnim | ne | **da** |
+| shadow izvještaj | **da** | ne |
+| tabela historije | da, straničenje | da, 14 redova, **laže o broju** |
+| gas analitika po periodu | **da** | **ne** — ignorše odabrani period |
+| upozorenje „prikazano je skraćeno" | da | **ne čita `truncated`** |
+
+Dvije greške u prikazu, obje na mobilnom, obje traže po jednu liniju:
+1. `DailyHistoryCard.tsx:81` piše „`{{count}}` dana zabilježeno" gdje je `count`
+   **dužina stranice** (14), a u bazi je 312 dana. Backend vraća `truncated`
+   (`daily-history.ts:165`) — kartica ga ne čita. Web istu stvar radi ispravno.
+2. `GasAnalyticsCard` računa iz **svih** dohvaćenih očitanja i ne prima
+   `timeRange`, pa „Danas" i „Ova godina" daju iste brojke. Web prosljeđuje
+   `from`/`to`.
+
+**Ovo su jedina dva mjesta gdje ekran tvrdi nešto što podaci ne nose.** Ostale
+kartice prikazuju tačno ono što backend vraća — uključujući i grešku od 0,31 K,
+koja je u servisu pa je ista na oba klijenta.
+
+### Mjerenje kao trajni dio CI-ja
+
+`Analytics truth` korak je u `baseline` jobu prije `F3.4`, sa self-testom prije
+baze. Sve tri presude idu u **jednu** `SAZETAK:` liniju jer `emit_notice.sh`
+uzima prvu liniju koja nosi odluku, a GitHub prima 50 anotacija po job-u — tri
+odvojene linije značile bi da M2 i M3 nikad ne stignu do nalaza (ista greška
+koja je prije skrivala F3.4/F3.5, v. §10.45).
+
+Prva verzija mjerenja je **pala** sa `column "roomCurrentTemp" does not exist`:
+Prisma polje nije ime kolone (`@map("currentTemp")`). Popravljeno istim danom;
+nalaz je bio tačan, upit nije.

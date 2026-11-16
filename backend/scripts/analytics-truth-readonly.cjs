@@ -16,6 +16,14 @@
  *        broje se događaji sa `roomCurrentTemp = 0`. Presuda:
  *        `NEMA_NULA` / `NULA_U_PROSJEKU`.
  *
+ *   M4 — `degreeDays` je 0 na svih 87 dana. Backfill traži
+ *        `MIN_OUTDOOR_SAMPLES_PER_DAY = 8` uzoraka vanjske temperature **u tom
+ *        danu** (`backfill-reconstruction.ts:247`). Ako `BoilerHistory` ima
+ *        manje, `null` je tačan — ali ako izvor ima podatak, onda je prag taj
+ *        koji gasi polje. Mjeri se raspodjela, ne pretpostavka: prosjek redova
+ *        po danu, koliko dana dostiže prag. Presuda:
+ *        `PODATKA_NEMA` / `PRAG_GA_ISKLJUCUJE` / `POLJE_SE_PISE`.
+ *
  *   M3 — dnevna analitika koje **nema**. `DailyRecord` ima 20+ mjernih kolona
  *        (`dutyPercent`, `overshootC`, `hysteresisK`, `nightUndershootC`, …),
  *        a nijedan analitički endpoint ih ne čita. Mjeri se koliko dana ih
@@ -90,7 +98,33 @@ function judgeDailyMetrics({ days, withOutcome, withMetrics }) {
   if (days === 0) return 'NEMA_DANA';
   if (withOutcome === 0) return 'NEMA_OBRACUNA';
   if (withMetrics === 0) return 'OBRACUN_BEZ_METRIKA';
+  /*
+   * Prag od 25 % je **imenovan**, ne osjećaj: ispod njega dnevna metrika ne
+   * može nositi ni jedan ekran (prosjek preko 4 dana od 87 nije analitika).
+   * Gola presuda `IMA_PODATAKA` na 5/86 bila bi tehnički tačna i praktično
+   * lažna — zato se ta dva slučaja razdvajaju.
+   */
+  const share = withMetrics / withOutcome;
+  if (share < 0.25) return 'METRIKE_RIJETKE';
   return 'IMA_PODATAKA';
+}
+
+/**
+ * M4. `degreeDays` iz izvora.
+ *
+ * Otvoreno pitanje iz §10.46 bilo je „ako izvor ima podatak, gdje se gubi".
+ * Tri ishoda, tri različita popravka:
+ *   - `PODATKA_NEMA` — `BoilerHistory` nema `externalTemp` za te dane. Popravka
+ *     je u izvoru (mjerenje), ne u pragu i ne u piscu.
+ *   - `PRAG_GA_ISKLJUCUJE` — podatak postoji, ali manje od 8 redova po danu.
+ *     Popravka je prag (ili gušći polling) — **ne** pisac.
+ *   - `POLJE_SE_PISE` — prag dostignut a polje ipak prazno. Tek tada je pisac.
+ */
+function judgeDegreeDays({ daysWithOutdoor, belowThreshold, stored }) {
+  if (daysWithOutdoor === 0) return 'PODATKA_NEMA';
+  if (belowThreshold > 0) return 'PRAG_GA_ISKLJUCUJE';
+  if (stored === 0) return 'PISAC_GA_PRESKACE';
+  return 'POLJE_SE_PISE';
 }
 
 async function runSelfTest() {
@@ -123,6 +157,34 @@ async function runSelfTest() {
   ok(
     judgeDailyMetrics({ days: 30, withOutcome: 10, withMetrics: 8 }) === 'IMA_PODATAKA',
     'M3 8/10 sa metrikama -> IMA_PODATAKA',
+  );
+  // Granica je prag, ne osjećaj: 2/10 je ispod 25 %, 3/10 iznad.
+  ok(
+    judgeDailyMetrics({ days: 30, withOutcome: 10, withMetrics: 2 }) === 'METRIKE_RIJETKE',
+    'M3 2/10 (20 %) -> METRIKE_RIJETKE, ne IMA_PODATAKA',
+  );
+  ok(
+    judgeDailyMetrics({ days: 30, withOutcome: 10, withMetrics: 3 }) === 'IMA_PODATAKA',
+    'M3 3/10 (30 %) -> IMA_PODATAKA',
+  );
+  ok(
+    judgeDailyMetrics({ days: 86, withOutcome: 86, withMetrics: 5 }) === 'METRIKE_RIJETKE',
+    'M3 5/86 (6 %) -> METRIKE_RIJETKE',
+  );
+
+  // M4: tri ishoda se ne smiju stisnuti u jedan — svaki ima drugu popravku.
+  ok(judgeDegreeDays({ daysWithOutdoor: 0, belowThreshold: 0, stored: 0 }) === 'PODATKA_NEMA', 'M4 nema izvora -> PODATKA_NEMA');
+  ok(
+    judgeDegreeDays({ daysWithOutdoor: 20, belowThreshold: 18, stored: 0 }) === 'PRAG_GA_ISKLJUCUJE',
+    'M4 18/20 dana ispod praga -> PRAG_GA_ISKLJUCUJE (ne pisac)',
+  );
+  ok(
+    judgeDegreeDays({ daysWithOutdoor: 20, belowThreshold: 0, stored: 0 }) === 'PISAC_GA_PRESKACE',
+    'M4 prag dostignut a polje prazno -> PISAC_GA_PRESKACE',
+  );
+  ok(
+    judgeDegreeDays({ daysWithOutdoor: 20, belowThreshold: 0, stored: 20 }) === 'POLJE_SE_PISE',
+    'M4 prag dostignut i polje puno -> POLJE_SE_PISE',
   );
 
   if (failed > 0) {
@@ -185,6 +247,27 @@ async function main() {
       [days],
     );
 
+    /*
+     * M4: koliko `BoilerHistory` redova nosi vanjsku temperaturu po danu.
+     * Prag je 8 (ista konstanta kao u backfillu) — ne prepisuje se ovdje kao
+     * druga vrijednost, nego se poredi sa stvarnom raspodjelom.
+     */
+    const outdoor = await client.query(
+      `SELECT count(*) FILTER (WHERE "n" > 0)::int AS days_with_outdoor,
+              count(*) FILTER (WHERE "n" > 0 AND "n" < 8)::int AS below_threshold,
+              coalesce(avg("n") FILTER (WHERE "n" > 0), 0) AS avg_rows,
+              coalesce(max("n"), 0)::int AS max_rows
+         FROM (
+           SELECT to_char("createdAt" AT TIME ZONE 'Europe/Sarajevo', 'YYYY-MM-DD') AS d,
+                  count(*) FILTER (WHERE "externalTemp" IS NOT NULL)::int AS n
+             FROM "BoilerHistory"
+            WHERE "createdAt" >= ${windowStart}
+            GROUP BY 1
+         ) per_day`,
+      [days],
+    );
+    const o = outdoor.rows[0];
+
     const e = events.rows[0];
     const d = daily.rows[0];
 
@@ -201,6 +284,11 @@ async function main() {
       avgShown !== null && avgNoZero !== null
         ? Number((avgNoZero - avgShown).toFixed(2))
         : null;
+    const m4 = judgeDegreeDays({
+      daysWithOutdoor: o.days_with_outdoor,
+      belowThreshold: o.below_threshold,
+      stored: d.with_degree_days,
+    });
     const m3 = judgeDailyMetrics({
       days: d.days,
       withOutcome: d.with_outcome,
@@ -226,6 +314,7 @@ async function main() {
       m1: { verdict: m1, cycles: e.cycles, open: e.open, totalMin: Math.round(totalMin), avgAsShown: Number(avgAsShown.toFixed(2)), avgIfClosedOnly: Number(avgIfClosedOnly.toFixed(2)) },
       m2: { verdict: m2, events: e.cycles, zeroCurrent: e.zero_current, zeroTarget: e.zero_target, avgShown, avgNoZero, zeroBiasK },
       m3: { verdict: m3, days: d.days, withOutcome: d.with_outcome, withMetrics: d.with_metrics, withGas: d.with_gas, withDegreeDays: d.with_degree_days },
+      m4: { verdict: m4, daysWithOutdoor: o.days_with_outdoor, belowThreshold: o.below_threshold, avgRows: Number(Number(o.avg_rows).toFixed(1)), maxRows: o.max_rows, storedDegreeDays: d.with_degree_days },
     };
 
     if (asJson) {
@@ -241,7 +330,7 @@ async function main() {
        */
       console.log(`ANALITIKA prozor ${days} dana`);
       console.log(
-        `  SAZETAK: M1 ${m1} (${e.cycles} ciklusa, ${e.open} bez kraja, prosj. ${avgAsShown.toFixed(2)} vs ${avgIfClosedOnly.toFixed(2)} min) | M2 ${m2} (${e.zero_current} nula od ${e.cycles}, prikazano ${avgShown === null ? '—' : avgShown.toFixed(2)} vs stvarno ${avgNoZero === null ? '—' : avgNoZero.toFixed(2)} °C, razlika ${zeroBiasK === null ? '—' : zeroBiasK.toFixed(2)} K) | M3 ${m3} (${d.with_metrics}/${d.with_outcome} obracunatih dana ima metrike, ${d.with_gas} plin, ${d.with_degree_days} stepen-dan od ${d.days})`,
+        `  SAZETAK: M1 ${m1} (${e.cycles} ciklusa, ${e.open} bez kraja, prosj. ${avgAsShown.toFixed(2)} vs ${avgIfClosedOnly.toFixed(2)} min) | M2 ${m2} (${e.zero_current} nula od ${e.cycles}, prikazano ${avgShown === null ? '—' : avgShown.toFixed(2)} vs stvarno ${avgNoZero === null ? '—' : avgNoZero.toFixed(2)} °C, razlika ${zeroBiasK === null ? '—' : zeroBiasK.toFixed(2)} K) | M3 ${m3} (${d.with_metrics}/${d.with_outcome} obracunatih dana ima metrike, ${d.with_gas} plin od ${d.days}) | M4 ${m4} (${o.days_with_outdoor} dana sa outdoorTempC, ${o.below_threshold} ispod praga 8, prosj. ${Number(o.avg_rows).toFixed(1)} redova, max ${o.max_rows}, stepen-dan upisan ${d.with_degree_days}/${d.days})`,
       );
       console.log(
         `  detalj M1: prosj. trajanje kako se prikazuje ${avgAsShown.toFixed(2)} min, samo zatvoreni ${avgIfClosedOnly.toFixed(2)} min`,
@@ -251,6 +340,9 @@ async function main() {
       );
       console.log(
         `  detalj M3: ${d.days} dana, ${d.with_outcome} sa outcomeAt, ${d.with_metrics} sa metrikama, ${d.with_gas} sa plinom, ${d.with_degree_days} sa stepen-danom`,
+      );
+      console.log(
+        `  detalj M4: ${o.days_with_outdoor} dana ima outdoorTempC, od toga ${o.below_threshold} ispod praga 8; prosj. ${Number(o.avg_rows).toFixed(1)} redova/dan, max ${o.max_rows}`,
       );
     }
 

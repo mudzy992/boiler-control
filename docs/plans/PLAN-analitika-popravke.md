@@ -206,3 +206,45 @@ popravka je pokvarila mjerenje — i to se vidi u CI-ju, ne u utisku.
    stvarno 0 °C (zadrži). Preporuka: izostavi + vrati `excludedZeroTemp`.
 2. **D1:** da li web dobija isti birač perioda kao mobilni, ili mobilni ostaje
    jedini analitički ekran. Ovo mijenja obim, ne ispravnost.
+
+---
+
+## Stanje izvršenja
+
+### Faza A — završena (commit `348d97c`)
+
+| # | šta je urađeno | test | dokaz da test hvata grešku |
+|---|---|---|---|
+| A1 | `dailyHistorySummaryTruncated` + `total` u mobilnom tipu | `DailyHistoryCard.test.tsx` (3) | sa starom karticom **1/3 pada** |
+| A2 | raspon plina = `dateRange`, u ključu i u pozivu | `f3Analytics.test.tsx` (+2) | sa starim kodom **2/2 padaju** |
+| A3 | tri imena za tri broja | `f3Analytics.test.tsx` (+1) | traži `cumulative`/`dana u periodu` u stvarnom rječniku |
+
+Uz A2 je došla i straža koja nije bila u planu: **jedno očitanje u periodu
+nije „0 m³"** nego „za potrošnju su potrebna dva". Prije popravke taj slučaj
+skoro nije bio dostižan (kartica je gledala sva očitanja), a poslije A2 kratak
+period često ima tačno jedno — pa bi popravka otvorila novu lažnu nulu.
+
+**Nusnalaz u snapshotu.** `analyticsNativeWind` je prije padao zbog A1, i to
+zato što je `getDailyHistory` bio **nemockovan**: kartica je završavala u grešci,
+a snapshot je to skrivao kao skeleton (`importantForAccessibility="no-hide-descendants"`).
+Uz to je `toMatchSnapshot` snimao tabelu **prije** nego što stigne prethodni
+period (`periodPrevious: —` umjesto `2.5`). Popravljeno: mock + čekanje na
+`2.5`. Snapshot sada prikazuje stanje koje korisnik stvarno vidi.
+
+### Kapija poslije A — mjerenje `43841582208`
+
+```
+M1 OTVORENI_PODCJENJUJU (67 ciklusa, 1 bez kraja, prosj. 219.73 vs 223.06 min)
+M2 NULA_U_PROSJEKU      (1 nula od 67, prikazano 20.32 vs stvarno 20.63, razlika 0.31 K)
+M3 METRIKE_RIJETKE      (5/86)
+M4 PRAG_GA_ISKLJUCUJE   (32/32 ispod praga, prosj. 2.1 red/dan)
+```
+
+**M2/M3/M4 nepromijenjeni — faza A nije dirala brojeve, kako je i planirano.**
+
+**M1 se promijenio sam, i to je dokaz da je B2 potreban.** Prije (run
+`43833708635`) bilo je `NEMA_OTVORENIH` — 0 otvorenih od 66. Sada grijanje
+**traje** u trenutku mjerenja, pa je 1 ciklus otvoren od 67, a prosječno
+trajanje koje korisnik vidi palo je sa 223,06 na **219,73 min** — iako se
+trajanje **nije promijenilo**, samo se imenilac povećao. To je tačno kvar iz
+audita §1.4, uhvaćen u stvarnom radu, a ne u testu. Popravka je B2.

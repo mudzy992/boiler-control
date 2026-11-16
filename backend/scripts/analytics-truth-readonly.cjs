@@ -161,7 +161,9 @@ async function main() {
       `SELECT count(*)::int AS cycles,
               count(*) FILTER (WHERE "timestampEnd" IS NULL)::int AS open,
               count(*) FILTER (WHERE "currentTemp" = 0)::int AS zero_current,
-              count(*) FILTER (WHERE "targetTemp" = 0)::int AS zero_target
+              count(*) FILTER (WHERE "targetTemp" = 0)::int AS zero_target,
+              avg("currentTemp") AS avg_current,
+              avg("currentTemp") FILTER (WHERE "currentTemp" <> 0) AS avg_current_no_zero
          FROM "HeatingEvent"
         WHERE "timestampStart" >= ${windowStart}`,
       [days],
@@ -188,6 +190,17 @@ async function main() {
 
     const m1 = judgeOpenCycles({ cycles: e.cycles, open: e.open });
     const m2 = judgeZeroTemps({ events: e.cycles, zero: e.zero_current });
+    /*
+     * Koliko nula stvarno pomjera broj na ekranu. Nula ulazi u prosjek kao
+     * 0 °C, pa je prikazani prosjek NIŽI od stvarnog. Bez ovog broja nalaz
+     * „ima nula" ne kaže da li je razlika 0,01 K ili 3 K.
+     */
+    const avgShown = e.avg_current === null ? null : Number(e.avg_current);
+    const avgNoZero = e.avg_current_no_zero === null ? null : Number(e.avg_current_no_zero);
+    const zeroBiasK =
+      avgShown !== null && avgNoZero !== null
+        ? Number((avgNoZero - avgShown).toFixed(2))
+        : null;
     const m3 = judgeDailyMetrics({
       days: d.days,
       withOutcome: d.with_outcome,
@@ -211,7 +224,7 @@ async function main() {
     const result = {
       windowDays: days,
       m1: { verdict: m1, cycles: e.cycles, open: e.open, totalMin: Math.round(totalMin), avgAsShown: Number(avgAsShown.toFixed(2)), avgIfClosedOnly: Number(avgIfClosedOnly.toFixed(2)) },
-      m2: { verdict: m2, events: e.cycles, zeroCurrent: e.zero_current, zeroTarget: e.zero_target },
+      m2: { verdict: m2, events: e.cycles, zeroCurrent: e.zero_current, zeroTarget: e.zero_target, avgShown, avgNoZero, zeroBiasK },
       m3: { verdict: m3, days: d.days, withOutcome: d.with_outcome, withMetrics: d.with_metrics, withGas: d.with_gas, withDegreeDays: d.with_degree_days },
     };
 
@@ -228,13 +241,13 @@ async function main() {
        */
       console.log(`ANALITIKA prozor ${days} dana`);
       console.log(
-        `  SAZETAK: M1 ${m1} (${e.cycles} ciklusa, ${e.open} bez kraja, prosj. ${avgAsShown.toFixed(2)} vs ${avgIfClosedOnly.toFixed(2)} min) | M2 ${m2} (${e.zero_current} nula u currentTemp od ${e.cycles}) | M3 ${m3} (${d.with_metrics}/${d.with_outcome} obracunatih dana ima metrike, ${d.with_gas} plin, ${d.with_degree_days} stepen-dan od ${d.days})`,
+        `  SAZETAK: M1 ${m1} (${e.cycles} ciklusa, ${e.open} bez kraja, prosj. ${avgAsShown.toFixed(2)} vs ${avgIfClosedOnly.toFixed(2)} min) | M2 ${m2} (${e.zero_current} nula od ${e.cycles}, prikazano ${avgShown === null ? '—' : avgShown.toFixed(2)} vs stvarno ${avgNoZero === null ? '—' : avgNoZero.toFixed(2)} °C, razlika ${zeroBiasK === null ? '—' : zeroBiasK.toFixed(2)} K) | M3 ${m3} (${d.with_metrics}/${d.with_outcome} obracunatih dana ima metrike, ${d.with_gas} plin, ${d.with_degree_days} stepen-dan od ${d.days})`,
       );
       console.log(
         `  detalj M1: prosj. trajanje kako se prikazuje ${avgAsShown.toFixed(2)} min, samo zatvoreni ${avgIfClosedOnly.toFixed(2)} min`,
       );
       console.log(
-        `  detalj M2: ${e.zero_current} nula u currentTemp, ${e.zero_target} nula u targetTemp (od ${e.cycles} dogadjaja)`,
+        `  detalj M2: ${e.zero_current} nula u currentTemp, ${e.zero_target} nula u targetTemp (od ${e.cycles} dogadjaja); prosj. sa nulama ${avgShown === null ? '—' : avgShown.toFixed(3)} °C, bez nula ${avgNoZero === null ? '—' : avgNoZero.toFixed(3)} °C`,
       );
       console.log(
         `  detalj M3: ${d.days} dana, ${d.with_outcome} sa outcomeAt, ${d.with_metrics} sa metrikama, ${d.with_gas} sa plinom, ${d.with_degree_days} sa stepen-danom`,

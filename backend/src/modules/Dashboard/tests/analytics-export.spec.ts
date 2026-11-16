@@ -215,8 +215,9 @@ describe('aggregateAnalyticsExport', () => {
       totalCycles: 0,
       totalDurationMin: 0,
       avgDurationMin: 0,
-      // `null`, ne 0: nula bi tvrdila da je u sobi 0 °C iz praznog izvoza.
-      avgIndoorTemp: null,
+      // Prazan izvoz zadržava `0` (postojeći ugovor, razlučiv po `totalCycles`).
+      // `null` važi samo kad događaji postoje a nijedan nema mjerenje.
+      avgIndoorTemp: 0,
       excludedZeroTemp: 0,
       openCycles: 0,
     });

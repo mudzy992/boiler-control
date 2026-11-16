@@ -278,9 +278,13 @@ export function aggregateAnalyticsExport(
         avgDurationMin: events.length
           ? Number((totalDuration / events.length).toFixed(2))
           : 0,
-        avgIndoorTemp: totalTempCount
-          ? Number((totalCurrent / totalTempCount).toFixed(2))
-          : null,
+        // Ista granica kao `heatingTotals`: prazan izvoz `0` (ugovor),
+        // izvoz sa događajima bez mjerenja `null` (nula bi tvrdila 0 °C).
+        avgIndoorTemp: events.length
+          ? totalTempCount
+            ? Number((totalCurrent / totalTempCount).toFixed(2))
+            : null
+          : 0,
         excludedZeroTemp: events.length - totalTempCount,
         openCycles: events.filter((e) => !e.timestampEnd).length,
       },

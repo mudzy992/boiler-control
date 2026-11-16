@@ -90,7 +90,10 @@ describe('B2 — otvoren ciklus ne obara prosječno trajanje', () => {
     const totals = heatingTotals([], NOW);
     expect(totals.totalCycles).toBe(0);
     expect(totals.avgDurationMin).toBe(0);
-    expect(totals.avgIndoorTemp).toBeNull();
+    // Prazan raspon NIJE isto što i „ima događaja bez mjerenja": `0` je
+    // postojeći ugovor i razlučiv je po `totalCycles`. `null` važi samo kad
+    // događaji postoje a nijedan nema upotrebljivu temperaturu.
+    expect(totals.avgIndoorTemp).toBe(0);
   });
 });
 

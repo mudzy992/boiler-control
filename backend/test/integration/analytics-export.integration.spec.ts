@@ -311,6 +311,10 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
       totalDurationMin: 75,
       avgDurationMin: 37.5,
       avgIndoorTemp: 19,
+      // B1/B2: nula izostavljenih redova i nula otvorenih ciklusa je ovdje
+      // **mjerenje**, ne nedostatak — zato se tvrdi eksplicitno.
+      excludedZeroTemp: 0,
+      openCycles: 0,
     });
     expect(legacy.body.stats.buckets).toEqual([
       {
@@ -353,6 +357,10 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
       totalDurationMin: 75,
       avgDurationMin: 37.5,
       avgIndoorTemp: 19,
+      // B1/B2: nula izostavljenih redova i nula otvorenih ciklusa je ovdje
+      // **mjerenje**, ne nedostatak — zato se tvrdi eksplicitno.
+      excludedZeroTemp: 0,
+      openCycles: 0,
     });
     expect(content.stats.buckets).toEqual([
       {
@@ -402,6 +410,8 @@ describe('Integration: GET /api/dashboard/export (FEAT-6)', () => {
       totalDurationMin: 60,
       avgDurationMin: 30,
       avgIndoorTemp: 19,
+      excludedZeroTemp: 0,
+      openCycles: 0,
     });
     expect(content.stats.buckets).toEqual([
       {

@@ -116,9 +116,24 @@ export function heatingTotals(
     avgDurationMin: totalCycles
       ? Number((totalDuration / totalCycles).toFixed(2))
       : 0,
-    avgIndoorTemp: tempCount
-      ? Number((tempSum / tempCount).toFixed(2))
-      : null,
+    /*
+     * Tri slučaja, tri različita odgovora — i granica je namjerna:
+     *
+     *   nema događaja      → `0`   (postojeći ugovor; `totalCycles` već kaže
+     *                               da je prazno, pa nula ne tvrdi mjerenje)
+     *   ima, ali nijedna
+     *   temperatura nije
+     *   mjerena            → `null` (nula bi rekla „u sobi je 0 °C")
+     *   ima mjerenja       → prosjek
+     *
+     * Prvi slučaj NIJE kvar iz B1 — zato se ne mijenja. Mijenja se samo onaj
+     * gdje je nula glumila mjerenje.
+     */
+    avgIndoorTemp: totalCycles
+      ? tempCount
+        ? Number((tempSum / tempCount).toFixed(2))
+        : null
+      : 0,
     excludedZeroTemp,
     openCycles,
   };

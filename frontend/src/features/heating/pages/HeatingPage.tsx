@@ -22,6 +22,7 @@ import {
 import { Segmented } from "@/shared/components/segmented";
 import { AnomalyBadge } from "../components/anomaly-badge";
 import { HeatingPeriodSummary } from "../components/heating-period-summary";
+import { DailyMetricsCard } from "../components/daily-metrics-card";
 import { useHeatingPeriod } from "../hooks/use-heating-period";
 import type { HeatingPeriod } from "../lib/heating-period";
 
@@ -38,6 +39,16 @@ const PAGE_SIZE = 25;
 export const HeatingPage = (): JSX.Element => {
   const { t } = useTranslation();
   const summaryPeriod = useHeatingPeriod("week");
+  /*
+   * C1 — kartica mjernih kolona. Prozor prati birač perioda: isti raspon za
+   * sve brojeve na stranici, inače "12 ciklusa" i "3 dana mjerenja" gledaju
+   * različite periode i poređenje ne znači ništa.
+   */
+  const { data: homeProfile } = useQuery({
+    queryKey: queryKeys.homeProfile,
+    queryFn: () => apiClient.getHomeProfile(),
+    staleTime: 1000 * 60 * 5,
+  });
   const [range, setRange] = useState<DateRange>({ from: "", to: "" });
   const [offset, setOffset] = useState(0);
 
@@ -130,6 +141,12 @@ export const HeatingPage = (): JSX.Element => {
           </QueryState>
         </CardContent>
       </Card>
+
+      <DailyMetricsCard
+        homeProfileId={homeProfile?.id}
+        from={summaryPeriod.range.from}
+        to={summaryPeriod.range.to}
+      />
 
       <DateRangeFilter
         idPrefix="heating-range"

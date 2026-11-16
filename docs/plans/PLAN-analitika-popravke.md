@@ -368,6 +368,28 @@ jeste odgovor; za temperaturu je razlika u kelvinima.
 `excludedZeroTemp` (B1) se ispisuju ispod tabele: bez njih trajanje izgleda
 tačnije nego što jeste.
 
+### C1 ekran — završena (`34e688c`)
+
+| #       | šta je urađeno                                     | test                                     | dokaz da test hvata grešku   |
+| ------- | -------------------------------------------------- | ---------------------------------------- | ---------------------------- |
+| kapija  | `evaluateMetricsGate` — prag 25 %, `no-data` ≠ 0 % | `metrics-gate.test.ts` (7) web + 4 mobil | granica 24,9/25 pada odmah   |
+| kartica | prosjek **samo** preko mjerenih dana               | `dailyMetricsCard.test.tsx` (3)          | bez kapije → 5,8 % test pada |
+
+**Kartica postoji i tačna je, ali se ne prikazuje — i to je odluka.** Plan
+traži prikaz tek od 25 %, stvarno stanje je 5,8 %. Alternativa („prikaži pa
+će se vidjeti") dala bi ekran prazan na 94 % dana, što korisnik ne može
+razlikovati od kvara.
+
+**Zašto prosjek ne ide preko svih dana.** Izostanak polja znači „nije
+mjereno" (dogovor B1). Prosjek preko svih dana bi nemjereno tiho uračunao kao
+nulu i spustio broj bez ijednog izmjerenog podatka. Test to fiksira brojem:
+`(40+60)/2 = 50`, a ne `(40+60+0)/3 = 33,3`.
+
+**Prag je kopiran, ne izmišljen dvaput.** Ista funkcija i isti test postoje na
+webu i mobilnom. Da se jednoj strani prag promijeni, padne jedna od dvije
+kopije — a dva klijenta ne smiju dati različit odgovor na „ima li dovoljno
+podataka".
+
 ### Kapija poslije C1/D1 — mjerenje `43857447424`
 
 ```

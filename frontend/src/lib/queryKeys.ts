@@ -48,6 +48,9 @@ export const queryKeys = {
    */
   heatingSummary: (from: string, to: string, bucket: "hour" | "day") =>
     ["heating-summary", from, to, bucket] as const,
+  /** C1 — dnevne mjerne kolone; dom i prozor su dio ključa. */
+  dailyMetrics: (homeProfileId: number, from: string, to: string) =>
+    ["daily-metrics", homeProfileId, from, to] as const,
   gasReadingsPage: (from: string, to: string, offset: number, limit: number) =>
     ["gas-readings", "page", from, to, offset, limit] as const,
   boilerEvents: ["boiler-events"] as const,

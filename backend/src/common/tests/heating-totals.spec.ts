@@ -139,8 +139,16 @@ describe('B1 — nula u sobnoj temperaturi nije mjerenje', () => {
 describe('Bucketi — cilj i postignuto iz istog skupa redova', () => {
   it('red bez upotrebljive temperature izlazi iz OBA prosjeka', () => {
     const bucket = emptyBucket();
-    addEventToBucket(bucket, event('2026-11-16T08:00:00.000Z', '2026-11-16T09:00:00.000Z', 21, 22), NOW);
-    addEventToBucket(bucket, event('2026-11-16T09:00:00.000Z', '2026-11-16T10:00:00.000Z', 0, 20), NOW);
+    addEventToBucket(
+      bucket,
+      event('2026-11-16T08:00:00.000Z', '2026-11-16T09:00:00.000Z', 21, 22),
+      NOW,
+    );
+    addEventToBucket(
+      bucket,
+      event('2026-11-16T09:00:00.000Z', '2026-11-16T10:00:00.000Z', 0, 20),
+      NOW,
+    );
 
     // Prije popravke: avgCurrent = (21+0)/2 = 10,5 uz avgTarget = 21.
     // Razlika „cilj vs postignuto" bila bi 10,5 K — kvar senzora, ne grijanja.

@@ -12,7 +12,7 @@ interface SummaryMetrics {
   totalCycles: number;
   totalDurationMin: number;
   avgDurationMin: number;
-  avgIndoorTemp: number;
+  avgIndoorTemp: number | null;
 }
 
 interface DashboardEventsPanelProps {
@@ -73,7 +73,8 @@ export const DashboardEventsPanel = ({
           />
           <StatCard
             title={t('dashboard.avgIndoorTemp')}
-            value={summaryMetrics.avgIndoorTemp}
+            /* B1: `null` → „—" (nema mjerenja), ne `0` (0 °C u sobi). */
+            value={summaryMetrics.avgIndoorTemp ?? '—'}
             suffix="°C"
           />
         </div>

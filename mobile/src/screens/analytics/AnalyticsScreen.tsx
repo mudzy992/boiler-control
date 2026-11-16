@@ -355,8 +355,13 @@ export const AnalyticsScreen = () => {
     {
       key: 'avgIndoor',
       label: t('analytics.avgIndoor'),
-      current: summary?.avgIndoorTemp,
-      previous: previousSummary?.avgIndoorTemp,
+      /*
+       * `?? undefined`, jer `null` u ovoj tabeli znači „nema mjerenja" — a
+       * `undefined` je ono što ćelija već prikazuje kao „—". Bez ovoga bi
+       * `null` otišao u `format(null)` i pukao, ili (gore) bio prikazan kao 0.
+       */
+      current: summary?.avgIndoorTemp ?? undefined,
+      previous: previousSummary?.avgIndoorTemp ?? undefined,
       format: (value: number) => value.toFixed(1),
       unit: '°C',
     },
@@ -399,8 +404,25 @@ export const AnalyticsScreen = () => {
           <View style={{ flexDirection: 'row', gap: space.sm }}>
             <Kpi
               label={t('analytics.avgIndoor')}
-              value={summary ? summary.avgIndoorTemp.toFixed(1) : '—'}
+              /*
+               * `avgIndoorTemp` je `number | null` (B1): `null` znači da nijedan
+               * red nema upotrebljivu temperaturu. Prije je bio `0`, pa je
+               * ekran pored `toFixed` pucao na `null` — a sa nulom je pisao
+               * „0.0 °C" za sobu u kojoj je 21 °C.
+               */
+              value={
+                summary?.avgIndoorTemp != null
+                  ? summary.avgIndoorTemp.toFixed(1)
+                  : '—'
+              }
               unit="°C"
+              meta={
+                summary?.excludedZeroTemp
+                  ? t('analytics.excludedZeroTemp', {
+                      count: summary.excludedZeroTemp,
+                    })
+                  : undefined
+              }
               testID="kpi-avg-indoor"
             />
             <Kpi

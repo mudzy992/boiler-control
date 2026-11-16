@@ -107,7 +107,13 @@ export interface HeatingSummaryResponse {
     totalCycles: number;
     totalDurationMin: number;
     avgDurationMin: number;
-    avgIndoorTemp: number;
+    /**
+     * `null` kad nijedan red nema upotrebljivu temperaturu (B1).
+     * `0` je do 16.11. značilo i „nema mjerenja" i „u sobi je 0 °C".
+     */
+    avgIndoorTemp: number | null;
+    excludedZeroTemp?: number;
+    openCycles?: number;
   };
   buckets: HeatingBucket[];
 }

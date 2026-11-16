@@ -170,19 +170,36 @@ describe('aggregateAnalyticsExport', () => {
       ],
       'UTC',
       'day',
+      /*
+       * `now` je eksplicitan. Prije B2 test nije imao otvoren ciklus u trajanju
+       * (red se preskakao), pa nije bilo ni parametra — a otvoren ciklus je
+       * upravo ono što test i treba da pokaže.
+       */
+      new Date('2026-01-01T11:10:00Z'),
     );
+    /*
+     * B1/B2: drugi red nosi `roomCurrentTemp: -2.5` — fizički nemoguća
+     * temperatura sobe (senzor nije javio). Prije popravke je ulazio u
+     * prosjek, pa je izvoz tvrdio **8,75 °C** za dan kad je u sobi bilo
+     * 20 °C. Sada izlazi iz oba prosjeka i **broji se**.
+     */
     expect(result.summary.summary).toEqual({
       totalCycles: 2,
-      totalDurationMin: 30,
-      avgDurationMin: 15,
-      avgIndoorTemp: 8.75,
+      // Otvoren ciklus traje do `now` (10 min), ne 0 i ne izostaje.
+      totalDurationMin: 40,
+      avgDurationMin: 20,
+      // Samo prvi red: 20 °C. Ne (20 + (−2,5)) / 2.
+      avgIndoorTemp: 20,
+      excludedZeroTemp: 1,
+      openCycles: 1,
     });
     expect(result.stats.buckets).toEqual([
       {
         label: '2026-01-01',
-        avgTargetTemp: 21.5,
-        avgCurrentTemp: 8.75,
-        totalDurationMin: 30,
+        // Oba prosjeka iz istog skupa (jedan upotrebljiv red).
+        avgTargetTemp: 22,
+        avgCurrentTemp: 20,
+        totalDurationMin: 40,
         cycles: 2,
       },
     ]);
@@ -198,7 +215,10 @@ describe('aggregateAnalyticsExport', () => {
       totalCycles: 0,
       totalDurationMin: 0,
       avgDurationMin: 0,
-      avgIndoorTemp: 0,
+      // `null`, ne 0: nula bi tvrdila da je u sobi 0 °C iz praznog izvoza.
+      avgIndoorTemp: null,
+      excludedZeroTemp: 0,
+      openCycles: 0,
     });
     expect(result.summary.buckets).toEqual([]);
     expect(result.stats.buckets).toEqual([]);

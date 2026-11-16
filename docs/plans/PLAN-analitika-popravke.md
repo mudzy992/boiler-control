@@ -305,3 +305,32 @@ Faza B je otkrila tri stvari koje su izgledale kao jedan pad:
    Zaključak: nestabilnost uslova u Audit jobu (tajmaut na sporijem runnew),
    ne regresija. Nije "popravljeno" jer nema šta da se popravi u kodu — ali je
    zabilježeno da se ne bi gonilo kao greška.
+
+### Kapija poslije B — mjerenje `43851109488` **ne mjeri popravku**
+
+```
+M1 NEMA_OTVORENIH (67 ciklusa, 0 bez kraja, prosj. 220.51 vs 220.51 min)
+M2 NULA_U_PROSJEKU (1 nula od 67, prikazano 20.32 vs stvarno 20.63, razlika 0.31 K)
+```
+
+**M2 je i dalje `NULA_U_PROSJEKU` i to nije regresija.** Skripta
+`analytics-truth-readonly.cjs` čita **bazu**, a ne kod: `HeatingEvent` red sa
+0 °C je i dalje u bazi. Popravka B1 ga izostavlja iz **prosjeka koji se
+prikazuje**, ali ne mijenja podatak — i ne treba: red je zapis da je senzor
+javio 0, a ne da je u sobi 0 °C.
+
+Isto važi za M1: `NEMA_OTVORENIH` sada samo znači da u trenutku mjerenja nije
+bilo otvorenog ciklusa. **Mjerenje ovdje ne može razlikovati „nema otvorenih" od
+„ima otvorenih, a popravka radi"** — jer oba daju isti broj kad je `open = 0`.
+
+Zato je za fazu B dokaz **test**, ne mjerenje:
+
+| kvar | kako je dokazan |
+|---|---|
+| B1 | `dashboard-summary-totals.spec.ts` — 5/5 pada sa starim servisom |
+| B2 | isto; + `heating-totals.spec.ts` tvrdi da je prosjek **isti** prije i poslije zatvaranja ciklusa |
+| B3 | isto — `NotFoundException` vs goli `Error` |
+
+**Ovo je ograničenje mjerenja, ne nalaz.** Da bi mjerenje moglo provjeriti B,
+trebalo bi čitati **odgovor endpointa**, a ne bazu. To je sljedeći korak ako se
+mjerenje želi zadržati kao kapija (v. „Šta ostaje").

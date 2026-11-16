@@ -1,11 +1,11 @@
-import { useState, type JSX } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/services/api';
-import { queryKeys } from '@/lib/queryKeys';
-import { PageHeader } from '@/shared/components/page-header';
-import { QueryState } from '@/shared/components/query-state';
-import { Card, CardContent } from '@/shared/components/ui/Card';
+import { useState, type JSX } from "react";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/api";
+import { queryKeys } from "@/lib/queryKeys";
+import { PageHeader } from "@/shared/components/page-header";
+import { QueryState } from "@/shared/components/query-state";
+import { Card, CardContent } from "@/shared/components/ui/Card";
 import {
   Table,
   TableBody,
@@ -13,13 +13,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/components/ui/table';
+} from "@/shared/components/ui/table";
 import {
   DateRangeFilter,
   TablePager,
   type DateRange,
-} from '@/shared/components/table-controls';
-import { AnomalyBadge } from '../components/anomaly-badge';
+} from "@/shared/components/table-controls";
+import { Segmented } from "@/shared/components/segmented";
+import { AnomalyBadge } from "../components/anomaly-badge";
+import { HeatingPeriodSummary } from "../components/heating-period-summary";
+import { useHeatingPeriod } from "../hooks/use-heating-period";
+import type { HeatingPeriod } from "../lib/heating-period";
 
 const PAGE_SIZE = 25;
 
@@ -33,7 +37,8 @@ const PAGE_SIZE = 25;
  */
 export const HeatingPage = (): JSX.Element => {
   const { t } = useTranslation();
-  const [range, setRange] = useState<DateRange>({ from: '', to: '' });
+  const summaryPeriod = useHeatingPeriod("week");
+  const [range, setRange] = useState<DateRange>({ from: "", to: "" });
   const [offset, setOffset] = useState(0);
 
   const eventsQuery = useQuery({
@@ -55,12 +60,12 @@ export const HeatingPage = (): JSX.Element => {
   const events = eventsQuery.data?.rows ?? [];
   const total = eventsQuery.data?.total ?? 0;
   const status = eventsQuery.isLoading
-    ? 'loading'
+    ? "loading"
     : eventsQuery.isError
-      ? 'error'
+      ? "error"
       : events.length === 0
-        ? 'empty'
-        : 'success';
+        ? "empty"
+        : "success";
 
   /*
    * Novi filter vraća na prvu stranu. Bez toga bi „od 2026-01-01" sa strane 7
@@ -73,7 +78,59 @@ export const HeatingPage = (): JSX.Element => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('heating.title')} description={t('heating.subtitle')} />
+      <PageHeader
+        title={t("heating.title")}
+        description={t("heating.subtitle")}
+      />
+
+      {/*
+       * D1 — birač perioda i poređenje sa prethodnim. Do 16.11. je web imao
+       * samo fiksni raspon za događaje, dok je mobilni imao dan/sedmica/
+       * mjesec/godina + prethodni period. Isti podatak, dva odgovora.
+       */}
+      <Card>
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-text-primary">
+              {t("heating.periodSummaryTitle")}
+            </h2>
+            <Segmented<HeatingPeriod>
+              idPrefix="heating-period"
+              label={t("heating.periodSelector")}
+              value={summaryPeriod.period}
+              onChange={summaryPeriod.setPeriod}
+              disabled={summaryPeriod.isFetching}
+              options={[
+                { value: "day", label: t("heating.periods.day") },
+                { value: "week", label: t("heating.periods.week") },
+                { value: "month", label: t("heating.periods.month") },
+                { value: "year", label: t("heating.periods.year") },
+              ]}
+            />
+          </div>
+          <QueryState
+            status={
+              summaryPeriod.isLoading
+                ? "loading"
+                : summaryPeriod.isError
+                  ? "error"
+                  : !summaryPeriod.current
+                    ? "empty"
+                    : "success"
+            }
+            onRetry={summaryPeriod.refetch}
+            emptyMessage={t("heating.periodNotMeasured")}
+            minHeightClassName="min-h-32"
+          >
+            <HeatingPeriodSummary
+              current={summaryPeriod.current}
+              previous={summaryPeriod.previousMetrics}
+              previousLabel={t("heating.periodPrevious")}
+            />
+          </QueryState>
+        </CardContent>
+      </Card>
+
       <DateRangeFilter
         idPrefix="heating-range"
         value={range}
@@ -85,20 +142,20 @@ export const HeatingPage = (): JSX.Element => {
         onRetry={() => {
           void eventsQuery.refetch();
         }}
-        emptyMessage={t('heating.empty')}
+        emptyMessage={t("heating.empty")}
       >
         <Card>
           <CardContent className="p-0 pt-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('heating.colStart')}</TableHead>
-                  <TableHead>{t('heating.colEnd')}</TableHead>
-                  <TableHead>{t('heating.colRoom')}</TableHead>
-                  <TableHead>{t('heating.colTarget')}</TableHead>
-                  <TableHead>{t('heating.colAction')}</TableHead>
-                  <TableHead>{t('heating.colSource')}</TableHead>
-                  <TableHead>{t('heating.colAnomaly')}</TableHead>
+                  <TableHead>{t("heating.colStart")}</TableHead>
+                  <TableHead>{t("heating.colEnd")}</TableHead>
+                  <TableHead>{t("heating.colRoom")}</TableHead>
+                  <TableHead>{t("heating.colTarget")}</TableHead>
+                  <TableHead>{t("heating.colAction")}</TableHead>
+                  <TableHead>{t("heating.colSource")}</TableHead>
+                  <TableHead>{t("heating.colAnomaly")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,17 +167,17 @@ export const HeatingPage = (): JSX.Element => {
                     <TableCell>
                       {record.timestampEnd
                         ? new Date(record.timestampEnd).toLocaleString()
-                        : '—'}
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       {record.roomCurrentTemp != null
                         ? `${record.roomCurrentTemp.toFixed(1)}°C`
-                        : '—'}
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       {record.roomTargetTemp != null
                         ? `${record.roomTargetTemp.toFixed(1)}°C`
-                        : '—'}
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
@@ -128,10 +185,12 @@ export const HeatingPage = (): JSX.Element => {
                           ? t(`heating.actions.${record.hvacAction}`, {
                               defaultValue: record.hvacAction,
                             })
-                          : '—'}
+                          : "—"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{record.source}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {record.source}
+                    </TableCell>
                     <TableCell>
                       <AnomalyBadge isAnomaly={record.isAnomaly ?? false} />
                     </TableCell>
@@ -153,4 +212,4 @@ export const HeatingPage = (): JSX.Element => {
   );
 };
 
-HeatingPage.displayName = 'HeatingPage';
+HeatingPage.displayName = "HeatingPage";

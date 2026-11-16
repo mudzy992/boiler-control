@@ -236,6 +236,46 @@ describe('F3 analitika', () => {
    * provjerava prijevod (to bi bio test prevoda), nego **da ista riječ ne
    * stoji uz dva različita broja** — ako neko vrati stari ključ, padne.
    */
+  /**
+   * B1 (audit analitike §1.3). `avgIndoorTemp` je do 16.11. bio `number` sa
+   * `0` kao „nema podataka" — pa je ekran pisao „0.0 °C" za dom u kojem je
+   * 21 °C. Sada backend vraća `null`, a ekran mora pokazati „—" i **ne puknuti**
+   * na `toFixed` nad `null` (to je bila druga polovina iste greške).
+   */
+  it('B1: bez mjerene temperature prikazuje „—", ne „0.0"', async () => {
+    jest.mocked(analyticsApi.getHeatingSummary).mockResolvedValue({
+      summary: {
+        totalCycles: 2,
+        totalDurationMin: 60,
+        avgDurationMin: 30,
+        // Nijedan red nema upotrebljivu temperaturu.
+        avgIndoorTemp: null,
+        excludedZeroTemp: 2,
+      },
+      buckets: [],
+    } as never);
+
+    const { cleanup } = await renderScreen();
+
+    /*
+     * `findByTestId`, ne `getByTestId`: dok upit ne razriješi, ekran prikazuje
+     * `Skeleton` **umjesto** KPI kartice, pa KPI u tom trenutku ne postoji.
+     * `getByTestId` je zato povremeno padao — test je bio flake, ne greška u
+     * kodu. Isto važi za `meta` red ispod, koji postoji samo sa odgovorom.
+     */
+    const kpi = await screen.findByTestId('kpi-avg-indoor');
+
+    await within(kpi).findByText(/analytics\.excludedZeroTemp/);
+
+    const texts = within(kpi)
+      .getAllByText(/./)
+      .map((node) => String(node.props.children));
+    expect(texts).toContain('—');
+    expect(texts.join(' ')).not.toContain('0.0');
+
+    await cleanup();
+  });
+
   it('A3: ista oznaka „uzorci" ne stoji uz dva različita broja', async () => {
     const { cleanup } = await renderScreen();
 

@@ -9,6 +9,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
+  addEventToBucket,
+  emptyBucket,
+  heatingTotals,
+  type BucketTotals,
+} from '../../common/heating-totals';
+import {
   ExportAnalyticsDto,
   GetHeatingEventsDto,
   GetHeatingSummaryDto,
@@ -393,37 +399,26 @@ export class DashboardService {
       orderBy: { timestampStart: 'asc' },
     });
 
-    const totalCycles = events.length;
-    const totalDurationMin = events.reduce((acc, e) => {
-      if (!e.timestampEnd) return acc;
-      return (
-        acc + (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000
-      );
-    }, 0);
-
-    const avgDurationMin = totalCycles
-      ? Number((totalDurationMin / totalCycles).toFixed(2))
-      : 0;
-
-    const avgIndoorTemp = totalCycles
-      ? Number(
-          (
-            events.reduce((acc, e) => acc + (e.roomCurrentTemp ?? 0), 0) /
-            totalCycles
-          ).toFixed(2),
-        )
-      : 0;
+    /*
+     * B1/B2 (audit analitike §1.3, §1.4): sabiranje je izdvojeno u
+     * `common/heating-totals`, jer su iste brojeve računala tri mjesta
+     * (ovaj servis, `analytics-export.ts` za `version=2`, i `version=1` izvoz
+     * koji zove ovaj servis) — pa popravka na jednom mjestu ne bi bila
+     * popravka. Detalji i mjerenja su u zaglavlju tog modula.
+     */
+    const now = new Date();
+    const totals = heatingTotals(events, now);
+    const {
+      totalCycles,
+      totalDurationMin,
+      avgDurationMin,
+      avgIndoorTemp,
+      excludedZeroTemp,
+      openCycles,
+    } = totals;
 
     const bucketType = bucket ?? 'day';
-    const bucketsMap = new Map<
-      string,
-      {
-        totalDuration: number;
-        cycles: number;
-        totalTarget: number;
-        totalCurrent: number;
-      }
-    >();
+    const bucketsMap = new Map<string, BucketTotals>();
 
     for (const e of events) {
       const date = new Date(e.timestampStart);
@@ -432,41 +427,36 @@ export class DashboardService {
       // server-local dan. v2 iza zastavice daje hronološke UTC ključeve.
       const label = bucketKey(date, bucketType, 'server-local');
 
-      if (!bucketsMap.has(label)) {
-        bucketsMap.set(label, {
-          totalDuration: 0,
-          cycles: 0,
-          totalTarget: 0,
-          totalCurrent: 0,
-        });
-      }
-
-      const b = bucketsMap.get(label)!;
-      b.cycles += 1;
-      b.totalTarget += e.roomTargetTemp;
-      b.totalCurrent += e.roomCurrentTemp;
-      if (e.timestampEnd) {
-        b.totalDuration +=
-          (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000;
-      }
+      const bucket = bucketsMap.get(label) ?? emptyBucket();
+      addEventToBucket(bucket, e, now);
+      bucketsMap.set(label, bucket);
     }
 
     return {
       summary: {
         totalCycles,
-        totalDurationMin: Math.round(totalDurationMin),
+        totalDurationMin,
         avgDurationMin,
         avgIndoorTemp,
+        /*
+         * Koliko je redova izostavljeno iz prosjeka temperature. Bez ovog
+         * broja ekran ne može reći „prosjek od 65 od 66" — a prećutati da
+         * nešto fali je ista greška kao `null` → `0`.
+         */
+        excludedZeroTemp,
+        openCycles,
       },
       buckets: Array.from(bucketsMap.entries()).map(([label, b]) => ({
         label,
-        totalDurationMin: Math.round(b.totalDuration),
+        totalDurationMin: Math.round(b.durationMin),
         cycles: b.cycles,
-        avgTargetTemp: b.cycles
-          ? Number((b.totalTarget / b.cycles).toFixed(2))
+        // Oba prosjeka iz istog skupa redova (`tempCount`); imenilac je
+        // `cycles` samo kad nijedan red nije izostavljen.
+        avgTargetTemp: b.tempCount
+          ? Number((b.targetSum / b.tempCount).toFixed(2))
           : 0,
-        avgCurrentTemp: b.cycles
-          ? Number((b.totalCurrent / b.cycles).toFixed(2))
+        avgCurrentTemp: b.tempCount
+          ? Number((b.currentSum / b.tempCount).toFixed(2))
           : 0,
       })),
     };
@@ -1062,8 +1052,16 @@ export class DashboardService {
       },
     });
 
+    /*
+     * B3 (audit analitike §1.5): goli `Error` Nest prevodi u **500**, pa je
+     * korisnik bez termostata vidio „server error" — kao da je pao server, a
+     * ne da njegov dom još nema uređaj. 404 jer resurs (podaci doma) ne
+     * postoji, a ne 400: zahtjev je ispravan.
+     */
     if (!count) {
-      throw new Error('Ovaj endpoint zahtijeva barem jedan termostat.');
+      throw new NotFoundException(
+        'Ovaj endpoint zahtijeva barem jedan termostat.',
+      );
     }
   }
 }

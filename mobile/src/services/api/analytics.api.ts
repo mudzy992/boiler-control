@@ -15,7 +15,17 @@ export interface HeatingSummaryResponse {
     totalCycles: number;
     totalDurationMin: number;
     avgDurationMin: number;
-    avgIndoorTemp: number;
+    /**
+     * `null` kad nijedan red nema upotrebljivu temperaturu (B1).
+     *
+     * Bilo je `number`, uz `0` kao „nema podataka" — pa je ekran pisao
+     * „0.0 °C" za dom u kojem je 21 °C. Nula je tvrdnja o mjerenju.
+     */
+    avgIndoorTemp: number | null;
+    /** Koliko je redova izostavljeno iz prosjeka (senzor nije javio). */
+    excludedZeroTemp?: number;
+    /** Koliko je ciklusa bilo otvoreno u trenutku mjerenja (B2). */
+    openCycles?: number;
   };
   buckets: HeatingSummaryBucket[];
 }

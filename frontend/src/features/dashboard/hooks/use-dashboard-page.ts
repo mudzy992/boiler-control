@@ -103,7 +103,7 @@ export const useDashboardPage = () => {
     totalCycles: 0,
     totalDurationMin: 0,
     avgDurationMin: 0,
-    avgIndoorTemp: 0,
+    avgIndoorTemp: null,
   };
 
   const getBucketLabel = useCallback(

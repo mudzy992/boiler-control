@@ -142,6 +142,8 @@ const enUS = {
      * dana (`getLearningTrends`). Tri broja, ista riječ — pa ih nije bilo
      * moguće uporediti. Svaki sada ima svoje ime.
      */
+    /** B1: prosjek je izostavio redove bez mjerenja — reci to, ne prećuti. */
+    excludedZeroTemp: '{{count}} readings without temperature excluded',
     samplesValue: '{{value}} samples (cumulative, this interval)',
     daysInPeriodValue: 'over {{value}} days in period',
     periodValue: 'Value',
@@ -1195,6 +1197,8 @@ const bsBS = {
     avgDuration: 'Prosj. trajanje',
     sessionsValue: '{{value}} sesija',
     /** V. `en.samplesValue` — tri broja koja su se zvala isto sada imaju tri imena. */
+    /** V. `en.excludedZeroTemp`. */
+    excludedZeroTemp: '{{count}} očitanja bez temperature izostavljeno',
     samplesValue: '{{value}} uzoraka (kumulativno, ovaj interval)',
     daysInPeriodValue: 'kroz {{value}} dana u periodu',
     periodValue: 'Vrijednost',

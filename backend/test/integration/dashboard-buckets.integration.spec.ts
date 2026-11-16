@@ -39,6 +39,8 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
     totalDurationMin: 0,
     avgDurationMin: 0,
     avgIndoorTemp: 0,
+    excludedZeroTemp: 0,
+    openCycles: 0,
   };
 
   beforeAll(async () => {
@@ -264,6 +266,10 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
         totalDurationMin: 75,
         avgDurationMin: 37.5,
         avgIndoorTemp: 19,
+        // B1/B2: koliko je redova izostavljeno iz prosjeka temperature i
+        // koliko je ciklusa bilo otvoreno. Nula je ovdje **mjerenje**.
+        excludedZeroTemp: 0,
+        openCycles: 0,
       },
       buckets: [
         {
@@ -292,6 +298,10 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
         totalDurationMin: 75,
         avgDurationMin: 37.5,
         avgIndoorTemp: 19,
+        // B1/B2: koliko je redova izostavljeno iz prosjeka temperature i
+        // koliko je ciklusa bilo otvoreno. Nula je ovdje **mjerenje**.
+        excludedZeroTemp: 0,
+        openCycles: 0,
       },
       buckets: [
         {
@@ -333,6 +343,8 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
         totalDurationMin: 15,
         avgDurationMin: 15,
         avgIndoorTemp: 21,
+        excludedZeroTemp: 0,
+        openCycles: 0,
       },
       buckets: [
         {
@@ -378,6 +390,8 @@ describe('Dashboard heating summary/stats buckets (integration)', () => {
         totalDurationMin: 60,
         avgDurationMin: 30,
         avgIndoorTemp: 19,
+        excludedZeroTemp: 0,
+        openCycles: 0,
       },
       buckets: [
         {

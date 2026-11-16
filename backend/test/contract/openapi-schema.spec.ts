@@ -379,9 +379,23 @@ describe('OpenAPI contract schemas (FE2-8)', () => {
         'buckets',
         'summary',
       ]);
+      /*
+       * B1/B2 (audit analitike): `avgIndoorTemp` je sada `number | null`, a
+       * dodata su dva **mjerena** broja koja klijent ne može izvesti sam:
+       *
+       *   `excludedZeroTemp` — koliko je redova izostavljeno iz prosjeka
+       *   (`null` bez ovoga znači „nema mjerenja" ali ne kaže koliko ih fali)
+       *   `openCycles` — koliko ciklusa je bilo otvoreno (njihovo trajanje je
+       *   mjereno do sada, zato prosječno trajanje ne pada dok grijanje traje).
+       *
+       * Spisak je zaključan namjerno: polje koje se doda bez odluke ovdje
+       * nije dio ugovora, nego slučajnost.
+       */
       expect(propsOf('DashboardHeatingSummaryDto').sort()).toEqual([
         'avgDurationMin',
         'avgIndoorTemp',
+        'excludedZeroTemp',
+        'openCycles',
         'totalCycles',
         'totalDurationMin',
       ]);

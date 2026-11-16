@@ -486,9 +486,30 @@ export class DashboardHeatingSummaryDto {
   avgDurationMin!: number;
 
   @ApiProperty({
-    description: '`Number((...).toFixed(2))`, 0 ako nema ciklusa (l.311).',
+    type: Number,
+    nullable: true,
+    description:
+      '`Number((...).toFixed(2))`; **`null` kad nijedna temperatura nije ' +
+      'upotrebljiva** (red sa 0 °C je senzor koji nije javio, ne mjerenje — ' +
+      'B1, `common/heating-totals.ts`). Nula bi tvrdila mjerenje koje ne postoji.',
   })
-  avgIndoorTemp!: number;
+  avgIndoorTemp!: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Koliko je redova izostavljeno iz `avgIndoorTemp` jer temperatura nije ' +
+      'fizički moguća (`< MIN_PLAUSIBLE_ROOM_C`). Ekran time može reći ' +
+      '„prosjek od 65 od 66".',
+  })
+  excludedZeroTemp?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Koliko je ciklusa bilo otvoreno u trenutku mjerenja. Njihovo trajanje ' +
+      'je mjereno do sada (`B2`), a ne odbačeno — pa prosjek ne pada dok ' +
+      'grijanje traje.',
+  })
+  openCycles?: number;
 }
 
 /** `buckets[]` (l.367-377). */

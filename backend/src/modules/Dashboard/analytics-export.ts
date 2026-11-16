@@ -1,4 +1,8 @@
 import { BadRequestException, Logger } from '@nestjs/common';
+import {
+  cycleDurationMin,
+  isPlausibleRoomTemp,
+} from '../../common/heating-totals';
 
 export const ANALYTICS_EXPORT_V2_FLAG = 'ANALYTICS_EXPORT_V2_ENABLED';
 export const ANALYTICS_EXPORT_MAX_ROWS_FLAG = 'ANALYTICS_EXPORT_MAX_ROWS';
@@ -190,39 +194,71 @@ export function aggregateAnalyticsExport(
   learning: readonly ExportLearningRow[],
   zone: string,
   bucket: 'hour' | 'day',
+  /**
+   * Trenutak za mjerenje otvorenog ciklusa. Parametar, ne `new Date()` unutra:
+   * bez toga izvoz i sažetak mogu dati dva različita trajanja za isti red, a
+   * test ne može tvrditi ništa.
+   */
+  now: Date = new Date(),
 ) {
   const buckets = new Map<
     string,
-    { target: number; current: number; duration: number; cycles: number }
+    {
+      target: number;
+      current: number;
+      duration: number;
+      cycles: number;
+      /**
+       * Broj redova iz kojih su **oba** prosjeka. Bez ovoga bi se dijelilo
+       * `cycles`-om, pa bi red sa 0 °C oborio `avgCurrentTemp` a ne i
+       * `avgTargetTemp` — razlika koja ne postoji.
+       */
+      tempCount: number;
+    }
   >();
   let totalDuration = 0;
   let totalCurrent = 0;
+  /** Broj redova sa upotrebljivom temperaturom — imenilac `avgIndoorTemp`. */
+  let totalTempCount = 0;
   for (const event of events) {
     // ULaz je hronološki; ne sortirati DST labele leksikografski.
     const key = exportBucketKey(event.timestampStart, zone, bucket);
+    /*
+     * Ista pravila kao sažetak (`common/heating-totals`): otvoren ciklus se
+     * mjeri do `now`, a red sa fizički nemogućom temperaturom izlazi iz
+     * **oba** prosjeka. Bez ovoga bi CSV tvrdio drugo od ekrana za isti dan.
+     */
+    const duration = cycleDurationMin(event, now);
     const row = buckets.get(key) ?? {
       target: 0,
       current: 0,
       duration: 0,
       cycles: 0,
+      tempCount: 0,
     };
-    row.target += event.roomTargetTemp;
-    row.current += event.roomCurrentTemp;
     row.cycles += 1;
-    totalCurrent += event.roomCurrentTemp;
-    if (event.timestampEnd) {
-      const duration =
-        (event.timestampEnd.getTime() - event.timestampStart.getTime()) /
-        60_000;
-      row.duration += duration;
-      totalDuration += duration;
+    row.duration += duration;
+    totalDuration += duration;
+    if (
+      isPlausibleRoomTemp(event.roomCurrentTemp) &&
+      Number.isFinite(event.roomTargetTemp)
+    ) {
+      row.target += event.roomTargetTemp;
+      row.current += event.roomCurrentTemp;
+      row.tempCount += 1;
+      totalCurrent += event.roomCurrentTemp;
+      totalTempCount += 1;
     }
     buckets.set(key, row);
   }
   const rows = Array.from(buckets.entries()).map(([label, row]) => ({
     label,
-    avgTargetTemp: Number((row.target / row.cycles).toFixed(2)),
-    avgCurrentTemp: Number((row.current / row.cycles).toFixed(2)),
+    avgTargetTemp: row.tempCount
+      ? Number((row.target / row.tempCount).toFixed(2))
+      : 0,
+    avgCurrentTemp: row.tempCount
+      ? Number((row.current / row.tempCount).toFixed(2))
+      : 0,
     totalDurationMin: Math.round(row.duration),
     cycles: row.cycles,
   }));
@@ -242,9 +278,15 @@ export function aggregateAnalyticsExport(
         avgDurationMin: events.length
           ? Number((totalDuration / events.length).toFixed(2))
           : 0,
+        // Ista granica kao `heatingTotals`: prazan izvoz `0` (ugovor),
+        // izvoz sa događajima bez mjerenja `null` (nula bi tvrdila 0 °C).
         avgIndoorTemp: events.length
-          ? Number((totalCurrent / events.length).toFixed(2))
+          ? totalTempCount
+            ? Number((totalCurrent / totalTempCount).toFixed(2))
+            : null
           : 0,
+        excludedZeroTemp: events.length - totalTempCount,
+        openCycles: events.filter((e) => !e.timestampEnd).length,
       },
       buckets: rows,
     },

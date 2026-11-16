@@ -160,8 +160,8 @@ async function main() {
     const events = await client.query(
       `SELECT count(*)::int AS cycles,
               count(*) FILTER (WHERE "timestampEnd" IS NULL)::int AS open,
-              count(*) FILTER (WHERE "roomCurrentTemp" = 0)::int AS zero_current,
-              count(*) FILTER (WHERE "roomTargetTemp" = 0)::int AS zero_target
+              count(*) FILTER (WHERE "currentTemp" = 0)::int AS zero_current,
+              count(*) FILTER (WHERE "targetTemp" = 0)::int AS zero_target
          FROM "HeatingEvent"
         WHERE "timestampStart" >= ${windowStart}`,
       [days],

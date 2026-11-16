@@ -253,6 +253,24 @@ const enUS = {
     periodExcludedZero:
       "{{count}} room temperature reading(s) of 0 °C excluded as not measured.",
     periodNotMeasured: "No measurements in this period.",
+    metricsTitle: "Boiler behaviour",
+    metricsSubtitle:
+      "Daily measurements: duty, overshoot, hysteresis, heat rate. Days without a measurement are not counted as zero.",
+    metricsCoverage:
+      "{{best}} % of days in this period have this measurement ({{days}} of {{total}} days). Shown from 25 %.",
+    metricsDays: "Days measured",
+    metricsDuty: "Burner duty",
+    metricsMedianCycle: "Median cycle",
+    metricsOvershoot: "Overshoot",
+    metricsUndershoot: "Undershoot",
+    metricsHysteresis: "Hysteresis",
+    metricsHysteresisAsymmetry: "Hysteresis asymmetry",
+    metricsHeatRate: "Heat-up rate",
+    metricsNightUndershoot: "Night undershoot",
+    metricsNightOutdoor: "Night outdoor min",
+    metricsNightFlow: "Night flow temp",
+    metricsFlowSet: "Flow setpoint",
+    metricsDegreeHours: "Degree-hours",
     actions: {
       HEATING_ON: "Heating on",
       HEATING_OFF: "Heating off",
@@ -855,6 +873,24 @@ const bsBS = {
     periodExcludedZero:
       "{{count}} očitanje(a) sobne temperature od 0 °C izostavljeno kao nemjereno.",
     periodNotMeasured: "Nema mjerenja u ovom periodu.",
+    metricsTitle: "Ponašanje kotla",
+    metricsSubtitle:
+      "Dnevna mjerenja: rad, prebačaj, histereza, brzina dogrijavanja. Dani bez mjerenja se ne računaju kao nula.",
+    metricsCoverage:
+      "{{best}} % dana u periodu ima ovo mjerenje ({{days}} od {{total}} dana). Prikazuje se od 25 %.",
+    metricsDays: "Dani sa mjerenjem",
+    metricsDuty: "Rad gorionika",
+    metricsMedianCycle: "Medijana ciklusa",
+    metricsOvershoot: "Prebačaj",
+    metricsUndershoot: "Podbačaj",
+    metricsHysteresis: "Histereza",
+    metricsHysteresisAsymmetry: "Asimetrija histereze",
+    metricsHeatRate: "Brzina dogrijavanja",
+    metricsNightUndershoot: "Noćni podbačaj",
+    metricsNightOutdoor: "Noćna vanjska min.",
+    metricsNightFlow: "Noćna polazna temp.",
+    metricsFlowSet: "Zadana polazna temp.",
+    metricsDegreeHours: "Stepen-sati",
     actions: {
       HEATING_ON: "Grijanje uključeno",
       HEATING_OFF: "Grijanje isključeno",
@@ -1188,8 +1224,7 @@ const bsBS = {
     minHeatingFlowC: "Najniža polazna grijanja (°C)",
     minHeatingFlowCHint:
       "Najniža polazna s kojom kotao još dobro grije. Prazno = vrijednost iz kataloga za taj kotao, ili 46 °C kad je katalog nema. Podignite je ako vaš kotao ne radi dobro na toliko.",
-    flowBoundsFromCatalog:
-      "Katalog za ovaj kotao navodi {{min}}–{{max}} °C.",
+    flowBoundsFromCatalog: "Katalog za ovaj kotao navodi {{min}}–{{max}} °C.",
     flowBoundsManual:
       "Za ovaj kotao nema potvrđene vrijednosti u katalogu — upišite granice sami, {{min}}–{{max}} °C.",
     required: "{{field}} je obavezno",

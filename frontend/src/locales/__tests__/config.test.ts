@@ -64,6 +64,10 @@ describe("i18n — inicijalizacija", () => {
     // `flowBoundsManual` — granica polazne je podatak **po tipu bojlera**, pa
     // forma mora reći odakle broj dolazi (katalog ili korisnikov ručni unos).
     //
+    // 524 → 540 (C1 ekran): šesnaest ključeva kartice mjernih kolona
+    // (`metricsTitle`, `metricsSubtitle`, `metricsCoverage`, `metricsDays` i 12
+    // natpisa kolona). Bez njih bi kartica prikazivala sirove nazive polja.
+    //
     // 507 → 524 (D1): sedamnaest ključeva birača perioda grijanja
     // (`heating.periods.*` 4, `periodSelector`, `periodSummaryTitle`,
     // `periodMetric`, `periodValue`, `periodPrevious`, `periodChange`,
@@ -76,7 +80,7 @@ describe("i18n — inicijalizacija", () => {
     // `modelRefBlend`, `modelRefNight`, `modelInternalGain`, `modelDayGain`,
     // `modelEquilibrium`). Bez njih bi modelski put prikazivao sirove ključeve
     // umjesto objašnjenja — a objašnjenje je i bio razlog breakdown-a.
-    expect(en.length).toBe(524);
+    expect(en.length).toBe(540);
   });
 });
 

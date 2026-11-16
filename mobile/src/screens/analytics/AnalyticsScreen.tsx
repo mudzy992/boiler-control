@@ -10,6 +10,7 @@ import { apiClient } from '../../services/api/client';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useToast } from '../../components/ui/nativewind';
 import { DailyHistoryCard } from '../../components/analytics/DailyHistoryCard';
+import { DailyMetricsCard } from '../../components/analytics/DailyMetricsCard';
 import { GasAnalyticsCard } from '../../components/analytics/GasAnalyticsCard';
 import {
   Button,
@@ -55,7 +56,7 @@ import { space } from '../../theme/tokens';
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 const getDateRange = (
-  timeRange: TimeRange,
+  timeRange: TimeRange
 ): { from: string; to: string; bucket: 'hour' | 'day' } => {
   const end = new Date();
   const start = new Date();
@@ -85,7 +86,7 @@ const getDateRange = (
  * Bez ovoga „u odnosu na prošlu sedmicu" nema šta da uporedi.
  */
 const getPreviousDateRange = (
-  timeRange: TimeRange,
+  timeRange: TimeRange
 ): { from: string; to: string; bucket: 'hour' | 'day' } => {
   const { from, to } = getDateRange(timeRange);
   const fromMs = new Date(from).getTime();
@@ -186,8 +187,7 @@ export const AnalyticsScreen = () => {
    */
   const gasReadingsQuery = useQuery({
     queryKey: ['gas-readings', dateRange.from, dateRange.to],
-    queryFn: () =>
-      apiClient.getGasReadings({ from: dateRange.from, to: dateRange.to }),
+    queryFn: () => apiClient.getGasReadings({ from: dateRange.from, to: dateRange.to }),
   });
 
   // Termostati dolaze iz dashboarda; koriste se za „cilj vs postignuto".
@@ -240,11 +240,7 @@ export const AnalyticsScreen = () => {
 
       // MO2-22: legacy API izvozi samo documentDirectory i cacheDirectory.
       const candidates = (
-        [fileSystem.documentDirectory, fileSystem.cacheDirectory] as (
-          | string
-          | null
-          | undefined
-        )[]
+        [fileSystem.documentDirectory, fileSystem.cacheDirectory] as (string | null | undefined)[]
       ).filter(Boolean) as string[];
 
       if (!candidates.length) {
@@ -323,7 +319,8 @@ export const AnalyticsScreen = () => {
     }[];
     return list.filter(
       (thermostat) =>
-        typeof thermostat.roomCurrentTemp === 'number' && typeof thermostat.roomTargetTemp === 'number',
+        typeof thermostat.roomCurrentTemp === 'number' &&
+        typeof thermostat.roomTargetTemp === 'number'
     );
   }, [dashboardQuery.data]);
 
@@ -385,9 +382,7 @@ export const AnalyticsScreen = () => {
       />
 
       <ScreenBody>
-        {!activeHome ? (
-          <InlineBanner tone="info" title={t('analytics.noActiveHome')} />
-        ) : null}
+        {!activeHome ? <InlineBanner tone="info" title={t('analytics.noActiveHome')} /> : null}
 
         {/* Vremenski period je uvijek vidljiva traka, ne select u zaglavlju. */}
         <Segmented<TimeRange>
@@ -410,11 +405,7 @@ export const AnalyticsScreen = () => {
                * ekran pored `toFixed` pucao na `null` — a sa nulom je pisao
                * „0.0 °C" za sobu u kojoj je 21 °C.
                */
-              value={
-                summary?.avgIndoorTemp != null
-                  ? summary.avgIndoorTemp.toFixed(1)
-                  : '—'
-              }
+              value={summary?.avgIndoorTemp != null ? summary.avgIndoorTemp.toFixed(1) : '—'}
               unit="°C"
               meta={
                 summary?.excludedZeroTemp
@@ -430,9 +421,7 @@ export const AnalyticsScreen = () => {
               value={summary ? (summary.totalDurationMin / 60).toFixed(1) : '—'}
               unit={t('analytics.hrs')}
               meta={
-                summary
-                  ? t('analytics.sessionsValue', { value: summary.totalCycles })
-                  : undefined
+                summary ? t('analytics.sessionsValue', { value: summary.totalCycles }) : undefined
               }
               testID="kpi-heating-hours"
             />
@@ -499,7 +488,7 @@ export const AnalyticsScreen = () => {
                     key={thermostat.id}
                     divider={index < thermostats.length - 1}
                     accessibilityLabel={`${thermostat.alias ?? ''}: ${actual.toFixed(
-                      1,
+                      1
                     )} / ${target.toFixed(1)} °C`}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
@@ -525,7 +514,7 @@ export const AnalyticsScreen = () => {
                         tone={ratio >= 1 ? 'ok' : 'warn'}
                         height={3}
                         accessibilityLabel={`${thermostat.alias ?? ''} ${actual.toFixed(
-                          1,
+                          1
                         )} / ${target.toFixed(1)} °C`}
                       />
                     </View>
@@ -597,10 +586,18 @@ export const AnalyticsScreen = () => {
           </Panel>
         </Section>
 
-        <GasAnalyticsCard
-          readings={gasReadingsQuery.data}
-          isLoading={gasReadingsQuery.isLoading}
+        {/*
+          C1 — mjerne kolone (`dutyPercent`, `overshootC`, `hysteresisK`, …).
+          Kartica sama nosi kapiju od 25 %: ispod toga se ne prikazuje, jer bi
+          bila prazna na 94 % dana i izgledala kao kvar.
+        */}
+        <DailyMetricsCard
+          homeProfileId={activeHome?.id}
+          from={dateRange.from.slice(0, 10)}
+          to={dateRange.to.slice(0, 10)}
         />
+
+        <GasAnalyticsCard readings={gasReadingsQuery.data} isLoading={gasReadingsQuery.isLoading} />
 
         {/*
           Historija dnevnih zapisa (`31`): 301 rekonstruisan dan je do sada bio u

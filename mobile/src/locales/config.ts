@@ -152,6 +152,21 @@ const enUS = {
     noPreviousData: 'no data for previous period',
     targetVsActual: 'Target vs actual',
     targetDash: '{{actual}} / {{target}}',
+    metricsTitle: 'Boiler behaviour',
+    metricsSubtitle: 'daily measurements',
+    metricsCoverage: '{{best}}% of days measured ({{days}} of {{total}}). Shown from 25%.',
+    metricsDuty: 'Burner duty',
+    metricsMedianCycle: 'Median cycle',
+    metricsOvershoot: 'Overshoot',
+    metricsUndershoot: 'Undershoot',
+    metricsHysteresis: 'Hysteresis',
+    metricsHysteresisAsymmetry: 'Hysteresis asymmetry',
+    metricsHeatRate: 'Heat-up rate',
+    metricsNightUndershoot: 'Night undershoot',
+    metricsNightOutdoor: 'Night outdoor min',
+    metricsNightFlow: 'Night flow temp',
+    metricsFlowSet: 'Flow setpoint',
+    metricsDegreeHours: 'Degree-hours',
     modelSection: 'Learning model',
     modelConfidenceLine: 'Confidence {{confidence}}% · {{samples}} days in period',
     modelHint: 'More data means better flow-temperature recommendations.',
@@ -175,8 +190,7 @@ const enUS = {
     perDay: '{{value}}/day',
     noGasReadings: 'No gas readings available yet.',
     /** Sa jednim očitanjem u periodu potrošnja nije nula — nije izmjerena. */
-    gasNeedsTwoReadings:
-      'Only one reading in this period — consumption needs two to be measured.',
+    gasNeedsTwoReadings: 'Only one reading in this period — consumption needs two to be measured.',
     meterReading: 'Meter Reading',
     dailyConsumption: 'Daily Consumption',
     noGasData: 'No gas data available',
@@ -508,13 +522,15 @@ const enUS = {
      * grijanja", a mjeri samo gdje je polazna voda unutar dozvoljenog raspona.
      * Kratko, uz samu traku — objašnjenje u chatu korisnik ne vidi na uređaju.
      */
-    gaugeHint: 'Bar: where the flow temperature sits within {{min}}–{{max}} °C. It is not heating progress.',
+    gaugeHint:
+      'Bar: where the flow temperature sits within {{min}}–{{max}} °C. It is not heating progress.',
     /**
      * F13: boje trake ciklusa. Vlasnikov tekst — ista rečenica u oba jezika
      * opisuje pragove iz `heatingProgress()` (do predviđenog / do 120 min /
      * prekoračenje), pa se broj 120 ne prepisuje ručno u UI.
      */
-    cycleColorsHint: 'Green up to the predicted time, yellow up to 120 min, red if the cycle overruns.',
+    cycleColorsHint:
+      'Green up to the predicted time, yellow up to 120 min, red if the cycle overruns.',
     /**
      * F14: broj se postavlja jednom ujutro i ne prati formulu tokom dana.
      * Bez ovog teksta korisnik vidi da se broj promijenio i ne zna zašto.
@@ -909,7 +925,6 @@ const enUS = {
     // F6 (SET-06): odjava je bila jedan dodir, bez potvrde.
     logoutTitle: 'Log out?',
     logoutBody: 'You will need to sign in again to see your boiler.',
-
   },
   profile: {
     title: 'Profile',
@@ -1040,15 +1055,18 @@ const enUS = {
     title: 'Update required',
     body: 'This version of the app is no longer supported. Download the new version to continue.',
     optionalTitle: 'New version available',
-    optionalBody: 'A newer version of Boiler Control is available. This one still works, but the new version has the latest fixes.',
+    optionalBody:
+      'A newer version of Boiler Control is available. This one still works, but the new version has the latest fixes.',
     currentVersion: 'Installed version',
     requiredVersion: 'Minimum version',
     availableVersion: 'Available version',
     updateButton: 'Update now',
     downloadButton: 'Download new version',
     instructionsTitle: 'How to install:',
-    instructionsDownload: 'Tap "Download new version". The download is not automatic — confirm it when the browser asks.',
-    instructionsUnknownSource: 'If Android blocks the install, allow "Install unknown apps" for your browser in Settings.',
+    instructionsDownload:
+      'Tap "Download new version". The download is not automatic — confirm it when the browser asks.',
+    instructionsUnknownSource:
+      'If Android blocks the install, allow "Install unknown apps" for your browser in Settings.',
     instructionsInstall: 'Open the downloaded file and confirm the installation.',
     manualHint: 'Ask the administrator for the new version file.',
   },
@@ -1121,9 +1139,9 @@ const bsBS = {
     dailyHistoryTitle: 'Dnevni zapisi',
     dailyHistorySummary: '{{count}} dana zabilježeno',
     /** V. `en.dailyHistorySummaryTruncated` — ista rečenica, bez prećutane tvrdnje. */
-    dailyHistorySummaryTruncated:
-      'Prikazano najnovijih {{shown}} od {{total}} zabilježenih dana',
-    dailyHistoryBackfill: '{{count}} rekonstruisano iz starijih događaja — nije mjereno u toku dana',
+    dailyHistorySummaryTruncated: 'Prikazano najnovijih {{shown}} od {{total}} zabilježenih dana',
+    dailyHistoryBackfill:
+      '{{count}} rekonstruisano iz starijih događaja — nije mjereno u toku dana',
     dailyHistoryError: 'Dnevni zapisi nisu mogli biti učitani.',
     dailyHistoryEmpty: 'Još nema dnevnih zapisa',
     dailyHistoryEmptyHint: 'Zapis se pojavljuje nakon prvog punog dana grijanja.',
@@ -1207,6 +1225,21 @@ const bsBS = {
     noPreviousData: 'nema podataka za prethodni period',
     targetVsActual: 'Cilj vs postignuto',
     targetDash: '{{actual}} / {{target}}',
+    metricsTitle: 'Ponašanje kotla',
+    metricsSubtitle: 'dnevna mjerenja',
+    metricsCoverage: '{{best}}% dana sa mjerenjem ({{days}} od {{total}}). Prikazuje se od 25%.',
+    metricsDuty: 'Rad gorionika',
+    metricsMedianCycle: 'Medijana ciklusa',
+    metricsOvershoot: 'Prebačaj',
+    metricsUndershoot: 'Podbačaj',
+    metricsHysteresis: 'Histereza',
+    metricsHysteresisAsymmetry: 'Asimetrija histereze',
+    metricsHeatRate: 'Brzina dogrijavanja',
+    metricsNightUndershoot: 'Noćni podbačaj',
+    metricsNightOutdoor: 'Noćna vanjska min.',
+    metricsNightFlow: 'Noćna polazna temp.',
+    metricsFlowSet: 'Zadana polazna temp.',
+    metricsDegreeHours: 'Stepen-sati',
     modelSection: 'Model učenja',
     modelConfidenceLine: 'Pouzdanost {{confidence}}% · {{samples}} dana u periodu',
     modelHint: 'Više podataka = bolje preporuke polazne vode.',
@@ -1229,8 +1262,7 @@ const bsBS = {
     recentReadings: 'Nedavna očitanja',
     perDay: '{{value}}/dan',
     noGasReadings: 'Još nema očitanja plina.',
-    gasNeedsTwoReadings:
-      'U ovom periodu je samo jedno očitanje — za potrošnju su potrebna dva.',
+    gasNeedsTwoReadings: 'U ovom periodu je samo jedno očitanje — za potrošnju su potrebna dva.',
     meterReading: 'Očitanje brojača',
     dailyConsumption: 'Dnevna potrošnja',
     noGasData: 'Nema dostupnih podataka o plinu',
@@ -1564,11 +1596,9 @@ const bsBS = {
     flowWithinTolerance: 'u toleranciji',
     flowOutsideTolerance: 'izvan tolerancije',
     flowScale: '{{min}} — {{max}}',
-    gaugeHint:
-      'Traka: gdje je polazna voda unutar {{min}}–{{max}} °C. Nije napredak grijanja.',
+    gaugeHint: 'Traka: gdje je polazna voda unutar {{min}}–{{max}} °C. Nije napredak grijanja.',
     /** F13: vlasnikov tekst za boje trake ciklusa (pragovi iz `heatingProgress()`). */
-    cycleColorsHint:
-      'Zeleno do predviđenog vremena, žuto do 120 min, crveno ako ciklus probije.',
+    cycleColorsHint: 'Zeleno do predviđenog vremena, žuto do 120 min, crveno ako ciklus probije.',
     /**
      * F14: ista poruka kao u en — jutarnji broj važi za cijeli dan, a izmjena
      * usred dana postoji samo uz izmjereni manjak.
@@ -1587,8 +1617,7 @@ const bsBS = {
     noPrediction: 'procjena još nije naučena',
     heatingProgressHint:
       'Zeleno do predviđenog vremena, žuto do {{value}} min, crveno ako ciklus probije.',
-    heatingProgressHintMeasured:
-      'Procjena je medijana tvojih završenih ciklusa: ~{{value}} min.',
+    heatingProgressHintMeasured: 'Procjena je medijana tvojih završenih ciklusa: ~{{value}} min.',
     gaugeMin: 'Minimum',
     gaugeMax: 'Maksimum',
     voltageUpdated: 'Ažurirano {{value}}',
@@ -1939,7 +1968,6 @@ const bsBS = {
     developerDesc: 'Razvio tim Boiler Control',
     logoutTitle: 'Odjaviti se?',
     logoutBody: 'Za pregled kotla bit će potrebna ponovna prijava.',
-
   },
   profile: {
     title: 'Profil',
@@ -1992,8 +2020,7 @@ const bsBS = {
     howItWorks: 'Kako ovo radi',
     howItWorksBody:
       'Termostat automatski prelazi između ovih ciljnih temperatura u zakazano vrijeme. Prikaz se osvježava u realnom vremenu sa uređaja.',
-    howToEditBody:
-      'Za izmjenu rasporeda koristi komande na termostatu ili aplikaciju proizvođača.',
+    howToEditBody: 'Za izmjenu rasporeda koristi komande na termostatu ili aplikaciju proizvođača.',
     mode: {
       PROGRAM: 'Program',
       MANUAL: 'Ručno',
@@ -2041,7 +2068,8 @@ const bsBS = {
     fieldMinHeatingFlow: 'Najniža polazna grijanja',
     boilerNone: 'Nije odabrano',
     boilerStale: 'Sačuvani model više nije u katalogu',
-    boilerLegacy: 'Ranije uneseno: {{model}} — odaberi model iz liste da se savjet može osloniti na njega.',
+    boilerLegacy:
+      'Ranije uneseno: {{model}} — odaberi model iz liste da se savjet može osloniti na njega.',
     maxFlowUnset: 'Nije postavljeno (granica kotla)',
     minFlowUnset: 'Nije postavljeno (46 °C)',
     flowBoundsFromCatalog: 'Katalog za ovaj kotao navodi {{min}}–{{max}} °C.',
@@ -2066,15 +2094,18 @@ const bsBS = {
     title: 'Potrebno ažuriranje',
     body: 'Ova verzija aplikacije se više ne podržava. Preuzmite novu verziju da biste nastavili koristiti Boiler Control.',
     optionalTitle: 'Dostupna je nova verzija',
-    optionalBody: 'Dostupna je novija verzija aplikacije Boiler Control. Ova još radi, ali nova verzija sadrži najnovije ispravke.',
+    optionalBody:
+      'Dostupna je novija verzija aplikacije Boiler Control. Ova još radi, ali nova verzija sadrži najnovije ispravke.',
     currentVersion: 'Instalirana verzija',
     requiredVersion: 'Minimalna verzija',
     availableVersion: 'Dostupna verzija',
     updateButton: 'Ažuriraj sada',
     downloadButton: 'Preuzmi novu verziju',
     instructionsTitle: 'Kako instalirati:',
-    instructionsDownload: 'Dodirnite „Preuzmi novu verziju". Preuzimanje nije automatsko — potvrdite ga kad vas browser pita.',
-    instructionsUnknownSource: 'Ako Android blokira instalaciju, dozvolite „Instalacija nepoznatih aplikacija" za vaš browser u Postavkama.',
+    instructionsDownload:
+      'Dodirnite „Preuzmi novu verziju". Preuzimanje nije automatsko — potvrdite ga kad vas browser pita.',
+    instructionsUnknownSource:
+      'Ako Android blokira instalaciju, dozvolite „Instalacija nepoznatih aplikacija" za vaš browser u Postavkama.',
     instructionsInstall: 'Otvorite preuzetu datoteku i potvrdite instalaciju.',
     manualHint: 'Zatražite datoteku nove verzije od administratora.',
   },

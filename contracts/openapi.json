@@ -904,7 +904,16 @@
             "type": "number"
           },
           "avgIndoorTemp": {
-            "description": "`Number((...).toFixed(2))`, 0 ako nema ciklusa (l.311).",
+            "description": "`Number((...).toFixed(2))`; **`null` kad nijedna temperatura nije upotrebljiva** (red sa 0 °C je senzor koji nije javio, ne mjerenje — B1, `common/heating-totals.ts`). Nula bi tvrdila mjerenje koje ne postoji.",
+            "nullable": true,
+            "type": "number"
+          },
+          "excludedZeroTemp": {
+            "description": "Koliko je redova izostavljeno iz `avgIndoorTemp` jer temperatura nije fizički moguća (`< MIN_PLAUSIBLE_ROOM_C`). Ekran time može reći „prosjek od 65 od 66\".",
+            "type": "number"
+          },
+          "openCycles": {
+            "description": "Koliko je ciklusa bilo otvoreno u trenutku mjerenja. Njihovo trajanje je mjereno do sada (`B2`), a ne odbačeno — pa prosjek ne pada dok grijanje traje.",
             "type": "number"
           },
           "totalCycles": {

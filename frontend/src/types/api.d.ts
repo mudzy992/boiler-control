@@ -1446,8 +1446,12 @@ export interface components {
         DashboardHeatingSummaryDto: {
             /** @description `Number((...).toFixed(2))`, 0 ako nema ciklusa (l.307). */
             avgDurationMin: number;
-            /** @description `Number((...).toFixed(2))`, 0 ako nema ciklusa (l.311). */
-            avgIndoorTemp: number;
+            /** @description `Number((...).toFixed(2))`; **`null` kad nijedna temperatura nije upotrebljiva** (red sa 0 °C je senzor koji nije javio, ne mjerenje — B1, `common/heating-totals.ts`). Nula bi tvrdila mjerenje koje ne postoji. */
+            avgIndoorTemp: number | null;
+            /** @description Koliko je redova izostavljeno iz `avgIndoorTemp` jer temperatura nije fizički moguća (`< MIN_PLAUSIBLE_ROOM_C`). Ekran time može reći „prosjek od 65 od 66". */
+            excludedZeroTemp?: number;
+            /** @description Koliko je ciklusa bilo otvoreno u trenutku mjerenja. Njihovo trajanje je mjereno do sada (`B2`), a ne odbačeno — pa prosjek ne pada dok grijanje traje. */
+            openCycles?: number;
             /** @description `events.length` (l.299). */
             totalCycles: number;
             /** @description `Math.round(...)` (l.363). */

@@ -69,7 +69,7 @@ jest.mock('../../services/api/homeProfile.api', () => ({
 }));
 
 jest.mock('../../services/api/client', () => ({
-  apiClient: { getGasReadings: jest.fn(), getDashboard: jest.fn() },
+  apiClient: { getGasReadings: jest.fn(), getDashboard: jest.fn(), getDailyHistory: jest.fn() },
 }));
 
 type Mode = 'light' | 'dark';
@@ -107,6 +107,30 @@ beforeEach(() => {
     },
   });
   jest.mocked(apiClient.getGasReadings).mockResolvedValue([]);
+  /*
+   * Kartica dnevne historije je prije bila jedina koja ne pitа server — njen
+   * upit je bio `enabled: false` dok `homeProfileId` ne stigne, a `getDailyHistory`
+   * nije bio mockovan, pa je završavala u grešci. Snapshot je to skrivao kao
+   * skeleton (`importantForAccessibility="no-hide-descendants"`). Sad je
+   * mockovan, da screenshot prikazuje stanje koje korisnik stvarno vidi.
+   */
+  jest.mocked(apiClient.getDailyHistory).mockResolvedValue({
+    homeProfileId: 7,
+    rows: [],
+    summary: {
+      days: 0,
+      live: 0,
+      backfill: 0,
+      withCycles: 0,
+      withGas: 0,
+      withDegreeDays: 0,
+      withShadow: 0,
+      firstDate: null,
+      lastDate: null,
+    },
+    truncated: false,
+    total: 0,
+  });
   jest.mocked(apiClient.getDashboard).mockResolvedValue({ homes: [] });
   jest.mocked(analyticsApi.getPreviousSummary).mockResolvedValue({
     summary: {
@@ -150,6 +174,22 @@ async function screenTree(mode: Mode) {
   // (vrijednost se pojavljuje i u tabeli poređenja, pa tekst nije jedinstven).
   await result.findByTestId('kpi-avg-indoor');
   await result.findByText('analytics.noTempData');
+  /*
+   * Snapshot se mora snimiti tek kad su **svi** upiti razriješeni.
+   *
+   * Snapshot je prije ovoga bio stabilan samo slučajno: `getDailyHistory` nije
+   * bio mockovan i vraćao je `undefined`, pa je kartica historije završavala u
+   * stanju greške — a to stanje se ne mijenja dalje. Sad kartica čita
+   * `truncated`/`total` (A1), pa je vrijeme snimanja postalo vidljivo:
+   * `toMatchSnapshot` je uhvatio tabelu prije nego je prethodni period stigao
+   * (`periodPrevious: —` umjesto `2.5`).
+   *
+   * Zato se čeka red koji potiče iz `getPreviousSummary` — tada je tabela
+   * konačna, bez obzira na to koliko kartica ispod nje ima.
+   */
+  await waitFor(() => {
+    expect(result.getByText('2.5')).toBeTruthy();
+  });
   // F3: bez uzoraka modela KPI pouzdanosti prikazuje stanje "nema podataka"
   // umjesto izmišljenog procenta (AN-01); sekcija modela uvijek postoji.
   await result.findByTestId('kpi-confidence');

@@ -58,6 +58,11 @@ const enUS = {
     title: 'Analytics',
     dailyHistoryTitle: 'Daily records',
     dailyHistorySummary: '{{count}} days recorded',
+    /**
+     * Isti broj, ali tačna tvrdnja: `count` u prethodnom ključu je dužina
+     * stranice, ne broj zapisa. Ovdje se kaže i koliko ih ukupno ima.
+     */
+    dailyHistorySummaryTruncated: 'Showing newest {{shown}} of {{total}} recorded days',
     dailyHistoryBackfill: '{{count}} reconstructed from older events — not measured live',
     dailyHistoryError: 'Daily records could not be loaded.',
     dailyHistoryEmpty: 'No daily records yet',
@@ -130,7 +135,15 @@ const enUS = {
     // F3: eksplicitna tabela „vrijednost / prethodno" umjesto hardkodiranih strelica
     avgDuration: 'Avg duration',
     sessionsValue: '{{value}} sessions',
-    samplesValue: '{{value}} samples',
+    /**
+     * A3 (audit analitike, §3.3). Riječ „samples" je na istom ekranu značila
+     * TRI različite stvari: kumulativne uzorke jednog intervala (ovdje), broj
+     * dana u periodu (`modelConfidenceLine`), i broj intervala ažuriranih tog
+     * dana (`getLearningTrends`). Tri broja, ista riječ — pa ih nije bilo
+     * moguće uporediti. Svaki sada ima svoje ime.
+     */
+    samplesValue: '{{value}} samples (cumulative, this interval)',
+    daysInPeriodValue: 'over {{value}} days in period',
     periodValue: 'Value',
     periodPrevious: 'Previous',
     periodSummary: 'Period summary',
@@ -138,7 +151,7 @@ const enUS = {
     targetVsActual: 'Target vs actual',
     targetDash: '{{actual}} / {{target}}',
     modelSection: 'Learning model',
-    modelConfidenceLine: 'Confidence {{confidence}}% · {{samples}} samples',
+    modelConfidenceLine: 'Confidence {{confidence}}% · {{samples}} days in period',
     modelHint: 'More data means better flow-temperature recommendations.',
     dataSource: '/api/analytics',
     dataSourceNote:
@@ -159,6 +172,9 @@ const enUS = {
     recentReadings: 'Recent Readings',
     perDay: '{{value}}/day',
     noGasReadings: 'No gas readings available yet.',
+    /** Sa jednim očitanjem u periodu potrošnja nije nula — nije izmjerena. */
+    gasNeedsTwoReadings:
+      'Only one reading in this period — consumption needs two to be measured.',
     meterReading: 'Meter Reading',
     dailyConsumption: 'Daily Consumption',
     noGasData: 'No gas data available',
@@ -1102,6 +1118,9 @@ const bsBS = {
     title: 'Analitika',
     dailyHistoryTitle: 'Dnevni zapisi',
     dailyHistorySummary: '{{count}} dana zabilježeno',
+    /** V. `en.dailyHistorySummaryTruncated` — ista rečenica, bez prećutane tvrdnje. */
+    dailyHistorySummaryTruncated:
+      'Prikazano najnovijih {{shown}} od {{total}} zabilježenih dana',
     dailyHistoryBackfill: '{{count}} rekonstruisano iz starijih događaja — nije mjereno u toku dana',
     dailyHistoryError: 'Dnevni zapisi nisu mogli biti učitani.',
     dailyHistoryEmpty: 'Još nema dnevnih zapisa',
@@ -1175,7 +1194,9 @@ const bsBS = {
     // F3: eksplicitna tabela „vrijednost / prethodno" umjesto hardkodiranih strelica
     avgDuration: 'Prosj. trajanje',
     sessionsValue: '{{value}} sesija',
-    samplesValue: '{{value}} uzoraka',
+    /** V. `en.samplesValue` — tri broja koja su se zvala isto sada imaju tri imena. */
+    samplesValue: '{{value}} uzoraka (kumulativno, ovaj interval)',
+    daysInPeriodValue: 'kroz {{value}} dana u periodu',
     periodValue: 'Vrijednost',
     periodPrevious: 'Prethodno',
     periodSummary: 'Sažetak perioda',
@@ -1183,7 +1204,7 @@ const bsBS = {
     targetVsActual: 'Cilj vs postignuto',
     targetDash: '{{actual}} / {{target}}',
     modelSection: 'Model učenja',
-    modelConfidenceLine: 'Pouzdanost {{confidence}}% · {{samples}} uzoraka',
+    modelConfidenceLine: 'Pouzdanost {{confidence}}% · {{samples}} dana u periodu',
     modelHint: 'Više podataka = bolje preporuke polazne vode.',
     dataSource: '/api/analytics',
     dataSourceNote:
@@ -1204,6 +1225,8 @@ const bsBS = {
     recentReadings: 'Nedavna očitanja',
     perDay: '{{value}}/dan',
     noGasReadings: 'Još nema očitanja plina.',
+    gasNeedsTwoReadings:
+      'U ovom periodu je samo jedno očitanje — za potrošnju su potrebna dva.',
     meterReading: 'Očitanje brojača',
     dailyConsumption: 'Dnevna potrošnja',
     noGasData: 'Nema dostupnih podataka o plinu',
@@ -2115,3 +2138,16 @@ function getDeviceLanguage(): string {
 }
 
 export default i18n;
+
+/**
+ * Sirovi rječnici, samo za testove.
+ *
+ * Test koji provjerava **rečenicu** (npr. da naslov historije nosi i prikazani
+ * i ukupan broj) ne može raditi sa mock-om koji vraća sam ključ: tada bi prošao
+ * i prevod bez `{{total}}`. Ovdje se izlaže isti objekat koji ide u `resources`,
+ * pa test čita ono što korisnik stvarno vidi — bez duplikata teksta u testu.
+ */
+export const __translationsForTest = {
+  'en-US': enUS,
+  'bs-BS': bsBS,
+};

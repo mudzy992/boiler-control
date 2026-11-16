@@ -117,6 +117,28 @@ export const GasAnalyticsCard: React.FC<GasAnalyticsCardProps> = ({ readings, is
     return null;
   }
 
+  /*
+   * Jedno očitanje u periodu **nije** potrošnja nula — to je nemjerena
+   * potrošnja. Razlika se dobija između dva očitanja, pa sa jednim nema nijedne
+   * razlike. Prije ovoga je kartica u tom slučaju pisala „0 m³", što je ista
+   * greška kao `null` → `0` u tabeli dnevne historije: nula tvrdi mjerenje.
+   *
+   * Do ovoga se dolazi lakše nego ranije: otkad kartica poštuje odabrani period
+   * (A2), kratak period često ima tačno jedno očitanje.
+   */
+  if (stats.readingCount < 2) {
+    return (
+      <Panel testID="analytics-gas-card-single">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          <Ionicons name="information-circle-outline" size={16} color={t.inkDim} />
+          <Text size="body" tone="muted" style={{ flex: 1 }}>
+            {tr('analytics.gasNeedsTwoReadings')}
+          </Text>
+        </View>
+      </Panel>
+    );
+  }
+
   const displayReadings = stats.sortedReadings.slice(-5).reverse();
 
   return (

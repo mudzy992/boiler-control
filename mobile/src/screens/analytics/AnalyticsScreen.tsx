@@ -176,9 +176,18 @@ export const AnalyticsScreen = () => {
     enabled: Boolean(activeHome?.id),
   });
 
+  /*
+   * Kartica plina mora gledati **isti** period kao ostale kartice.
+   *
+   * Do 16.11. upit nije nosio ni raspon ni period u ključu: sabirala su se sva
+   * očitanja, pa su „Danas" i „Ova godina" davali identične brojke. Raspon je
+   * isti `dateRange` koji ide u `heating-summary` i `heating-stats` — ne drugi,
+   * izračunat na drugom mjestu.
+   */
   const gasReadingsQuery = useQuery({
-    queryKey: ['gas-readings'],
-    queryFn: () => apiClient.getGasReadings(),
+    queryKey: ['gas-readings', dateRange.from, dateRange.to],
+    queryFn: () =>
+      apiClient.getGasReadings({ from: dateRange.from, to: dateRange.to }),
   });
 
   // Termostati dolaze iz dashboarda; koriste se za „cilj vs postignuto".
@@ -413,6 +422,7 @@ export const AnalyticsScreen = () => {
                   ? t('analytics.samplesValue', { value: latestLearning.samples })
                   : t('analytics.noInsights')
               }
+              /* `samples` je kumulativno po intervalu — ime to kaže (A3). */
               tone={latestLearning ? 'ok' : 'neutral'}
               testID="kpi-confidence"
             />
@@ -595,6 +605,12 @@ export const AnalyticsScreen = () => {
               ) : (
                 <View style={{ gap: 6 }}>
                   <Text size="body" weight="medium">
+                    {/*
+                      `points.length` je broj DANA u periodu, ne uzoraka. Do
+                      16.11. je prikazan pod istom riječi „uzoraka" kao
+                      kumulativni `samples` u KPI kartici iznad — dva broja,
+                      jedno ime (A3). Prevod sada kaže „dana u periodu".
+                    */}
                     {t('analytics.modelConfidenceLine', {
                       confidence: Math.round(latestLearning.avgConfidence * 100),
                       samples: learningQuery.data?.points.length ?? 0,

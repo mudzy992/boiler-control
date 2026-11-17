@@ -80,7 +80,15 @@ describe("i18n — inicijalizacija", () => {
     // `modelRefBlend`, `modelRefNight`, `modelInternalGain`, `modelDayGain`,
     // `modelEquilibrium`). Bez njih bi modelski put prikazivao sirove ključeve
     // umjesto objašnjenja — a objašnjenje je i bio razlog breakdown-a.
-    expect(en.length).toBe(540);
+    // 540 → 553 (F17): trinaest ključeva za razdvajanje izdanja po platformi
+    // i linkove za preuzimanje na login ekranu:
+    //   `appReleases.{platformLabel,platformPhone,platformTv,platformHint,
+    //    colPlatform,filterLabel,filterAll}` (7) — bez njih lista izdanja ne
+    //    razlikuje mobilni od TV-a, a dvije iste verzije izgledaju kao duplikat;
+    //   `auth.{downloadTitle,downloadPhone,downloadPhoneHint,downloadTv,
+    //    downloadTvHint,downloadAction}` (6) — bez njih login ekran prikaže
+    //    sirove ključeve umjesto linkova.
+    expect(en.length).toBe(553);
   });
 });
 

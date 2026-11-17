@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/app-releases/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppReleaseController_available"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/app-releases/latest": {
         parameters: {
             query?: never;
@@ -2238,7 +2254,9 @@ export interface operations {
     };
     AppReleaseController_list: {
         parameters: {
-            query?: never;
+            query: {
+                platform: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2270,9 +2288,28 @@ export interface operations {
             };
         };
     };
-    AppReleaseController_latest: {
+    AppReleaseController_available: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppReleaseController_latest: {
+        parameters: {
+            query: {
+                platform: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

@@ -81,6 +81,14 @@ const enUS = {
   },
   appReleases: {
     title: "Mobile app releases",
+    platformLabel: "Platform",
+    platformPhone: "Mobile app",
+    platformTv: "TV app",
+    platformHint:
+      "Versions are tracked separately per app — a TV build is never compared with a mobile build.",
+    colPlatform: "App",
+    filterLabel: "Show:",
+    filterAll: "All",
     subtitle:
       "Publish a new APK. The app checks this server and offers the new version to users.",
     fileLabel: "APK file",
@@ -119,6 +127,12 @@ const enUS = {
       "A withdrawn version is no longer offered to users, but stays in the history.",
   },
   auth: {
+    downloadTitle: "Download the app",
+    downloadPhone: "Mobile app",
+    downloadPhoneHint: "Android phone — full control of the boiler",
+    downloadTv: "TV app",
+    downloadTvHint: "Android TV / Google TV — analytics on the big screen",
+    downloadAction: "Download APK",
     login: "Login",
     register: "Register",
     email: "Email",
@@ -705,6 +719,14 @@ const bsBS = {
   },
   appReleases: {
     title: "Verzije mobilne aplikacije",
+    platformLabel: "Platforma",
+    platformPhone: "Mobilna aplikacija",
+    platformTv: "TV aplikacija",
+    platformHint:
+      "Verzije se prate odvojeno po aplikaciji — TV verzija se nikad ne poredi sa mobilnom.",
+    colPlatform: "Aplikacija",
+    filterLabel: "Prikaži:",
+    filterAll: "Sve",
     subtitle:
       "Objavite novi APK. Aplikacija provjerava ovaj server i nudi korisnicima novu verziju.",
     fileLabel: "APK datoteka",
@@ -739,6 +761,12 @@ const bsBS = {
       "Povučena verzija se više ne nudi korisnicima, ali ostaje u historiji.",
   },
   auth: {
+    downloadTitle: "Preuzmi aplikaciju",
+    downloadPhone: "Mobilna aplikacija",
+    downloadPhoneHint: "Android telefon — puno upravljanje kotlom",
+    downloadTv: "TV aplikacija",
+    downloadTvHint: "Android TV / Google TV — analitika na velikom ekranu",
+    downloadAction: "Preuzmi APK",
     login: "Prijava",
     register: "Registracija",
     email: "Email",

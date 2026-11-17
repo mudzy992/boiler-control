@@ -31,8 +31,17 @@ import { Badge } from "@/ui";
  *    prati `mutation.isPending`, a uspjeh se prikazuje tek sa servera.
  */
 
+type ReleasePlatform = "PHONE" | "TV";
+
 interface AppReleaseRow {
   id: number;
+  /**
+   * Kojoj aplikaciji izdanje pripada. Do F17 ovo polje nije postojalo, pa je
+   * TV APK iste verzije kao mobilni padao na jedinstvenom `version`. Sada su
+   * izdanja odvojena, a tabela mora da **pokaže** koja je koja — bez toga dvije
+   * iste verzije izgledaju kao duplikat.
+   */
+  platform: ReleasePlatform;
   version: string;
   buildNumber: number;
   sizeBytes: number;
@@ -54,6 +63,14 @@ export const AppReleasesPage = (): JSX.Element => {
   const queryClient = useQueryClient();
 
   const [file, setFile] = useState<File | null>(null);
+  /*
+   * Platforma je eksplicitna u formi, sa `PHONE` kao početnom vrijednošću —
+   * ne zato što je vjerovatnija, nego zato što se vidi i može promijeniti.
+   * Server odbija upload bez platforme, pa se ne može desiti da TV APK tiho
+   * prođe kao mobilni.
+   */
+  const [platform, setPlatform] = useState<ReleasePlatform>("PHONE");
+  const [filter, setFilter] = useState<ReleasePlatform | "ALL">("ALL");
   const [version, setVersion] = useState("");
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -70,6 +87,10 @@ export const AppReleasesPage = (): JSX.Element => {
 
       const form = new FormData();
       form.append("apk", file);
+      // Platforma je OBAVEZNA: server odbija upload bez nje umjesto da
+      // pretpostavi mobilni — pogrešna pretpostavka bi TV APK tiho upisala
+      // kao mobilni release.
+      form.append("platform", platform);
       if (version.trim()) form.append("version", version.trim());
       if (notes.trim()) form.append("notes", notes.trim());
 
@@ -83,7 +104,9 @@ export const AppReleasesPage = (): JSX.Element => {
       setVersion("");
       setNotes("");
       setFormError(null);
-      setSuccessVersion(row.version);
+      setSuccessVersion(
+        `${row.version} (${row.platform === "TV" ? "TV" : "mobilni"})`,
+      );
       void queryClient.invalidateQueries({ queryKey: RELEASES_QUERY_KEY });
     },
     onError: (error) => {
@@ -113,7 +136,11 @@ export const AppReleasesPage = (): JSX.Element => {
    * kroz `disabled` na dugmetu — korisnik koji odabere datoteku mora vidjeti
    * da je stvarno primljena (ime i veličina), a ne da nagađa zašto dugme ne radi.
    */
-  const rows = releasesQuery.data ?? [];
+  const allRows = releasesQuery.data ?? [];
+  const rows =
+    filter === "ALL"
+      ? allRows
+      : allRows.filter((row) => row.platform === filter);
   const status = releasesQuery.isLoading
     ? "loading"
     : releasesQuery.isError
@@ -131,6 +158,41 @@ export const AppReleasesPage = (): JSX.Element => {
 
       <Card>
         <CardContent className="space-y-4 pt-4">
+          {/*
+            Platforma je PRVA kontrola, prije fajla. Razlog: ona određuje šta
+            „nova verzija" znači (poređenje je unutar platforme), pa admin mora
+            izabrati aplikaciju prije nego što izabere APK — inače se dešava da
+            se TV APK pošalje kao mobilni i tiho prođe ako je verzija veća.
+          */}
+          <fieldset className="space-y-1">
+            <legend className="block text-sm font-medium text-ink">
+              {t("appReleases.platformLabel")}
+            </legend>
+            <div className="flex gap-4">
+              {(["PHONE", "TV"] as const).map((value) => (
+                <label
+                  key={value}
+                  className="flex items-center gap-2 text-sm text-ink"
+                >
+                  <input
+                    type="radio"
+                    name="app-release-platform"
+                    value={value}
+                    checked={platform === value}
+                    onChange={() => setPlatform(value)}
+                    disabled={uploadMutation.isPending}
+                  />
+                  {value === "TV"
+                    ? t("appReleases.platformTv")
+                    : t("appReleases.platformPhone")}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-ink-dim">
+              {t("appReleases.platformHint")}
+            </p>
+          </fieldset>
+
           <div className="space-y-1">
             <label
               htmlFor="app-release-apk"
@@ -237,6 +299,30 @@ export const AppReleasesPage = (): JSX.Element => {
         </CardContent>
       </Card>
 
+      {/*
+        Filter postoji jer se poslije F17 u istoj tabeli nalaze dvije aplikacije
+        sa nezavisnim brojevima. Bez filtera lista izgleda kao da verzije
+        skaču naprijed-nazad (2.0.0, 1.0.0, 1.9.0, 1.0.0 …).
+      */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-ink-muted">
+          {t("appReleases.filterLabel")}
+        </span>
+        {(["ALL", "PHONE", "TV"] as const).map((value) => (
+          <Button
+            key={value}
+            variant={filter === value ? "primary" : "ghost"}
+            onClick={() => setFilter(value)}
+          >
+            {value === "ALL"
+              ? t("appReleases.filterAll")
+              : value === "TV"
+                ? t("appReleases.platformTv")
+                : t("appReleases.platformPhone")}
+          </Button>
+        ))}
+      </div>
+
       <QueryState
         status={status}
         onRetry={() => {
@@ -249,6 +335,7 @@ export const AppReleasesPage = (): JSX.Element => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>{t("appReleases.colPlatform")}</TableHead>
                   <TableHead>{t("appReleases.colVersion")}</TableHead>
                   <TableHead>{t("appReleases.colBuild")}</TableHead>
                   <TableHead>{t("appReleases.colSize")}</TableHead>
@@ -260,6 +347,13 @@ export const AppReleasesPage = (): JSX.Element => {
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.id}>
+                    <TableCell>
+                      <Badge tone={row.platform === "TV" ? "info" : "muted"}>
+                        {row.platform === "TV"
+                          ? t("appReleases.platformTv")
+                          : t("appReleases.platformPhone")}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="font-medium">
                       {row.version}
                       {row.notes ? (

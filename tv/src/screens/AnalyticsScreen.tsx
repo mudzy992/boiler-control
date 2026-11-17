@@ -24,6 +24,16 @@ import { colors, spacing } from '../theme';
 export interface AnalyticsScreenProps {
   /** Odgovor `GET /api/gas/analysis`, ili `null` dok se učitava. */
   analysis: Record<string, unknown> | null;
+  /**
+   * Nova verzija TV aplikacije, ili `null`.
+   *
+   * **Samo obavijest, bez dugmeta za instalaciju.** Android traži
+   * `REQUEST_INSTALL_PACKAGES` i sistemsku potvrdu za svaku instalaciju van
+   * prodavnice; na TV-u ta potvrda prekrije cijeli ekran i traži daljinski.
+   * Zato TV kaže da nova verzija postoji i pokaže broj — instalaciju pokreće
+   * onaj ko zna šta radi.
+   */
+  updateAvailable?: { version: string } | null;
   loading: boolean;
   error: string | null;
   /** Vrijeme zadnjeg uspješnog osvježavanja; `null` = nikad. */
@@ -34,6 +44,7 @@ export interface AnalyticsScreenProps {
 
 export function AnalyticsScreen({
   analysis,
+  updateAvailable,
   loading,
   error,
   updatedAt,
@@ -82,6 +93,19 @@ export function AnalyticsScreen({
         <Text style={styles.title}>Analitika</Text>
         <FreshnessBadge freshness={freshness} />
       </View>
+
+      {updateAvailable ? (
+        /*
+         * Traka je iznad metrika i ostaje dok je nova verzija objavljena.
+         * Namjerno NIJE modalni dijalog: TV nema način da ga zatvori bez
+         * daljinskog, a poruka nije hitna.
+         */
+        <View style={styles.updateBar} testID="tv-update-banner">
+          <Text style={styles.updateText}>
+            Dostupna je nova verzija TV aplikacije: v{updateAvailable.version}
+          </Text>
+        </View>
+      ) : null}
 
       <View style={styles.grid}>
         {shown.map((metric) => (
@@ -200,5 +224,14 @@ const styles = StyleSheet.create({
   },
   unit: { color: colors.textMuted, fontSize: 24, paddingBottom: 10 },
   muted: { color: colors.textMuted, fontSize: 22, textAlign: 'center' },
+  updateBar: {
+    backgroundColor: colors.surface,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    borderRadius: 8,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  updateText: { color: colors.text, fontSize: 22 },
   fault: { color: colors.fault, fontSize: 28, textAlign: 'center' },
 });

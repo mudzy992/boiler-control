@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { StatusBanner } from '@/shared/components/status-banner';
+import { AppDownloadLinks } from '../components/AppDownloadLinks';
 import {
   Button,
   Field,
@@ -94,6 +95,14 @@ export const LoginPage = (): JSX.Element => {
               {t('auth.signIn')}
             </Button>
           </form>
+
+          {/*
+            Linkovi za preuzimanje su ISPOD forme, ne iznad: onaj ko se
+            prijavljuje svaki dan ne smije prvo proći pored poziva na download.
+            Ali moraju biti na ovom ekranu — čovjek koji prvi put dolazi nema
+            nalog, pa mu prijava ne pomaže da dođe do aplikacije.
+          */}
+          <AppDownloadLinks />
         </PanelBody>
       </Panel>
     </div>

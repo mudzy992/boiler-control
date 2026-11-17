@@ -28,8 +28,13 @@ import { FileStorageService, APK_MAX_SIZE_BYTES } from './file-storage.service';
 /** Semver bez prerelease dijela — isti oblik koji klijent upoređuje. */
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
 
+export type ReleasePlatform = 'PHONE' | 'TV';
+
 export interface AppReleaseRow {
   id: number;
+  /// `PHONE` (mobilna) ili `TV`. Izdanja se ne miješaju: TV ne smije dobiti
+  /// mobilni APK kao „novu verziju" (v. `latestPublished`).
+  platform: ReleasePlatform;
   version: string;
   buildNumber: number;
   sizeBytes: number;
@@ -54,7 +59,16 @@ export interface UploadAppReleaseInput {
   buildNumber?: number;
   notes?: string;
   isPublished?: boolean;
+  /**
+   * Kojoj aplikaciji izdanje pripada. **Obavezno** na ulazu; kontroler ga
+   * izvodi iz multipart polja, a servis ne pretpostavlja `PHONE` — pogrešna
+   * pretpostavka bi TV APK tiho upisala kao mobilni.
+   */
+  platform: ReleasePlatform;
 }
+
+/** Platforme u obliku koji se koristi za validaciju ulaza. */
+export const RELEASE_PLATFORMS: readonly ReleasePlatform[] = ['PHONE', 'TV'];
 
 /**
  * Upoređuje dvije semver verzije. Isti algoritam kao mobilni
@@ -207,7 +221,11 @@ export class AppReleaseService {
   ) {}
 
   /**
-   * Najnovija **objavljena** verzija — ona koja se nudi korisnicima.
+   * Najnovija **objavljena** verzija za datu platformu — ona koja se nudi.
+   *
+   * `platform` je parametar, a ne filter koji pozivalac dodaje: kad bi bio
+   * opcion, prvi pozivalac koji ga zaboravi vrati TV-u mobilno izdanje, a to
+   * se u UI-u vidi kao „TV ima novu verziju" — sa APK-om koji se ne instalira.
    *
    * Dvije stvari koje ova metoda mora da poštuje, a nijedna nije očigledna:
    *
@@ -221,12 +239,18 @@ export class AppReleaseService {
    *    izdanju), pa se najviša verzija traži u kodu istim poređenjem koje
    *    koristi i klijent.
    */
-  async latestPublished(): Promise<AppReleaseRow | null> {
+  async latestPublished(
+    platform: ReleasePlatform = 'PHONE',
+  ): Promise<AppReleaseRow | null> {
     const rows = await this.prisma.appRelease.findMany({
-      where: { isPublished: true },
+      // `platform` je OBAVEZAN u filteru, i to je cijela poenta razdvajanja:
+      // TV ne smije dobiti mobilni APK kao svoju „novu verziju". Podrazumijevana
+      // vrijednost `PHONE` održava postojeće pozivaoce ispravnim.
+      where: { isPublished: true, platform },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       select: {
         id: true,
+        platform: true,
         version: true,
         buildNumber: true,
         sizeBytes: true,
@@ -256,10 +280,17 @@ export class AppReleaseService {
    *
    * Zabrana je zato vezana za **istoriju**, a nudenje za **vidljivost**.
    */
-  private async highestEver(): Promise<AppReleaseRow | null> {
+  private async highestEver(
+    platform: ReleasePlatform,
+  ): Promise<AppReleaseRow | null> {
     const rows = await this.prisma.appRelease.findMany({
+      // Isti razlog kao `latestPublished`: poređenje „je li nova verzija veća"
+      // mora biti unutar iste aplikacije. Inače bi TV 1.0.0 bio odbijen jer
+      // mobilni ima 2.0.0.
+      where: { platform },
       select: {
         id: true,
+        platform: true,
         version: true,
         buildNumber: true,
         sizeBytes: true,
@@ -282,11 +313,13 @@ export class AppReleaseService {
   // `await`-uju, a promjena povratnog tipa u `PrismaPromise` bi procurila kroz
   // kontroler u ugovor. Zato je `require-await` ovdje isključen, a ne prekršen.
   // eslint-disable-next-line @typescript-eslint/require-await
-  async list(): Promise<AppReleaseRow[]> {
+  async list(platform?: ReleasePlatform): Promise<AppReleaseRow[]> {
     return this.prisma.appRelease.findMany({
+      where: platform ? { platform } : {},
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       select: {
         id: true,
+        platform: true,
         version: true,
         buildNumber: true,
         sizeBytes: true,
@@ -322,6 +355,18 @@ export class AppReleaseService {
       throw new BadRequestException('APK prelazi dozvoljenu veličinu');
     }
 
+    /*
+     * Platforma se validira prije ičega drugog. Ako bi se pretpostavila
+     * (`?? 'PHONE'`), TV APK bi tiho postao mobilni release — i korisnici bi
+     * dobili obavijest o „novoj verziji" koja ne odgovara njihovoj aplikaciji.
+     */
+    const platform = input.platform;
+    if (!RELEASE_PLATFORMS.includes(platform)) {
+      throw new BadRequestException(
+        `Platforma mora biti PHONE ili TV (dobijeno: ${String(platform)}).`,
+      );
+    }
+
     const fromApk = readVersionFromApk(input.file.buffer);
     const version = (input.version?.trim() || fromApk.version || '').trim();
 
@@ -331,10 +376,12 @@ export class AppReleaseService {
       );
     }
 
-    const previous = await this.highestEver();
+    // Poređenje je UNUTAR platforme: TV 1.0.0 je „nova" iako mobilni ima 2.0.0.
+    const previous = await this.highestEver(platform);
     if (previous && compareVersions(version, previous.version) <= 0) {
       throw new ConflictException(
-        `Verzija ${version} nije veća od posljednje objavljene (${previous.version})`,
+        `Verzija ${version} nije veća od posljednje objavljene za ${platform} ` +
+          `(${previous.version}). Izdanja za mobilni i TV se porede odvojeno.`,
       );
     }
 
@@ -347,11 +394,16 @@ export class AppReleaseService {
       version,
       buildNumber,
       input.file,
+      // Platforma u nazivu fajla: bez nje bi `boiler-control-1.0.0-10000.apk`
+      // za mobilni i TV bio ISTI fajl na disku — drugi upload bi pregazio prvi,
+      // a u bazi bi ostala dva reda koja pokazuju na iste bajtove.
+      platform,
     );
 
     try {
       const row = await this.prisma.appRelease.create({
         data: {
+          platform,
           version,
           buildNumber,
           apkPath: stored.relativePath,
@@ -361,6 +413,7 @@ export class AppReleaseService {
         },
         select: {
           id: true,
+          platform: true,
           version: true,
           buildNumber: true,
           sizeBytes: true,
@@ -371,7 +424,7 @@ export class AppReleaseService {
       });
 
       this.logger.log(
-        `Nova verzija ${row.version} (build ${row.buildNumber}) objavljena: ${stored.relativePath}`,
+        `Nova ${row.platform} verzija ${row.version} (build ${row.buildNumber}) objavljena: ${stored.relativePath}`,
       );
 
       return { ...row, downloadUrl: downloadUrlFor(row.id) };
@@ -395,6 +448,7 @@ export class AppReleaseService {
       data: { isPublished },
       select: {
         id: true,
+        platform: true,
         version: true,
         buildNumber: true,
         sizeBytes: true,

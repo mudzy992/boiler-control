@@ -6,6 +6,16 @@
  * značilo bi da se razvojna verzija ne može pokrenuti na TV-u.
  */
 
+/**
+ * Verzija instalirane TV aplikacije.
+ *
+ * Dolazi iz `expo-constants`, tj. iz `app.config.js`, a on iz `package.json` —
+ * pa je isti broj koji build upiše u APK. Ručno upisana verzija ovdje bila bi
+ * treći izvor i prvi bi se razišao: TV bi tvrdio da je ažuran iako nije.
+ */
+export const APP_VERSION: string =
+  require('expo-constants').default?.expoConfig?.version ?? '';
+
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? 'https://api.boiler-control.ba';
 

@@ -83,4 +83,22 @@ describe('TV analitika', () => {
     expect(screen.getByText('12.50')).toBeTruthy();
     expect(screen.getByText('podaci nisu osvježeni')).toBeTruthy();
   });
+
+  it('obavijest o novoj verziji je vidljiva, ali NE blokira analitiku', async () => {
+    /*
+     * TV ne instalira sam (traži sistemsku potvrdu preko cijelog ekrana i
+     * daljinski), pa obavijest ne smije skloniti podatke niti tražiti akciju.
+     */
+    await renderScreen({ updateAvailable: { version: '1.2.0' } });
+
+    expect(screen.getByTestId('tv-update-banner')).toBeTruthy();
+    expect(screen.getByText(/v1\.2\.0/)).toBeTruthy();
+    // Metrike su i dalje tu — obavijest je traka, ne prepreka.
+    expect(screen.getByText('12.50')).toBeTruthy();
+  });
+
+  it('bez nove verzije trake nema', async () => {
+    await renderScreen({ updateAvailable: null });
+    expect(screen.queryByTestId('tv-update-banner')).toBeNull();
+  });
 });

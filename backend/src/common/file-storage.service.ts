@@ -112,6 +112,7 @@ export class FileStorageService {
     version: string,
     buildNumber: number,
     file: UploadedFileInput,
+    platform: 'PHONE' | 'TV' = 'PHONE',
   ): Promise<StoredFileInfo> {
     if (!APK_MIME_TYPES.has(file.mimetype)) {
       throw new BadRequestException('Release mora biti .apk datoteka');
@@ -128,9 +129,17 @@ export class FileStorageService {
       throw new BadRequestException('Neispravna verzija u nazivu datoteke');
     }
 
-    const relativeDir = 'app-releases';
+    /*
+     * Platforma je u PUTANJI, ne samo u nazivu: `latestPublished(platform)`
+     * vraća red iz baze, ali fajl na disku mora biti jednoznačan. Bez ovoga su
+     * mobilni i TV APK sa istom verzijom i buildNumber-om bili ISTI fajl —
+     * drugi upload bi pregazio prvi, a baza bi imala dva reda koja pokazuju na
+     * iste bajtove. To se ne vidi kao greška: vidi se kao „TV se ne može
+     * instalirati" ili, gore, kao mobilni APK na TV linku.
+     */
+    const relativeDir = path.posix.join('app-releases', platform.toLowerCase());
     await this.ensureDir(relativeDir);
-    const fileName = `boiler-control-${safeVersion}-${buildNumber}.apk`;
+    const fileName = `boiler-control-${platform.toLowerCase()}-${safeVersion}-${buildNumber}.apk`;
     const relativePath = path.posix.join(relativeDir, fileName);
 
     await fs.writeFile(this.resolveAbsolutePath(relativePath), file.buffer);

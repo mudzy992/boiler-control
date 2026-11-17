@@ -16,8 +16,9 @@ import {
   prepareNotifications,
 } from './src/services/notifications';
 import { createSessionStore, type StoredSession } from './src/lib/session';
+import { newVersionAvailable, type TvLatestRelease } from './src/lib/update';
 import type { ClaimResponse } from './src/lib/pairing';
-import { API_BASE_URL, translate } from './src/config';
+import { API_BASE_URL, APP_VERSION, translate } from './src/config';
 
 /**
  * Ulazna tačka TV aplikacije.
@@ -39,6 +40,12 @@ const sessionStore = createSessionStore({
 
 const POLL_INTERVAL_MS = 60_000;
 
+/**
+ * Provjera nove verzije rijetko je potrebna, a poziv ide na svakih sat: TV
+ * visi na zidu danima, pa bi češće pitanje bilo bespotreban promet.
+ */
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
 export default function App() {
   const [session, setSession] = useState<StoredSession | null>(null);
   const [booted, setBooted] = useState(false);
@@ -46,6 +53,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const [release, setRelease] = useState<TvLatestRelease | null>(null);
 
   /*
    * Notifikacije se pripremaju **prije** uparivanja: push token se šalje uz
@@ -106,6 +114,31 @@ export default function App() {
     }
   }, [client, session]);
 
+  /*
+   * Provjera nove verzije. **Ne blokira ništa**: ako padne, TV radi dalje bez
+   * obavijesti. Suprotno ponašanje (gate koji zaključa TV) ostavilo bi
+   * korisnika bez analitike zbog nadogradnje koju ne može izvršiti bez
+   * telefona — v. `src/lib/update.ts`.
+   */
+  useEffect(() => {
+    if (!session) return;
+
+    const check = async () => {
+      try {
+        const currentVersion = APP_VERSION;
+        if (!currentVersion) return;
+        const response = await client.get(`${TV_ENDPOINTS.releaseLatest}?platform=TV`);
+        setRelease(newVersionAvailable(currentVersion, response.data));
+      } catch {
+        // Tišina je tačan odgovor: TV je upotrebljiv i bez obavijesti.
+      }
+    };
+
+    void check();
+    const timer = setInterval(() => void check(), UPDATE_CHECK_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [client, session]);
+
   useEffect(() => {
     if (!session) return;
     void loadAnalytics();
@@ -148,6 +181,7 @@ export default function App() {
       {session ? (
         <AnalyticsScreen
           analysis={analysis}
+          updateAvailable={release}
           loading={loading}
           error={error}
           updatedAt={updatedAt}

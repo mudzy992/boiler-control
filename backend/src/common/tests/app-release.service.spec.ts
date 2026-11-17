@@ -209,7 +209,11 @@ describe('buildNumberFromVersion', () => {
 
 describe('AppReleaseService.upload', () => {
   function setup(
-    existing: Array<{ version: string; isPublished?: boolean }> = [],
+    existing: Array<{
+      version: string;
+      isPublished?: boolean;
+      platform?: 'PHONE' | 'TV';
+    }> = [],
   ) {
     // `latestPublished` i `highestEver` oba čitaju `findMany`; razlika je u
     // `where` filteru, pa se ovdje poštuje — inače test ne bi razlikovao
@@ -220,18 +224,31 @@ describe('AppReleaseService.upload', () => {
       sizeBytes: 1,
       notes: null,
       isPublished: row.isPublished ?? true,
+      // Dosadašnja izdanja su bila mobilna; testovi koji ne navedu platformu
+      // time provjeravaju da `PHONE` ostaje zadan.
+      platform: row.platform ?? 'PHONE',
       publishedAt: new Date(2026, 10, 1 + index),
       ...row,
     }));
 
     const prisma = {
       appRelease: {
-        findMany: jest.fn((args?: { where?: { isPublished?: boolean } }) =>
-          Promise.resolve(
-            args?.where?.isPublished === true
-              ? rows.filter((row) => row.isPublished)
-              : rows,
-          ),
+        findMany: jest.fn(
+          (args?: { where?: { isPublished?: boolean; platform?: string } }) => {
+            // Stvarni Prisma poštuje SVE uslove; lažna baza mora isto, inače
+            // test ne bi uhvatio da `latestPublished` ne filtrira platformu —
+            // a to je tačno kvar zbog kojeg TV dobija mobilni APK.
+            let result = rows;
+            if (args?.where?.isPublished === true) {
+              result = result.filter((row) => row.isPublished);
+            }
+            if (args?.where?.platform) {
+              result = result.filter(
+                (row) => row.platform === args.where!.platform,
+              );
+            }
+            return Promise.resolve(result);
+          },
         ),
         // Povratni tip je `Promise`, kao i stvarni Prisma poziv: jedan test
         // namjerno pravi odbijenicu (`mockRejectedValueOnce`), a to je moguće
@@ -269,7 +286,7 @@ describe('AppReleaseService.upload', () => {
   it('objavljuje verziju pročitanu iz APK-a', async () => {
     const { service, prisma } = setup();
 
-    const result = await service.upload({ file });
+    const result = await service.upload({ file, platform: 'PHONE' });
 
     expect(prisma.appRelease.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -287,7 +304,7 @@ describe('AppReleaseService.upload', () => {
   it('odbija verziju koja nije veća od posljednje objavljene', async () => {
     const { service, storage } = setup([{ version: '1.4.0' }]);
 
-    await expect(service.upload({ file })).rejects.toThrow(
+    await expect(service.upload({ file, platform: 'PHONE' })).rejects.toThrow(
       /nije veća od posljednje objavljene/,
     );
     // Ništa nije upisano: ni fajl, ni red.
@@ -297,7 +314,7 @@ describe('AppReleaseService.upload', () => {
   it('ručna korekcija verzije ima prednost pred onom iz APK-a', async () => {
     const { service, prisma } = setup([{ version: '1.3.0' }]);
 
-    await service.upload({ file, version: '1.5.0' });
+    await service.upload({ file, version: '1.5.0', platform: 'PHONE' });
 
     expect(prisma.appRelease.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -309,9 +326,9 @@ describe('AppReleaseService.upload', () => {
   it('poruka o nedostajućem fajlu kaže i da zahtjev nije bio multipart', async () => {
     const { service, storage } = setup();
 
-    await expect(service.upload({ file: undefined as never })).rejects.toThrow(
-      /multipart\/form-data/,
-    );
+    await expect(
+      service.upload({ file: undefined as never, platform: 'PHONE' }),
+    ).rejects.toThrow(/multipart\/form-data/);
     expect(storage.storeAppRelease).not.toHaveBeenCalled();
   });
 
@@ -319,7 +336,10 @@ describe('AppReleaseService.upload', () => {
     const { service, storage } = setup();
 
     await expect(
-      service.upload({ file: { ...file, buffer: Buffer.from('nije apk') } }),
+      service.upload({
+        file: { ...file, buffer: Buffer.from('nije apk') },
+        platform: 'PHONE',
+      }),
     ).rejects.toThrow(/unesite je ručno/);
     expect(storage.storeAppRelease).not.toHaveBeenCalled();
   });
@@ -328,7 +348,9 @@ describe('AppReleaseService.upload', () => {
     const { service, prisma, storage } = setup();
     prisma.appRelease.create.mockRejectedValueOnce(new Error('db down'));
 
-    await expect(service.upload({ file })).rejects.toThrow('db down');
+    await expect(service.upload({ file, platform: 'PHONE' })).rejects.toThrow(
+      'db down',
+    );
     expect(storage.deleteFile).toHaveBeenCalledWith(
       'app-releases/boiler-control-1.4.0-14.apk',
     );
@@ -435,10 +457,144 @@ describe('AppReleaseService — skrivena verzija', () => {
 
     // 1.5.0 je veća od vidljive 1.5.0? Nije — jednaka je. Ali 1.6.0 je
     // skrivena i dalje postoji, pa 1.5.0 ne smije proći kao „nova".
-    await expect(service.upload({ file, version: '1.5.0' })).rejects.toThrow(
-      /nije veća od posljednje objavljene \(1\.6\.0\)/,
+    await expect(
+      service.upload({ file, version: '1.5.0', platform: 'PHONE' }),
+    ).rejects.toThrow(
+      /nije veća od posljednje objavljene za PHONE \(1\.6\.0\)/,
     );
     expect(storage.storeAppRelease).not.toHaveBeenCalled();
     expect(prisma.appRelease.create).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * F17: razdvajanje izdanja po platformi.
+ *
+ * **Zašto ovi testovi postoje.** Prije F17 je `AppRelease.version` bio
+ * jedinstven na cijeloj tabeli, a `latestPublished()` nije primao platformu.
+ * Dvije posljedice, obje tihe:
+ *
+ * 1. TV APK iste verzije kao mobilni (oba `1.0.0`) → `Unique constraint failed`
+ *    pri uploadu. Admin to vidi kao „upload ne radi", bez objašnjenja.
+ * 2. Gore: `latest` za TV vraća **mobilni** release, pa TV nudi update na
+ *    aplikaciju koja se na TV-u ne može instalirati.
+ *
+ * Nijedna se ne vidi iz koda — samo iz ovih tvrdnji.
+ */
+describe('AppReleaseService — platforma', () => {
+  function setup(rows: Array<Record<string, unknown>>) {
+    const prisma = {
+      appRelease: {
+        findMany: jest.fn((args?: { where?: { platform?: string } }) =>
+          Promise.resolve(
+            args?.where?.platform
+              ? rows.filter((r) => r.platform === args.where!.platform)
+              : rows,
+          ),
+        ),
+        create: jest.fn(({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({ id: 9, publishedAt: new Date(), ...data }),
+        ),
+      },
+    };
+    const storage = {
+      storeAppRelease: jest.fn().mockResolvedValue({
+        relativePath: 'app-releases/tv/boiler-control-tv-1.0.0-10000.apk',
+        mimeType: 'application/vnd.android.package-archive',
+        originalName: 'app.apk',
+      }),
+      deleteFile: jest.fn(),
+    };
+    const service = new AppReleaseService(prisma as never, storage as never);
+    return { service, prisma, storage };
+  }
+
+  const row = (over: Record<string, unknown>) => ({
+    id: 1,
+    buildNumber: 1,
+    sizeBytes: 1,
+    notes: null,
+    isPublished: true,
+    publishedAt: new Date(),
+    ...over,
+  });
+
+  const tvApk = {
+    buffer: apk('1.0.0', 10_000),
+    mimetype: 'application/vnd.android.package-archive',
+    size: 1024,
+    originalname: 'app.apk',
+  };
+
+  it('TV i mobilni mogu imati ISTU verziju — ne sudaraju se', async () => {
+    // Ovo je kvar koji je F17 popravio: `version` je bio @unique na tabeli.
+    const { service, prisma } = setup([
+      row({ platform: 'PHONE', version: '1.0.0' }),
+    ]);
+
+    await expect(
+      service.upload({ file: tvApk, platform: 'TV' }),
+    ).resolves.toMatchObject({ version: '1.0.0', platform: 'TV' });
+
+    expect(prisma.appRelease.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ platform: 'TV', version: '1.0.0' }),
+      }),
+    );
+  });
+
+  it('poređenje verzija je UNUTAR platforme — TV 1.0.0 nije „starija" od mobilne 2.0.0', async () => {
+    const { service } = setup([row({ platform: 'PHONE', version: '2.0.0' })]);
+
+    // Bez `platform` u `highestEver` ovo bi palo sa 409, iako TV nikad nije
+    // imao izdanje.
+    await expect(
+      service.upload({ file: tvApk, platform: 'TV' }),
+    ).resolves.toBeDefined();
+  });
+
+  it('latest za TV NE vraća mobilno izdanje', async () => {
+    const { service } = setup([
+      row({ id: 1, platform: 'PHONE', version: '2.0.0' }),
+      row({ id: 2, platform: 'TV', version: '1.0.0' }),
+    ]);
+
+    await expect(service.latestPublished('TV')).resolves.toMatchObject({
+      id: 2,
+      platform: 'TV',
+      version: '1.0.0',
+    });
+    await expect(service.latestPublished('PHONE')).resolves.toMatchObject({
+      id: 1,
+      platform: 'PHONE',
+    });
+  });
+
+  it('platforma bez izdanja vraća null — TV link se tada ne prikazuje', async () => {
+    const { service } = setup([row({ platform: 'PHONE', version: '2.0.0' })]);
+    await expect(service.latestPublished('TV')).resolves.toBeNull();
+  });
+
+  it('nepoznata platforma se ODBIJA, ne pretvara u PHONE', async () => {
+    // Tiho pretvaranje bi TV APK upisalo kao mobilni — korisnici bi dobili
+    // obavijest o verziji koja ne odgovara njihovoj aplikaciji.
+    const { service } = setup([]);
+    await expect(
+      service.upload({ file: tvApk, platform: 'WEB' as never }),
+    ).rejects.toThrow(/Platforma mora biti PHONE ili TV/);
+  });
+
+  it('platforma ulazi u naziv fajla na disku', async () => {
+    // Bez ovoga mobilni i TV APK iste verzije i buildNumber-a su ISTI fajl:
+    // drugi upload pregazi prvi, a baza ima dva reda na iste bajtove.
+    const { service, storage } = setup([]);
+    await service.upload({ file: tvApk, platform: 'TV' });
+
+    expect(storage.storeAppRelease).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Number),
+      expect.any(Object),
+      'TV',
+    );
   });
 });

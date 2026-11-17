@@ -101,6 +101,8 @@ export const TV_ENDPOINTS = {
   devices: '/api/notifications/devices',
   health: '/api/health',
   pairingSession: '/api/tv-pairing/sessions',
+  /// Najnovije TV izdanje — samo za obavijest, TV ne instalira sam.
+  releaseLatest: '/api/app-releases/latest',
 } as const;
 
 /**

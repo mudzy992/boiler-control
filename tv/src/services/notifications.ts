@@ -1,24 +1,35 @@
 /**
  * Push notifikacije na TV-u.
  *
- * **Glavna svrha TV aplikacije.** Korisnik gleda TV, a ne telefon — obavještenje
- * o kvaru kotla mora se pojaviti **na TV-u**, kao sistemska notifikacija, i kad
- * aplikacija nije u prvom planu.
- *
- * **Zašto `setNotificationHandler` prikazuje i dok je app otvorena.** Podrazumijevano
- * ponašanje na Androidu je da FCM prikaže notifikaciju samo kad app **nije** u
- * prvom planu; ako je otvorena, sistem je ne prikaže. TV koji prikazuje
- * analitiku je upravo u prvom planu — pa bi korisnik propustio baš ono zbog
- * čega aplikacija postoji. Zato handler eksplicitno traži prikaz.
- *
- * **Zašto kanal sa `MAX` značajem.** Android 8+ grupiše notifikacije po
- * kanalima i korisnik može utišati kanal. Kanali se ne mogu mijenjati poslije
- * kreiranja — zato je ime kanala verzionisano (`kvar-v1`), da pojačanje
- * značaja u budućnosti ne bude tiho ignorisano.
+ * Android isporučuje ih kao sistemske FCM notifikacije; Expo Push Service je
+ * backend gateway. Kanal-ID-jevi ispod moraju odgovarati backendu
+ * `ExpoPushService.resolveChannel()` (`daily`, `alerts`, `heating`), inače
+ * Android ne može primijeniti željeni kanal na poruku.
  */
 import * as Notifications from 'expo-notifications';
 
-export const NOTIFICATION_CHANNEL_ID = 'kvar-v1';
+/**
+ * Isti channel ID-jevi koje backend šalje. Podešavanja su identična mobilnim,
+ * osim što je TV sistemski alert podignut na MAX (TV može biti u drugoj sobi).
+ * Android kanali se ne mogu mijenjati nakon prvog kreiranja na uređaju.
+ */
+export const SYSTEM_NOTIFICATION_CHANNELS = [
+  {
+    id: 'daily',
+    name: 'Preporuke',
+    importance: Notifications.AndroidImportance.DEFAULT,
+  },
+  {
+    id: 'alerts',
+    name: 'Kvar i sistemska upozorenja',
+    importance: Notifications.AndroidImportance.MAX,
+  },
+  {
+    id: 'heating',
+    name: 'Događaji grijanja',
+    importance: Notifications.AndroidImportance.DEFAULT,
+  },
+] as const;
 
 /**
  * Postavi ponašanje prijema. Zove se jednom na startu aplikacije, prije nego
@@ -27,8 +38,7 @@ export const NOTIFICATION_CHANNEL_ID = 'kvar-v1';
 export function configureNotificationHandling(): void {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      // Nova imena (`shouldShowBanner`/`shouldShowList`) su obavezna od
-      // expo-notifications 0.29; stara (`shouldShowAlert`) su uklonjena.
+      // Handler prikazuje sistemski banner i kad je aplikacija u prvom planu.
       shouldShowBanner: true,
       shouldShowList: true,
       shouldPlaySound: true,
@@ -38,23 +48,22 @@ export function configureNotificationHandling(): void {
 }
 
 /**
- * Kreira kanal i traži dozvolu. Vraća `true` ako TV smije prikazivati
- * notifikacije.
+ * Kreira sve kanale koje backend može poslati i traži dozvolu.
  *
- * **Ne baca** kad korisnik odbije: TV bez dozvola i dalje prikazuje analitiku.
- * Aplikacija koja se ne pokrene jer nema dozvolu za notifikacije je gora od
- * aplikacije bez notifikacija.
+ * `null`-token ne blokira uparivanje: TV bez FCM-a ili dozvole ostaje
+ * upotrebljiv, samo neće dobijati push obavijesti.
  */
 export async function prepareNotifications(): Promise<boolean> {
   try {
-    await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
-      name: 'Kvar i upozorenja',
-      importance: Notifications.AndroidImportance.MAX,
-      // TV nema vibraciju; zvuk je jedini način da se korisnik trgne.
-      sound: 'default',
-      enableVibrate: false,
-      showBadge: false,
-    });
+    for (const channel of SYSTEM_NOTIFICATION_CHANNELS) {
+      await Notifications.setNotificationChannelAsync(channel.id, {
+        name: channel.name,
+        importance: channel.importance,
+        sound: 'default',
+        enableVibrate: false,
+        showBadge: false,
+      });
+    }
 
     const existing = await Notifications.getPermissionsAsync();
     if (existing.granted) return true;
@@ -69,13 +78,9 @@ export async function prepareNotifications(): Promise<boolean> {
 /**
  * Expo push token uređaja, ili `null`.
  *
- * `null` je **normalan ishod**, ne greška: TV bez Google Play usluga (ili bez
- * mreže u tom trenutku) nema token. Uparivanje tada radi bez push-a — v.
- * `TvPairingScreen`, koja grešku pretvara u `null` i nastavlja.
- *
- * **Projektni ID je obavezan** za Expo push (`getExpoPushTokenAsync` bez njega
- * baca na SDK 49+). Dolazi iz `expo-constants`, tj. iz `app.config.js`, pa se
- * ne može zaboraviti u kodu.
+ * EAS project ID identifikuje Expo projekat, nije Firebase credential. FCM
+ * app config i FCM v1 service-account credentials moraju biti podešeni
+ * zasebno za TV aplikaciju.
  */
 export async function getTvPushToken(): Promise<string | null> {
   try {
@@ -91,7 +96,7 @@ export async function getTvPushToken(): Promise<string | null> {
 
 function getProjectId(): string | null {
   // `expo-constants` je jedini izvor koji radi i u razvoju i u produkciji.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Constants = require('expo-constants').default;
   return (
     Constants?.expoConfig?.extra?.eas?.projectId ??

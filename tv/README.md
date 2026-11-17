@@ -48,15 +48,30 @@ peer zahtjeve paketa koji traže običan `react-native`.
 
 ## Notifikacije
 
-- Kanal `kvar-v1` sa `importance: MAX` — Android 8+ ne mijenja značaj kanala
-  poslije kreiranja, pa se pojačanje značaja radi **novim imenom kanala**.
-- `setNotificationHandler` vraća `shouldShowBanner: true` i `shouldShowList:
-  true`. Bez toga bi notifikacija bila prikazana samo kad aplikacija **nije** u
-  prvom planu — a TV najčešće **jeste** na analitici, pa bi korisnik propustio
-  baš ono zbog čega aplikacija postoji.
-- Push token se traži **prije** uparivanja i šalje uz zahtjev za kod. Ako TV
-  nema Play usluga ili mreže, `getTvPushToken()` vraća `null` i uparivanje
-  nastavlja bez notifikacija — TV je tada osakaćen, ali upotrebljiv.
+TV koristi Expo push token + Expo Push Service, koji isporučuje Android notifikaciju preko Firebase Cloud Messaginga (FCM). Backend šalje notification payload (naslov/tijelo/zvuk); Android ga prikazuje kao **sistemsku notifikaciju** u pozadini i kad je TV aplikacija ugašena. `setNotificationHandler` prikazuje je i dok je aplikacija otvorena.
+
+TV registracija mora postojati i u Firebaseu, sa package ID-jem tačno `com.boilercontrol.tv`. Ona može biti u istom Firebase projektu kao telefon, ali je zasebna Android app registracija i koristi svoj `google-services.json`. Firebase projekat/FCM nije isto što i TV-ov zasebni EAS project ID.
+
+### Jednokratno podešavanje prije prvog TV builda
+
+1. U Firebase Console dodaj Android app `com.boilercontrol.tv` u željeni Firebase projekat i preuzmi njen `google-services.json`.
+2. Kopiraj fajl u `tv/assets/google-services.json`. Build meni provjerava da fajl postoji i da sadrži client `com.boilercontrol.tv`.
+3. U `tv/.env` postavi EAS ID dobijen iz `npx eas-cli init`:
+   ```env
+   EAS_PROJECT_ID=<TV_EAS_PROJECT_UUID>
+   EXPO_PUBLIC_API_URL=https://api.boiler-control.ba101.top/api
+   ```
+   `EAS_PROJECT_ID` je poseban od mobilnog ID-ja i nije tajna. Dodaj isti `EAS_PROJECT_ID` u EAS production environment. `EXPO_PUBLIC_API_URL` je već podešen u `tv/eas.json` za production build.
+4. U Firebase/Google Cloudu uključi Firebase Cloud Messaging API v1 i napravi service-account key s FCM slanjem. U EAS TV projektu pokreni `cd tv && npx eas-cli credentials --platform android` i dodaj taj ključ kao **FCM V1 service-account credential**. Ovo je privatni ključ: ne stavljati u Git, `.env` ni chat. Ne mijenja Android signing keystore.
+5. Pokreni TV EAS build iz menija (11 cloud ili 13 local). Lokalni build traži EAS prijavu, JDK i Android SDK.
+
+### Tok poruke i Android kanali
+
+- TV traži Expo push token **prije** prikaza koda i šalje ga uz jedini pairing POST. Tek kad telefon odobri uparivanje, backend poveže token sa korisnikom.
+- Backend šalje preko Expo Push Service; TV koristi `expo-notifications`/FCM i OS prikazuje sistemsku poruku.
+- Android kanali su `daily`, `alerts` i `heating` — isti ID-jevi koje backend šalje. `alerts` je na TV-u `MAX` značaja; ostali su `DEFAULT`. Android čuva izbor korisnika za svaki kanal.
+- Ako TV nema Play usluge, mrežu ili korisnik odbije dozvolu, pairing i analitika i dalje rade, ali push može izostati.
+- TV još nije potvrđen na fizičkom uređaju; poslije builda testirati pairing, dozvolu za notifikacije, pa poslati stvarni alert dok je aplikacija otvorena, u pozadini i ugašena.
 
 > `expo-notifications` u SDK 58 još prikazuje data-only FCM poruke sa
 > naslovom, ali **SDK 59 to ukida**. Backend zato mora slati `notification`

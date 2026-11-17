@@ -58,6 +58,9 @@ const base = {
     package: 'com.boilercontrol.tv',
     // Izvedeno iz `pkg.version`, nikad fiksno (v. komentar iznad).
     versionCode: versionCodeFromVersion(pkg.version),
+    // Firebase Android app mora biti registrovan baš kao com.boilercontrol.tv.
+    // Build skripta provjerava package_name prije native builda.
+    googleServicesFile: './assets/google-services.json',
     // Bez ovoga TV se ne može instalirati sa Play prodavnice za TV uređaje.
     // Plugin doda `LEANBACK_LAUNCHER` kategoriju u manifest.
     softwareKeyboardLayoutMode: 'pan',

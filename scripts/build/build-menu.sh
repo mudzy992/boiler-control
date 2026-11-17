@@ -170,6 +170,9 @@ prebuild_of() {
   local dir="$1" variant="$2"
   local -a env_prefix=()
   [ "$variant" = "tv" ] && env_prefix=(env EXPO_TV=1)
+  if [ "$variant" = "tv" ]; then
+    check_tv_firebase "$dir" || return 1
+  fi
 
   info "▶ prebuild --clean ($variant)"
   ( cd "$dir" && "${env_prefix[@]}" npx expo prebuild --platform android --clean )
@@ -237,12 +240,43 @@ build_apk_release() {
   fi
 }
 
+# TV Google Services file mora sadržati Android app client za TV package ID,
+# ne mobilni client. Bez njega FCM token/dispatch neće raditi.
+check_tv_firebase() {
+  local dir="$1" file="$dir/assets/google-services.json"
+  if [ ! -f "$file" ]; then
+    warn "Nedostaje $file."
+    say "    U Firebase registruj Android app com.boilercontrol.tv i kopiraj njen google-services.json u tv/assets/."
+    return 1
+  fi
+
+  if ! node - "$file" <<'NODE'
+const fs = require('node:fs');
+const file = process.argv[2];
+try {
+  const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const hasTvClient = (config.client || []).some(
+    (client) => client.client_info?.android_client_info?.package_name === 'com.boilercontrol.tv',
+  );
+  if (!hasTvClient) process.exit(1);
+} catch {
+  process.exit(1);
+}
+NODE
+  then
+    warn "$file ne sadrži ispravan Firebase Android client za com.boilercontrol.tv."
+    say "    Preuzmi google-services.json za TV registraciju (ne mobilni fajl)."
+    return 1
+  fi
+}
+
 # EAS buildovi se potpisuju credentials-ima projekta u Expo/EAS-u, za razliku
 # od opcije lokalnog Gradle builda. Za TV je EAS_PROJECT_ID obavezan jer TV
 # ima poseban Expo slug/projekat; ne izmišljamo niti dijelimo mobilni ID.
 check_eas_project() {
   local dir="$1" variant="$2" config project_id
   [ "$variant" = "tv" ] || return 0
+  check_tv_firebase "$dir" || return 1
 
   config="$(cd "$dir" && EXPO_TV=1 npx expo config --json 2>/dev/null)" || config=""
   project_id="$(printf '%s' "$config" | node -e '

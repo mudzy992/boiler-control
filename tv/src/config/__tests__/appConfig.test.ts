@@ -41,6 +41,12 @@ describe('app.config.js', () => {
     expect(config.backgroundColor).toBe('#0B1418');
   });
 
+  it('koristi Firebase config za registrovani TV package ID', () => {
+    const config = load();
+    expect(config.android.package).toBe('com.boilercontrol.tv');
+    expect(config.android.googleServicesFile).toBe('./assets/google-services.json');
+  });
+
   it('push traži projectId iz okoline, ne iz repoa', () => {
     process.env.EAS_PROJECT_ID = 'abc-123';
     const config = load();

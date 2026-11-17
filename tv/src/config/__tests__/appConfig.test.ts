@@ -47,10 +47,10 @@ describe('app.config.js', () => {
     expect(config.android.googleServicesFile).toBe('./assets/google-services.json');
   });
 
-  it('push traži projectId iz okoline, ne iz repoa', () => {
-    process.env.EAS_PROJECT_ID = 'abc-123';
+  it('EAS ID je upisan u dinamičku konfiguraciju za credentials CLI', () => {
     const config = load();
-    expect(config.extra.eas.projectId).toBe('abc-123');
-    delete process.env.EAS_PROJECT_ID;
+    expect(config.extra.eas.projectId).toBe(
+      '5e53f78e-129d-4505-94f5-880fde2867cc',
+    );
   });
 });

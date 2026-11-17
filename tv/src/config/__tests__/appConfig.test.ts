@@ -47,6 +47,11 @@ describe('app.config.js', () => {
     expect(config.android.googleServicesFile).toBe('./assets/google-services.json');
   });
 
+  it('deklarira Buffer polyfill potreban react-native-svg QR bundleu', () => {
+    const packageJson = require('../../../package.json');
+    expect(packageJson.dependencies.buffer).toBeDefined();
+  });
+
   it('EAS ID je upisan u dinamičku konfiguraciju za credentials CLI', () => {
     const config = load();
     expect(config.extra.eas.projectId).toBe(

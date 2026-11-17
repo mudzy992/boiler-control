@@ -15,18 +15,34 @@
  * plugin* (`createRunOncePlugin`), tj. ide u `plugins` niz sa `isTV` opcijom.
  * Prvi pokušaj ga je zvao kao funkciju nad config objektom — to pada tek na
  * `prebuild`, odnosno na gradle build-u u CI-ju, a ne pri `expo start`.
+ */
 
-
-const IS_TV = process.env.EXPO_TV === '1';
+// Jedini izvor verzije je `package.json` (isto pravilo kao mobilna, MO2-2).
+// Ranije je ovdje pisalo `version: '1.0.0'` i `versionCode: 1` — pa bi svaki
+// TV build nosio ISTI versionCode, a Android odbija nadogradnju sa istim
+// brojem. Isti kvar je mobilna imala 16.11. i popravljen je izvođenjem broja.
+const pkg = require('./package.json');
 
 /** TV gradnja se uključuje iz okoline, nikad automatski. */
 const IS_TV = process.env.EXPO_TV === '1';
+
+/**
+ * `major*10000 + minor*100 + patch` — **ista formula** kao mobilna
+ * (`mobile/app.config.js`) i backend (`buildNumberFromVersion`), da broj u APK-u
+ * i broj koji server izvede budu isti.
+ */
+const versionCodeFromVersion = (version) => {
+  const [major = 0, minor = 0, patch = 0] = String(version)
+    .split('.')
+    .map((n) => Number.parseInt(n, 10));
+  return major * 10_000 + minor * 100 + patch;
+};
 
 /** @type {import('expo/config').ExpoConfig} */
 const base = {
   name: 'Boiler Control TV',
   slug: 'boiler-control-tv',
-  version: '1.0.0',
+  version: pkg.version,
   orientation: 'landscape',
   // TV nema status bar ni navigaciju — `hidden` je jedini ispravan izbor.
   userInterfaceStyle: 'dark',
@@ -40,7 +56,8 @@ const base = {
   },
   android: {
     package: 'com.boilercontrol.tv',
-    versionCode: 1,
+    // Izvedeno iz `pkg.version`, nikad fiksno (v. komentar iznad).
+    versionCode: versionCodeFromVersion(pkg.version),
     // Bez ovoga TV se ne može instalirati sa Play prodavnice za TV uređaje.
     // Plugin doda `LEANBACK_LAUNCHER` kategoriju u manifest.
     softwareKeyboardLayoutMode: 'pan',

@@ -15,6 +15,9 @@ Aplikacija za TV: prijava uparivanjem sa telefonom, jedan ekran analitike i
 push token — zato što bi registracija tokena inače bila drugi POST. Server
 upisuje token u `UserDevice` tek kad telefon odobri.
 
+> **Najkraći put:** `./scripts/build/build-menu.sh` (opcije 5–8). Skripta digne
+> verziju i popravi `package-lock.json` sama. Detalji: `docs/BUILD-LOKALNO.md`.
+
 ## Pokretanje
 
 TV **ne radi u Expo Go** (Expo Go ne podržava Android TV). Potreban je

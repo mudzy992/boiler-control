@@ -20,6 +20,10 @@ Razlog za jedan izvor: prije MO2-2 postojala su **tri** broja koja se ne slažu
 
 ### Kako se diže verzija (postupak)
 
+> **Najkraći put:** `./scripts/build/build-menu.sh` — meni digne `version` i
+> popravi `package-lock.json` sam, a vrati broj ako build padne.
+> Detalji: `docs/BUILD-LOKALNO.md`. Ručni postupak ostaje ispod.
+
 1. **`mobile/package.json` → `version`** — jedina promjena koja je potrebna.
    `app.config.js` je čita i postavlja `expo.version` i `android.versionCode`.
 2. `eas.json` → `production.autoIncrement: true` **sam po sebi ne radi ništa**

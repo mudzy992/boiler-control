@@ -93,7 +93,8 @@ export function TvPairingScreen({
         expiresAt: new Date(created.expiresAt).getTime(),
       });
     } catch (error) {
-      const status = (error as { response?: { status?: unknown } })?.response?.status;
+      const status = (error as { response?: { status?: unknown } })?.response
+        ?.status;
       const message =
         typeof status === 'number'
           ? status === 404
@@ -196,7 +197,7 @@ export function TvPairingScreen({
       <Centered>
         <Text style={styles.title}>Upari TV sa telefonom</Text>
         <View style={styles.qrBox}>
-          <QRCode value={pairingDeepLink(state.code)} size={280} />
+          <QRCode value={pairingDeepLink(state.code)} size={220} />
         </View>
         <Text style={styles.code}>{formatCodeForTv(state.code)}</Text>
         <Text style={styles.hint}>
@@ -248,7 +249,9 @@ function Centered({ children }: { children: React.ReactNode }) {
   return (
     <ScrollView
       contentContainerStyle={styles.root}
+      scrollEnabled
       showsVerticalScrollIndicator={false}
+      focusable
       testID="tv-pairing-scroll-container"
     >
       {children}
@@ -291,28 +294,28 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 42,
+    fontSize: 32,
     fontFamily: fonts.sansSemiBold,
     textAlign: 'center',
   },
   hint: {
     color: colors.textMuted,
-    fontSize: 22,
+    fontSize: 18,
     fontFamily: fonts.sans,
     textAlign: 'center',
-    maxWidth: 900,
-    lineHeight: 32,
+    maxWidth: 760,
+    lineHeight: 26,
   },
   code: {
     color: colors.accent,
-    fontSize: 64,
+    fontSize: 48,
     fontFamily: fonts.monoSemiBold,
-    letterSpacing: 8,
+    letterSpacing: 6,
     fontVariant: ['tabular-nums'],
   },
   countdown: {
     color: colors.textMuted,
-    fontSize: 26,
+    fontSize: 20,
     fontFamily: fonts.mono,
     fontVariant: ['tabular-nums'],
   },
@@ -327,7 +330,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  actionLabel: { color: colors.onAccent, fontSize: 28, fontFamily: fonts.sansSemiBold },
+  actionLabel: {
+    color: colors.onAccent,
+    fontSize: 22,
+    fontFamily: fonts.sansSemiBold,
+  },
 });
 
 export { PAIRING_LOCAL_TIMEOUT_MS };

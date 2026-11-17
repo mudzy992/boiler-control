@@ -11,7 +11,13 @@
  * iz nedostatka vremena, nego ekran koji **ne može** poslati izmjenu.
  */
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import {
   buildTvMetrics,
@@ -88,7 +94,13 @@ export function AnalyticsScreen({
   }
 
   return (
-    <View style={styles.root}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.root}
+      scrollEnabled
+      showsVerticalScrollIndicator
+      testID="tv-analytics-scroll"
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Analitika</Text>
         <FreshnessBadge freshness={freshness} />
@@ -108,8 +120,13 @@ export function AnalyticsScreen({
       ) : null}
 
       <View style={styles.grid}>
-        {shown.map((metric) => (
-          <MetricCard key={metric.key} metric={metric} translate={translate} />
+        {shown.map((metric, index) => (
+          <MetricCard
+            key={metric.key}
+            metric={metric}
+            translate={translate}
+            preferredFocus={index === 0}
+          />
         ))}
       </View>
 
@@ -119,7 +136,7 @@ export function AnalyticsScreen({
           +{hiddenCount} više u aplikaciji na telefonu
         </Text>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -150,12 +167,23 @@ function FreshnessBadge({
 function MetricCard({
   metric,
   translate,
+  preferredFocus,
 }: {
   metric: TvMetric;
   translate: (key: string) => string;
+  preferredFocus: boolean;
 }) {
+  const [focused, setFocused] = React.useState(false);
+
   return (
-    <View style={styles.card}>
+    <View
+      focusable
+      hasTVPreferredFocus={preferredFocus}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={[styles.card, focused && styles.cardFocused]}
+      testID={`tv-metric-${metric.key}`}
+    >
       <Text style={styles.label}>{translate(metric.label)}</Text>
       <View style={styles.valueRow}>
         <Text style={styles.value}>{metric.value}</Text>
@@ -171,10 +199,12 @@ function Centered({ children }: { children: React.ReactNode }) {
 
 /** Sve mjere su za gledanje sa 3 m, ne za čitanje iz ruke. */
 const styles = StyleSheet.create({
+  scroll: { flex: 1, backgroundColor: colors.background },
   root: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: colors.background,
     padding: spacing.lg,
+    paddingBottom: spacing.lg + spacing.md,
     gap: spacing.md,
   },
   centered: {
@@ -190,11 +220,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { color: colors.text, fontSize: 40, fontFamily: fonts.sansSemiBold },
+  title: { color: colors.text, fontSize: 30, fontFamily: fonts.sansSemiBold },
   badge: {
     color: colors.accent,
     fontFamily: fonts.mono,
-    fontSize: 20,
+    fontSize: 16,
     borderWidth: 1,
     borderColor: colors.accent,
     borderRadius: 999,
@@ -209,24 +239,39 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.border,
-    borderRadius: 4,
+    borderRadius: 6,
     padding: spacing.md,
-    minWidth: 300,
+    minWidth: 240,
     flexGrow: 1,
     gap: spacing.sm,
   },
-  label: { color: colors.textMuted, fontSize: 20, fontFamily: fonts.sansMedium },
+  cardFocused: { borderColor: colors.accent },
+  label: {
+    color: colors.textMuted,
+    fontSize: 16,
+    fontFamily: fonts.sansMedium,
+  },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
   value: {
     color: colors.text,
-    fontSize: 56,
+    fontSize: 40,
     fontFamily: fonts.sansBold,
     fontVariant: ['tabular-nums'],
   },
-  unit: { color: colors.textMuted, fontSize: 24, fontFamily: fonts.sansMedium, paddingBottom: 10 },
-  muted: { color: colors.textMuted, fontSize: 22, fontFamily: fonts.sans, textAlign: 'center' },
+  unit: {
+    color: colors.textMuted,
+    fontSize: 18,
+    fontFamily: fonts.sansMedium,
+    paddingBottom: 6,
+  },
+  muted: {
+    color: colors.textMuted,
+    fontSize: 18,
+    fontFamily: fonts.sans,
+    textAlign: 'center',
+  },
   updateBar: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -237,6 +282,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  updateText: { color: colors.text, fontSize: 22, fontFamily: fonts.sansMedium },
-  fault: { color: colors.fault, fontSize: 28, fontFamily: fonts.sansSemiBold, textAlign: 'center' },
+  updateText: {
+    color: colors.text,
+    fontSize: 18,
+    fontFamily: fonts.sansMedium,
+  },
+  fault: {
+    color: colors.fault,
+    fontSize: 22,
+    fontFamily: fonts.sansSemiBold,
+    textAlign: 'center',
+  },
 });

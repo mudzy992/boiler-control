@@ -12,7 +12,9 @@ import { AnalyticsScreen } from '../AnalyticsScreen';
 
 const translate = (key: string) => key;
 
-function renderScreen(overrides: Partial<React.ComponentProps<typeof AnalyticsScreen>> = {}) {
+function renderScreen(
+  overrides: Partial<React.ComponentProps<typeof AnalyticsScreen>> = {},
+) {
   return render(
     <AnalyticsScreen
       analysis={{ consumptionFromReferenceM3: 12.5, costIncVat: 25 }}
@@ -35,6 +37,22 @@ describe('TV analitika', () => {
     expect(screen.queryByText('gas.metricHeatingHours')).toBeNull();
   });
 
+  it('analitika se može scrollati daljinskim i fokusira metriku', async () => {
+    await renderScreen({
+      analysis: {
+        consumptionFromReferenceM3: 12.5,
+        costIncVat: 25,
+        totalHeatingHours: 10,
+      },
+    });
+
+    const scroll = screen.getByTestId('tv-analytics-scroll');
+    const firstMetric = screen.getByTestId('tv-metric-consumption');
+    expect(scroll.props.scrollEnabled).toBe(true);
+    expect(firstMetric.props.focusable).toBe(true);
+    expect(firstMetric.props.hasTVPreferredFocus).toBe(true);
+  });
+
   it('mjerenja ima ali sva su nula — prikazuje nule, ne prazno stanje', async () => {
     // 0 je mjerenje: u periodu nije potrošeno ništa. Prazno stanje ovdje bi
     // bilo laž („nema podataka") umjesto istine („nije trošeno").
@@ -48,9 +66,7 @@ describe('TV analitika', () => {
     await renderScreen({ analysis: {} });
 
     expect(screen.getByText('Još nema podataka')).toBeTruthy();
-    expect(
-      screen.getByText(/kotao pošalje prva očitanja/),
-    ).toBeTruthy();
+    expect(screen.getByText(/kotao pošalje prva očitanja/)).toBeTruthy();
   });
 
   it('zastarjeli podatak je vidljiv, ne skriven', async () => {

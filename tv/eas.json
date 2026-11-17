@@ -1,0 +1,19 @@
+{
+  "cli": {
+    "version": ">= 7.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_TV": "1",
+        "EXPO_PUBLIC_API_URL": "https://api.boiler-control.ba101.top/api"
+      }
+    }
+  }
+}

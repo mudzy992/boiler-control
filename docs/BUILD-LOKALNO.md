@@ -1,4 +1,4 @@
-# Lokalni build — mobilna i TV aplikacija
+# Android build meni — mobilna i TV aplikacija
 
 ```bash
 ./scripts/build/build-menu.sh
@@ -14,12 +14,14 @@ MOBILNA APLIKACIJA
   2) Debug build + instalacija na uređaj
   3) Release APK (lokalni gradle)
   4) Testovi + typecheck
+  10) EAS production APK (cloud build)
 
 TV APLIKACIJA
   5) Dev server (Expo, EXPO_TV=1)
   6) Debug build + instalacija na TV
   7) Release APK (lokalni gradle)
   8) Testovi + typecheck
+  11) EAS production APK (cloud build)
 
 OSTALO
   9) Provjeri okolinu (java, adb, SDK, node_modules)
@@ -27,7 +29,11 @@ OSTALO
   q) Izlaz
 ```
 
-Prije svakog builda (2, 3, 6, 7) meni pita **kako dignuti verziju**:
+Prije svakog builda (2, 3, 6, 7, 10, 11) meni pita **kako dignuti verziju**:
+
+- **3 i 7** su lokalni Gradle buildovi; bez vlastitog keystore-a release APK je debug-potpisan.
+- **10 i 11** su EAS cloud buildovi; APK potpisuje keystore konfigurisan za odgovarajući EAS projekat.
+- EAS buildovi traže internet i EAS prijavu. Mobilni projekat je već povezan; TV prvo mora imati svoj EAS project ID i Android credentials. Ako ID nedostaje, meni ispiše uputu umjesto da pokrene pogrešan build.
 
 | izbor | primjer | kada |
 |---|---|---|
@@ -45,8 +51,18 @@ Prije svakog builda (2, 3, 6, 7) meni pita **kako dignuti verziju**:
 | `versionCode` | **ne** | izvodi ga `app.config.js` iz `version` |
 | `app.json` | ne | nema `version` od MO2-2 |
 
+Za EAS profile je build broj dodatno upravljan EAS-om (`appVersionSource: remote`, `autoIncrement: true`); package verziju meni i dalje diže prije pokretanja builda.
+
 Formula `versionCode`-a je ista na obje aplikacije i na backendu:
 **`major*10000 + minor*100 + patch`** (`2.1.0` → `20100`).
+
+## EAS cloud buildovi
+
+- Izaberi **10** za mobilni EAS production APK ili **11** za TV EAS production APK.
+- Oba profila prave APK u cloudu; EAS koristi Android credentials vezane za taj EAS projekat. Prvi build može tražiti EAS prijavu i izbor/podešavanje credentials-a.
+- Mobilna aplikacija je već povezana sa EAS projektom.
+- TV mora imati svoj EAS projekat, zaseban od mobilnog. Prvo pokreni `cd tv && npx eas-cli init`, pa postavi generisani project ID kao `EAS_PROJECT_ID` (lokalno i u EAS production environmentu). TV config već čita tu varijablu. Meni odbije TV build ako ID nedostaje.
+- Da bi APK mogao ažurirati već instaliranu aplikaciju, izaberi isti EAS projekat/keystore kojim je ranija verzija potpisana. EAS build credentials se ne dijele automatski između mobilne i TV aplikacije.
 
 ## Sigurnosna mreža
 
@@ -162,5 +178,6 @@ Android aplikaciju koja se **ne pojavljuje** na TV početnom ekranu.
 - Stvarna instalacija APK-a na uređaj (potpis je provjeren čitanjem
   generisanog `build.gradle`, ne instalacijom).
 - Instalacija na uređaj/TV (`adb`).
-- EAS build (`build:tv` u `tv/package.json` koristi EAS, ali skripta ga ne nudi
-  jer traži nalog).
+- Stvarni EAS cloud build: meni sada nudi opcije 10/11, ali build nije
+  pokrenut u ovom okruženju (potrebni su korisnikov EAS nalog/credentials;
+  TV EAS projekat još treba inicijalizovati i povezati).

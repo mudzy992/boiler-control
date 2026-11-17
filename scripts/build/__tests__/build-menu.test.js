@@ -50,4 +50,17 @@ describe('build-menu.sh', () => {
     expect(out).toMatch(/node/);
     expect(out).toMatch(/node_modules|Mobile|mobile/);
   });
+
+  it('meni nudi EAS cloud build za mobilnu i TV aplikaciju', () => {
+    const source = require('node:fs').readFileSync(SCRIPT, 'utf8');
+    expect(source).toMatch(/10\) EAS production APK/);
+    expect(source).toMatch(/11\) EAS production APK/);
+    expect(
+      require(path.join(REPO_ROOT, 'mobile/eas.json')).build.production.android
+        .buildType,
+    ).toBe('apk');
+    const tvProfile = require(path.join(REPO_ROOT, 'tv/eas.json')).build.production;
+    expect(tvProfile.android.buildType).toBe('apk');
+    expect(tvProfile.env.EXPO_TV).toBe('1');
+  });
 });

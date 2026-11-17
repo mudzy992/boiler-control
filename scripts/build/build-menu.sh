@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Lokalni build — mobilna i TV aplikacija, sa automatskim dizanjem verzije.
+# Android build meni — mobilna i TV aplikacija, lokalno ili kroz EAS, sa automatskim dizanjem verzije.
 #
 #   ./scripts/build/build-menu.sh
 #
@@ -237,6 +237,47 @@ build_apk_release() {
   fi
 }
 
+# EAS buildovi se potpisuju credentials-ima projekta u Expo/EAS-u, za razliku
+# od opcije lokalnog Gradle builda. Za TV je EAS_PROJECT_ID obavezan jer TV
+# ima poseban Expo slug/projekat; ne izmišljamo niti dijelimo mobilni ID.
+check_eas_project() {
+  local dir="$1" variant="$2" config project_id
+  [ "$variant" = "tv" ] || return 0
+
+  config="$(cd "$dir" && EXPO_TV=1 npx expo config --json 2>/dev/null)" || config=""
+  project_id="$(printf '%s' "$config" | node -e '
+    let input = "";
+    process.stdin.on("data", (chunk) => (input += chunk));
+    process.stdin.on("end", () => {
+      try {
+        const config = JSON.parse(input);
+        process.stdout.write(String(config.extra?.eas?.projectId ?? ""));
+      } catch {
+        process.exitCode = 1;
+      }
+    });
+  ' 2>/dev/null || true)"
+
+  if [ -z "$project_id" ]; then
+    warn "TV nema EAS project ID. EAS TV build ne može početi dok TV projekat nije povezan."
+    say "    U tv/ pokreni: npx eas-cli init"
+    say "    Zatim: export EAS_PROJECT_ID='<dobijeni ID>' i dodaj isti ID u EAS production environment."
+    return 1
+  fi
+}
+
+build_eas_apk() {
+  local dir="$1" name="$2" variant="$3"
+  require_deps "$dir" "$name" || return 1
+  require_cmd npx "Node/npm je potreban za EAS CLI."
+  check_eas_project "$dir" "$variant" || return 1
+
+  info "▶ EAS cloud build: $name (production APK)"
+  run_build "$dir" "$name" "$variant" \
+    npx eas-cli build --platform android --profile production
+  ok "EAS build je završen. Preuzmi APK sa build URL-a iznad / Expo dashboarda."
+}
+
 build_debug() {
   local dir="$1" name="$2" variant="$3" device="${4:-}"
   require_deps "$dir" "$name" || return 1
@@ -404,7 +445,7 @@ menu() {
   while true; do
     clear 2>/dev/null || true
     printf '%s╔══════════════════════════════════════════════════════╗%s\n' "$BOLD" "$RESET"
-    printf '%s║  Boiler Control — lokalni build                      ║%s\n' "$BOLD" "$RESET"
+    printf '%s║  Boiler Control — Android build                      ║%s\n' "$BOLD" "$RESET"
     printf '%s╚══════════════════════════════════════════════════════╝%s\n' "$BOLD" "$RESET"
     show_versions
     say "${BOLD}MOBILNA APLIKACIJA${RESET}"
@@ -412,12 +453,14 @@ menu() {
     say "  2) Debug build + instalacija na uređaj"
     say "  3) Release APK (lokalni gradle)"
     say "  4) Testovi + typecheck"
+    say "  10) EAS production APK (cloud build)"
     say ""
     say "${BOLD}TV APLIKACIJA${RESET}"
     say "  5) Dev server (Expo, EXPO_TV=1)"
     say "  6) Debug build + instalacija na TV"
     say "  7) Release APK (lokalni gradle)"
     say "  8) Testovi + typecheck"
+    say "  11) EAS production APK (cloud build)"
     say ""
     say "${BOLD}OSTALO${RESET}"
     say "  9) Provjeri okolinu (java, adb, SDK, node_modules)"
@@ -437,6 +480,8 @@ menu() {
       7) with_version "$TV_DIR" "tv" build_apk_release "$TV_DIR" "tv" "tv"; clear_restore; pause ;;
       8) run_tests "$TV_DIR" "tv"; pause ;;
       9) run_preflight; pause ;;
+      10) with_version "$MOBILE_DIR" "mobile" build_eas_apk "$MOBILE_DIR" "mobile" "phone"; clear_restore; pause ;;
+      11) with_version "$TV_DIR" "tv" build_eas_apk "$TV_DIR" "tv" "tv"; clear_restore; pause ;;
       v) with_version "$MOBILE_DIR" "mobile" true; clear_restore
          with_version "$TV_DIR" "tv" true; clear_restore; pause ;;
       q|Q) exit 0 ;;

@@ -43,7 +43,7 @@ peer zahtjeve paketa koji traže običan `react-native`.
 | varijabla | značenje |
 |---|---|
 | `EXPO_PUBLIC_API_URL` | adresa API-ja (razvoj: `http://<ip-racunara>:3000`) |
-| `EAS_PROJECT_ID` | EAS projekat; bez njega `getExpoPushTokenAsync` baca, pa TV ostaje bez push-a |
+| `EAS_PROJECT_ID` | ID posebnog EAS projekta za slug `boiler-control-tv` (ne mobilni ID); bez njega `getExpoPushTokenAsync` baca, pa TV ostaje bez push-a |
 | `EXPO_TV=1` | uključuje TV plugin i TV manifest |
 
 ## Notifikacije

@@ -32,6 +32,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VERSIONS_JS="$REPO_ROOT/scripts/build/versions.js"
+SIGNING_JS="$REPO_ROOT/scripts/build/android-signing.js"
 MOBILE_DIR="$REPO_ROOT/mobile"
 TV_DIR="$REPO_ROOT/tv"
 
@@ -173,6 +174,42 @@ prebuild_of() {
   info "▶ prebuild --clean ($variant)"
   ( cd "$dir" && "${env_prefix[@]}" npx expo prebuild --platform android --clean )
   ok "prebuild dovršen"
+
+  ensure_release_signing "$dir" "$variant"
+}
+
+# `expo prebuild` UVIJEK generiše `release { signingConfig signingConfigs.debug }`
+# — tj. release APK potpisan DEBUG ključem (izmjereno 17.11.). Ako je preko tog
+# `applicationId` već instaliran APK iz EAS builda (svoj ključ), instalacija
+# lokalnog pada sa:
+#
+#   „App not installed as package conflicts with an existing package"
+#
+# Poruka ne pominje potpis ni keystore, pa se lako pripiše verziji. Zato se
+# potpis provjerava prije builda, a ne poslije neuspjele instalacije.
+ensure_release_signing() {
+  local dir="$1" name="$2"
+
+  if [ -f "$dir/android/keystore.properties" ]; then
+    # Keystore postoji: uskladi release potpis prije nego što gradle krene.
+    if node "$SIGNING_JS" wire "$dir" >/dev/null 2>&1; then
+      ok "$name: release potpisan keystore-om iz android/keystore.properties"
+    else
+      warn "$name: keystore.properties postoji, ali potpis nije postavljen"
+    fi
+    return 0
+  fi
+
+  local signed_with
+  signed_with="$(node "$SIGNING_JS" check "$dir" 2>/dev/null | head -1 | sed 's/.*: //')"
+  if [ "$signed_with" = "debug" ]; then
+    warn "$name: release APK će biti potpisan DEBUG ključem."
+    say "    To radi samo ako na uređaju NIJE instaliran EAS build iste aplikacije."
+    say "    U suprotnom Android odbija instalaciju: 'package conflicts with an existing package'."
+    say "    Rješenje: android/keystore.properties (storeFile, storePassword, keyAlias, keyPassword),"
+    say "    pa pokreni ovaj build ponovo — potpis se tada uskladi automatski."
+    say "    Ili prvo odinstaliraj aplikaciju: adb uninstall ${name/@/-}"
+  fi
 }
 
 build_apk_release() {
@@ -245,6 +282,29 @@ check_lock_version() {
   fi
 }
 
+# Je li release APK potpisan istim ključem kao dosadašnji buildovi.
+#
+# `debug` potpis nije greška po sebi — greška je INSTALIRATI ga preko APK-a
+# potpisanog drugim ključem. Zato se ovdje samo prijavljuje, sa objašnjenjem.
+check_signing() {
+  local dir="$1" name="$2"
+  local out signed_with
+  out="$(node "$SIGNING_JS" check "$dir" 2>/dev/null || true)"
+
+  if [ -z "$out" ] || [ "${out%%$'\n'*}" = "nema android/ — pokreni prebuild" ]; then
+    # Nema prebuild-a: nema šta da se provjeri (i to je normalno stanje repoa).
+    ok "$name: android/ nije generisan (potpis se provjerava poslije prebuild-a)"
+    return 0
+  fi
+
+  signed_with="$(printf '%s\n' "$out" | head -1 | sed 's/.*: //')"
+  if [ "$signed_with" = "release" ]; then
+    ok "$name: release potpisan keystore-om"
+  else
+    warn "$name: release potpisan DEBUG ključem (ne može preko EAS builda iste aplikacije)"
+  fi
+}
+
 run_preflight() {
   echo
   local problems=0
@@ -287,6 +347,7 @@ run_preflight() {
       warn "$dir_label/node_modules: nema — pokreni: cd $dir_label && npm install"
     fi
     check_lock_version "$dir" "$dir_label" || problems=$((problems + 1))
+    check_signing "$dir" "$dir_label"
   done
 
   echo
@@ -385,11 +446,22 @@ require_node
 case "${1:-}" in
   --versions) show_versions; exit 0 ;;
   --check) run_preflight; exit 0 ;;
+  --signing)
+    # Stanje potpisa za obje aplikacije, bez prebuild-a.
+    for app_dir in "mobile:$MOBILE_DIR" "tv:$TV_DIR"; do
+      dir_label="${app_dir%%:*}"
+      dir="${app_dir##*:}"
+      printf '%s: ' "$dir_label"
+      node "$SIGNING_JS" check "$dir" | tr '\n' ' '
+      printf '\n'
+    done
+    exit 0 ;;
   --help|-h)
-    say "Upotreba: $0 [--versions|--check|--help]"
+    say "Upotreba: $0 [--versions|--check|--signing|--help]"
     say "  bez argumenata  interaktivni meni"
     say "  --versions      ispiši verzije obje aplikacije i izađi"
-    say "  --check         provjeri okolinu (java, adb, SDK, node_modules)"
+    say "  --check         provjeri okolinu (java, adb, SDK, node_modules, potpis)"
+    say "  --signing       čime je potpisan release APK (mobilni i TV)"
     exit 0 ;;
 esac
 

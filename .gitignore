@@ -15,6 +15,29 @@ dist/
 # (izmjereno: `git check-ignore` je hvatao `scripts/build/build-menu.sh`).
 build/
 !scripts/build/
+
+# `expo prebuild` izlaz — generise se iz `app.config.js` i NE ide u repo.
+#
+# Dva razloga, oba izmjerena 17.11.:
+# 1. `prebuild` generise `release { signingConfig signingConfigs.debug }` — tj.
+#    lokalni release APK je potpisan DEBUG kljucem. EAS build potpisuje svojim.
+#    Dvije razlicite potpise za isti `applicationId` Androida vide kao
+#    „App not installed as package conflicts with an existing package".
+# 2. Generisani folder nosi `versionCode` iz trenutka generisanja; commitovan bi
+#    drzao staru verziju i tiha izmjena u `app.config.js` ne bi vazila.
+mobile/android/
+tv/android/
+
+# Tajne za potpisivanje lokalnog release builda. Nikad u repo:
+# `keystore.properties` sadrži lozinku, a `.jks` je privatni ključ.
+# Šablon (`android/keystore.properties.example`) se generiše `prebuild`-om
+# iz `scripts/build/android-signing.js` — v. docs/BUILD-LOKALNO.md.
+keystore.properties
+*.jks
+*.keystore
+!debug.keystore
+mobile/ios/
+tv/ios/
 dist-ssr/
 web-build/
 

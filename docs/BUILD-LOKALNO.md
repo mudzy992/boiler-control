@@ -79,6 +79,62 @@ gori od greške, zato skripta stane odmah.
 dev server radi i bez njih. Neusklađen `package-lock.json` se prijavljuje kao
 crveno u ispisu i povećava broj problema.
 
+## „App not installed as package conflicts with an existing package"
+
+Ova poruka **nije** o verziji — to je **potpis** (keystore).
+
+Android za isti `applicationId` zahtijeva **isti ključ** za nadogradnju. Dva
+builda iste aplikacije potpisana različitim ključevima ne mogu jedan preko
+drugog:
+
+| build | čime je potpisan |
+|---|---|
+| EAS build (`eas build`) | EAS-ovim ključem iz trezora |
+| **lokalni** `gradlew assembleRelease` | **DEBUG ključem** (`debug.keystore`, šifra `android`) |
+
+Izmjereno 17.11.: `expo prebuild` generiše
+`release { signingConfig signingConfigs.debug }` — dakle lokalni release APK je
+**uvijek** potpisan debug ključem, dok se ne postavi vlastiti keystore.
+
+Razlika prema verziji: `versionCode` koji nije veći daje **drugu** poruku
+(„already installed" / „App not installed"), a potpis daje upravo
+„package conflicts with an existing package".
+
+### Tri rješenja
+
+1. **Odinstaliraj i instaliraj** (najbrže, gubi podatke aplikacije):
+   ```bash
+   adb uninstall com.boilercontrol.app    # mobilni
+   adb uninstall com.boilercontrol.tv     # TV
+   ```
+2. **Postavi vlastiti keystore** — tada su lokalni i EAS build isti ključ:
+   ```bash
+   mobile/android/keystore.properties     # ili tv/android/
+   ```
+   ```properties
+   storeFile=release.jks
+   storePassword=…
+   keyAlias=release
+   keyPassword=…
+   ```
+   `storeFile` je **relativan na `android/`**. Meni tada automatski uskladi
+   potpis poslije `prebuild`-a. Za EAS ista tajna ide u
+   `eas credentials` (Android → Keystore), ne u repo.
+3. **Koristi samo EAS buildove** za uređaje na kojima je već EAS verzija.
+
+### Provjera
+
+```bash
+./scripts/build/build-menu.sh --signing
+# mobile: release potpisan: debug   keystore.properties: nema
+```
+
+Meni prijavi debug potpis **prije** builda, a ne poslije neuspjele
+instalacije.
+
+> `keystore.properties`, `*.jks` i `*.keystore` su u `.gitignore`. Nikad u
+> repo — `keystore.properties` sadrži lozinku, a `.jks` je privatni ključ.
+
 ## Zahtjevi
 
 | alat | za šta |
@@ -103,6 +159,8 @@ Android aplikaciju koja se **ne pojavljuje** na TV početnom ekranu.
 ## Nije provjereno
 
 - Stvarni `gradlew assembleRelease` — u okruženju nema JDK-a ni Android SDK-a.
+- Stvarna instalacija APK-a na uređaj (potpis je provjeren čitanjem
+  generisanog `build.gradle`, ne instalacijom).
 - Instalacija na uređaj/TV (`adb`).
 - EAS build (`build:tv` u `tv/package.json` koristi EAS, ali skripta ga ne nudi
   jer traži nalog).

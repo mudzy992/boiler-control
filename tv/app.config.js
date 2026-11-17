@@ -74,8 +74,9 @@ const base = {
   ],
   extra: {
     eas: {
-      // Isti EAS projekat kao mobilna aplikacija: push tokeni idu na isti
-      // račun, pa `getExpoPushTokenAsync` radi bez nove konfiguracije.
+      // TV ima svoj slug (`boiler-control-tv`) i mora koristiti svoj EAS
+      // project ID, ne mobilni. ID nije tajna; dolazi iz tv/.env lokalno i
+      // EAS production environmenta za cloud/local build config.
       projectId: process.env.EAS_PROJECT_ID ?? '',
     },
   },

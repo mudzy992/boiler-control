@@ -57,7 +57,7 @@ TV registracija mora postojati i u Firebaseu, sa package ID-jem tačno `com.boil
 2. Kopiraj fajl u `tv/assets/google-services.json`. Build meni provjerava da fajl postoji i da sadrži client `com.boilercontrol.tv`.
 3. TV EAS projekat već je kreiran. Njegov ID (`5e53f78e-129d-4505-94f5-880fde2867cc`) je sada postavljen direktno u `tv/app.config.js`: to je javni project ID, ne tajna. Pošto je config dinamičan, `eas init` ne može ga upisati sam; nema potrebe da ga dodaješ u `.env` ili EAS environment. `EXPO_PUBLIC_API_URL` je već podešen u `tv/eas.json` za production build.
 4. U Firebase/Google Cloudu uključi Firebase Cloud Messaging API v1 i napravi service-account key s FCM slanjem. U EAS TV projektu pokreni `cd tv && npx eas-cli credentials --platform android` i dodaj taj ključ kao **FCM V1 service-account credential**. Ovo je privatni ključ: ne stavljati u Git, `.env` ni chat. Ne mijenja Android signing keystore.
-5. Pokreni TV EAS build iz menija (11 cloud ili 13 local). Lokalni build traži EAS prijavu, JDK i Android SDK.
+5. Pokreni TV EAS build iz menija (11 cloud ili 13 local). Lokalni build traži EAS prijavu, JDK i Android SDK. TV namjerno nema EAS Update channel ni `expo-updates`: ažuriranje ostaje samo provjera verzije i obavijest, bez OTA preuzimanja/instalacije.
 
 ### Tok poruke i Android kanali
 

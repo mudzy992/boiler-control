@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppDownloadLinks } from '../components/AppDownloadLinks';
+import { absoluteDownloadUrl } from '../lib/appDownloadUrl';
 import { apiClient } from '../../../services/api';
 import '../../../locales/config';
 
@@ -43,6 +44,24 @@ afterEach(() => {
 });
 
 describe('linkovi za preuzimanje', () => {
+  it('ne duplira /api kada server vrati API putanju, a base već završava sa /api', () => {
+    expect(
+      absoluteDownloadUrl(
+        '/api/app-releases/5/apk',
+        'https://api.boiler-control.ba101.top/api',
+      ),
+    ).toBe('https://api.boiler-control.ba101.top/api/app-releases/5/apk');
+  });
+
+  it('zadržava /api na ruti kada API base nema /api sufiks', () => {
+    expect(
+      absoluteDownloadUrl(
+        '/api/app-releases/6/apk',
+        'https://api.boiler-control.ba101.top',
+      ),
+    ).toBe('https://api.boiler-control.ba101.top/api/app-releases/6/apk');
+  });
+
   it('prikazuje oba linka kad su oba izdanja objavljena', async () => {
     vi.spyOn(apiClient, 'get').mockResolvedValue({
       phone: release('2.1.0', 5),

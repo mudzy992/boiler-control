@@ -2,6 +2,7 @@ import { type JSX } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '@/services/api';
+import { absoluteDownloadUrl } from '../lib/appDownloadUrl';
 
 /**
  * Linkovi za preuzimanje aplikacija na login ekranu.
@@ -53,24 +54,8 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Apsolutni URL za download.
- *
- * Server vraća **relativnu** putanju (`/api/app-releases/:id/apk`), pa se ovdje
- * spaja sa `BASE_URL`. Bez toga bi `<a href='/api/...'>` na sajtu pogodio
- * frontend host, a ne API — korisnik bi dobio HTML stranicu sa 404 umjesto APK.
- */
-function absoluteDownloadUrl(path: string): string {
-  /*
-   * Ime varijable je **`VITE_API_URL`** (isto koje koristi `services/api.ts`).
-   * Prva verzija je čitala `VITE_API_BASE_URL` — nepostojeću — pa bi link
-   * tiho ostao relativan (`/api/...`) i pogodio frontend host umjesto API-ja.
-   * Ta greška se ne vidi u razvoju kad su oba na istom hostu; vidi se u
-   * produkciji kao 404 na klik.
-   */
-  const base = (import.meta.env.VITE_API_URL ?? '').trim();
-  if (!base) return path;
-  return `${base.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+function configuredApiBase(): string {
+  return (import.meta.env.VITE_API_URL ?? '').trim();
 }
 
 export const AppDownloadLinks = (): JSX.Element | null => {
@@ -140,7 +125,7 @@ function DownloadCard({
 
   return (
     <a
-      href={absoluteDownloadUrl(release.downloadUrl)}
+      href={absoluteDownloadUrl(release.downloadUrl, configuredApiBase())}
       /*
        * `download` je namjerno ovdje: bez njega Android browser otvori bajtove
        * kao tekst. Server šalje `Content-Disposition: attachment`, ali atribut

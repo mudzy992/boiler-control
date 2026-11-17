@@ -283,7 +283,7 @@ export class TvPairingService {
    *
    * Ovo NIJE `claim`: ne vraća tokene i ne mijenja stanje, samo prikazuje.
    */
-  async listForUser(userId: number) {
+  listForUser(userId: number) {
     return this.prisma.tvPairingSession.findMany({
       where: { userId, status: { in: ['APPROVED', 'CLAIMED'] } },
       select: {

@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   Post,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -12,7 +11,6 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
@@ -59,8 +57,7 @@ export class TvPairingController {
   @Public()
   @Get('sessions/:code')
   @ApiOperation({ summary: 'TV provjerava je li kod odobren (bez prijave)' })
-  @ApiQuery({ name: 'deviceLabel', required: false, type: String })
-  async poll(@Req() req, @Query('deviceLabel') _deviceLabel?: string) {
+  async poll(@Req() req) {
     const code = decodeURIComponent(req.params.code ?? '');
     return this.pairing.claim(code);
   }
@@ -89,7 +86,7 @@ export class TvPairingController {
   @ApiBearerAuth()
   @Get('devices')
   @ApiOperation({ summary: 'Upareni TV uređaji korisnika' })
-  async devices(@Req() req) {
+  devices(@Req() req) {
     return this.pairing.listForUser(req.user.userId);
   }
 }

@@ -7,7 +7,14 @@ node_modules/
 
 # Build output
 dist/
+# `scripts/build/build-menu.sh` upisuje ovdje staru verziju da bi je vratio ako
+# build padne. Ne commitovati: sadrži stanje lokalne mašine, ne izvorni kod.
+.build-restore
+# `build/` je gradle/Expo izlaz — ali NE i `scripts/build/`, gdje živi
+# lokalna build skripta. Goli `build/` uzorak bi tiho izbacio skriptu iz repoa
+# (izmjereno: `git check-ignore` je hvatao `scripts/build/build-menu.sh`).
 build/
+!scripts/build/
 dist-ssr/
 web-build/
 

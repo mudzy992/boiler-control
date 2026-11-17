@@ -17,11 +17,13 @@ on:
     branches: [main, 'arena/**']
     paths:
       - 'tv/**'
+      - 'scripts/build/**'
       - '.github/workflows/tv-ci.yml'
   pull_request:
     branches: [main]
     paths:
       - 'tv/**'
+      - 'scripts/build/**'
       - '.github/workflows/tv-ci.yml'
 
 permissions:
@@ -91,6 +93,19 @@ jobs:
           path: ${{ runner.temp }}/tv-ci-jest.json
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Build skripta — verzije i ulazi
+        # `scripts/build/` drži verzije za OBA builda. Testovi su ovdje čisto
+        # node okruženje (bez React Native), pa se vrte u TV job-u jer je on
+        # najbliži: njegov `versionCode` upravo zavisi od te logike.
+        working-directory: .
+        run: npx --prefix tv jest --config '{"testEnvironment":"node","testMatch":["<rootDir>/__tests__/**/*.test.js"]}' --rootDir scripts/build
+
+      - name: Build skripta — verzije usklađene sa lock fajlom
+        # `npm ci` pada ako se `package.json` i `package-lock.json` razilaze, a
+        # bump verzije mora pisati u oba. Ovaj korak hvata zaboravljeni lock.
+        working-directory: .
+        run: ./scripts/build/build-menu.sh --check
 
       - name: TV ne smije pisati (poseban korak)
         # Izdvojeno da pad bude čitljiv kao „TV je dobio pravo upisa", a ne kao

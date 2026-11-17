@@ -20,16 +20,19 @@ import {
 } from 'react-native';
 
 import {
-  buildTvMetrics,
+  buildTvOverview,
   describeFreshness,
-  limitForTv,
-  type TvMetric,
+  type GasAnalyticsLike,
+  type TvDashboardLike,
+  type TvOverviewCard,
 } from '../lib/analytics';
 import { colors, fonts, spacing } from '../theme';
 
 export interface AnalyticsScreenProps {
   /** Odgovor `GET /api/gas/analysis`, ili `null` dok se učitava. */
-  analysis: Record<string, unknown> | null;
+  analysis: GasAnalyticsLike | null;
+  /** Temperatura vani, polazna voda i termostat iz `GET /api/dashboard`. */
+  dashboard: TvDashboardLike | null;
   /**
    * Nova verzija TV aplikacije, ili `null`.
    *
@@ -50,13 +53,14 @@ export interface AnalyticsScreenProps {
 
 export function AnalyticsScreen({
   analysis,
+  dashboard,
   updateAvailable,
   loading,
   error,
   updatedAt,
   translate,
 }: AnalyticsScreenProps) {
-  if (loading && !analysis) {
+  if (loading && !analysis && !dashboard) {
     return (
       <Centered>
         <ActivityIndicator size="large" color={colors.accent} />
@@ -65,7 +69,7 @@ export function AnalyticsScreen({
     );
   }
 
-  if (error && !analysis) {
+  if (error && !analysis && !dashboard) {
     return (
       <Centered>
         <Text style={styles.fault}>Analitika nije dostupna</Text>
@@ -74,24 +78,8 @@ export function AnalyticsScreen({
     );
   }
 
-  const metrics = buildTvMetrics(analysis as never);
-  const { shown, hiddenCount } = limitForTv(metrics);
+  const cards = buildTvOverview(analysis, dashboard);
   const freshness = describeFreshness(updatedAt);
-
-  if (shown.length === 0) {
-    /*
-     * Prazno stanje mora objasniti **zašto** je prazno. „Nema podataka" bez
-     * razloga izgleda kao kvar; korisnik tada zove servis.
-     */
-    return (
-      <Centered>
-        <Text style={styles.title}>Još nema podataka</Text>
-        <Text style={styles.muted}>
-          Analitika se pojavljuje kad kotao pošalje prva očitanja.
-        </Text>
-      </Centered>
-    );
-  }
 
   return (
     <ScrollView
@@ -119,23 +107,20 @@ export function AnalyticsScreen({
         </View>
       ) : null}
 
-      <View style={styles.grid}>
-        {shown.map((metric, index) => (
-          <MetricCard
-            key={metric.key}
-            metric={metric}
-            translate={translate}
-            preferredFocus={index === 0}
-          />
-        ))}
-      </View>
-
-      {hiddenCount > 0 && (
-        // „+2" umjesto tišine: bez ovoga ekran izgleda kao da metrika nema.
-        <Text style={styles.muted}>
-          +{hiddenCount} više u aplikaciji na telefonu
+      {error ? (
+        <Text style={styles.partialFault}>
+          Neki podaci nisu osvježeni: {error}
         </Text>
-      )}
+      ) : null}
+
+      <View style={styles.cardRow}>
+        <MetricCard metric={cards[0]} translate={translate} preferredFocus />
+        <MetricCard metric={cards[1]} translate={translate} />
+      </View>
+      <View style={styles.cardRow}>
+        <MetricCard metric={cards[2]} translate={translate} />
+        <MetricCard metric={cards[3]} translate={translate} />
+      </View>
     </ScrollView>
   );
 }
@@ -167,11 +152,11 @@ function FreshnessBadge({
 function MetricCard({
   metric,
   translate,
-  preferredFocus,
+  preferredFocus = false,
 }: {
-  metric: TvMetric;
+  metric: TvOverviewCard;
   translate: (key: string) => string;
-  preferredFocus: boolean;
+  preferredFocus?: boolean;
 }) {
   const [focused, setFocused] = React.useState(false);
 
@@ -186,9 +171,27 @@ function MetricCard({
     >
       <Text style={styles.label}>{translate(metric.label)}</Text>
       <View style={styles.valueRow}>
-        <Text style={styles.value}>{metric.value}</Text>
+        <Text style={styles.value}>
+          {metric.value === null
+            ? '—'
+            : metric.key === 'cost'
+              ? metric.value.toFixed(2)
+              : metric.value.toFixed(1)}
+        </Text>
         <Text style={styles.unit}>{metric.unit}</Text>
       </View>
+      {metric.key === 'thermostat' ? (
+        <Text style={styles.subtitle}>
+          Cilj:{' '}
+          {typeof metric.targetValue === 'number'
+            ? metric.targetValue.toFixed(1)
+            : '—'}{' '}
+          °C
+        </Text>
+      ) : null}
+      {metric.key === 'cost' ? (
+        <Text style={styles.subtitle}>Za analizirani period</Text>
+      ) : null}
     </View>
   );
 }
@@ -232,9 +235,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   badgeStale: { color: colors.fault, borderColor: colors.fault },
-  grid: {
+  cardRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'stretch',
     gap: spacing.md,
   },
   card: {
@@ -243,8 +246,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 6,
     padding: spacing.md,
-    minWidth: 240,
-    flexGrow: 1,
+    minWidth: 0,
+    flex: 1,
     gap: spacing.sm,
   },
   cardFocused: { borderColor: colors.accent },
@@ -252,6 +255,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 16,
     fontFamily: fonts.sansMedium,
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 15,
+    fontFamily: fonts.sans,
   },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
   value: {
@@ -286,6 +294,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontFamily: fonts.sansMedium,
+  },
+  partialFault: {
+    color: colors.warning,
+    fontSize: 14,
+    fontFamily: fonts.sans,
   },
   fault: {
     color: colors.fault,

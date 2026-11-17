@@ -29,8 +29,11 @@ export const API_BASE_URL =
  * zamijene kad zatreba drugi jezik.
  */
 const LABELS: Record<string, string> = {
+  'weather.currentShort': 'Vanjska temperatura',
+  'thermostat.title': 'Termostat',
+  'boiler.flowTemp': 'Polazna voda',
   'gas.metricTotalConsumption': 'Ukupna potrošnja',
-  'gas.metricCostIncVat': 'Trošak',
+  'gas.metricCostIncVat': 'Ukupni trošak',
   'gas.metricHeatingHours': 'Vrijeme grijanja',
   'gas.metricAvgFlowTemp': 'Polazni vod',
   'gas.metricUsagePerHour': 'Potrošnja po satu',

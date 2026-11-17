@@ -63,20 +63,29 @@ describe('TV klijent je samo za čitanje', () => {
     const { onFulfilled } = registeredRequestInterceptor();
 
     expect(TV_ENDPOINTS.pairingSession).toBe('/tv-pairing/sessions');
+    expect(TV_ENDPOINTS.dashboard).toBe('/dashboard');
     expect(TV_ENDPOINTS.gasAnalysis).toBe('/gas/analysis');
     expect(TV_ENDPOINTS.releaseLatest).toBe('/app-releases/latest');
-    const config = { method: 'get', url: TV_ENDPOINTS.gasAnalysis, headers: new Headers0() };
+    const config = {
+      method: 'get',
+      url: TV_ENDPOINTS.gasAnalysis,
+      headers: new Headers0(),
+    };
     // Interceptor vraća config sinhrono kad zahtjev prolazi (Promise samo za odbijene).
     expect(onFulfilled(config)).toBe(config);
     expect(client).toBeDefined();
   });
 
   it('POST kod za uparivanje cilja /api/tv-pairing/sessions tačno jednom', async () => {
-    const response = { data: { code: 'ABCD2345', expiresAt: '2030-01-01T00:00:00.000Z' } };
+    const response = {
+      data: { code: 'ABCD2345', expiresAt: '2030-01-01T00:00:00.000Z' },
+    };
     const post = jest.spyOn(axios, 'post').mockResolvedValue(response as never);
 
     await expect(
-      requestPairingCode('https://api.example.com/api', { deviceLabel: 'Android TV' }),
+      requestPairingCode('https://api.example.com/api', {
+        deviceLabel: 'Android TV',
+      }),
     ).resolves.toEqual(response.data);
 
     expect(post).toHaveBeenCalledWith(
@@ -87,20 +96,35 @@ describe('TV klijent je samo za čitanje', () => {
     post.mockRestore();
   });
 
-  it.each(['post', 'put', 'patch', 'delete'])('%s je odbijen prije slanja', async (method) => {
-    createTvClient({ baseUrl: 'https://api.example.com', getToken: () => null });
-    const { onFulfilled } = registeredRequestInterceptor();
+  it.each(['post', 'put', 'patch', 'delete'])(
+    '%s je odbijen prije slanja',
+    async (method) => {
+      createTvClient({
+        baseUrl: 'https://api.example.com',
+        getToken: () => null,
+      });
+      const { onFulfilled } = registeredRequestInterceptor();
 
-    await expect(
-      onFulfilled({ method, url: '/api/boiler/mode', headers: new Headers0() }),
-    ).rejects.toBeInstanceOf(TvWriteBlockedError);
-  });
+      await expect(
+        onFulfilled({
+          method,
+          url: '/api/boiler/mode',
+          headers: new Headers0(),
+        }),
+      ).rejects.toBeInstanceOf(TvWriteBlockedError);
+    },
+  );
 
   it('metoda koja nije zadana tretira se kao GET (axios tako radi)', async () => {
-    createTvClient({ baseUrl: 'https://api.example.com', getToken: () => null });
+    createTvClient({
+      baseUrl: 'https://api.example.com',
+      getToken: () => null,
+    });
     const { onFulfilled } = registeredRequestInterceptor();
 
-    expect(onFulfilled({ url: '/health', headers: new Headers0() })).toBeDefined();
+    expect(
+      onFulfilled({ url: '/health', headers: new Headers0() }),
+    ).toBeDefined();
   });
 
   it('post/put/patch/delete padaju bučno, ne tiho', () => {
@@ -136,13 +160,17 @@ describe('TV klijent je samo za čitanje', () => {
     const onUnauthorized = jest.fn();
     createTvClient({ baseUrl: '', getToken: () => 'x', onUnauthorized });
     const instance = mockedAxios.create.mock.results.at(-1)!.value;
-    const [, onRejected] = instance.interceptors.response.use.mock.calls.at(-1)!;
+    const [, onRejected] =
+      instance.interceptors.response.use.mock.calls.at(-1)!;
 
-    await expect(onRejected({ response: { status: 500 } })).rejects.toBeDefined();
+    await expect(
+      onRejected({ response: { status: 500 } }),
+    ).rejects.toBeDefined();
     expect(onUnauthorized).not.toHaveBeenCalled();
 
-    await expect(onRejected({ response: { status: 401 } })).rejects.toBeDefined();
+    await expect(
+      onRejected({ response: { status: 401 } }),
+    ).rejects.toBeDefined();
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
   });
 });
-

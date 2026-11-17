@@ -68,5 +68,7 @@ describe('build-menu.sh', () => {
     expect(tvProfile.env.EXPO_TV).toBe('1');
     expect(tvEas.cli.appVersionSource).toBe('local');
     expect(tvProfile.autoIncrement).toBe(false);
+    // TV update policy is version check + notice only: no EAS OTA channel.
+    expect(tvProfile.channel).toBeUndefined();
   });
 });

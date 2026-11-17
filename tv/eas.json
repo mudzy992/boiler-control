@@ -6,7 +6,6 @@
   "build": {
     "production": {
       "autoIncrement": false,
-      "channel": "production",
       "android": {
         "buildType": "apk"
       },

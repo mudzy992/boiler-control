@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -244,7 +245,15 @@ function Countdown({ expiresAt }: { expiresAt: number }) {
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
-  return <View style={styles.root}>{children}</View>;
+  return (
+    <ScrollView
+      contentContainerStyle={styles.root}
+      showsVerticalScrollIndicator={false}
+      testID="tv-pairing-scroll-container"
+    >
+      {children}
+    </ScrollView>
+  );
 }
 
 function Action({ onPress, label }: { onPress: () => void; label: string }) {
@@ -269,11 +278,15 @@ function Action({ onPress, label }: { onPress: () => void; label: string }) {
 /** TV se gleda sa 3 m — sve mjere su veće nego na telefonu. */
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    // Overscan differs between TV models; keep content away from the lower
+    // edge, and let the screen scroll on smaller display modes rather than clip.
+    paddingBottom: spacing.xl + spacing.md,
     gap: spacing.md,
   },
   title: {

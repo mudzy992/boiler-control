@@ -1,11 +1,11 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 // SEC-4: `authCookieEnabled` je čista funkcija (čita env, nema DI), pa je
 // `common -> modules/Auth` ovdje bezopasan; isti obrazac već koriste
 // `app-config.controller.ts:3`, `health.controller.ts:2` i `metrics.controller.ts:5`.
 import { authCookieEnabled } from '../modules/Auth/auth-cookie';
-// `import type` + `@Optional()`: servis konfiguracije mora moći da se napravi i
-// bez baze (testovi, health provjere), a `F15` release čita tek ako postoji.
-import type { AppReleaseService } from './app-release.service';
+// Runtime class token + `@Optional()`: u produkciji se servis mora ubrizgati,
+// a izolovani testovi ga i dalje smiju izostaviti.
+import { AppReleaseService } from './app-release.service';
 
 /**
  * MO2-2: ugovor koji mobilna aplikacija čita da odluči smije li raditi.
@@ -84,7 +84,15 @@ export class AppConfigService {
    * zanemaruje, a vraća se sigurna zadana vrijednost. Servis nikad ne baca —
    * endpoint koji baca zaključao bi korisnike van aplikacije.
    */
-  constructor(@Optional() private readonly releases?: AppReleaseService) {}
+  // Explicit token is required: this dependency is optional in isolated tests,
+  // but the runtime class token must still resolve in CommonModule. A type-only
+  // import here erased design:paramtypes and silently injected `undefined` in
+  // production, making every `/api/app/config` response report no release.
+  constructor(
+    @Optional()
+    @Inject(AppReleaseService)
+    private readonly releases?: AppReleaseService,
+  ) {}
 
   /**
    * `F15`: `latestVersion` sada dolazi iz baze (admin upload), a env ostaje

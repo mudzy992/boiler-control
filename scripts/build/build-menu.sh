@@ -443,12 +443,15 @@ run_preflight() {
 pause() { printf '\n%sEnter za nastavak…%s' "$DIM" "$RESET"; read -r _ || true; }
 
 choose_bump() {
+  local dir="$1" name="$2" current next
+  current="$(version_of "$dir")"
+  next="$(node -e "console.log(require('$VERSIONS_JS').bumpVersion('$current','patch'))")"
   echo
   say "Kako dignuti verziju prije builda?"
-  say "  1) patch  — ispravka        ($(node -e "console.log(require('$VERSIONS_JS').bumpVersion('$(version_of "$MOBILE_DIR")','patch'))") za mobilni)"
+  say "  1) patch  — ispravka        ($next za $name)"
   say "  2) minor  — nova funkcionalnost"
   say "  3) major  — velika promjena"
-  say "  4) bez dizanja — ponovni build iste verzije"
+  say "  4) bez dizanja — versionCode ostaje isti (nije nadogradnja za Android)"
   printf '%s> %s' "$BOLD" "$RESET"
   local choice
   read -r choice || true
@@ -465,7 +468,7 @@ choose_bump() {
 with_version() {
   local dir="$1" name="$2"
   shift 2
-  choose_bump
+  choose_bump "$dir" "$name"
   if [ -n "$BUMP" ]; then
     bump_app_version "$dir" "$name"
   else

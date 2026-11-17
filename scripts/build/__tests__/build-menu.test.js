@@ -58,12 +58,15 @@ describe('build-menu.sh', () => {
     expect(source).toMatch(/12\) EAS production APK/);
     expect(source).toMatch(/13\) EAS production APK/);
     expect(source).toMatch(/--local --output/);
-    expect(
-      require(path.join(REPO_ROOT, 'mobile/eas.json')).build.production.android
-        .buildType,
-    ).toBe('apk');
-    const tvProfile = require(path.join(REPO_ROOT, 'tv/eas.json')).build.production;
+    const mobileEas = require(path.join(REPO_ROOT, 'mobile/eas.json'));
+    expect(mobileEas.build.production.android.buildType).toBe('apk');
+    expect(mobileEas.cli.appVersionSource).toBe('local');
+    expect(mobileEas.build.production.autoIncrement).toBe(false);
+    const tvEas = require(path.join(REPO_ROOT, 'tv/eas.json'));
+    const tvProfile = tvEas.build.production;
     expect(tvProfile.android.buildType).toBe('apk');
     expect(tvProfile.env.EXPO_TV).toBe('1');
+    expect(tvEas.cli.appVersionSource).toBe('local');
+    expect(tvProfile.autoIncrement).toBe(false);
   });
 });

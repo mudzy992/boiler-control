@@ -9,16 +9,14 @@ const pkg = require('./package.json');
  *
  * **Izmjereno 16.11.** `android.versionCode` je bio `config.android?.versionCode
  * || 1`, a `app.json` to polje NE sadrži. Znači je svaki build dobijao
- * `versionCode = 1`, bez obzira na `version`:
+ * `versionCode = 1`, bez obzira na `version`. Sada ga izvodi semver formula.
  *
- *   EAS bi upisao (autoIncrement): 1, 2, 3, 4, 5 …
- *   app.config.js je davao:        1, 1, 1, 1, 1
- *
- * `eas.json` ima `autoIncrement: true` za `production`, ali `app.config.js`
- * ga pregazi, pa je postavka mrtva. Android traži **strogo veći** `versionCode`
- * za nadogradnju na istom `version` (i za `expo-updates` na `appVersion`
- * runtime policy) — sa stalnim 1 svaki sljedeći APK se odbija kao „već
- * instalirano" ili se instalira kao ista verzija.
+ * **Važno za EAS:** production koristi `appVersionSource: local` i
+ * `autoIncrement: false`. Remote auto-increment bi zamijenio formulu —
+ * izmjereni build log je pokazao EAS code `22 → 23` dok meni najavio `20200 →
+ * 20201`. Time bi lokalni Gradle i EAS APK-ovi imali neusklađene Android
+ * versionCode vrijednosti i jednog dana lokalni build bi blokirao EAS
+ * nadogradnju. Verziju diže build meni; EAS samo čita lokalni config.
  *
  * Formula je ista kao `buildNumberFromVersion` u backendu, da broj u APK-u i
  * broj koji server izvede budu isti: `major*10000 + minor*100 + patch`.
@@ -180,16 +178,9 @@ module.exports = ({ config }) => {
     android: {
       ...(config.android || {}),
       package: config.android?.package || 'com.boilercontrol.app',
-      /*
-       * Redoslijed: ručno zadat (config) → EAS/remote (APP_VERSION_CODE) →
-       * izvedeno iz `pkg.version`. `APP_VERSION_CODE` čita EAS sa svog
-       * servera pri buildu, pa ga poštujemo kad postoji; kad ne postoji, broj
-       * se izvodi, a ne pada na 1.
-       */
-      versionCode:
-        config.android?.versionCode ||
-        Number(process.env.APP_VERSION_CODE) ||
-        versionCodeFromVersion(pkg.version),
+      // EAS i lokalni Gradle moraju koristiti isti broj iz package.json.
+      // `eas.json` je zato appVersionSource=local, autoIncrement=false.
+      versionCode: versionCodeFromVersion(pkg.version),
       adaptiveIcon: {
         ...(config.android?.adaptiveIcon || {}),
         foregroundImage:

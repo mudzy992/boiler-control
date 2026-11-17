@@ -1,11 +1,11 @@
 {
   "cli": {
     "version": ">= 7.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "production": {
-      "autoIncrement": true,
+      "autoIncrement": false,
       "channel": "production",
       "android": {
         "buildType": "apk"

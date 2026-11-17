@@ -15,6 +15,7 @@ MOBILNA APLIKACIJA
   3) Release APK (lokalni gradle)
   4) Testovi + typecheck
   10) EAS production APK (cloud build)
+  12) EAS production APK (localni build na ovom računaru)
 
 TV APLIKACIJA
   5) Dev server (Expo, EXPO_TV=1)
@@ -22,6 +23,7 @@ TV APLIKACIJA
   7) Release APK (lokalni gradle)
   8) Testovi + typecheck
   11) EAS production APK (cloud build)
+  13) EAS production APK (localni build na ovom računaru)
 
 OSTALO
   9) Provjeri okolinu (java, adb, SDK, node_modules)
@@ -29,11 +31,14 @@ OSTALO
   q) Izlaz
 ```
 
-Prije svakog builda (2, 3, 6, 7, 10, 11) meni pita **kako dignuti verziju**:
+Prije svakog builda (2, 3, 6, 7, 10–13) meni pita **kako dignuti verziju**:
 
 - **3 i 7** su lokalni Gradle buildovi; bez vlastitog keystore-a release APK je debug-potpisan.
-- **10 i 11** su EAS cloud buildovi; APK potpisuje keystore konfigurisan za odgovarajući EAS projekat.
-- EAS buildovi traže internet i EAS prijavu. Mobilni projekat je već povezan; TV prvo mora imati svoj EAS project ID i Android credentials. Ako ID nedostaje, meni ispiše uputu umjesto da pokrene pogrešan build.
+- **10 i 11** su EAS cloud buildovi; kompilacija se izvršava na EAS serverima.
+- **12 i 13** su EAS local buildovi; kompilacija se izvršava na ovom računaru.
+- Sva četiri EAS izbora koriste production profil i traže EAS prijavu/projekat i odgovarajuće credentials. I lokalni EAS build i dalje se povezuje na EAS radi projekta/credentials-a; to nije potpuno offline build.
+- Mobilni EAS projekat je već povezan; TV prvo mora imati svoj EAS project ID i Android credentials. Ako TV ID nedostaje, meni ispiše uputu umjesto da pokrene build.
+- Opcije 12/13 traže Linux/macOS, JDK i `ANDROID_HOME` ili `ANDROID_SDK_ROOT`.
 
 | izbor | primjer | kada |
 |---|---|---|
@@ -58,8 +63,9 @@ Formula `versionCode`-a je ista na obje aplikacije i na backendu:
 
 ## EAS cloud buildovi
 
-- Izaberi **10** za mobilni EAS production APK ili **11** za TV EAS production APK.
-- Oba profila prave APK u cloudu; EAS koristi Android credentials vezane za taj EAS projekat. Prvi build može tražiti EAS prijavu i izbor/podešavanje credentials-a.
+- Izaberi **10** za mobilni EAS production APK u cloudu ili **11** za TV EAS production APK u cloudu.
+- Izaberi **12** za mobilni EAS production APK lokalno ili **13** za TV EAS production APK lokalno. Izlaz ide u `dist/mobile-<version>-eas-local.apk` ili `dist/tv-<version>-eas-local.apk`.
+- Sva četiri profila prave APK; cloud opcije kompiliraju na EAS serverima, local opcije na ovom računaru. EAS credentials su i dalje vezani za EAS projekat; lokalni build nije offline build.
 - Mobilna aplikacija je već povezana sa EAS projektom.
 - TV mora imati svoj EAS projekat, zaseban od mobilnog. Prvo pokreni `cd tv && npx eas-cli init`, pa postavi generisani project ID kao `EAS_PROJECT_ID` (lokalno i u EAS production environmentu). TV config već čita tu varijablu. Meni odbije TV build ako ID nedostaje.
 - Da bi APK mogao ažurirati već instaliranu aplikaciju, izaberi isti EAS projekat/keystore kojim je ranija verzija potpisana. EAS build credentials se ne dijele automatski između mobilne i TV aplikacije.
@@ -157,7 +163,7 @@ instalacije.
 |---|---|
 | Node.js | sve (verzije, Expo CLI) |
 | `node_modules` u `mobile/` i `tv/` | `npm install` u svakom |
-| JDK 17+ i `ANDROID_HOME` | debug/release build (opcije 2, 3, 6, 7) |
+| JDK 17+ i `ANDROID_HOME` / `ANDROID_SDK_ROOT` | lokalni Android buildovi (2, 3, 6, 7, 12, 13) |
 | `adb` | instalacija na uređaj (2, 6) |
 
 TV build uvijek ide sa `EXPO_TV=1`, jer bez njega `prebuild` generiše običnu
@@ -178,6 +184,7 @@ Android aplikaciju koja se **ne pojavljuje** na TV početnom ekranu.
 - Stvarna instalacija APK-a na uređaj (potpis je provjeren čitanjem
   generisanog `build.gradle`, ne instalacijom).
 - Instalacija na uređaj/TV (`adb`).
-- Stvarni EAS cloud build: meni sada nudi opcije 10/11, ali build nije
+- Stvarni EAS cloud/local build: meni nudi opcije 10–13, ali nijedan nije
   pokrenut u ovom okruženju (potrebni su korisnikov EAS nalog/credentials;
-  TV EAS projekat još treba inicijalizovati i povezati).
+  TV EAS projekat još treba inicijalizovati i povezati; local build traži
+  JDK/Android SDK).

@@ -278,6 +278,39 @@ build_eas_apk() {
   ok "EAS build je završen. Preuzmi APK sa build URL-a iznad / Expo dashboarda."
 }
 
+# EAS Local Build izvodi isti EAS profil na ovoj mašini (ne u cloudu).
+# I dalje mu trebaju EAS login/projekat/credentials, uz lokalne Android alate.
+build_eas_local_apk() {
+  local dir="$1" name="$2" variant="$3" os dest
+  require_deps "$dir" "$name" || return 1
+  require_cmd npx "Node/npm je potreban za EAS CLI."
+  require_cmd java "JDK je potreban za lokalni Android build."
+  check_eas_project "$dir" "$variant" || return 1
+
+  os="$(uname -s)"
+  case "$os" in
+    Linux|Darwin) ;;
+    *)
+      warn "EAS local build podržava Linux/macOS, ne '$os'."
+      return 1 ;;
+  esac
+  if [ -z "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}" ]; then
+    warn "Za EAS local build postavi ANDROID_HOME ili ANDROID_SDK_ROOT."
+    return 1
+  fi
+
+  dest="$REPO_ROOT/dist/$name-$(version_of "$dir")-eas-local.apk"
+  mkdir -p "$REPO_ROOT/dist"
+  info "▶ EAS local build: $name (production APK)"
+  run_build "$dir" "$name" "$variant" \
+    npx eas-cli build --platform android --profile production --local --output "$dest"
+  if [ -f "$dest" ]; then
+    ok "Lokalno izgrađen APK: ${dest#$REPO_ROOT/}"
+  else
+    warn "EAS završio bez očekivanog APK-a na $dest; provjeri EAS CLI log iznad."
+  fi
+}
+
 build_debug() {
   local dir="$1" name="$2" variant="$3" device="${4:-}"
   require_deps "$dir" "$name" || return 1
@@ -454,6 +487,7 @@ menu() {
     say "  3) Release APK (lokalni gradle)"
     say "  4) Testovi + typecheck"
     say "  10) EAS production APK (cloud build)"
+    say "  12) EAS production APK (localni build na ovom računaru)"
     say ""
     say "${BOLD}TV APLIKACIJA${RESET}"
     say "  5) Dev server (Expo, EXPO_TV=1)"
@@ -461,6 +495,7 @@ menu() {
     say "  7) Release APK (lokalni gradle)"
     say "  8) Testovi + typecheck"
     say "  11) EAS production APK (cloud build)"
+    say "  13) EAS production APK (localni build na ovom računaru)"
     say ""
     say "${BOLD}OSTALO${RESET}"
     say "  9) Provjeri okolinu (java, adb, SDK, node_modules)"
@@ -482,6 +517,8 @@ menu() {
       9) run_preflight; pause ;;
       10) with_version "$MOBILE_DIR" "mobile" build_eas_apk "$MOBILE_DIR" "mobile" "phone"; clear_restore; pause ;;
       11) with_version "$TV_DIR" "tv" build_eas_apk "$TV_DIR" "tv" "tv"; clear_restore; pause ;;
+      12) with_version "$MOBILE_DIR" "mobile" build_eas_local_apk "$MOBILE_DIR" "mobile" "phone"; clear_restore; pause ;;
+      13) with_version "$TV_DIR" "tv" build_eas_local_apk "$TV_DIR" "tv" "tv"; clear_restore; pause ;;
       v) with_version "$MOBILE_DIR" "mobile" true; clear_restore
          with_version "$TV_DIR" "tv" true; clear_restore; pause ;;
       q|Q) exit 0 ;;

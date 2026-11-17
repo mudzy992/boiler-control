@@ -7,6 +7,7 @@ import { HomeManagementScreen } from '../screens/home/HomeManagementScreen';
 import { ScheduleManagementScreen } from '../screens/schedule/ScheduleManagementScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { NotificationPreferencesScreen } from '../screens/notifications/NotificationPreferencesScreen';
+import { TvPairingScreen } from '../screens/tv/TvPairingScreen';
 
 const Stack = createStackNavigator();
 
@@ -63,6 +64,11 @@ export const SettingsStackNavigator = () => {
           title: t('notifications.title'),
           headerBackTitle: t('common.back'),
         }}
+      />
+      <Stack.Screen
+        name="TvPairing"
+        component={TvPairingScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="NotificationPreferences"

@@ -329,3 +329,28 @@ export interface DailyMetricsResponse {
   rows: DailyMetricRow[];
   coverage: DailyMetricsCoverage;
 }
+
+/**
+ * F16 — uparivanje Android TV-a QR kodom.
+ *
+ * Kod se prikazuje **na TV-u** i skenira telefonom. Telefon ga šalje na
+ * `/api/tv-pairing/sessions/:code/approve` — odobrenje ide sa **telefona**, jer
+ * TV nema sesiju. TV zatim preuzme tokene svojim `GET`-om.
+ */
+export interface TvPairingSessionInfo {
+  /** Kod koji se prikazuje na TV-u, npr. `ABCD-2345`. */
+  code: string;
+  /** ISO trenutak isteka, da telefon može reći „kod više ne vrijedi". */
+  expiresAt: string;
+}
+
+export type TvPairingStatus = 'PENDING' | 'APPROVED' | 'CLAIMED' | 'EXPIRED' | 'REJECTED';
+
+export interface TvPairingDevice {
+  id: number;
+  codeHint: string;
+  status: TvPairingStatus;
+  createdAt: string;
+  claimedAt: string | null;
+  approvedByDevice: string | null;
+}

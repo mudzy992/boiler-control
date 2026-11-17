@@ -5,6 +5,33 @@
 const pkg = require('./package.json');
 
 /**
+ * `versionCode` za Android — izveden iz `pkg.version`, ne iz `1`.
+ *
+ * **Izmjereno 16.11.** `android.versionCode` je bio `config.android?.versionCode
+ * || 1`, a `app.json` to polje NE sadrži. Znači je svaki build dobijao
+ * `versionCode = 1`, bez obzira na `version`:
+ *
+ *   EAS bi upisao (autoIncrement): 1, 2, 3, 4, 5 …
+ *   app.config.js je davao:        1, 1, 1, 1, 1
+ *
+ * `eas.json` ima `autoIncrement: true` za `production`, ali `app.config.js`
+ * ga pregazi, pa je postavka mrtva. Android traži **strogo veći** `versionCode`
+ * za nadogradnju na istom `version` (i za `expo-updates` na `appVersion`
+ * runtime policy) — sa stalnim 1 svaki sljedeći APK se odbija kao „već
+ * instalirano" ili se instalira kao ista verzija.
+ *
+ * Formula je ista kao `buildNumberFromVersion` u backendu, da broj u APK-u i
+ * broj koji server izvede budu isti: `major*10000 + minor*100 + patch`.
+ * `pkg.version` je jedini izvor verzije (MO2-2), pa je i ovo jedini izvor broja.
+ */
+const versionCodeFromVersion = (version) => {
+  const [major = 0, minor = 0, patch = 0] = String(version)
+    .split('.')
+    .map((n) => Number.parseInt(n, 10));
+  return major * 10_000 + minor * 100 + patch;
+};
+
+/**
  * Jedan izvor za EAS projectId — koristi se i u `extra.eas.projectId` i u
  * `updates.url`, pa se ne može desiti da se razilaze.
  */
@@ -61,7 +88,7 @@ module.exports = ({ config }) => {
       'expo-font',
       'expo-updates',
       '@react-native-community/datetimepicker',
-      "expo-localization",
+      'expo-localization',
       /**
        * MO2-16 (MO-025): `expo-image-picker` NIJE bio naveden ovdje, pa ga je
        * Expo autolinking pokretao bez argumenata — a plugin tada po defaultu
@@ -92,14 +119,14 @@ module.exports = ({ config }) => {
       [
         'expo-notifications',
         {
-          icon: "./assets/new/ic_notification.png",
-          color: "#ffffff",
+          icon: './assets/new/ic_notification.png',
+          color: '#ffffff',
           defaultChannel: 'default',
           enableBackgroundRemoteNotifications: false,
         },
       ],
       [
-        "expo-build-properties",
+        'expo-build-properties',
         {
           android: {
             /*
@@ -132,7 +159,7 @@ module.exports = ({ config }) => {
              */
 
             // Najveća pojedinačna ušteda na veličini .apk-a: samo jedna ABI.
-            buildArchs: ["arm64-v8a"],
+            buildArchs: ['arm64-v8a'],
 
             // R8/ProGuard je ISKLJUČEN po odluci vlasnika: smanjio bi APK, ali
             // obfuskacija može slomiti runtime, a stvarni APK se ne može
@@ -153,7 +180,16 @@ module.exports = ({ config }) => {
     android: {
       ...(config.android || {}),
       package: config.android?.package || 'com.boilercontrol.app',
-      versionCode: config.android?.versionCode || 1,
+      /*
+       * Redoslijed: ručno zadat (config) → EAS/remote (APP_VERSION_CODE) →
+       * izvedeno iz `pkg.version`. `APP_VERSION_CODE` čita EAS sa svog
+       * servera pri buildu, pa ga poštujemo kad postoji; kad ne postoji, broj
+       * se izvodi, a ne pada na 1.
+       */
+      versionCode:
+        config.android?.versionCode ||
+        Number(process.env.APP_VERSION_CODE) ||
+        versionCodeFromVersion(pkg.version),
       adaptiveIcon: {
         ...(config.android?.adaptiveIcon || {}),
         foregroundImage:
@@ -165,8 +201,7 @@ module.exports = ({ config }) => {
         monochromeImage:
           config.android?.adaptiveIcon?.monochromeImage ||
           './assets/new/ic_launcher_monochrome.png',
-        backgroundColor:
-          config.android?.adaptiveIcon?.backgroundColor || '#ffffff',
+        backgroundColor: config.android?.adaptiveIcon?.backgroundColor || '#ffffff',
       },
       /*
        * `edgeToEdgeEnabled` je UKLONJEN: u SDK 58 plugin ispisuje

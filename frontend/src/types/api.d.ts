@@ -949,6 +949,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tv-pairing/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Upareni TV uređaji korisnika */
+        get: operations["TvPairingController_devices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv-pairing/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** TV traži kod za uparivanje (bez prijave) */
+        post: operations["TvPairingController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv-pairing/sessions/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** TV provjerava je li kod odobren (bez prijave) */
+        get: operations["TvPairingController_poll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv-pairing/sessions/{code}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Telefon odobrava kod */
+        post: operations["TvPairingController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv-pairing/sessions/{code}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Telefon odbija kod */
+        post: operations["TvPairingController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/user": {
         parameters: {
             query?: never;
@@ -1326,6 +1411,15 @@ export interface components {
             roomTargetTemp: number;
         };
         CreateHomeProfileDto: Record<string, never>;
+        CreatePairingSessionDTO: {
+            /** @description Naziv uređaja koji korisnik vidi u listi uparenih TV-a */
+            deviceLabel?: string;
+            /**
+             * @description Expo push token TV-a. Dolazi uz zahtjev za kod jer je ovo jedini POST koji TV smije poslati; server ga upisuje tek kad telefon odobri.
+             * @example ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+             */
+            tvPushToken?: string;
+        };
         CreateThermostatDeviceDto: {
             alias?: string;
             deviceId: string;
@@ -3599,6 +3693,96 @@ export interface operations {
         };
     };
     RecommendationsController_getTodayRecommendations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TvPairingController_devices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TvPairingController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePairingSessionDTO"];
+            };
+        };
+        responses: {
+            /** @description Kod, rok i interval anketiranja */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TvPairingController_poll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TvPairingController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TvPairingController_reject: {
         parameters: {
             query?: never;
             header?: never;

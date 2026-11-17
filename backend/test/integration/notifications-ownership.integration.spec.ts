@@ -112,10 +112,20 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
       },
     });
     notificationId = notification.id;
+    /*
+     * `isActive: true` je OBAVEZNO od F16 (17.11.).
+     *
+     * Do tada `getUserTokens` nije filtrirao po `isActive` — uslov je bio
+     * `expoPushToken: { not: undefined }`, što u Prismi znači „ne filtriraj",
+     * pa su i opozvani uređaji dobijali push. Ovaj uređaj je zato prolazio
+     * bez polja. Sada filter radi, a `isActive: false` je zadana vrijednost
+     * kad se polje ne pošalje — pa uređaj mora biti eksplicitno aktivan.
+     */
     await prisma.userDevice.create({
       data: {
         userId: ownerId,
         platform: 'android',
+        isActive: true,
         expoPushToken: `ExponentPushToken[s002${suffix.replace(/-/g, '')}]`,
       },
     });

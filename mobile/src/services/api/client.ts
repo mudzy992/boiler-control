@@ -5,6 +5,7 @@ import type {
   DailyHistoryResponse,
   DailyMetricsResponse,
   DashboardHealthResponse,
+  TvPairingDevice,
 } from '../../types/Dashboard';
 import type { AccountExportResponse } from '../../types/AccountExport';
 import type {
@@ -261,6 +262,34 @@ class ApiClientService {
     to?: string;
   }): Promise<DailyMetricsResponse> {
     const response = await this.client.get('/daily-record/metrics', { params });
+    return response.data;
+  }
+
+  /**
+   * F16 — telefon odobrava TV uparivanje.
+   *
+   * Odobrenje ide sa **telefona**, jer TV nema sesiju. Kod ide u putanju
+   * (URL-encode), ne u tijelo — tako ga i TV prikazuje.
+   */
+  async approveTvPairing(code: string, deviceLabel?: string) {
+    const response = await this.client.post(
+      `/tv-pairing/sessions/${encodeURIComponent(code)}/approve`,
+      { deviceLabel }
+    );
+    return response.data as { status: 'APPROVED' };
+  }
+
+  /** Telefon odbija kod; TV prestaje čekati. */
+  async rejectTvPairing(code: string) {
+    const response = await this.client.post(
+      `/tv-pairing/sessions/${encodeURIComponent(code)}/reject`
+    );
+    return response.data as { status: 'REJECTED' };
+  }
+
+  /** Upareni TV uređaji — za ekran „uređaji". */
+  async getTvPairingDevices(): Promise<TvPairingDevice[]> {
+    const response = await this.client.get('/tv-pairing/devices');
     return response.data;
   }
 

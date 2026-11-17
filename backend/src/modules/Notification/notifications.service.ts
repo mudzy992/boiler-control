@@ -28,11 +28,30 @@ export class NotificationsService {
     });
   }
 
-  async getUserTokens(userId: number): Promise<string[]> {
+  /**
+   * Tokeni na koje treba poslati push.
+   *
+   * **Dvije popravke (F16, 17.11.), obje izmjerene:**
+   *
+   * 1. `expoPushToken: { not: undefined }` **ne filtrira ništa** — Prisma
+   *    `undefined` u filteru znači „ne filtriraj po ovom polju", pa su se
+   *    vraćali i opozvani uređaji. Sada se traži `isActive: true`; opozvan
+   *    token (odjava, reinstalacija) ne smije dobijati push.
+   * 2. `kind` razdvaja telefon od TV-a. Bez toga bi notifikacija za TV otišla
+   *    i na telefon i obrnuto, a korisnik ne bi mogao razlikovati odakle je.
+   *
+   * `kind` je opcion: bez njega se šalje na **sve** aktivne uređaje (postojeće
+   * ponašanje), pa pozivaoci koji ne znaju za TV nastavljaju da rade isto.
+   */
+  async getUserTokens(
+    userId: number,
+    kind?: 'PHONE' | 'TV',
+  ): Promise<string[]> {
     const devices = await this.prisma.userDevice.findMany({
       where: {
         userId,
-        expoPushToken: { not: undefined },
+        isActive: true,
+        ...(kind ? { kind } : {}),
       },
       select: {
         expoPushToken: true,

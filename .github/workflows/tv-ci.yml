@@ -1,0 +1,99 @@
+name: TV CI
+
+# Zašto postoji: TV aplikacija ima pravilo koje se ne vidi na ekranu — **ne
+# smije poslati nijedan PUT/POST osim uparivanja**. To pravilo čuva jedan test
+# (`src/services/api/__tests__/client.test.ts`); bez CI-ja bi ga prvi
+# „praktični" refaktor tiho uklonio.
+#
+# Namjerno BEZ builda APK-a: `EXPO_TV=1 expo prebuild` traži Android SDK i
+# mrežu ka Google repozitorijima, a ovdje je cilj da se za ~2 minute sazna da
+# li kod i testovi stoje.
+
+on:
+  workflow_dispatch:
+  push:
+    # `arena/**` kao i ostali workflowi: bez toga promjena u `tv/` ostaje
+    # neprovjerena do merge-a, a ovo je jedini workflow koji vrti TV testove.
+    branches: [main, 'arena/**']
+    paths:
+      - 'tv/**'
+      - '.github/workflows/tv-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tv/**'
+      - '.github/workflows/tv-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tv-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tv
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Isto kao backend i mobilni: Node 22.
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: tv/package-lock.json
+
+      - name: Install dependencies
+        # `--ignore-scripts` jer postinstall skripte (expo-modules) traže mrežu
+        # ka Expo CDN-u; za type-check i jest nijesu potrebne.
+        #
+        # `legacy-peer-deps` je u `tv/.npmrc` (npm tretira `react-native-tvos`
+        # sufiks `-1` kao prerelease i odbija peer zahtjeve), pa `npm ci` radi
+        # bez dodatnog flega — ali ga ovdje navodimo eksplicitno da pad ne bi
+        # izgledao kao greška u zavisnostima.
+        run: npm ci --ignore-scripts --no-audit --no-fund --legacy-peer-deps
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        # TV još nema eslint konfiguraciju; `tsc` pokriva ono što je za TV
+        # važno (tipovi propsa i API odgovora). Kad se doda, ovaj korak se
+        # mijenja u `npx eslint .`.
+        run: echo "eslint nije konfigurisan za tv/ (v. README)"
+
+      - name: Tests
+        # `--ci` isključuje interaktivno snimanje snapshotova: test koji bi
+        # inače tiho ažurirao snapshot u CI-ju mora pasti.
+        #
+        # JSON se piše uvijek, ne samo pri padu: artefakt ispod se dodaje
+        # `if: failure()`, pa je dovoljno da postoji kad zatreba.
+        run: npx jest --ci --json --outputFile="$RUNNER_TEMP/tv-ci-jest.json"
+
+      # Anotacija **mora** ići prije artefakta: `upload-artifact` se u ovom
+      # okruženju ne može preuzeti (0 bajtova uz blokiran blob), pa je anotacija
+      # jedini kanal koji stvarno stiže do čitača. Isti reporter kao u
+      # `backend-audit.yml`, da poruka bude ista u oba workflowa.
+      - name: Jest report (on failure)
+        if: failure()
+        run: node ../scripts/audit/jest_report.cjs "$RUNNER_TEMP/tv-ci-jest.json"
+
+      - name: Jest result (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-ci-jest-result
+          path: ${{ runner.temp }}/tv-ci-jest.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: TV ne smije pisati (poseban korak)
+        # Izdvojeno da pad bude čitljiv kao „TV je dobio pravo upisa", a ne kao
+        # „jedan od 52 testa je pao". Ovo je jedino pravilo koje TV ne smije
+        # prekršiti: greška bi značila da TV može promijeniti stanje kotla.
+        run: npx jest --ci src/services/api

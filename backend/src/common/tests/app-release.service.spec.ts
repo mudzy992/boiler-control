@@ -77,10 +77,23 @@ function zipWithEntry(
   return Buffer.concat([local, nameBuf, data, central, nameBuf, eocd]);
 }
 
+/**
+ * Stvarni oblik zapisa: **bez `expo` omotača**.
+ *
+ * Provjereno na generisanom `app.config` (`npx expo config --type public
+ * --json`): top-level ključevi su `android`, `extra`, `icon`, `name`,
+ * `version`, … i nema ključa `expo`. Do 16.11. su ovi testovi pravili
+ * `{"expo":{"version":…}}`, što je oblik **`app.json`**, a ne ugrađenog
+ * `app.config` — pa su prolazili na zapisu kakav se u APK-u ne pojavljuje.
+ */
 function apk(version = '1.4.0', versionCode = 14, method: 0 | 8 = 8): Buffer {
   return zipWithEntry(
     'assets/app.config',
-    JSON.stringify({ expo: { version, android: { versionCode } } }),
+    JSON.stringify({
+      name: 'Boiler Control',
+      version,
+      android: { versionCode },
+    }),
     method,
   );
 }
@@ -98,6 +111,65 @@ describe('readVersionFromApk', () => {
       version: '2.0.1',
       buildNumber: 201,
     });
+  });
+
+  /*
+   * OVO JE BIO STVARNI KVAR (popravljen 16.11.).
+   *
+   * Prije: regex je uzimao prvi `"version"` u tekstu, ma čiji bio. EAS/config
+   * serijalizuje `extra` prije top-level polja, pa je `extra.*.version` bio
+   * pročitan kao verzija aplikacije.
+   */
+  it('čita TAČNO top-level `version`, ne prvu u tekstu', () => {
+    const text = JSON.stringify({
+      extra: { eas: { projectId: 'x' }, someTool: { version: '0.0.1' } },
+      name: 'Boiler Control',
+      version: '2.0.0',
+      android: { versionCode: 156 },
+    });
+
+    // Dokaz kvara: stari regex bi vratio `0.0.1`.
+    expect(/"version"\s*:\s*"([^"]+)"/.exec(text)?.[1]).toBe('0.0.1');
+
+    expect(
+      readVersionFromApk(zipWithEntry('assets/app.config', text, 0)),
+    ).toEqual({
+      version: '2.0.0',
+      buildNumber: 156,
+    });
+  });
+
+  it('`versionCode` se čita samo iz `android.versionCode`', () => {
+    // `buildNumber` na vrhu (iOS polje) NE smije se zamijeniti za Androidov.
+    const text = JSON.stringify({
+      version: '3.1.4',
+      buildNumber: '999',
+      android: { versionCode: 42 },
+    });
+    expect(
+      readVersionFromApk(zipWithEntry('assets/app.config', text, 0)),
+    ).toEqual({
+      version: '3.1.4',
+      buildNumber: 42,
+    });
+  });
+
+  it('oštećen JSON vraća null, ne baca i ne nagađa', () => {
+    const broken = zipWithEntry('assets/app.config', '{"version":"1.2.3",', 0);
+    expect(readVersionFromApk(broken)).toEqual({
+      version: null,
+      buildNumber: null,
+    });
+  });
+
+  it('verzija koja nije strogi semver se odbija, ostaje null', () => {
+    const text = JSON.stringify({
+      version: '2.0.0-beta.1',
+      android: { versionCode: 2 },
+    });
+    expect(
+      readVersionFromApk(zipWithEntry('assets/app.config', text, 0)).version,
+    ).toBeNull();
   });
 
   it('vraća null kad fajl nije ZIP — ne baca', () => {

@@ -90,16 +90,48 @@ export function readVersionFromApk(buffer: Buffer): {
   const config = readZipEntry(buffer, 'assets/app.config');
   if (!config) return { version: null, buildNumber: null };
 
-  const text = config.toString('utf8');
-  const version = /"version"\s*:\s*"([^"]+)"/.exec(text)?.[1] ?? null;
-  const buildNumber =
-    /"(?:versionCode|android\.versionCode|buildNumber)"\s*:\s*(\d+)/.exec(
-      text,
-    )?.[1];
+  /*
+   * JSON.parse, NE regex. Do 16.11. je ovdje bio regex koji je uzimao **prvi**
+   * `"version"` u tekstu, bez obzira na to čiji je:
+   *
+   *   {"extra":{"someTool":{"version":"0.0.1"}},"version":"2.0.0",...}
+   *    ^ taj se čitao                                              ^ a ne ovaj
+   *
+   * Izmjereno na stvarnom obliku zapisa: regex vraća `0.0.1`, JSON vraća
+   * `2.0.0`. Posljedica nije bila tiha: `version` mora biti **veća** od
+   * posljednje objavljene (`ConflictException`), pa bi APK sa 2.0.0 bio odbijen
+   * kao „nije veća od 2.0.0" — ili bi, poslije ručnog unosa, u bazi završila
+   * verzija koja ne odgovara onome što je u APK-u.
+   *
+   * Isto važi za `versionCode`: regex bi ga našao gdje god da se pojavi.
+   * Sada se čita tačno `android.versionCode`.
+   */
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(config.toString('utf8'));
+  } catch {
+    // Oštećen zapis: admin unosi verziju ručno. Ne bacamo — v. iznad.
+    return { version: null, buildNumber: null };
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    return { version: null, buildNumber: null };
+  }
+
+  const root = parsed as Record<string, unknown>;
+  const rawVersion = root.version;
+  const rawBuild = (root.android as Record<string, unknown> | undefined)
+    ?.versionCode;
 
   return {
-    version: version && SEMVER_PATTERN.test(version) ? version : null,
-    buildNumber: buildNumber ? Number(buildNumber) : null,
+    version:
+      typeof rawVersion === 'string' && SEMVER_PATTERN.test(rawVersion)
+        ? rawVersion
+        : null,
+    buildNumber:
+      typeof rawBuild === 'number' && Number.isFinite(rawBuild)
+        ? rawBuild
+        : null,
   };
 }
 

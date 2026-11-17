@@ -465,6 +465,21 @@
         "properties": {},
         "type": "object"
       },
+      "CreatePairingSessionDTO": {
+        "properties": {
+          "deviceLabel": {
+            "description": "Naziv uređaja koji korisnik vidi u listi uparenih TV-a",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "tvPushToken": {
+            "description": "Expo push token TV-a. Dolazi uz zahtjev za kod jer je ovo jedini POST koji TV smije poslati; server ga upisuje tek kad telefon odobri.",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CreateThermostatDeviceDto": {
         "properties": {
           "alias": {
@@ -5086,6 +5101,106 @@
         ],
         "tags": [
           "Recommendations"
+        ]
+      }
+    },
+    "/api/tv-pairing/devices": {
+      "get": {
+        "operationId": "TvPairingController_devices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upareni TV uređaji korisnika",
+        "tags": [
+          "TV pairing"
+        ]
+      }
+    },
+    "/api/tv-pairing/sessions": {
+      "post": {
+        "operationId": "TvPairingController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePairingSessionDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Kod, rok i interval anketiranja"
+          }
+        },
+        "summary": "TV traži kod za uparivanje (bez prijave)",
+        "tags": [
+          "TV pairing"
+        ]
+      }
+    },
+    "/api/tv-pairing/sessions/{code}": {
+      "get": {
+        "operationId": "TvPairingController_poll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "TV provjerava je li kod odobren (bez prijave)",
+        "tags": [
+          "TV pairing"
+        ]
+      }
+    },
+    "/api/tv-pairing/sessions/{code}/approve": {
+      "post": {
+        "operationId": "TvPairingController_approve",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Telefon odobrava kod",
+        "tags": [
+          "TV pairing"
+        ]
+      }
+    },
+    "/api/tv-pairing/sessions/{code}/reject": {
+      "post": {
+        "operationId": "TvPairingController_reject",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Telefon odbija kod",
+        "tags": [
+          "TV pairing"
         ]
       }
     },

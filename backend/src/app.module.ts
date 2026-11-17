@@ -9,6 +9,7 @@ import { HomeProfileModule } from './modules/HomeProfile/home.profile.module';
 import { ThermostatDeviceModule } from './modules/ThermostatDevice/thermostat.device.module';
 import { UserModule } from './modules/User/user.module';
 import { NotificationsModule } from './modules/Notification/notifications.module';
+import { TvPairingModule } from './modules/TvPairing/tv-pairing.module';
 import { HeatingAnomalyModule } from './modules/HeatingAnomalyCheckerService/heating.anomaly.checker.module';
 import { HeatingModule } from './modules/Heating/heating.module';
 import { HeatingRecommendationModule } from './modules/HeatingRecommendation/heating.recommendation.module';
@@ -45,6 +46,7 @@ import { CommonModule } from './common/common.module';
     ThermostatDeviceModule,
     UserModule,
     NotificationsModule,
+    TvPairingModule,
     HeatingAnomalyModule,
     HeatingModule,
     HeatingRecommendationModule,

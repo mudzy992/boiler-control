@@ -1051,6 +1051,21 @@ const enUS = {
    * uputstvo za instalaciju APK-a — bez njega korisnik vidi samo dugme i
    * Androidovu poruku o nepoznatom izvoru koju ne razumije.
    */
+  tvPairing: {
+    title: 'Connect TV',
+    subtitle: 'Approve the code shown on your TV',
+    enterCode: 'Code from the TV',
+    codeLabel: 'Pairing code',
+    hint: 'Eight characters, e.g. ABCD-2345. The code is valid for 5 minutes.',
+    approve: 'Approve sign-in',
+    clear: 'Clear',
+    approvedTitle: 'TV connected',
+    approvedBody: 'The TV is now signed in. You can close this screen.',
+    errorTitle: 'Code did not work',
+    errorBody: 'Check the code on the TV and try again. Codes expire after 5 minutes.',
+    securityNote:
+      'The TV never sees your password. It receives a single-use code that you approve here.',
+  },
   update: {
     title: 'Update required',
     body: 'This version of the app is no longer supported. Download the new version to continue.',
@@ -2089,6 +2104,20 @@ const bsBS = {
     homeDeleted: 'Dom je obrisan',
     cannotDeleteActive: 'Aktivan dom se ne može obrisati. Prvo prebaci na drugi dom.',
     genericError: 'Nešto nije u redu. Pokušaj ponovo.',
+  },
+  tvPairing: {
+    title: 'Poveži TV',
+    subtitle: 'Odobri kod koji se prikazuje na TV-u',
+    enterCode: 'Kod sa TV-a',
+    codeLabel: 'Kod za uparivanje',
+    hint: 'Osam znakova, npr. ABCD-2345. Kod vrijedi 5 minuta.',
+    approve: 'Odobri prijavu',
+    clear: 'Očisti',
+    approvedTitle: 'TV je povezan',
+    approvedBody: 'TV je sada prijavljen. Možeš zatvoriti ovaj ekran.',
+    errorTitle: 'Kod nije prošao',
+    errorBody: 'Provjeri kod na TV-u i pokušaj ponovo. Kodovi ističu nakon 5 minuta.',
+    securityNote: 'TV nikad ne vidi tvoju lozinku. Dobija jednokratni kod koji ti odobravaš ovdje.',
   },
   update: {
     title: 'Potrebno ažuriranje',

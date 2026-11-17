@@ -344,6 +344,11 @@ model UserDevice {
   id            Int       @id @default(autoincrement())
   userId        Int
   platform      String
+  /// `PHONE` ili `TV`. Bez ovoga TV i telefon dijele isti spisak tokena, pa se
+  /// notifikacija namijenjena TV-u ne može razlikovati od one za telefon.
+  kind          DeviceKind @default(PHONE)
+  /// Ime koje korisnik vidi pri upravljanju uređajima (npr. „TV u dnevnoj").
+  label         String?
   expoPushToken String    @unique
   isActive      Boolean   @default(true)
   lastSeenAt    DateTime?
@@ -683,4 +688,80 @@ model RefreshToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+/// Vrsta uređaja. `PHONE` je postojeće ponašanje, pa je i zadana vrijednost —
+/// migracija ne mijenja nijedan postojeći red.
+enum DeviceKind {
+  PHONE
+  TV
+}
+
+/// Zahtjev za prijavu TV-a QR kodom (Android TV).
+///
+/// **Zašto token u bazi, a ne potpisani JWT.** Kod mora biti jednokratan i
+/// mora se moći opozvati u sekundi (korisnik klikne „odbij" na telefonu). JWT
+/// to ne može bez crne liste, a crna lista je ista tabela — samo bez
+/// mogućnosti da se vidi stanje.
+///
+/// **Zašto se čuva HASH, a ne kod.** Isto pravilo kao `RefreshToken`: ako baza
+/// procuri, kodovi u njoj ne smiju biti upotrebljivi. Kod ima 8 znakova iz
+/// abecede bez dvosmislenih slova (v. `pairing-code.ts`).
+model TvPairingSession {
+  id        Int      @id @default(autoincrement())
+  /// SHA-256 heks koda. Kod se NIKAD ne čuva u čistom obliku — ni ovdje, ni
+  /// u drugom polju. (`shortCode` je uklonjen: čuvao je kod u čistom obliku,
+  /// pa bi baza koja procuri davala upotrebljive kodove.)
+  codeHash  String   @unique
+  /// Prva četiri znaka, SAMO za prikaz u listi uparenih uređaja.
+  ///
+  /// Nije dovoljno za prijavu (8 znakova treba), a korisniku kaže koji je
+  /// uređaj koji. Bez ovoga bi lista prikazivala samo `id`.
+  codeHint  String
+  /// `PENDING` dok telefon ne odobri; `CLAIMED` kad TV preuzme tokene.
+  status    TvPairingStatus @default(PENDING)
+  /// Popunjava se kad telefon odobri. Do tada je `null`.
+  userId    Int?
+  /// Tokeni se izdaju TEK pri preuzimanju (v. `claim()`), da ne stoje u bazi
+  /// duže nego što treba.
+  accessToken  String?
+  refreshToken String?
+  /// Koliko puta je TV pitao. Ograničeno, da se ne može rudariti kod.
+  pollCount Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  claimedAt DateTime?
+
+  /// Telefon koji je odobrio — za reviziju („ko je pustio ovaj TV").
+  approvedByDevice String?
+
+  /// Expo push token TV-a, ako ga je TV poslao pri traženju koda.
+  ///
+  /// **Zašto ovdje, a ne kroz `POST /api/notifications/register-token`.**
+  /// TV aplikacija po pravilu radi **samo GET** (izuzetak je uparivanje).
+  /// Registracija tokena kroz notifikacijski kontroler bila bi drugi POST koji
+  /// TV mora napraviti — i to baš onaj koji se zaboravi kad se app premjesti.
+  /// Zato token ide **zajedno sa zahtjevom za kod** (jedini POST koji TV
+  /// smije), a u `UserDevice` ga upisuje **server** pri odobrenju. Poslije
+  /// uparivanja TV više ništa ne piše.
+  ///
+  /// Nije tajna (Expo token je javni identifikator uređaja za push), ali se
+  /// briše kad sesija istekne.
+  tvPushToken String?
+
+  @@index([expiresAt])
+  @@index([status])
+}
+
+enum TvPairingStatus {
+  /// TV čeka da telefon skenira i odobri.
+  PENDING
+  /// Telefon je odobrio; TV još nije preuzeo tokene.
+  APPROVED
+  /// TV je preuzeo tokene. Kod više ne vrijedi.
+  CLAIMED
+  /// Istekao ili odbijen.
+  EXPIRED
+  /// Korisnik je odbio na telefonu.
+  REJECTED
 }

@@ -243,7 +243,9 @@ describe('AppReleaseService.upload', () => {
               result = result.filter((row) => row.isPublished);
             }
             if (args?.where?.platform) {
-              result = result.filter((row) => row.platform === args.where!.platform);
+              result = result.filter(
+                (row) => row.platform === args.where!.platform,
+              );
             }
             return Promise.resolve(result);
           },
@@ -324,9 +326,9 @@ describe('AppReleaseService.upload', () => {
   it('poruka o nedostajućem fajlu kaže i da zahtjev nije bio multipart', async () => {
     const { service, storage } = setup();
 
-    await expect(service.upload({ file: undefined as never, platform: 'PHONE' })).rejects.toThrow(
-      /multipart\/form-data/,
-    );
+    await expect(
+      service.upload({ file: undefined as never, platform: 'PHONE' }),
+    ).rejects.toThrow(/multipart\/form-data/);
     expect(storage.storeAppRelease).not.toHaveBeenCalled();
   });
 
@@ -346,7 +348,9 @@ describe('AppReleaseService.upload', () => {
     const { service, prisma, storage } = setup();
     prisma.appRelease.create.mockRejectedValueOnce(new Error('db down'));
 
-    await expect(service.upload({ file, platform: 'PHONE' })).rejects.toThrow('db down');
+    await expect(service.upload({ file, platform: 'PHONE' })).rejects.toThrow(
+      'db down',
+    );
     expect(storage.deleteFile).toHaveBeenCalledWith(
       'app-releases/boiler-control-1.4.0-14.apk',
     );
@@ -455,7 +459,9 @@ describe('AppReleaseService — skrivena verzija', () => {
     // skrivena i dalje postoji, pa 1.5.0 ne smije proći kao „nova".
     await expect(
       service.upload({ file, version: '1.5.0', platform: 'PHONE' }),
-    ).rejects.toThrow(/nije veća od posljednje objavljene za PHONE \(1\.6\.0\)/);
+    ).rejects.toThrow(
+      /nije veća od posljednje objavljene za PHONE \(1\.6\.0\)/,
+    );
     expect(storage.storeAppRelease).not.toHaveBeenCalled();
     expect(prisma.appRelease.create).not.toHaveBeenCalled();
   });

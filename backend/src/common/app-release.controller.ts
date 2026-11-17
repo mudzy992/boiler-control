@@ -98,7 +98,9 @@ export class AppReleaseController {
       this.releases.latestPublished('TV'),
     ]);
 
-    const asLink = (row: Awaited<ReturnType<typeof this.releases.latestPublished>>) =>
+    const asLink = (
+      row: Awaited<ReturnType<typeof this.releases.latestPublished>>,
+    ) =>
       row
         ? {
             version: row.version,

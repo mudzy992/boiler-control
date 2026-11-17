@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppConfigService } from '../app-config.service';
 import { AppConfigController } from '../app-config.controller';
+import { AppReleaseService } from '../app-release.service';
 
 /**
  * MO2-2: version gate.
@@ -51,6 +52,43 @@ describe('AppConfigService (MO2-2 version gate)', () => {
       expect(config.minSupportedVersion).toBe('1.0.0');
       expect(config.latestVersion).toBe('2.0.0');
     });
+  });
+
+  it('ubacuje najnoviji PHONE release kroz Nest DI u app config', async () => {
+    const publishedAt = new Date('2026-11-07T12:00:00.000Z');
+    const latestPublished = jest.fn().mockResolvedValue({
+      id: 42,
+      platform: 'PHONE',
+      version: '2.3.0',
+      buildNumber: 20300,
+      sizeBytes: 12_345_678,
+      notes: 'Ispravke',
+      isPublished: true,
+      publishedAt,
+    });
+    const module = await Test.createTestingModule({
+      providers: [
+        AppConfigService,
+        {
+          provide: AppReleaseService,
+          useValue: { latestPublished },
+        },
+      ],
+    }).compile();
+
+    const config = await module.get(AppConfigService).getAppConfig();
+
+    expect(latestPublished).toHaveBeenCalledWith('PHONE');
+    expect(config.latestVersion).toBe('2.3.0');
+    expect(config.latestRelease).toEqual({
+      version: '2.3.0',
+      buildNumber: 20300,
+      sizeBytes: 12_345_678,
+      notes: 'Ispravke',
+      downloadUrl: '/api/app-releases/42/apk',
+      publishedAt: publishedAt.toISOString(),
+    });
+    await module.close();
   });
 
   describe('env override', () => {

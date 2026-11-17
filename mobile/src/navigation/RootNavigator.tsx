@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AppState, View } from 'react-native';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -12,11 +13,7 @@ import { useAuth } from '../hooks/useAuth';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { MainTabNavigator } from './MainTabNavigator';
-import {
-  DEEP_LINK_PREFIXES,
-  MAIN_TAB_SCREENS,
-  ROOT_SCREENS,
-} from '../constants/routes';
+import { DEEP_LINK_PREFIXES, MAIN_TAB_SCREENS, ROOT_SCREENS } from '../constants/routes';
 import { handleColdStartNotification } from '../services/notifications/notificationService';
 import { UpdateRequiredScreen } from '../screens/common/UpdateRequiredScreen';
 import { UpdateAvailableBanner } from '../screens/common/UpdateAvailableBanner';
@@ -75,7 +72,7 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
     // MO2-3 / MO-002: cold-start tap se smije obraditi samo jednom, i tek kad
     // je korisnik prijavljen. Dok nije, root stack sadrži samo Login/Register,
     // pa bi navigacija na `Main` pala kao "not handled".
-    const coldStartHandled = React.useRef(false);
+    const coldStartHandled = useRef(false);
 
     /**
      * MO2-2: version gate. `null` znači da provjera još traje.
@@ -84,13 +81,28 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
 
     useEffect(() => {
       let cancelled = false;
-      // `checkVersionGate` nikad ne baca: svaka greška (mreža, timeout,
-      // neočekivan odgovor) postaje fail-open rezultat.
-      void checkVersionGate().then((result) => {
-        if (!cancelled) setVersionGate(result);
+      let lastCheckedAt = 0;
+      const refreshVersionGate = () => {
+        // Start + povratak u foreground; ograniči učestalost da brza app
+        // switching ne napravi lavinu javnih GET zahtjeva.
+        if (Date.now() - lastCheckedAt < 60_000) return;
+        lastCheckedAt = Date.now();
+        // `checkVersionGate` nikad ne baca: mrežni i parse kvarovi su fail-open.
+        void checkVersionGate().then((result) => {
+          if (!cancelled) setVersionGate(result);
+        });
+      };
+
+      refreshVersionGate();
+      const subscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') refreshVersionGate();
       });
+      const interval = setInterval(refreshVersionGate, 15 * 60 * 1000);
+
       return () => {
         cancelled = true;
+        subscription.remove();
+        clearInterval(interval);
       };
     }, []);
 
@@ -129,45 +141,42 @@ const RootNavigatorContent = React.forwardRef<NavigationContainerRef<any>, RootN
     };
 
     return (
-      <>
-        {/*
-          F15: novija verzija postoji, a ova još smije raditi. Traka je iznad
-          navigatora (apsolutno pri dnu), pa se vidi na svakom ekranu i ne
-          mijenja layout. Blokada ostaje samo za `mustUpdate`.
-        */}
-        {versionGate.release ? (
-          <UpdateAvailableBanner release={versionGate.release} />
-        ) : null}
+      <View style={{ flex: 1 }}>
         <NavigationContainer
-        ref={ref}
-        theme={navigationTheme}
-        linking={linking}
-        onReady={handleReady}
-        fallback={
-          <Center flex={1}>
-            <Spinner color="brand.400" />
-          </Center>
-        }
-      >
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {!isAuthenticated ? (
-            // Auth Stack
-            <>
-              <Stack.Screen name={ROOT_SCREENS.Login} component={LoginScreen} />
-              <Stack.Screen name={ROOT_SCREENS.Register} component={RegisterScreen} />
-            </>
-          ) : (
-            // Main App Stack
-            <>
-              <Stack.Screen name={ROOT_SCREENS.Main} component={MainTabNavigator} />
-              {/* Modal screens will be added here in future phases */}
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-      </>
+          ref={ref}
+          theme={navigationTheme}
+          linking={linking}
+          onReady={handleReady}
+          fallback={
+            <Center flex={1}>
+              <Spinner color="brand.400" />
+            </Center>
+          }
+        >
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {!isAuthenticated ? (
+              // Auth Stack
+              <>
+                <Stack.Screen name={ROOT_SCREENS.Login} component={LoginScreen} />
+                <Stack.Screen name={ROOT_SCREENS.Register} component={RegisterScreen} />
+              </>
+            ) : (
+              // Main App Stack
+              <>
+                <Stack.Screen name={ROOT_SCREENS.Main} component={MainTabNavigator} />
+                {/* Modal screens will be added here in future phases */}
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+        {/*
+          Sibling and rendered AFTER NavigationContainer: otherwise the full-
+          screen navigator draws over this absolutely positioned update offer.
+        */}
+        {versionGate.release ? <UpdateAvailableBanner release={versionGate.release} /> : null}
+      </View>
     );
-  },
+  }
 );
 
 RootNavigatorContent.displayName = 'RootNavigator';

@@ -54,6 +54,8 @@ const styles = StyleSheet.create({
     // Apsolutno pri dnu: ne mijenja layout navigacije, pa nijedan ekran ne
     // iskače iz svog rasporeda zbog trake.
     position: 'absolute',
+    zIndex: 1000,
+    elevation: 1000,
     left: space.sm,
     right: space.sm,
     bottom: space.sm,

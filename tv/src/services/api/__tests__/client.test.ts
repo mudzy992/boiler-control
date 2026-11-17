@@ -63,7 +63,8 @@ describe('TV klijent je samo za čitanje', () => {
     const { onFulfilled } = registeredRequestInterceptor();
 
     expect(TV_ENDPOINTS.pairingSession).toBe('/tv-pairing/sessions');
-    expect(TV_ENDPOINTS.gasAnalysis).toBe('/analysis/gas');
+    expect(TV_ENDPOINTS.gasAnalysis).toBe('/gas/analysis');
+    expect(TV_ENDPOINTS.releaseLatest).toBe('/app-releases/latest');
     const config = { method: 'get', url: TV_ENDPOINTS.gasAnalysis, headers: new Headers0() };
     // Interceptor vraća config sinhrono kad zahtjev prolazi (Promise samo za odbijene).
     expect(onFulfilled(config)).toBe(config);

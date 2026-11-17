@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "46525182384",
+    "project_id": "boiler-control-tv",
+    "storage_bucket": "boiler-control-tv.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:46525182384:android:afac35af0e0e4cccb5a675",
+        "android_client_info": {
+          "package_name": "com.boilercontrol.tv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM4BdQHWTMIvSPwomQTRTAps9uCVvW0pY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

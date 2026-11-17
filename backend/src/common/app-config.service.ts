@@ -128,7 +128,11 @@ export class AppConfigService {
   private async latestReleaseSafe(): Promise<AppConfig['latestRelease']> {
     if (!this.releases) return null;
     try {
-      const row = await this.releases.latestPublished();
+      // Eksplicitno `PHONE`: ova konfiguracija je za MOBILNU aplikaciju.
+      // Bez argumenta bi vrijedila podrazumijevana vrijednost, ali je ona
+      // detalj implementacije — ovdje je namjera dio ugovora. Ako se ikad
+      // doda TV config, on traži svoj `latestPublished('TV')`.
+      const row = await this.releases.latestPublished('PHONE');
       if (!row) return null;
       return {
         version: row.version,

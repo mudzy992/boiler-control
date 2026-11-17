@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Res,
   StreamableFile,
   UploadedFile,
@@ -47,8 +49,25 @@ export class AppReleaseController {
    */
   @Public()
   @Get('latest')
-  async latest() {
-    const latest = await this.releases.latestPublished();
+  async latest(@Query('platform') platform?: string) {
+    /*
+     * `platform` je opcion **samo** za nazadnu kompatibilnost: stariji mobilni
+     * klijenti ovu rutu zovu bez parametra i moraju i dalje dobiti mobilno
+     * izdanje. Nedostatak parametra NIJE „sve platforme" — to bi TV-u vratilo
+     * mobilni APK.
+     *
+     * Nepoznata vrijednost (`?platform=tv` malim slovima, `?platform=WEB`) se
+     * odbija, a ne pretvara u `PHONE`: tiho pretvaranje bi TV-u dalo mobilni
+     * APK, a to je greška koju korisnik vidi kao „ne može se instalirati".
+     */
+    const resolved = platform == null ? 'PHONE' : platform.toUpperCase();
+    if (resolved !== 'PHONE' && resolved !== 'TV') {
+      throw new BadRequestException(
+        `Platforma mora biti PHONE ili TV (dobijeno: ${platform}).`,
+      );
+    }
+
+    const latest = await this.releases.latestPublished(resolved);
     if (!latest) {
       return { release: null };
     }
@@ -60,12 +79,48 @@ export class AppReleaseController {
     };
   }
 
+  /**
+   * Javna lista NAJNOVIJIH izdanja po platformi — za login ekran.
+   *
+   * **Zašto zasebna ruta, a ne dva poziva `latest`.** Login ekran prikazuje
+   * oba linka (mobilni i TV) i to prije prijave; dva paralelna poziva znače dva
+   * stanja učitavanja i dvije greške koje treba spojiti u jedan prikaz. Ova
+   * ruta vraća **jedan** objekat, pa ekran ima jedno stanje.
+   *
+   * Platforma bez objavljenog izdanja dobija `null` — ekran tada **ne
+   * prikazuje** taj link. Bolje bez linka nego link na 404.
+   */
+  @Public()
+  @Get('available')
+  async available() {
+    const [phone, tv] = await Promise.all([
+      this.releases.latestPublished('PHONE'),
+      this.releases.latestPublished('TV'),
+    ]);
+
+    const asLink = (row: Awaited<ReturnType<typeof this.releases.latestPublished>>) =>
+      row
+        ? {
+            version: row.version,
+            buildNumber: row.buildNumber,
+            sizeBytes: row.sizeBytes,
+            notes: row.notes,
+            publishedAt: row.publishedAt.toISOString(),
+            downloadUrl: `/api/app-releases/${row.id}/apk`,
+          }
+        : null;
+
+    return { phone: asLink(phone), tv: asLink(tv) };
+  }
+
   /** Admin: sve objavljene i skrivene verzije, najnovije prve. */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Get()
-  async list() {
-    const rows = await this.releases.list();
+  async list(@Query('platform') platform?: string) {
+    const rows = await this.releases.list(
+      platform === 'TV' || platform === 'PHONE' ? platform : undefined,
+    );
     return rows.map((row) => ({
       ...row,
       downloadUrl: `/api/app-releases/${row.id}/apk`,
@@ -89,6 +144,7 @@ export class AppReleaseController {
       buildNumber?: string;
       notes?: string;
       isPublished?: string;
+      platform?: string;
     },
   ) {
     const buildNumber =
@@ -96,8 +152,15 @@ export class AppReleaseController {
         ? Number(body.buildNumber)
         : undefined;
 
+    /*
+     * Platforma iz forme. Nedostatak se odbija u servisu, a ne pretpostavlja
+     * ovdje: `?? 'PHONE'` bi TV APK tiho upisao kao mobilni.
+     */
+    const platform = body.platform?.toUpperCase() ?? '';
+
     return this.releases.upload({
       file: apk,
+      platform: platform as 'PHONE' | 'TV',
       version: body.version,
       buildNumber: Number.isFinite(buildNumber) ? buildNumber : undefined,
       notes: body.notes,

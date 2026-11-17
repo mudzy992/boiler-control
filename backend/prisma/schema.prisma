@@ -321,8 +321,20 @@ model TuyaToken {
 /// ostavilo korisnike sa linkom na fajl koji nije onaj koji su skinuli.
 model AppRelease {
   id          Int      @id @default(autoincrement())
+  /// Kojoj aplikaciji izdanje pripada: `PHONE` (mobilna) ili `TV`.
+  ///
+  /// **Zašto je ovo moralo biti dodato (F17, 17.11.).** Do sada je `version`
+  /// bio `@unique` na cijeloj tabeli, pa bi mobilni i TV APK iste verzije
+  /// (npr. oba `1.0.0` — što je sasvim normalno, dvije aplikacije se razvijaju
+  /// nezavisno) udarili u `Unique constraint failed`. Gore od pada: TV bi
+  /// mogao „naslijediti" mobilni release kao svoj `latest`, pa bi TV nudio
+  /// update na mobilnu verziju.
+  ///
+  /// Jedinstven je **par** `(platform, version)` — v. `@@unique` ispod.
+  platform    DeviceKind @default(PHONE)
   /// Semver bez prefiksa, npr. `1.4.0`. Upoređuje se sa `version.config.ts`.
-  version     String   @unique
+  /// Jedinstven **u okviru platforme**.
+  version     String
   /// `versionCode` iz `app.json` — Android ga traži za nadogradnju na istoj verziji.
   buildNumber Int
   /// Putanja u `UPLOAD_ROOT_PATH`, npr. `app-releases/boiler-control-1.4.0-14.apk`.
@@ -337,7 +349,9 @@ model AppRelease {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@unique([platform, version])
   @@index([publishedAt])
+  @@index([platform, isPublished])
 }
 
 model UserDevice {

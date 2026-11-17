@@ -2901,7 +2901,16 @@
     "/api/app-releases": {
       "get": {
         "operationId": "AppReleaseController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -2924,10 +2933,33 @@
         ]
       }
     },
+    "/api/app-releases/available": {
+      "get": {
+        "operationId": "AppReleaseController_available",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AppRelease"
+        ]
+      }
+    },
     "/api/app-releases/latest": {
       "get": {
         "operationId": "AppReleaseController_latest",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""

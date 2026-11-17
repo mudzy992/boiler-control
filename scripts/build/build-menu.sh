@@ -208,7 +208,13 @@ ensure_release_signing() {
     say "    U suprotnom Android odbija instalaciju: 'package conflicts with an existing package'."
     say "    Rješenje: android/keystore.properties (storeFile, storePassword, keyAlias, keyPassword),"
     say "    pa pokreni ovaj build ponovo — potpis se tada uskladi automatski."
-    say "    Ili prvo odinstaliraj aplikaciju: adb uninstall ${name/@/-}"
+    local package_id
+    case "$(basename "$dir")" in
+      mobile) package_id="com.boilercontrol.app" ;;
+      tv) package_id="com.boilercontrol.tv" ;;
+      *) package_id="<applicationId>" ;;
+    esac
+    say "    Ili prvo odinstaliraj aplikaciju: adb uninstall $package_id"
   fi
 }
 

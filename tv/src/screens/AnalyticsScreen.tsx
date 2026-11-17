@@ -19,7 +19,7 @@ import {
   limitForTv,
   type TvMetric,
 } from '../lib/analytics';
-import { colors, spacing } from '../theme';
+import { colors, fonts, spacing } from '../theme';
 
 export interface AnalyticsScreenProps {
   /** Odgovor `GET /api/gas/analysis`, ili `null` dok se učitava. */
@@ -190,9 +190,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { color: colors.text, fontSize: 40, fontWeight: '600' },
+  title: { color: colors.text, fontSize: 40, fontFamily: fonts.sansSemiBold },
   badge: {
     color: colors.accent,
+    fontFamily: fonts.mono,
     fontSize: 20,
     borderWidth: 1,
     borderColor: colors.accent,
@@ -208,30 +209,34 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
     padding: spacing.md,
     minWidth: 300,
     flexGrow: 1,
     gap: spacing.sm,
   },
-  label: { color: colors.textMuted, fontSize: 20 },
+  label: { color: colors.textMuted, fontSize: 20, fontFamily: fonts.sansMedium },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
   value: {
     color: colors.text,
     fontSize: 56,
-    fontWeight: '700',
+    fontFamily: fonts.sansBold,
     fontVariant: ['tabular-nums'],
   },
-  unit: { color: colors.textMuted, fontSize: 24, paddingBottom: 10 },
-  muted: { color: colors.textMuted, fontSize: 22, textAlign: 'center' },
+  unit: { color: colors.textMuted, fontSize: 24, fontFamily: fonts.sansMedium, paddingBottom: 10 },
+  muted: { color: colors.textMuted, fontSize: 22, fontFamily: fonts.sans, textAlign: 'center' },
   updateBar: {
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderLeftWidth: 4,
     borderLeftColor: colors.accent,
     borderRadius: 8,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  updateText: { color: colors.text, fontSize: 22 },
-  fault: { color: colors.fault, fontSize: 28, textAlign: 'center' },
+  updateText: { color: colors.text, fontSize: 22, fontFamily: fonts.sansMedium },
+  fault: { color: colors.fault, fontSize: 28, fontFamily: fonts.sansSemiBold, textAlign: 'center' },
 });

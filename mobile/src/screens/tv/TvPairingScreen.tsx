@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 
@@ -19,19 +20,14 @@ import {
   Text,
 } from '../../ui';
 import { space } from '../../theme/tokens';
+import { parseTvPairingCode } from './pairingCode';
 
 /**
  * F16 — telefon odobrava prijavu TV-a.
  *
- * **Zašto ručni unos, a ne skener, iako zadatak traži QR.** QR skener traži
- * `expo-camera` i **kameru**, a ovaj ekran mora raditi i kad:
- *
- *   - korisnik je odbio dozvolu za kameru (trajno, bez ponovnog pitanja),
- *   - TV prikazuje kod ali QR nije čitljiv (odsjaj, ugao, stari TV),
- *   - telefon nema kameru ili je zauzeta.
- *
- * Zato je tok isti, a unos je **tekst**: kod od 8 znakova se prepisuje s TV-a
- * za dvije sekunde. Skener se dodaje iznad kao prečica, ne kao uslov.
+ * **Dva načina unosa, isti sigurni tok.** Telefon može skenirati QR kod sa
+ * TV-a ili ručno unijeti osam znakova. Ručni unos ostaje dostupan kad korisnik
+ * odbije dozvolu za kameru, kamera je zauzeta ili QR nije čitljiv iz ugla.
  *
  * **Zašto odobrava telefon, a ne TV.** TV nema tastaturu za lozinku, a i da ima
  * — lozinka bi se kucala na uređaju koji vidi svako u sobi. Ovako TV dobije
@@ -43,8 +39,33 @@ export const TvPairingScreen = () => {
   const queryClient = useQueryClient();
   const [code, setCode] = useState('');
   const [approved, setApproved] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
-  const normalize = (raw: string) => raw.replace(/[\s-]/g, '').toUpperCase();
+  const openScanner = async () => {
+    setScanError(null);
+    if (!cameraPermission?.granted) {
+      const permission = await requestCameraPermission();
+      if (!permission.granted) {
+        setScanError('tvPairing.cameraPermissionDenied');
+        return;
+      }
+    }
+    setScannerOpen(true);
+  };
+
+  const handleQrScanned = ({ data }: { data: string }) => {
+    const scannedCode = parseTvPairingCode(data);
+    if (!scannedCode) {
+      setScanError('tvPairing.invalidQr');
+      setScannerOpen(false);
+      return;
+    }
+    setCode(scannedCode);
+    setScanError(null);
+    setScannerOpen(false);
+  };
 
   const approveMutation = useMutation({
     mutationFn: (value: string) => apiClient.approveTvPairing(value),
@@ -54,15 +75,15 @@ export const TvPairingScreen = () => {
     },
   });
 
-  const normalized = normalize(code);
+  const normalized = parseTvPairingCode(code);
   /*
-   * Dužina je uslov za dugme, ne za slanje: server i sam odbija pogrešan
-   * oblik, ali korisnik ne treba da pošalje zahtjev koji sigurno pada.
+   * Dužina i abeceda su uslov za dugme: ne šaljemo kod koji backend sigurno
+   * odbija. Isti parser validira ručni unos i skenirani QR.
    */
-  const canSubmit = normalized.length === 8;
+  const canSubmit = normalized !== null;
 
   const submit = () => {
-    if (!canSubmit) return;
+    if (!normalized) return;
     approveMutation.mutate(normalized);
   };
 
@@ -93,6 +114,14 @@ export const TvPairingScreen = () => {
           />
         ) : null}
 
+        {scanError ? (
+          <InlineBanner
+            tone="fault"
+            title={t('tvPairing.errorTitle')}
+            message={t(scanError)}
+          />
+        ) : null}
+
         <Section label={t('tvPairing.enterCode')}>
           <Panel variant="flush" padded={false}>
             <PanelRow divider={false}>
@@ -101,7 +130,11 @@ export const TvPairingScreen = () => {
                 <FormInput
                   accessibilityLabel={t('tvPairing.codeLabel')}
                   value={code}
-                  onChangeText={setCode}
+                  onChangeText={(value) => {
+                    setCode(value);
+                    setScanError(null);
+                    if (approveMutation.isError) approveMutation.reset();
+                  }}
                   placeholder="ABCD-2345"
                   autoCapitalize="characters"
                   autoCorrect={false}
@@ -118,6 +151,35 @@ export const TvPairingScreen = () => {
               </View>
             </PanelRow>
           </Panel>
+          <Text size="meta" tone="dim" style={{ marginTop: space.sm, marginBottom: space.sm }}>
+            {t('tvPairing.orScan')}
+          </Text>
+          {scannerOpen ? (
+            <View style={{ overflow: 'hidden', borderRadius: 4 }}>
+              <CameraView
+                testID="tv-pairing-camera"
+                facing="back"
+                barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                onBarcodeScanned={handleQrScanned}
+                style={{ width: '100%', height: 260 }}
+              />
+              <Button
+                label={t('tvPairing.closeScanner')}
+                variant="secondary"
+                block
+                onPress={() => setScannerOpen(false)}
+                testID="tv-pairing-close-scanner"
+              />
+            </View>
+          ) : (
+            <Button
+              label={t('tvPairing.scanQr')}
+              variant="secondary"
+              block
+              onPress={() => void openScanner()}
+              testID="tv-pairing-scan"
+            />
+          )}
         </Section>
 
         <Button

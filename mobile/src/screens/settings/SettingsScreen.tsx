@@ -485,6 +485,18 @@ const SettingsScreenContent = () => {
           </Panel>
         </Section>
 
+        <Section label={t('settings.devicesSection')}>
+          <Panel variant="flush" padded={false}>
+            <SettingRow
+              icon="tv-outline"
+              title={t('settings.connectTv')}
+              subtitle={t('settings.connectTvDesc')}
+              onPress={() => (navigation as any).navigate('TvPairing')}
+              testID="settings-connect-tv"
+            />
+          </Panel>
+        </Section>
+
         <Section label={t('settings.homesSection')}>
           <Panel variant="flush" padded={false}>
             <SettingRow

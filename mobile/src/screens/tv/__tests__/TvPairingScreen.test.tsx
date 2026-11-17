@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { TvPairingScreen } from '../TvPairingScreen';
+import { parseTvPairingCode } from '../pairingCode';
 import { apiClient } from '../../../services/api/client';
 import '../../../locales/config';
 
@@ -22,6 +23,19 @@ jest.mock('../../../services/api/client', () => ({
     approveTvPairing: jest.fn(),
   },
 }));
+
+jest.mock('expo-camera', () => {
+  const React = jest.requireActual('react');
+  const { View } = jest.requireActual('react-native');
+  return {
+    CameraView: ({ testID, onBarcodeScanned }: any) =>
+      React.createElement(View, { testID, onBarcodeScanned }),
+    useCameraPermissions: () => [
+      { granted: true },
+      jest.fn().mockResolvedValue({ granted: true }),
+    ],
+  };
+});
 
 const mockNavigation = { goBack: jest.fn() };
 jest.mock('@react-navigation/native', () => ({
@@ -45,6 +59,32 @@ async function renderScreen() {
 }
 
 describe('F16 — ekran za uparivanje TV-a', () => {
+  it('QR parser prihvata TV deep link i odbija pogrešan/nepouzdan kod', () => {
+    expect(parseTvPairingCode('boilercontrol://tv-pair?code=ABCD2345')).toBe('ABCD2345');
+    expect(parseTvPairingCode('abcd-2345')).toBe('ABCD2345');
+    expect(parseTvPairingCode('https://example.com')).toBeNull();
+    expect(parseTvPairingCode('ABCD0123')).toBeNull();
+  });
+
+  it('skenirani TV QR popunjava polje i zatvara kameru', async () => {
+    await renderScreen();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('tv-pairing-scan'));
+    });
+    const camera = screen.getByTestId('tv-pairing-camera');
+    await act(async () => {
+      camera.props.onBarcodeScanned({
+        data: 'boilercontrol://tv-pair?code=ABCD2345',
+      });
+    });
+    expect(screen.getByTestId('tv-pairing-code').props.value).toBe('ABCD2345');
+    expect(screen.queryByTestId('tv-pairing-camera')).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('tv-pairing-approve'));
+    });
+    await waitFor(() => expect(apiClient.approveTvPairing).toHaveBeenCalledWith('ABCD2345'));
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });

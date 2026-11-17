@@ -96,13 +96,14 @@ export function createTvClient(options: TvClientOptions): AxiosInstance {
 
 /** Rute koje TV smije zvati čitanjem (GET). */
 export const TV_ENDPOINTS = {
-  analytics: '/api/analytics/dashboard',
-  gasAnalysis: '/api/analysis/gas',
-  devices: '/api/notifications/devices',
-  health: '/api/health',
-  pairingSession: '/api/tv-pairing/sessions',
+  // API_BASE_URL završava sa `/api`; ostale putanje zato su relativne tom prefiksu.
+  analytics: '/analytics/dashboard',
+  gasAnalysis: '/analysis/gas',
+  devices: '/notifications/devices',
+  health: '/health',
+  pairingSession: '/tv-pairing/sessions',
   /// Najnovije TV izdanje — samo za obavijest, TV ne instalira sam.
-  releaseLatest: '/api/app-releases/latest',
+  releaseLatest: '/app-releases/latest',
 } as const;
 
 /**

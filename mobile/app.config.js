@@ -115,6 +115,15 @@ module.exports = ({ config }) => {
         },
       ],
       [
+        'expo-camera',
+        {
+          cameraPermission: 'Allow Boiler Control to scan a TV pairing QR code.',
+          microphonePermission: false,
+          recordAudioAndroid: false,
+          barcodeScannerEnabled: true,
+        },
+      ],
+      [
         'expo-notifications',
         {
           icon: './assets/new/ic_notification.png',

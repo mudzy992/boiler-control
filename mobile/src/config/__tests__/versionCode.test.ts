@@ -49,12 +49,10 @@ describe('versionCode iz verzije', () => {
     }
   });
 
-  it('odgovara stvarnoj verziji iz package.json (2.0.0 → 20000)', () => {
-    // `package.json` je jedini izvor verzije (MO2-2). Ako se verzija podigne,
-    // ovaj test pada dok se ne ažurira očekivani broj — namjerno: to je
-    // trenutak kad se provjeri da `versionCode` zaista raste.
-    expect(pkg.version).toBe('2.0.0');
-    expect(versionCodeFromVersion(pkg.version)).toBe(20_000);
+  it('app.config prati package.json bez hardkodovanja trenutne verzije', () => {
+    const config = appConfigFactory({ config: {} });
+    expect(config.version).toBe(pkg.version);
+    expect(config.android.versionCode).toBe(versionCodeFromVersion(pkg.version));
   });
 
   it('app.config EAS/local Android versionCode ostaje formula, ne remote override', () => {

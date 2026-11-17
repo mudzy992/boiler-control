@@ -735,6 +735,20 @@ model TvPairingSession {
   /// Telefon koji je odobrio — za reviziju („ko je pustio ovaj TV").
   approvedByDevice String?
 
+  /// Expo push token TV-a, ako ga je TV poslao pri traženju koda.
+  ///
+  /// **Zašto ovdje, a ne kroz `POST /api/notifications/register-token`.**
+  /// TV aplikacija po pravilu radi **samo GET** (izuzetak je uparivanje).
+  /// Registracija tokena kroz notifikacijski kontroler bila bi drugi POST koji
+  /// TV mora napraviti — i to baš onaj koji se zaboravi kad se app premjesti.
+  /// Zato token ide **zajedno sa zahtjevom za kod** (jedini POST koji TV
+  /// smije), a u `UserDevice` ga upisuje **server** pri odobrenju. Poslije
+  /// uparivanja TV više ništa ne piše.
+  ///
+  /// Nije tajna (Expo token je javni identifikator uređaja za push), ali se
+  /// briše kad sesija istekne.
+  tvPushToken String?
+
   @@index([expiresAt])
   @@index([status])
 }

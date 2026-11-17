@@ -53,7 +53,10 @@ export class TvPairingService {
    * Vraća i `expiresAt` u ISO obliku da TV može prikazati odbrojavanje bez
    * računanja na osnovu lokalnog sata (koji na TV-u često nije tačan).
    */
-  async create(deviceLabel?: string): Promise<{
+  async create(
+    deviceLabel?: string,
+    tvPushToken?: string,
+  ): Promise<{
     code: string;
     expiresAt: string;
     pollIntervalMs: number;
@@ -84,6 +87,10 @@ export class TvPairingService {
         codeHint: code.slice(0, 4),
         expiresAt,
         approvedByDevice: deviceLabel ?? null,
+        // Push token ide uz zahtjev za kod jer je ovo JEDINI POST koji TV
+        // smije poslati. Upisuje se u `UserDevice` tek pri odobrenju (v.
+        // `approve()`), pa neupareni TV ne može primati ništa.
+        tvPushToken: tvPushToken ?? null,
       },
     });
 
@@ -244,7 +251,66 @@ export class TvPairingService {
       throw new BadRequestException('Kod više nije aktivan');
     }
 
+    await this.registerTvDevice(userId, session.tvPushToken, deviceLabel);
+
     return { status: 'APPROVED' };
+  }
+
+  /**
+   * Upiši TV kao `UserDevice` da bi dobijao push.
+   *
+   * **Zašto ovdje, a ne da TV sam registruje token.** TV radi samo GET; da bi
+   * dobijao notifikacije morao bi zvati `POST /api/notifications/register-token`
+   * — drugi upis koji TV ne smije. Zato token dolazi uz zahtjev za kod, a
+   * registracija se dešava ovdje, na serveru, kad telefon odobri.
+   *
+   * **Zašto `kind: 'TV'`.** Bez toga bi notifikacija namijenjena TV-u otišla i
+   * na telefon i obrnuto, a korisnik ne bi mogao razlikovati odakle je (v.
+   * `getUserTokens(userId, kind)`).
+   *
+   * **Zašto `upsert` po tokenu, a ne po `userId`.** Isti TV se može ponovo
+   * upariti (nakon odjave ili reinstalacije) — tada token već postoji i treba
+   * ga **reaktivirati**, ne napraviti duplikat. Duplikat znači dvije
+   * notifikacije za isti događaj.
+   *
+   * Greška ovdje **ne smije** oboriti uparivanje: TV je već dobio tokene i
+   * može prikazivati analitiku. Bez push-a je osakaćen, ali upotrebljiv —
+   * zato samo logujemo.
+   */
+  private async registerTvDevice(
+    userId: number,
+    tvPushToken: string | null,
+    deviceLabel?: string,
+  ): Promise<void> {
+    if (!tvPushToken) return;
+
+    try {
+      await this.prisma.userDevice.upsert({
+        where: { expoPushToken: tvPushToken },
+        create: {
+          userId,
+          expoPushToken: tvPushToken,
+          // TV je Android uređaj; `kind` je ono što ga razdvaja od telefona.
+          platform: 'android',
+          kind: 'TV',
+          label: deviceLabel ?? 'Android TV',
+          isActive: true,
+        },
+        update: {
+          userId,
+          kind: 'TV',
+          label: deviceLabel ?? 'Android TV',
+          // Reinstalacija/odjava pa novo uparivanje: token se vraća u pogon.
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `[tv-pairing] TV uređaj nije registrovan za push (korisnik ${userId}): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   /** Korisnik odbija kod. Traži prijavu, da odbijenicu ne može poslati bilo ko. */

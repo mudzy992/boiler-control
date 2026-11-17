@@ -465,6 +465,21 @@
         "properties": {},
         "type": "object"
       },
+      "CreatePairingSessionDTO": {
+        "properties": {
+          "deviceLabel": {
+            "description": "Naziv uređaja koji korisnik vidi u listi uparenih TV-a",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "tvPushToken": {
+            "description": "Expo push token TV-a. Dolazi uz zahtjev za kod jer je ovo jedini POST koji TV smije poslati; server ga upisuje tek kad telefon odobri.",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CreateThermostatDeviceDto": {
         "properties": {
           "alias": {
@@ -5113,6 +5128,16 @@
       "post": {
         "operationId": "TvPairingController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePairingSessionDTO"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Kod, rok i interval anketiranja"

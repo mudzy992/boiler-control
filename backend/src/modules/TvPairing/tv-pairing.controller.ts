@@ -15,6 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../Auth/jwt-auth.guard';
 import { Public } from '../Auth/public.decorator';
+import { CreatePairingSessionDTO } from './dto/create-pairing-session.dto';
 import { TvPairingService } from './tv-pairing.service';
 
 /**
@@ -44,8 +45,11 @@ export class TvPairingController {
   @HttpCode(201)
   @ApiOperation({ summary: 'TV traži kod za uparivanje (bez prijave)' })
   @ApiOkResponse({ description: 'Kod, rok i interval anketiranja' })
-  async create(@Body() body?: { deviceLabel?: string }) {
-    return this.pairing.create(body?.deviceLabel);
+  async create(
+    @Body()
+    body?: CreatePairingSessionDTO,
+  ) {
+    return this.pairing.create(body?.deviceLabel, body?.tvPushToken);
   }
 
   /**

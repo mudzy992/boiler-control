@@ -25,10 +25,12 @@ type Row = Record<string, any>;
 /** Minimalna lažna baza — dovoljna za `where` uslove koje servis koristi. */
 function makeDb() {
   const rows: Row[] = [];
+  const deviceRows: Row[] = [];
   let nextId = 1;
 
   return {
     rows,
+    deviceRows,
     tvPairingSession: {
       create: ({ data }: any) => {
         const row = {
@@ -80,6 +82,26 @@ function makeDb() {
           ),
         ),
     },
+
+    /*
+     * `UserDevice` — TV se registruje za push pri odobrenju (v. `approve()`).
+     * Lažna baza čuva ono što `upsert` traži: jedinstven `expoPushToken` i
+     * reaktivaciju postojećeg reda.
+     */
+    userDevice: {
+      upsert: jest.fn(({ where, create, update }: any): Promise<Row> => {
+        const existing = deviceRows.find(
+          (d) => d.expoPushToken === where.expoPushToken,
+        );
+        if (existing) {
+          Object.assign(existing, update);
+          return Promise.resolve(existing);
+        }
+        const row = { id: deviceRows.length + 1, ...create } as Row;
+        deviceRows.push(row);
+        return Promise.resolve(row);
+      }),
+    },
   };
 }
 
@@ -99,6 +121,95 @@ function makeService() {
   );
   return { service, db, auth, refreshTokens };
 }
+
+/**
+ * Push registracija pri odobrenju.
+ *
+ * **Zašto ovi testovi postoje.** Glavna svrha TV aplikacije su notifikacije, a
+ * TV po pravilu ne smije raditi nijedan POST osim uparivanja. Ako se token ne
+ * upiše ovdje, TV se upari, prikaže analitiku — i **nikad ne dobije
+ * notifikaciju**, bez ijedne greške. To je kvar koji se ne vidi u UI-u.
+ */
+describe('push token TV-a pri odobrenju', () => {
+  const token = 'ExponentPushToken[abcDEF123_-]';
+
+  it('token poslan uz zahtjev za kod upisuje se u UserDevice kad telefon odobri', async () => {
+    const { service, db } = makeService();
+    const { code } = await service.create('TV u dnevnoj', token);
+
+    // Prije odobrenja: token je na sesiji, ali uređaj još ne postoji.
+    expect(db.rows[0].tvPushToken).toBe(token);
+    expect(db.deviceRows).toHaveLength(0);
+
+    await service.approve(7, code, 'TV u dnevnoj');
+
+    expect(db.deviceRows).toHaveLength(1);
+    expect(db.deviceRows[0]).toMatchObject({
+      userId: 7,
+      expoPushToken: token,
+      platform: 'android',
+      // `kind` je ono što razdvaja TV od telefona; bez njega notifikacija
+      // namijenjena TV-u ide i na telefon.
+      kind: 'TV',
+      label: 'TV u dnevnoj',
+      isActive: true,
+    });
+  });
+
+  it('bez tokena uparivanje radi, samo bez push-a', async () => {
+    const { service, db } = makeService();
+    const { code } = await service.create();
+
+    await service.approve(7, code, 'Pixel');
+
+    expect(db.deviceRows).toHaveLength(0);
+    expect(db.rows[0].status).toBe('APPROVED');
+  });
+
+  it('ponovno uparivanje istog TV-a reaktivira uređaj, ne pravi duplikat', async () => {
+    // Duplikat = dvije notifikacije za isti događaj, svaki put sve više.
+    const { service, db } = makeService();
+
+    const first = await service.create('TV', token);
+    await service.approve(7, first.code, 'TV');
+    db.deviceRows[0].isActive = false; // TV je odjavljen
+
+    const second = await service.create('TV', token);
+    await service.approve(7, second.code, 'TV');
+
+    expect(db.deviceRows).toHaveLength(1);
+    expect(db.deviceRows[0].isActive).toBe(true);
+  });
+
+  it('greška pri upisu uređaja NE obara uparivanje', async () => {
+    /*
+     * TV je već dobio tokene i može prikazivati analitiku. Bez push-a je
+     * osakaćen, ali upotrebljiv; ako bismo grešku propustili, korisnik bi
+     * ostao bez uparivanja zbog kvara koji nije njegov.
+     */
+    const { service, db } = makeService();
+    db.userDevice.upsert.mockRejectedValueOnce(new Error('baza je pala'));
+
+    const { code } = await service.create('TV', token);
+    await expect(service.approve(7, code, 'TV')).resolves.toEqual({
+      status: 'APPROVED',
+    });
+
+    const claimed = await service.claim(code);
+    expect(claimed).toMatchObject({ status: 'READY' });
+  });
+
+  it('neupareni TV ne dobija uređaj ni kad je token poslan', async () => {
+    // Token sam po sebi ne smije ništa registrovati — inače bi bilo koji TV
+    // mogao sebi otvoriti push bez odobrenja telefona.
+    const { service, db } = makeService();
+    const { code } = await service.create('TV', token);
+
+    await service.claim(code); // telefon NIJE odobrio
+
+    expect(db.deviceRows).toHaveLength(0);
+  });
+});
 
 describe('TvPairingService', () => {
   it('kod se čuva kao hash, nikad u čistom obliku', async () => {

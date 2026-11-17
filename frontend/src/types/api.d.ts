@@ -1411,6 +1411,15 @@ export interface components {
             roomTargetTemp: number;
         };
         CreateHomeProfileDto: Record<string, never>;
+        CreatePairingSessionDTO: {
+            /** @description Naziv uređaja koji korisnik vidi u listi uparenih TV-a */
+            deviceLabel?: string;
+            /**
+             * @description Expo push token TV-a. Dolazi uz zahtjev za kod jer je ovo jedini POST koji TV smije poslati; server ga upisuje tek kad telefon odobri.
+             * @example ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+             */
+            tvPushToken?: string;
+        };
         CreateThermostatDeviceDto: {
             alias?: string;
             deviceId: string;
@@ -3724,7 +3733,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePairingSessionDTO"];
+            };
+        };
         responses: {
             /** @description Kod, rok i interval anketiranja */
             200: {

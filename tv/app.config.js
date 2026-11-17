@@ -27,6 +27,12 @@ const pkg = require('./package.json');
 const IS_TV = process.env.EXPO_TV === '1';
 
 /**
+ * Statički EAS ID je potreban jer `eas credentials` ne učitava `.env` prije
+ * nego što poveže dinamičku konfiguraciju sa EAS projektom. ID nije tajna.
+ */
+const EAS_PROJECT_ID = '5e53f78e-129d-4505-94f5-880fde2867cc';
+
+/**
  * `major*10000 + minor*100 + patch` — **ista formula** kao mobilna
  * (`mobile/app.config.js`) i backend (`buildNumberFromVersion`), da broj u APK-u
  * i broj koji server izvede budu isti.
@@ -77,10 +83,10 @@ const base = {
   ],
   extra: {
     eas: {
-      // TV ima svoj slug (`boiler-control-tv`) i mora koristiti svoj EAS
-      // project ID, ne mobilni. ID nije tajna; dolazi iz tv/.env lokalno i
-      // EAS production environmenta za cloud/local build config.
-      projectId: process.env.EAS_PROJECT_ID ?? '',
+      // TV ima svoj slug (`boiler-control-tv`) i svoj EAS project ID,
+      // različit od mobilnog. Mora biti statičan zbog dynamic app config:
+      // `eas credentials` ga ne može upisati automatski.
+      projectId: EAS_PROJECT_ID,
     },
   },
 };

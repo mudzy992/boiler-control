@@ -293,10 +293,8 @@ check_eas_project() {
   ' 2>/dev/null || true)"
 
   if [ -z "$project_id" ]; then
-    warn "TV nema EAS project ID. EAS TV build ne može početi dok TV projekat nije povezan."
-    say "    U tv/ pokreni: npx eas-cli init"
-    say "    U tv/.env dodaj EAS_PROJECT_ID=<dobijeni ID> (ne EXPO_PUBLIC_EAS_PROJECT_ID)."
-    say "    Dodaj isti ID u EAS production environment za cloud/local build config."
+    warn "TV app.config nije povezan sa EAS project ID-jem."
+    say "    Poveži tv/app.config.js extra.eas.projectId sa TV ID-jem iz eas init."
     return 1
   fi
 }

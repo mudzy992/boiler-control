@@ -55,6 +55,9 @@ describe('build-menu.sh', () => {
     const source = require('node:fs').readFileSync(SCRIPT, 'utf8');
     expect(source).toMatch(/10\) EAS production APK/);
     expect(source).toMatch(/11\) EAS production APK/);
+    expect(source).toMatch(/12\) EAS production APK/);
+    expect(source).toMatch(/13\) EAS production APK/);
+    expect(source).toMatch(/--local --output/);
     expect(
       require(path.join(REPO_ROOT, 'mobile/eas.json')).build.production.android
         .buildType,

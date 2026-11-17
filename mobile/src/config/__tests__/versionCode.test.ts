@@ -5,18 +5,25 @@
  * || 1`, a `app.json` polje `versionCode` ne sadrži. Znači je svaki build dobijao
  * `1`:
  *
- *   EAS bi upisao (`autoIncrement: true`):  1, 2, 3, 4, 5 …
- *   app.config.js je stvarno davao:         1, 1, 1, 1, 1
+ *   stari EAS autoIncrement davao: 1, 2, 3, 4, 5 …
+ *   stari app.config.js davao:     1, 1, 1, 1, 1
  *
- * `eas.json` postavka je bila mrtva jer je `app.config.js` pregazi.
+ * Verzija EAS remote source-a je kasnije pokazala drugi problem: EAS brojač
+ * `22 → 23` nije pratio formulu `20200 → 20201`. Production sada koristi
+ * local source bez EAS autoIncrementa, tako da i Gradle i EAS čitaju isti broj
+ * iz semvera.
  *
  * **Zašto je to važno i kad nijedan današnji ekran ne čita `buildNumber`.**
- * Android traži strogo veći `versionCode` za nadogradnju iste `version`, a
- * `expo-updates` na `appVersion` runtime policy ga koristi da razlikuje buildove
- * iste verzije. Sa stalnim 1 drugi APK se odbija kao „već instalirano".
+ * Android traži strogo veći `versionCode` za nadogradnju. `expo-updates` na
+ * `appVersion` runtime policy koristi `expo.version` (semver), odvojeno od tog
+ * internog Android broja. Pogrešan/ponovljen `versionCode` može blokirati
+ * instalaciju nadogradnje.
  */
 
 const pkg = require('../../../package.json');
+// Dynamic Expo config is CommonJS and must be invoked with the current test env.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const appConfigFactory = require('../../../app.config.js');
 
 /** Isti račun kao u `app.config.js` i kao `buildNumberFromVersion` u backendu. */
 function versionCodeFromVersion(version: string): number {
@@ -48,6 +55,18 @@ describe('versionCode iz verzije', () => {
     // trenutak kad se provjeri da `versionCode` zaista raste.
     expect(pkg.version).toBe('2.0.0');
     expect(versionCodeFromVersion(pkg.version)).toBe(20_000);
+  });
+
+  it('app.config EAS/local Android versionCode ostaje formula, ne remote override', () => {
+    const oldValue = process.env.APP_VERSION_CODE;
+    process.env.APP_VERSION_CODE = '23';
+    try {
+      const config = appConfigFactory({ config: {} });
+      expect(config.android.versionCode).toBe(versionCodeFromVersion(pkg.version));
+    } finally {
+      if (oldValue === undefined) delete process.env.APP_VERSION_CODE;
+      else process.env.APP_VERSION_CODE = oldValue;
+    }
   });
 
   it('NE vraća 1 za novu verziju (stari kvar)', () => {

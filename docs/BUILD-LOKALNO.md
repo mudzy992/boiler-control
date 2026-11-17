@@ -45,7 +45,7 @@ Prije svakog builda (2, 3, 6, 7, 10–13) meni pita **kako dignuti verziju**:
 | `patch` | `2.0.0` → `2.0.1` | ispravka |
 | `minor` | `2.0.1` → `2.1.0` | nova funkcionalnost (patch se resetuje) |
 | `major` | `2.1.0` → `3.0.0` | velika promjena |
-| bez dizanja | ostaje ista | ponovni build iste verzije |
+| bez dizanja | ostaje ista | rebuild bez većeg `versionCode`-a; Android ga ne tretira kao novu nadogradnju |
 
 ## Šta se mijenja
 
@@ -56,7 +56,7 @@ Prije svakog builda (2, 3, 6, 7, 10–13) meni pita **kako dignuti verziju**:
 | `versionCode` | **ne** | izvodi ga `app.config.js` iz `version` |
 | `app.json` | ne | nema `version` od MO2-2 |
 
-Za EAS profile je build broj dodatno upravljan EAS-om (`appVersionSource: remote`, `autoIncrement: true`); package verziju meni i dalje diže prije pokretanja builda.
+EAS profili koriste `appVersionSource: local` i `autoIncrement: false`; tako lokalni Gradle i EAS dobijaju isti `versionCode` iz `package.json`. Meni diže verziju prije builda. U aplikaciji se u Postavke prikazuje semver (`versionName`, npr. `2.2.1`); Androidov `versionCode` (`20201`) je interni broj za nadogradnje i ne prikazuje se kao verzija korisniku.
 
 Formula `versionCode`-a je ista na obje aplikacije i na backendu:
 **`major*10000 + minor*100 + patch`** (`2.1.0` → `20100`).

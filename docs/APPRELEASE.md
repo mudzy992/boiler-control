@@ -26,9 +26,9 @@ Razlog za jedan izvor: prije MO2-2 postojala su **tri** broja koja se ne slažu
 
 1. **`mobile/package.json` → `version`** — jedina promjena koja je potrebna.
    `app.config.js` je čita i postavlja `expo.version` i `android.versionCode`.
-2. `eas.json` → `production.autoIncrement: true` **sam po sebi ne radi ništa**
-   dok `app.config.js` postavlja `versionCode` (§3) — ali od sada `versionCode`
-   raste zajedno sa verzijom, pa je uslov Androida ispunjen.
+2. Trenutno `eas.json` koristi `appVersionSource: local` i
+   `production.autoIncrement: false`: meni digne semver, a `app.config.js`
+   izvodi `versionCode` iz njega. EAS ne održava zaseban brojač (§3).
 3. Objava na server ide kroz **admin dashboard** (`POST /api/app-releases`), ne
    kroz EAS update kanal. Detalji u §2.
 4. Ne dirati `app.json` — nema `version`.
@@ -131,22 +131,32 @@ EAS bi upisao (autoIncrement: true):  1, 2, 3, 4, 5
 app.config.js je stvarno davao:       1, 1, 1, 1, 1
 ```
 
-`eas.json` postavka je bila mrtva jer je `app.config.js` pregazi. Android traži
-**strogo veći** `versionCode` za nadogradnju iste `version`, a `expo-updates` na
-`appVersion` runtime policy ga koristi da razlikuje buildove iste verzije.
+`appVersionSource: remote` i `autoIncrement: true` su se pokazali neusklađenim
+sa aplikacionom formulom. Stvarni EAS local-build log je pokazao da EAS
+inkrementira svoj udaljeni brojač `22 → 23`, dok je build meni za istu promjenu
+verzije prikazao `20200 → 20201`. Remote izvor je zato davao drugi Android
+`versionCode` od lokalnog Gradle builda i od broja koji admin izvodi iz APK
+konfiguracije.
 
-Sada: `config.android?.versionCode` → `APP_VERSION_CODE` (EAS remote) →
-izvedeno iz `pkg.version` **istom formulom** kao `buildNumberFromVersion` u
-backendu:
+**Trenutna politika:** `mobile/eas.json` i `tv/eas.json` koriste
+`appVersionSource: local` i `production.autoIncrement: false`. Build meni
+mijenja semver u `package.json`; app config izvodi Android `versionCode` iz te
+iste verzije. EAS ne inkrementira drugi, nezavisan brojač.
 
-| verzija | `versionCode` |
-| ------- | ------------- |
-| 2.0.0   | 20000         |
-| 2.0.1   | 20001         |
-| 2.1.0   | 20100         |
-| 3.0.0   | 30000         |
+| verzija | Android `versionCode` (Gradle + EAS) |
+| ------- | ------------------------------------ |
+| 2.0.0   | 20000                                |
+| 2.0.1   | 20001                                |
+| 2.1.0   | 20100                                |
+| 3.0.0   | 30000                                |
 
-Provjereno: bez env → `20000`; `APP_VERSION_CODE=7` → `7`.
+Korisniku se u Postavke prikazuje `expo.version` / Android `versionName` (npr.
+`2.2.1`). `versionCode` (`20201`) je Androidov interni broj za prihvatanje
+nadogradnji, ne verzija prikazana u UI-ju.
+
+Poslije promjene je `APP_VERSION_CODE` namjerno uklonjen iz mobilnog configa:
+ni EAS env varijabla ni ručno zadana vrijednost ne smiju razići APK kod sa
+semverom.
 
 ## 4. Šta je provjereno i **ispravno** (ne dirati)
 
@@ -166,9 +176,10 @@ Provjereno: bez env → `20000`; `APP_VERSION_CODE=7` → `7`.
   zip-u sa stvarnim sadržajem `app.config` i na izvoru `expo-constants` gradle
   zadatka. Prvi upload kroz dashboard treba potvrditi da admin vidi
   `2.0.0` bez ručnog unosa.
-- **EAS `remote` verzija** (`appVersionSource: 'remote'`) živi na EAS serveru.
-  Ako je tamo `versionCode` već visok (npr. 14), a `package.json` kaže `2.0.0`,
-  novi build bi dobio **20000** — veći, dakle valjan za nadogradnju, ali skok
-  nije monotono nastavljanje. Ako je to nepoželjno, postaviti `APP_VERSION_CODE`.
+- **Postojeća EAS remote verzija** na serveru nije više izvor za nove buildove.
+  Nakon prelaska na `appVersionSource: local`, formula daje `20200+`, što je
+  veće od ranijeg remote broja (`23` u izmjerenom buildu); stari EAS brojač se
+  ignoriše. Prije prihvatanja budućeg `versionCode`-a većeg od Android limita
+  treba provjeriti semver formulu i instaliranu bazu korisnika.
 - **Nema automatskog podizanja verzije u CI-ju.** Ne postoji skripta ni workflow
   koji mijenja `package.json`; podizanje je ručno (§1).

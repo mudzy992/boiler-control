@@ -68,6 +68,19 @@ describe('F11 — Android SDK verzije u app.config.js', () => {
     expect(appJson.expo.android.edgeToEdgeEnabled).toBeUndefined();
   });
 
+  it('uključuje QR skeniranje uz kameru bez audio dozvole', () => {
+    const config = resolveConfig() as { plugins: unknown[] };
+    const camera = config.plugins.find(
+      (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-camera',
+    ) as [string, { barcodeScannerEnabled: boolean; microphonePermission: boolean; recordAudioAndroid: boolean }] | undefined;
+    expect(camera?.[1]).toEqual({
+      cameraPermission: 'Allow Boiler Control to scan a TV pairing QR code.',
+      microphonePermission: false,
+      recordAudioAndroid: false,
+      barcodeScannerEnabled: true,
+    });
+  });
+
   it('zadržava odluku vlasnika o R8 i jednoj ABI', () => {
     const android = buildPropertiesAndroid();
     expect(android.enableMinifyInReleaseBuilds).toBe(false);

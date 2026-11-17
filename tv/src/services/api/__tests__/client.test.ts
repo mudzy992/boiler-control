@@ -1,5 +1,10 @@
 import axios from 'axios';
-import { createTvClient, TvWriteBlockedError } from '../client';
+import {
+  createTvClient,
+  requestPairingCode,
+  TV_ENDPOINTS,
+  TvWriteBlockedError,
+} from '../client';
 
 /**
  * **Ovo je najvažniji test TV aplikacije.**
@@ -50,17 +55,35 @@ describe('TV klijent je samo za čitanje', () => {
     mockedAxios.create.mockClear();
   });
 
-  it('GET prolazi', async () => {
+  it('GET rute su relativne API base-u koji već završava sa /api', async () => {
     const client = createTvClient({
-      baseUrl: 'https://api.example.com',
+      baseUrl: 'https://api.example.com/api',
       getToken: () => null,
     });
     const { onFulfilled } = registeredRequestInterceptor();
 
-    const config = { method: 'get', url: '/api/gas/analysis', headers: new Headers0() };
+    expect(TV_ENDPOINTS.pairingSession).toBe('/tv-pairing/sessions');
+    expect(TV_ENDPOINTS.gasAnalysis).toBe('/analysis/gas');
+    const config = { method: 'get', url: TV_ENDPOINTS.gasAnalysis, headers: new Headers0() };
     // Interceptor vraća config sinhrono kad zahtjev prolazi (Promise samo za odbijene).
     expect(onFulfilled(config)).toBe(config);
     expect(client).toBeDefined();
+  });
+
+  it('POST kod za uparivanje cilja /api/tv-pairing/sessions tačno jednom', async () => {
+    const response = { data: { code: 'ABCD2345', expiresAt: '2030-01-01T00:00:00.000Z' } };
+    const post = jest.spyOn(axios, 'post').mockResolvedValue(response as never);
+
+    await expect(
+      requestPairingCode('https://api.example.com/api', { deviceLabel: 'Android TV' }),
+    ).resolves.toEqual(response.data);
+
+    expect(post).toHaveBeenCalledWith(
+      'https://api.example.com/api/tv-pairing/sessions',
+      { deviceLabel: 'Android TV' },
+      { timeout: 15_000 },
+    );
+    post.mockRestore();
   });
 
   it.each(['post', 'put', 'patch', 'delete'])('%s je odbijen prije slanja', async (method) => {
@@ -76,7 +99,7 @@ describe('TV klijent je samo za čitanje', () => {
     createTvClient({ baseUrl: 'https://api.example.com', getToken: () => null });
     const { onFulfilled } = registeredRequestInterceptor();
 
-    expect(onFulfilled({ url: '/api/health', headers: new Headers0() })).toBeDefined();
+    expect(onFulfilled({ url: '/health', headers: new Headers0() })).toBeDefined();
   });
 
   it('post/put/patch/delete padaju bučno, ne tiho', () => {

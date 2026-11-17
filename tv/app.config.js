@@ -7,7 +7,8 @@
  * 1. `EXPO_TV=1` mora uključiti TV plugin pri `prebuild` — bez toga se
  *    generiše obična Android aplikacija koja se **ne pojavljuje** na Android
  *    TV početnom ekranu (nema `LEANBACK_LAUNCHER`).
- * 2. `projectId` za push dolazi iz okoline (EAS), ne iz repoa.
+ * 2. `projectId` za push je statički vezan za TV EAS projekat jer dinamični
+ *    config CLI ne može sam zapisati tu vrijednost.
  * 3. `android.softwareKeyboardLayoutMode` mora biti `pan`: TV prikazuje
  *    tastaturu preko cijelog ekrana i bez ovoga polje za kod ostane ispod nje.
  *
@@ -52,16 +53,23 @@ const base = {
   orientation: 'landscape',
   // TV nema status bar ni navigaciju — `hidden` je jedini ispravan izbor.
   userInterfaceStyle: 'dark',
-  backgroundColor: '#0B1418',
+  backgroundColor: '#05070b',
   scheme: 'boilercontrol',
-  icon: './assets/icon.png',
+  // Ista aplikacijska ikonica kao mobilna, uz iste Android adaptive layers.
+  icon: './assets/boiler-control-icon-master.png',
   splash: {
-    backgroundColor: '#0B1418',
+    backgroundColor: '#05070b',
     resizeMode: 'contain',
-    image: './assets/icon.png',
+    image: './assets/boiler-control-icon-master.png',
   },
   android: {
     package: 'com.boilercontrol.tv',
+    adaptiveIcon: {
+      foregroundImage: './assets/ic_launcher_foreground.png',
+      backgroundImage: './assets/ic_launcher_background.png',
+      monochromeImage: './assets/ic_launcher_monochrome.png',
+      backgroundColor: '#ffffff',
+    },
     // Izvedeno iz `pkg.version`, nikad fiksno (v. komentar iznad).
     versionCode: versionCodeFromVersion(pkg.version),
     // Firebase Android app mora biti registrovan baš kao com.boilercontrol.tv.

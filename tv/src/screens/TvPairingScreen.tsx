@@ -18,7 +18,7 @@ import {
   type ClaimResponse,
   type PairingState,
 } from '../lib/pairing';
-import { colors, spacing } from '../theme';
+import { colors, fonts, spacing } from '../theme';
 
 /**
  * Ekran za uparivanje — prvo što korisnik vidi na TV-u.
@@ -91,11 +91,15 @@ export function TvPairingScreen({
         code: created.code,
         expiresAt: new Date(created.expiresAt).getTime(),
       });
-    } catch {
-      setState({
-        phase: 'error',
-        message: 'Nije moguće dobiti kod. Provjeri vezu i pokušaj ponovo.',
-      });
+    } catch (error) {
+      const status = (error as { response?: { status?: unknown } })?.response?.status;
+      const message =
+        typeof status === 'number'
+          ? status === 404
+            ? 'API nije pronašao rutu za uparivanje (HTTP 404). Ažuriraj TV aplikaciju i pokušaj ponovo.'
+            : `API je odgovorio greškom HTTP ${status}. Provjeri konfiguraciju i pokušaj ponovo.`
+          : 'TV se nije mogao povezati s API-jem. Provjeri Wi-Fi i pokušaj ponovo.';
+      setState({ phase: 'error', message });
     } finally {
       setBusy(false);
     }
@@ -195,8 +199,8 @@ export function TvPairingScreen({
         </View>
         <Text style={styles.code}>{formatCodeForTv(state.code)}</Text>
         <Text style={styles.hint}>
-          Skeniraj kod aplikacijom na telefonu ili prepiši broj iznad i odobri
-          prijavu. Kod vrijedi 5 minuta.
+          Na telefonu otvori Postavke → Uređaji → Poveži TV. Skeniraj QR kod
+          kamerom ili ručno unesi kod iznad. Kod vrijedi 5 minuta.
         </Text>
         <Countdown expiresAt={state.expiresAt} />
       </Centered>
@@ -275,26 +279,28 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 42,
-    fontWeight: '600',
+    fontFamily: fonts.sansSemiBold,
     textAlign: 'center',
   },
   hint: {
     color: colors.textMuted,
     fontSize: 22,
+    fontFamily: fonts.sans,
     textAlign: 'center',
     maxWidth: 900,
     lineHeight: 32,
   },
   code: {
-    color: colors.text,
+    color: colors.accent,
     fontSize: 64,
-    fontWeight: '700',
+    fontFamily: fonts.monoSemiBold,
     letterSpacing: 8,
     fontVariant: ['tabular-nums'],
   },
   countdown: {
     color: colors.textMuted,
     fontSize: 26,
+    fontFamily: fonts.mono,
     fontVariant: ['tabular-nums'],
   },
   qrBox: {
@@ -303,11 +309,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   action: {
-    borderRadius: 12,
+    borderRadius: 4,
+    backgroundColor: colors.accent,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  actionLabel: { color: colors.accent, fontSize: 28, fontWeight: '600' },
+  actionLabel: { color: colors.onAccent, fontSize: 28, fontFamily: fonts.sansSemiBold },
 });
 
 export { PAIRING_LOCAL_TIMEOUT_MS };

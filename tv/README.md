@@ -10,6 +10,7 @@ Aplikacija za TV: prijava uparivanjem sa telefonom, jedan ekran analitike i
 | TV **ne mijenja** stanje (samo GET) | interceptor u `src/services/api/client.ts` + uklonjene `post`/`put`/`patch`/`delete` | `src/services/api/__tests__/client.test.ts` |
 | notifikacije su **sistemske**, rade i u pozadini | FCM `notification` payload + `setNotificationHandler` | v. „Notifikacije" |
 | prijavu **odobrava telefon**, TV nikad ne vidi lozinku | `POST /api/tv-pairing/sessions` + QR/kod | `src/lib/__tests__/pairing.test.ts` |
+| TV mrežne rute se ne dupliraju | `EXPO_PUBLIC_API_URL` već završava sa `/api`; klijent dodaje samo putanju modula | `src/services/api/__tests__/client.test.ts` |
 
 **Jedini POST koji TV šalje** je zahtjev za kod za uparivanje. Njime putuje i
 push token — zato što bi registracija tokena inače bila drugi POST. Server
@@ -44,6 +45,12 @@ peer zahtjeve paketa koji traže običan `react-native`.
 |---|---|
 | `EXPO_PUBLIC_API_URL` | adresa API-ja (razvoj: `http://<ip-racunara>:3000`) |
 | `EXPO_TV=1` | uključuje TV plugin i TV manifest |
+
+## Uparivanje s telefonom
+
+Na TV-u izaberi **Upari TV**. U mobilnoj aplikaciji otvori **Postavke → Uređaji → Poveži TV**, pa skeniraj TV QR kod kamerom ili ručno unesi osam znakova. Telefon odobrava prijavu; TV nikad ne traži lozinku. QR skener i unos koda vode u isti approval tok.
+
+TV koristi API bazu koja već završava sa `/api` (`EXPO_PUBLIC_API_URL`). Zbog toga se rute u TV klijentu pišu bez ponovnog `/api` prefiksa — u suprotnom bi zahtjevi išli na `/api/api/...` i vraćali 404.
 
 ## Notifikacije
 

@@ -49,6 +49,21 @@ function setup(overrides: Partial<React.ComponentProps<typeof TvPairingScreen>> 
 }
 
 describe('TV uparivanje', () => {
+  it('prikazuje HTTP status ako backend odbije zahtjev za kod', async () => {
+    const { props } = setup({
+      requestCode: jest.fn(async () => {
+        throw { response: { status: 404 } };
+      }),
+    });
+    await render(<TvPairingScreen {...props} />);
+    await act(async () => {
+      fireEvent.press(screen.getByText('Upari TV'));
+    });
+    expect(
+      screen.getByText(/API nije pronašao rutu za uparivanje \(HTTP 404\)/),
+    ).toBeTruthy();
+  });
+
   it('prikazuje kod i QR koji nosi deep link, ne URL', async () => {
     const { props } = setup();
     // RTL 14: `render` je asinhron — bez `await` svaki `screen.*` padne sa

@@ -34,7 +34,7 @@ jest.mock('../../hooks/useTranslation', () => ({
 }));
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: jest.fn() }),
+  useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
 jest.mock('expo-notifications', () => ({
@@ -69,6 +69,7 @@ jest.mock('../../services/api/client', () => ({
 type Mode = 'light' | 'dark';
 
 const EXPORT_URI = 'file:///cache/downloads/account-export-v1-test.json';
+const mockNavigate = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -115,6 +116,16 @@ describe('Settings nativewind', () => {
 });
 
 describe('Settings NativeWind interactions', () => {
+  it('shows a clear TV pairing entry and opens its screen', async () => {
+    const result = await screenTree('dark');
+    expect(result.getByText('settings.devicesSection')).toBeTruthy();
+    expect(result.getByText('settings.connectTv')).toBeTruthy();
+    expect(result.getByText('settings.connectTvDesc')).toBeTruthy();
+    await fireEvent.press(result.getByTestId('settings-connect-tv'));
+    expect(mockNavigate).toHaveBeenCalledWith('TvPairing');
+    await result.unmount();
+  });
+
   it('uses the shared color-mode toggle', async () => {
     const toggleColorMode = jest.fn();
     const result = await screenTree('light', toggleColorMode);

@@ -2,7 +2,8 @@
  * Konfiguracija TV aplikacije.
  *
  * Base URL dolazi iz okoline jer TV nema `localhost`: u razvoju je to adresa
- * računara u lokalnoj mreži, u produkciji javni API. Ugraditi URL u kod
+ * računara u lokalnoj mreži, u produkciji javni API. URL uključuje `/api`;
+ * endpointi su relativne putanje bez tog prefiksa. Ugraditi dev URL u kod
  * značilo bi da se razvojna verzija ne može pokrenuti na TV-u.
  */
 
@@ -17,7 +18,7 @@ export const APP_VERSION: string =
   require('expo-constants').default?.expoConfig?.version ?? '';
 
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'https://api.boiler-control.ba';
+  process.env.EXPO_PUBLIC_API_URL ?? 'https://api.boiler-control.ba101.top/api';
 
 /**
  * Prevod za natpise metrika.

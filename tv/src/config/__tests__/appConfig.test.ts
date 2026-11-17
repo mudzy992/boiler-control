@@ -38,7 +38,35 @@ describe('app.config.js', () => {
     // TV visi na zidu: portret nema smisla, a svijetli ekran je reflektor.
     const config = load();
     expect(config.orientation).toBe('landscape');
-    expect(config.backgroundColor).toBe('#0B1418');
+    expect(config.backgroundColor).toBe('#05070b');
+  });
+
+  it('API base zadano odgovara javnom /api endpointu', () => {
+    const { API_BASE_URL } = require('../../config');
+    expect(API_BASE_URL).toMatch(/^https:\/\/api\.boiler-control\.ba101\.top\/api$/);
+  });
+
+  it('koristi brand boje iz mobilne dark teme', () => {
+    const { colors } = require('../../theme');
+    expect(colors).toMatchObject({
+      background: '#05070b',
+      surface: '#0b0f16',
+      raised: '#111723',
+      text: '#e8edf4',
+      accent: '#ff6b3d',
+      fault: '#f87171',
+    });
+  });
+
+  it('koristi istu aplikacijsku i adaptive ikonicu kao mobilna', () => {
+    const config = load();
+    expect(config.icon).toBe('./assets/boiler-control-icon-master.png');
+    expect(config.android.adaptiveIcon).toEqual({
+      foregroundImage: './assets/ic_launcher_foreground.png',
+      backgroundImage: './assets/ic_launcher_background.png',
+      monochromeImage: './assets/ic_launcher_monochrome.png',
+      backgroundColor: '#ffffff',
+    });
   });
 
   it('koristi Firebase config za registrovani TV package ID', () => {

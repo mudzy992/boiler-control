@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
+import { useFonts } from 'expo-font';
 
 import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { TvPairingScreen } from './src/screens/TvPairingScreen';
@@ -47,6 +48,14 @@ const POLL_INTERVAL_MS = 60_000;
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    IBMPlexSans_400Regular: require('./assets/IBMPlexSans_400Regular.ttf'),
+    IBMPlexSans_500Medium: require('./assets/IBMPlexSans_500Medium.ttf'),
+    IBMPlexSans_600SemiBold: require('./assets/IBMPlexSans_600SemiBold.ttf'),
+    IBMPlexSans_700Bold: require('./assets/IBMPlexSans_700Bold.ttf'),
+    IBMPlexMono_400Regular: require('./assets/IBMPlexMono_400Regular.ttf'),
+    IBMPlexMono_600SemiBold: require('./assets/IBMPlexMono_600SemiBold.ttf'),
+  });
   const [session, setSession] = useState<StoredSession | null>(null);
   const [booted, setBooted] = useState(false);
   const [analysis, setAnalysis] = useState<Record<string, unknown> | null>(null);
@@ -173,7 +182,7 @@ export default function App() {
     setSession(paired);
   }, []);
 
-  if (!booted) return null;
+  if (!booted || !fontsLoaded) return null;
 
   return (
     <SafeAreaProvider>

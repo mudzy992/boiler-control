@@ -1,13 +1,16 @@
 # Boiler Control TV (Android TV / Google TV)
 
-Aplikacija za TV: prijava uparivanjem sa telefonom, jedan ekran analitike i
-**sistemske notifikacije** o kvarovima.
+TV aplikacija za pregled doma: početna, analitika/zdravlje, grijanje, plin,
+profil, obavijesti i raspored. Prijava se odobrava telefonom; svi ekrani nakon
+uparivanja su read-only. Podaci dolaze iz postojećih GET API-ja, a TV prikazuje
+stvarne vrijednosti bez demo mjerenja.
 
 ## Tri pravila koja se ne krše
 
 | pravilo | gdje je sprovedeno | test |
 |---|---|---|
-| TV **ne mijenja** stanje (samo GET) | interceptor u `src/services/api/client.ts` + uklonjene `post`/`put`/`patch`/`delete` | `src/services/api/__tests__/client.test.ts` |
+| TV **ne mijenja** stanje (samo GET nakon uparivanja) | interceptor u `src/services/api/client.ts` + uklonjene `post`/`put`/`patch`/`delete` | `src/services/api/__tests__/client.test.ts` |
+| Daljinska navigacija i fokus su prvi razred | glavni tabovi, podtabovi, čitljiv fokus, animirani prelazi | TV ekran testovi + ručna provjera na uređaju |
 | notifikacije su **sistemske**, rade i u pozadini | FCM `notification` payload + `setNotificationHandler` | v. „Notifikacije" |
 | prijavu **odobrava telefon**, TV nikad ne vidi lozinku | `POST /api/tv-pairing/sessions` + QR/kod | `src/lib/__tests__/pairing.test.ts` |
 | TV mrežne rute se ne dupliraju | `EXPO_PUBLIC_API_URL` već završava sa `/api`; klijent dodaje samo putanju modula | `src/services/api/__tests__/client.test.ts` |
@@ -18,6 +21,23 @@ upisuje token u `UserDevice` tek kad telefon odobri.
 
 > **Najkraći put:** `./scripts/build/build-menu.sh` (opcije 5–8). Skripta digne
 > verziju i popravi `package-lock.json` sama. Detalji: `docs/BUILD-LOKALNO.md`.
+
+## Tihe nadogradnje unutar aplikacije
+
+TV koristi `expo-updates` na EAS `production` kanalu. Kad se objavi kompatibilna
+JavaScript/UI nadogradnja, aplikacija je u pozadini provjeri, preuzme i tiho
+primijeni ponovnim pokretanjem svog procesa — bez linka, browsera, ručnog APK-a
+ili sistemskog install dijaloga. Objavljivanje ide na isti kanal:
+
+```bash
+cd tv && eas update --channel production --message "Opis promjene"
+```
+
+OTA ažuriranje važi za JavaScript, stilove i assete. Promjena native modula,
+Android dozvola ili konfiguracije i dalje zahtijeva novi APK. Android ne
+odobrava tihu instalaciju van-prodavnica za običnu aplikaciju; za nju je potreban
+system/device-owner privilegij. U tim slučajevima novi APK mora se isporučiti
+putem upravljanog Play kanala ili instalirati uz Androidovu potvrdu.
 
 ## Pokretanje
 
@@ -64,7 +84,7 @@ TV registracija mora postojati i u Firebaseu, sa package ID-jem tačno `com.boil
 2. Kopiraj fajl u `tv/assets/google-services.json`. Build meni provjerava da fajl postoji i da sadrži client `com.boilercontrol.tv`.
 3. TV EAS projekat već je kreiran. Njegov ID (`5e53f78e-129d-4505-94f5-880fde2867cc`) je sada postavljen direktno u `tv/app.config.js`: to je javni project ID, ne tajna. Pošto je config dinamičan, `eas init` ne može ga upisati sam; nema potrebe da ga dodaješ u `.env` ili EAS environment. `EXPO_PUBLIC_API_URL` je već podešen u `tv/eas.json` za production build.
 4. U Firebase/Google Cloudu uključi Firebase Cloud Messaging API v1 i napravi service-account key s FCM slanjem. U EAS TV projektu pokreni `cd tv && npx eas-cli credentials --platform android` i dodaj taj ključ kao **FCM V1 service-account credential**. Ovo je privatni ključ: ne stavljati u Git, `.env` ni chat. Ne mijenja Android signing keystore.
-5. Pokreni TV EAS build iz menija (11 cloud ili 13 local). Lokalni build traži EAS prijavu, JDK i Android SDK. TV namjerno nema EAS Update channel ni `expo-updates`: ažuriranje ostaje samo provjera verzije i obavijest, bez OTA preuzimanja/instalacije.
+5. Pokreni TV EAS build iz menija (11 cloud ili 13 local). Lokalni build traži EAS prijavu, JDK i Android SDK. Production profil koristi EAS `production` kanal; OTA isporuka radi nakon prvog APK-a izgrađenog s `expo-updates` konfiguracijom.
 
 ### Tok poruke i Android kanali
 
@@ -82,7 +102,7 @@ TV registracija mora postojati i u Firebaseu, sa package ID-jem tačno `com.boil
 ## Testovi
 
 ```bash
-npm test          # jest, 52 testa u 7 suita
+npm test          # Jest testovi za API, uparivanje, OTA konfiguraciju i TV ekrane
 npm run typecheck
 ```
 
@@ -92,11 +112,12 @@ mjerenje nije nula, da istekao kod ne čeka vječno.
 
 ## Šta TV namjerno NE radi
 
-- **Ne upravlja kotlom.** Nema režima, temperature, ni rasporeda. To ostaje na
-  telefonu — a i da želi, klijent bi odbio zahtjev.
-- **Nema navigaciju.** Jedan ekran; više ekrana traži uputstvo za daljinski.
-- **Ne prikazuje sve metrike.** Šest najviše (`MAX_TV_METRICS`), sa natpisom
-  koliko ih je još u telefonu.
+- **Ne upravlja kotlom** i ne mijenja raspored. To ostaje na telefonu; API
+  klijent bi odbio svaki takav zahtjev.
+- **Ne kreira i ne mijenja podatke**: nema dodavanja očitanja, profilnih
+  izmjena niti označavanja obavijesti kao pročitanih.
+- **Ne izmišlja mjerenja.** Prazno ili nedostupno polje ostaje označeno kao
+  nedostupno; istorijski graf se crta samo iz stvarnih očitanja.
 
 ## Nije provjereno u ovom okruženju
 

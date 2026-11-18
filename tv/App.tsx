@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { Animated, Easing, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import { useFonts } from 'expo-font';
@@ -31,10 +31,11 @@ import {
   prepareNotifications,
 } from './src/services/notifications';
 import { createSessionStore, type StoredSession } from './src/lib/session';
-import { newVersionAvailable, type TvLatestRelease } from './src/lib/update';
+import * as Updates from 'expo-updates';
 import type { ClaimResponse } from './src/lib/pairing';
-import { API_BASE_URL, APP_VERSION } from './src/config';
+import { API_BASE_URL } from './src/config';
 import { colors } from './src/theme';
+import { TvAmbientBackground } from './src/components/TvUI';
 
 const sessionStore = createSessionStore({
   read: () => SecureStore.getItemAsync('tv.session.v1'),
@@ -47,7 +48,7 @@ const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 const emptyData: TvDashboardData = {
   dashboard: null, analysis: null, readings: [], health: null, heatingStatus: [],
   heatingSummary: null, heatingEvents: [], devices: [], programs: [], profile: null, homeProfile: null,
-  notifications: [], updatedAt: null, loading: false, error: null, release: null,
+  notifications: [], updatedAt: null, loading: false, error: null,
 };
 
 function asRecord(value: unknown): AnyRecord | null {
@@ -68,6 +69,20 @@ function asList(value: unknown): AnyRecord[] {
 }
 function dataFrom(response: any) { return response?.data; }
 
+function TvPageTransition({ children, transitionKey }: { children: React.ReactNode; transitionKey: string }) {
+  const progress = React.useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    progress.setValue(0);
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress, transitionKey]);
+  return <Animated.View style={{ flex: 1, opacity: progress, transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>{children}</Animated.View>;
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     IBMPlexSans_400Regular: require('./assets/IBMPlexSans_400Regular.ttf'),
@@ -80,7 +95,6 @@ export default function App() {
   const [session, setSession] = useState<StoredSession | null>(null);
   const [booted, setBooted] = useState(false);
   const [data, setData] = useState<TvDashboardData>(emptyData);
-  const [release, setRelease] = useState<TvLatestRelease | null>(null);
   const [page, setPage] = useState<Page>('home');
   const [homeView, setHomeView] = useState<HomeView>('overview');
   const [gasView, setGasView] = useState<GasView>('readings');
@@ -157,9 +171,8 @@ export default function App() {
       updatedAt: errors.length === 0 ? Date.now() : null,
       loading: false,
       error: errors.length ? errors.join(' · ') : null,
-      release,
     });
-  }, [client, session, release]);
+  }, [client, session]);
 
   useEffect(() => {
     if (!session) return;
@@ -169,21 +182,28 @@ export default function App() {
   }, [session, loadData]);
 
   useEffect(() => {
-    if (!session) return;
-    const check = async () => {
+    if (!booted || !fontsLoaded) return;
+    let active = true;
+    const checkAndApplySilently = async () => {
       try {
-        if (!APP_VERSION) return;
-        const response = await client.get(`${TV_ENDPOINTS.releaseLatest}?platform=TV`);
-        const update = newVersionAvailable(APP_VERSION, response.data);
-        setRelease(update);
+        if (!Updates.isEnabled) return;
+        const update = await Updates.checkForUpdateAsync();
+        if (!update.isAvailable) return;
+        await Updates.fetchUpdateAsync();
+        // OTA bundle is applied by restarting this app only; no browser,
+        // external installer, alert, or interaction is required.
+        if (active) await Updates.reloadAsync();
       } catch {
-        // Update check is optional; it never blocks read-only screens.
+        // Offline, dev client, or an incompatible native runtime: keep running.
       }
     };
-    void check();
-    const timer = setInterval(() => void check(), UPDATE_CHECK_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [client, session]);
+    void checkAndApplySilently();
+    const timer = setInterval(() => void checkAndApplySilently(), UPDATE_CHECK_INTERVAL_MS);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [booted, fontsLoaded]);
 
   // Pairing is the only permitted write path, and it is isolated from the
   // read-only authenticated client. After pairing the application sends GETs only.
@@ -200,16 +220,18 @@ export default function App() {
   }, []);
 
   if (!booted || !fontsLoaded) return null;
-  const dataWithRelease = { ...data, release };
   return <SafeAreaProvider>
     <StatusBar style="light" hidden />
     {session ? <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TvTopBar data={dataWithRelease} />
-      {page === 'home' ? <HomeScreen data={dataWithRelease} view={homeView} onView={setHomeView} /> : null}
-      {page === 'heating' ? <HeatingScreen data={dataWithRelease} /> : null}
-      {page === 'gas' ? <GasScreen data={dataWithRelease} view={gasView} onView={setGasView} /> : null}
-      {page === 'settings' ? <SettingsScreen data={dataWithRelease} view={settingsView} onView={setSettingsView} /> : null}
-      <TvMainNavigation page={page} onChange={setPage} />
+      <TvAmbientBackground />
+      <TvTopBar data={data} />
+      <TvPageTransition transitionKey={`${page}:${page === 'home' ? homeView : page === 'gas' ? gasView : page === 'settings' ? settingsView : ''}`}>
+        {page === 'home' ? <HomeScreen data={data} view={homeView} onView={setHomeView} /> : null}
+        {page === 'heating' ? <HeatingScreen data={data} /> : null}
+        {page === 'gas' ? <GasScreen data={data} view={gasView} onView={setGasView} /> : null}
+        {page === 'settings' ? <SettingsScreen data={data} view={settingsView} onView={setSettingsView} /> : null}
+      </TvPageTransition>
+      <TvMainNavigation page={page} onChange={(nextPage) => { setPage(nextPage); if (nextPage === 'home') setHomeView('overview'); }} />
     </View> : <TvPairingScreen requestCode={requestCode} pollCode={pollCode} getPushToken={getTvPushToken} onPaired={onPaired} />}
   </SafeAreaProvider>;
 }

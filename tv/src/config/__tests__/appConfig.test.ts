@@ -22,7 +22,12 @@ describe('app.config.js', () => {
   it('bez EXPO_TV nema TV plugina — običan prebuild ostaje običan', () => {
     delete process.env.EXPO_TV;
     const config = load();
-    expect(config.plugins).toEqual(['expo-notifications']);
+    expect(config.plugins).toContain('expo-notifications');
+    expect(config.plugins).toContain('expo-updates');
+    expect(config.plugins).not.toContainEqual([
+      '@react-native-tvos/config-tv',
+      { isTV: true },
+    ]);
   });
 
   it('sa EXPO_TV=1 dodaje se config-tv plugin sa isTV: true', () => {
@@ -32,6 +37,19 @@ describe('app.config.js', () => {
       '@react-native-tvos/config-tv',
       { isTV: true },
     ]);
+  });
+
+  it('OTA JavaScript nadogradnje su uključene tiho unutar aplikacije', () => {
+    const config = load();
+    expect(config.updates).toMatchObject({
+      url: 'https://u.expo.dev/5e53f78e-129d-4505-94f5-880fde2867cc',
+      enabled: true,
+      checkAutomatically: 'ON_LOAD',
+      fallbackToCacheTimeout: 0,
+    });
+    expect(config.runtimeVersion).toEqual({ policy: 'appVersion' });
+    const eas = require('../../../eas.json');
+    expect(eas.build.production.channel).toBe('production');
   });
 
   it('TV aplikacija je zaključana na landscape i tamnu pozadinu', () => {

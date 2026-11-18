@@ -5,6 +5,7 @@
   },
   "build": {
     "production": {
+      "channel": "production",
       "autoIncrement": false,
       "android": {
         "buildType": "apk"

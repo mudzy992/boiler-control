@@ -39,9 +39,9 @@ describe("FE2-4: App.tsx dijeli stranice po ruti", () => {
   });
 
   it("svaku stranicu iz features/*/pages/ učitava dinamički (React.lazy)", () => {
-    // `F15`: dvanaesta je `features/app-releases/pages/AppReleasesPage.tsx`
-    // (admin objava verzija). Svaka nova stranica se ovdje broji svjesno.
-    expect(pageNames.length, "očekuje se 12 stranica").toBe(12);
+    // F17: admin objava verzija i admin push test su zasebne lazy stranice.
+    // Svaka nova stranica se ovdje broji svjesno.
+    expect(pageNames.length, "očekuje se 13 stranica").toBe(13);
     const lazy = dynamicPageImports(appSource);
     const uncovered = pageNames
       .map((f) => pagePaths[f]!.replace(/\.tsx$/, "").replace(/^\.\.\//, "./"))

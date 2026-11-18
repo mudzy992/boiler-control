@@ -28,6 +28,27 @@ export const fonts = {
   monoSemiBold: 'IBMPlexMono_600SemiBold',
 } as const;
 
+/** Jedinstvena skala tipografije za kanonski TV prikaz (dp). */
+export const typeScale = {
+  hero: 36,
+  title: 28,
+  section: 18,
+  body: 16,
+  small: 14,
+  micro: 12,
+} as const;
+
+/** Kanonske margine sigurne zone i pravila interakcije za Android TV. */
+export const tvLayout = {
+  safeX: 48,
+  safeY: 27,
+  focusScale: 1.05,
+  minFocusTarget: 48,
+  focusBorder: 2,
+  topBarHeight: 64,
+  bottomNavHeight: 64,
+} as const;
+
 /** Umjereni TV razmaci: čitljivi iz daljine bez guranja sadržaja van ekrana. */
 export const spacing = {
   sm: 8,

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './features/auth/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MainLayout } from './components/MainLayout';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { AdminRoute, ProtectedRoute } from './components/ProtectedRoute';
 import { QueryState } from './shared/components/query-state';
 import './index.css';
 
@@ -48,6 +48,11 @@ const NotificationsPage = lazy(() =>
 const AppReleasesPage = lazy(() =>
   import('./features/app-releases/pages/AppReleasesPage').then((m) => ({
     default: m.AppReleasesPage,
+  })),
+);
+const AdminPushTestPage = lazy(() =>
+  import('./features/notifications/pages/AdminPushTestPage').then((m) => ({
+    default: m.AdminPushTestPage,
   })),
 );
 const DesignGalleryPage = lazy(() =>
@@ -178,6 +183,16 @@ function App() {
                     <MainLayout>
                       <AppReleasesPage />
                     </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/push-test"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <MainLayout><AdminPushTestPage /></MainLayout>
+                    </AdminRoute>
                   </ProtectedRoute>
                 }
               />

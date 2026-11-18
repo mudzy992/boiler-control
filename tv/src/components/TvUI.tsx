@@ -10,9 +10,10 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { translateText } from '../config';
 import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { colors, fonts, spacing } from '../theme';
+import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
 
 export type TvIconName =
   | 'home'
@@ -129,13 +130,13 @@ export function TvText({
     warn: colors.warning,
     fault: colors.fault,
   }[tone];
-  const fontSize = { hero: 37, title: 29, section: 17, body: 14, small: 12, micro: 10 }[size];
+  const fontSize = typeScale[size];
   return (
     <Text
       numberOfLines={numberOfLines}
       style={[{ color, fontFamily: size === 'hero' ? fonts.sansBold : fonts.sans, fontSize }, style]}
     >
-      {children}
+      {typeof children === 'string' ? translateText(children) : children}
     </Text>
   );
 }
@@ -251,7 +252,7 @@ export function TvCardTitle({
       ) : null}
       <View style={styles.cardTitleCopy}>
         <TvText size="section" style={styles.cardTitle}>{title}</TvText>
-        {subtitle ? <TvText size="micro" tone="dim" style={styles.cardSubtitle}>{subtitle}</TvText> : null}
+        {subtitle ? <TvText size="small" tone="dim" style={styles.cardSubtitle}>{subtitle}</TvText> : null}
       </View>
       {right ? <View style={styles.cardTitleRight}>{right}</View> : null}
     </View>
@@ -292,7 +293,7 @@ export function TvMetricCard({
         <TvText size="hero" style={styles.metricValue}>{value}</TvText>
         {unit ? <TvText size="small" tone="muted" style={styles.metricUnit}>{unit}</TvText> : null}
       </View>
-      {meta ? <TvText size="micro" tone="dim" style={styles.metricMeta}>{meta}</TvText> : null}
+      {meta ? <TvText size="small" tone="dim" style={styles.metricMeta}>{meta}</TvText> : null}
     </TvCard>
   );
 }
@@ -326,14 +327,19 @@ export function TvChip({
   onPress: () => void;
   testID?: string;
 }) {
+  const [focused, setFocused] = React.useState(false);
   return (
     <Pressable
       focusable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onPress={onPress}
-      style={[styles.chip, active && styles.chipActive]}
+      style={[styles.chip, active && styles.chipActive, focused && styles.chipFocused]}
       testID={testID}
     >
-      <TvText size="micro" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.text : colors.textDim }}>{label}</TvText>
+      <TvText size="small" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.text : colors.textDim }}>{label}</TvText>
     </Pressable>
   );
 }
@@ -351,7 +357,7 @@ export function TvSectionTitle({
     <View style={styles.sectionTitle}>
       <View>
         <TvText size="section" style={styles.sectionHeading}>{title}</TvText>
-        {meta ? <TvText size="micro" tone="dim" style={styles.sectionMeta}>{meta}</TvText> : null}
+        {meta ? <TvText size="small" tone="dim" style={styles.sectionMeta}>{meta}</TvText> : null}
       </View>
       {action ? <View>{action}</View> : null}
     </View>
@@ -377,7 +383,7 @@ export function TvDataRow({
         {icon ? <TvIcon name={icon} size={17} color={colors.textDim} /> : null}
         <View style={styles.dataRowCopy}>
           <TvText size="small" tone="muted" style={styles.dataRowLabel}>{label}</TvText>
-          {detail ? <TvText size="micro" tone="dim" style={styles.dataRowDetail}>{detail}</TvText> : null}
+          {detail ? <TvText size="small" tone="dim" style={styles.dataRowDetail}>{detail}</TvText> : null}
         </View>
       </View>
       <TvText size="small" tone={tone} style={styles.dataRowValue}>{value}</TvText>
@@ -406,35 +412,36 @@ export function TvScrollView({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: 'transparent' },
-  scrollContent: { width: '100%', maxWidth: 1540, alignSelf: 'center', flexGrow: 1, paddingHorizontal: spacing.xl + 10, paddingTop: 27, paddingBottom: 34, gap: 14 },
+  scrollContent: { width: '100%', maxWidth: 1540, alignSelf: 'center', flexGrow: 1, paddingHorizontal: tvLayout.safeX, paddingTop: tvLayout.safeY, paddingBottom: tvLayout.safeY, gap: spacing.md },
   pageHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20, marginBottom: 4 },
   headingText: { flexShrink: 1 },
   eyebrow: { letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 5, fontFamily: fonts.mono },
-  pageTitle: { fontSize: 33, letterSpacing: -0.8, fontFamily: fonts.sansSemiBold },
+  pageTitle: { fontSize: typeScale.hero, letterSpacing: -0.8, fontFamily: fonts.sansSemiBold },
   headingSubtitle: { marginTop: 7 },
   headingRight: { alignItems: 'flex-end', justifyContent: 'flex-end' },
-  card: { position: 'relative', overflow: 'hidden', backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: 21, gap: spacing.sm, shadowColor: '#000000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.28, shadowRadius: 18, elevation: 4 },
-  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.42, shadowRadius: 18, elevation: 9, transform: [{ scale: 1.012 }] },
+  card: { position: 'relative', overflow: 'hidden', backgroundColor: colors.surface, borderColor: colors.border, borderWidth: tvLayout.focusBorder, borderRadius: 18, padding: 20, gap: spacing.sm, shadowColor: '#000000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.18, shadowRadius: 9, elevation: 3 },
+  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8, transform: [{ scale: tvLayout.focusScale }] },
   metricCard: { paddingVertical: 17, paddingHorizontal: 19, gap: 6, minHeight: 136 },
   metricAura: { position: 'absolute', width: 126, height: 126, borderRadius: 100, right: -53, top: -70, borderWidth: 1, borderColor: 'rgba(255,255,255,0.065)' },
   pressableCard: { flex: 1 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 3 },
   cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   cardTitleCopy: { flex: 1, minWidth: 0 },
-  cardTitle: { fontFamily: fonts.sansSemiBold, fontSize: 15 },
+  cardTitle: { fontFamily: fonts.sansSemiBold, fontSize: typeScale.section },
   cardSubtitle: { marginTop: 3 },
   cardTitleRight: { marginLeft: 'auto' },
   metricHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  metricLabel: { fontFamily: fonts.sansMedium, fontSize: 11 },
+  metricLabel: { fontFamily: fonts.sansMedium, fontSize: typeScale.small },
   metricIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   metricValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 7, marginTop: 6 },
-  metricValue: { fontSize: 35, lineHeight: 41, letterSpacing: -1.2, fontFamily: fonts.monoSemiBold },
+  metricValue: { fontSize: typeScale.hero, lineHeight: 45, letterSpacing: -1.2, fontFamily: fonts.monoSemiBold },
   metricUnit: { fontFamily: fonts.sansMedium },
   metricMeta: { marginTop: 1 },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 6 },
   statusDot: { width: 6, height: 6, borderRadius: 5 },
-  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: 'rgba(11,15,22,0.82)' },
+  chip: { minHeight: tvLayout.minFocusTarget, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 8, borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: 'rgba(11,15,22,0.82)', justifyContent: 'center' },
   chipActive: { borderColor: '#2c3746', backgroundColor: '#1a222e' },
+  chipFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 10, elevation: 7, transform: [{ scale: tvLayout.focusScale }] },
   chipText: { fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: colors.textDim },
   chipTextActive: { color: colors.accent },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },

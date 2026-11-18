@@ -88,7 +88,9 @@ describe("i18n — inicijalizacija", () => {
     //   `auth.{downloadTitle,downloadPhone,downloadPhoneHint,downloadTv,
     //    downloadTvHint,downloadAction}` (6) — bez njih login ekran prikaže
     //    sirove ključeve umjesto linkova.
-    expect(en.length).toBe(553);
+    // 553 → 573 (admin push test): 20 ključeva za admin navigaciju, odabir
+    // uređaja, formu, sigurno slanje i live preview.
+    expect(en.length).toBe(573);
   });
 });
 

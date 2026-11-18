@@ -33,7 +33,7 @@ import {
 import { createSessionStore, type StoredSession } from './src/lib/session';
 import * as Updates from 'expo-updates';
 import type { ClaimResponse } from './src/lib/pairing';
-import { API_BASE_URL } from './src/config';
+import { API_BASE_URL, setTvLocale } from './src/config';
 import { colors } from './src/theme';
 import { TvAmbientBackground } from './src/components/TvUI';
 
@@ -173,6 +173,11 @@ export default function App() {
       error: errors.length ? errors.join(' · ') : null,
     });
   }, [client, session]);
+
+  useEffect(() => {
+    const locale = data.profile?.locale ?? data.profile?.language ?? data.homeProfile?.locale;
+    if (locale) setTvLocale(locale);
+  }, [data.profile?.locale, data.profile?.language, data.homeProfile?.locale]);
 
   useEffect(() => {
     if (!session) return;

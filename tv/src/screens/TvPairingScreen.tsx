@@ -4,8 +4,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  Text as NativeText,
   View,
+  type TextProps,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -19,7 +20,12 @@ import {
   type ClaimResponse,
   type PairingState,
 } from '../lib/pairing';
-import { colors, fonts, spacing } from '../theme';
+import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
+import { translateText } from '../config';
+
+function Text({ children, ...props }: TextProps) {
+  return <NativeText {...props}>{typeof children === 'string' ? translateText(children) : children}</NativeText>;
+}
 
 /**
  * Ekran za uparivanje — prvo što korisnik vidi na TV-u.
@@ -162,7 +168,7 @@ export function TvPairingScreen({
 
   if (state.phase === 'paired') {
     return (
-      <Centered>
+      <Centered preferredFocus>
         <Text style={styles.title}>TV je uparen</Text>
         <Text style={styles.hint}>Učitavam analitiku…</Text>
         <ActivityIndicator color={colors.accent} />
@@ -194,7 +200,7 @@ export function TvPairingScreen({
 
   if (state.phase === 'waiting') {
     return (
-      <Centered>
+      <Centered preferredFocus>
         <Text style={styles.title}>Upari TV sa telefonom</Text>
         <View style={styles.qrBox}>
           <QRCode value={pairingDeepLink(state.code)} size={220} />
@@ -245,13 +251,14 @@ function Countdown({ expiresAt }: { expiresAt: number }) {
   );
 }
 
-function Centered({ children }: { children: React.ReactNode }) {
+function Centered({ children, preferredFocus = false }: { children: React.ReactNode; preferredFocus?: boolean }) {
   return (
     <ScrollView
       contentContainerStyle={styles.root}
       scrollEnabled
       showsVerticalScrollIndicator={false}
       focusable
+      hasTVPreferredFocus={preferredFocus}
       testID="tv-pairing-scroll-container"
     >
       {children}
@@ -260,6 +267,7 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 function Action({ onPress, label }: { onPress: () => void; label: string }) {
+  const [focused, setFocused] = useState(false);
   /*
    * `Pressable` sa `hasTVPreferredFocus`, NE `Text`: na TV-u se do dugmeta
    * dolazi daljinskim (D-pad), pa element mora primati fokus. `Text` sa
@@ -271,7 +279,9 @@ function Action({ onPress, label }: { onPress: () => void; label: string }) {
       accessibilityRole="button"
       hasTVPreferredFocus
       onPress={onPress}
-      style={styles.action}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={[styles.action, focused && styles.actionFocused]}
     >
       <Text style={styles.actionLabel}>{label}</Text>
     </Pressable>
@@ -285,22 +295,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    paddingHorizontal: tvLayout.safeX,
+    paddingTop: tvLayout.safeY,
     // Overscan differs between TV models; keep content away from the lower
     // edge, and let the screen scroll on smaller display modes rather than clip.
-    paddingBottom: spacing.xl + spacing.md,
+    paddingBottom: tvLayout.safeY,
     gap: spacing.md,
   },
   title: {
     color: colors.text,
-    fontSize: 32,
+    fontSize: typeScale.title,
     fontFamily: fonts.sansSemiBold,
     textAlign: 'center',
   },
   hint: {
     color: colors.textMuted,
-    fontSize: 18,
+    fontSize: typeScale.body,
     fontFamily: fonts.sans,
     textAlign: 'center',
     maxWidth: 760,
@@ -308,14 +318,14 @@ const styles = StyleSheet.create({
   },
   code: {
     color: colors.accent,
-    fontSize: 48,
+    fontSize: typeScale.hero,
     fontFamily: fonts.monoSemiBold,
     letterSpacing: 6,
     fontVariant: ['tabular-nums'],
   },
   countdown: {
     color: colors.textMuted,
-    fontSize: 20,
+    fontSize: typeScale.section,
     fontFamily: fonts.mono,
     fontVariant: ['tabular-nums'],
   },
@@ -325,14 +335,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   action: {
-    borderRadius: 4,
+    minHeight: tvLayout.minFocusTarget,
+    borderRadius: 12,
+    borderWidth: tvLayout.focusBorder,
+    borderColor: colors.accent,
     backgroundColor: colors.accent,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
   },
+  actionFocused: { shadowColor: colors.accent, shadowOpacity: 0.48, shadowRadius: 14, elevation: 9, transform: [{ scale: tvLayout.focusScale }] },
   actionLabel: {
     color: colors.onAccent,
-    fontSize: 22,
+    fontSize: typeScale.section,
     fontFamily: fonts.sansSemiBold,
   },
 });

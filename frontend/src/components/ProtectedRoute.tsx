@@ -7,6 +7,13 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+export const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { user, isInitializing } = useAuth();
+  if (isInitializing || !user) return <QueryState status="loading" />;
+  if (user.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
+
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { token, isInitializing } = useAuth();
 

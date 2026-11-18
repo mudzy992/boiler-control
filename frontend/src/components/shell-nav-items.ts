@@ -25,4 +25,5 @@ export const SHELL_NAV_ITEMS: readonly ShellNavItem[] = [
 /** Stavke koje se prikazuju samo administratoru (`F15`: objava verzija). */
 export const ADMIN_NAV_ITEMS: readonly ShellNavItem[] = [
   { key: 'app-releases', href: '/app-releases', labelKey: 'nav.appReleases', adminOnly: true },
+  { key: 'admin-push-test', href: '/admin/push-test', labelKey: 'nav.adminPushTest', adminOnly: true },
 ] as const;

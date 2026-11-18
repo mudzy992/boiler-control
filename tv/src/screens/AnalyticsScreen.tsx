@@ -15,8 +15,9 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
-  Text,
+  Text as NativeText,
   View,
+  type TextProps,
 } from 'react-native';
 
 import {
@@ -26,7 +27,12 @@ import {
   type TvDashboardLike,
   type TvOverviewCard,
 } from '../lib/analytics';
-import { colors, fonts, spacing } from '../theme';
+import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
+import { translateText } from '../config';
+
+function Text({ children, ...props }: TextProps) {
+  return <NativeText {...props}>{typeof children === 'string' ? translateText(children) : children}</NativeText>;
+}
 
 export interface AnalyticsScreenProps {
   /** Odgovor `GET /api/gas/analysis`, ili `null` dok se učitava. */
@@ -206,8 +212,9 @@ const styles = StyleSheet.create({
   root: {
     flexGrow: 1,
     backgroundColor: colors.background,
-    padding: spacing.lg,
-    paddingBottom: spacing.lg + spacing.md,
+    paddingHorizontal: tvLayout.safeX,
+    paddingTop: tvLayout.safeY,
+    paddingBottom: tvLayout.safeY,
     gap: spacing.md,
   },
   centered: {
@@ -215,7 +222,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
-    padding: spacing.xl,
+    paddingHorizontal: tvLayout.safeX,
+    paddingVertical: tvLayout.safeY,
     gap: spacing.md,
   },
   header: {
@@ -223,12 +231,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { color: colors.text, fontSize: 30, fontFamily: fonts.sansSemiBold },
+  title: { color: colors.text, fontSize: typeScale.hero, fontFamily: fonts.sansSemiBold },
   badge: {
     color: colors.accent,
     fontFamily: fonts.mono,
-    fontSize: 16,
-    borderWidth: 1,
+    fontSize: typeScale.small,
+    borderWidth: tvLayout.focusBorder,
     borderColor: colors.accent,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
@@ -242,41 +250,42 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderWidth: 2,
+    borderWidth: tvLayout.focusBorder,
     borderColor: colors.border,
-    borderRadius: 6,
-    padding: spacing.md,
+    borderRadius: 18,
+    padding: 20,
+    minHeight: 144,
     minWidth: 0,
     flex: 1,
     gap: spacing.sm,
   },
-  cardFocused: { borderColor: colors.accent },
+  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8, transform: [{ scale: tvLayout.focusScale }] },
   label: {
     color: colors.textMuted,
-    fontSize: 16,
+    fontSize: typeScale.body,
     fontFamily: fonts.sansMedium,
   },
   subtitle: {
     color: colors.textMuted,
-    fontSize: 15,
+    fontSize: typeScale.small,
     fontFamily: fonts.sans,
   },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
   value: {
     color: colors.text,
-    fontSize: 40,
-    fontFamily: fonts.sansBold,
+    fontSize: typeScale.hero,
+    fontFamily: fonts.monoSemiBold,
     fontVariant: ['tabular-nums'],
   },
   unit: {
     color: colors.textMuted,
-    fontSize: 18,
+    fontSize: typeScale.section,
     fontFamily: fonts.sansMedium,
     paddingBottom: 6,
   },
   muted: {
     color: colors.textMuted,
-    fontSize: 18,
+    fontSize: typeScale.body,
     fontFamily: fonts.sans,
     textAlign: 'center',
   },
@@ -292,17 +301,17 @@ const styles = StyleSheet.create({
   },
   updateText: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: typeScale.section,
     fontFamily: fonts.sansMedium,
   },
   partialFault: {
     color: colors.warning,
-    fontSize: 14,
+    fontSize: typeScale.small,
     fontFamily: fonts.sans,
   },
   fault: {
     color: colors.fault,
-    fontSize: 22,
+    fontSize: typeScale.title,
     fontFamily: fonts.sansSemiBold,
     textAlign: 'center',
   },

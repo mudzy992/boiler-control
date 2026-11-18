@@ -1,6 +1,7 @@
 import {
   MAX_TV_METRICS,
   buildTvMetrics,
+  buildTvOverview,
   describeFreshness,
   formatMetric,
   limitForTv,
@@ -76,6 +77,44 @@ describe('metrike za TV', () => {
     ]);
     expect(metrics[0].unit).toBe('m³');
     expect(metrics[0].value).toBe('10.00');
+  });
+});
+
+describe('TV overview', () => {
+  it('vraća četiri kartice u traženom redoslijedu i termostat sa ciljem', () => {
+    const cards = buildTvOverview(
+      { costIncVat: 81.25 },
+      {
+        system: {
+          weather: { temp: 7.4 },
+          boiler: { actualFlowTemp: 46 },
+        },
+        homes: [
+          {
+            thermostats: [
+              { roomCurrentTemp: null, roomTargetTemp: 21 },
+              { roomCurrentTemp: 20.5, roomTargetTemp: 22 },
+            ],
+          },
+        ],
+      },
+    );
+
+    expect(cards.map((card) => card.key)).toEqual([
+      'outside',
+      'thermostat',
+      'flow',
+      'cost',
+    ]);
+    expect(cards.map((card) => card.value)).toEqual([7.4, 20.5, 46, 81.25]);
+    expect(cards[1].targetValue).toBe(22);
+  });
+
+  it('nedostajuće vrijednosti ostaju null, ne izmišljene nule', () => {
+    const cards = buildTvOverview(null, null);
+    expect(cards).toHaveLength(4);
+    expect(cards.map((card) => card.value)).toEqual([null, null, null, null]);
+    expect(cards[1].targetValue).toBeNull();
   });
 });
 

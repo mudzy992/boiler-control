@@ -18,7 +18,7 @@ export const colors = {
   fault: '#f87171',
 } as const;
 
-/** Veći razmaci nego na mobilnom, zbog gledanja sa nekoliko metara. */
+/** Tipografija ostaje čitljiva iz daljine. */
 export const fonts = {
   sans: 'IBMPlexSans_400Regular',
   sansMedium: 'IBMPlexSans_500Medium',
@@ -28,9 +28,10 @@ export const fonts = {
   monoSemiBold: 'IBMPlexMono_600SemiBold',
 } as const;
 
+/** Umjereni TV razmaci: čitljivi iz daljine bez guranja sadržaja van ekrana. */
 export const spacing = {
-  sm: 12,
-  md: 24,
-  lg: 40,
-  xl: 64,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
 } as const;

@@ -12,10 +12,21 @@ import { AnalyticsScreen } from '../AnalyticsScreen';
 
 const translate = (key: string) => key;
 
-function renderScreen(overrides: Partial<React.ComponentProps<typeof AnalyticsScreen>> = {}) {
+function renderScreen(
+  overrides: Partial<React.ComponentProps<typeof AnalyticsScreen>> = {},
+) {
   return render(
     <AnalyticsScreen
       analysis={{ consumptionFromReferenceM3: 12.5, costIncVat: 25 }}
+      dashboard={{
+        system: {
+          weather: { temp: 6.5 },
+          boiler: { actualFlowTemp: 48 },
+        },
+        homes: [
+          { thermostats: [{ roomCurrentTemp: 20.5, roomTargetTemp: 22 }] },
+        ],
+      }}
       loading={false}
       error={null}
       updatedAt={Date.now()}
@@ -26,31 +37,56 @@ function renderScreen(overrides: Partial<React.ComponentProps<typeof AnalyticsSc
 }
 
 describe('TV analitika', () => {
-  it('prikazuje potrošnju i cijenu, bez nula za neizmjereno', async () => {
+  it('prikazuje četiri tražene vrijednosti u dogovorenom redoslijedu', async () => {
     await renderScreen();
 
-    expect(screen.getByText('12.50')).toBeTruthy();
+    expect(screen.getByText('weather.currentShort')).toBeTruthy();
+    expect(screen.getByText('thermostat.title')).toBeTruthy();
+    expect(screen.getByText('Cilj: 22.0 °C')).toBeTruthy();
+    expect(screen.getByText('boiler.flowTemp')).toBeTruthy();
+    expect(screen.getByText('gas.metricCostIncVat')).toBeTruthy();
+    expect(screen.getByText('6.5')).toBeTruthy();
+    expect(screen.getByText('20.5')).toBeTruthy();
+    expect(screen.getByText('48.0')).toBeTruthy();
     expect(screen.getByText('25.00')).toBeTruthy();
-    // `totalHeatingHours` nije poslan — kartica NE smije postojati kao 0.
-    expect(screen.queryByText('gas.metricHeatingHours')).toBeNull();
+
+    expect(
+      screen.getAllByTestId(/^tv-metric-/).map((card) => card.props.testID),
+    ).toEqual([
+      'tv-metric-outside',
+      'tv-metric-thermostat',
+      'tv-metric-flow',
+      'tv-metric-cost',
+    ]);
+  });
+
+  it('analitika se može scrollati daljinskim i fokusira prvu karticu', async () => {
+    await renderScreen();
+
+    const scroll = screen.getByTestId('tv-analytics-scroll');
+    const firstMetric = screen.getByTestId('tv-metric-outside');
+    expect(scroll.props.scrollEnabled).toBe(true);
+    expect(firstMetric.props.focusable).toBe(true);
+    expect(firstMetric.props.hasTVPreferredFocus).toBe(true);
+    expect(screen.getByTestId('tv-metric-thermostat').props.focusable).toBe(
+      true,
+    );
   });
 
   it('mjerenja ima ali sva su nula — prikazuje nule, ne prazno stanje', async () => {
     // 0 je mjerenje: u periodu nije potrošeno ništa. Prazno stanje ovdje bi
     // bilo laž („nema podataka") umjesto istine („nije trošeno").
-    await renderScreen({ analysis: { consumptionFromReferenceM3: 0 } });
+    await renderScreen({ analysis: { costIncVat: 0 } });
 
     expect(screen.getByText('0.00')).toBeTruthy();
     expect(screen.queryByText('Još nema podataka')).toBeNull();
   });
 
-  it('prazno stanje objašnjava zašto je prazno', async () => {
-    await renderScreen({ analysis: {} });
+  it('nedostajuće senzore prikazuje kao crtice, ne kao izmišljene nule', async () => {
+    await renderScreen({ analysis: null, dashboard: null });
 
-    expect(screen.getByText('Još nema podataka')).toBeTruthy();
-    expect(
-      screen.getByText(/kotao pošalje prva očitanja/),
-    ).toBeTruthy();
+    expect(screen.getAllByText('—')).toHaveLength(4);
+    expect(screen.queryByText('Još nema podataka')).toBeNull();
   });
 
   it('zastarjeli podatak je vidljiv, ne skriven', async () => {
@@ -67,7 +103,7 @@ describe('TV analitika', () => {
   });
 
   it('greška bez podataka kaže da analitika nije dostupna', async () => {
-    await renderScreen({ analysis: null, error: 'mreža' });
+    await renderScreen({ analysis: null, dashboard: null, error: 'mreža' });
     expect(screen.getByText('Analitika nije dostupna')).toBeTruthy();
   });
 
@@ -80,7 +116,8 @@ describe('TV analitika', () => {
       updatedAt: Date.now() - 60 * 60 * 1000,
     });
 
-    expect(screen.getByText('12.50')).toBeTruthy();
+    expect(screen.getByText('6.5')).toBeTruthy();
+    expect(screen.getByText(/Neki podaci nisu osvježeni: mreža/)).toBeTruthy();
     expect(screen.getByText('podaci nisu osvježeni')).toBeTruthy();
   });
 
@@ -94,7 +131,7 @@ describe('TV analitika', () => {
     expect(screen.getByTestId('tv-update-banner')).toBeTruthy();
     expect(screen.getByText(/v1\.2\.0/)).toBeTruthy();
     // Metrike su i dalje tu — obavijest je traka, ne prepreka.
-    expect(screen.getByText('12.50')).toBeTruthy();
+    expect(screen.getByText('6.5')).toBeTruthy();
   });
 
   it('bez nove verzije trake nema', async () => {

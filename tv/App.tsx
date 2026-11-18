@@ -18,6 +18,7 @@ import {
 } from './src/services/notifications';
 import { createSessionStore, type StoredSession } from './src/lib/session';
 import { newVersionAvailable, type TvLatestRelease } from './src/lib/update';
+import type { GasAnalyticsLike, TvDashboardLike } from './src/lib/analytics';
 import type { ClaimResponse } from './src/lib/pairing';
 import { API_BASE_URL, APP_VERSION, translate } from './src/config';
 
@@ -58,7 +59,8 @@ export default function App() {
   });
   const [session, setSession] = useState<StoredSession | null>(null);
   const [booted, setBooted] = useState(false);
-  const [analysis, setAnalysis] = useState<Record<string, unknown> | null>(null);
+  const [analysis, setAnalysis] = useState<GasAnalyticsLike | null>(null);
+  const [dashboard, setDashboard] = useState<TvDashboardLike | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
@@ -89,6 +91,7 @@ export default function App() {
     void sessionStore.clear();
     setSession(null);
     setAnalysis(null);
+    setDashboard(null);
   }, []);
 
   const client = useMemo(
@@ -104,23 +107,43 @@ export default function App() {
   const loadAnalytics = useCallback(async () => {
     if (!session) return;
     setLoading(true);
-    try {
-      const response = await client.get(TV_ENDPOINTS.gasAnalysis);
-      setAnalysis(response.data ?? null);
+
+    // Gas trošak i trenutne temperature dolaze iz odvojenih, GET-only API-ja.
+    // Jedan kvar ne smije sakriti vrijednosti koje je drugi poziv uspješno vratio.
+    const [gasResult, dashboardResult] = await Promise.allSettled([
+      client.get<GasAnalyticsLike>(TV_ENDPOINTS.gasAnalysis),
+      client.get<TvDashboardLike>(TV_ENDPOINTS.dashboard),
+    ]);
+
+    const errors: string[] = [];
+    if (gasResult.status === 'fulfilled') {
+      setAnalysis(gasResult.value.data ?? null);
+    } else {
+      errors.push(
+        gasResult.reason instanceof Error
+          ? gasResult.reason.message
+          : 'Greška pri učitavanju troška',
+      );
+    }
+
+    if (dashboardResult.status === 'fulfilled') {
+      setDashboard(dashboardResult.value.data ?? null);
+    } else {
+      errors.push(
+        dashboardResult.reason instanceof Error
+          ? dashboardResult.reason.message
+          : 'Greška pri učitavanju temperatura',
+      );
+    }
+
+    if (errors.length === 0) {
       setUpdatedAt(Date.now());
       setError(null);
-    } catch (caught) {
-      /*
-       * Greška NE briše zadnje poznate podatke: TV koji izgubi vezu zadržava
-       * brojeve uz oznaku „podaci nisu osvježeni", što je korisnije od
-       * praznog ekrana.
-       */
-      setError(
-        caught instanceof Error ? caught.message : 'Nepoznata greška',
-      );
-    } finally {
-      setLoading(false);
+    } else {
+      // Zadržava zadnje uspješne vrijednosti i prikazuje preostale podatke.
+      setError(errors.join(' · '));
     }
+    setLoading(false);
   }, [client, session]);
 
   /*
@@ -136,7 +159,9 @@ export default function App() {
       try {
         const currentVersion = APP_VERSION;
         if (!currentVersion) return;
-        const response = await client.get(`${TV_ENDPOINTS.releaseLatest}?platform=TV`);
+        const response = await client.get(
+          `${TV_ENDPOINTS.releaseLatest}?platform=TV`,
+        );
         setRelease(newVersionAvailable(currentVersion, response.data));
       } catch {
         // Tišina je tačan odgovor: TV je upotrebljiv i bez obavijesti.
@@ -190,6 +215,7 @@ export default function App() {
       {session ? (
         <AnalyticsScreen
           analysis={analysis}
+          dashboard={dashboard}
           updateAvailable={release}
           loading={loading}
           error={error}

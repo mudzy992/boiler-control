@@ -26,10 +26,7 @@ const isNum = (v: unknown): v is number =>
   typeof v === 'number' && Number.isFinite(v);
 
 /** `null` → `null` (nije mjereno); `0` ostaje `0` (mjereno i nula). */
-export function formatMetric(
-  value: unknown,
-  digits = 1,
-): string | null {
+export function formatMetric(value: unknown, digits = 1): string | null {
   return isNum(value) ? value.toFixed(digits) : null;
 }
 
@@ -40,7 +37,9 @@ export function formatMetric(
  * Isti kvar kao D2 na webu: `??` bi `0` proglasio „nema vrijednosti" i tiho
  * prikazao drugi broj.
  */
-export function resolveGasConsumption(analysis: Record<string, unknown>): number | null {
+export function resolveGasConsumption(
+  analysis: Record<string, unknown>,
+): number | null {
   if (isNum(analysis.consumptionFromReferenceM3)) {
     return analysis.consumptionFromReferenceM3;
   }
@@ -65,12 +64,16 @@ export interface GasAnalyticsLike {
  * na TV-u), pa novac, pa tehnika. Metrike bez mjerenja **izostaju** — prazna
  * kartica na TV-u nema legende koja bi objasnila zašto je prazna.
  */
-export function buildTvMetrics(analysis: GasAnalyticsLike | null | undefined): TvMetric[] {
+export function buildTvMetrics(
+  analysis: GasAnalyticsLike | null | undefined,
+): TvMetric[] {
   if (!analysis) return [];
 
   const metrics: TvMetric[] = [];
 
-  const consumption = resolveGasConsumption(analysis as Record<string, unknown>);
+  const consumption = resolveGasConsumption(
+    analysis as Record<string, unknown>,
+  );
   if (consumption !== null) {
     metrics.push({
       key: 'consumption',
@@ -118,6 +121,79 @@ export function buildTvMetrics(analysis: GasAnalyticsLike | null | undefined): T
   }
 
   return metrics;
+}
+
+/** Dashboard values used by the four TV summary cards. */
+export interface TvDashboardLike {
+  system?: {
+    weather?: { temp?: unknown } | null;
+    boiler?: { actualFlowTemp?: unknown } | null;
+  } | null;
+  homes?: Array<{
+    thermostats?: Array<{
+      roomCurrentTemp?: unknown;
+      roomTargetTemp?: unknown;
+    }>;
+  }> | null;
+}
+
+export interface TvOverviewCard {
+  key: 'outside' | 'thermostat' | 'flow' | 'cost';
+  label: string;
+  value: number | null;
+  unit: '°C' | 'KM';
+  /** Target temperature subtitle, used by the thermostat card. */
+  targetValue?: number | null;
+}
+
+/**
+ * Fixed TV overview, ordered for the dashboard layout: outside and room
+ * temperature first, then actual boiler flow temperature and total gas cost.
+ * Missing sensor/API data stays null and is rendered as an em dash, never zero.
+ */
+export function buildTvOverview(
+  analysis: GasAnalyticsLike | null | undefined,
+  dashboard: TvDashboardLike | null | undefined,
+): TvOverviewCard[] {
+  const thermostats = dashboard?.homes?.[0]?.thermostats ?? [];
+  const thermostat =
+    thermostats.find((item) => isNum(item.roomCurrentTemp)) ?? thermostats[0];
+
+  return [
+    {
+      key: 'outside',
+      label: 'weather.currentShort',
+      value: isNum(dashboard?.system?.weather?.temp)
+        ? dashboard.system.weather.temp
+        : null,
+      unit: '°C',
+    },
+    {
+      key: 'thermostat',
+      label: 'thermostat.title',
+      value: isNum(thermostat?.roomCurrentTemp)
+        ? thermostat.roomCurrentTemp
+        : null,
+      targetValue: isNum(thermostat?.roomTargetTemp)
+        ? thermostat.roomTargetTemp
+        : null,
+      unit: '°C',
+    },
+    {
+      key: 'flow',
+      label: 'boiler.flowTemp',
+      value: isNum(dashboard?.system?.boiler?.actualFlowTemp)
+        ? dashboard.system.boiler.actualFlowTemp
+        : null,
+      unit: '°C',
+    },
+    {
+      key: 'cost',
+      label: 'gas.metricCostIncVat',
+      value: isNum(analysis?.costIncVat) ? analysis.costIncVat : null,
+      unit: 'KM',
+    },
+  ];
 }
 
 /**

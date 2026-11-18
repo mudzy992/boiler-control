@@ -28,7 +28,9 @@ jest.mock('react-native-qrcode-svg', () => {
 // Jest ne može da izračuna `setInterval` u fake okruženju bez ovoga.
 jest.useFakeTimers();
 
-function setup(overrides: Partial<React.ComponentProps<typeof TvPairingScreen>> = {}) {
+function setup(
+  overrides: Partial<React.ComponentProps<typeof TvPairingScreen>> = {},
+) {
   const requestCode = jest.fn(async () => ({
     code: 'ABCD2345',
     expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
@@ -86,6 +88,9 @@ describe('TV uparivanje', () => {
     expect(
       screen.getByText('QR:boilercontrol://tv-pair?code=ABCD2345'),
     ).toBeTruthy();
+    const scroll = screen.getByTestId('tv-pairing-scroll-container');
+    expect(scroll.props.scrollEnabled).toBe(true);
+    expect(scroll.props.focusable).toBe(true);
   });
 
   it('push token ide UZ zahtjev za kod — TV ne smije drugi POST', async () => {

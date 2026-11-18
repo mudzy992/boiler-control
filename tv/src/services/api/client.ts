@@ -48,7 +48,11 @@ export function createTvClient(options: TvClientOptions): AxiosInstance {
    */
   instance.interceptors.request.use((config) => {
     const method = (config.method ?? 'get').toLowerCase();
-    if (!TV_READ_ONLY_METHODS.includes(method as (typeof TV_READ_ONLY_METHODS)[number])) {
+    if (
+      !TV_READ_ONLY_METHODS.includes(
+        method as (typeof TV_READ_ONLY_METHODS)[number],
+      )
+    ) {
       return Promise.reject(new TvWriteBlockedError(method, config.url ?? ''));
     }
 
@@ -96,7 +100,8 @@ export function createTvClient(options: TvClientOptions): AxiosInstance {
 
 /** Rute koje TV trenutno koristi; sve su relativne prema API_BASE_URL (`.../api`). */
 export const TV_ENDPOINTS = {
-  // Backend ruta je `GET /api/gas/analysis`.
+  // Backend rute su `GET /api/dashboard` i `GET /api/gas/analysis`.
+  dashboard: '/dashboard',
   gasAnalysis: '/gas/analysis',
   pairingSession: '/tv-pairing/sessions',
   // Najnovije TV izdanje — samo za obavijest, TV ne instalira sam.

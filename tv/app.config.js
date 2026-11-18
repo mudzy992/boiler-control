@@ -54,6 +54,15 @@ const base = {
   // TV nema status bar ni navigaciju — `hidden` je jedini ispravan izbor.
   userInterfaceStyle: 'dark',
   backgroundColor: '#05070b',
+  // JavaScript/UI nadogradnje se preuzimaju i primjenjuju tiho kroz aplikaciju.
+  // Native promjene i dalje zahtijevaju novi store/build instalacijski paket.
+  updates: {
+    url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
+    enabled: true,
+    checkAutomatically: 'ON_LOAD',
+    fallbackToCacheTimeout: 0,
+  },
+  runtimeVersion: { policy: 'appVersion' },
   scheme: 'boilercontrol',
   // Ista aplikacijska ikonica kao mobilna, uz iste Android adaptive layers.
   icon: './assets/boiler-control-icon-master.png',
@@ -80,6 +89,7 @@ const base = {
     softwareKeyboardLayoutMode: 'pan',
   },
   plugins: [
+    'expo-updates',
     'expo-notifications',
     /*
      * TV plugin se dodaje SAMO kad je `EXPO_TV=1`. Bez uslova bi običan

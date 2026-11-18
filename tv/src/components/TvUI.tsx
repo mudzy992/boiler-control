@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Text,
   View,
-  type PressableProps,
   type ScrollViewProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { colors, fonts, spacing } from '../theme';
 
@@ -35,6 +35,25 @@ export type TvIconName =
   | 'dots'
   | 'cloud'
   | 'alert';
+
+export function TvAmbientBackground() {
+  return (
+    <Svg pointerEvents="none" style={StyleSheet.absoluteFill} viewBox="0 0 1920 1080" preserveAspectRatio="none">
+      <Defs>
+        <RadialGradient id="tvWarmGlow" cx="0.84" cy="0.02" r="0.54">
+          <Stop offset="0" stopColor={colors.accent} stopOpacity="0.12" />
+          <Stop offset="1" stopColor={colors.accent} stopOpacity="0" />
+        </RadialGradient>
+        <RadialGradient id="tvCoolGlow" cx="0.08" cy="0.92" r="0.48">
+          <Stop offset="0" stopColor="#38bdf8" stopOpacity="0.06" />
+          <Stop offset="1" stopColor="#38bdf8" stopOpacity="0" />
+        </RadialGradient>
+      </Defs>
+      <Rect width="1920" height="1080" fill="url(#tvWarmGlow)" />
+      <Rect width="1920" height="1080" fill="url(#tvCoolGlow)" />
+    </Svg>
+  );
+}
 
 const ICON_PATHS: Record<TvIconName, string> = {
   home: 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z',
@@ -152,10 +171,14 @@ export function TvCard({
   testID,
   accessibilityLabel,
   containerStyle,
+  decorative = false,
+  preferredFocus = false,
 }: {
   children: React.ReactNode;
   style?: ViewStyle | ViewStyle[];
   containerStyle?: ViewStyle | ViewStyle[];
+  decorative?: boolean;
+  preferredFocus?: boolean;
   onPress?: () => void;
   focused?: boolean;
   testID?: string;
@@ -164,6 +187,14 @@ export function TvCard({
   const [focus, setFocus] = React.useState(false);
   const content = (
     <View style={[styles.card, focus && styles.cardFocused, focused && styles.cardFocused, style]} testID={testID}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(22,30,44,0.98)', 'rgba(11,15,22,0.98)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {decorative ? <View pointerEvents="none" style={styles.metricAura} /> : null}
       {children}
     </View>
   );
@@ -172,6 +203,7 @@ export function TvCard({
       <View
         style={containerStyle}
         focusable
+        hasTVPreferredFocus={preferredFocus}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
         accessibilityLabel={accessibilityLabel}
@@ -183,6 +215,7 @@ export function TvCard({
   return (
     <Pressable
       focusable
+      hasTVPreferredFocus={preferredFocus}
       onPress={onPress}
       onFocus={() => setFocus(true)}
       onBlur={() => setFocus(false)}
@@ -191,7 +224,7 @@ export function TvCard({
       style={[styles.pressableCard, containerStyle]}
       testID={testID}
     >
-      <View style={[styles.card, focus && styles.cardFocused, style]}>{children}</View>
+      {content}
     </Pressable>
   );
 }
@@ -234,6 +267,7 @@ export function TvMetricCard({
   tone = 'primary',
   onPress,
   testID,
+  preferredFocus = false,
 }: {
   label: string;
   value: string;
@@ -243,10 +277,11 @@ export function TvMetricCard({
   tone?: 'primary' | 'signal' | 'ok' | 'warn';
   onPress?: () => void;
   testID?: string;
+  preferredFocus?: boolean;
 }) {
   const tint = tone === 'signal' ? colors.accent : tone === 'ok' ? colors.success : tone === 'warn' ? colors.warning : colors.text;
   return (
-    <TvCard onPress={onPress} testID={testID} containerStyle={{ flex: 1 }}>
+    <TvCard onPress={onPress} testID={testID} containerStyle={{ flex: 1 }} style={styles.metricCard} decorative preferredFocus={preferredFocus}>
       <View style={styles.metricHead}>
         <TvText size="small" tone="muted" style={styles.metricLabel}>{label}</TvText>
         <View style={[styles.metricIcon, { backgroundColor: `${tint}1c` }]}>
@@ -298,7 +333,7 @@ export function TvChip({
       style={[styles.chip, active && styles.chipActive]}
       testID={testID}
     >
-      <TvText size="micro" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.accent : colors.textDim }}>{label}</TvText>
+      <TvText size="micro" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.text : colors.textDim }}>{label}</TvText>
     </Pressable>
   );
 }
@@ -370,16 +405,18 @@ export function TvScrollView({
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { flexGrow: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: 42, gap: spacing.md },
+  scroll: { flex: 1, backgroundColor: 'transparent' },
+  scrollContent: { width: '100%', maxWidth: 1540, alignSelf: 'center', flexGrow: 1, paddingHorizontal: spacing.xl + 10, paddingTop: 27, paddingBottom: 34, gap: 14 },
   pageHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20, marginBottom: 4 },
   headingText: { flexShrink: 1 },
   eyebrow: { letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 5, fontFamily: fonts.mono },
   pageTitle: { fontSize: 33, letterSpacing: -0.8, fontFamily: fonts.sansSemiBold },
   headingSubtitle: { marginTop: 7 },
   headingRight: { alignItems: 'flex-end', justifyContent: 'flex-end' },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.lg, gap: spacing.sm },
-  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.19, shadowRadius: 12, elevation: 5 },
+  card: { position: 'relative', overflow: 'hidden', backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: 21, gap: spacing.sm, shadowColor: '#000000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.28, shadowRadius: 18, elevation: 4 },
+  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.42, shadowRadius: 18, elevation: 9, transform: [{ scale: 1.012 }] },
+  metricCard: { paddingVertical: 17, paddingHorizontal: 19, gap: 6, minHeight: 136 },
+  metricAura: { position: 'absolute', width: 126, height: 126, borderRadius: 100, right: -53, top: -70, borderWidth: 1, borderColor: 'rgba(255,255,255,0.065)' },
   pressableCard: { flex: 1 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 3 },
   cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
@@ -396,8 +433,8 @@ const styles = StyleSheet.create({
   metricMeta: { marginTop: 1 },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 6 },
   statusDot: { width: 6, height: 6, borderRadius: 5 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
-  chipActive: { borderColor: `${colors.accent}55`, backgroundColor: `${colors.accent}1c` },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: 'rgba(11,15,22,0.82)' },
+  chipActive: { borderColor: '#2c3746', backgroundColor: '#1a222e' },
   chipText: { fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: colors.textDim },
   chipTextActive: { color: colors.accent },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },

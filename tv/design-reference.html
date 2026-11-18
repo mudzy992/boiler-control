@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#05070b" />
+  <title>Boiler Control TV — referentni dizajn</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #05070b;
+      --panel: #0b0f16;
+      --raised: #111723;
+      --line: #1f2733;
+      --line-strong: #2c3746;
+      --ink: #e8edf4;
+      --muted: #9aa6b6;
+      --dim: #828d9e;
+      --signal: #ff6b3d;
+      --signal-soft: rgba(255, 107, 61, .13);
+      --ok: #22c55e;
+      --ok-soft: rgba(34, 197, 94, .12);
+      --warn: #f5a524;
+      --warn-soft: rgba(245, 165, 36, .12);
+      --fault: #f87171;
+      --info: #38bdf8;
+      --radius: 18px;
+      --shadow: 0 24px 64px rgba(0,0,0,.34);
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--canvas); color: var(--ink); font-family: var(--font); }
+    body { background-image: radial-gradient(ellipse at 84% 5%, rgba(255,107,61,.075), transparent 28%), radial-gradient(ellipse at 10% 88%, rgba(56,189,248,.035), transparent 31%); }
+    button { color: inherit; font: inherit; }
+    .app { height: 100dvh; min-height: 600px; display: grid; grid-template-rows: 82px 1fr 82px; max-width: 1920px; margin: 0 auto; position: relative; isolation: isolate; }
+    .topbar { z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; border-bottom: 1px solid rgba(255,255,255,.055); background: rgba(5,7,11,.78); backdrop-filter: blur(20px); }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .brandmark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; color: var(--signal); background: linear-gradient(145deg, rgba(255,107,61,.2), rgba(255,107,61,.06)); border: 1px solid rgba(255,107,61,.27); box-shadow: inset 0 1px rgba(255,255,255,.08); }
+    .brandmark svg { width: 23px; height: 23px; }
+    .brand-name { font-weight: 700; letter-spacing: -.03em; font-size: 17px; }
+    .brand-sub { margin-top: 3px; color: var(--dim); font: 10px var(--mono); text-transform: uppercase; letter-spacing: .13em; }
+    .top-meta { display: flex; align-items: center; gap: 24px; }
+    .live-state { color: #a5f3bd; background: var(--ok-soft); border: 1px solid rgba(34,197,94,.23); padding: 8px 12px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .live-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--ok); box-shadow: 0 0 12px rgba(34,197,94,.8); }
+    .weather-mini { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+    .weather-mini strong { color: var(--ink); font: 600 15px var(--mono); }
+    .weather-symbol { color: #f8c773; font-size: 19px; }
+    .clock { text-align: right; font: 600 17px var(--mono); letter-spacing: -.06em; }
+    .clock small { display: block; color: var(--dim); font: 10px var(--font); letter-spacing: .05em; margin-top: 2px; }
+    .workspace { min-height: 0; overflow: auto; padding: 27px 42px 34px; scrollbar-width: thin; scrollbar-color: #384252 transparent; scroll-behavior: smooth; }
+    .workspace::-webkit-scrollbar { width: 8px; }
+    .workspace::-webkit-scrollbar-thumb { background: #384252; border-radius: 99px; border: 2px solid var(--canvas); }
+    .page { display: none; max-width: 1540px; margin: 0 auto; animation: enter .26s ease both; }
+    .page.active { display: block; }
+    @keyframes enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 0 0 21px; }
+    .eyebrow { color: var(--signal); font: 600 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 8px; }
+    h1 { margin: 0; font-size: clamp(27px, 2.25vw, 38px); line-height: 1.05; letter-spacing: -.055em; font-weight: 700; }
+    .heading-copy { color: var(--muted); margin: 9px 0 0; font-size: 13px; }
+    .heading-right { display: flex; align-items: center; gap: 10px; }
+    .subtabs { display: inline-flex; padding: 4px; gap: 3px; border-radius: 12px; border: 1px solid var(--line); background: rgba(11,15,22,.82); }
+    .subtab { border: 0; border-radius: 8px; background: transparent; padding: 9px 14px; color: var(--dim); font-weight: 650; font-size: 11px; cursor: pointer; transition: .18s ease; }
+    .subtab.active { color: var(--ink); background: #1a222e; box-shadow: inset 0 1px rgba(255,255,255,.06); }
+    .range-pills { display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+    .range-pills button { border: 0; background: transparent; color: var(--dim); padding: 7px 10px; border-radius: 7px; font-size: 10px; cursor: pointer; }
+    .range-pills button.selected { color: var(--signal); background: var(--signal-soft); }
+    .grid { display: grid; gap: 14px; }
+    .kpis { grid-template-columns: repeat(4, minmax(0,1fr)); margin-bottom: 14px; }
+    .card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(145deg, rgba(17,23,35,.96), rgba(11,15,22,.98)); box-shadow: 0 10px 26px rgba(0,0,0,.12), inset 0 1px rgba(255,255,255,.035); }
+    .kpi { min-height: 140px; padding: 18px 20px; }
+    .kpi:after { content: ""; position: absolute; width: 130px; height: 130px; right: -55px; top: -73px; border-radius: 50%; border: 1px solid rgba(255,255,255,.055); box-shadow: 0 0 0 15px rgba(255,255,255,.012), 0 0 0 31px rgba(255,255,255,.009); pointer-events: none; }
+    .kpi-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 11px; font-weight: 600; }
+    .icon-box { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: var(--signal); background: var(--signal-soft); }
+    .icon-box svg { width: 16px; height: 16px; }
+    .kpi-value { margin-top: 15px; font: 600 clamp(26px,2.1vw,35px) var(--mono); letter-spacing: -.08em; white-space: nowrap; }
+    .kpi-value .unit { font: 500 13px var(--font); color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+    .kpi-meta { margin-top: 7px; font-size: 10px; color: var(--dim); }
+    .positive { color: #6ee79a; }
+    .negative { color: #f4b95d; }
+    .home-grid { grid-template-columns: minmax(0,1.55fr) minmax(300px,.85fr); }
+    .panel { padding: 20px 22px; }
+    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+    .panel-title h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+    .panel-title p { margin: 4px 0 0; color: var(--dim); font-size: 10px; }
+    .text-link { border: 0; background: transparent; color: var(--signal); font-size: 10px; font-weight: 700; cursor: pointer; }
+    .chart-wrap { width: 100%; height: 190px; position: relative; }
+    .chart-wrap svg { width: 100%; height: 100%; overflow: visible; }
+    .chart-grid { stroke: #26303d; stroke-width: 1; stroke-dasharray: 3 6; }
+    .chart-label { fill: #788597; font: 9px var(--mono); }
+    .chart-area { fill: url(#area); }
+    .chart-line { fill: none; stroke: var(--signal); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 5px rgba(255,107,61,.35)); }
+    .chart-line-cool { fill: none; stroke: #38bdf8; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-point { fill: var(--canvas); stroke: var(--signal); stroke-width: 2; }
+    .chart-legend { display: flex; align-items: center; gap: 16px; color: var(--dim); font-size: 10px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--signal); margin-right: 5px; display: inline-block; }
+    .legend-dot.blue { background: var(--info); }
+    .two-col { grid-template-columns: 1.4fr 1fr; }
+    .health-panel { padding: 21px; }
+    .health-main { display: flex; align-items: center; gap: 20px; }
+    .score-ring { width: 118px; height: 118px; flex: 0 0 auto; position: relative; display: grid; place-items: center; }
+    .score-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .score-ring circle { fill: none; stroke-width: 7; }
+    .score-ring .track { stroke: #242c38; }
+    .score-ring .progress { stroke: var(--ok); stroke-linecap: round; stroke-dasharray: 264; stroke-dashoffset: 23; filter: drop-shadow(0 0 5px rgba(34,197,94,.35)); }
+    .score-num { font: 600 29px var(--mono); letter-spacing: -.09em; }
+    .score-num small { display: block; text-align: center; color: var(--dim); font: 9px var(--font); letter-spacing: .1em; text-transform: uppercase; margin-top: 2px; }
+    .health-copy h3 { margin: 0 0 7px; font-size: 16px; }
+    .health-copy p { color: var(--muted); font-size: 11px; line-height: 1.55; margin: 0; }
+    .health-status { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 6px 9px; border: 1px solid rgba(34,197,94,.2); background: var(--ok-soft); color: #9ef0b6; border-radius: 8px; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .health-items { display: grid; gap: 11px; margin-top: 20px; }
+    .health-item { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); }
+    .health-check { color: var(--ok); font-size: 14px; }
+    .heat-status { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .heat-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 8px 10px; color: #ffd4c6; background: var(--signal-soft); border: 1px solid rgba(255,107,61,.22); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+    .heat-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 12px var(--signal); }
+    .boiler-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.055); }
+    .boiler-row:last-child { border: 0; }
+    .boiler-name { font-size: 11px; color: var(--muted); }
+    .boiler-val { font: 500 12px var(--mono); color: var(--ink); }
+    .event-list { display: grid; }
+    .event-row { display: grid; grid-template-columns: 78px 14px 1fr auto; align-items: center; gap: 10px; min-height: 39px; color: var(--muted); font-size: 10px; border-bottom: 1px solid rgba(255,255,255,.045); }
+    .event-row:last-child { border: 0; }
+    .event-time { font: 10px var(--mono); color: var(--dim); }
+    .event-line { width: 7px; height: 7px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 8px rgba(255,107,61,.45); }
+    .event-duration { color: var(--dim); font: 9px var(--mono); }
+    .chart-large { height: 270px; }
+    .analytics-grid { grid-template-columns: minmax(0,1.6fr) minmax(270px,.85fr); }
+    .metric-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 14px; }
+    .metric { padding: 15px 17px; }
+    .metric-label { color: var(--muted); font-size: 10px; }
+    .metric-value { margin-top: 10px; font: 600 23px var(--mono); letter-spacing: -.06em; }
+    .metric-foot { margin-top: 5px; color: var(--dim); font-size: 9px; }
+    .progress-track { height: 6px; background: #202833; border-radius: 99px; overflow: hidden; margin: 7px 0 14px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg,var(--signal),#ffac77); border-radius: inherit; }
+    .health-stat { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 11px; }
+    .health-stat:last-child { border: 0; }
+    .health-stat span { color: var(--muted); }
+    .health-stat strong { font: 500 11px var(--mono); }
+    .heating-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .big-reading { padding: 18px 20px; }
+    .big-reading .metric-value { font-size: 31px; }
+    .event-tag { padding: 5px 7px; border-radius: 6px; background: var(--raised); color: var(--dim); font: 9px var(--mono); }
+    .table { width: 100%; border-collapse: collapse; text-align: left; }
+    .table th { padding: 10px 8px; color: var(--dim); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .1em; border-bottom: 1px solid var(--line); }
+    .table td { padding: 13px 8px; color: var(--muted); font-size: 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .table td:first-child { color: var(--ink); font-weight: 600; }
+    .table tr:last-child td { border: 0; }
+    .mono { font-family: var(--mono); color: var(--ink); }
+    .settings-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; }
+    .settings-nav { padding: 9px; }
+    .settings-choice { display: flex; align-items: center; gap: 11px; width: 100%; padding: 12px 13px; border: 0; border-radius: 10px; color: var(--muted); background: transparent; text-align: left; cursor: pointer; font-size: 11px; }
+    .settings-choice.active { color: var(--ink); background: #1a222e; box-shadow: inset 2px 0 var(--signal); }
+    .settings-choice .choice-icon { width: 17px; text-align: center; color: var(--dim); }
+    .settings-choice.active .choice-icon { color: var(--signal); }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .setting-row:last-child { border: 0; }
+    .setting-label { font-size: 11px; font-weight: 600; }
+    .setting-desc { color: var(--dim); font-size: 9px; margin-top: 4px; }
+    .setting-value { color: var(--muted); font-size: 10px; }
+    .toggle { width: 30px; height: 17px; border-radius: 99px; background: #343e4c; position: relative; }
+    .toggle:after { content: ""; position: absolute; left: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: #b3bdc9; }
+    .toggle.on { background: rgba(255,107,61,.55); }
+    .toggle.on:after { left: 15px; background: var(--signal); }
+    .readonly { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; color: var(--dim); font-size: 9px; }
+    .footer-nav { z-index: 5; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 24px max(8px, env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.07); background: rgba(11,15,22,.94); backdrop-filter: blur(18px); }
+    .tab { display: flex; align-items: center; justify-content: center; gap: 10px; height: 56px; min-width: 152px; padding: 0 20px; border: 1px solid transparent; border-radius: 13px; color: var(--dim); background: transparent; cursor: pointer; transition: .18s ease; }
+    .tab svg { width: 19px; height: 19px; }
+    .tab span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .tab.active { color: var(--signal); background: var(--signal-soft); border-color: rgba(255,107,61,.18); }
+    .tab:hover, .focusable:focus-visible, button:focus-visible { outline: 2px solid rgba(255,107,61,.85); outline-offset: 2px; box-shadow: 0 0 0 6px rgba(255,107,61,.12); }
+    .focusable:focus-visible, button:focus-visible { transform: translateY(-1px); }
+    .tab.active:focus-visible { outline-color: var(--signal); }
+    .trend { color: var(--ok); font-size: 10px; font-weight: 700; }
+    .lower-grid { grid-template-columns: 1.1fr .9fr; margin-top: 14px; }
+    .health-score-page { grid-template-columns: minmax(300px,.75fr) 1.4fr; }
+    .line { height: 1px; background: var(--line); margin: 12px 0; }
+    .reading-note { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 9px; margin-top: 14px; }
+    .note-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--info); }
+    @media (max-width: 1100px) {
+      .workspace { padding: 22px 24px 30px; }
+      .topbar { padding: 0 24px; }
+      .kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .home-grid, .analytics-grid, .health-score-page { grid-template-columns: 1fr; }
+      .settings-layout { grid-template-columns: 190px 1fr; }
+      .tab { min-width: 120px; }
+    }
+    @media (max-width: 700px) {
+      .app { min-height: 500px; grid-template-rows: 64px 1fr 70px; }
+      .workspace { padding: 17px 14px 23px; }
+      .topbar { padding: 0 15px; }
+      .top-meta .live-state, .top-meta .clock { display: none; }
+      .weather-mini { font-size: 11px; }
+      .page-heading { align-items: flex-start; flex-direction: column; margin-bottom: 15px; }
+      .kpis { gap: 9px; }
+      .kpi { min-height: 116px; padding: 14px; }
+      .home-grid, .two-col, .analytics-grid, .health-score-page, .lower-grid { grid-template-columns: 1fr; }
+      .metric-row { gap: 8px; }
+      .metric { padding: 12px; }
+      .metric-value { font-size: 18px; }
+      .panel { padding: 16px; }
+      .tab { min-width: 0; flex: 1; height: 54px; padding: 0 6px; flex-direction: column; gap: 3px; }
+      .tab span { font-size: 8px; }
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav { display: flex; overflow-x: auto; }
+      .settings-choice { width: auto; white-space: nowrap; }
+      .subtabs { max-width: 100%; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M13.1 2.8c.7 3.2-1.1 4.4-2.6 6.2-1.2 1.5-1.6 3.4-.6 4.8-.1-2 1.2-3.2 2.5-4.1 2.6 2 4 4.1 3.6 6.5-.3 2.3-2.1 4-4.5 4-3.3 0-5.6-2.5-5.2-5.8.2-2.1 1.3-3.4 2.2-4.3C8.2 13.7 4.5 15.3 4.5 18c0 2.2 2.3 3.7 6.8 3.7 5.6 0 8.3-3.2 8.3-7.3 0-4-2.5-7.5-6.5-11.6Z" fill="currentColor"/></svg></div>
+        <div><div class="brand-name">Boiler Control</div><div class="brand-sub">TV · Visoko · Dom</div></div>
+      </div>
+      <div class="top-meta">
+        <div class="weather-mini"><span class="weather-symbol">☼</span><span>Vanjska temperatura</span><strong>8.6°</strong></div>
+        <div class="live-state"><i class="live-dot"></i> Sistem online</div>
+        <div class="clock"><span id="clock">20:42</span><small>SUBOTA · 7. NOVEMBAR</small></div>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace">
+      <section class="page active" id="page-home" data-page="home">
+        <div class="page-heading">
+          <div><div class="eyebrow">Kontrolni centar <span class="positive">/ sve radi normalno</span></div><h1>Dobro veče, Amire.</h1><p class="heading-copy">Pregled doma · podaci osvježeni prije 2 minute</p></div>
+          <div class="heading-right"><div class="subtabs" aria-label="Početna sekcija"><button class="subtab active focusable" data-home-view="home">Pregled</button><button class="subtab focusable" data-home-view="analytics">Analitika</button><button class="subtab focusable" data-home-view="health">Zdravlje</button></div></div>
+        </div>
+        <div class="grid kpis">
+          <article class="card kpi focusable"><div class="kpi-top"><span>Vanjska temperatura</span><span class="icon-box">☼</span></div><div class="kpi-value">8.6<span class="unit">°C</span></div><div class="kpi-meta">Oblačno · osjećaj 7.9°</div></article>
+          <article class="card kpi focusable"><div class="kpi-top"><span>Termostat · Dnevna soba</span><span class="icon-box">⌂</span></div><div class="kpi-value">21.4<span class="unit">°C</span></div><div class="kpi-meta">Cilj <span class="mono">22.0 °C</span> · grijanje uključeno</div></article>
+          <article class="card kpi focusable"><div class="kpi-top"><span>Polazna voda</span><span class="icon-box">♨</span></div><div class="kpi-value">48<span class="unit">°C</span></div><div class="kpi-meta">Stvarno · cilj 50 °C</div></article>
+          <article class="card kpi focusable"><div class="kpi-top"><span>Trošak plina · 30 dana</span><span class="icon-box">◉</span></div><div class="kpi-value">128<span class="unit">KM</span></div><div class="kpi-meta"><span class="positive">−6.2%</span> prema prethodnom periodu</div></article>
+        </div>
+        <div class="grid home-grid">
+          <article class="card panel">
+            <div class="panel-title"><div><h2>Temperatura doma</h2><p>Očitanje termostata i cilj · posljednja 24 sata</p></div><div class="chart-legend"><span><i class="legend-dot"></i> U sobi</span><span><i class="legend-dot blue"></i> Cilj</span></div></div>
+            <div class="chart-wrap"><svg viewBox="0 0 760 205" role="img" aria-label="Graf temperature doma"><defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ff6b3d" stop-opacity=".25"/><stop offset="1" stop-color="#ff6b3d" stop-opacity="0"/></linearGradient></defs><path class="chart-grid" d="M40 25H750M40 70H750M40 115H750M40 160H750"/><text class="chart-label" x="0" y="29">24°</text><text class="chart-label" x="0" y="74">22°</text><text class="chart-label" x="0" y="119">20°</text><text class="chart-label" x="0" y="164">18°</text><path class="chart-area" d="M40 147 C90 142 100 124 150 126 S220 118 260 99 S330 105 370 91 S430 87 470 78 S535 86 570 69 S630 76 675 60 S720 55 750 55 L750 175 L40 175Z"/><path class="chart-line" d="M40 147 C90 142 100 124 150 126 S220 118 260 99 S330 105 370 91 S430 87 470 78 S535 86 570 69 S630 76 675 60 S720 55 750 55"/><path class="chart-line-cool" d="M40 75H750"/><circle class="chart-point" cx="750" cy="55" r="4"/><text class="chart-label" x="40" y="197">00:00</text><text class="chart-label" x="218" y="197">06:00</text><text class="chart-label" x="396" y="197">12:00</text><text class="chart-label" x="574" y="197">18:00</text><text class="chart-label" x="720" y="197">Sada</text></svg></div>
+          </article>
+          <article class="card panel">
+            <div class="panel-title"><div><h2>Status grijanja</h2><p>Thermostat · Dnevna soba</p></div><div class="heat-badge"><i></i> Aktivno</div></div>
+            <div class="health-main"><div class="score-ring"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="progress" cx="50" cy="50" r="42"/></svg><div class="score-num">72<small>% ciklusa</small></div></div><div class="health-copy"><h3>Stabilno zagrijavanje</h3><p>Temperatura raste prema cilju. Procjena do cilja: <span class="mono">18 min</span>.</p></div></div>
+            <div class="boiler-row"><span class="boiler-name">Termostat</span><span class="boiler-val">21.4° <span class="dim">/ 22.0°</span></span></div><div class="boiler-row"><span class="boiler-name">Polazna voda</span><span class="boiler-val">48° <span class="dim">/ 50°</span></span></div><div class="boiler-row"><span class="boiler-name">Zadnji ciklus</span><span class="boiler-val">18:22 · 46 min</span></div>
+          </article>
+        </div>
+        <div class="grid lower-grid">
+          <article class="card panel"><div class="panel-title"><div><h2>Zdravlje sistema</h2><p>Pregled kotla, termostata i podataka</p></div><button class="text-link focusable" data-open="health">DETALJI ↗</button></div><div class="health-items"><div class="health-item"><span class="health-check">✓</span> Kotao povezan i šalje očitanja <span class="event-duration">2 min</span></div><div class="health-item"><span class="health-check">✓</span> Termostat odgovara normalno <span class="event-duration">sada</span></div><div class="health-item"><span class="health-check">✓</span> Raspored aktivan za danas <span class="event-duration">07:00–22:30</span></div></div></article>
+          <article class="card panel"><div class="panel-title"><div><h2>Današnja preporuka</h2><p>Na osnovu uslova doma i vanjske temperature</p></div><span class="event-tag">AI · 92%</span></div><div class="boiler-row"><span class="boiler-name">Preporučena polazna</span><span class="boiler-val">50 °C</span></div><div class="boiler-row"><span class="boiler-name">Ušteda u odnosu na jučer</span><span class="boiler-val positive">−0.8 m³</span></div><div class="boiler-row"><span class="boiler-name">Procjena potrošnje</span><span class="boiler-val">4.2 m³ danas</span></div></article>
+        </div>
+      </section>
+
+      <section class="page" id="page-analytics" data-page="analytics">
+        <div class="page-heading"><div><div class="eyebrow">Pregled podataka / <span class="positive">zdravlje doma</span></div><h1>Analitika</h1><p class="heading-copy">Stvarni trendovi grijanja i potrošnje · bez procjena koje nisu izmjerene</p></div><div class="range-pills"><button class="selected focusable">DAN</button><button class="focusable">SEDMICA</button><button class="focusable">MJESEC</button><button class="focusable">GODINA</button></div></div>
+        <div class="metric-row"><article class="card metric"><div class="metric-label">Zdravlje sistema</div><div class="metric-value positive">94 <span style="font:12px var(--font);color:var(--muted)">/ 100</span></div><div class="metric-foot">Stabilno · 3 provjere uredne</div></article><article class="card metric"><div class="metric-label">Prosječna sobna temperatura</div><div class="metric-value">21.2 °C</div><div class="metric-foot">Cilj 22.0 °C</div></article><article class="card metric"><div class="metric-label">Potrošnja u periodu</div><div class="metric-value">38.6 m³</div><div class="metric-foot"><span class="positive">−4.8%</span> prema ranijem periodu</div></article></div>
+        <div class="grid analytics-grid">
+          <article class="card panel"><div class="panel-title"><div><h2>Grijanje i temperatura</h2><p>Satni prosjek · stvarna očitanja</p></div><div class="chart-legend"><span><i class="legend-dot"></i> Sobna temp.</span><span><i class="legend-dot blue"></i> Cilj</span></div></div><div class="chart-wrap chart-large"><svg viewBox="0 0 900 280" role="img" aria-label="Graf grijanja"><path class="chart-grid" d="M42 28H890M42 85H890M42 142H890M42 199H890"/><text class="chart-label" x="4" y="32">24°</text><text class="chart-label" x="4" y="89">22°</text><text class="chart-label" x="4" y="146">20°</text><text class="chart-label" x="4" y="203">18°</text><path class="chart-area" d="M42 177 C95 169 120 158 165 152 S228 127 270 134 S338 105 380 112 S440 95 485 90 S550 101 595 77 S652 83 700 67 S760 82 804 54 S850 58 890 43L890 225L42 225Z"/><path class="chart-line" d="M42 177 C95 169 120 158 165 152 S228 127 270 134 S338 105 380 112 S440 95 485 90 S550 101 595 77 S652 83 700 67 S760 82 804 54 S850 58 890 43"/><path class="chart-line-cool" d="M42 85H890"/><text class="chart-label" x="42" y="255">06:00</text><text class="chart-label" x="250" y="255">09:00</text><text class="chart-label" x="465" y="255">12:00</text><text class="chart-label" x="680" y="255">15:00</text><text class="chart-label" x="850" y="255">18:00</text></svg></div></article>
+          <article class="card panel"><div class="panel-title"><div><h2>Stanje zdravlja</h2><p>Automatske provjere</p></div><span class="health-status"><i class="live-dot"></i> Dobro</span></div><div class="health-stat"><span>Veza kotla</span><strong class="positive">ONLINE</strong></div><div class="health-stat"><span>Termostat</span><strong class="positive">ONLINE</strong></div><div class="health-stat"><span>Podaci očitanja</span><strong>2 min</strong></div><div class="health-stat"><span>Upozorenja</span><strong>0 aktivnih</strong></div><div class="line"></div><div class="metric-label">Pouzdanost očitanja</div><div class="progress-track"><div class="progress-fill" style="width:94%"></div></div><div class="metric-foot">Na osnovu dostupnosti uređaja i svježine podataka.</div></article>
+        </div>
+        <div class="grid lower-grid"><article class="card panel"><div class="panel-title"><div><h2>Potrošnja plina</h2><p>Poređenje s prethodnim periodom</p></div><span class="trend">↓ 4.8%</span></div><div class="chart-wrap" style="height:145px"><svg viewBox="0 0 760 160"><path class="chart-grid" d="M40 25H750M40 65H750M40 105H750"/><path d="M40 117 L130 91 L220 99 L310 58 L400 72 L490 44 L580 67 L670 36 L750 51" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 126 L130 105 L220 111 L310 76 L400 87 L490 64 L580 83 L670 60 L750 69" fill="none" stroke="#ff6b3d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><text class="chart-label" x="42" y="151">PON</text><text class="chart-label" x="210" y="151">UTO</text><text class="chart-label" x="380" y="151">SRI</text><text class="chart-label" x="550" y="151">ČET</text><text class="chart-label" x="700" y="151">PET</text></svg></div></article><article class="card panel"><div class="panel-title"><div><h2>Učinkovitost grijanja</h2><p>Vrijeme do ciljne temperature</p></div></div><div class="health-stat"><span>Prosjek ove sedmice</span><strong>42 min</strong></div><div class="health-stat"><span>Prethodna sedmica</span><strong>47 min</strong></div><div class="health-stat"><span>Promjena</span><strong class="positive">−10.6%</strong></div><div class="reading-note"><i class="note-dot"></i> Poređenje prikazano samo kad postoje oba raspona podataka.</div></article></div>
+      </section>
+
+      <section class="page" id="page-health" data-page="health">
+        <div class="page-heading"><div><div class="eyebrow">Analitika / <span class="positive">status uređaja</span></div><h1>Zdravlje sistema</h1><p class="heading-copy">Stanje veze, termostata i svježine podataka</p></div><div class="health-status"><i class="live-dot"></i> Sve provjere uredne</div></div>
+        <div class="grid health-score-page">
+          <article class="card panel health-panel"><div class="health-main"><div class="score-ring" style="width:148px;height:148px"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="progress" cx="50" cy="50" r="42"/></svg><div class="score-num" style="font-size:35px">94<small>indeks</small></div></div><div class="health-copy"><h3>Dom radi uredno</h3><p>Nema aktivnih upozorenja. Posljednje očitanje stiglo je prije 2 minute.</p><div class="health-status"><i class="live-dot"></i> Stabilno</div></div></div><div class="health-items"><div class="health-item"><span class="health-check">✓</span> Kotao dostupan <span class="event-duration">ONLINE</span></div><div class="health-item"><span class="health-check">✓</span> Termostat dostupan <span class="event-duration">ONLINE</span></div><div class="health-item"><span class="health-check">✓</span> Zadnji podatak je svjež <span class="event-duration">2 min</span></div><div class="health-item"><span class="health-check">✓</span> Raspored grijanja aktivan <span class="event-duration">DANAS</span></div></div></article>
+          <article class="card panel"><div class="panel-title"><div><h2>Termostat · Dnevna soba</h2><p>Usporedba trenutne i ciljne temperature</p></div><div class="heat-badge"><i></i> Grije</div></div><div class="heating-summary"><div class="card big-reading"><div class="metric-label">Trenutno</div><div class="metric-value">21.4 °C</div></div><div class="card big-reading"><div class="metric-label">Cilj</div><div class="metric-value">22.0 °C</div></div></div><div class="panel-title" style="margin-top:18px"><div><h2>Temperatura · danas</h2><p>Stvarna očitanja i cilj</p></div></div><div class="chart-wrap"><svg viewBox="0 0 700 185"><path class="chart-grid" d="M35 25H690M35 70H690M35 115H690M35 160H690"/><path class="chart-line" d="M35 145 C80 139 105 121 150 124 S220 110 250 97 S320 92 355 84 S420 95 460 75 S525 81 560 62 S630 61 690 54"/><path class="chart-line-cool" d="M35 70H690"/><text class="chart-label" x="35" y="180">00:00</text><text class="chart-label" x="205" y="180">06:00</text><text class="chart-label" x="375" y="180">12:00</text><text class="chart-label" x="545" y="180">18:00</text></svg></div></article>
+        </div>
+      </section>
+
+      <section class="page" id="page-heating" data-page="heating">
+        <div class="page-heading"><div><div class="eyebrow">Udobnost doma / <span class="positive">trenutni ciklus</span></div><h1>Grijanje</h1><p class="heading-copy">Status termostata, ciklusi i dnevni raspored</p></div><div class="heat-badge"><i></i> Grijanje aktivno</div></div>
+        <div class="grid heating-summary">
+          <article class="card big-reading"><div class="metric-label">Temperatura sobe · Dnevna soba</div><div class="metric-value">21.4 <span style="font-size:14px;color:var(--muted)">°C</span></div><div class="metric-foot">Cilj <span class="mono">22.0 °C</span> · nedostaje 0.6°</div><div class="progress-track" style="height:8px;margin-top:15px"><div class="progress-fill" style="width:82%"></div></div><div class="metric-foot">Procjena do cilja · 18 min</div></article>
+          <article class="card big-reading"><div class="metric-label">Polazna voda · stvarno / cilj</div><div class="metric-value">48 / 50 <span style="font-size:14px;color:var(--muted)">°C</span></div><div class="metric-foot">U dozvoljenom rasponu</div><div class="boiler-row" style="margin-top:12px"><span class="boiler-name">Kotao</span><span class="boiler-val positive">Online</span></div></article>
+        </div>
+        <div class="grid two-col" style="margin-top:14px">
+          <article class="card panel"><div class="panel-title"><div><h2>Temperatura kroz dan</h2><p>Očitana sobna temperatura u odnosu na cilj</p></div><div class="chart-legend"><span><i class="legend-dot"></i> Soba</span><span><i class="legend-dot blue"></i> Cilj</span></div></div><div class="chart-wrap chart-large"><svg viewBox="0 0 850 280"><path class="chart-grid" d="M40 25H840M40 82H840M40 139H840M40 196H840"/><text class="chart-label" x="0" y="29">24°</text><text class="chart-label" x="0" y="86">22°</text><text class="chart-label" x="0" y="143">20°</text><text class="chart-label" x="0" y="200">18°</text><path class="chart-area" d="M40 185 C100 180 120 165 170 161 S245 142 285 133 S355 115 400 119 S465 98 510 93 S585 100 630 80 S700 83 740 62 S800 65 840 49L840 220L40 220Z"/><path class="chart-line" d="M40 185 C100 180 120 165 170 161 S245 142 285 133 S355 115 400 119 S465 98 510 93 S585 100 630 80 S700 83 740 62 S800 65 840 49"/><path class="chart-line-cool" d="M40 82H840"/><text class="chart-label" x="40" y="255">06:00</text><text class="chart-label" x="230" y="255">09:00</text><text class="chart-label" x="430" y="255">12:00</text><text class="chart-label" x="630" y="255">15:00</text><text class="chart-label" x="800" y="255">18:00</text></svg></div></article>
+          <article class="card panel"><div class="panel-title"><div><h2>Današnji ciklusi</h2><p>Početak · trajanje · temperatura sobe</p></div><span class="event-tag">3 CIKLUSA</span></div><div class="event-list"><div class="event-row"><span class="event-time">06:42–07:31</span><i class="event-line"></i><span>Jutarnje zagrijavanje</span><span class="event-duration">49 min</span></div><div class="event-row"><span class="event-time">12:08–12:36</span><i class="event-line"></i><span>Dogrijavanje</span><span class="event-duration">28 min</span></div><div class="event-row"><span class="event-time">18:22–19:08</span><i class="event-line"></i><span>Večernji ciklus</span><span class="event-duration">46 min</span></div></div><div class="line"></div><div class="panel-title"><div><h2>Raspored</h2><p>Danas · automatski</p></div><button class="text-link focusable" data-open="schedule">CIJELI RASPORED ↗</button></div><div class="boiler-row"><span class="boiler-name">22:30 – 06:30</span><span class="boiler-val">Noćni režim · 19.0°</span></div></article>
+        </div>
+      </section>
+
+      <section class="page" id="page-gas" data-page="gas">
+        <div class="page-heading"><div><div class="eyebrow">Potrošnja / <span class="positive">pregled bez izmjena</span></div><h1>Plin</h1><p class="heading-copy">Očitanja i analiza troška · TV režim samo za čitanje</p></div><div class="subtabs"><button class="subtab active focusable" data-gas-view="readings">Očitanja</button><button class="subtab focusable" data-gas-view="analysis">Analiza</button></div></div>
+        <div class="readonly"><span>◉</span> SAMO PREGLED · dodavanje i uređivanje nije dostupno na TV-u</div>
+        <div class="grid metric-row" style="margin-top:14px"><article class="card metric"><div class="metric-label">Potrošnja · 30 dana</div><div class="metric-value">38.6 m³</div><div class="metric-foot">Od zadnjeg očitanja</div></article><article class="card metric"><div class="metric-label">Trošak ukupno</div><div class="metric-value">128.40 KM</div><div class="metric-foot">S uključenim PDV-om</div></article><article class="card metric"><div class="metric-label">Cijena po m³</div><div class="metric-value">3.32 KM</div><div class="metric-foot">Važeća cijena</div></article></div>
+        <div class="grid two-col">
+          <article class="card panel" id="gas-chart-panel"><div class="panel-title"><div><h2 id="gas-panel-title">Historija očitanja</h2><p id="gas-panel-subtitle">Zadnjih 6 očitanja · redoslijed od najnovijeg</p></div><span class="event-tag">M³</span></div><div class="chart-wrap" style="height:165px"><svg viewBox="0 0 700 175"><path class="chart-grid" d="M40 25H690M40 70H690M40 115H690"/><path d="M45 128 L165 105 L280 87 L395 64 L510 48 L625 29" fill="none" stroke="#ff6b3d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="625" cy="29" r="4" fill="#05070b" stroke="#ff6b3d" stroke-width="2"/><text class="chart-label" x="38" y="162">JUN</text><text class="chart-label" x="155" y="162">JUL</text><text class="chart-label" x="270" y="162">AUG</text><text class="chart-label" x="385" y="162">SEP</text><text class="chart-label" x="500" y="162">OKT</text><text class="chart-label" x="610" y="162">NOV</text></svg></div></article>
+          <article class="card panel"><div class="panel-title"><div><h2 id="gas-list-title">Očitanja plinomjera</h2><p>Datum · stanje brojila · razlika</p></div></div><table class="table"><thead><tr><th>Datum</th><th>Stanje</th><th>Potrošnja</th><th>Trošak</th></tr></thead><tbody><tr><td>01.11.2026</td><td class="mono">1,842.6</td><td>94.2 m³</td><td class="mono">312 KM</td></tr><tr><td>01.10.2026</td><td class="mono">1,748.4</td><td>62.8 m³</td><td class="mono">208 KM</td></tr><tr><td>01.09.2026</td><td class="mono">1,685.6</td><td>38.1 m³</td><td class="mono">126 KM</td></tr><tr><td>01.08.2026</td><td class="mono">1,647.5</td><td>21.6 m³</td><td class="mono">72 KM</td></tr></tbody></table><div class="reading-note"><i class="note-dot"></i> Očitanja su prikazana kao evidentirana u aplikaciji.</div></article>
+        </div>
+      </section>
+
+      <section class="page" id="page-settings" data-page="settings">
+        <div class="page-heading"><div><div class="eyebrow">Postavke / <span class="positive">prikaz podataka</span></div><h1 id="settings-title">Profil</h1><p class="heading-copy">Pregled profila i postavki · izmjene ostaju u mobilnoj aplikaciji</p></div><div class="readonly">◉ SAMO PREGLED</div></div>
+        <div class="settings-layout">
+          <nav class="card settings-nav" aria-label="Postavke">
+            <button class="settings-choice active focusable" data-setting="profile"><span class="choice-icon">◉</span> Profil</button>
+            <button class="settings-choice focusable" data-setting="notifications"><span class="choice-icon">♢</span> Obavijesti</button>
+            <button class="settings-choice focusable" data-setting="schedule"><span class="choice-icon">◷</span> Raspored grijanja</button>
+          </nav>
+          <div class="card panel" id="settings-content">
+            <div class="panel-title"><div><h2 id="settings-panel-title">Osnovni podaci</h2><p id="settings-panel-subtitle">Korisnički profil povezan s ovim domom</p></div><span class="event-tag">KORISNIK</span></div>
+            <div id="settings-rows">
+              <div class="setting-row"><div><div class="setting-label">Ime</div><div class="setting-desc">Prikazno ime profila</div></div><div class="setting-value">Amir H.</div></div>
+              <div class="setting-row"><div><div class="setting-label">E-mail</div><div class="setting-desc">Prijavljeni račun</div></div><div class="setting-value">amir@example.com</div></div>
+              <div class="setting-row"><div><div class="setting-label">Dom</div><div class="setting-desc">Aktivni profil domaćinstva</div></div><div class="setting-value">Visoko · Porodična kuća</div></div>
+              <div class="setting-row"><div><div class="setting-label">Status TV uređaja</div><div class="setting-desc">Uparen s mobilnom aplikacijom</div></div><div class="setting-value positive">Povezan</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="footer-nav" aria-label="Glavna navigacija">
+      <button class="tab active focusable" data-tab="home" aria-label="Početna"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Početna</span></button>
+      <button class="tab focusable" data-tab="heating" aria-label="Grijanje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22c4.5 0 7-3 7-7 0-3.3-2-5.8-5.4-9.8.4 2.7-.6 4.1-2.1 5.2.1-2.8-1.2-5.2-3.2-7.4C8.8 7.3 5 11 5 15c0 4.1 2.7 7 7 7Z"/><path d="M12 19c1.6 0 2.6-1.1 2.6-2.7 0-1.2-.7-2-1.9-3.4-.1 1.1-.6 1.7-1.4 2.1-.1-.9-.5-1.5-1.1-2-.7 1.1-1 2-1 3.1 0 1.7 1 2.9 2.8 2.9Z"/></svg><span>Grijanje</span></button>
+      <button class="tab focusable" data-tab="gas" aria-label="Plin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5m0 14h17"/><path d="m7 15 4-5 3 2 5-7"/><circle cx="19" cy="5" r="1.5"/></svg><span>Plin</span></button>
+      <button class="tab focusable" data-tab="settings" aria-label="Postavke"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 2.9-.2-.1a1.7 1.7 0 0 0-1.8.4l-.1.1h-3.4l-.1-.2a1.7 1.7 0 0 0-1.7-.9l-.2.1-2.9-1.7.1-.2a1.7 1.7 0 0 0-.4-1.8l-.1-.1v-3.4l.2-.1a1.7 1.7 0 0 0 .9-1.7l-.1-.2 1.7-2.9.2.1a1.7 1.7 0 0 0 1.8-.4l.1-.1h3.4l.1.2a1.7 1.7 0 0 0 1.7.9l.2-.1 2.9 1.7-.1.2a1.7 1.7 0 0 0 .4 1.8l.1.1z"/></svg><span>Postavke</span></button>
+    </nav>
+  </div>
+
+  <script>
+    const pages = [...document.querySelectorAll('.page')];
+    const mainTabs = [...document.querySelectorAll('[data-tab]')];
+    const workspace = document.getElementById('workspace');
+    function showPage(id) {
+      pages.forEach(page => page.classList.toggle('active', page.dataset.page === id));
+      const activeTab = (id === 'analytics' || id === 'health') ? 'home' : id;
+      mainTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === activeTab));
+      workspace.scrollTop = 0;
+    }
+    mainTabs.forEach(tab => tab.addEventListener('click', () => showPage(tab.dataset.tab)));
+    document.querySelectorAll('[data-home-view]').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('[data-home-view]').forEach(item => item.classList.toggle('active', item === button));
+      if (button.dataset.homeView === 'home') showPage('home');
+      else showPage(button.dataset.homeView);
+    }));
+    document.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => {
+      showPage(button.dataset.open === 'schedule' ? 'settings' : button.dataset.open);
+      if (button.dataset.open === 'schedule') selectSetting('schedule');
+    }));
+    document.querySelectorAll('.range-pills button').forEach(button => button.addEventListener('click', () => {
+      button.parentElement.querySelectorAll('button').forEach(item => item.classList.toggle('selected', item === button));
+    }));
+    const gasViews = {
+      readings: { title: 'Historija očitanja', subtitle: 'Zadnjih 6 očitanja · redoslijed od najnovijeg', list: 'Očitanja plinomjera', note: 'Očitanja su prikazana kao evidentirana u aplikaciji.' },
+      analysis: { title: 'Trošak i potrošnja', subtitle: 'Mjesečna potrošnja · samo postojeća očitanja', list: 'Analiza po periodu', note: 'Ukupno s PDV-om · bez dodavanja ili izmjene očitanja.' }
+    };
+    document.querySelectorAll('[data-gas-view]').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('[data-gas-view]').forEach(item => item.classList.toggle('active', item === button));
+      const data = gasViews[button.dataset.gasView];
+      document.getElementById('gas-panel-title').textContent = data.title;
+      document.getElementById('gas-panel-subtitle').textContent = data.subtitle;
+      document.getElementById('gas-list-title').textContent = data.list;
+      document.querySelector('.reading-note').innerHTML = '<i class="note-dot"></i> ' + data.note;
+    }));
+    const settingContent = {
+      profile: {
+        title: 'Profil', panel: 'Osnovni podaci', subtitle: 'Korisnički profil povezan s ovim domom', tag: 'KORISNIK',
+        rows: [['Ime','Prikazno ime profila','Amir H.'],['E-mail','Prijavljeni račun','amir@example.com'],['Dom','Aktivni profil domaćinstva','Visoko · Porodična kuća'],['Status TV uređaja','Uparen s mobilnom aplikacijom','Povezan']]
+      },
+      notifications: {
+        title: 'Obavijesti', panel: 'Nedavne obavijesti', subtitle: 'Sistemske poruke i upozorenja', tag: '3 NOVE',
+        rows: [['Grijanje uključeno','Dnevna soba · danas, 18:22','Sistem'],['Dnevna preporuka','Polazna temperatura optimizovana · 07:00','Preporuka'],['Sistem online','Kotao se javio · prije 2 min','Status'],['Raspored aktivan','Noćni režim počinje u 22:30','Raspored']]
+      },
+      schedule: {
+        title: 'Raspored grijanja', panel: 'Sedmični raspored', subtitle: 'Samo pregled · izmjene se rade u mobilnoj aplikaciji', tag: 'AKTIVAN',
+        rows: [['Radni dani','06:30 – 08:30 · 21.5 °C','Dnevni režim'],['Radni dani','08:30 – 16:30 · 19.0 °C','Štedni režim'],['Radni dani','16:30 – 22:30 · 22.0 °C','Večernji režim'],['Svaki dan','22:30 – 06:30 · 18.5 °C','Noćni režim']]
+      }
+    };
+    function selectSetting(key) {
+      document.querySelectorAll('[data-setting]').forEach(button => button.classList.toggle('active', button.dataset.setting === key));
+      const data = settingContent[key];
+      document.getElementById('settings-title').textContent = data.title;
+      document.getElementById('settings-panel-title').textContent = data.panel;
+      document.getElementById('settings-panel-subtitle').textContent = data.subtitle;
+      document.querySelector('#settings-content .event-tag').textContent = data.tag;
+      document.getElementById('settings-rows').innerHTML = data.rows.map(row => `<div class="setting-row"><div><div class="setting-label">${row[0]}</div><div class="setting-desc">${row[1]}</div></div><div class="setting-value">${row[2]}</div></div>`).join('');
+    }
+    document.querySelectorAll('[data-setting]').forEach(button => button.addEventListener('click', () => selectSetting(button.dataset.setting)));
+    // TV-remote friendly prototype: arrows move focus to the closest control in that direction.
+    document.addEventListener('keydown', event => {
+      if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+      const current = document.activeElement;
+      if (!current || !current.matches('.focusable,button')) return;
+      const candidates = [...document.querySelectorAll('.page.active .focusable, .footer-nav .focusable, .page.active button')].filter(item => item !== current && item.getClientRects().length);
+      const a = current.getBoundingClientRect();
+      const ax = a.left + a.width/2, ay = a.top + a.height/2;
+      const dirs = { ArrowLeft: [-1,0], ArrowRight: [1,0], ArrowUp: [0,-1], ArrowDown: [0,1] };
+      const [dx,dy] = dirs[event.key];
+      let best = null, bestScore = Infinity;
+      for (const item of candidates) {
+        const b = item.getBoundingClientRect(), bx=b.left+b.width/2, by=b.top+b.height/2;
+        const vx=bx-ax, vy=by-ay, primary=vx*dx+vy*dy;
+        if (primary <= 2) continue;
+        const cross=Math.abs(vx*dy-vy*dx);
+        const score=primary+cross*1.7;
+        if (score<bestScore) { best=item; bestScore=score; }
+      }
+      if (best) { event.preventDefault(); best.focus({preventScroll:true}); best.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'}); }
+    });
+    // Set clock from local browser time; fixed prototype date is part of sample data.
+    document.getElementById('clock').textContent = new Intl.DateTimeFormat('bs-BA', {hour:'2-digit',minute:'2-digit'}).format(new Date());
+    document.querySelector('.tab.active').focus({preventScroll:true});
+  </script>
+</body>
+</html>

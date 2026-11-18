@@ -28,7 +28,7 @@ import request from 'supertest';
  * nikad ne poziva, pa `unbound-method` ovdje nije stvarni problem.
  */
 function handlerRef(
-  name: 'testTriggerAllReminders' | 'testGasReminder',
+  name: 'testTriggerAllReminders' | 'testGasReminder' | 'testOwnDevicePush',
 ): object {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   return NotificationsController.prototype[name];
@@ -59,6 +59,11 @@ describe('SEC-3 / R-004: admin guard na masovnom testnom endpointu', () => {
       handlerRef('testTriggerAllReminders'),
     );
     expect(roles).toBeDefined();
+    expect(roles).toContain('ADMIN');
+  });
+
+  it('test vlastitog uređaja traži isključivo ADMIN rolu', () => {
+    const roles = Reflect.getMetadata(ROLES_KEY, handlerRef('testOwnDevicePush'));
     expect(roles).toContain('ADMIN');
   });
 

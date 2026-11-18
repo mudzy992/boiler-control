@@ -1,7 +1,8 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { colors, fonts, spacing } from '../theme';
+import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
+import { tvLocaleTag } from '../config';
 import {
   TvCard, TvCardTitle, TvChip, TvDataRow, TvIcon, TvMetricCard, TvPageHeading,
   TvScrollView, TvSectionTitle, TvStatusPill, TvText, type TvIconName,
@@ -40,7 +41,7 @@ const pick = (obj: AnyRecord | null | undefined, ...keys: string[]) => {
 const dateText = (value: unknown) => {
   if (!value) return '—';
   const date = new Date(String(value));
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString('bs-BA', { day: '2-digit', month: 'short', year: 'numeric' });
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString(tvLocaleTag(), { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 export function TvMainNavigation({ page, onChange }: { page: Page; onChange: (page: Page) => void }) {
@@ -62,7 +63,7 @@ export function TvMainNavigation({ page, onChange }: { page: Page; onChange: (pa
 export function TvTopBar({ data }: { data: TvDashboardData }) {
   const weather = data.dashboard?.system?.weather;
   const temp = pick(weather, 'temp', 'temperature');
-  const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' }) : null;
+  const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString(tvLocaleTag(), { hour: '2-digit', minute: '2-digit' }) : null;
   const location = String(pick(data.homeProfile, 'location', 'city') ?? 'DOM');
   const homeName = String(pick(data.homeProfile, 'name', 'title') ?? '');
   return <View style={styles.topbar}>
@@ -73,7 +74,7 @@ export function TvTopBar({ data }: { data: TvDashboardData }) {
     <View style={styles.topMeta}>
       <View style={styles.topMetaItem}><TvIcon name="weather" size={19} color={colors.warning} /><TvText size="small" tone="muted">Vanjska temperatura</TvText><TvText size="small" style={styles.topValue}>{fmt(temp)}°</TvText></View>
       <TvStatusPill label={data.error ? 'PODACI ZASTARJELI' : data.updatedAt ? 'SISTEM ONLINE' : 'POVEZIVANJE'} tone={data.error ? 'warn' : data.updatedAt ? 'ok' : 'neutral'} />
-      <View style={styles.clockWrap}><TvText size="section" style={styles.clock}>{new Date().toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' })}</TvText><TvText size="micro" tone="dim">{updated ? `AŽURIRANO ${updated}` : 'ČEKA PODATKE'}</TvText></View>
+      <View style={styles.clockWrap}><TvText size="section" style={styles.clock}>{new Date().toLocaleTimeString(tvLocaleTag(), { hour: '2-digit', minute: '2-digit' })}</TvText><TvText size="micro" tone="dim">{updated ? `AŽURIRANO ${updated}` : 'ČEKA PODATKE'}</TvText></View>
     </View>
   </View>;
 }
@@ -181,7 +182,7 @@ export function SettingsScreen({ data, view, onView }: { data: TvDashboardData; 
   return <TvScrollView key={view}>
     <TvPageHeading eyebrow="POSTAVKE · SAMO PREGLED" title="Profil i postavke" subtitle="Izmjene profila i uređaja ostaju dostupne u mobilnoj aplikaciji" />
     <View style={styles.settingsLayout}>
-      <View style={styles.settingsMenu}>{menu.map((item) => <Pressable key={item.id} focusable onPress={() => onView(item.id)} style={({ focused }) => [styles.settingsButton, view === item.id && styles.settingsButtonActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={view === item.id ? colors.accent : colors.textMuted} /><TvText size="small" style={view === item.id ? styles.settingsTextActive : undefined}>{item.label}</TvText><TvIcon name="chevron" size={17} color={colors.textDim} /></Pressable>)}</View>
+      <View style={styles.settingsMenu}>{menu.map((item) => <Pressable key={item.id} focusable hasTVPreferredFocus={view === item.id} accessibilityRole="button" accessibilityLabel={item.label} onPress={() => onView(item.id)} style={({ focused }) => [styles.settingsButton, view === item.id && styles.settingsButtonActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={view === item.id ? colors.accent : colors.textMuted} /><TvText size="small" style={view === item.id ? styles.settingsTextActive : undefined}>{item.label}</TvText><TvIcon name="chevron" size={17} color={colors.textDim} /></Pressable>)}</View>
       <View style={styles.settingsContent}>{view === 'profile' ? <ProfileSettings data={data} /> : view === 'notifications' ? <NotificationSettings data={data} /> : <ScheduleSettings data={data} />}</View>
     </View><DataFootnote data={data} />
   </TvScrollView>;
@@ -290,7 +291,7 @@ function HealthSummary({ data }: { data: TvDashboardData }) {
     <TvDataRow label="Ocjena sistema" value={score != null ? `${fmt(score, 0)} / 100` : '—'} />
     <TvDataRow label="Uređaji u nalogu" value={String(data.devices.length || '—')} />
     <TvDataRow label="Obavijesti" value={String(data.notifications.length)} />
-    <TvText size="micro" tone="dim">Bez API podatka kartica ostaje prazna; TV ne koristi demo vrijednosti.</TvText>
+    <TvText size="small" tone="dim">Bez API podatka kartica ostaje prazna; TV ne koristi demo vrijednosti.</TvText>
   </TvCard>;
 }
 function Recommendation({ data }: { data: TvDashboardData }) {
@@ -298,11 +299,11 @@ function Recommendation({ data }: { data: TvDashboardData }) {
   return <TvCard containerStyle={{ flex: 0.9 }}><TvCardTitle title="Preporuka sistema" subtitle="Vrijednosti koje vraća dashboard API" icon="trend" />
     <TvDataRow label="Preporučena polazna temperatura" value={isNumber(pick(recommendation, 'recommendedFlowTemp')) ? `${fmt(recommendation.recommendedFlowTemp)} °C` : '—'} />
     <TvDataRow label="Izvor preporuke" value={String(pick(recommendation, 'source') ?? '—')} />
-    <TvText size="micro" tone="dim">Preporuka je informativna i TV ne mijenja postavke kotla.</TvText>
+    <TvText size="small" tone="dim">Preporuka je informativna i TV ne mijenja postavke kotla.</TvText>
   </TvCard>;
 }
 function DataFootnote({ data }: { data: TvDashboardData }) {
-  return <View style={styles.footnote}><TvIcon name="shield" size={14} color={colors.textDim} /><TvText size="micro" tone="dim">Samo pregled · vrijednosti se prikazuju isključivo kada ih postojeći API vrati{data.updatedAt ? ` · osvježeno ${new Date(data.updatedAt).toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' })}` : ''}</TvText></View>;
+  return <View style={styles.footnote}><TvIcon name="shield" size={14} color={colors.textDim} /><TvText size="small" tone="dim">Samo pregled · vrijednosti se prikazuju isključivo kada ih postojeći API vrati{data.updatedAt ? ` · osvježeno ${new Date(data.updatedAt).toLocaleTimeString(tvLocaleTag(), { hour: '2-digit', minute: '2-digit' })}` : ''}</TvText></View>;
 }
 function EmptyState({ text }: { text: string }) { return <View style={styles.empty}><TvText size="small" tone="dim">{text}</TvText></View>; }
 function TemperatureChart({ events }: { events: AnyRecord[] }) {
@@ -314,7 +315,7 @@ function TemperatureChart({ events }: { events: AnyRecord[] }) {
   const width = 500;
   const height = 82;
   const points = values.map((value, index) => `${(index / (values.length - 1)) * width},${height - ((value - min) / Math.max(max - min, 0.1)) * (height - 10) - 5}`);
-  return <View style={styles.chartPlaceholder}><Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}><Path d={`M0 12H${width}M0 41H${width}M0 70H${width}`} stroke={colors.border} strokeWidth="1" strokeDasharray="4 6" /><Path d={`M${points.join(' L')}`} fill="none" stroke={colors.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></Svg><TvText size="micro" tone="dim" style={styles.chartCaption}>Stvarna sobna temperatura · {values.length} očitanja</TvText></View>;
+  return <View style={styles.chartPlaceholder}><Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}><Path d={`M0 12H${width}M0 41H${width}M0 70H${width}`} stroke={colors.border} strokeWidth="1" strokeDasharray="4 6" /><Path d={`M${points.join(' L')}`} fill="none" stroke={colors.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></Svg><TvText size="small" tone="dim" style={styles.chartCaption}>Stvarna sobna temperatura · {values.length} očitanja</TvText></View>;
 }
 function ReadingChart({ readings }: { readings: AnyRecord[] }) {
   const ordered = [...readings].sort((a, b) => readingDate(a).localeCompare(readingDate(b))).slice(-12);
@@ -325,26 +326,26 @@ function ReadingChart({ readings }: { readings: AnyRecord[] }) {
   const width = 500;
   const height = 82;
   const points = values.map((value, index) => `${(index / (values.length - 1)) * width},${height - ((value - min) / Math.max(max - min, 0.1)) * (height - 10) - 5}`);
-  return <View style={styles.chartPlaceholder}><Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}><Path d={`M0 12H${width}M0 41H${width}M0 70H${width}`} stroke={colors.border} strokeWidth="1" strokeDasharray="4 6" /><Path d={`M${points.join(' L')}`} fill="none" stroke={colors.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></Svg><TvText size="micro" tone="dim" style={styles.chartCaption}>Stanje brojila · {values.length} evidentirana očitanja</TvText></View>;
+  return <View style={styles.chartPlaceholder}><Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}><Path d={`M0 12H${width}M0 41H${width}M0 70H${width}`} stroke={colors.border} strokeWidth="1" strokeDasharray="4 6" /><Path d={`M${points.join(' L')}`} fill="none" stroke={colors.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></Svg><TvText size="small" tone="dim" style={styles.chartCaption}>Stanje brojila · {values.length} evidentirana očitanja</TvText></View>;
 }
-function EmptyChart({ caption }: { caption: string }) { return <View style={styles.chartPlaceholder}><Svg width="100%" height={82} viewBox="0 0 500 82"><Path d="M0 18H500M0 41H500M0 64H500" stroke={colors.border} strokeWidth="1" strokeDasharray="4 6" /><Circle cx="20" cy="41" r="4" fill={colors.textDim} /></Svg><TvText size="micro" tone="dim" style={styles.chartCaption}>{caption}</TvText></View>; }
+function EmptyChart({ caption }: { caption: string }) { return <View style={styles.chartPlaceholder}><Svg width="100%" height={82} viewBox="0 0 500 82"><Path d="M0 18H500M0 41H500M0 64H500" stroke={colors.border} strokeWidth="1" strokeDasharray="4 6" /><Circle cx="20" cy="41" r="4" fill={colors.textDim} /></Svg><TvText size="small" tone="dim" style={styles.chartCaption}>{caption}</TvText></View>; }
 function Loading() { return <View style={styles.loading}><ActivityIndicator color={colors.accent} /><TvText size="small" tone="muted">Učitavanje stvarnih podataka…</TvText></View>; }
 function readingDate(reading: AnyRecord) { return String(pick(reading, 'readingDate', 'date', 'createdAt') ?? ''); }
 function minuteTime(value: unknown) { if (!isNumber(value)) return undefined; const minutes = Math.max(0, Math.floor(value)); return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`; }
 
 const styles = StyleSheet.create({
-  nav: { height: 82, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: 'rgba(11,15,22,0.96)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.075)' },
+  nav: { height: tvLayout.bottomNavHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: tvLayout.safeX, backgroundColor: 'rgba(11,15,22,0.96)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.075)' },
   navItems: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  navItem: { minWidth: 152, height: 56, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: 1, borderColor: 'transparent', borderRadius: 13 },
+  navItem: { minWidth: 152, height: tvLayout.minFocusTarget, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: tvLayout.focusBorder, borderColor: 'transparent', borderRadius: 13 },
   navItemActive: { backgroundColor: `${colors.accent}16`, borderColor: `${colors.accent}33` },
-  navFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}20`, shadowColor: colors.accent, shadowOpacity: 0.24, shadowRadius: 12, elevation: 7, transform: [{ translateY: -1 }] },
-  brandName: { fontFamily: fonts.sansBold, fontSize: 17, letterSpacing: -0.4 },
+  navFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}20`, shadowColor: colors.accent, shadowOpacity: 0.35, shadowRadius: 12, elevation: 7, transform: [{ scale: tvLayout.focusScale }] },
+  brandName: { fontFamily: fonts.sansBold, fontSize: typeScale.section, letterSpacing: -0.4 },
   brandCaption: { fontFamily: fonts.mono, letterSpacing: 1, marginTop: 3 },
-  topbar: { height: 82, paddingHorizontal: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(5,7,11,0.86)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)' },
+  topbar: { height: tvLayout.topBarHeight, paddingHorizontal: tvLayout.safeX, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(5,7,11,0.86)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)' },
   topBrand: { flexDirection: 'row', alignItems: 'center', gap: 14, flexShrink: 1 },
   topBrandIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: `${colors.accent}18`, borderColor: `${colors.accent}44`, borderWidth: 1, alignItems: 'center', justifyContent: 'center', shadowColor: colors.accent, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
-  topMeta: { flexDirection: 'row', alignItems: 'center', gap: 24 }, topMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 9 }, topValue: { fontFamily: fonts.monoSemiBold, fontSize: 15 }, clockWrap: { alignItems: 'flex-end', gap: 2, minWidth: 96 }, clock: { fontFamily: fonts.monoSemiBold, fontSize: 17 },
-  chipRow: { flexDirection: 'row', gap: 8, alignItems: 'center' }, metricGrid: { flexDirection: 'row', gap: 14, marginVertical: 2 }, twoColumns: { flexDirection: 'row', gap: 14 }, settingsLayout: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' }, settingsMenu: { width: 250, gap: 8 }, settingsButton: { minHeight: 58, borderRadius: 12, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }, settingsButtonActive: { borderColor: `${colors.accent}55`, backgroundColor: `${colors.accent}10` }, settingsTextActive: { color: colors.accent, fontFamily: fonts.sansSemiBold, flex: 1 }, settingsContent: { flex: 1 },
-  empty: { paddingVertical: 19, paddingHorizontal: 6 }, chartPlaceholder: { marginTop: 8, borderRadius: 10, backgroundColor: 'rgba(5,7,11,0.55)', borderWidth: 1, borderColor: `${colors.border}99`, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 10 }, chartCaption: { lineHeight: 16 }, loading: { minHeight: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }, footnote: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 3 },
+  topMeta: { flexDirection: 'row', alignItems: 'center', gap: 24 }, topMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 9 }, topValue: { fontFamily: fonts.monoSemiBold, fontSize: typeScale.small }, clockWrap: { alignItems: 'flex-end', gap: 2, minWidth: 96 }, clock: { fontFamily: fonts.monoSemiBold, fontSize: typeScale.section },
+  chipRow: { flexDirection: 'row', gap: 8, alignItems: 'center' }, metricGrid: { flexDirection: 'row', gap: 14, marginVertical: 2 }, twoColumns: { flexDirection: 'row', gap: 14 }, settingsLayout: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' }, settingsMenu: { width: 250, gap: 8 }, settingsButton: { minHeight: tvLayout.minFocusTarget, borderRadius: 12, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: colors.surface }, settingsButtonActive: { borderColor: `${colors.accent}55`, backgroundColor: `${colors.accent}10` }, settingsTextActive: { color: colors.accent, fontFamily: fonts.sansSemiBold, flex: 1 }, settingsContent: { flex: 1 },
+  empty: { paddingVertical: 19, paddingHorizontal: 6 }, chartPlaceholder: { marginTop: 8, borderRadius: 10, backgroundColor: 'rgba(5,7,11,0.55)', borderWidth: 1, borderColor: `${colors.border}99`, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 10 }, chartCaption: { lineHeight: 19 }, loading: { minHeight: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }, footnote: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 3 },
   healthPageGrid: { flexDirection: 'row', gap: 14, alignItems: 'stretch' }, healthMain: { flexDirection: 'row', alignItems: 'center', gap: 20, paddingVertical: 8 }, scoreRing: { width: 148, height: 148, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }, scoreCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' }, scoreValue: { fontFamily: fonts.monoSemiBold, lineHeight: 36 }, healthCopy: { flex: 1, gap: 9 }, healthTitle: { fontFamily: fonts.sansSemiBold }, healthItems: { marginTop: 10 }, heatingSummary: { flexDirection: 'row', gap: 12, marginBottom: 14 }, bigReading: { flex: 1, minHeight: 88, paddingHorizontal: 16, paddingVertical: 13, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: 'rgba(5,7,11,0.55)', gap: 6 }, bigNumber: { fontFamily: fonts.monoSemiBold, letterSpacing: -0.8 }, warningList: { marginTop: 12 },
 });

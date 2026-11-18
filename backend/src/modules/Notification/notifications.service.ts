@@ -61,6 +61,24 @@ export class NotificationsService {
     return devices.map((d) => d.expoPushToken);
   }
 
+  /** Test-only delivery path: target only the current admin's chosen device class. */
+  async sendTestPushToOwnDevices(params: {
+    userId: number;
+    kind: 'PHONE' | 'TV';
+    title: string;
+    message: string;
+  }) {
+    const tokens = await this.getUserTokens(params.userId, params.kind);
+    if (tokens.length === 0) {
+      return { success: false, sent: 0, message: `No active ${params.kind} push devices are registered to this account.` };
+    }
+    await this.expoPushService.sendPushToTokens(tokens, params.title, params.message, {
+      test: true,
+      target: params.kind,
+    });
+    return { success: true, sent: tokens.length, message: `Test push sent to ${tokens.length} ${params.kind} device(s).` };
+  }
+
   // 🔑 DEBOUNCE CHECK
   async canSendNotification(
     userId: number,

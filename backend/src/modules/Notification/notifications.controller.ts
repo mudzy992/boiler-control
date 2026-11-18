@@ -1,5 +1,6 @@
 import {
   Controller,
+  BadRequestException,
   Get,
   Post,
   Body,
@@ -40,6 +41,30 @@ export class NotificationsController {
       body.expoPushToken,
       body.platform,
     );
+  }
+
+  /** Send a test push only to the requesting administrator's selected device kind. */
+  @Post('admin/test-device')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  async testOwnDevicePush(
+    @User() userId: number,
+    @Body() body: { kind?: string; title?: string; message?: string },
+  ) {
+    if (body.kind !== 'PHONE' && body.kind !== 'TV') {
+      throw new BadRequestException('kind must be PHONE or TV');
+    }
+    const title = typeof body.title === 'string' ? body.title.trim().slice(0, 100) : '';
+    const message = typeof body.message === 'string' ? body.message.trim().slice(0, 500) : '';
+    if (!title || !message) {
+      throw new BadRequestException('Title and message are required');
+    }
+    return this.notificationsService.sendTestPushToOwnDevices({
+      userId,
+      kind: body.kind,
+      title,
+      message,
+    });
   }
 
   @Post('manual')

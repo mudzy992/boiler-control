@@ -80,7 +80,7 @@ export class TvPairingService {
       }
     }
 
-    await this.prisma.tvPairingSession.create({
+    const session = await this.prisma.tvPairingSession.create({
       data: {
         codeHash: hashCode(code),
         // SAMO prva četiri znaka — v. `codeHint` u šemi.
@@ -93,6 +93,10 @@ export class TvPairingService {
         tvPushToken: tvPushToken ?? null,
       },
     });
+
+    this.logger.log(
+      `[tv-pairing] session ${session.id} created; pushTokenAttached=${tvPushToken ? 'yes' : 'no'}`,
+    );
 
     return {
       code,
@@ -292,7 +296,12 @@ export class TvPairingService {
     deviceLabel: string | undefined,
     pairingSessionId: number,
   ): Promise<void> {
-    if (!tvPushToken) return;
+    if (!tvPushToken) {
+      this.logger.warn(
+        `[tv-pairing] no TV push token to register for user=${userId} session=${pairingSessionId}`,
+      );
+      return;
+    }
 
     try {
       await this.prisma.userDevice.upsert({
@@ -314,6 +323,9 @@ export class TvPairingService {
           isActive: true,
         },
       });
+      this.logger.log(
+        `[tv-pairing] active TV push device registered for user=${userId} session=${pairingSessionId}`,
+      );
     } catch (error) {
       // Zadrži token na sesiji kako bi kvar mogao biti dijagnostikovan ili
       // ponovo obrađen; nikad ne prijavljuj uspjeh registracije ako upsert padne.

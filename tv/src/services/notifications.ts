@@ -66,11 +66,14 @@ export async function prepareNotifications(): Promise<boolean> {
     }
 
     const existing = await Notifications.getPermissionsAsync();
-    if (existing.granted) return true;
-
-    const requested = await Notifications.requestPermissionsAsync();
-    return requested.granted;
-  } catch {
+    const granted = existing.granted
+      ? true
+      : (await Notifications.requestPermissionsAsync()).granted;
+    console.info(`[tv-push] notification permission ${granted ? 'granted' : 'denied'}`);
+    return granted;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'unknown error';
+    console.warn(`[tv-push] notification setup failed: ${reason}`);
     return false;
   }
 }
@@ -85,11 +88,17 @@ export async function prepareNotifications(): Promise<boolean> {
 export async function getTvPushToken(): Promise<string | null> {
   try {
     const projectId = getProjectId();
-    if (!projectId) return null;
+    if (!projectId) {
+      console.warn('[tv-push] Expo project ID is missing; cannot obtain a push token');
+      return null;
+    }
 
     const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.info(`[tv-push] Expo push token obtained for project ${projectId}`);
     return data;
-  } catch {
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'unknown error';
+    console.warn(`[tv-push] Expo token request failed: ${reason}`);
     return null;
   }
 }

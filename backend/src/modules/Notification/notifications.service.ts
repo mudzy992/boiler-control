@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ExpoPushService } from '../ExpoPush/expo.push.notification.service';
 import { NOTIFICATION_DEBOUNCE } from './util/debounce';
@@ -6,6 +7,8 @@ import { NotificationType } from 'src/generated/prisma';
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     private prisma: PrismaService,
     private expoPushService: ExpoPushService,
@@ -68,23 +71,51 @@ export class NotificationsService {
     title: string;
     message: string;
   }) {
+    const diagnosticId = randomBytes(6).toString('hex');
+    this.logger.log(
+      `[push-test:${diagnosticId}] requested user=${params.userId} kind=${params.kind}`,
+    );
+
     const tokens = await this.getUserTokens(params.userId, params.kind);
     if (tokens.length === 0) {
-      return { success: false, sent: 0, message: `No active ${params.kind} push devices are registered to this account.` };
+      this.logger.warn(
+        `[push-test:${diagnosticId}] no active device tokens user=${params.userId} kind=${params.kind}`,
+      );
+      return {
+        success: false,
+        sent: 0,
+        targeted: 0,
+        rejected: 0,
+        errors: [],
+        diagnosticId,
+        message: `No active ${params.kind} push devices are registered to this account.`,
+      };
     }
-    const delivery = await this.expoPushService.sendPushToTokens(tokens, params.title, params.message, {
-      test: true,
-      target: params.kind,
-    });
+
+    this.logger.log(
+      `[push-test:${diagnosticId}] found ${tokens.length} active ${params.kind} token(s); submitting to Expo`,
+    );
+    const delivery = await this.expoPushService.sendPushToTokens(
+      tokens,
+      params.title,
+      params.message,
+      { test: true, target: params.kind },
+      diagnosticId,
+    );
     const success = delivery.accepted > 0;
+
+    this.logger.log(
+      `[push-test:${diagnosticId}] completed targeted=${delivery.targeted} accepted=${delivery.accepted} rejected=${delivery.rejected} errors=${delivery.errors.join(',') || 'none'}`,
+    );
+
     return {
       success,
-      // Keep `sent` for existing callers, but make its meaning explicit in the
-      // response message: Expo ticket acceptance is not provider/device receipt.
+      // `sent` means Expo ticket acceptance, not confirmed device delivery.
       sent: delivery.accepted,
       targeted: delivery.targeted,
       rejected: delivery.rejected,
       errors: delivery.errors,
+      diagnosticId,
       message: `Expo accepted ${delivery.accepted} of ${delivery.targeted} ${params.kind} push ticket(s). Rejected: ${delivery.rejected}${delivery.errors.length ? ` (${delivery.errors.join(', ')})` : ''}. Device delivery is not confirmed yet.`,
     };
   }

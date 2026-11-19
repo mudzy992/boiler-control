@@ -131,10 +131,10 @@ export class TvPairingService {
     if (!session) throw new NotFoundException('Kod nije pronađen');
 
     if (session.expiresAt.getTime() < Date.now()) {
-      if (session.status !== 'EXPIRED') {
+      if (session.status !== 'EXPIRED' || session.tvPushToken) {
         await this.prisma.tvPairingSession.update({
           where: { id: session.id },
-          data: { status: 'EXPIRED' },
+          data: { status: 'EXPIRED', tvPushToken: null },
         });
       }
       return { status: 'EXPIRED' };
@@ -146,7 +146,7 @@ export class TvPairingService {
     if (session.pollCount >= PAIRING_MAX_POLLS) {
       await this.prisma.tvPairingSession.update({
         where: { id: session.id },
-        data: { status: 'EXPIRED' },
+        data: { status: 'EXPIRED', tvPushToken: null },
       });
       return { status: 'EXPIRED' };
     }
@@ -180,6 +180,15 @@ export class TvPairingService {
       return { status: 'CLAIMED' };
     }
 
+    // Fallback retry: a transient database issue during phone approval must
+    // not strand the TV token in its short-lived pairing row indefinitely.
+    await this.registerTvDevice(
+      session.userId,
+      session.tvPushToken,
+      session.approvedByDevice ?? undefined,
+      session.id,
+    );
+
     return {
       status: 'READY',
       token: session.accessToken,
@@ -211,7 +220,7 @@ export class TvPairingService {
     if (session.expiresAt.getTime() < Date.now()) {
       await this.prisma.tvPairingSession.update({
         where: { id: session.id },
-        data: { status: 'EXPIRED' },
+        data: { status: 'EXPIRED', tvPushToken: null },
       });
       throw new BadRequestException('Kod je istekao');
     }
@@ -251,7 +260,7 @@ export class TvPairingService {
       throw new BadRequestException('Kod više nije aktivan');
     }
 
-    await this.registerTvDevice(userId, session.tvPushToken, deviceLabel);
+    await this.registerTvDevice(userId, session.tvPushToken, deviceLabel, session.id);
 
     return { status: 'APPROVED' };
   }
@@ -280,7 +289,8 @@ export class TvPairingService {
   private async registerTvDevice(
     userId: number,
     tvPushToken: string | null,
-    deviceLabel?: string,
+    deviceLabel: string | undefined,
+    pairingSessionId: number,
   ): Promise<void> {
     if (!tvPushToken) return;
 
@@ -305,8 +315,26 @@ export class TvPairingService {
         },
       });
     } catch (error) {
+      // Zadrži token na sesiji kako bi kvar mogao biti dijagnostikovan ili
+      // ponovo obrađen; nikad ne prijavljuj uspjeh registracije ako upsert padne.
       this.logger.warn(
         `[tv-pairing] TV uređaj nije registrovan za push (korisnik ${userId}): ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return;
+    }
+
+    // Sesija je samo kratkotrajni transport za token. Nakon potvrđenog upserta
+    // brišemo kopiju da token ne ostane trajno u TvPairingSession.
+    try {
+      await this.prisma.tvPairingSession.update({
+        where: { id: pairingSessionId },
+        data: { tvPushToken: null },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `[tv-pairing] TV push token je registrovan, ali nije uklonjen iz sesije ${pairingSessionId}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -338,7 +366,7 @@ export class TvPairingService {
 
     await this.prisma.tvPairingSession.updateMany({
       where: { id: session.id, status: { in: ['PENDING', 'APPROVED'] } },
-      data: { status: 'REJECTED', userId },
+      data: { status: 'REJECTED', userId, tvPushToken: null },
     });
 
     return { status: 'REJECTED' };

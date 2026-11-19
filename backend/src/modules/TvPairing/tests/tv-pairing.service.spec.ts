@@ -144,6 +144,7 @@ describe('push token TV-a pri odobrenju', () => {
     await service.approve(7, code, 'TV u dnevnoj');
 
     expect(db.deviceRows).toHaveLength(1);
+    expect(db.rows[0].tvPushToken).toBeNull();
     expect(db.deviceRows[0]).toMatchObject({
       userId: 7,
       expoPushToken: token,
@@ -197,6 +198,9 @@ describe('push token TV-a pri odobrenju', () => {
 
     const claimed = await service.claim(code);
     expect(claimed).toMatchObject({ status: 'READY' });
+    // TV claim pokušava ponovo nakon privremenog DB kvara pri odobrenju.
+    expect(db.deviceRows).toHaveLength(1);
+    expect(db.rows[0].tvPushToken).toBeNull();
   });
 
   it('neupareni TV ne dobija uređaj ni kad je token poslan', async () => {

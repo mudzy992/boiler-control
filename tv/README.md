@@ -88,8 +88,8 @@ TV registracija mora postojati i u Firebaseu, sa package ID-jem tačno `com.boil
 
 ### Tok poruke i Android kanali
 
-- TV traži Expo push token **prije** prikaza koda i šalje ga uz jedini pairing POST. Tek kad telefon odobri uparivanje, backend poveže token sa korisnikom.
-- Backend šalje preko Expo Push Service; TV koristi `expo-notifications`/FCM i OS prikazuje sistemsku poruku.
+- TV traži Expo push token **prije** prikaza koda i šalje ga uz jedini pairing POST. Dok čeka odobrenje token je privremeno na `TvPairingSession`; nakon odobrenja backend ga upisuje u `UserDevice` kao aktivni `kind=TV`, pa briše kopiju iz pairing sesije. Ako upis ne uspije, backend ostavlja token na sesiji i loguje grešku.
+- Backend šalje preko Expo Push Service; TV koristi `expo-notifications`/FCM i OS prikazuje sistemsku poruku. Expo ticket `accepted` nije dokaz da je FCM isporučio poruku na uređaj.
 - Android kanali su `daily`, `alerts` i `heating` — isti ID-jevi koje backend šalje. `alerts` je na TV-u `MAX` značaja; ostali su `DEFAULT`. Android čuva izbor korisnika za svaki kanal.
 - Ako TV nema Play usluge, mrežu ili korisnik odbije dozvolu, pairing i analitika i dalje rade, ali push može izostati.
 - TV još nije potvrđen na fizičkom uređaju; poslije builda testirati pairing, dozvolu za notifikacije, pa poslati stvarni alert dok je aplikacija otvorena, u pozadini i ugašena.

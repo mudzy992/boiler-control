@@ -126,10 +126,21 @@ export async function requestPairingCode(
   baseUrl: string,
   payload: { deviceLabel?: string; tvPushToken?: string },
 ): Promise<{ code: string; expiresAt: string }> {
-  const response = await axios.post(
+  const response = await axios.post<unknown>(
     `${baseUrl}${TV_ENDPOINTS.pairingSession}`,
     payload,
     { timeout: 15_000 },
   );
-  return response.data;
+  const value = response.data;
+  if (!isRecord(value) || typeof value.code !== 'string' || typeof value.expiresAt !== 'string') {
+    throw new Error('API je vratio neispravan odgovor za pairing kod.');
+  }
+  if (!value.code.trim() || !Number.isFinite(Date.parse(value.expiresAt))) {
+    throw new Error('API je vratio neispravan odgovor za pairing kod.');
+  }
+  return { code: value.code, expiresAt: value.expiresAt };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

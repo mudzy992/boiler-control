@@ -27,9 +27,8 @@ import {
   type TvDashboardLike,
   type TvOverviewCard,
 } from '../lib/analytics';
-import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
+import { colors, fonts, scaleContent, spacing, typeScale, tvLayout } from '../theme';
 import { translateText } from '../config';
-import { TvFocusGlow } from '../components/TvUI';
 
 function Text({ children, ...props }: TextProps) {
   return <NativeText {...props}>{typeof children === 'string' ? translateText(children) : children}</NativeText>;
@@ -70,7 +69,7 @@ export function AnalyticsScreen({
   if (loading && !analysis && !dashboard) {
     return (
       <Centered>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.accent} accessibilityLabel="Učitavanje analitike" />
         <Text style={styles.muted}>Učitavam analitiku…</Text>
       </Centered>
     );
@@ -172,6 +171,9 @@ function MetricCard({
       hasTVPreferredFocus={preferredFocus}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={`${translate(metric.label)}: ${metric.value === null ? 'Nema podatka' : metric.value} ${metric.unit}`}
       style={[styles.card, focused && styles.cardFocused]}
       testID={`tv-metric-${metric.key}`}
     >
@@ -198,7 +200,6 @@ function MetricCard({
       {metric.key === 'cost' ? (
         <Text style={styles.subtitle}>Za analizirani period</Text>
       ) : null}
-      {focused ? <TvFocusGlow radius={18} /> : null}
     </View>
   );
 }
@@ -234,14 +235,14 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontSize: typeScale.hero, fontFamily: fonts.sansSemiBold },
   badge: {
-    color: colors.accent,
+    color: colors.accentText,
     fontFamily: fonts.mono,
     fontSize: typeScale.small,
     borderWidth: tvLayout.focusBorder,
     borderColor: colors.accent,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: scaleContent(4),
   },
   badgeStale: { color: colors.fault, borderColor: colors.fault },
   cardRow: {
@@ -253,16 +254,16 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'visible',
     backgroundColor: colors.surface,
-    borderWidth: tvLayout.focusBorder,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 18,
-    padding: 20,
-    minHeight: 144,
+    borderRadius: scaleContent(18),
+    padding: scaleContent(20),
+    minHeight: scaleContent(144),
     minWidth: 0,
     flex: 1,
     gap: spacing.sm,
   },
-  cardFocused: { borderColor: colors.accent, transform: [{ scale: tvLayout.focusScale }] },
+  cardFocused: { borderColor: colors.accent, borderWidth: tvLayout.focusBorder, backgroundColor: colors.raised },
   label: {
     color: colors.textMuted,
     fontSize: typeScale.body,
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: typeScale.section,
     fontFamily: fonts.sansMedium,
-    paddingBottom: 6,
+    paddingBottom: scaleContent(6),
   },
   muted: {
     color: colors.textMuted,
@@ -296,9 +297,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderLeftWidth: 4,
+    borderLeftWidth: scaleContent(4),
     borderLeftColor: colors.accent,
-    borderRadius: 8,
+    borderRadius: scaleContent(8),
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },

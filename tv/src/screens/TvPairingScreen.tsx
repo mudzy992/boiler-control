@@ -20,11 +20,15 @@ import {
   type ClaimResponse,
   type PairingState,
 } from '../lib/pairing';
-import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
+import { colors, fonts, scaleContent, spacing, typeScale, tvLayout } from '../theme';
 import { translateText } from '../config';
 
 function Text({ children, ...props }: TextProps) {
   return <NativeText {...props}>{typeof children === 'string' ? translateText(children) : children}</NativeText>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
@@ -65,6 +69,16 @@ export function TvPairingScreen({
 }: TvPairingScreenProps) {
   const [state, setState] = useState<PairingState>({ phase: 'idle' });
   const [busy, setBusy] = useState(false);
+  const mountedRef = useRef(false);
+  const pairingRequestRef = useRef(false);
+  const pairedHandledRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   /*
    * `onPaired` ide kroz `ref`: ako je u zavisnostima efekta, svaki render
@@ -75,41 +89,42 @@ export function TvPairingScreen({
   onPairedRef.current = onPaired;
 
   const startPairing = useCallback(async () => {
+    if (pairingRequestRef.current) return;
+    pairingRequestRef.current = true;
+    pairedHandledRef.current = false;
     setBusy(true);
     try {
-      /*
-       * Push token se traži **prije** koda i šalje uz zahtjev. TV time nikad
-       * ne mora drugi POST — v. `TvPairingSession.tvPushToken`.
-       *
-       * Greška ovdje ne smije spriječiti uparivanje: TV bez Play usluga
-       * (ili bez mreže u tom trenutku) mora moći prikazati analitiku, samo
-       * bez notifikacija.
-       */
+      // Token se šalje uz jedini pairing POST; token greška ne blokira pairing.
       let pushToken: string | null = null;
       try {
         pushToken = await getPushToken();
       } catch {
         pushToken = null;
       }
+      if (!mountedRef.current) return;
 
       const created = await requestCode(pushToken);
-      setState({
-        phase: 'waiting',
-        code: created.code,
-        expiresAt: new Date(created.expiresAt).getTime(),
-      });
+      if (!mountedRef.current) return;
+      const expiresAt = new Date(created.expiresAt).getTime();
+      if (!Number.isFinite(expiresAt)) {
+        throw new Error('API je vratio neispravan rok za pairing kod.');
+      }
+      setState({ phase: 'waiting', code: created.code, expiresAt });
     } catch (error) {
-      const status = (error as { response?: { status?: unknown } })?.response
-        ?.status;
+      if (!mountedRef.current) return;
+      const status = isRecord(error) && isRecord(error.response) ? error.response.status : undefined;
       const message =
         typeof status === 'number'
           ? status === 404
             ? 'API nije pronašao rutu za uparivanje (HTTP 404). Ažuriraj TV aplikaciju i pokušaj ponovo.'
             : `API je odgovorio greškom HTTP ${status}. Provjeri konfiguraciju i pokušaj ponovo.`
-          : 'TV se nije mogao povezati s API-jem. Provjeri Wi-Fi i pokušaj ponovo.';
+          : error instanceof Error && error.message.includes('neispravan')
+            ? error.message
+            : 'TV se nije mogao povezati s API-jem. Provjeri Wi-Fi i pokušaj ponovo.';
       setState({ phase: 'error', message });
     } finally {
-      setBusy(false);
+      pairingRequestRef.current = false;
+      if (mountedRef.current) setBusy(false);
     }
   }, [getPushToken, requestCode]);
 
@@ -138,17 +153,16 @@ export function TvPairingScreen({
         const response = await pollCode(state.code);
         if (cancelled) return;
 
-        setState((current) => {
-          const next = reduceClaim(current, response);
-          if (next.phase === 'paired') {
-            onPairedRef.current({
-              token: next.token,
-              refreshToken: next.refreshToken,
-              userId: next.userId,
-            });
-          }
-          return next;
-        });
+        const next = reduceClaim(state, response);
+        if (next.phase === 'paired' && !pairedHandledRef.current) {
+          pairedHandledRef.current = true;
+          onPairedRef.current({
+            token: next.token,
+            refreshToken: next.refreshToken,
+            userId: next.userId,
+          });
+        }
+        setState(next);
       } catch {
         // Mreža je pala: ne mijenjamo stanje. TV nastavlja pitati — jedan
         // promašaj ne znači da je kod nevažeći.
@@ -171,7 +185,7 @@ export function TvPairingScreen({
       <Centered preferredFocus>
         <Text style={styles.title}>TV je uparen</Text>
         <Text style={styles.hint}>Učitavam analitiku…</Text>
-        <ActivityIndicator color={colors.accent} />
+        <ActivityIndicator color={colors.accent} accessibilityLabel="Učitavanje" />
       </Centered>
     );
   }
@@ -222,7 +236,7 @@ export function TvPairingScreen({
         Za prikaz analitike potrebno je upariti ovaj TV sa telefonom.
       </Text>
       {busy ? (
-        <ActivityIndicator color={colors.accent} />
+        <ActivityIndicator color={colors.accent} accessibilityLabel="Učitavanje" />
       ) : (
         <Action onPress={startPairing} label="Upari TV" />
       )}
@@ -277,6 +291,7 @@ function Action({ onPress, label }: { onPress: () => void; label: string }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       hasTVPreferredFocus
       onPress={onPress}
       onFocus={() => setFocused(true)}
@@ -313,14 +328,14 @@ const styles = StyleSheet.create({
     fontSize: typeScale.body,
     fontFamily: fonts.sans,
     textAlign: 'center',
-    maxWidth: 760,
-    lineHeight: 26,
+    maxWidth: scaleContent(760),
+    lineHeight: scaleContent(26),
   },
   code: {
     color: colors.accent,
     fontSize: typeScale.hero,
     fontFamily: fonts.monoSemiBold,
-    letterSpacing: 6,
+    letterSpacing: scaleContent(6),
     fontVariant: ['tabular-nums'],
   },
   countdown: {
@@ -332,11 +347,11 @@ const styles = StyleSheet.create({
   qrBox: {
     backgroundColor: '#ffffff',
     padding: spacing.md,
-    borderRadius: 12,
+    borderRadius: scaleContent(12),
   },
   action: {
     minHeight: tvLayout.minFocusTarget,
-    borderRadius: 12,
+    borderRadius: scaleContent(12),
     borderWidth: tvLayout.focusBorder,
     borderColor: colors.accent,
     backgroundColor: colors.accent,
@@ -344,7 +359,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     justifyContent: 'center',
   },
-  actionFocused: { borderColor: '#ffffff', transform: [{ scale: tvLayout.focusScale }] },
+  actionFocused: { borderColor: '#ffffff', borderWidth: tvLayout.focusBorder },
   actionLabel: {
     color: colors.onAccent,
     fontSize: typeScale.section,

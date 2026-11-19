@@ -65,11 +65,11 @@ const base = {
   runtimeVersion: { policy: 'appVersion' },
   scheme: 'boilercontrol',
   // Ista aplikacijska ikonica kao mobilna, uz iste Android adaptive layers.
-  icon: './assets/boiler-control-icon-master.png',
+  icon: './assets/icon.png',
   splash: {
     backgroundColor: '#05070b',
     resizeMode: 'contain',
-    image: './assets/boiler-control-icon-master.png',
+    image: './assets/splash-screen.png',
   },
   android: {
     package: 'com.boilercontrol.tv',
@@ -77,7 +77,7 @@ const base = {
       foregroundImage: './assets/ic_launcher_foreground.png',
       backgroundImage: './assets/ic_launcher_background.png',
       monochromeImage: './assets/ic_launcher_monochrome.png',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#ff6b3d',
     },
     // Izvedeno iz `pkg.version`, nikad fiksno (v. komentar iznad).
     versionCode: versionCodeFromVersion(pkg.version),
@@ -89,6 +89,16 @@ const base = {
     softwareKeyboardLayoutMode: 'pan',
   },
   plugins: [
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-screen.png',
+        imageWidth: 256,
+        resizeMode: 'contain',
+        backgroundColor: '#05070b',
+        dark: { backgroundColor: '#05070b', image: './assets/splash-screen.png' },
+      },
+    ],
     'expo-updates',
     'expo-notifications',
     /*

@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     justifyContent: 'center',
   },
-  actionFocused: { shadowColor: colors.accent, shadowOpacity: 0.48, shadowRadius: 14, elevation: 9, transform: [{ scale: tvLayout.focusScale }] },
+  actionFocused: { borderColor: '#ffffff', transform: [{ scale: tvLayout.focusScale }] },
   actionLabel: {
     color: colors.onAccent,
     fontSize: typeScale.section,

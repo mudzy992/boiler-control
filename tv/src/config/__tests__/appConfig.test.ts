@@ -78,12 +78,13 @@ describe('app.config.js', () => {
 
   it('koristi istu aplikacijsku i adaptive ikonicu kao mobilna', () => {
     const config = load();
-    expect(config.icon).toBe('./assets/boiler-control-icon-master.png');
+    expect(config.icon).toBe('./assets/icon.png');
+    expect(require('node:fs').existsSync(require('node:path').join(__dirname, '../../../assets/icon.png'))).toBe(true);
     expect(config.android.adaptiveIcon).toEqual({
       foregroundImage: './assets/ic_launcher_foreground.png',
       backgroundImage: './assets/ic_launcher_background.png',
       monochromeImage: './assets/ic_launcher_monochrome.png',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#ff6b3d',
     });
   });
 

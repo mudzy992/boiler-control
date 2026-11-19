@@ -37,6 +37,10 @@ export type TvIconName =
   | 'cloud'
   | 'alert';
 
+export function TvFocusGlow({ radius = 18 }: { radius?: number }) {
+  return <View pointerEvents="none" style={[styles.focusGlow, { borderRadius: radius }]} />;
+}
+
 export function TvAmbientBackground() {
   return (
     <Svg pointerEvents="none" style={StyleSheet.absoluteFill} viewBox="0 0 1920 1080" preserveAspectRatio="none">
@@ -121,20 +125,20 @@ export function TvText({
   size?: 'hero' | 'title' | 'section' | 'body' | 'small' | 'micro';
   numberOfLines?: number;
 }) {
-  const color = {
-    primary: colors.text,
-    muted: colors.textMuted,
-    dim: colors.textDim,
-    signal: colors.accent,
-    ok: colors.success,
-    warn: colors.warning,
-    fault: colors.fault,
+  const sizeClass = {
+    hero: 'text-hero', title: 'text-title', section: 'text-section',
+    body: 'text-body', small: 'text-small', micro: 'text-micro',
+  }[size];
+  const toneClass = {
+    primary: 'text-ink', muted: 'text-muted', dim: 'text-dim',
+    signal: 'text-accent', ok: 'text-success', warn: 'text-warning', fault: 'text-fault',
   }[tone];
-  const fontSize = typeScale[size];
+  const weightClass = size === 'hero' ? 'font-bold' : 'font-sans';
   return (
     <Text
       numberOfLines={numberOfLines}
-      style={[{ color, fontFamily: size === 'hero' ? fonts.sansBold : fonts.sans, fontSize }, style]}
+      className={`${sizeClass} ${toneClass} ${weightClass}`}
+      style={style}
     >
       {typeof children === 'string' ? translateText(children) : children}
     </Text>
@@ -187,7 +191,7 @@ export function TvCard({
 }) {
   const [focus, setFocus] = React.useState(false);
   const content = (
-    <View style={[styles.card, focus && styles.cardFocused, focused && styles.cardFocused, style]} testID={testID}>
+    <View className="rounded-tv border-focus border-line bg-surface p-5" style={[styles.card, focus && styles.cardFocused, focused && styles.cardFocused, style]} testID={testID}>
       <LinearGradient
         pointerEvents="none"
         colors={['rgba(22,30,44,0.98)', 'rgba(11,15,22,0.98)']}
@@ -200,16 +204,20 @@ export function TvCard({
     </View>
   );
   if (!onPress) {
+    // Read-only panels remain focusable so D-pad users can traverse and inspect
+    // them; the focus treatment is visual only and never implies an action.
     return (
       <View
-        style={containerStyle}
+        style={[styles.focusableCardContainer, containerStyle]}
         focusable
         hasTVPreferredFocus={preferredFocus}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
+        accessibilityRole="summary"
         accessibilityLabel={accessibilityLabel}
       >
         {content}
+        {focus ? <TvFocusGlow radius={18} /> : null}
       </View>
     );
   }
@@ -226,6 +234,7 @@ export function TvCard({
       testID={testID}
     >
       {content}
+      {focus ? <TvFocusGlow radius={18} /> : null}
     </Pressable>
   );
 }
@@ -330,8 +339,10 @@ export function TvChip({
   const [focused, setFocused] = React.useState(false);
   return (
     <Pressable
+      className="min-h-focus rounded-control border-focus border-line bg-surface px-4"
       focusable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ selected: active }}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
@@ -340,6 +351,7 @@ export function TvChip({
       testID={testID}
     >
       <TvText size="small" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.text : colors.textDim }}>{label}</TvText>
+      {focused ? <TvFocusGlow radius={12} /> : null}
     </Pressable>
   );
 }
@@ -419,11 +431,13 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: typeScale.hero, letterSpacing: -0.8, fontFamily: fonts.sansSemiBold },
   headingSubtitle: { marginTop: 7 },
   headingRight: { alignItems: 'flex-end', justifyContent: 'flex-end' },
-  card: { position: 'relative', overflow: 'hidden', backgroundColor: colors.surface, borderColor: colors.border, borderWidth: tvLayout.focusBorder, borderRadius: 18, padding: 20, gap: spacing.sm, shadowColor: '#000000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.18, shadowRadius: 9, elevation: 3 },
-  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8, transform: [{ scale: tvLayout.focusScale }] },
+  card: { position: 'relative', overflow: 'hidden', borderColor: colors.border, gap: spacing.sm },
+  cardFocused: { borderColor: colors.accent, transform: [{ scale: tvLayout.focusScale }] },
   metricCard: { paddingVertical: 17, paddingHorizontal: 19, gap: 6, minHeight: 136 },
   metricAura: { position: 'absolute', width: 126, height: 126, borderRadius: 100, right: -53, top: -70, borderWidth: 1, borderColor: 'rgba(255,255,255,0.065)' },
-  pressableCard: { flex: 1 },
+  focusableCardContainer: { position: 'relative', overflow: 'visible' },
+  pressableCard: { flex: 1, position: 'relative', overflow: 'visible' },
+  focusGlow: { position: 'absolute', top: -5, right: -5, bottom: -5, left: -5, borderWidth: 4, borderColor: 'rgba(255,107,61,0.3)', zIndex: 10 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 3 },
   cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   cardTitleCopy: { flex: 1, minWidth: 0 },
@@ -439,9 +453,9 @@ const styles = StyleSheet.create({
   metricMeta: { marginTop: 1 },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 6 },
   statusDot: { width: 6, height: 6, borderRadius: 5 },
-  chip: { minHeight: tvLayout.minFocusTarget, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 8, borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: 'rgba(11,15,22,0.82)', justifyContent: 'center' },
-  chipActive: { borderColor: '#2c3746', backgroundColor: '#1a222e' },
-  chipFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 10, elevation: 7, transform: [{ scale: tvLayout.focusScale }] },
+  chip: { position: 'relative', overflow: 'visible', minHeight: tvLayout.minFocusTarget, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12, borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
+  chipActive: { borderColor: '#2c3746', backgroundColor: colors.raised },
+  chipFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}1c`, transform: [{ scale: tvLayout.focusScale }] },
   chipText: { fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: colors.textDim },
   chipTextActive: { color: colors.accent },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },

@@ -4,7 +4,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
 import { tvLocaleTag } from '../config';
 import {
-  TvCard, TvCardTitle, TvChip, TvDataRow, TvIcon, TvMetricCard, TvPageHeading,
+  TvCard, TvCardTitle, TvChip, TvDataRow, TvFocusGlow, TvIcon, TvMetricCard, TvPageHeading,
   TvScrollView, TvSectionTitle, TvStatusPill, TvText, type TvIconName,
 } from '../components/TvUI';
 
@@ -45,6 +45,7 @@ const dateText = (value: unknown) => {
 };
 
 export function TvMainNavigation({ page, onChange }: { page: Page; onChange: (page: Page) => void }) {
+  const [focusedPage, setFocusedPage] = React.useState<Page | null>(null);
   const items: { id: Page; label: string; icon: TvIconName }[] = [
     { id: 'home', label: 'Početna', icon: 'home' },
     { id: 'heating', label: 'Grijanje', icon: 'flame' },
@@ -54,7 +55,10 @@ export function TvMainNavigation({ page, onChange }: { page: Page; onChange: (pa
   return (
     <View style={styles.nav} accessibilityRole="tablist">
       <View style={styles.navItems}>
-        {items.map((item) => <Pressable key={item.id} focusable accessibilityRole="tab" accessibilityState={{ selected: page === item.id }} onPress={() => onChange(item.id)} style={({ focused }) => [styles.navItem, page === item.id && styles.navItemActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={page === item.id ? colors.accent : colors.textDim} /><TvText size="small" style={{ fontFamily: page === item.id ? fonts.sansSemiBold : fonts.sansMedium, color: page === item.id ? colors.accent : colors.textMuted, letterSpacing: 0.7, textTransform: 'uppercase' }}>{item.label}</TvText></Pressable>)}
+        {items.map((item) => {
+          const focused = focusedPage === item.id;
+          return <Pressable key={item.id} className="min-h-focus rounded-control border-focus px-5" focusable accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected: page === item.id }} onFocus={() => setFocusedPage(item.id)} onBlur={() => setFocusedPage(null)} onPress={() => onChange(item.id)} style={[styles.navItem, page === item.id && styles.navItemActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={page === item.id ? colors.accent : colors.textDim} /><TvText size="small" style={{ fontFamily: page === item.id ? fonts.sansSemiBold : fonts.sansMedium, color: page === item.id ? colors.accent : colors.textMuted, letterSpacing: 0.7, textTransform: 'uppercase' }}>{item.label}</TvText>{focused ? <TvFocusGlow radius={13} /> : null}</Pressable>;
+        })}
       </View>
     </View>
   );
@@ -176,13 +180,17 @@ export function GasScreen({ data, view, onView }: { data: TvDashboardData; view:
 }
 
 export function SettingsScreen({ data, view, onView }: { data: TvDashboardData; view: SettingsView; onView: (view: SettingsView) => void }) {
+  const [focusedSetting, setFocusedSetting] = React.useState<SettingsView | null>(null);
   const menu: { id: SettingsView; label: string; icon: TvIconName }[] = [
     { id: 'profile', label: 'Profil', icon: 'profile' }, { id: 'notifications', label: 'Obavijesti', icon: 'bell' }, { id: 'schedule', label: 'Raspored grijanja', icon: 'calendar' },
   ];
   return <TvScrollView key={view}>
     <TvPageHeading eyebrow="POSTAVKE · SAMO PREGLED" title="Profil i postavke" subtitle="Izmjene profila i uređaja ostaju dostupne u mobilnoj aplikaciji" />
     <View style={styles.settingsLayout}>
-      <View style={styles.settingsMenu}>{menu.map((item) => <Pressable key={item.id} focusable hasTVPreferredFocus={view === item.id} accessibilityRole="button" accessibilityLabel={item.label} onPress={() => onView(item.id)} style={({ focused }) => [styles.settingsButton, view === item.id && styles.settingsButtonActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={view === item.id ? colors.accent : colors.textMuted} /><TvText size="small" style={view === item.id ? styles.settingsTextActive : undefined}>{item.label}</TvText><TvIcon name="chevron" size={17} color={colors.textDim} /></Pressable>)}</View>
+      <View style={styles.settingsMenu}>{menu.map((item) => {
+        const focused = focusedSetting === item.id;
+        return <Pressable key={item.id} className="min-h-focus rounded-control border-focus px-4" focusable hasTVPreferredFocus={view === item.id} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: view === item.id }} onFocus={() => setFocusedSetting(item.id)} onBlur={() => setFocusedSetting(null)} onPress={() => onView(item.id)} style={[styles.settingsButton, view === item.id && styles.settingsButtonActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={view === item.id ? colors.accent : colors.textMuted} /><TvText size="small" style={view === item.id ? styles.settingsTextActive : undefined}>{item.label}</TvText><TvIcon name="chevron" size={17} color={colors.textDim} />{focused ? <TvFocusGlow radius={12} /> : null}</Pressable>;
+      })}</View>
       <View style={styles.settingsContent}>{view === 'profile' ? <ProfileSettings data={data} /> : view === 'notifications' ? <NotificationSettings data={data} /> : <ScheduleSettings data={data} />}</View>
     </View><DataFootnote data={data} />
   </TvScrollView>;
@@ -338,12 +346,12 @@ const styles = StyleSheet.create({
   navItems: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   navItem: { minWidth: 152, height: tvLayout.minFocusTarget, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: tvLayout.focusBorder, borderColor: 'transparent', borderRadius: 13 },
   navItemActive: { backgroundColor: `${colors.accent}16`, borderColor: `${colors.accent}33` },
-  navFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}20`, shadowColor: colors.accent, shadowOpacity: 0.35, shadowRadius: 12, elevation: 7, transform: [{ scale: tvLayout.focusScale }] },
+  navFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}20`, transform: [{ scale: tvLayout.focusScale }] },
   brandName: { fontFamily: fonts.sansBold, fontSize: typeScale.section, letterSpacing: -0.4 },
   brandCaption: { fontFamily: fonts.mono, letterSpacing: 1, marginTop: 3 },
   topbar: { height: tvLayout.topBarHeight, paddingHorizontal: tvLayout.safeX, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(5,7,11,0.86)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)' },
   topBrand: { flexDirection: 'row', alignItems: 'center', gap: 14, flexShrink: 1 },
-  topBrandIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: `${colors.accent}18`, borderColor: `${colors.accent}44`, borderWidth: 1, alignItems: 'center', justifyContent: 'center', shadowColor: colors.accent, shadowOpacity: 0.15, shadowRadius: 12, elevation: 3 },
+  topBrandIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: `${colors.accent}18`, borderColor: `${colors.accent}44`, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   topMeta: { flexDirection: 'row', alignItems: 'center', gap: 24 }, topMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 9 }, topValue: { fontFamily: fonts.monoSemiBold, fontSize: typeScale.small }, clockWrap: { alignItems: 'flex-end', gap: 2, minWidth: 96 }, clock: { fontFamily: fonts.monoSemiBold, fontSize: typeScale.section },
   chipRow: { flexDirection: 'row', gap: 8, alignItems: 'center' }, metricGrid: { flexDirection: 'row', gap: 14, marginVertical: 2 }, twoColumns: { flexDirection: 'row', gap: 14 }, settingsLayout: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' }, settingsMenu: { width: 250, gap: 8 }, settingsButton: { minHeight: tvLayout.minFocusTarget, borderRadius: 12, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: colors.surface }, settingsButtonActive: { borderColor: `${colors.accent}55`, backgroundColor: `${colors.accent}10` }, settingsTextActive: { color: colors.accent, fontFamily: fonts.sansSemiBold, flex: 1 }, settingsContent: { flex: 1 },
   empty: { paddingVertical: 19, paddingHorizontal: 6 }, chartPlaceholder: { marginTop: 8, borderRadius: 10, backgroundColor: 'rgba(5,7,11,0.55)', borderWidth: 1, borderColor: `${colors.border}99`, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 10 }, chartCaption: { lineHeight: 19 }, loading: { minHeight: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }, footnote: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 3 },

@@ -8,7 +8,7 @@ describe('admin test push delivery', () => {
       { expoPushToken: 'ExponentPushToken[tv-1]' },
       { expoPushToken: 'ExponentPushToken[tv-2]' },
     ]);
-    const sendPushToTokens = jest.fn().mockResolvedValue(undefined);
+    const sendPushToTokens = jest.fn().mockResolvedValue({ targeted: 2, accepted: 1, rejected: 1, errors: ['DeviceNotRegistered'] });
     const service = new NotificationsService(
       { userDevice: { findMany } } as unknown as PrismaService,
       { sendPushToTokens } as unknown as ExpoPushService,
@@ -31,7 +31,9 @@ describe('admin test push delivery', () => {
       'Ping',
       { test: true, target: 'TV' },
     );
-    expect(result).toMatchObject({ success: true, sent: 2 });
+    expect(result).toMatchObject({ success: true, sent: 1, targeted: 2, rejected: 1 });
+    expect(result.message).toContain('DeviceNotRegistered');
+    expect(result.message).toContain('Device delivery is not confirmed yet.');
   });
 
   it('does not attempt delivery when no active selected-kind device exists', async () => {

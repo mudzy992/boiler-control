@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import './global.css';
 import { StatusBar } from 'expo-status-bar';
-import { Animated, Easing, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { Animated, BackHandler, Easing, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import { useFonts } from 'expo-font';
@@ -36,6 +38,9 @@ import type { ClaimResponse } from './src/lib/pairing';
 import { API_BASE_URL, setTvLocale } from './src/config';
 import { colors } from './src/theme';
 import { TvAmbientBackground } from './src/components/TvUI';
+
+// Keep native splash visible until the font and secure session are ready.
+void SplashScreen.preventAutoHideAsync();
 
 const sessionStore = createSessionStore({
   read: () => SecureStore.getItemAsync('tv.session.v1'),
@@ -112,6 +117,11 @@ export default function App() {
       setBooted(true);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!booted || !fontsLoaded) return;
+    void SplashScreen.hideAsync();
+  }, [booted, fontsLoaded]);
 
   const onUnauthorized = useCallback(() => {
     void sessionStore.clear();
@@ -223,6 +233,31 @@ export default function App() {
     void sessionStore.save(paired);
     setSession(paired);
   }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (page === 'settings' && settingsView !== 'profile') {
+        setSettingsView('profile');
+        return true;
+      }
+      if (page === 'gas' && gasView !== 'readings') {
+        setGasView('readings');
+        return true;
+      }
+      if (page === 'home' && homeView !== 'overview') {
+        setHomeView('overview');
+        return true;
+      }
+      if (page !== 'home') {
+        setPage('home');
+        setHomeView('overview');
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, [session, page, settingsView, gasView, homeView]);
 
   if (!booted || !fontsLoaded) return null;
   return <SafeAreaProvider>

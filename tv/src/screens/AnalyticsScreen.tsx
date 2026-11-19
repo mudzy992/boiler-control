@@ -29,6 +29,7 @@ import {
 } from '../lib/analytics';
 import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
 import { translateText } from '../config';
+import { TvFocusGlow } from '../components/TvUI';
 
 function Text({ children, ...props }: TextProps) {
   return <NativeText {...props}>{typeof children === 'string' ? translateText(children) : children}</NativeText>;
@@ -165,7 +166,6 @@ function MetricCard({
   preferredFocus?: boolean;
 }) {
   const [focused, setFocused] = React.useState(false);
-
   return (
     <View
       focusable
@@ -198,6 +198,7 @@ function MetricCard({
       {metric.key === 'cost' ? (
         <Text style={styles.subtitle}>Za analizirani period</Text>
       ) : null}
+      {focused ? <TvFocusGlow radius={18} /> : null}
     </View>
   );
 }
@@ -249,6 +250,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   card: {
+    position: 'relative',
+    overflow: 'visible',
     backgroundColor: colors.surface,
     borderWidth: tvLayout.focusBorder,
     borderColor: colors.border,
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.sm,
   },
-  cardFocused: { borderColor: colors.accent, shadowColor: colors.accent, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8, transform: [{ scale: tvLayout.focusScale }] },
+  cardFocused: { borderColor: colors.accent, transform: [{ scale: tvLayout.focusScale }] },
   label: {
     color: colors.textMuted,
     fontSize: typeScale.body,

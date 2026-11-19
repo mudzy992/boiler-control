@@ -72,11 +72,21 @@ export class NotificationsService {
     if (tokens.length === 0) {
       return { success: false, sent: 0, message: `No active ${params.kind} push devices are registered to this account.` };
     }
-    await this.expoPushService.sendPushToTokens(tokens, params.title, params.message, {
+    const delivery = await this.expoPushService.sendPushToTokens(tokens, params.title, params.message, {
       test: true,
       target: params.kind,
     });
-    return { success: true, sent: tokens.length, message: `Test push sent to ${tokens.length} ${params.kind} device(s).` };
+    const success = delivery.accepted > 0;
+    return {
+      success,
+      // Keep `sent` for existing callers, but make its meaning explicit in the
+      // response message: Expo ticket acceptance is not provider/device receipt.
+      sent: delivery.accepted,
+      targeted: delivery.targeted,
+      rejected: delivery.rejected,
+      errors: delivery.errors,
+      message: `Expo accepted ${delivery.accepted} of ${delivery.targeted} ${params.kind} push ticket(s). Rejected: ${delivery.rejected}${delivery.errors.length ? ` (${delivery.errors.join(', ')})` : ''}. Device delivery is not confirmed yet.`,
+    };
   }
 
   // 🔑 DEBOUNCE CHECK

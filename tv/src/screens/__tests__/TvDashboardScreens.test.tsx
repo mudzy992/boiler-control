@@ -34,6 +34,16 @@ describe('TV read-only dashboard screens', () => {
     expect(view.queryByText('128')).toBeNull();
   });
 
+  it('zadržava podnavigaciju Početna/Analitika/Zdravlje dostupnom iz svakog prikaza', async () => {
+    const onView = jest.fn();
+    const view = await render(<HomeScreen data={baseData} view="analytics" onView={onView} />);
+
+    expect(view.getByRole('button', { name: 'Pregled' })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Zdravlje' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Zdravlje' }));
+    expect(onView).toHaveBeenCalledWith('health');
+  });
+
   it('prikazuje očitanja iz API-ja i prebacuje prikaz plina bez upisa', async () => {
     const onView = jest.fn();
     const data = {

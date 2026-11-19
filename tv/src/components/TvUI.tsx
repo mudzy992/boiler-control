@@ -9,11 +9,10 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { translateText } from '../config';
 import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { colors, fonts, spacing, typeScale, tvLayout } from '../theme';
+import { baseTypeScale, colors, fonts, scaleContent, spacing, typeScale, tvLayout } from '../theme';
 
 export type TvIconName =
   | 'home'
@@ -36,10 +35,6 @@ export type TvIconName =
   | 'dots'
   | 'cloud'
   | 'alert';
-
-export function TvFocusGlow({ radius = 18 }: { radius?: number }) {
-  return <View pointerEvents="none" style={[styles.focusGlow, { borderRadius: radius }]} />;
-}
 
 export function TvAmbientBackground() {
   return (
@@ -88,14 +83,17 @@ export function TvIcon({
   size = 20,
   color = colors.textMuted,
   strokeWidth = 1.8,
+  sizeScale = 'content',
 }: {
   name: TvIconName;
   size?: number;
   color?: string;
   strokeWidth?: number;
+  sizeScale?: 'content' | 'full';
 }) {
+  const iconSize = sizeScale === 'full' ? size : scaleContent(size);
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none">
       {name === 'flame' ? (
         <Path d={ICON_PATHS[name]} fill={color} stroke={color} strokeWidth={1} strokeLinejoin="round" />
       ) : (
@@ -118,12 +116,15 @@ export function TvText({
   tone = 'primary',
   size = 'body',
   numberOfLines,
+  sizeScale = 'content',
 }: {
   children: React.ReactNode;
   style?: TextStyle | TextStyle[];
   tone?: 'primary' | 'muted' | 'dim' | 'signal' | 'ok' | 'warn' | 'fault';
   size?: 'hero' | 'title' | 'section' | 'body' | 'small' | 'micro';
   numberOfLines?: number;
+  /** Header text remains at its original size; content defaults to the 75% scale. */
+  sizeScale?: 'content' | 'full';
 }) {
   const sizeClass = {
     hero: 'text-hero', title: 'text-title', section: 'text-section',
@@ -131,14 +132,15 @@ export function TvText({
   }[size];
   const toneClass = {
     primary: 'text-ink', muted: 'text-muted', dim: 'text-dim',
-    signal: 'text-accent', ok: 'text-success', warn: 'text-warning', fault: 'text-fault',
+    signal: 'text-accent-text', ok: 'text-success', warn: 'text-warning', fault: 'text-fault',
   }[tone];
   const weightClass = size === 'hero' ? 'font-bold' : 'font-sans';
   return (
     <Text
       numberOfLines={numberOfLines}
       className={`${sizeClass} ${toneClass} ${weightClass}`}
-      style={style}
+      accessibilityRole={size === 'hero' || size === 'title' || size === 'section' ? 'header' : undefined}
+      style={[{ fontSize: sizeScale === 'full' ? baseTypeScale[size] : typeScale[size] }, style]}
     >
       {typeof children === 'string' ? translateText(children) : children}
     </Text>
@@ -191,15 +193,10 @@ export function TvCard({
 }) {
   const [focus, setFocus] = React.useState(false);
   const content = (
-    <View className="rounded-tv border-focus border-line bg-surface p-5" style={[styles.card, focus && styles.cardFocused, focused && styles.cardFocused, style]} testID={testID}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={['rgba(22,30,44,0.98)', 'rgba(11,15,22,0.98)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      {decorative ? <View pointerEvents="none" style={styles.metricAura} /> : null}
+    <View
+      style={[styles.card, focus && styles.cardFocused, focused && styles.cardFocused, decorative && styles.metricCard, style]}
+      testID={testID}
+    >
       {children}
     </View>
   );
@@ -217,7 +214,6 @@ export function TvCard({
         accessibilityLabel={accessibilityLabel}
       >
         {content}
-        {focus ? <TvFocusGlow radius={18} /> : null}
       </View>
     );
   }
@@ -234,7 +230,6 @@ export function TvCard({
       testID={testID}
     >
       {content}
-      {focus ? <TvFocusGlow radius={18} /> : null}
     </Pressable>
   );
 }
@@ -291,7 +286,7 @@ export function TvMetricCard({
 }) {
   const tint = tone === 'signal' ? colors.accent : tone === 'ok' ? colors.success : tone === 'warn' ? colors.warning : colors.text;
   return (
-    <TvCard onPress={onPress} testID={testID} containerStyle={{ flex: 1 }} style={styles.metricCard} decorative preferredFocus={preferredFocus}>
+    <TvCard onPress={onPress} testID={testID} containerStyle={{ flex: 1 }} style={styles.metricCard} decorative preferredFocus={preferredFocus} accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${meta ? `. ${meta}` : ''}`}>
       <View style={styles.metricHead}>
         <TvText size="small" tone="muted" style={styles.metricLabel}>{label}</TvText>
         <View style={[styles.metricIcon, { backgroundColor: `${tint}1c` }]}>
@@ -311,16 +306,20 @@ export function TvStatusPill({
   label,
   tone = 'ok',
   icon,
+  sizeScale = 'content',
 }: {
   label: string;
   tone?: 'ok' | 'signal' | 'warn' | 'fault' | 'neutral';
   icon?: TvIconName;
+  sizeScale?: 'content' | 'full';
 }) {
   const tint = tone === 'signal' ? colors.accent : tone === 'warn' ? colors.warning : tone === 'fault' ? colors.fault : tone === 'neutral' ? colors.textDim : colors.success;
+  const labelColor = tone === 'signal' ? colors.accentText : tone === 'neutral' ? colors.text : tint;
+  const s = (value: number) => sizeScale === 'full' ? value : scaleContent(value);
   return (
-    <View style={[styles.statusPill, { borderColor: `${tint}44`, backgroundColor: `${tint}15` }]}>
-      {icon ? <TvIcon name={icon} size={13} color={tint} /> : <View style={[styles.statusDot, { backgroundColor: tint }]} />}
-      <TvText size="micro" style={{ color: tint, fontFamily: fonts.sansSemiBold, letterSpacing: 0.8 }}>{label}</TvText>
+    <View accessible accessibilityRole="text" accessibilityLabel={translateText(label)} style={[styles.statusPill, { gap: s(6), paddingHorizontal: s(9), paddingVertical: s(6), borderColor: `${tint}44`, backgroundColor: `${tint}15` }]}>
+      {icon ? <TvIcon name={icon} size={s(13)} sizeScale="full" color={tint} /> : <View style={[styles.statusDot, { width: s(6), height: s(6), backgroundColor: tint }]} />}
+      <TvText size="micro" sizeScale={sizeScale} style={{ color: labelColor, fontFamily: fonts.sansSemiBold, letterSpacing: s(0.8) }}>{label}</TvText>
     </View>
   );
 }
@@ -330,19 +329,22 @@ export function TvChip({
   active,
   onPress,
   testID,
+  preferredFocus = false,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
   testID?: string;
+  preferredFocus?: boolean;
 }) {
   const [focused, setFocused] = React.useState(false);
   return (
     <Pressable
-      className="min-h-focus rounded-control border-focus border-line bg-surface px-4"
       focusable
+      hasTVPreferredFocus={preferredFocus}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityHint={active ? 'Trenutno odabrano' : 'Odaberi ovaj prikaz'}
       accessibilityState={{ selected: active }}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
@@ -350,8 +352,7 @@ export function TvChip({
       style={[styles.chip, active && styles.chipActive, focused && styles.chipFocused]}
       testID={testID}
     >
-      <TvText size="small" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.text : colors.textDim }}>{label}</TvText>
-      {focused ? <TvFocusGlow radius={12} /> : null}
+      <TvText size="small" style={{ fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: active ? colors.accentText : colors.textDim }}>{label}</TvText>
     </Pressable>
   );
 }
@@ -424,47 +425,43 @@ export function TvScrollView({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: 'transparent' },
-  scrollContent: { width: '100%', maxWidth: 1540, alignSelf: 'center', flexGrow: 1, paddingHorizontal: tvLayout.safeX, paddingTop: tvLayout.safeY, paddingBottom: tvLayout.safeY, gap: spacing.md },
-  pageHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20, marginBottom: 4 },
+  scrollContent: { width: '100%', maxWidth: scaleContent(1540), alignSelf: 'center', flexGrow: 1, paddingHorizontal: tvLayout.safeX, paddingTop: tvLayout.safeY, paddingBottom: tvLayout.safeY, gap: spacing.md },
+  pageHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: scaleContent(20), marginBottom: scaleContent(4) },
   headingText: { flexShrink: 1 },
-  eyebrow: { letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 5, fontFamily: fonts.mono },
-  pageTitle: { fontSize: typeScale.hero, letterSpacing: -0.8, fontFamily: fonts.sansSemiBold },
-  headingSubtitle: { marginTop: 7 },
+  eyebrow: { letterSpacing: scaleContent(1.5), textTransform: 'uppercase', marginBottom: scaleContent(5), fontFamily: fonts.mono },
+  pageTitle: { fontSize: typeScale.hero, letterSpacing: scaleContent(-0.8), fontFamily: fonts.sansSemiBold },
+  headingSubtitle: { marginTop: scaleContent(7) },
   headingRight: { alignItems: 'flex-end', justifyContent: 'flex-end' },
-  card: { position: 'relative', overflow: 'hidden', borderColor: colors.border, gap: spacing.sm },
-  cardFocused: { borderColor: colors.accent, transform: [{ scale: tvLayout.focusScale }] },
-  metricCard: { paddingVertical: 17, paddingHorizontal: 19, gap: 6, minHeight: 136 },
-  metricAura: { position: 'absolute', width: 126, height: 126, borderRadius: 100, right: -53, top: -70, borderWidth: 1, borderColor: 'rgba(255,255,255,0.065)' },
+  card: { position: 'relative', overflow: 'hidden', backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1.5, borderRadius: scaleContent(18), padding: scaleContent(20), gap: spacing.sm },
+  cardFocused: { borderColor: colors.accent, borderWidth: tvLayout.focusBorder, backgroundColor: colors.raised },
+  metricCard: { paddingVertical: scaleContent(17), paddingHorizontal: scaleContent(19), gap: scaleContent(6), minHeight: scaleContent(136) },
   focusableCardContainer: { position: 'relative', overflow: 'visible' },
   pressableCard: { flex: 1, position: 'relative', overflow: 'visible' },
-  focusGlow: { position: 'absolute', top: -5, right: -5, bottom: -5, left: -5, borderWidth: 4, borderColor: 'rgba(255,107,61,0.3)', zIndex: 10 },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 3 },
-  cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: scaleContent(3) },
+  cardIcon: { width: scaleContent(40), height: scaleContent(40), borderRadius: scaleContent(12), alignItems: 'center', justifyContent: 'center' },
   cardTitleCopy: { flex: 1, minWidth: 0 },
   cardTitle: { fontFamily: fonts.sansSemiBold, fontSize: typeScale.section },
-  cardSubtitle: { marginTop: 3 },
+  cardSubtitle: { marginTop: scaleContent(3) },
   cardTitleRight: { marginLeft: 'auto' },
-  metricHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  metricHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: scaleContent(10) },
   metricLabel: { fontFamily: fonts.sansMedium, fontSize: typeScale.small },
-  metricIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  metricValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 7, marginTop: 6 },
-  metricValue: { fontSize: typeScale.hero, lineHeight: 45, letterSpacing: -1.2, fontFamily: fonts.monoSemiBold },
+  metricIcon: { width: scaleContent(40), height: scaleContent(40), borderRadius: scaleContent(12), alignItems: 'center', justifyContent: 'center' },
+  metricValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: scaleContent(7), marginTop: scaleContent(6) },
+  metricValue: { fontSize: typeScale.hero, lineHeight: scaleContent(45), letterSpacing: scaleContent(-1.2), fontFamily: fonts.monoSemiBold },
   metricUnit: { fontFamily: fonts.sansMedium },
-  metricMeta: { marginTop: 1 },
-  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 6 },
-  statusDot: { width: 6, height: 6, borderRadius: 5 },
-  chip: { position: 'relative', overflow: 'visible', minHeight: tvLayout.minFocusTarget, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12, borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
+  metricMeta: { marginTop: scaleContent(1) },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: scaleContent(6), borderRadius: 99, borderWidth: 1, paddingHorizontal: scaleContent(9), paddingVertical: scaleContent(6) },
+  statusDot: { width: scaleContent(6), height: scaleContent(6), borderRadius: 99 },
+  chip: { position: 'relative', overflow: 'visible', minHeight: tvLayout.minFocusTarget, paddingHorizontal: scaleContent(14), paddingVertical: scaleContent(7), borderRadius: scaleContent(12), borderWidth: tvLayout.focusBorder, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
   chipActive: { borderColor: '#2c3746', backgroundColor: colors.raised },
-  chipFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}1c`, transform: [{ scale: tvLayout.focusScale }] },
-  chipText: { fontFamily: fonts.sansSemiBold, letterSpacing: 0.6, color: colors.textDim },
-  chipTextActive: { color: colors.accent },
+  chipFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}1c` },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
   sectionHeading: { fontFamily: fonts.sansSemiBold },
-  sectionMeta: { marginTop: 4 },
-  dataRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderBottomColor: `${colors.text}0d`, borderBottomWidth: StyleSheet.hairlineWidth },
-  dataRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  sectionMeta: { marginTop: scaleContent(4) },
+  dataRow: { minHeight: tvLayout.minFocusTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: scaleContent(12), borderBottomColor: 'rgba(152,164,180,0.22)', borderBottomWidth: StyleSheet.hairlineWidth },
+  dataRowLeft: { flexDirection: 'row', alignItems: 'center', gap: scaleContent(10), flex: 1 },
   dataRowCopy: { flex: 1 },
   dataRowLabel: { fontFamily: fonts.sansMedium },
-  dataRowDetail: { marginTop: 3 },
+  dataRowDetail: { marginTop: scaleContent(3) },
   dataRowValue: { fontFamily: fonts.mono, textAlign: 'right' },
 });

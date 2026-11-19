@@ -72,7 +72,7 @@ describe('app.config.js', () => {
       raised: '#111723',
       text: '#e8edf4',
       accent: '#ff6b3d',
-      fault: '#f87171',
+      fault: '#ff8c8c',
     });
   });
 

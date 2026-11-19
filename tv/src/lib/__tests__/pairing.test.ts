@@ -3,6 +3,7 @@ import {
   extractPairingCode,
   isLocallyExpired,
   pairingDeepLink,
+  parseClaimResponse,
   reduceClaim,
   type PairingState,
 } from '../pairing';
@@ -18,6 +19,19 @@ const waiting = (code = 'ABCD2345'): PairingState => ({
   phase: 'waiting',
   code,
   expiresAt: Date.now() + 60_000,
+});
+
+describe('validacija odgovora API-ja', () => {
+  it('prihvata samo podržan status i validne tokene za READY', () => {
+    expect(parseClaimResponse({ status: 'PENDING' })).toEqual({ status: 'PENDING' });
+    expect(parseClaimResponse({ status: 'READY', token: 'access', refreshToken: 'refresh', userId: 7 })).toEqual({
+      status: 'READY', token: 'access', refreshToken: 'refresh', userId: 7,
+    });
+    expect(parseClaimResponse({ status: 'READY', token: '', refreshToken: 'refresh', userId: 7 })).toBeNull();
+    expect(parseClaimResponse({ status: 'READY', token: 'access', refreshToken: 'refresh', userId: '7' })).toBeNull();
+    expect(parseClaimResponse({ status: 'UNKNOWN' })).toBeNull();
+    expect(parseClaimResponse(null)).toBeNull();
+  });
 });
 
 describe('redukcija stanja', () => {

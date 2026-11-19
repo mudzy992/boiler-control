@@ -14,6 +14,7 @@ module.exports = {
         muted: tokens.colors.textMuted,
         dim: tokens.colors.textDim,
         accent: tokens.colors.accent,
+        'accent-text': tokens.colors.accentText,
         'on-accent': tokens.colors.onAccent,
         success: tokens.colors.success,
         warning: tokens.colors.warning,

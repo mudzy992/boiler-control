@@ -759,8 +759,8 @@ model TvPairingSession {
   /// smije), a u `UserDevice` ga upisuje **server** pri odobrenju. Poslije
   /// uparivanja TV više ništa ne piše.
   ///
-  /// Nije tajna (Expo token je javni identifikator uređaja za push), ali se
-  /// briše kad sesija istekne.
+  /// Nije tajna (Expo token je javni identifikator uređaja za push). Token se
+  /// briše iz sesije nakon upisa u UserDevice ili kad sesija istekne/odbije se.
   tvPushToken String?
 
   @@index([expiresAt])

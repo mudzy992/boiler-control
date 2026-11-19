@@ -96,6 +96,14 @@ describe('TV klijent je samo za čitanje', () => {
     post.mockRestore();
   });
 
+  it('odbija neispravan pairing JSON umjesto da ga proslijedi UI-ju', async () => {
+    const post = jest.spyOn(axios, 'post').mockResolvedValue({ data: { code: '', expiresAt: 'neispravan' } } as never);
+    await expect(
+      requestPairingCode('https://api.example.com/api', {}),
+    ).rejects.toThrow('neispravan odgovor za pairing kod');
+    post.mockRestore();
+  });
+
   it.each(['post', 'put', 'patch', 'delete'])(
     '%s je odbijen prije slanja',
     async (method) => {

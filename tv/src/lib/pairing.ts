@@ -42,6 +42,32 @@ export type ClaimResponse =
       userId: number;
     };
 
+/** Validate untrusted JSON before it enters the pairing state machine. */
+export function parseClaimResponse(value: unknown): ClaimResponse | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const response = value as Record<string, unknown>;
+  const status = response.status;
+  if (status === 'READY') {
+    if (
+      typeof response.token === 'string' && response.token.trim().length > 0 &&
+      typeof response.refreshToken === 'string' && response.refreshToken.trim().length > 0 &&
+      typeof response.userId === 'number' && Number.isSafeInteger(response.userId) && response.userId > 0
+    ) {
+      return {
+        status,
+        token: response.token,
+        refreshToken: response.refreshToken,
+        userId: response.userId,
+      };
+    }
+    return null;
+  }
+
+  return status === 'PENDING' || status === 'APPROVED' || status === 'CLAIMED' || status === 'EXPIRED' || status === 'REJECTED'
+    ? { status }
+    : null;
+}
+
 /**
  * Prevedi odgovor servera u novo stanje TV-a.
  *

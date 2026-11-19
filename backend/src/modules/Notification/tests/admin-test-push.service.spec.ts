@@ -30,8 +30,10 @@ describe('admin test push delivery', () => {
       'Test',
       'Ping',
       { test: true, target: 'TV' },
+      expect.any(String),
     );
     expect(result).toMatchObject({ success: true, sent: 1, targeted: 2, rejected: 1 });
+    expect(result.diagnosticId).toMatch(/^[a-f0-9]{12}$/);
     expect(result.message).toContain('DeviceNotRegistered');
     expect(result.message).toContain('Device delivery is not confirmed yet.');
   });

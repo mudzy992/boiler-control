@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { createHash } from 'node:crypto';
+import { Injectable, Logger } from '@nestjs/common';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 import { NotificationType } from 'src/generated/prisma';
 
 @Injectable()
 export class ExpoPushService {
+  private readonly logger = new Logger(ExpoPushService.name);
   private expo: Expo;
 
   constructor() {
@@ -15,6 +17,7 @@ export class ExpoPushService {
     title: string,
     message: string,
     data?: any,
+    diagnosticId?: string,
   ): Promise<{ targeted: number; accepted: number; rejected: number; errors: string[] }> {
     const messages: ExpoPushMessage[] = [];
     const errors: string[] = [];
@@ -24,6 +27,11 @@ export class ExpoPushService {
       if (!Expo.isExpoPushToken(pushToken)) {
         rejected += 1;
         errors.push('InvalidExpoPushToken');
+        if (diagnosticId) {
+          this.logger.warn(
+            `[push-test:${diagnosticId}] invalid Expo token ref=${tokenRef(pushToken)}`,
+          );
+        }
         continue;
       }
 
@@ -46,28 +54,42 @@ export class ExpoPushService {
         // A successful HTTP request only means Expo accepted a ticket. It is
         // not evidence that FCM delivered the notification to the device.
         const tickets = await this.expo.sendPushNotificationsAsync(chunk);
-        for (const ticket of tickets) {
+        tickets.forEach((ticket, index) => {
+          const pushToken = String(chunk[index]?.to ?? 'unknown');
+          const ref = tokenRef(pushToken);
           if (ticket.status === 'ok') {
             accepted += 1;
+            if (diagnosticId) {
+              this.logger.log(
+                `[push-test:${diagnosticId}] Expo ticket accepted tokenRef=${ref} ticketId=${ticket.id}`,
+              );
+            }
           } else {
             rejected += 1;
             const reason = ticket.details?.error ?? ticket.message;
             errors.push(reason);
-            console.error('Expo push ticket rejected', {
-              message: ticket.message,
-              details: ticket.details,
-            });
+            this.logger.error(
+              `${diagnosticId ? `[push-test:${diagnosticId}] ` : ''}Expo push ticket rejected tokenRef=${ref} reason=${reason}`,
+            );
           }
-        }
+        });
       } catch (error) {
         rejected += chunk.length;
         errors.push('ExpoRequestFailed');
-        console.error('Expo push request failed', error);
+        const reason = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `${diagnosticId ? `[push-test:${diagnosticId}] ` : ''}Expo push request failed for ${chunk.length} token(s): ${reason}`,
+        );
       }
     }
 
     return { targeted: tokens.length, accepted, rejected, errors: [...new Set(errors)] };
   }
+}
+
+/** Stable, non-reversible reference for correlating device tickets without logging tokens. */
+function tokenRef(token: string): string {
+  return createHash('sha256').update(token).digest('hex').slice(0, 12);
 }
 
 function resolveChannel(type: NotificationType): string {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { baseTvLayout, baseTypeScale, colors, fonts, scaleContent, spacing, typeScale, tvLayout } from '../theme';
 import { tvLocaleTag } from '../config';
@@ -128,10 +128,7 @@ export function HomeScreen({ data, view, onView }: { data: TvDashboardData; view
         <TvMetricCard label="Polazna voda" value={fmt(pick(boiler, 'actualFlowTemp', 'flowTemp', 'currentFlowTemp'))} unit="°C" meta="Temperatura sistema grijanja" icon="water" />
         <TvMetricCard label="Trošak plina" value={fmt(cost, 2)} unit="KM" meta="Iznos vraćen analizom plina" icon="cost" tone="ok" />
       </View>
-      <View style={styles.twoColumns}>
-        <TvCard containerStyle={{ flex: 1.55 }}><TvCardTitle title="Temperatura doma" subtitle="Očitanje termostata · posljednja dostupna mjerenja" icon="chart" /><TemperatureChart events={data.heatingEvents} /></TvCard>
-        <HeatingSummary data={data} />
-      </View>
+      <HeatingStatusCard data={data} />
       <View style={styles.twoColumns}><HealthSummary data={data} /><Recommendation data={data} /></View>
     </> : view === 'analytics' ? <AnalyticsView data={data} /> : <HealthView data={data} />}
     <DataFootnote data={data} />
@@ -305,15 +302,61 @@ function HealthView({ data }: { data: TvDashboardData }) {
   </>;
 }
 
-function HeatingSummary({ data }: { data: TvDashboardData }) {
-  const thermostat = data.dashboard?.homes?.[0]?.thermostats?.[0] ?? {};
-  const boiler = data.dashboard?.system?.boiler ?? {};
+function HeatingStatusCard({ data }: { data: TvDashboardData }) {
   const active = data.heatingStatus.some((item) => item?.isHeatingNow === true);
-  return <TvCard containerStyle={{ flex: 0.85 }}><TvCardTitle title="Status grijanja" subtitle={String(pick(thermostat, 'alias', 'name') ?? 'Termostat')} right={<TvStatusPill label={active ? 'AKTIVNO' : 'STATUS NEPOZNAT'} tone={active ? 'ok' : 'neutral'} />} icon="flame" />
-    <TvDataRow label="Termostat" value={`${fmt(pick(thermostat, 'roomCurrentTemp'))} / ${fmt(pick(thermostat, 'roomTargetTemp'))} °C`} />
-    <TvDataRow label="Polazna voda" value={`${fmt(pick(boiler, 'actualFlowTemp'))} °C`} />
-    <TvDataRow label="Ciklusi u periodu" value={fmt(pick(data.heatingSummary, 'totalCycles'), 0)} />
-  </TvCard>;
+  const glow = React.useRef(new Animated.Value(0.2)).current;
+
+  React.useEffect(() => {
+    if (!active) {
+      glow.setValue(0);
+      return undefined;
+    }
+
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, {
+          toValue: 0.78,
+          duration: 1350,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glow, {
+          toValue: 0.24,
+          duration: 1350,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [active, glow]);
+
+  return (
+    <TvCard containerStyle={styles.heatingStatusContainer} accessibilityLabel={active ? 'Grijanje aktivno, zagrijavanje je u toku' : 'Grijanje neaktivno'}>
+      <View style={[styles.heatingStatusCard, active && styles.heatingStatusActive]}>
+        {active ? <Animated.View pointerEvents="none" style={[styles.heatingGlow, { opacity: glow }]} /> : null}
+        <View style={[styles.heatingIcon, active && styles.heatingIconActive]}>
+          <TvIcon name="flame" size={30} color={active ? colors.accent : colors.textDim} />
+        </View>
+        <View style={styles.heatingStatusCopy}>
+          <TvText size="small" tone="dim" style={styles.heatingEyebrow}>STATUS GRIJANJA</TvText>
+          <TvText size="section" style={active ? [styles.heatingStatusTitle, styles.heatingStatusTitleActive] : styles.heatingStatusTitle}>
+            {active ? 'ZAGRIJAVANJE' : 'NEAKTIVNO'}
+          </TvText>
+          <TvText size="small" tone="muted">
+            {active ? 'Grijanje je aktivno' : 'Trenutno nema zagrijavanja'}
+          </TvText>
+        </View>
+        <View
+          style={[styles.heatingIndicator, active && styles.heatingIndicatorActive]}
+          accessibilityLabel={active ? 'Aktivno' : 'Neaktivno'}
+        >
+          <View style={[styles.heatingIndicatorDot, active && styles.heatingIndicatorDotActive]} />
+        </View>
+      </View>
+    </TvCard>
+  );
 }
 function HealthSummary({ data }: { data: TvDashboardData }) {
   const score = pick(data.health, 'score', 'healthScore', 'overallScore');
@@ -367,8 +410,8 @@ const styles = StyleSheet.create({
   nav: { height: tvLayout.bottomNavHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: tvLayout.safeX, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.12)' },
   navItems: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scaleContent(8) },
   navItem: { minWidth: scaleContent(152), height: tvLayout.minFocusTarget, paddingHorizontal: scaleContent(15), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: scaleContent(10), borderWidth: tvLayout.focusBorder, borderColor: 'transparent', borderRadius: scaleContent(13) },
-  navItemActive: { backgroundColor: `${colors.accent}16`, borderColor: `${colors.accent}66` },
-  navFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}20` },
+  navItemActive: { backgroundColor: 'transparent', borderColor: 'transparent', borderRadius: 0, borderBottomWidth: scaleContent(2), borderBottomColor: colors.accent },
+  navFocused: { borderColor: colors.accent, backgroundColor: `${colors.accent}20`, borderRadius: scaleContent(13) },
   brandName: { fontFamily: fonts.sansBold, fontSize: baseTypeScale.section, letterSpacing: -0.4 },
   brandCaption: { fontFamily: fonts.mono, letterSpacing: 1, marginTop: 3 },
   topbar: { height: baseTvLayout.topBarHeight, paddingHorizontal: baseTvLayout.safeX, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
@@ -388,6 +431,20 @@ const styles = StyleSheet.create({
   settingsButtonActive: { borderColor: `${colors.accent}88`, backgroundColor: `${colors.accent}10` },
   settingsTextActive: { color: colors.accentText, fontFamily: fonts.sansSemiBold, flex: 1 },
   settingsContent: { flex: 1 },
+  heatingStatusContainer: { width: '100%' },
+  heatingStatusCard: { minHeight: scaleContent(122), position: 'relative', overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: scaleContent(18), paddingHorizontal: scaleContent(22), paddingVertical: scaleContent(16), borderWidth: 1, borderColor: colors.border, borderRadius: scaleContent(14), backgroundColor: colors.background },
+  heatingStatusActive: { borderColor: `${colors.accent}88`, backgroundColor: '#130d0b' },
+  heatingGlow: { position: 'absolute', right: -scaleContent(42), top: -scaleContent(78), width: scaleContent(330), height: scaleContent(250), borderRadius: scaleContent(150), backgroundColor: `${colors.accent}36` },
+  heatingIcon: { width: scaleContent(62), height: scaleContent(62), flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: scaleContent(18), backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  heatingIconActive: { backgroundColor: `${colors.accent}18`, borderColor: `${colors.accent}70` },
+  heatingStatusCopy: { flex: 1, gap: scaleContent(4) },
+  heatingEyebrow: { fontFamily: fonts.mono, letterSpacing: 1.2 },
+  heatingStatusTitle: { fontFamily: fonts.sansBold, letterSpacing: 1.1 },
+  heatingStatusTitleActive: { color: colors.accentText },
+  heatingIndicator: { width: scaleContent(34), height: scaleContent(34), alignItems: 'center', justifyContent: 'center', borderRadius: scaleContent(17), backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  heatingIndicatorActive: { backgroundColor: `${colors.accent}18`, borderColor: `${colors.accent}66` },
+  heatingIndicatorDot: { width: scaleContent(9), height: scaleContent(9), borderRadius: scaleContent(5), backgroundColor: colors.textDim },
+  heatingIndicatorDotActive: { backgroundColor: colors.accent },
   empty: { paddingVertical: scaleContent(19), paddingHorizontal: scaleContent(6) },
   chartPlaceholder: { marginTop: scaleContent(8), borderRadius: scaleContent(10), backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: scaleContent(9), paddingTop: scaleContent(6), paddingBottom: scaleContent(8) },
   chartCaption: { lineHeight: scaleContent(19) },

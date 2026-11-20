@@ -4,11 +4,18 @@ import { ExpoPushService } from '../../ExpoPush/expo.push.notification.service';
 
 describe('admin test push delivery', () => {
   it('sends only active tokens of the selected kind for the requesting admin', async () => {
-    const findMany = jest.fn().mockResolvedValue([
-      { expoPushToken: 'ExponentPushToken[tv-1]' },
-      { expoPushToken: 'ExponentPushToken[tv-2]' },
-    ]);
-    const sendPushToTokens = jest.fn().mockResolvedValue({ targeted: 2, accepted: 1, rejected: 1, errors: ['DeviceNotRegistered'] });
+    const findMany = jest
+      .fn()
+      .mockResolvedValue([
+        { expoPushToken: 'ExponentPushToken[tv-1]' },
+        { expoPushToken: 'ExponentPushToken[tv-2]' },
+      ]);
+    const sendPushToTokens = jest.fn().mockResolvedValue({
+      targeted: 2,
+      accepted: 1,
+      rejected: 1,
+      errors: ['DeviceNotRegistered'],
+    });
     const service = new NotificationsService(
       { userDevice: { findMany } } as unknown as PrismaService,
       { sendPushToTokens } as unknown as ExpoPushService,
@@ -32,7 +39,12 @@ describe('admin test push delivery', () => {
       { test: true, target: 'TV' },
       expect.any(String),
     );
-    expect(result).toMatchObject({ success: true, sent: 1, targeted: 2, rejected: 1 });
+    expect(result).toMatchObject({
+      success: true,
+      sent: 1,
+      targeted: 2,
+      rejected: 1,
+    });
     expect(result.diagnosticId).toMatch(/^[a-f0-9]{12}$/);
     expect(result.message).toContain('DeviceNotRegistered');
     expect(result.message).toContain('Device delivery is not confirmed yet.');

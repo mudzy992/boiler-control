@@ -63,7 +63,10 @@ describe('SEC-3 / R-004: admin guard na masovnom testnom endpointu', () => {
   });
 
   it('test vlastitog uređaja traži isključivo ADMIN rolu', () => {
-    const roles = Reflect.getMetadata(ROLES_KEY, handlerRef('testOwnDevicePush'));
+    const roles = Reflect.getMetadata(
+      ROLES_KEY,
+      handlerRef('testOwnDevicePush'),
+    );
     expect(roles).toContain('ADMIN');
   });
 

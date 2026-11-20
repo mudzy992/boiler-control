@@ -4891,6 +4891,20 @@
         ]
       }
     },
+    "/api/notifications/admin/test-device": {
+      "post": {
+        "operationId": "NotificationsController_testOwnDevicePush",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
     "/api/notifications/manual": {
       "post": {
         "operationId": "NotificationsController_sendManualNotification",

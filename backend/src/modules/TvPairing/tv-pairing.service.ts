@@ -264,7 +264,12 @@ export class TvPairingService {
       throw new BadRequestException('Kod više nije aktivan');
     }
 
-    await this.registerTvDevice(userId, session.tvPushToken, deviceLabel, session.id);
+    await this.registerTvDevice(
+      userId,
+      session.tvPushToken,
+      deviceLabel,
+      session.id,
+    );
 
     return { status: 'APPROVED' };
   }

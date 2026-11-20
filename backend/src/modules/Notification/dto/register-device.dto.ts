@@ -1,6 +1,12 @@
 import { Transform } from 'class-transformer';
 import type { TransformFnParams } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
 
 // Globalni enableImplicitConversion ne smije pretvoriti ne-string u string prije
 // @IsString; originalni tip tokena mora ostati vidljiv validatoru.
@@ -16,4 +22,9 @@ export class RegisterDeviceDTO {
 
   @IsEnum(['android', 'ios'])
   platform: 'android' | 'ios';
+
+  // Older mobile builds omit this field; the server treats those as PHONE.
+  @IsOptional()
+  @IsEnum(['PHONE', 'TV'])
+  kind?: 'PHONE' | 'TV';
 }

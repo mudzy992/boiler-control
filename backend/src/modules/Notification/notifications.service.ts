@@ -14,20 +14,44 @@ export class NotificationsService {
     private expoPushService: ExpoPushService,
   ) {}
 
-  async registerToken(userId: number, expoPushToken: string, platform: string) {
-    const existing = await this.prisma.userDevice.findFirst({
-      where: { userId, platform },
+  async registerToken(
+    userId: number,
+    expoPushToken: string,
+    platform: string,
+    kind: 'PHONE' | 'TV' = 'PHONE',
+  ) {
+    // The Expo token is globally unique. Re-registering that exact token must
+    // reactivate it and correct its owner/kind (for example after account
+    // changes), rather than accidentally updating the other Android device.
+    const tokenRow = await this.prisma.userDevice.findUnique({
+      where: { expoPushToken },
+      select: { id: true },
     });
 
-    if (existing) {
+    if (tokenRow) {
       return this.prisma.userDevice.update({
-        where: { id: existing.id },
-        data: { expoPushToken },
+        where: { id: tokenRow.id },
+        data: { userId, expoPushToken, platform, kind, isActive: true },
+      });
+    }
+
+    // Android PHONE and Android TV share the platform value. Include `kind`
+    // so registering the phone cannot select and overwrite the TV row.
+    const existingDevice = await this.prisma.userDevice.findFirst({
+      where: { userId, platform, kind },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    });
+
+    if (existingDevice) {
+      return this.prisma.userDevice.update({
+        where: { id: existingDevice.id },
+        data: { expoPushToken, isActive: true },
       });
     }
 
     return this.prisma.userDevice.create({
-      data: { userId, expoPushToken, platform },
+      data: { userId, expoPushToken, platform, kind, isActive: true },
     });
   }
 
@@ -158,7 +182,19 @@ export class NotificationsService {
     const tokens = await this.getUserTokens(userId);
     if (tokens.length === 0) return;
 
-    await this.expoPushService.sendPushToTokens(tokens, title, message, data);
+    const diagnosticId = randomBytes(6).toString('hex');
+    const delivery = await this.expoPushService.sendPushToTokens(
+      tokens,
+      title,
+      message,
+      data,
+      diagnosticId,
+      type,
+    );
+
+    this.logger.log(
+      `[push:${diagnosticId}] business notification user=${userId} type=${type} targeted=${delivery.targeted} accepted=${delivery.accepted} rejected=${delivery.rejected} errors=${delivery.errors.join(',') || 'none'}`,
+    );
 
     await this.prisma.notification.create({
       data: {
@@ -167,6 +203,9 @@ export class NotificationsService {
         title,
         message,
         data: data ?? {},
+        // Expo ticket acceptance is not proof of device display, but do not
+        // leave this field at its default true when every ticket was rejected.
+        deliveryOk: delivery.accepted > 0,
       },
     });
   }

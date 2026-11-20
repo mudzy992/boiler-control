@@ -71,18 +71,27 @@ describe('NotificationsService device registration', () => {
 describe('NotificationsService business push recording', () => {
   it('uses the canonical notification type and records Expo ticket acceptance, not default success', async () => {
     const create = jest.fn().mockResolvedValue({ id: 71 });
-    const sendPushToTokens = jest.fn().mockResolvedValue({
-      targeted: 2,
-      accepted: 1,
-      rejected: 1,
-      errors: ['DeviceNotRegistered'],
-    });
+    const sendPushToTokens = jest
+      .fn()
+      .mockResolvedValueOnce({
+        targeted: 1,
+        accepted: 1,
+        rejected: 0,
+        errors: [],
+      })
+      .mockResolvedValueOnce({
+        targeted: 1,
+        accepted: 0,
+        rejected: 1,
+        errors: ['DeviceNotRegistered'],
+      });
     const service = new NotificationsService(
       {
         userDevice: {
-          findMany: jest
-            .fn()
-            .mockResolvedValue([{ expoPushToken: 'phone-token' }]),
+          findMany: jest.fn().mockResolvedValue([
+            { expoPushToken: 'phone-token', kind: 'PHONE' },
+            { expoPushToken: 'tv-token', kind: 'TV' },
+          ]),
         },
         notification: { create },
       } as unknown as PrismaService,
@@ -99,8 +108,19 @@ describe('NotificationsService business push recording', () => {
       data: { flowTemp: 55 },
     });
 
-    expect(sendPushToTokens).toHaveBeenCalledWith(
+    expect(sendPushToTokens).toHaveBeenCalledTimes(2);
+    expect(sendPushToTokens).toHaveBeenNthCalledWith(
+      1,
       ['phone-token'],
+      'Heating started',
+      'Started',
+      { flowTemp: 55 },
+      expect.any(String),
+      NotificationType.HEATING_STARTED,
+    );
+    expect(sendPushToTokens).toHaveBeenNthCalledWith(
+      2,
+      ['tv-token'],
       'Heating started',
       'Started',
       { flowTemp: 55 },
@@ -123,7 +143,9 @@ describe('NotificationsService business push recording', () => {
         userDevice: {
           findMany: jest
             .fn()
-            .mockResolvedValue([{ expoPushToken: 'phone-token' }]),
+            .mockResolvedValue([
+              { expoPushToken: 'phone-token', kind: 'PHONE' },
+            ]),
         },
         notification: { create },
       } as unknown as PrismaService,

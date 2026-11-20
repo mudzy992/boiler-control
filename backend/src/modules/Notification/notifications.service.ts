@@ -179,21 +179,52 @@ export class NotificationsService {
     const canSend = await this.canSendNotification(userId, type);
     if (!canSend) return;
 
-    const tokens = await this.getUserTokens(userId);
-    if (tokens.length === 0) return;
+    const devices = await this.prisma.userDevice.findMany({
+      where: { userId, isActive: true },
+      select: { expoPushToken: true, kind: true },
+    });
+    if (devices.length === 0) return;
 
-    const diagnosticId = randomBytes(6).toString('hex');
-    const delivery = await this.expoPushService.sendPushToTokens(
-      tokens,
-      title,
-      message,
-      data,
-      diagnosticId,
-      type,
-    );
+    // PHONE and TV apps use different Expo projects. Expo rejects a single
+    // push request containing tokens from more than one project, so submit
+    // one request per registered device kind instead of mixing their tokens.
+    const groupedTokens: Record<'PHONE' | 'TV', string[]> = {
+      PHONE: [],
+      TV: [],
+    };
+    for (const device of devices)
+      groupedTokens[device.kind].push(device.expoPushToken);
+
+    let accepted = 0;
+    let targeted = 0;
+    let rejected = 0;
+    const errors = new Set<string>();
+
+    for (const kind of ['PHONE', 'TV'] as const) {
+      const tokens = groupedTokens[kind];
+      if (tokens.length === 0) continue;
+
+      const diagnosticId = randomBytes(6).toString('hex');
+      const delivery = await this.expoPushService.sendPushToTokens(
+        tokens,
+        title,
+        message,
+        data,
+        diagnosticId,
+        type,
+      );
+      accepted += delivery.accepted;
+      targeted += delivery.targeted;
+      rejected += delivery.rejected;
+      delivery.errors.forEach((error) => errors.add(error));
+
+      this.logger.log(
+        `[push:${diagnosticId}] business notification user=${userId} type=${type} kind=${kind} targeted=${delivery.targeted} accepted=${delivery.accepted} rejected=${delivery.rejected} errors=${delivery.errors.join(',') || 'none'}`,
+      );
+    }
 
     this.logger.log(
-      `[push:${diagnosticId}] business notification user=${userId} type=${type} targeted=${delivery.targeted} accepted=${delivery.accepted} rejected=${delivery.rejected} errors=${delivery.errors.join(',') || 'none'}`,
+      `Business push aggregate user=${userId} type=${type} targeted=${targeted} accepted=${accepted} rejected=${rejected} errors=${[...errors].join(',') || 'none'}`,
     );
 
     await this.prisma.notification.create({
@@ -205,7 +236,7 @@ export class NotificationsService {
         data: data ?? {},
         // Expo ticket acceptance is not proof of device display, but do not
         // leave this field at its default true when every ticket was rejected.
-        deliveryOk: delivery.accepted > 0,
+        deliveryOk: accepted > 0,
       },
     });
   }

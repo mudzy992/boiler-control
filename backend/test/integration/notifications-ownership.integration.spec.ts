@@ -135,7 +135,12 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
     triggerDailyReminders.mockReset();
     triggerDailyReminders.mockResolvedValue({ accepted: true });
     sendPushToTokens.mockReset();
-    sendPushToTokens.mockResolvedValue(undefined);
+    sendPushToTokens.mockResolvedValue({
+      targeted: 1,
+      accepted: 1,
+      rejected: 0,
+      errors: [],
+    });
     await prisma.notification.deleteMany({
       where: { userId: ownerId, title: { startsWith: 'S-002' } },
     });
@@ -300,6 +305,8 @@ describe('Integration: notification authorization (SEC-1/SEC-3)', () => {
       body.title,
       body.message,
       body.data,
+      expect.any(String),
+      'GAS_READING_REMINDER',
     );
     const stored = await prisma.notification.findFirst({
       where: { userId: ownerId, title: body.title },

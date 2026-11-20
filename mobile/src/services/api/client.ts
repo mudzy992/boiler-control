@@ -496,6 +496,7 @@ class ApiClientService {
     const response = await this.client.post('/notifications/register-token', {
       expoPushToken,
       platform,
+      kind: 'PHONE',
     });
     return response.data;
   }

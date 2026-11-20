@@ -18,7 +18,13 @@ export class ExpoPushService {
     message: string,
     data?: any,
     diagnosticId?: string,
-  ): Promise<{ targeted: number; accepted: number; rejected: number; errors: string[] }> {
+    notificationType?: NotificationType,
+  ): Promise<{
+    targeted: number;
+    accepted: number;
+    rejected: number;
+    errors: string[];
+  }> {
     const messages: ExpoPushMessage[] = [];
     const errors: string[] = [];
     let rejected = 0;
@@ -29,7 +35,7 @@ export class ExpoPushService {
         errors.push('InvalidExpoPushToken');
         if (diagnosticId) {
           this.logger.warn(
-            `[push-test:${diagnosticId}] invalid Expo token ref=${tokenRef(pushToken)}`,
+            `[push:${diagnosticId}] invalid Expo token ref=${tokenRef(pushToken)}`,
           );
         }
         continue;
@@ -42,7 +48,7 @@ export class ExpoPushService {
         body: message,
         data,
         priority: 'high',
-        channelId: resolveChannel(data?.type),
+        channelId: resolveChannel(notificationType ?? data?.type),
       });
     }
 
@@ -61,7 +67,7 @@ export class ExpoPushService {
             accepted += 1;
             if (diagnosticId) {
               this.logger.log(
-                `[push-test:${diagnosticId}] Expo ticket accepted tokenRef=${ref} ticketId=${ticket.id}`,
+                `[push:${diagnosticId}] Expo ticket accepted tokenRef=${ref} ticketId=${ticket.id}`,
               );
             }
           } else {
@@ -69,7 +75,7 @@ export class ExpoPushService {
             const reason = ticket.details?.error ?? ticket.message;
             errors.push(reason);
             this.logger.error(
-              `${diagnosticId ? `[push-test:${diagnosticId}] ` : ''}Expo push ticket rejected tokenRef=${ref} reason=${reason}`,
+              `${diagnosticId ? `[push:${diagnosticId}] ` : ''}Expo push ticket rejected tokenRef=${ref} reason=${reason}`,
             );
           }
         });
@@ -78,12 +84,17 @@ export class ExpoPushService {
         errors.push('ExpoRequestFailed');
         const reason = error instanceof Error ? error.message : String(error);
         this.logger.error(
-          `${diagnosticId ? `[push-test:${diagnosticId}] ` : ''}Expo push request failed for ${chunk.length} token(s): ${reason}`,
+          `${diagnosticId ? `[push:${diagnosticId}] ` : ''}Expo push request failed for ${chunk.length} token(s): ${reason}`,
         );
       }
     }
 
-    return { targeted: tokens.length, accepted, rejected, errors: [...new Set(errors)] };
+    return {
+      targeted: tokens.length,
+      accepted,
+      rejected,
+      errors: [...new Set(errors)],
+    };
   }
 }
 

@@ -40,6 +40,7 @@ export class NotificationsController {
       userId,
       body.expoPushToken,
       body.platform,
+      body.kind ?? 'PHONE',
     );
   }
 
@@ -54,8 +55,10 @@ export class NotificationsController {
     if (body.kind !== 'PHONE' && body.kind !== 'TV') {
       throw new BadRequestException('kind must be PHONE or TV');
     }
-    const title = typeof body.title === 'string' ? body.title.trim().slice(0, 100) : '';
-    const message = typeof body.message === 'string' ? body.message.trim().slice(0, 500) : '';
+    const title =
+      typeof body.title === 'string' ? body.title.trim().slice(0, 100) : '';
+    const message =
+      typeof body.message === 'string' ? body.message.trim().slice(0, 500) : '';
     if (!title || !message) {
       throw new BadRequestException('Title and message are required');
     }

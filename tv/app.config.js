@@ -7,7 +7,7 @@
  * 1. `EXPO_TV=1` mora uključiti TV plugin pri `prebuild` — bez toga se
  *    generiše obična Android aplikacija koja se **ne pojavljuje** na Android
  *    TV početnom ekranu (nema `LEANBACK_LAUNCHER`).
- * 2. `projectId` za push je statički vezan za TV EAS projekat jer dinamični
+ * 2. `projectId` je statički vezan za TV EAS projekat jer dinamični
  *    config CLI ne može sam zapisati tu vrijednost.
  * 3. `android.softwareKeyboardLayoutMode` mora biti `pan`: TV prikazuje
  *    tastaturu preko cijelog ekrana i bez ovoga polje za kod ostane ispod nje.
@@ -81,9 +81,6 @@ const base = {
     },
     // Izvedeno iz `pkg.version`, nikad fiksno (v. komentar iznad).
     versionCode: versionCodeFromVersion(pkg.version),
-    // Firebase Android app mora biti registrovan baš kao com.boilercontrol.tv.
-    // Build skripta provjerava package_name prije native builda.
-    googleServicesFile: './assets/google-services.json',
     // Bez ovoga TV se ne može instalirati sa Play prodavnice za TV uređaje.
     // Plugin doda `LEANBACK_LAUNCHER` kategoriju u manifest.
     softwareKeyboardLayoutMode: 'pan',
@@ -100,7 +97,6 @@ const base = {
       },
     ],
     'expo-updates',
-    'expo-notifications',
     /*
      * TV plugin se dodaje SAMO kad je `EXPO_TV=1`. Bez uslova bi običan
      * `expo start` na telefonu dobio TV manifest — a ovaj repo ima i mobilnu

@@ -21,7 +21,6 @@ const baseData: TvDashboardData = {
   programs: [],
   profile: null,
   homeProfile: null,
-  notifications: [],
   updatedAt: null,
   loading: false,
   error: null,

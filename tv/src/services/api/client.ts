@@ -117,14 +117,10 @@ export const TV_ENDPOINTS = {
  * funkcija** koju poziva samo ekran za uparivanje, i to samo dok TV nema
  * sesiju.
  *
- * **Zašto push token ide ovim pozivom.** Notifikacije su glavna svrha TV
- * aplikacije, a registracija tokena je inače zaseban POST. Pošto TV poslije
- * uparivanja ne smije nijedan upis, token se šalje **uz ovaj jedini POST**, a
- * server ga upisuje tek kad telefon odobri (v. `TvPairingService.approve`).
  */
 export async function requestPairingCode(
   baseUrl: string,
-  payload: { deviceLabel?: string; tvPushToken?: string },
+  payload: { deviceLabel?: string },
 ): Promise<{ code: string; expiresAt: string }> {
   const response = await axios.post<unknown>(
     `${baseUrl}${TV_ENDPOINTS.pairingSession}`,

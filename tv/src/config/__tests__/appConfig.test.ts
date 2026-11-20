@@ -22,7 +22,7 @@ describe('app.config.js', () => {
   it('bez EXPO_TV nema TV plugina — običan prebuild ostaje običan', () => {
     delete process.env.EXPO_TV;
     const config = load();
-    expect(config.plugins).toContain('expo-notifications');
+    expect(config.plugins).not.toContain('expo-notifications');
     expect(config.plugins).toContain('expo-updates');
     expect(config.plugins).not.toContainEqual([
       '@react-native-tvos/config-tv',
@@ -88,10 +88,10 @@ describe('app.config.js', () => {
     });
   });
 
-  it('koristi Firebase config za registrovani TV package ID', () => {
+  it('Android aplikacija ne traži Firebase konfiguraciju za push notifikacije', () => {
     const config = load();
     expect(config.android.package).toBe('com.boilercontrol.tv');
-    expect(config.android.googleServicesFile).toBe('./assets/google-services.json');
+    expect(config.android.googleServicesFile).toBeUndefined();
   });
 
   it('deklarira Buffer polyfill potreban react-native-svg QR bundleu', () => {

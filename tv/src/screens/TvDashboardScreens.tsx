@@ -11,7 +11,7 @@ import {
 export type Page = 'home' | 'heating' | 'gas' | 'settings';
 export type HomeView = 'overview' | 'analytics' | 'health';
 export type GasView = 'readings' | 'analysis';
-export type SettingsView = 'profile' | 'notifications' | 'schedule';
+export type SettingsView = 'profile' | 'schedule';
 export type AnyRecord = Record<string, unknown>;
 export type ThermostatRecord = AnyRecord & {
   roomCurrentTemp?: unknown;
@@ -44,7 +44,6 @@ export interface TvDashboardData {
   programs: AnyRecord[];
   profile: AnyRecord | null;
   homeProfile: AnyRecord | null;
-  notifications: AnyRecord[];
   updatedAt: number | null;
   loading: boolean;
   error: string | null;
@@ -201,7 +200,7 @@ export function GasScreen({ data, view, onView }: { data: TvDashboardData; view:
 export function SettingsScreen({ data, view, onView }: { data: TvDashboardData; view: SettingsView; onView: (view: SettingsView) => void }) {
   const [focusedSetting, setFocusedSetting] = React.useState<SettingsView | null>(null);
   const menu: { id: SettingsView; label: string; icon: TvIconName }[] = [
-    { id: 'profile', label: 'Profil', icon: 'profile' }, { id: 'notifications', label: 'Obavijesti', icon: 'bell' }, { id: 'schedule', label: 'Raspored grijanja', icon: 'calendar' },
+    { id: 'profile', label: 'Profil', icon: 'profile' }, { id: 'schedule', label: 'Raspored grijanja', icon: 'calendar' },
   ];
   return <TvScrollView key={view}>
     <TvPageHeading eyebrow="POSTAVKE · SAMO PREGLED" title="Profil i postavke" subtitle="Izmjene profila i uređaja ostaju dostupne u mobilnoj aplikaciji" />
@@ -210,7 +209,7 @@ export function SettingsScreen({ data, view, onView }: { data: TvDashboardData; 
         const focused = focusedSetting === item.id;
         return <Pressable key={item.id} focusable hasTVPreferredFocus={view === item.id} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: view === item.id }} onFocus={() => setFocusedSetting(item.id)} onBlur={() => setFocusedSetting(null)} onPress={() => onView(item.id)} style={[styles.settingsButton, view === item.id && styles.settingsButtonActive, focused && styles.navFocused]}><TvIcon name={item.icon} size={21} color={view === item.id ? colors.accentText : colors.textMuted} /><TvText size="small" style={view === item.id ? styles.settingsTextActive : undefined}>{item.label}</TvText><TvIcon name="chevron" size={17} color={colors.textDim} /></Pressable>;
       })}</View>
-      <View style={styles.settingsContent}>{view === 'profile' ? <ProfileSettings data={data} /> : view === 'notifications' ? <NotificationSettings data={data} /> : <ScheduleSettings data={data} />}</View>
+      <View style={styles.settingsContent}>{view === 'profile' ? <ProfileSettings data={data} /> : <ScheduleSettings data={data} />}</View>
     </View><DataFootnote data={data} />
   </TvScrollView>;
 }
@@ -224,11 +223,6 @@ function ProfileSettings({ data }: { data: TvDashboardData }) {
     <TvDataRow label="Dom" detail="Aktivni profil domaćinstva" value={String(pick(home, 'name', 'title', 'location') ?? '—')} />
     <TvDataRow label="Lokacija" value={String(pick(home, 'location', 'city', 'address') ?? pick(profile, 'homeLocation') ?? '—')} />
     <TvDataRow label="Status TV uređaja" value="Povezan" tone="ok" /></TvCard>;
-}
-
-function NotificationSettings({ data }: { data: TvDashboardData }) {
-  return <TvCard><TvCardTitle title="Obavijesti" subtitle="Obavještenja primljena iz naloga · bez označavanja kao pročitano" icon="bell" right={<TvStatusPill label="SAMO PREGLED" tone="signal" />} />
-    {data.notifications.length ? data.notifications.slice(0, 10).map((notification, index) => <TvDataRow key={itemKey(notification.id, index)} label={String(pick(notification, 'title', 'type') ?? 'Obavijest')} detail={String(pick(notification, 'message', 'body') ?? dateText(pick(notification, 'createdAt')))} value={dateText(pick(notification, 'createdAt'))} tone={pick(notification, 'readAt', 'isRead') ? 'dim' : 'primary'} />) : <EmptyState text="Nema obavijesti vraćenih iz API-ja." />}</TvCard>;
 }
 
 function ScheduleSettings({ data }: { data: TvDashboardData }) {
@@ -363,7 +357,6 @@ function HealthSummary({ data }: { data: TvDashboardData }) {
   return <TvCard containerStyle={{ flex: 1.1 }}><TvCardTitle title="Zdravlje sistema" subtitle="Status iz dashboard health API-ja" icon="shield" right={<TvStatusPill label={score != null ? 'PODACI UČITANI' : 'NEMA STATUSA'} tone={score != null ? 'ok' : 'neutral'} />} />
     <TvDataRow label="Ocjena sistema" value={score != null ? `${fmt(score, 0)} / 100` : '—'} />
     <TvDataRow label="Uređaji u nalogu" value={String(data.devices.length || '—')} />
-    <TvDataRow label="Obavijesti" value={String(data.notifications.length)} />
     <TvText size="small" tone="dim">Bez API podatka kartica ostaje prazna; TV ne koristi demo vrijednosti.</TvText>
   </TvCard>;
 }

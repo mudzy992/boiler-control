@@ -44,15 +44,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Redukcija je čista funkcija i testirana bez ekrana (`lib/__tests__/pairing`).
  */
 export interface TvPairingScreenProps {
-  /** Traži novi kod; `tvPushToken` se šalje uz njega — v. backend DTO. */
-  requestCode: (tvPushToken: string | null) => Promise<{
+  /** Traži novi kod za uparivanje. */
+  requestCode: () => Promise<{
     code: string;
     expiresAt: string;
   }>;
   /** Pita je li kod odobren. */
   pollCode: (code: string) => Promise<ClaimResponse>;
-  /** Dobijen je push token uređaja (može biti `null` ako nema mreže/Play usluga). */
-  getPushToken: () => Promise<string | null>;
   /** Poziva se tačno jednom kad su tokeni preuzeti. */
   onPaired: (session: {
     token: string;
@@ -64,7 +62,6 @@ export interface TvPairingScreenProps {
 export function TvPairingScreen({
   requestCode,
   pollCode,
-  getPushToken,
   onPaired,
 }: TvPairingScreenProps) {
   const [state, setState] = useState<PairingState>({ phase: 'idle' });
@@ -94,16 +91,7 @@ export function TvPairingScreen({
     pairedHandledRef.current = false;
     setBusy(true);
     try {
-      // Token se šalje uz jedini pairing POST; token greška ne blokira pairing.
-      let pushToken: string | null = null;
-      try {
-        pushToken = await getPushToken();
-      } catch {
-        pushToken = null;
-      }
-      if (!mountedRef.current) return;
-
-      const created = await requestCode(pushToken);
+      const created = await requestCode();
       if (!mountedRef.current) return;
       const expiresAt = new Date(created.expiresAt).getTime();
       if (!Number.isFinite(expiresAt)) {
@@ -126,7 +114,7 @@ export function TvPairingScreen({
       pairingRequestRef.current = false;
       if (mountedRef.current) setBusy(false);
     }
-  }, [getPushToken, requestCode]);
+  }, [requestCode]);
 
   /*
    * Anketiranje. Jedan interval, jedna funkcija: `setInterval` sa `async`

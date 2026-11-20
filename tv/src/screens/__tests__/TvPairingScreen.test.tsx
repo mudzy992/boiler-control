@@ -13,8 +13,8 @@ import { TvPairingScreen } from '../TvPairingScreen';
  * Ekran za uparivanje.
  *
  * Provjerava se ponašanje, ne izgled: šta se prikaže kad kod istekne, je li
- * QR sadržaj deep link (a ne URL), i — najvažnije — da se tokeni predaju
- * tačno jednom, jer bi drugo preuzimanje značilo drugu sesiju na TV-u.
+ * QR sadržaj deep link (a ne URL), i da uparivanje funkcioniše bez
+ * bilo kakve push registracije.
  */
 
 jest.mock('react-native-qrcode-svg', () => {
@@ -36,18 +36,16 @@ function setup(
     expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
   }));
   const pollCode = jest.fn(async () => ({ status: 'PENDING' as const }));
-  const getPushToken = jest.fn(async () => 'ExponentPushToken[abc]');
   const onPaired = jest.fn();
 
   const props = {
     requestCode,
     pollCode,
-    getPushToken,
     onPaired,
     ...overrides,
   };
 
-  return { props, requestCode, pollCode, getPushToken, onPaired };
+  return { props, requestCode, pollCode, onPaired };
 }
 
 describe('TV uparivanje', () => {
@@ -93,62 +91,16 @@ describe('TV uparivanje', () => {
     expect(scroll.props.focusable).toBe(true);
   });
 
-  it('push token ide UZ zahtjev za kod — TV ne smije drugi POST', async () => {
-    const { props, requestCode, getPushToken } = setup();
+  it('zahtjev za pairing kod ne traži push token', async () => {
+    const { props, requestCode } = setup();
     await render(<TvPairingScreen {...props} />);
-
-    /*
-     * `fireEvent.press` umjesto direktnog poziva `props.onPress`: dugme je
-     * `Pressable` (mora primati fokus na TV-u), pa se ovako provjerava i da
-     * je element stvarno pritisnut — a ne samo da handler postoji.
-     */
     await act(async () => {
       fireEvent.press(screen.getByText('Upari TV'));
     });
 
-    expect(getPushToken).toHaveBeenCalledTimes(1);
-    // Ovo je srž: token je argument zahtjeva za kod, ne zaseban poziv.
-    expect(requestCode).toHaveBeenCalledWith('ExponentPushToken[abc]');
-  });
-
-  it('bez push tokena uparivanje i dalje počinje', async () => {
-    // TV bez Play usluga mora moći prikazati analitiku, samo bez notifikacija.
-    const { props, requestCode } = setup({
-      getPushToken: jest.fn(async () => null),
-    });
-    await render(<TvPairingScreen {...props} />);
-
-    /*
-     * `fireEvent.press` umjesto direktnog poziva `props.onPress`: dugme je
-     * `Pressable` (mora primati fokus na TV-u), pa se ovako provjerava i da
-     * je element stvarno pritisnut — a ne samo da handler postoji.
-     */
-    await act(async () => {
-      fireEvent.press(screen.getByText('Upari TV'));
-    });
-
-    expect(requestCode).toHaveBeenCalledWith(null);
+    expect(requestCode).toHaveBeenCalledTimes(1);
+    expect(requestCode).toHaveBeenCalledWith();
     expect(screen.getByText('ABCD 2345')).toBeTruthy();
-  });
-
-  it('greška pri dobijanju push tokena ne sprječava uparivanje', async () => {
-    const { props, requestCode } = setup({
-      getPushToken: jest.fn(async () => {
-        throw new Error('nema Play usluga');
-      }),
-    });
-    await render(<TvPairingScreen {...props} />);
-
-    /*
-     * `fireEvent.press` umjesto direktnog poziva `props.onPress`: dugme je
-     * `Pressable` (mora primati fokus na TV-u), pa se ovako provjerava i da
-     * je element stvarno pritisnut — a ne samo da handler postoji.
-     */
-    await act(async () => {
-      fireEvent.press(screen.getByText('Upari TV'));
-    });
-
-    expect(requestCode).toHaveBeenCalledWith(null);
   });
 
   it('kad telefon odobri, tokeni se predaju TAČNO jednom', async () => {

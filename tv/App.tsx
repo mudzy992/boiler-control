@@ -28,11 +28,6 @@ import {
   requestPairingCode,
   TV_ENDPOINTS,
 } from './src/services/api/client';
-import {
-  configureNotificationHandling,
-  getTvPushToken,
-  prepareNotifications,
-} from './src/services/notifications';
 import { createSessionStore, type StoredSession } from './src/lib/session';
 import * as Updates from 'expo-updates';
 import { parseClaimResponse, type ClaimResponse } from './src/lib/pairing';
@@ -54,7 +49,7 @@ const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 const emptyData: TvDashboardData = {
   dashboard: null, analysis: null, readings: [], health: null, heatingStatus: [],
   heatingSummary: null, heatingEvents: [], devices: [], programs: [], profile: null, homeProfile: null,
-  notifications: [], updatedAt: null, loading: false, error: null,
+  updatedAt: null, loading: false, error: null,
 };
 
 function isRecord(value: unknown): value is AnyRecord {
@@ -93,7 +88,7 @@ function asDashboard(value: unknown): DashboardRecord | null {
 function asList(value: unknown): AnyRecord[] {
   if (Array.isArray(value)) return value.filter(isRecord);
   if (!isRecord(value)) return [];
-  for (const key of ['data', 'items', 'readings', 'notifications', 'devices', 'programs']) {
+  for (const key of ['data', 'items', 'readings', 'devices', 'programs']) {
     if (Array.isArray(value[key])) return value[key].filter(isRecord);
   }
   return [];
@@ -145,11 +140,6 @@ export default function App() {
       setAppActive(nextState === 'active');
     });
     return () => subscription.remove();
-  }, []);
-
-  useEffect(() => {
-    configureNotificationHandling();
-    void prepareNotifications();
   }, []);
 
   useEffect(() => {
@@ -209,7 +199,6 @@ export default function App() {
       client.get<unknown>('/devices', { signal }),
       client.get<unknown>('/user', { signal }),
       client.get<unknown>('/home-profile', { signal }),
-      client.get<unknown>('/notifications', { signal }),
     ]);
     if (signal.aborted) return;
 
@@ -253,7 +242,6 @@ export default function App() {
       programs: programs ?? current.programs,
       profile: hasResponse(8) ? asRecord(payloads[8]) : current.profile,
       homeProfile: hasResponse(9) ? asRecord(payloads[9]) : current.homeProfile,
-      notifications: hasResponse(10) ? asList(payloads[10]) : current.notifications,
       // Preserve the previous successful timestamp on partial failures so the
       // UI can honestly show stale data rather than erasing its freshness.
       updatedAt: errors.length === 0 ? Date.now() : current.updatedAt,
@@ -336,9 +324,10 @@ export default function App() {
 
   // Pairing is the only permitted write path, and it is isolated from the
   // read-only authenticated client. After pairing the application sends GETs only.
-  const requestCode = useCallback(async (tvPushToken: string | null) => requestPairingCode(API_BASE_URL, {
-    deviceLabel: 'Android TV', tvPushToken: tvPushToken ?? undefined,
-  }), []);
+  const requestCode = useCallback(
+    async () => requestPairingCode(API_BASE_URL, { deviceLabel: 'Android TV' }),
+    [],
+  );
   const pollCode = useCallback(async (code: string): Promise<ClaimResponse> => {
     const response = await client.get<unknown>(`${TV_ENDPOINTS.pairingSession}/${encodeURIComponent(code)}`);
     const claim = parseClaimResponse(response.data);
@@ -389,6 +378,6 @@ export default function App() {
         {page === 'settings' ? <SettingsScreen data={data} view={settingsView} onView={setSettingsView} /> : null}
       </TvPageTransition>
       <TvMainNavigation page={page} onChange={(nextPage) => { setPage(nextPage); if (nextPage === 'home') setHomeView('overview'); }} />
-    </View> : <TvPairingScreen requestCode={requestCode} pollCode={pollCode} getPushToken={getTvPushToken} onPaired={onPaired} />}
+    </View> : <TvPairingScreen requestCode={requestCode} pollCode={pollCode} onPaired={onPaired} />}
   </SafeAreaProvider>;
 }

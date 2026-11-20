@@ -76,7 +76,7 @@ describe('TV klijent je samo za čitanje', () => {
     expect(client).toBeDefined();
   });
 
-  it('POST kod za uparivanje cilja /api/tv-pairing/sessions tačno jednom', async () => {
+  it('POST kod za uparivanje ne registruje push token', async () => {
     const response = {
       data: { code: 'ABCD2345', expiresAt: '2030-01-01T00:00:00.000Z' },
     };

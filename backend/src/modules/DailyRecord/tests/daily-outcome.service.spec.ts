@@ -67,16 +67,31 @@ function setup(options: {
   observations?: ObservationRow[];
   evidence?: Array<Record<string, unknown>>;
   heatingEvents?: Array<{ timestampStart: Date; timestampEnd: Date | null }>;
+  metricRecords?: Array<{
+    localDate: string;
+    gasM3: number | null;
+    degreeDays: number | null;
+  }>;
+  boilerRows?: Array<{
+    createdAt: Date;
+    externalTemp: number;
+    suggestedFlowTemp: number;
+    actualFlowTemp: number | null;
+  }>;
+  gasReadings?: Array<{ readingDate: Date; consumption: number | null }>;
 }) {
   const prisma = {
     homeProfile: {
-      findUnique: jest
-        .fn()
-        .mockResolvedValue(
-          options.home === undefined
-            ? { id: 10, weatherTimezone: ZONE, user: { timezone: null } }
-            : options.home,
-        ),
+      findUnique: jest.fn().mockResolvedValue(
+        options.home === undefined
+          ? {
+              id: 10,
+              userId: 7,
+              weatherTimezone: ZONE,
+              user: { timezone: null },
+            }
+          : options.home,
+      ),
     },
     dailyRecord: {
       // Isti model, dva različita upita: noćni dokaz se prepoznaje po filteru
@@ -85,7 +100,9 @@ function setup(options: {
         Promise.resolve(
           'nightFlowC' in args.where
             ? (options.evidence ?? [])
-            : (options.pending ?? []),
+            : 'OR' in args.where
+              ? (options.metricRecords ?? [])
+              : (options.pending ?? []),
         ),
       ),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
@@ -96,6 +113,12 @@ function setup(options: {
     heatingEvent: {
       findMany: jest.fn().mockResolvedValue(options.heatingEvents ?? []),
     },
+    boilerHistory: {
+      findMany: jest.fn().mockResolvedValue(options.boilerRows ?? []),
+    },
+    gasReading: {
+      findMany: jest.fn().mockResolvedValue(options.gasReadings ?? []),
+    },
   };
 
   const service = new DailyOutcomeService(prisma as never);
@@ -103,6 +126,85 @@ function setup(options: {
 }
 
 describe('DailyOutcomeService.fillHome', () => {
+  it('noćni prolaz dopunjava plin i stepen-dan iz dostupnih izvora', async () => {
+    const boilerRows = Array.from({ length: 8 }, (_, index) => ({
+      createdAt: localInstant(DAY, index * 2),
+      externalTemp: 5,
+      suggestedFlowTemp: 50,
+      actualFlowTemp: 49,
+    }));
+    const { service, prisma } = setup({
+      metricRecords: [{ localDate: DAY, gasM3: null, degreeDays: null }],
+      boilerRows,
+      gasReadings: [
+        { readingDate: localInstant(DAY, 10), consumption: 1.25 },
+        { readingDate: localInstant(DAY, 15), consumption: 2.5 },
+      ],
+    });
+
+    await service.fillHome(10, NOW);
+
+    expect(prisma.dailyRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          homeProfileId: 10,
+          OR: [{ gasM3: null }, { degreeDays: null }],
+        }),
+      }),
+    );
+    expect(prisma.dailyRecord.updateMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: { homeProfileId: 10, localDate: DAY, gasM3: null },
+        data: { gasM3: 3.75 },
+      }),
+    );
+    expect(prisma.dailyRecord.updateMany).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: { homeProfileId: 10, localDate: DAY, degreeDays: null },
+        data: { degreeDays: 10 },
+      }),
+    );
+  });
+
+  it('dopunjava samo NULL polje i čuva postojeću vrijednost plina', async () => {
+    const { service, prisma } = setup({
+      metricRecords: [{ localDate: DAY, gasM3: 7.73, degreeDays: null }],
+      boilerRows: Array.from({ length: 8 }, (_, index) => ({
+        createdAt: localInstant(DAY, index * 2),
+        externalTemp: 5,
+        suggestedFlowTemp: 50,
+        actualFlowTemp: 49,
+      })),
+      gasReadings: [{ readingDate: localInstant(DAY, 10), consumption: 9 }],
+    });
+
+    await service.fillHome(10, NOW);
+
+    expect(prisma.dailyRecord.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.dailyRecord.updateMany).toHaveBeenCalledWith({
+      where: { homeProfileId: 10, localDate: DAY, degreeDays: null },
+      data: { degreeDays: 10 },
+    });
+  });
+
+  it('nedovoljan broj vanjskih očitanja ne pravi izmišljeni stepen-dan', async () => {
+    const { service, prisma } = setup({
+      metricRecords: [{ localDate: DAY, gasM3: null, degreeDays: null }],
+      boilerRows: Array.from({ length: 7 }, (_, index) => ({
+        createdAt: localInstant(DAY, index * 2),
+        externalTemp: 5,
+        suggestedFlowTemp: 50,
+        actualFlowTemp: 49,
+      })),
+    });
+
+    await service.fillHome(10, NOW);
+
+    expect(prisma.dailyRecord.updateMany).not.toHaveBeenCalled();
+  });
+
   it('bez dnevnih zapisa ne čita seriju i ne piše ništa', async () => {
     const { service, prisma } = setup({ pending: [] });
 

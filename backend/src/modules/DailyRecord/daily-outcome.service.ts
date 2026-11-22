@@ -9,6 +9,12 @@ import {
 } from './day-outcome';
 import { localDateKey, resolveHomeTimeZone } from './proposal-schedule';
 import {
+  completionFields,
+  reconstructDay,
+  type BackfillBoilerRow,
+  type BackfillGasReading,
+} from './backfill-reconstruction';
+import {
   nightFloorFrom,
   type NightEvidence,
   type NightFloorResult,
@@ -20,8 +26,9 @@ import {
  * Predlog (`DailyRecordWriter`, `20`) je zamrznut u 06:00 i nikad se ne
  * prepisuje. Ishodi se, po prirodi stvari, znaju tek poslije ponoći. Zato ovaj
  * servis dira **isključivo mjerna polja** — nikad `proposedFlowTemp`,
- * `proposedAt`, `flowSetC` ni `flowSetSource` — i to samo jednom, uz
- * `outcomeAt IS NULL` kao uslov u samom upitu.
+ * `proposedAt`, `flowSetC` ni `flowSetSource`. Ishod serije se upisuje uz
+ * `outcomeAt IS NULL`; plin i stepen-dan se dopunjuju odvojeno i samo dok je
+ * njihovo vlastito polje `NULL`.
  */
 
 export const OUTCOME_VERSION = 'outcome-1';
@@ -45,6 +52,13 @@ export const OUTCOME_VERSION_EVENTS = 'outcome-events-1';
  * serija za tako star dan se više ne čita, pa se ne bi ni mogla izmjeriti.
  */
 export const OUTCOME_LOOKBACK_DAYS = 7;
+
+/**
+ * Gas i stepen-dan dolaze iz odvojenih izvora koji mogu stići poslije prvog
+ * upisa dnevnog reda. Svaki noćni prolaz ponovo provjerava zadnjih 30 dana;
+ * upisuje samo polja koja su još NULL.
+ */
+export const SOURCE_METRICS_LOOKBACK_DAYS = 30;
 
 /**
  * Prozor za dokaze o noći. 30 dana: dovoljno noći u sličnom režimu, a kratko
@@ -100,6 +114,7 @@ export class DailyOutcomeService {
       where: { id: homeProfileId },
       select: {
         id: true,
+        userId: true,
         weatherTimezone: true,
         user: { select: { timezone: true } },
       },
@@ -111,6 +126,20 @@ export class DailyOutcomeService {
       userTimeZone: home.user.timezone,
     });
     const todayLocal = localDateKey(now, zone.zone);
+    try {
+      await this.completeSourceMetrics(
+        homeProfileId,
+        home.userId,
+        zone.zone,
+        now,
+        todayLocal,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `Plin/stepen-dan za kuću ${homeProfileId} nije dopunjen: ${message}`,
+      );
+    }
     const oldestLocal = localDateKey(
       new Date(now.getTime() - OUTCOME_LOOKBACK_DAYS * 24 * 60 * 60 * 1000),
       zone.zone,
@@ -265,6 +294,121 @@ export class DailyOutcomeService {
     }
 
     return { homeProfileId, filled, skipped, reasons };
+  }
+
+  /**
+   * Dopuni plin i stepen-dan na postojećim redovima iz njihovih izvornih
+   * tabela. Ta dva podatka često nastaju nakon jutarnjeg `DailyRecord` upisa,
+   * zato ih ne smije zavisiti od backfill-a koji se pokrene samo ručno.
+   *
+   * `completionFields` dijeli istu rekonstrukciju sa backfill CLI-jem; svaki
+   * `UPDATE` dodatno uslovljava baš svoje polje sa `IS NULL`, da ne prepiše
+   * vrijednost koja je stigla nakon čitanja.
+   */
+  private async completeSourceMetrics(
+    homeProfileId: number,
+    userId: number,
+    timeZone: string,
+    now: Date,
+    todayLocal: string,
+  ): Promise<void> {
+    const oldestLocal = localDateKey(
+      new Date(
+        now.getTime() - SOURCE_METRICS_LOOKBACK_DAYS * 24 * 60 * 60 * 1000,
+      ),
+      timeZone,
+    );
+    const records = await this.prisma.dailyRecord.findMany({
+      where: {
+        homeProfileId,
+        localDate: { gte: oldestLocal, lt: todayLocal },
+        OR: [{ gasM3: null }, { degreeDays: null }],
+      },
+      select: { localDate: true, gasM3: true, degreeDays: true },
+      orderBy: { localDate: 'asc' },
+    });
+    if (records.length === 0) return;
+
+    // Two-day buffer covers UTC/local-day boundaries for every supported zone.
+    const sourceFrom = new Date(
+      now.getTime() - (SOURCE_METRICS_LOOKBACK_DAYS + 2) * 24 * 60 * 60 * 1000,
+    );
+    const [boilerRows, gasReadings] = await Promise.all([
+      this.prisma.boilerHistory.findMany({
+        where: { userId, createdAt: { gte: sourceFrom, lt: now } },
+        select: {
+          createdAt: true,
+          externalTemp: true,
+          suggestedFlowTemp: true,
+          actualFlowTemp: true,
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.gasReading.findMany({
+        where: { userId, readingDate: { gte: sourceFrom, lt: now } },
+        select: { readingDate: true, consumption: true },
+        orderBy: { readingDate: 'asc' },
+      }),
+    ]);
+
+    const boilerByDay = new Map<string, BackfillBoilerRow[]>();
+    for (const row of boilerRows) {
+      const localDate = localDateKey(row.createdAt, timeZone);
+      const bucket = boilerByDay.get(localDate) ?? [];
+      bucket.push(row);
+      boilerByDay.set(localDate, bucket);
+    }
+    const gasByDay = new Map<string, BackfillGasReading[]>();
+    for (const row of gasReadings) {
+      const localDate = localDateKey(row.readingDate, timeZone);
+      const bucket = gasByDay.get(localDate) ?? [];
+      bucket.push(row);
+      gasByDay.set(localDate, bucket);
+    }
+
+    let gasUpdated = 0;
+    let degreeDaysUpdated = 0;
+    for (const record of records) {
+      const reconstructed = reconstructDay({
+        localDate: record.localDate,
+        zone: timeZone,
+        events: [],
+        boilerRows: boilerByDay.get(record.localDate) ?? [],
+        gasReadings: gasByDay.get(record.localDate) ?? [],
+        recommendation: null,
+      });
+      if (!reconstructed) continue;
+
+      const patch = completionFields(
+        { gasM3: record.gasM3, degreeDays: record.degreeDays },
+        reconstructed,
+      );
+      if (patch.gasM3 != null) {
+        const result = await this.prisma.dailyRecord.updateMany({
+          where: { homeProfileId, localDate: record.localDate, gasM3: null },
+          data: { gasM3: patch.gasM3 },
+        });
+        gasUpdated += result.count;
+      }
+      if (patch.degreeDays != null) {
+        const result = await this.prisma.dailyRecord.updateMany({
+          where: {
+            homeProfileId,
+            localDate: record.localDate,
+            degreeDays: null,
+          },
+          data: { degreeDays: patch.degreeDays },
+        });
+        degreeDaysUpdated += result.count;
+      }
+    }
+
+    if (gasUpdated > 0 || degreeDaysUpdated > 0) {
+      this.logger.log(
+        `Izvori za kuću ${homeProfileId}: dopunjen plin ${gasUpdated}, ` +
+          `stepen-dan ${degreeDaysUpdated} redova.`,
+      );
+    }
   }
 
   /**

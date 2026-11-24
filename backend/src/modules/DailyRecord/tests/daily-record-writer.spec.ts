@@ -57,6 +57,7 @@ function setup(options: {
   uniqueViolation?: boolean;
   /** F4.2: prikupljanje ulaza za model put; `undefined` = nije spojen. */
   proposalInputs?: unknown;
+  intervalLearning?: unknown;
 }) {
   const dailyRecords: any[] = [];
   const recommendations: any[] = [];
@@ -99,7 +100,9 @@ function setup(options: {
             : options.cachedWeather,
         ),
     },
-    heatingIntervalLearning: { findUnique: jest.fn().mockResolvedValue(null) },
+    heatingIntervalLearning: {
+      findUnique: jest.fn().mockResolvedValue(options.intervalLearning ?? null),
+    },
     $transaction: jest.fn((callback: any) => Promise.resolve(callback(tx))),
   };
 
@@ -145,6 +148,31 @@ describe('pisanje dnevnog zapisa', () => {
     expect(recommendations[0].recommendedFlowTemp).toBe(
       dailyRecords[0].proposedFlowTemp,
     );
+  });
+
+  it('ne zapisuje nulu kao očekivano vrijeme kad nema naučene procjene', async () => {
+    const { writer, recommendations, dailyRecords } = setup({});
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(recommendations[0].expectedHeatTimeMin).toBeNull();
+    expect(recommendations[0].breakdown.expectedHeatTimeMin).toBeNull();
+    expect(dailyRecords[0].params.breakdown.expectedHeatTimeMin).toBeNull();
+  });
+
+  it('uses only a positive learned interval reach-time as an estimate', async () => {
+    const { writer, recommendations } = setup({
+      intervalLearning: {
+        offset: 0.5,
+        confidence: 0.8,
+        avgReachTimeMin: 32.4,
+        p90OvershootC: 1.2,
+        samples: 12,
+      },
+    });
+    await writer.writeForHome(10, NOW_IN_WINDOW);
+
+    expect(recommendations[0].expectedHeatTimeMin).toBe(32.4);
+    expect(recommendations[0].breakdown.expectedHeatTimeMin).toBe(32.4);
   });
 
   it('zapis nosi polaznu na snazi i verziju modela', async () => {

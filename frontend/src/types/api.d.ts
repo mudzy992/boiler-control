@@ -1621,7 +1621,7 @@ export interface components {
         };
         DashboardHeatingEventDto: {
             deviceId: number;
-            /** @description 0 ako `timestampEnd` ne postoji. */
+            /** @description Duration from timestampStart to timestampEnd, or to the report cutoff when no end is recorded. */
             durationMinutes: number;
             /** Format: date-time */
             endedAt: string | null;
@@ -1717,7 +1717,7 @@ export interface components {
         };
         DashboardRecentHeatingEventDto: {
             deviceId: number;
-            /** @description 0 ako `timestampEnd` ne postoji (l.148-152). */
+            /** @description Duration from timestampStart to timestampEnd, or to now when no end is recorded. */
             durationMinutes: number;
             /** Format: date-time */
             endedAt: string | null;
@@ -1753,7 +1753,8 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             date: string;
-            expectedHeatTimeMin: number;
+            /** @description Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime. */
+            expectedHeatTimeMin: number | null;
             id: number;
             recommendedFlowTemp: number;
             userId: number;
@@ -2056,7 +2057,8 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             date: string;
-            expectedHeatTimeMin: number;
+            /** @description Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime. */
+            expectedHeatTimeMin: number | null;
             id: number;
             recommendedFlowTemp: number;
             userId: number;

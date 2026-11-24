@@ -152,7 +152,11 @@ export const RecommendationBreakdown = ({
       value: String(breakdown.samples),
     });
   }
-  if (breakdown.expectedHeatTimeMin !== null) {
+  if (
+    breakdown.expectedHeatTimeMin !== null &&
+    Number.isFinite(breakdown.expectedHeatTimeMin) &&
+    breakdown.expectedHeatTimeMin > 0
+  ) {
     rows.push({
       label: t("recommendation.heatTime"),
       value: `${breakdown.expectedHeatTimeMin.toFixed(0)} min`,

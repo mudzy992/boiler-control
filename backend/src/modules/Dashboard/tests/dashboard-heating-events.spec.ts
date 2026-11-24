@@ -141,6 +141,16 @@ describe('B-019: heating-events mapira temperaturu po uređaju', () => {
     expect(deviceLookups()[0].where.id.in.sort()).toEqual([11, 22]);
   });
 
+  it('otvoreni događaj traje do kraja traženog perioda, ne do današnjeg datuma', async () => {
+    const { service } = makeFakeDb(devices, [
+      eventOn(11, 1, '2026-01-02T23:00:00Z'),
+    ]);
+
+    const res = await service.getHeatingEvents(1, baseQuery);
+
+    expect(res.data[0].durationMinutes).toBe(60);
+  });
+
   it('prazna stranica NE radi lookup uređaja', async () => {
     const { service, deviceLookups } = makeFakeDb(devices, []);
     const res = await service.getHeatingEvents(1, baseQuery);

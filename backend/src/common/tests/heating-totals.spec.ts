@@ -5,6 +5,7 @@ import {
   heatingTotals,
   isPlausibleRoomTemp,
   MIN_PLAUSIBLE_ROOM_C,
+  observationCutoff,
   type HeatingEventLike,
 } from '../heating-totals';
 
@@ -41,6 +42,17 @@ function event(
 }
 
 describe('B2 — otvoren ciklus ne obara prosječno trajanje', () => {
+  it('historical periods cap an open cycle at the period end, not today', () => {
+    const periodEnd = new Date('2026-11-10T00:00:00.000Z');
+    const today = new Date('2026-11-16T12:00:00.000Z');
+    const cutoff = observationCutoff(periodEnd, today);
+
+    expect(cutoff).toEqual(periodEnd);
+    expect(
+      cycleDurationMin(event('2026-11-09T23:00:00.000Z', null), cutoff),
+    ).toBe(60);
+  });
+
   it('otvoren ciklus se mjeri do `now`, a ne odbacuje', () => {
     // Dva zatvorena (60 i 30 min) + jedan otvoren koji traje 10 min.
     const events = [

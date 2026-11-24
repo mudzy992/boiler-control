@@ -65,6 +65,10 @@ export interface HeatingTotals {
  * prosjek samim tim što je mjerenje palo usred grijanja. Ako je `now` prije
  * početka (sat unazad), trajanje je 0, ne negativno.
  */
+export function observationCutoff(rangeEnd: Date, now: Date): Date {
+  return new Date(Math.min(rangeEnd.getTime(), now.getTime()));
+}
+
 export function cycleDurationMin(event: HeatingEventLike, now: Date): number {
   const end = event.timestampEnd ?? now;
   const ms = end.getTime() - event.timestampStart.getTime();

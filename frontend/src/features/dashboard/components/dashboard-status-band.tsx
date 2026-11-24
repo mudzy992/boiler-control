@@ -113,6 +113,11 @@ export const DashboardStatusBand = ({
             }
           />
         ) : null}
+        {progress.mode === 'running' || progress.mode === 'overtime' ? (
+          <p className="text-xs text-ink-muted">
+            {t('dashboard.heatingProgressNote')}
+          </p>
+        ) : null}
       </div>
     </HeroPanel>
   );

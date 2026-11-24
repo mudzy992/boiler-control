@@ -150,15 +150,10 @@ export const ReportsPage = (): JSX.Element => {
                           {new Date(record.date).toLocaleDateString()}
                         </TableCell>
                         <TableCell>{record.recommendedFlowTemp.toFixed(1)}°C</TableCell>
-                        {/*
-                          Backend još ne računa očekivano vrijeme dogrijavanja
-                          i u zapis upisuje `0` (`daily-record.writer.ts`).
-                          „0 min" bi izgledalo kao mjerenje, pa se nula
-                          prikazuje kao „—". Kad motor bude davao procjenu, ovdje
-                          se vraća broj bez promjene prikaza.
-                        */}
+                        {/* Only learned positive estimates are shown; absent or legacy placeholder values stay unknown. */}
                         <TableCell>
-                          {record.expectedHeatTimeMin > 0
+                          {record.expectedHeatTimeMin != null &&
+                          record.expectedHeatTimeMin > 0
                             ? `${record.expectedHeatTimeMin.toFixed(0)} min`
                             : '—'}
                         </TableCell>

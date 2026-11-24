@@ -41,6 +41,17 @@ describe('MO2-15 RecommendationBreakdown', () => {
     expect(getByText('28 min')).toBeTruthy();
   });
 
+  it('does not render zero as an estimate when it was a legacy placeholder', async () => {
+    const { queryByText } = await render(
+      <RecommendationBreakdown
+        breakdown={{ ...fullBreakdown, expectedHeatTimeMin: 0 }}
+      />
+    );
+
+    expect(queryByText('recommendation.expectedHeatTime')).toBeNull();
+    expect(queryByText('0 min')).toBeNull();
+  });
+
   it('omits optional rows when samples and expected heat time are null', async () => {
     const { queryByText } = await render(
       <RecommendationBreakdown

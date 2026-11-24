@@ -72,6 +72,7 @@ describe('FE2-10 recommendation breakdown snapshot', () => {
     });
 
     expect(JSON.stringify(result)).toBe(before);
+    expect(snapshot.expectedHeatTimeMin).toBeNull();
     // F4.3: `engine` i `model` su nova polja ugovora. Skup se i dalje
     // zaključava tačno — aditivno ne znači „bilo šta smije ući".
     expect(Object.keys(snapshot).sort()).toEqual([

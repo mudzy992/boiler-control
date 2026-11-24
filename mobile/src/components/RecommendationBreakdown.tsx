@@ -124,7 +124,11 @@ export const RecommendationBreakdown = React.memo(function RecommendationBreakdo
       value: formatNumber(breakdown.samples, 0),
     });
   }
-  if (breakdown.expectedHeatTimeMin != null) {
+  if (
+    typeof breakdown.expectedHeatTimeMin === 'number' &&
+    Number.isFinite(breakdown.expectedHeatTimeMin) &&
+    breakdown.expectedHeatTimeMin > 0
+  ) {
     rows.push({
       key: 'expectedHeatTime',
       label: t('recommendation.expectedHeatTime'),

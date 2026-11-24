@@ -92,7 +92,12 @@ export function buildRecommendationBreakdown(
     finalTemp: result.finalTemp,
     confidence: result.confidence,
     samples: meta.samples ?? null,
-    expectedHeatTimeMin: meta.expectedHeatTimeMin ?? null,
+    expectedHeatTimeMin:
+      typeof meta.expectedHeatTimeMin === 'number' &&
+      Number.isFinite(meta.expectedHeatTimeMin) &&
+      meta.expectedHeatTimeMin > 0
+        ? meta.expectedHeatTimeMin
+        : null,
     model: engine === 'model' ? (meta.model ?? null) : null,
   };
 }

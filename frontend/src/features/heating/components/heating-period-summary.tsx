@@ -28,7 +28,7 @@ export interface HeatingPeriodMetrics {
   avgIndoorTemp: number | null;
   /** B1 — koliko je temperatura izostavljeno jer su bila 0 °C. */
   excludedZeroTemp?: number;
-  /** B2 — koliko ciklusa nema kraj (podcjenjuju trajanje). */
+  /** How many cycles lacked an end timestamp when this period was measured. */
   openCycles?: number;
 }
 

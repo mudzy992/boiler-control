@@ -175,7 +175,7 @@ model Recommendation {
   id                  Int      @id @default(autoincrement())
   userId              Int
   recommendedFlowTemp Float
-  expectedHeatTimeMin Float
+  expectedHeatTimeMin Float?
   confidenceScore     Float
   breakdown           Json?
   createdAt           DateTime @default(now())

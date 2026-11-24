@@ -565,11 +565,19 @@ export class DailyRecordWriter {
           `(mode ${input.mode}${intervalKey ? `, interval ${intervalKey}` : ''})`,
       );
     }
+    // This is an estimate only when interval learning has a positive learned
+    // reach-time. Never encode missing metadata as zero: zero looks measured.
+    const expectedHeatTimeMin =
+      typeof intervalLearning?.avgReachTimeMin === 'number' &&
+      Number.isFinite(intervalLearning.avgReachTimeMin) &&
+      intervalLearning.avgReachTimeMin > 0
+        ? intervalLearning.avgReachTimeMin
+        : null;
     const breakdown = buildRecommendationBreakdown(result, {
       mode: input.mode,
       intervalKey,
       samples: intervalLearning?.samples ?? null,
-      expectedHeatTimeMin: 0,
+      expectedHeatTimeMin,
     });
 
     // Sve što je motor dobio i vratio — da se isti broj može preračunati
@@ -656,7 +664,7 @@ export class DailyRecordWriter {
             userId: context.userId,
             date: now,
             recommendedFlowTemp: proposedFlowTemp,
-            expectedHeatTimeMin: 0,
+            expectedHeatTimeMin,
             confidenceScore: result.confidence,
             breakdown,
           },

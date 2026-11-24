@@ -109,8 +109,13 @@ export class DashboardStoredRecommendationDto {
   @ApiProperty()
   recommendedFlowTemp!: number;
 
-  @ApiProperty()
-  expectedHeatTimeMin!: number;
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description:
+      'Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime.',
+  })
+  expectedHeatTimeMin!: number | null;
 
   @ApiProperty()
   confidenceScore!: number;
@@ -354,7 +359,8 @@ export class DashboardRecentHeatingEventDto {
   source!: string;
 
   @ApiProperty({
-    description: '0 ako `timestampEnd` ne postoji (l.148-152).',
+    description:
+      'Duration from `timestampStart` to `timestampEnd`, or to now when no end is recorded.',
   })
   durationMinutes!: number;
 
@@ -435,7 +441,10 @@ export class DashboardHeatingEventDto {
   @ApiProperty()
   source!: string;
 
-  @ApiProperty({ description: '0 ako `timestampEnd` ne postoji.' })
+  @ApiProperty({
+    description:
+      'Duration from `timestampStart` to `timestampEnd`, or to the report cutoff when no end is recorded.',
+  })
   durationMinutes!: number;
 }
 

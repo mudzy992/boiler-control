@@ -332,7 +332,7 @@ const enUS = {
   },
   heating: {
     title: 'Heating Status',
-    subtitle: 'Monitor your heating system and thermostat status',
+    subtitle: 'Heating states are inferred from thermostat snapshots, not measured at the burner; transitions use a 1°C deadband and 2-minute minimum interval.',
     current: 'Current',
     target: 'Target',
     difference: 'Difference',
@@ -474,7 +474,7 @@ const enUS = {
     finalTemp: 'Final recommendation',
     confidence: 'Confidence',
     samples: 'Samples',
-    expectedHeatTime: 'Expected heat time',
+    expectedHeatTime: 'Learned average cycle duration',
     // F4.3 — modelski put (isti izraz kao web, isti ugovor).
     modelSlope: 'House heat-loss slope',
     modelSlopeCi: '(conservative estimate)',
@@ -550,7 +550,7 @@ const enUS = {
     heatingProgressHint:
       'Green up to the predicted time, yellow up to {{value}} min, red if the cycle overruns.',
     heatingProgressHintMeasured:
-      'Prediction comes from the median of your finished cycles: ~{{value}} min.',
+      'Estimate from the median duration of completed thermostat-inferred cycles, not direct burner runtime: ~{{value}} min.',
     gaugeMin: 'Minimum',
     gaugeMax: 'Maximum',
     voltageUpdated: 'Updated {{value}}',
@@ -1427,7 +1427,7 @@ const bsBS = {
   },
   heating: {
     title: 'Status grijanja',
-    subtitle: 'Prati svoj sistem grijanja i status termostata',
+    subtitle: 'Stanja grijanja se zaključuju iz očitanja termostata, ne mjere na gorioniku; prijelazi koriste mrtvu zonu od 1 °C i minimalni interval od 2 minute.',
     current: 'Trenutna',
     target: 'Ciljna',
     difference: 'Razlika',
@@ -1577,7 +1577,7 @@ const bsBS = {
     finalTemp: 'Konačna preporuka',
     confidence: 'Pouzdanost',
     samples: 'Broj uzoraka',
-    expectedHeatTime: 'Očekivano vrijeme zagrijavanja',
+    expectedHeatTime: 'Naučeno prosječno trajanje ciklusa grijanja',
     modelSlope: 'Nagib gubitaka doma',
     modelSlopeCi: '(konzervativna procjena)',
     modelSlopePoint: '(izmjereno)',
@@ -1640,7 +1640,7 @@ const bsBS = {
     noPrediction: 'procjena još nije naučena',
     heatingProgressHint:
       'Zeleno do predviđenog vremena, žuto do {{value}} min, crveno ako ciklus probije.',
-    heatingProgressHintMeasured: 'Procjena je medijana tvojih završenih ciklusa: ~{{value}} min.',
+    heatingProgressHintMeasured: 'Procjena je medijana trajanja završenih ciklusa izvedenih iz očitanja termostata, ne direktno mjerenje rada gorionika: ~{{value}} min.',
     gaugeMin: 'Minimum',
     gaugeMax: 'Maksimum',
     voltageUpdated: 'Ažurirano {{value}}',

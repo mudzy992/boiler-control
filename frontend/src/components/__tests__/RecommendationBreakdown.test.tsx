@@ -68,6 +68,17 @@ describe('FE2-10 RecommendationBreakdown', () => {
     expect(screen.queryByText('Recommendation breakdown')).not.toBeInTheDocument();
   });
 
+  it('ne prikazuje nulu koja je ranije bila placeholder za nepoznato vrijeme', () => {
+    render(
+      <RecommendationBreakdown
+        breakdown={{ ...breakdown, expectedHeatTimeMin: 0 }}
+      />,
+    );
+
+    expect(screen.queryByText('Learned average cycle duration')).not.toBeInTheDocument();
+    expect(screen.queryByText('0 min')).not.toBeInTheDocument();
+  });
+
   it('null optional polja ne prikazuju redove za uzorke/vrijeme', () => {
     render(
       <RecommendationBreakdown
@@ -77,7 +88,7 @@ describe('FE2-10 RecommendationBreakdown', () => {
 
     expect(screen.queryByText('Number of samples')).not.toBeInTheDocument();
     expect(
-      screen.queryByText('Expected heat-up time'),
+      screen.queryByText('Learned average cycle duration'),
     ).not.toBeInTheDocument();
   });
 

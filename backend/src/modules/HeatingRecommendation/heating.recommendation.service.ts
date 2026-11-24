@@ -242,7 +242,20 @@ export class HeatingRecommendationService {
         }),
         this.prisma.recommendation.count({ where }),
       ]);
-      return { rows, total };
+      // Older records used zero as a placeholder for unavailable metadata.
+      // Normalize those rows at the API boundary even before the DB migration
+      // has been applied everywhere.
+      return {
+        rows: rows.map((row) => ({
+          ...row,
+          expectedHeatTimeMin:
+            typeof row.expectedHeatTimeMin === 'number' &&
+            row.expectedHeatTimeMin > 0
+              ? row.expectedHeatTimeMin
+              : null,
+        })),
+        total,
+      };
     } catch (error) {
       this.logger.error('Error fetching recommendations', error);
       return { rows: [], total: 0 };

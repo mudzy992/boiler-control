@@ -927,7 +927,7 @@
             "type": "number"
           },
           "durationMinutes": {
-            "description": "0 ako `timestampEnd` ne postoji.",
+            "description": "Duration from timestampStart to timestampEnd, or to the report cutoff when no end is recorded.",
             "type": "number"
           },
           "endedAt": {
@@ -1280,7 +1280,7 @@
             "type": "number"
           },
           "durationMinutes": {
-            "description": "0 ako `timestampEnd` ne postoji (l.148-152).",
+            "description": "Duration from timestampStart to timestampEnd, or to now when no end is recorded.",
             "type": "number"
           },
           "endedAt": {
@@ -1390,7 +1390,9 @@
             "type": "string"
           },
           "expectedHeatTimeMin": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime."
           },
           "id": {
             "type": "number"
@@ -2255,7 +2257,9 @@
             "type": "string"
           },
           "expectedHeatTimeMin": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime."
           },
           "id": {
             "type": "number"

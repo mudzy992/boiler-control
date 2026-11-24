@@ -10,8 +10,10 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   addEventToBucket,
+  cycleDurationMin,
   emptyBucket,
   heatingTotals,
+  observationCutoff,
   type BucketTotals,
 } from '../../common/heating-totals';
 import {
@@ -152,6 +154,7 @@ export class DashboardService {
     const heatingStatus: Array<{ deviceId: number; isHeatingNow: boolean }> =
       hasThermostat ? await this.getHeatingStatus(userId) : [];
 
+    const recentEventsAsOf = new Date();
     const homes = await Promise.all(
       homeProfiles.map(async (profile) => {
         const thermostatIds = profile.thermostatDevices.map((t) => t.id);
@@ -221,12 +224,7 @@ export class DashboardService {
                 ?.roomCurrentTemp ?? null,
             hvacAction: e.hvacAction,
             source: e.source,
-            durationMinutes: e.timestampEnd
-              ? Math.round(
-                  (e.timestampEnd.getTime() - e.timestampStart.getTime()) /
-                    60000,
-                )
-              : 0,
+            durationMinutes: Math.round(cycleDurationMin(e, recentEventsAsOf)),
             isAnomaly: e.isAnomaly || false,
             proposedEndTime: e.proposedEndTime ?? null,
           })),
@@ -349,6 +347,7 @@ export class DashboardService {
     const deviceById = new Map<number, DeviceTemps>(
       devices.map((d): [number, DeviceTemps] => [d.id, d]),
     );
+    const eventDurationCutoff = observationCutoff(toDate, new Date());
 
     return {
       data: events.map((e) => ({
@@ -364,11 +363,7 @@ export class DashboardService {
           deviceById.get(e.deviceId)?.roomTargetTemp ?? null,
         hvacAction: e.hvacAction,
         source: e.source,
-        durationMinutes: e.timestampEnd
-          ? Math.round(
-              (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000,
-            )
-          : 0,
+        durationMinutes: Math.round(cycleDurationMin(e, eventDurationCutoff)),
       })),
       meta: {
         page: Number(page),
@@ -406,7 +401,9 @@ export class DashboardService {
      * koji zove ovaj servis) — pa popravka na jednom mjestu ne bi bila
      * popravka. Detalji i mjerenja su u zaglavlju tog modula.
      */
-    const now = new Date();
+    // An open cycle in a historical comparison period must not accrue
+    // duration all the way to today; stop observation at the requested window.
+    const now = observationCutoff(new Date(to), new Date());
     const totals = heatingTotals(events, now);
     const {
       totalCycles,
@@ -695,6 +692,7 @@ export class DashboardService {
       intervals,
       zone,
       bucket,
+      observationCutoff(range.to, new Date()),
     );
     const meta = {
       version: 2 as const,
@@ -763,12 +761,22 @@ export class DashboardService {
     });
   }
 
-  private getRecentRecommendations(userId: number) {
-    return this.prisma.recommendation.findMany({
+  private async getRecentRecommendations(userId: number) {
+    const rows = await this.prisma.recommendation.findMany({
       where: { userId },
       orderBy: { date: 'desc' },
       take: 5,
     });
+    // Normalize legacy placeholders while old rows may still be served before
+    // the data-cleanup migration has run.
+    return rows.map((row) => ({
+      ...row,
+      expectedHeatTimeMin:
+        typeof row.expectedHeatTimeMin === 'number' &&
+        row.expectedHeatTimeMin > 0
+          ? row.expectedHeatTimeMin
+          : null,
+    }));
   }
 
   private async getLatestWeather(userId?: number, homeProfileId?: number) {
@@ -1014,14 +1022,9 @@ export class DashboardService {
     }
 
     // 4. Stopa anomalija + pravila upozorenja na istom uzorku.
-    // `durationMinutes` koristi ISTU semantiku kao getHeatingEvents():
-    // round((end - start) / 60000), odnosno 0 kad ciklus još traje.
+    // Otvoren događaj mjeri se do trenutka izračuna, a ne lažno kao 0 min.
     const eventInputs = recentEvents.map((e) => ({
-      durationMinutes: e.timestampEnd
-        ? Math.round(
-            (e.timestampEnd.getTime() - e.timestampStart.getTime()) / 60000,
-          )
-        : 0,
+      durationMinutes: Math.round(cycleDurationMin(e, new Date())),
       roomTargetTemp: e.roomTargetTemp,
       roomCurrentTemp: e.roomCurrentTemp,
       isAnomaly: e.isAnomaly,

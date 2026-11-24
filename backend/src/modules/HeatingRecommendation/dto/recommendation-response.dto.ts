@@ -151,7 +151,8 @@ export class RecommendationBreakdownDto {
   @ApiProperty({
     type: Number,
     nullable: true,
-    description: 'Expected heat time in minutes, if available.',
+    description:
+      'Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime.',
   })
   expectedHeatTimeMin!: number | null;
 }
@@ -167,8 +168,13 @@ export class RecommendationResponseDto {
   @ApiProperty()
   recommendedFlowTemp!: number;
 
-  @ApiProperty()
-  expectedHeatTimeMin!: number;
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description:
+      'Mean duration of completed thermostat-inferred heating events, in minutes, when available; this is not direct burner runtime.',
+  })
+  expectedHeatTimeMin!: number | null;
 
   @ApiProperty()
   confidenceScore!: number;

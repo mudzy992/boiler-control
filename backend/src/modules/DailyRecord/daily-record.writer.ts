@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FlowTemperatureEngine } from '../Heating/engine/flow-temperature.engine';
 import type { FlowTempInput } from '../Heating/engine/types';
+import { intervalKeyCandidates } from '../Heating/interval-key';
 import { buildRecommendationBreakdown } from '../HeatingRecommendation/recommendation-breakdown';
 import { describeFlowClamp } from './clamp-log';
 import { resolveProposalEngine } from './proposal-engine';
@@ -471,15 +472,25 @@ export class DailyRecordWriter {
     flowSet: FlowSetSnapshot,
   ): Promise<DailyRecordWriteResult> {
     const intervalKey = intervalKeyForLocalDate(context.localDate);
-    const intervalLearning =
-      await this.prisma.heatingIntervalLearning.findUnique({
-        where: {
-          homeProfileId_intervalKey: {
+    // Interval learning rows may still use the legacy numeric weekday keys
+    // (`2_morning`) while daily records use canonical keys (`weekday_morning`).
+    // Match the canonical-first candidate list, as live BoilerService does,
+    // instead of silently falling back to PROFILE_ONLY on an exact-key miss.
+    const intervalKeyCandidatesForRead = intervalKeyCandidates(intervalKey);
+    const intervalRows = intervalKeyCandidatesForRead.length
+      ? await this.prisma.heatingIntervalLearning.findMany({
+          where: {
             homeProfileId: home.id,
-            intervalKey,
+            intervalKey: { in: intervalKeyCandidatesForRead },
           },
-        },
-      });
+        })
+      : [];
+    const intervalLearning =
+      intervalKeyCandidatesForRead
+        .map((candidate) =>
+          intervalRows.find((row) => row.intervalKey === candidate),
+        )
+        .find(Boolean) ?? null;
 
     const input: FlowTempInput = {
       mode: intervalLearning ? 'FULL' : 'PROFILE_ONLY',

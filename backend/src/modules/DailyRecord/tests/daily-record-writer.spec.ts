@@ -101,7 +101,11 @@ function setup(options: {
         ),
     },
     heatingIntervalLearning: {
-      findUnique: jest.fn().mockResolvedValue(options.intervalLearning ?? null),
+      findMany: jest
+        .fn()
+        .mockResolvedValue(
+          options.intervalLearning == null ? [] : [options.intervalLearning],
+        ),
     },
     $transaction: jest.fn((callback: any) => Promise.resolve(callback(tx))),
   };
@@ -159,9 +163,10 @@ describe('pisanje dnevnog zapisa', () => {
     expect(dailyRecords[0].params.breakdown.expectedHeatTimeMin).toBeNull();
   });
 
-  it('uses only a positive learned interval reach-time as an estimate', async () => {
-    const { writer, recommendations } = setup({
+  it('reads a legacy numeric weekday key and includes its learned cycle estimate', async () => {
+    const { writer, recommendations, dailyRecords, prisma } = setup({
       intervalLearning: {
+        intervalKey: '0_morning',
         offset: 0.5,
         confidence: 0.8,
         avgReachTimeMin: 32.4,
@@ -171,6 +176,13 @@ describe('pisanje dnevnog zapisa', () => {
     });
     await writer.writeForHome(10, NOW_IN_WINDOW);
 
+    expect(prisma.heatingIntervalLearning.findMany).toHaveBeenCalledWith({
+      where: {
+        homeProfileId: 10,
+        intervalKey: { in: ['weekend_morning', '0_morning', '6_morning'] },
+      },
+    });
+    expect(dailyRecords[0].params.input.mode).toBe('FULL');
     expect(recommendations[0].expectedHeatTimeMin).toBe(32.4);
     expect(recommendations[0].breakdown.expectedHeatTimeMin).toBe(32.4);
   });

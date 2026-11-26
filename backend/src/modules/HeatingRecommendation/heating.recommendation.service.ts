@@ -63,7 +63,7 @@ export class HeatingRecommendationService {
       );
       return;
     }
-    const intervalLearning = this.getOrCreateIntervalLearning(
+    const intervalLearning = this.findIntervalLearning(
       device.homeProfile,
       intervalKey,
     );
@@ -79,23 +79,20 @@ export class HeatingRecommendationService {
 
     // 3️⃣ Update interval learning if event ended
     if (event.timestampEnd) {
-      const newSamples = (intervalLearning.samples ?? 0) + 1;
+      const previousSamples = intervalLearning?.samples ?? 0;
+      const newSamples = previousSamples + 1;
 
       const newAvgReach =
-        ((intervalLearning.avgReachTimeMin ?? 0) *
-          (intervalLearning.samples ?? 0) +
+        ((intervalLearning?.avgReachTimeMin ?? 0) * previousSamples +
           reachTime) /
         newSamples;
 
       const newAvgOvershoot =
-        ((intervalLearning.avgOvershoot ?? 0) *
-          (intervalLearning.samples ?? 0) +
-          overshoot) /
+        ((intervalLearning?.avgOvershoot ?? 0) * previousSamples + overshoot) /
         newSamples;
 
       const newOffset =
-        ((intervalLearning.offset ?? 0) * (intervalLearning.samples ?? 0) +
-          overshoot) /
+        ((intervalLearning?.offset ?? 0) * previousSamples + overshoot) /
         newSamples;
 
       // F5.3: `confidence` se **računa iz dokaza**, a ne akumulira.
@@ -121,7 +118,7 @@ export class HeatingRecommendationService {
       // `null` i percentil se **ne mijenja** — bolje ne tvrditi nego izmisliti
       // percentil iz dva broja.
       const p90OvershootC = nextPercentile({
-        previousP90: intervalLearning.p90OvershootC,
+        previousP90: intervalLearning?.p90OvershootC ?? null,
         samples: newSamples,
         newSample: overshoot,
       });
@@ -130,22 +127,35 @@ export class HeatingRecommendationService {
       const { confidence: newConfidence, reason: confidenceReason } =
         intervalConfidence({ samples: newSamples, residualStd });
 
-      await this.prisma.heatingIntervalLearning.updateMany({
-        where: { id: intervalLearning.id },
-        data: {
-          avgReachTimeMin: newAvgReach,
-          avgOvershoot: newAvgOvershoot,
-          p90OvershootC,
-          offset: newOffset,
-          samples: newSamples,
-          confidence: newConfidence,
-          residualStd,
-          lastUpdated: new Date(),
-        },
-      });
+      const learningData = {
+        avgReachTimeMin: newAvgReach,
+        avgOvershoot: newAvgOvershoot,
+        p90OvershootC,
+        offset: newOffset,
+        samples: newSamples,
+        confidence: newConfidence,
+        residualStd,
+        lastUpdated: new Date(),
+      };
+      if (intervalLearning) {
+        await this.prisma.heatingIntervalLearning.updateMany({
+          where: { id: intervalLearning.id },
+          data: learningData,
+        });
+      } else {
+        // No interval row exists yet. Persist the first completed event so the
+        // profile can start learning instead of updating a fake id 0 forever.
+        await this.prisma.heatingIntervalLearning.create({
+          data: {
+            homeProfileId: device.homeProfile.id,
+            intervalKey,
+            ...learningData,
+          },
+        });
+      }
 
       this.logger.debug(
-        `[HeatingRecommendation] Updated IntervalLearning ${intervalKey} | reachTime=${reachTime.toFixed(
+        `[HeatingRecommendation] Saved IntervalLearning ${intervalKey} | reachTime=${reachTime.toFixed(
           2,
         )} | overshoot=${overshoot.toFixed(2)} | ` +
           `confidence=${newConfidence.toFixed(3)} (residual ${residualStd.toFixed(2)} K` +
@@ -180,30 +190,18 @@ export class HeatingRecommendationService {
     );
   }
 
-  /** Helper: get or create interval learning */
-  private getOrCreateIntervalLearning(homeProfile: any, intervalKey: string) {
-    /*
-     * Traže se i stariji formati (`1_afternoon`) — v. `intervalKeyCandidates`.
-     * Bez toga bi prva izmjena formata izgledala kao „učenje je izgubljeno", jer
-     * jedinstveni indeks `(homeProfileId, intervalKey)` ne spaja formate sam.
-     */
+  /** Find an existing interval row, preferring canonical then legacy keys. */
+  private findIntervalLearning(homeProfile: any, intervalKey: string) {
     const candidates = intervalKeyCandidates(intervalKey);
-    let learning = homeProfile.intervalLearnings?.find(
-      (i: { intervalKey: string }) => candidates.includes(i.intervalKey),
+    return (
+      candidates
+        .map((candidate) =>
+          homeProfile.intervalLearnings?.find(
+            (row: { intervalKey: string }) => row.intervalKey === candidate,
+          ),
+        )
+        .find(Boolean) ?? null
     );
-    if (!learning) {
-      learning = {
-        id: 0, // dummy, real create treba preko prisma ako želimo persist
-        intervalKey,
-        offset: 0,
-        avgOvershoot: 0,
-        avgReachTimeMin: 0,
-        samples: 0,
-        confidence: 0.1,
-      };
-      homeProfile.intervalLearnings.push(learning);
-    }
-    return learning;
   }
 
   /**

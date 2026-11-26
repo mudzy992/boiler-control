@@ -53,7 +53,7 @@ function makeService(prisma: unknown): HeatingRecommendationService {
 }
 
 /** Prisma mock koji bilježi svaki poziv na `recommendation`. */
-function recordingPrisma() {
+function recordingPrisma(intervalLearnings: any[] = []) {
   const rec = {
     findFirst: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue({ id: 1 }),
@@ -73,27 +73,15 @@ function recordingPrisma() {
           learningConfidence: 0.5,
           location: 'Visoko',
           timezone: 'Europe/Sarajevo',
-          // `getOrCreateIntervalLearning` čita ovaj niz i, kad ključ ne
-          // postoji, gura novi zapis u njega — pa mora biti niz, ne undefined.
-          intervalLearnings: [],
+          // The learner reads interval rows from the included home profile.
+          intervalLearnings,
           user: { timezone: 'Europe/Sarajevo' },
         },
       }),
     },
     heatingIntervalLearning: {
-      findUnique: jest.fn().mockResolvedValue({
-        id: 1,
-        key: 'weekday_morning',
-        samples: 8,
-        offset: 0.5,
-        confidence: 0.5,
-        avgReachTimeMin: 30,
-        p90OvershootC: 0.2,
-        avgOvershoot: 0.4,
-      }),
       create: jest.fn().mockResolvedValue({ id: 2 }),
-      update: jest.fn().mockResolvedValue({ id: 1 }),
-      // F5.3: učenje se upisuje kroz `updateMany` (jedan upis za sve kolone).
+      // Existing rows update atomically; first completed events create a row.
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     weatherCache: { findFirst: jest.fn().mockResolvedValue(null) },
@@ -154,11 +142,39 @@ describe('F4.6 HeatingRecommendationService — ne piše Recommendation', () => 
 
     await service.processHeatingEvent(event);
 
-    const touched =
-      prisma.heatingIntervalLearning.updateMany.mock.calls.length +
-      prisma.heatingIntervalLearning.update.mock.calls.length +
-      prisma.heatingIntervalLearning.create.mock.calls.length;
-    expect(touched).toBeGreaterThan(0);
+    expect(prisma.heatingIntervalLearning.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        homeProfileId: 3,
+        intervalKey: 'weekday_morning',
+        samples: 1,
+        avgReachTimeMin: 30,
+      }),
+    });
+    expect(prisma.heatingIntervalLearning.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('updates an existing legacy numeric weekday row instead of creating a duplicate', async () => {
+    const { prisma } = recordingPrisma([
+      {
+        id: 9,
+        intervalKey: '1_morning',
+        samples: 2,
+        offset: 0.3,
+        confidence: 0.2,
+        avgReachTimeMin: 24,
+        p90OvershootC: null,
+        avgOvershoot: 0.2,
+      },
+    ]);
+    const service = makeService(prisma);
+
+    await service.processHeatingEvent(event);
+
+    expect(prisma.heatingIntervalLearning.updateMany).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: expect.objectContaining({ samples: 3 }),
+    });
+    expect(prisma.heatingIntervalLearning.create).not.toHaveBeenCalled();
   });
 
   it('ne računa predlog — motor se ne poziva', async () => {
